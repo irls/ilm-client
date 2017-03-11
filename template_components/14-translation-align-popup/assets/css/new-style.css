@@ -1,0 +1,77 @@
+.tab-heading .row {
+  margin:0;
+}
+
+ul.nav.nav-tabs li:after {
+  background-image:url(../../assets/img/nav_slant.gif);
+  content:'';
+  position:absolute;
+  height:100%;
+  width:37px;
+  height:100%;
+  top:0;
+  right:0;
+  background-repeat:no-repeat;
+}
+
+.nav-tabs > li {
+  float:left;
+  margin-bottom:-1px;
+  width:9%;
+  text-align:center;
+}
+
+ul.nav.nav-tabs .active a {
+  background:rgba(236, 234, 234, 0);
+  color:#000;
+}
+
+ul.nav.nav-tabs li a {
+  background:rgba(221, 221, 221, 0);
+  border:0!important;
+  color:#555;
+  border-right:0;
+  font-weight:bold;
+}
+
+ul.nav.nav-tabs {
+  background:#ccc;
+}
+
+ul.nav.nav-tabs li a:hover {
+  color:#000;
+}
+
+.left-tab select {
+  margin:0 10px;
+}
+
+span.setting i {
+  font-size:27px;
+  color:#777;
+}
+
+.fuller {
+  border:1px solid #dad8d8;
+  padding:10px;
+  margin-bottom:15px;
+}
+
+.fuller i {
+  margin-right:10px;
+  color:#f85050;
+}
+
+.fuller span {
+  color:#777777;
+}
+
+.fuller h1, h4 {
+  color:#777;
+}
+
+.right-sidebar blockquote .fa-book {
+  font-size:24px;
+  color:#f85050;
+}
+

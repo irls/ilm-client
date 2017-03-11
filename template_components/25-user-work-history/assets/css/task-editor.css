@@ -1,0 +1,151 @@
+a.navbar-brand.navbar-link {
+  background:rgb(8,8,8);
+}
+
+ul.nav.nav-tabs li:after {
+  background-image:url(../../assets/img/nav_slant.gif);
+  content:'';
+  position:absolute;
+  height:100%;
+  width:37px;
+  height:100%;
+  top:0;
+  right:0;
+  background-repeat:no-repeat;
+}
+
+.nav-tabs > li {
+  float:left;
+  margin-bottom:-1px;
+  width:12%;
+  text-align:center;
+}
+
+ul.nav.nav-tabs .active a {
+  background:rgba(236, 234, 234, 0);
+  color:#000;
+}
+
+ul.nav.nav-tabs li a {
+  background:rgba(221, 221, 221, 0);
+  border:0!important;
+  color:#555;
+  border-right:0;
+  font-weight:bold;
+  padding:10px 5px 10px 0px;
+}
+
+ul.nav.nav-tabs {
+  background:#ccc;
+}
+
+ul.nav.nav-tabs li a:hover {
+  color:#000;
+}
+
+.tab-title h1 {
+  color:rgb(51, 51, 51);
+  font-size:24px;
+  margin:0;
+  display:inline-block;
+  vertical-align:middle;
+}
+
+.tab-title h1 i {
+  font-size:26px;
+  padding:0;
+  margin:0 10px;
+}
+
+.tab-title {
+  padding:10px;
+}
+
+.discreption {
+  padding:15px;
+  background:#fff;
+  float:left;
+  width:100%;
+}
+
+.discreption-icon i {
+  font-size:58px;
+}
+
+.discreption-box .discreption-icon {
+  width:6%;
+  float:left;
+}
+
+.discreption-text {
+  width:94%;
+  float:right;
+}
+
+.discreption-text h1 {
+  margin:0;
+  font-size:26px;
+  margin-bottom:10px;
+}
+
+.discription-p {
+  float:left;
+  width:100%;
+}
+
+div.discreption-left {
+  float:left;
+  min-width:329px;
+}
+
+div.discreption-left li {
+  list-style:none;
+}
+
+.discreption-left i {
+  margin:0 10px;
+  vertical-align:middle;
+}
+
+div.discreption-left li a:hover {
+  text-decoration:none;
+}
+
+.discreption-left p {
+  color:#777;
+}
+
+.discreption-box {
+  float:left;
+  width:100%;
+  border-bottom:1px solid #ecebeb;
+}
+
+.discreption:last-child .discreption-box {
+  border-bottom:0;
+}
+
+form.date {
+  width:33%;
+  float:right;
+}
+
+form.date .form-group {
+  width:50%;
+  float:left;
+}
+
+div.tab-title h1 {
+  display:inline-block;
+}
+
+form.date input {
+  width:80%;
+  float:left;
+}
+
+form.date i {
+  vertical-align:middle;
+  margin:10px;
+}
+

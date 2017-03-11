@@ -1,0 +1,110 @@
+div.modal-header {
+  position:relative;
+}
+
+div.modal-body {
+  margin-top:20px;
+}
+
+.form-group .file {
+  visibility:hidden;
+  position:absolute;
+}
+
+.modal-footer {
+  padding:15px;
+  text-align:left;
+}
+
+.modal-footer fieldset {
+  min-height:192px;
+}
+
+#import .modal-footer fieldset {
+  background-image:url(../../assets/img/brows.png);
+  background-repeat:no-repeat;
+  background-size:218px;
+  background-position:46%;
+}
+
+#import .form-group {
+  margin-bottom:10px;
+}
+
+#import .input-group i {
+  width:25px;
+}
+
+h4.modal-title .fa-book {
+  font-size:30px;
+}
+
+.modal-header {
+  border-bottom:1px solid #e5e5e5;
+}
+
+.fa {
+  font-size:18px;
+}
+
+input {
+  border-radius:0;
+  border:1px solid #f1f2f3;
+  padding:5px;
+}
+
+.modal-dialog {
+  width:400px;
+  margin-top:10%;
+}
+
+.form-group {
+  margin-bottom:000;
+}
+
+button.btn.btn-default {
+  background:#214a80;
+  border:none;
+  border-radius:4px;
+  padding:6px 15px;
+  box-shadow:none;
+  text-shadow:none;
+  outline:none;
+  color:#fff;
+  border-radius:0;
+  transition:all 400ms linear 0s;
+}
+
+button.btn.btn-default:hover {
+  background:#00d1ff;
+}
+
+select:focus, input:focus {
+  outline:none;
+  box-shadow:0 3px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+fieldset {
+  -webkit-margin-start:2px;
+  -webkit-margin-end:2px;
+  -webkit-padding-before:0.35em;
+  -webkit-padding-start:0.75em;
+  -webkit-padding-end:0.75em;
+  -webkit-padding-after:0.625em;
+  min-width:-webkit-min-content;
+  border-width:2px;
+  border-style:groove;
+  border-color:threedface;
+  border-image:initial;
+  margin-bottom:0;
+}
+
+legend {
+  width:auto;
+  border-bottom:0;
+}
+
+fieldset {
+  border:1px solid #b9b6b6;
+}
+

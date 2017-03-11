@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>books</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700">
+    <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
+    <link rel="stylesheet" href="assets/css/book.css">
+    <link rel="stylesheet" href="assets/css/Header-Blue.css">
+    <link rel="stylesheet" href="assets/css/MUSA_no-more-tables.css">
+    <link rel="stylesheet" href="assets/css/MUSA_no-more-tables1.css">
+    <link rel="stylesheet" href="assets/css/new-style.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/untitled-2.css">
+</head>
+
+<body>
+    <div style="background:transparent;">
+        <div class="header-blue" style="background:transparent;">
+            <nav class="navbar navbar-default">
+                <div class="container-fluid">
+                    <div class="navbar-header"><a class="navbar-brand navbar-link" href="#">Documents </a>
+                        <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-2"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button>
+                    </div>
+                    <div class="collapse navbar-collapse" id="navcol-2">
+                        <ul class="nav navbar-nav">
+                            <li role="presentation"><a href="#">Audio </a></li>
+                            <li class="active" role="presentation"><a href="#">User </a></li>
+                            <li role="presentation"><a href="#">API </a></li>
+                            <li role="presentation"><a href="#">Task </a></li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li class="active" role="presentation"><a href="#">Help </a></li>
+                            <li role="presentation"><a href="#">Contact </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+    <div>
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#tab-1" role="tab" data-toggle="tab">Books </a></li>
+            <li><a href="#tab-2" role="tab" data-toggle="tab">Collections </a></li>
+            <li><a href="#tab-3" role="tab" data-toggle="tab">Transcripts </a></li>
+            <li><a href="#tab-3" role="tab" data-toggle="tab">Notes </a></li>
+            <li><a href="#tab-3" role="tab" data-toggle="tab">Syllabi </a></li>
+            <li><a href="#tab-3" role="tab" data-toggle="tab">Courses </a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" role="tabpanel" id="tab-1">
+                <div class="tab-heading">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="tab-title">
+                                <div class="col-md-6">
+                                    <h1><i class="fa fa-book"></i>4,506 Books</h1></div>
+                                <div class="col-md-6">
+                                    <ul class="heading-ul tab-title-list">
+                                        <li><a href="#" data-target="#import" data-toggle="modal"><i class="glyphicon glyphicon-plus"></i>Import </a><a href="#">Filter </a></li>
+                                    </ul>
+                                    <div class="modal fade" role="dialog" tabindex="-1" id="import">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                                                    <h4 class="modal-title"><i class="fa fa-plus"></i><i class="fa fa-book"></i>Import Book</h4></div>
+                                                <div class="modal-body">
+                                                    <form>
+                                                        <div class="form-group">
+                                                            <input type="file" class="file" name="img[]">
+                                                            <div class="input-group"><span class="input-group-addon"><i class="fa fa-folder-open-o"></i></span>
+                                                                <input class="form-control input-lg" type="text" readonly="" value="Browse for File"><span class="input-group-btn">Text<button class="btn btn-default browse input-lg" type="button">Browse </button></span></div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <input type="file" class="file" name="img[]">
+                                                            <div class="input-group"><span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                                                                <input class="form-control input-lg" type="text"><span class="input-group-btn">Text<button class="btn btn-default input-lg" type="submit">Submit </button></span></div>
+                                                        </div>
+                                                        <div class="form-group url"></div>
+                                                    </form>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <fieldset>
+                                                        <legend>Drop File here</legend>
+                                                    </fieldset>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="text">
+                                    <select>
+                                        <option value="12" selected="">My Staging</option>
+                                        <option value="13">Cleaned</option>
+                                        <option value="14">Proofed</option>
+                                    </select>
+                                    <select>
+                                        <option value="12" selected="">Editor Languages</option>
+                                        <option value="13">English</option>
+                                        <option value="14">Spanish</option>
+                                        <option value="">Spanish</option>
+                                        <option value="">German</option>
+                                        <option value="">Russian</option>
+                                        <option value="">Arabic</option>
+                                        <option value="">Arabic</option>
+                                        <option value="">Farsi</option>
+                                        <option value="">Chinese</option>
+                                        <option value="">Romanian</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="table-box">
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th class="table-title">Book Title</th>
+                                                <th class="table-author">Author </th>
+                                                <th class="table-subject">Subject </th>
+                                                <th class="table-size">Size </th>
+                                                <th class="table-difficulty">Difficulty </th>
+                                                <th class="table-publish">Published </th>
+                                                <th class="table-state">State </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="table-">The Great Pizza Race</td>
+                                                <td class="table-">Giacomo Guilizzoni </td>
+                                                <td class="table-">Historical Fiction</td>
+                                                <td class="table-">240 Pages</td>
+                                                <td class="table-">42% </td>
+                                                <td class="table-"> <i class="fa fa-check-square-o"></i></td>
+                                                <td class="table-">Public </td>
+                                            </tr>
+                                            <tr></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 right-sidebar">
+                            <div class="sidebar">
+                                <blockquote>
+                                    <p> <i class="fa fa-book"></i>Around the world<i class="fa fa-pencil"></i></p>
+                                    <footer>John Jons</footer>
+                                </blockquote>
+                                <p class="pages">120 Pages, 38%<i class="fa fa-download"></i></p>
+                                <fieldset>
+                                    <legend>Discription </legend>
+                                    <p><strong>Lorem Ipsum</strong> is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type
+                                        and scrambled it</p>
+                                </fieldset>
+                                <div class="book-listing">
+                                    <fieldset>
+                                        <legend>Discription </legend>
+                                        <div class="fieldset">
+                                            <p>Book Id<span>Jjw </span></p>
+                                            <p>Language<span>en </span></p>
+                                            <p>Transiiation<span>false </span></p>
+                                            <p>Subtitle<span>A staire on Power</span></p>
+                                            <p>Section<span>Chapter </span></p>
+                                            <p>Numbering<span>xx </span></p>
+                                            <p>Subject<span>Historical Fiction</span></p>
+                                            <p>Subtagst<span> Fiction History </span></p>
+                                            <p>Subtagst<span> Fiction History </span></p>
+                                            <p>Subtagst<span> Fiction History </span></p>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                                <fieldset class="publish">
+                                    <legend>Discription </legend>
+                                    <form>
+                                        <p>Published, Ver3.1<span><i class="fa fa-toggle-on"></i></span></p>
+                                        <div class="form-group"><span class="label label-default">Pub State</span>
+                                            <select class="form-control">
+                                                <option value="12" selected="">Public</option>
+                                                <option value="13">Public Hidden</option>
+                                                <option value="14">Encumbered</option>
+                                                <option value="">Research</option>
+                                                <option value="">Private</option>
+                                            </select>
+                                        </div>
+                                    </form>
+                                </fieldset>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane" role="tabpanel" id="tab-2">
+                <p>Second tab content.</p>
+            </div>
+            <div class="tab-pane" role="tabpanel" id="tab-3">
+                <p>Third tab content.</p>
+            </div>
+        </div>
+    </div>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+</body>
+
+</html>

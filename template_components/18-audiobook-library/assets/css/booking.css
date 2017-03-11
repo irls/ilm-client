@@ -1,0 +1,97 @@
+fieldset {
+  -webkit-margin-start:2px;
+  -webkit-margin-end:2px;
+  -webkit-padding-before:0.35em;
+  -webkit-padding-start:0.75em;
+  -webkit-padding-end:0.75em;
+  -webkit-padding-after:0.625em;
+  min-width:-webkit-min-content;
+  border-width:2px;
+  border-style:groove;
+  border-color:threedface;
+  border-image:initial;
+  margin-bottom:0;
+}
+
+legend {
+  width:auto;
+  border-bottom:0;
+}
+
+fieldset {
+  border:1px solid #b9b6b6;
+}
+
+fieldset {
+  -webkit-margin-start:2px;
+  -webkit-margin-end:2px;
+  -webkit-padding-before:0.35em;
+  -webkit-padding-start:0.75em;
+  -webkit-padding-end:0.75em;
+  -webkit-padding-after:0.625em;
+  min-width:-webkit-min-content;
+  border-width:2px;
+  border-style:groove;
+  border-color:threedface;
+  border-image:initial;
+  margin-bottom:0;
+}
+
+legend {
+  width:auto;
+  border-bottom:0;
+  font-size:12px;
+  margin-bottom:0;
+}
+
+fieldset {
+  border:1px solid #b9b6b6;
+  position:relative;
+  margin-bottom:10px;
+}
+
+fieldset {
+  -webkit-margin-start:2px;
+  -webkit-margin-end:2px;
+  -webkit-padding-before:0.35em;
+  -webkit-padding-start:0.75em;
+  -webkit-padding-end:0.75em;
+  -webkit-padding-after:0.625em;
+  min-width:-webkit-min-content;
+  border-width:2px;
+  border-style:groove;
+  border-color:threedface;
+  border-image:initial;
+  margin-bottom:0;
+}
+
+legend {
+  width:auto;
+  border-bottom:0;
+  font-size:12px;
+  margin-bottom:0;
+}
+
+fieldset {
+  border:1px solid #b9b6b6;
+  position:relative;
+  margin-bottom:10px;
+}
+
+.right-sidebar fieldset p {
+  font-size:12px;
+}
+
+div.book-listing span {
+  float:right;
+  width:50%;
+}
+
+.fieldset {
+  height:262px;
+  float:left;
+  width:100%;
+  overflow-y:scroll;
+  padding:5px;
+}
+

@@ -1,0 +1,29 @@
+.call {
+  display:inline-block;
+  width:100%;
+  background:#fff;
+  background:rgba(255, 255, 255, 0.38);
+  padding:10px;
+}
+
+.call .row {
+  margin-bottom:10px;
+  background:#f2f1f1;
+  padding:10px 0;
+}
+
+div.call-to h1, h4 {
+  text-align:center;
+}
+
+p.textarea-top {
+  background:rgb(196,198,198);
+  padding:2px 5px;
+  margin:0;
+}
+
+p.textarea {
+  background:#fff;
+  padding:15px;
+}
+

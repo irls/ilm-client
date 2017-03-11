@@ -1,0 +1,97 @@
+select {
+  border:1px solid rgb(222, 220, 220)!important;
+  height:38px;
+  padding:7px;
+}
+
+.fa {
+  font-size:18px;
+}
+
+select {
+  border-radius:0;
+  border:1px solid #f1f2f3;
+  padding:10px;
+}
+
+.form-group {
+  margin-bottom:000;
+}
+
+select {
+  border:1px solid rgb(239, 236, 236)!important;
+  color:#333;
+  height:31px;
+  padding:5px;
+}
+
+select {
+  min-width:134px;
+  max-width:100%;
+}
+
+select:focus, input:focus {
+  outline:none;
+  box-shadow:0 3px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+fieldset {
+  -webkit-margin-start:2px;
+  -webkit-margin-end:2px;
+  -webkit-padding-before:0.35em;
+  -webkit-padding-start:0.75em;
+  -webkit-padding-end:0.75em;
+  -webkit-padding-after:0.625em;
+  min-width:-webkit-min-content;
+  border-width:2px;
+  border-style:groove;
+  border-color:threedface;
+  border-image:initial;
+  margin-bottom:0;
+}
+
+legend {
+  width:auto;
+  border-bottom:0;
+  font-size:12px;
+  margin-bottom:0;
+}
+
+.right-sidebar i {
+  font-size:23px;
+}
+
+fieldset {
+  border:1px solid #b9b6b6;
+  position:relative;
+  margin-bottom:10px;
+}
+
+.right-sidebar fieldset p {
+  font-size:12px;
+}
+
+.publish i {
+  float:right;
+  color:green;
+}
+
+.publish select {
+  float:right;
+  width:73%;
+  /*vertical-align:middle;*/
+  vertical-align:middle;
+}
+
+span.label.label-default {
+  background:transparent;
+  color:#000;
+  font-weight:normal;
+  /*vertical-align:middle;*/
+}
+
+.publish .label {
+  margin-top:9px;
+  float:left;
+}
+

@@ -1,0 +1,124 @@
+{
+  "books": [
+    {
+      "meta": {
+        "bookid": "shoghi-adj-en",
+        "title": "The Advent of Divine Justice",
+        "subtitle": "",
+        "author": "Shoghi Effendi",
+        "category": "Religion",
+        "length": "48000",
+        "difficulty": "42",
+        "lang": "en",
+        "description": "Est irure eu esse. Anim possumus veniam multos e ipsum. Hic amet labore aliqua consequat, ex se elit fabulas.",
+        "sectionName": "",
+        "numbering": "x",
+        "published": true,
+        "pubType": "Public",
+        "importStatus": "shared",
+        "version": "3.2",
+        "coverimg": "https://dl.dropboxusercontent.com/u/382588/ocean2.0/Library/books-work/assets/covers/adj.png"
+      },
+
+      "content": [
+        {"type": "title", "classes": "", "author": "", "id": "p0a",
+         "content": "The Advent of Divine Justice" },
+
+        {"type": "subhead", "classes": " author", "author": "", "id": "p0b",
+          "content": "Shoghi Effendi" },
+
+        {"type": "par", "classes": "preamble", "author": "", "id": "p0c", "parnum": "",
+            "content": "To the beloved of God and the handmaids of the Merciful throughout the United States and Canada." },
+
+        {"type": "par", "classes": "salutation", "author": "", "id": "p0d", "parnum": "",
+                "content": "Best-beloved brothers and sisters in the love of Bahá’u’lláh:" },
+
+        {"type": "par", "classes": "dropcap", "author": "", "id": "p0e", "parnum": "1", "lang": "en",
+          "content": " It would be difficult indeed to adequately express the feelings of irrepressible joy and exultation that flood my heart every time I pause to contemplate the ceaseless evidences of the dynamic energy which animates the stalwart pioneers of the World Order of Bahá’u’lláh in the execution of the Plan committed to their charge. The signature of the contract, by your elected national representatives, signalizing the opening of the final phase of the greatest enterprise ever launched by the followers of the Faith of Bahá’u’lláh in the West, no less than the extremely heartening progress recorded in the successive reports of their National Teaching Committee, attest, beyond the shadow of a doubt, the fidelity, the vigor, and the thoroughness with which you are conducting the manifold operations which the evolution of the Seven Year Plan must necessarily involve. In both of its aspects, and in all its details, it is being prosecuted with exemplary regularity and precision, with undiminished efficiency, and commendable dispatch. " },
+
+        {"type": "par", "classes": "", "author": "", "id": "p0f", "parnum": "2",
+          "content": "  The resourcefulness which the national representatives of the American believers have, in recent months, so strikingly demonstrated, as evidenced by the successive measures they have adopted, has been matched by the loyal, the unquestioning and generous support accorded them by all those whom they represent, at every critical stage, and with every fresh advance, in the discharge of their sacred duties. Such close interaction, such complete cohesion, such continual harmony and fellowship between the various agencies that contribute to the organic life, and constitute the basic framework, of every properly functioning Bahá’í community, is a phenomenon which offers a striking contrast to the disruptive tendencies which the discordant elements of present-day society so tragically manifest. Whereas every apparent trial with which the unfathomable wisdom of the Almighty deems it necessary to afflict His chosen community serves only to demonstrate afresh its essential solidarity and to consolidate its inward strength, each of the successive crises in the fortunes of a decadent age exposes more convincingly than the one preceding it the corrosive influences that are fast sapping the vitality and undermining the basis of its declining institutions. " },
+
+        {"type": "par", "classes": "", "author": "", "id": "p0g", "parnum": "3",
+          "content": " For such demonstrations of the interpositions of an ever-watchful Providence they who stand identified with the Community of the Most Great Name must feel eternally grateful. From every fresh token of His unfailing blessing on the one hand, and of His visitation on the other, they cannot but derive immense hope and courage. Alert to seize every opportunity which the revolutions of the wheel of destiny within their Faith offers them, and undismayed by the prospect of spasmodic convulsions that must sooner or later fatally affect those who have refused to embrace its light, they, and those who will labor after them, must press forward until the processes now set in motion will have each spent its force and contributed its share towards the birth of the Order now stirring in the womb of a travailing age. " },
+
+        {"type": "header", "classes": "", "author": "", "id": "3a", "secnum": "1",
+            "content": "Early Chapter" },
+
+        {"type": "subhead", "classes": "toc1", "author": "", "id": "3ab",
+          "content": "Recurrent Crises" },
+
+        {"type": "subhead", "classes": "toc2", "author": "", "id": "3ac",
+            "content": "Recurrent Crises 2" },
+
+        {"type": "subhead", "classes": "toc3", "author": "", "id": "3ad",
+            "content": "Recurrent Crises 3" },
+
+        {"type": "par", "classes": "", "author": "", "id": "p0i", "parnum": "4",
+          "content": "These recurrent crises which, with ominous frequency and resistless force, are afflicting an ever-increasing portion of the human race must of necessity continue, however impermanently, to exercise, in a certain measure, their baleful influence upon a world community which has spread its ramifications to the uttermost ends of the earth. How can the beginnings of a world upheaval, unleashing forces that are so gravely deranging the social, the religious, the political, and the economic equilibrium of organized society, throwing into chaos and confusion political systems, racial doctrines, social conceptions, cultural standards, religious associations, and trade relationships — how can such agitations, on a scale so vast, so unprecedented, fail to produce any repercussions on the institutions of a Faith of such tender age whose teachings have a direct and vital bearing on each of these spheres of human life and conduct?" }
+
+      ],
+      "files": []
+    },
+    {
+      "meta": {
+        "bookid": "shoghi-cof-en",
+        "title": "The Citadel of Faith",
+        "subtitle": "",
+        "author": "Shoghi Effendi",
+        "category": "Religion",
+        "length": "48000",
+        "difficulty": "42",
+        "lang": "en",
+        "description": "Est irure eu esse. Anim possumus veniam multos e ipsum. Hic amet labore aliqua consequat, ex se elit fabulas.",
+        "sectionName": "",
+        "numbering": "x.x",
+        "published": true,
+        "pubType": "Public",
+        "importStatus": "shared",
+        "version": "3.2",
+        "coverimg": "http://images.gr-assets.com/books/1282837672l/2316052.jpg"
+      },
+
+      "content": [
+        {"type": "title", "classes": "", "author": "", "id": "p0a",
+         "content": "The Citadel of Faith" },
+
+        {"type": "subhead", "classes": " author", "author": "", "id": "p0b",
+          "content": "Shoghi Effendi" },
+
+        {"type": "par", "classes": "preamble", "author": "", "id": "p0c", "parnum": "",
+            "content": "To the beloved of God and the handmaids of the Merciful throughout the United States and Canada." },
+
+        {"type": "par", "classes": "salutation", "author": "", "id": "p0d", "parnum": "",
+                "content": "Best-beloved brothers and sisters in the love of Bahá’u’lláh:" },
+
+        {"type": "par", "classes": "dropcap", "author": "", "id": "p0e", "parnum": "1", "lang": "en",
+          "content": " It would be difficult indeed to adequately express the feelings of irrepressible joy and exultation that flood my heart every time I pause to contemplate the ceaseless evidences of the dynamic energy which animates the stalwart pioneers of the World Order of Bahá’u’lláh in the execution of the Plan committed to their charge. The signature of the contract, by your elected national representatives, signalizing the opening of the final phase of the greatest enterprise ever launched by the followers of the Faith of Bahá’u’lláh in the West, no less than the extremely heartening progress recorded in the successive reports of their National Teaching Committee, attest, beyond the shadow of a doubt, the fidelity, the vigor, and the thoroughness with which you are conducting the manifold operations which the evolution of the Seven Year Plan must necessarily involve. In both of its aspects, and in all its details, it is being prosecuted with exemplary regularity and precision, with undiminished efficiency, and commendable dispatch. " },
+
+        {"type": "par", "classes": "", "author": "", "id": "p0f", "parnum": "2",
+          "content": "  The resourcefulness which the national representatives of the American believers have, in recent months, so strikingly demonstrated, as evidenced by the successive measures they have adopted, has been matched by the loyal, the unquestioning and generous support accorded them by all those whom they represent, at every critical stage, and with every fresh advance, in the discharge of their sacred duties. Such close interaction, such complete cohesion, such continual harmony and fellowship between the various agencies that contribute to the organic life, and constitute the basic framework, of every properly functioning Bahá’í community, is a phenomenon which offers a striking contrast to the disruptive tendencies which the discordant elements of present-day society so tragically manifest. Whereas every apparent trial with which the unfathomable wisdom of the Almighty deems it necessary to afflict His chosen community serves only to demonstrate afresh its essential solidarity and to consolidate its inward strength, each of the successive crises in the fortunes of a decadent age exposes more convincingly than the one preceding it the corrosive influences that are fast sapping the vitality and undermining the basis of its declining institutions. " },
+
+        {"type": "par", "classes": "", "author": "", "id": "p0g", "parnum": "3",
+          "content": " For such demonstrations of the interpositions of an ever-watchful Providence they who stand identified with the Community of the Most Great Name must feel eternally grateful. From every fresh token of His unfailing blessing on the one hand, and of His visitation on the other, they cannot but derive immense hope and courage. Alert to seize every opportunity which the revolutions of the wheel of destiny within their Faith offers them, and undismayed by the prospect of spasmodic convulsions that must sooner or later fatally affect those who have refused to embrace its light, they, and those who will labor after them, must press forward until the processes now set in motion will have each spent its force and contributed its share towards the birth of the Order now stirring in the womb of a travailing age. " },
+
+        {"type": "header", "classes": "", "author": "", "id": "3a", "secnum": "1",
+            "content": "Early Chapter" },
+
+        {"type": "subhead", "classes": "toc1", "author": "", "id": "3ab",
+          "content": "Recurrent Crises" },
+
+        {"type": "subhead", "classes": "toc2", "author": "", "id": "3ac",
+            "content": "Recurrent Crises 2" },
+
+        {"type": "subhead", "classes": "toc3", "author": "", "id": "3ad",
+            "content": "Recurrent Crises 3" },
+
+        {"type": "par", "classes": "", "author": "", "id": "p0i", "parnum": "4",
+          "content": "These recurrent crises which, with ominous frequency and resistless force, are afflicting an ever-increasing portion of the human race must of necessity continue, however impermanently, to exercise, in a certain measure, their baleful influence upon a world community which has spread its ramifications to the uttermost ends of the earth. How can the beginnings of a world upheaval, unleashing forces that are so gravely deranging the social, the religious, the political, and the economic equilibrium of organized society, throwing into chaos and confusion political systems, racial doctrines, social conceptions, cultural standards, religious associations, and trade relationships — how can such agitations, on a scale so vast, so unprecedented, fail to produce any repercussions on the institutions of a Faith of such tender age whose teachings have a direct and vital bearing on each of these spheres of human life and conduct?" }
+
+      ],
+      "files": []
+    }
+  ]
+}

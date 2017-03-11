@@ -1,0 +1,307 @@
+ul.heading-ul li {
+  float:left;
+  list-style:none;
+}
+
+div.tab-heading tbody {
+  height:621px;
+  width:100%;
+  display:block;
+}
+
+.tab-heading .row {
+  margin:0;
+}
+
+.right-sidebar blockquote .fa-book {
+  font-size:24px;
+  color:#f85050;
+}
+
+select {
+  border:1px solid rgb(222, 220, 220)!important;
+  height:35px;
+  padding:7px;
+}
+
+.sidebar {
+  width:100%;
+  background:#f2f1f1;
+  display:inline-block;
+  padding:10px;
+}
+
+.table-box {
+  background:#f2f1f1;
+  padding:10px;
+  width:100%;
+  display:inline-block;
+  position:relative;
+}
+
+.fa {
+  font-size:18px;
+}
+
+select {
+  border-radius:0;
+  border:1px solid #f1f2f3;
+  padding:10px;
+}
+
+input {
+  border-radius:0;
+  border:1px solid #f1f2f3;
+  padding:6px;
+}
+
+td {
+  text-align:center;
+}
+
+tr {
+  transition:all 400ms linear 0s;
+}
+
+tr:hover {
+  background:#e3effb!important;
+}
+
+.form-group {
+  margin-bottom:000;
+}
+
+button.btn.btn-default {
+  background:#214a80;
+  border:none;
+  border-radius:4px;
+  padding:6px 15px;
+  box-shadow:none;
+  text-shadow:none;
+  outline:none;
+  color:#fff;
+  border-radius:0;
+  transition:all 400ms linear 0s;
+}
+
+button.btn.btn-default:hover {
+  background:#00d1ff;
+}
+
+select {
+  border:1px solid rgb(239, 236, 236)!important;
+  color:#333;
+  height:31px;
+  padding:5px;
+}
+
+select {
+  min-width:134px;
+  max-width:100%;
+}
+
+select:focus, input:focus {
+  outline:none;
+  box-shadow:0 3px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+.tab-heading td:first-child {
+  width:20%;
+}
+
+.tab-heading td:nth-child(2) {
+  width:20%;
+}
+
+.tab-heading td:nth-child(3) {
+  width:20%;
+}
+
+.tab-heading td {
+  width:10%;
+  text-align:left;
+}
+
+.tab-heading th:first-child {
+  width:20%;
+}
+
+.tab-heading th:nth-child(2) {
+  width:20%;
+}
+
+.tab-heading th:nth-child(3) {
+  width:20%;
+}
+
+.tab-heading th {
+  width:10%;
+  border-bottom:0!important;
+}
+
+div.tab-heading tr {
+  width:100%;
+  display:table;
+}
+
+div.tab-heading thead tr {
+  background:#e3effb;
+}
+
+fieldset {
+  -webkit-margin-start:2px;
+  -webkit-margin-end:2px;
+  -webkit-padding-before:0.35em;
+  -webkit-padding-start:0.75em;
+  -webkit-padding-end:0.75em;
+  -webkit-padding-after:0.625em;
+  min-width:-webkit-min-content;
+  border-width:2px;
+  border-style:groove;
+  border-color:threedface;
+  border-image:initial;
+  margin-bottom:0;
+}
+
+legend {
+  width:auto;
+  border-bottom:0;
+  font-size:12px;
+  margin-bottom:0;
+}
+
+.tab-heading h1 i {
+  font-size:32px;
+  padding:0;
+}
+
+.tab-title {
+  background:#eceaea;
+  display:inline-block;
+  width:100%;
+  border-bottom:2px solid #dddddd;
+  padding:10px 0;
+}
+
+ul.heading-ul.tab-title-list li {
+  margin:0 17px;
+  line-height:31px;
+}
+
+ul.heading-ul.tab-title-list li a {
+  margin-left:10px;
+}
+
+ul.heading-ul.tab-title-list {
+  margin:15px 0;
+}
+
+ul.heading-ul.tab-title-list {
+  margin:0;
+  padding:0;
+}
+
+.right-sidebar blockquote .fa-book {
+  font-size:24px;
+  color:#333;
+}
+
+.right-sidebar blockquote p {
+  font-size:18px;
+}
+
+.right-sidebar i {
+  font-size:23px;
+}
+
+.right-sidebar .fa-pencil {
+  float:right;
+}
+
+.tab-heading h1 {
+  color:rgb(51, 51, 51);
+  font-size:27px;
+  margin:0;
+  display:inline-block;
+  vertical-align:middle;
+}
+
+fieldset {
+  border:1px solid #b9b6b6;
+  position:relative;
+  margin-bottom:10px;
+}
+
+.right-sidebar fieldset p {
+  font-size:12px;
+}
+
+div.tab-heading thead {
+  width:100%;
+  display:block;
+  padding-right:17px;
+}
+
+div.book-listing span {
+  float:right;
+  width:50%;
+}
+
+.publish i {
+  float:right;
+  color:green;
+}
+
+.publish select {
+  float:right;
+  width:73%;
+  /*vertical-align:middle;*/
+  vertical-align:middle;
+}
+
+span.label.label-default {
+  background:transparent;
+  color:#000;
+  font-weight:normal;
+  /*vertical-align:middle;*/
+}
+
+.publish .label {
+  margin-top:9px;
+  float:left;
+}
+
+input {
+  padding:6px;
+}
+
+.move select {
+  width:87%;
+  float:right;
+  margin-bottom:10px;
+}
+
+div.move i {
+  margin-right:5px;
+  margin-top:3px;
+}
+
+form.right-form input {
+  width:68%;
+  float:right;
+}
+
+form.right-form .form-group {
+  width:100%;
+  float:left;
+  margin-bottom:10px;
+}
+
+.move-btn {
+  float:right;
+}
+
+form.right-form i {
+  margin-right:5px;
+}
+

@@ -1,0 +1,129 @@
+<template>
+  <table class="toolbar"><tr>
+    <td>
+      <h3 v-if="currentBook().meta.title.length"><i class="fa fa-pencil fa-lg"></i>
+       {{currentBook().meta.title}}
+      </h3>
+    </td>
+
+    <td class='right'>
+      <div class='right'>
+
+        <!-- Back to Books Button -->
+        <button @click="goBack" class='booksbtn btn btn-default'>
+          <i class="fa fa-chevron-left fa-lg"></i> Back <i class="fa fa-book "></i>
+        </button>
+
+        <ButtonRadioGroup id='viewmode' :values="editModes" @changeEditMode='viewSelect' :selected="editMode" :default="editMode"></ButtonRadioGroup>
+
+      </div>
+    </td>
+</tr></table>
+</template>
+
+<script>
+import ButtonRadioGroup from '../generic/ButtonRadioGroup'
+
+export default {
+  data () {
+    return {
+      editMode: 'Editor',
+      editModes: {
+        'Editor': 'Editor',
+        'HTML': 'HTML',
+        'JSON': 'JSON',
+        'Display': 'Display'
+      }
+    }
+  },
+  methods: {
+    currentBook: function() {
+      if (this.$store.getters.currentBook) return this.$store.getters.currentBook
+      else return {title:''}
+    },
+    getEditMode: function() {
+      let editMode = this.$store.getters.bookEditMode()
+      return editMode
+    },
+    viewSelect: function(val) {
+      this.editMode = val
+      this.$store.commit('setEditMode', this.editMode)
+    },
+    goBack: function() {
+      let currentBookid = this.$store.state.currentBookid
+      let path = '/books' + (currentBookid?'/'+currentBookid:'')
+      this.$router.push(path)
+    }
+  },
+  components: {
+    ButtonRadioGroup
+  },
+  // watch: {
+  //   'this.editMode' () {
+  //     this.editModeChange()
+  //     console.log('Watcher for editmode')
+  //   }
+  // },
+  // events: {
+  //   changeEditMode: function(editMode) {
+  //     this.editMode = editMode
+  //     console.log('Caught event changeEditMode', editMode)
+  //   }
+  // },
+  // created: function () {
+  //   this.$on('changeEditMode', function(editMode){
+  //     this.editMode = editMode
+  //     console.log('Caught event changeEditMode with on', editMode)
+  //   });
+  // }
+}
+</script>
+
+
+<style scoped >
+
+.toolbar {width: 100%; height: 4em; box-shadow: 0px 0px 3px 2px rgba(178, 191, 224, 0.53); }
+.toolbar tr {}
+.toolbar td {padding: 5px; width: auto; position: relative;}
+.toolbar td.right {text-align: right;  width: 60%; padding-right: 1em;}
+.toolbar button, .toolbar select {display: inline !important;}
+
+div.right {text-align: right;}
+
+h3 {
+  padding-left: .35em; margin-top:.4em;
+}
+h3 i.fa-pencil {
+  opacity: .75;
+  color: #337ab7;
+  padding-right: .3em;
+}
+
+.tools {
+  text-align: right !important;
+  position: inline !important;
+  padding-top: 15px; border: 1px solid green;
+  float: right
+}
+select {
+  margin-top: -.25em;
+  width: 8em; padding:0;
+  height: 2em;
+}
+
+button_ {
+  background: white;
+  border: 1px solid silver;
+  border-radius: 3px;
+  padding: 3px; padding-right: 5px;
+}
+button:hover {
+  color: darkgreen;
+  background: #F0FFF0;
+}
+
+#viewmode, button.booksbtn {
+  display: inline; float: right; padding-left: 10px; padding-right: 10px;
+}
+
+</style>
