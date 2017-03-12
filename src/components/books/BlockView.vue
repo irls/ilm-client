@@ -7,16 +7,42 @@
       <!-- Editor toolbar, only visible for editors -->
       <div class='blockinfo'><div class='blockinfo-content'>
         <div class='edit'><i class="fa fa-pencil-square-o fa-lg" @click='clickEvent(b)'></i></div>
-        <div class='type'> &nbsp; &nbsp;
+        <div class='type'>
           <!-- Block Type selector -->
           <select v-model='block.type'>
             <option v-for="(type, index) in blockTypes" :value="type">{{ type }}</option>
           </select>
 
+          <!-- All block classes -->
+          <span v-for='classType of Object.keys(blockClasses)' class='menulink'>
+            &nbsp; &nbsp; &nbsp;
+            <dropdown :visible="visible" :position="position" @clickOut="visible = false">
+
+              {{classType}} <i class="fa fa-caret-square-o-down" @click="visible = true"></i>
+              <!-- <div class="inlineBlock hero is-primary" @click="visible = true">
+                <div class="hero-body">Link</div>
+              </div> -->
+              <div slot="dropdown" class="dialog">
+                Content
+              </div>
+            </dropdown>
+
+
+
+
+            <!-- <select>
+              <option v-for="(clss, index) in blockClasses[classType]" :value="clss">{{ clss }}</option>
+            </select> -->
+          </span>
+
+
           <!-- Type specific classes -->
           <select v-if='blockTypeClasses.length>0' v-model='blockTypeClass'>
             <option v-for="(clss, index) in blockTypeClasses" :value="clss">{{ clss }}</option>
           </select>
+
+
+
 
         </div>
         <div class='classes' v-if='block.classes.length'><i>{{block.classes}}</i></div>
@@ -51,13 +77,16 @@
 
 
 <script>
+import dropdown from 'vue-my-dropdown';
+
 export default {
   data () {
     return {
+      visible: false,
       blockType: '',
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClass: '',
-      blockClasses: {
+      blockTypeClasses: {
         title: [' ', 'subtitle', 'author', 'translator'],
         header: [' ', 'chapter', 'selection', 'letter', 'talk', 'date', 'venue'],
         subhead: [' ', 'toc1', 'toc2', 'toc3', 'toc4'],
@@ -67,6 +96,16 @@ export default {
         hr: [' ', 'section', 'large', 'small']
       },
       typeClasses: [' ', 'subtitle', 'author', 'translator'], // classes available for this type
+      blockClasses: {
+        Author: [' ', 'bab', 'baha', 'shoghi', 'sacred', 'bible', 'muhammad', 'quran', 'jesus', 'ali', 'tradition', 'husayn'],
+        Justify: [' ', 'center', 'right', 'left'],
+        Whitespace: [' ', 'verse', 'pre'],
+        Style: [' ', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline', 'rulebelow', 'bookgraphic'],
+        Padding: ['nopad', 'nopad-top', 'nopad-bottom', 'pad', 'pad-top', 'pad-bottom'],
+        Format: ['blockquote', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer'],
+        Size: ['xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
+        Font: [' ', 'typewriter', 'oldbook', 'modern']
+      },
 
       isRecording: false,
       isPlaying: false,
@@ -76,6 +115,7 @@ export default {
   },
   props: ['block'],
   components: {
+    dropdown
   },
   methods: {
     block_tag: function(type) {
@@ -91,7 +131,7 @@ export default {
 
     },
     getTypeClasses: function(type) {
-      if (this.blockClasses.hasOwnProperty(type)) return this.blockClasses[type];
+      if (this.blockTypeClasses.hasOwnProperty(type)) return this.blockTypeClasses[type];
     },
     setTypeClass: function(type, clss) {
       // remove type classes besides this one
@@ -104,7 +144,7 @@ export default {
     },
     classTypeMatch: function(type) {
       let allClasses = this.cssList(this.block.classes)
-      for (let cls of this.blockClasses[type]) if (allClasses.indexOf(cls)>-1) {
+      for (let cls of this.blockTypeClasses[type]) if (allClasses.indexOf(cls)>-1) {
         return cls
       }
     },
@@ -114,9 +154,9 @@ export default {
     addTypeClass: function(clss) {
       //console.log('addTypeClass:  ', clss)
       let classes = this.cssList(this.block.classes + ' ' + clss)
-      let typeClasses = this.blockClasses[this.block.type]
+      let typeClasses = this.blockTypeClasses[this.block.type]
       // delete other type classes except the one selected
-      for (let typClass of this.blockClasses[this.block.type]) {
+      for (let typClass of this.blockTypeClasses[this.block.type]) {
         if (typClass!=clss && classes.indexOf(typClass)>-1) {
           classes.splice(classes.indexOf(typClass), 1)
         }
@@ -138,7 +178,7 @@ export default {
       return this.block.classes
     },
     blockTypeClasses: function() {
-      if (this.blockClasses.hasOwnProperty(this.block.type)) return this.blockClasses[this.block.type];
+      if (this.blockTypeClasses.hasOwnProperty(this.block.type)) return this.blockTypeClasses[this.block.type];
       else return [];
     },
     // blockTypeClass: function() {
@@ -202,7 +242,7 @@ div.content {
  width: 100%;
 }
 .blockinfo-content {
-  display: none;
+  /*display: none;*/
 }
 .blockinfo .edit {
   font-size: 1.25em; padding-right: 3em;
@@ -268,6 +308,7 @@ div.viewercontent.ocean div.content.par.dropcap::first-letter {
 }
 */
 
+.menulink:hover {cursor: pointer; color: navy;}
 
 
 </style>

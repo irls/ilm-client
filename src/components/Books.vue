@@ -7,7 +7,7 @@
     </div>
 
     <table id='bodytable'><tr :colspan="colCount">
-      <td class='maincontent'>
+      <td class='maincontent scrollable'>
         <template v-if="isEditMode()">
           <BookEdit v-if="bookEditMode()=='Editor'" />
           <BookEdit_HTML v-else-if="bookEditMode()=='HTML'" />
@@ -138,12 +138,25 @@ div.bar {
 
 
 
-
+/*
 .clearfix:after {
   content: "";
   display: table;
   clear: both;
 }
+
+.scrollable {
+  height: auto;  
+  overflow: hidden;
+  backface-visibility: hidden;
+  overflow-y: auto !important;
+  will-change: overflow;
+  width: 100%;
+  display: flex;
+  height: 100vh;
+  position: relative;
+  will-change: overflow;
+}*/
 
 
 </style>
