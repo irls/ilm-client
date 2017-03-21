@@ -15,5 +15,6 @@ new Vue({
   render: h => h(App),
   created: function() {
     this.$store.dispatch('initiateBooks')
+    //this.$store.dispatch('ilmAuth')
   }
 })
