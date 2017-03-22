@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios'
-// import superlogin from 'superlogin-client'
+import superlogin from 'superlogin-client'
 
 
 Vue.use(Vuex)
@@ -11,8 +11,12 @@ const API_ALLBOOKS = '/static/books.json';
 
 export const store = new Vuex.Store({
   state: {
-    users: [],
+    // auth
     currentUser: {},
+    currentSession: {},
+    isLoggedIn: false,
+    auth: superlogin,
+
     books: [],
     currentBookid: '',
     bookFilters: {filter: '', lang: 'en', importStatus: 'shared'},
@@ -54,10 +58,6 @@ export const store = new Vuex.Store({
     setEditMode(state, editMode) {
       state.editMode = editMode
     },
-    // setloginSession(session) {
-    //   state.session = session
-    //   console.log('session', session)
-    // }
   },
   actions: {
     initiateBooks(context) {
@@ -71,9 +71,5 @@ export const store = new Vuex.Store({
           console.log('Error: ', e)
         })
     },
-    // ilmAuth(context) {
-    //
-    //
-    // }
   },
 });

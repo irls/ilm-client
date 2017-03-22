@@ -1,33 +1,4 @@
 <template>
-  <!-- <div style="background:transparent;">
-      <div class="header-blue" style="background:transparent;">
-          <nav class="navbar navbar-default">
-              <div class="container-fluid">
-                  <div class="navbar-header">
-
-                    <router-link class="navbar-brand navbar-link" to="/">
-                      <img src="../assets/ilm-logo.svg" class='logo'/></router-link>
-                  </div>
-
-                  <div id="navcol-2">
-                      <ul class="nav navbar-nav">
-                          <router-link to="/books" class='presentation' tag='li'><a>Books</a></router-link>
-                          <router-link to="/users" class='presentation' tag='li'><a>Users</a></router-link>
-                          <router-link to="/libraries" class='presentation' tag='li'><a>Libraries</a></router-link>
-                          <router-link to="/assignments" class='presentation' tag='li'><a>Assignments</a></router-link>
-                      </ul>
-                      <ul class="nav navbar-nav navbar-right">
-                          <router-link class="presentation" to="/help" tag='li'><a>Help</a></router-link></router-link>
-                          <router-link class="presentation" to="/contact" tag='li'><a>Contact</a></router-link>
-                      </ul>
-                  </div>
-              </div>
-          </nav>
-      </div>
-  </div> -->
-
-
-<!-- <nav class="navbar navbar-default"> -->
   <table class="navtable">
     <tr><td class='logo'>
       <router-link to="/"><img src="../assets/ilm-logo.svg"/></router-link>
@@ -44,14 +15,10 @@
       <ul class="navlist">
           <router-link class="presentation" to="/help" tag='li'><a>Help</a></router-link></router-link>
           <router-link class="presentation" to="/contact" tag='li'><a>Contact</a></router-link>
+          <li v-if="$store.state.isLoggedIn" class="presentation"><a href="" @click="$store.state.auth.logout()">Logout</a></li>
       </ul>
     </td></tr>
   </table>
-<!-- </nav> -->
-
-
-
-
 </template>
 
 

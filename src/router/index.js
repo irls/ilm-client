@@ -4,7 +4,7 @@ import Router from 'vue-router'
 import Books from '../components/Books'
 import Users from '../components/Users'
 import Libraries from '../components/Libraries'
-import Assignments from '../components/Assignments'
+import Tasks from '../components/Tasks'
 import Help from '../components/Help'
 import Contact from '../components/Contact'
 
@@ -39,7 +39,7 @@ export default new Router({
     },
     {
       path: '/assignments',
-      component: Assignments
+      component: Tasks
     },
     {
       path: '/help',

@@ -2,6 +2,7 @@
   <div id="app">
     <MainMenu></MainMenu>
     <router-view></router-view>
+    <Login v-if="!$store.state.isLoggedIn"></Login>
   </div>
 </template>
 
@@ -9,11 +10,12 @@
 
 <script>
 import MainMenu from './components/MainMenu'
+import Login from "./components/login"
 
 export default {
   name: 'app',
   components: {
-    MainMenu
+    MainMenu, Login
   },
   methods: {
     setCurrentBookid: function(bookid) {
