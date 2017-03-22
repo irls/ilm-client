@@ -1,30 +1,40 @@
-# ilm
+# Ilm-Client
 
-> ILM - Content Manager
+Application for creating and managing multiple library content for FFA-Reader and similar.
 
-## Build Setup
+This is a Chrome-only Vue.js 2.0 application which uses the Ilm-Server as a backend (https://github.com/chadananda/ilm-server)
 
-``` bash
-# install dependencies
-npm install
 
-# serve with hot reload at localhost:8080
-npm run dev
+## Getting Started with Development
 
-# build for production with minification
-npm run build
+1. Install the ILM-Server with
+    * ```git clone git@github.com:chadananda/ilm-server.git```
+    * ```npm install```
 
-# build for production and view the bundle analyzer report
-npm run build --report
+2. Set up your DEV config file
+    * Copy /config/env.example.sh to /config/env.dev.sh
+    * Add ```localhost:5984``` (or your local CouchDB location) to the end of the line ```export DB_HOST=```
 
-# run unit tests
-npm run unit
+3. Launch the server with 
+    * ```npm run dev```
 
-# run e2e tests
-npm run e2e
+4. Next download the ILM-Client
+    * ```git clone git@github.com:chadananda/ilm-client.git```
+    * ```npm install```
 
-# run all tests
-npm test
-```
+5. Setup Dev config file the dev config file 
+    * Copy ```/config/env.example.sh``` to ```/config/env.dev.sh```
+    * Add ```localhost:5984``` (or your local CouchDB location) to the end of the line ```export DB_HOST=```
+    * Add ```localhost:3000``` to the end of the line ```export ILM_SERVER=```
 
-For detailed explanation on how things work, checkout the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+6. Launch the ILM-Client app with 
+    * ```npm run dev``` 
+
+7. Login with the default DEV-only admin user
+    * User: ```dev-admin```, Pass: ```vanilla```
+
+#### Note:
+  * Changes to Dev client source code are reflected immediatly thanks to Webpack hot-loading
+  * Changes to the server code require restarting the server which clears the current session 
+
+
