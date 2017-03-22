@@ -15,10 +15,10 @@
 
       <!-- Password Reset Request -->
       <div class="form-password" :class="{ 'active': active == 'password' }">
-        <h3 class='title'>Request Password Reset</h3>
+        <h3 class='title'>Request Forgot Password Link</h3>
         <div class="error-message" v-text="passwordError"></div>
         <input type="text" name="email" placeholder="Email" v-model="passwordEmail">
-        <input type="submit" :class="{'disabled': !passwordEmail}" @click="user_passwordreset(passwordEmail)" value='Reset Password'>
+        <input type="submit" :class="{'disabled': !passwordEmail}" @click="user_passwordreset(passwordEmail)" value='Email Login Link'>
         <div class="links"><a @click="active = 'login'"> <i class="fa fa-arrow-left"></i> Back to Login</a></div>
       </div>
     </div>
@@ -60,7 +60,8 @@
         })
       },
       user_passwordreset: function(email) {
-        alert("A password reset email has been sent to: "+ email)
+        this.auth.forgotPassword(email)
+        alert("A login link has been sent by email to: "+ email)
         this.active = 'login'
       }
 
