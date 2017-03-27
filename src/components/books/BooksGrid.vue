@@ -19,23 +19,46 @@ export default {
   data () {
     return {
       headers: [
-          {   title: 'Book Title', path: 'title', addClass: 'booktitle',
-            html: function (val) {
-              return "<i class='fa fa-book'></i>&nbsp;&nbsp;"+ val     },
-          }, { title: 'Author', path: 'author', addClass: 'author'
-          }, { title: 'Subject', path: 'category', addClass: 'category'
-          }, { title: 'Size', path: 'length',
-            render: function (val) {
-              return '~'+Math.round(val / 300) +'pg'
-            },
-          }, { title: 'Difficulty', path: 'difficulty',
-          }, { title: 'Published', path: 'published',
-            html: function (val) {
-              return "<i class='fa "+ (val ? "fa-check-square-o" : "fa-square-o") + "'></i>" },
-          }, { title: 'Type', path: 'pubType', },
-        ],
+        {
+          title: 'Book Title',
+          path: 'title',
+          addClass: 'booktitle',
+          html (val) {
+            return `<i class='fa fa-book'></i>&nbsp;&nbsp;${val}`
+          }
+        }, {
+          title: 'Author',
+          path: 'author',
+          addClass: 'author'
+        }, {
+          title: 'Subject',
+          path: 'category',
+          addClass: 'category'
+        }, {
+          title: 'Size',
+          path: 'length',
+          render (val) {
+            // return '~'+Math.round(val / 300) +'pg'
+            return `~${Math.round(val / 300)}pg`
+          }
+        }, {
+          title: 'Difficulty',
+          path: 'difficulty'
+        }, {
+          title: 'Published',
+          path: 'published',
+          html (val) {
+            // return `<i class='fa ${(val ? 'fa-check-square-o' : 'fa-square-o')}></i>`
+            // return "<i class='fa "+ (val ? "fa-check-square-o" : "fa-square-o") + "'></i>"
+            return '<i class="fa ' + (val ? 'fa-check-square-o' : 'fa-square-o') + '"></i>'
+          }
+        }, {
+          title: 'Type',
+          path: 'pubType'
+        }
+      ],
       idField: 'bookid',
-      selectedBooks: [],
+      selectedBooks: []
     }
   },
   components: {
@@ -44,38 +67,38 @@ export default {
   methods: {
     // A row in the table has been clicked. Returns Vue data object bound to the row.
     rowClick (ev) {
-      //console.log(ev.bookid)
+      // console.log(ev.bookid)
       let bookid = ev.bookid
       if (bookid) {
-        this.selectedBooks = [bookid];
+        this.selectedBooks = [bookid]
         this.$store.commit('setCurrentBook', bookid)
-        this.$router.replace({ path: '/books/'+ bookid })
+        this.$router.replace({ path: '/books/' + bookid })
       }
-    },
-    setFilter: function(filter) {
-      filterQuery = filter.trim();
-    },
+    }
+    // setFilter (filter) {
+      // filterQuery = filter.trim()
+    // }
   },
   computed: {
-    books() { // filtered list of books
+    books () { // filtered list of books
       let state = this.$store.state
       let books = this.$store.getters.allBooks
       return books
-        .filter(book => book.meta.lang == state.bookFilters.lang)
-        .filter(book => book.meta.importStatus == state.bookFilters.importStatus)
+        .filter(book => book.meta.lang === state.bookFilters.lang)
+        .filter(book => book.meta.importStatus === state.bookFilters.importStatus)
         .filter(book => {
           let str = `${book.meta.title} ${book.meta.bookid} ${book.meta.category} ${book.meta.description} ${book.meta.subtitle} ${book.meta.author}`
-          str = str.toLowerCase();
+          str = str.toLowerCase()
           let find = state.bookFilters.filter.toLowerCase().trim()
-          return (str.indexOf(find)>-1)
+          return (str.indexOf(find) > -1)
         })
     },
-    booksMeta() { // because our grid does not work with nested values
+    booksMeta () { // because our grid does not work with nested values
       let result = []
       for (let book of this.books) result.push(book.meta)
       return result
     }
-  },
+  }
 }
 </script>
 
