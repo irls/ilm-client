@@ -36,6 +36,9 @@ import BookEdit_JSON from './books/BookEdit_JSON'
 import BookEdit_Display from './books/BookEdit_Display'
 
 export default {
+
+  name: 'Books',
+
   data () {
     return {
       metaVisible: false,
@@ -146,7 +149,7 @@ div.bar {
 }
 
 .scrollable {
-  height: auto;  
+  height: auto;
   overflow: hidden;
   backface-visibility: hidden;
   overflow-y: auto !important;
