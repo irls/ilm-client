@@ -44,7 +44,7 @@ Features:
           <li :class="{disabled: (currentPage === 0)}"><a href="#" @click="previous">Previous</a></li>
           <template>
             <li v-for="page in noPages" :class="{active: page === currentPage}">
-              <a href="#" @click="(e) => goToPage(page, e)">{{page + 1}}</a>
+              <a href="#" @click="goToPage(page, $event)">{{page + 1}}</a>
             </li>
           </template>
           <li :class="{disabled: (currentPage + 1 === noPages.length)}"><a href="#" @click="next">Next</a></li>
@@ -145,7 +145,7 @@ Features:
           ++this.currentPage
         }
       },
-      goToPage: function (page, e) { // Go to a specific page click handler
+      goToPage (page, e) { // Go to a specific page click handler
         e.preventDefault()
         this.currentPage = page
       },
