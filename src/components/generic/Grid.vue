@@ -150,10 +150,10 @@ Features:
         this.currentPage = page
       },
       isSelected: function (id) {
-        return (this.selected.indexOf(id)>-1);
+        return (this.selected.indexOf(id) > -1)
       },
       isVisible: function (id) {
-        //console.log ('limiteddata: ', this.computed.limitedData)
+        // console.log ('limiteddata: ', this.computed.limitedData)
       }
     }
   }
