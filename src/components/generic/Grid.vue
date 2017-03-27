@@ -66,9 +66,9 @@ Features:
       idField: String, // name of field to used as a unique id
       selected: Array // list of
     },
-    data: function () {
+    data () {
       var sortOrders = {}
-      this.columns.forEach(function (key) {
+      this.columns.forEach(key => {
         sortOrders[key.path] = 1
       })
       return {
@@ -78,39 +78,39 @@ Features:
       }
     },
     watch: {
-      'filterKey': function (a, b) { // Reset to page 0 when search changes
+      'filterKey' (a, b) { // Reset to page 0 when search changes
         this.currentPage = 0
       },
-      'rowsPerPage': function (a, b) { // Reset to page 0 when items per page changes
+      'rowsPerPage' (a, b) { // Reset to page 0 when items per page changes
         this.currentPage = 0
       }
     },
     computed: {
-      noPages: function () { // No. pages as an array. Used for rendering paginator
+      noPages () { // No. pages as an array. Used for rendering paginator
         let pages = Math.ceil(this.filteredData.length / this.rowsPerPage)
         return [...Array(pages).keys()]
       },
-      emptyTableText: function () { // Default text shown when there's no data in the table
+      emptyTableText () { // Default text shown when there's no data in the table
         if (this.customEmptyTableText) {
           return this.customEmptyTableText
         } else {
           return 'No data to show'
         }
       },
-      filteredData: function () { // Data filtered through the local search
+      filteredData () { // Data filtered through the local search
         var sortKey = this.sortKey
         var filterKey = this.filterKey && this.filterKey.toLowerCase()
         var order = this.sortOrders[sortKey] || 1
         var data = this.data
         if (filterKey) {
-          data = data.filter(function (row) {
-            return Object.keys(row).some(function (key) {
+          data = data.filter(row => {
+            return Object.keys(row).some(key => {
               return String(row[key]).toLowerCase().indexOf(filterKey) > -1
             })
           })
         }
         if (sortKey) { // If sort specified, sort
-          data = data.slice().sort(function (a, b) {
+          data = data.slice().sort((a, b) => {
             a = a[sortKey]
             b = b[sortKey]
             return (a === b ? 0 : a > b ? 1 : -1) * order
@@ -118,7 +118,7 @@ Features:
         }
         return data
       },
-      limitedData: function () { // Data limited to a page
+      limitedData () { // Data limited to a page
         return this.filteredData.slice(
           this.currentPage * this.rowsPerPage,
           this.rowsPerPage * (this.currentPage + 1)
@@ -126,20 +126,20 @@ Features:
       }
     },
     methods: {
-      sortBy: function (key) { // header row click handler. Sort by column
+      sortBy (key) { // header row click handler. Sort by column
         this.sortKey = key
         this.sortOrders[key] = this.sortOrders[key] * -1
       },
-      rowEvent: function (entry) { // Event broadcase from table with clicked element
+      rowEvent (entry) { // Event broadcase from table with clicked element
         this.$emit('clickRow', entry)
       },
-      previous: function (e) { // Previous page click handler
+      previous (e) { // Previous page click handler
         e.preventDefault()
         if (this.currentPage !== 0) {
           --this.currentPage
         }
       },
-      next: function (e) { // Next page click handler
+      next (e) { // Next page click handler
         e.preventDefault()
         if (this.currentPage + 1 !== this.noPages.length) {
           ++this.currentPage
@@ -149,10 +149,10 @@ Features:
         e.preventDefault()
         this.currentPage = page
       },
-      isSelected: function (id) {
+      isSelected (id) {
         return (this.selected.indexOf(id) > -1)
       },
-      isVisible: function (id) {
+      isVisible (id) {
         // console.log ('limiteddata: ', this.computed.limitedData)
       }
     }
