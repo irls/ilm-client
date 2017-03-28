@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <MainMenu></MainMenu>
-    <router-view></router-view>
+    <MainMenu v-if="$store.state.isLoggedIn"></MainMenu>
+    <router-view v-if="$store.state.isLoggedIn"></router-view>
     <Login v-if="!$store.state.isLoggedIn"></Login>
   </div>
 </template>
