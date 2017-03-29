@@ -109,7 +109,6 @@ export default {
     axios.get(API_ALLUSERS)
     .then(response => {
       this.users = response.data.users
-      console.log(response.data)
     })
     .catch(err => {
       console.log('Error: ', err)
