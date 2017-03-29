@@ -1,5 +1,5 @@
 <template>
-  <select v-model="selectedValue" class="form-control">
+  <select v-model="selectedValue">
     <option disabled value="">Select Privilege</option>
     <option
       v-for="option in options"

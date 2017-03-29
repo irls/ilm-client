@@ -1,5 +1,5 @@
 <template>
-  <select v-model="selectedValue" class="form-control">
+  <select v-model="selectedValue">
     <option disabled value="">Editor Languages</option>
     <option
       v-for="option in options"
