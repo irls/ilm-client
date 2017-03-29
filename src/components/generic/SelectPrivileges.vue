@@ -14,7 +14,7 @@ import PRIVILEGES from '../../../static/privileges.json'
 
 export default {
 
-  name: 'SelectLanguages',
+  name: 'SelectPrivilege',
 
   data () {
     return {
