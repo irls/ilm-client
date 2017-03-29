@@ -15,14 +15,14 @@
           <div class="col-md-7 user-right">
             <i class="fa fa-calendar-check-o"></i><a href="#">All Work History</a>
             <span>Filter: </span><input type="text" v-model="filterKey">
-            <a href="#"><i class="fa fa-user-plus"></i>New User</a>
+            <a href="#" @click="userAddModalActive = true"><i class="fa fa-user-plus"></i>New User</a>
           </div>
         </div>
       </div>
     </div>
 
     <form class="user-form">
-      <div v-for="user in filteredUsers" class="user-form-box">
+      <div v-for="user in pagedUsers" class="user-form-box">
         <div class="t-box"><span><i class="fa fa-user"></i>{{user.name}}</span></div>
         <div class="t-box"><span>{{user.email}}</span></div>
         <div class="t-box">
@@ -46,6 +46,18 @@
       </div>
     </form>
 
+    <pagination
+      :length="filteredUsers.length"
+      :currentPage="currentPage"
+      :rowsPerPage="rowsPerPage"
+      @goToPage="page => { currentPage = page }"
+    ></pagination>
+
+    <user-add-modal
+      :show="userAddModalActive"
+      @closed="userAddModalActive = false"
+    ></user-add-modal>
+
   </div>
 </template>
 
@@ -54,6 +66,9 @@
 import axios from 'axios'
 import SelectPrivileges from './generic/SelectPrivileges'
 import SelectLanguages from './generic/SelectLanguages'
+import UserAddModal from './users/UserAddModal'
+import Pagination from './generic/Pagination'
+import { filteredData, pagedData } from '../filters'
 
 const API_ALLUSERS = '/static/users.json'
 
@@ -62,32 +77,32 @@ export default {
   name: 'Users',
 
   components: {
+    UserAddModal,
     SelectPrivileges,
-    SelectLanguages
+    SelectLanguages,
+    Pagination
   },
 
   data () {
     return {
       users: [],
-      filterKey: ''
+      filterKey: '',
+      currentPage: 0,
+      rowsPerPage: 2,
+      userAddModalActive: false
     }
   },
 
   computed: {
 
-    // TODO: replace with mixin or something
+    pagedUsers (val) {
+      return pagedData(this.filteredUsers, this.currentPage, this.rowsPerPage)
+    },
+
     filteredUsers () {
-      var filterKey = this.filterKey && this.filterKey.toLowerCase()
-      var users = this.users
-      if (filterKey) {
-        users = users.filter(row => {
-          return Object.keys(row).some(key => {
-            return String(row[key]).toLowerCase().indexOf(filterKey) > -1
-          })
-        })
-      }
-      return users
+      return filteredData(this.users, this.filterKey)
     }
+
   },
 
   created () {
@@ -99,16 +114,13 @@ export default {
     .catch(err => {
       console.log('Error: ', err)
     })
-  },
-
-  methods: {
-
   }
+
 }
 </script>
 
 <style scoped>
-
+/* TODO remove unnecessary code */
 .t-box i,div#no-more-tables p,p.user-profile i,td.user-table i {
     vertical-align: middle
 }
