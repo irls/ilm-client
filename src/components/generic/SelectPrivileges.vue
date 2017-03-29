@@ -1,5 +1,6 @@
 <template>
-  <select v-model="selected" class="form-control">
+  <select v-model="selectedValue" class="form-control">
+    <option disabled value="">Select Privilege</option>
     <option
       v-for="option in options"
       :value="option.rank">
@@ -17,7 +18,8 @@ export default {
 
   data () {
     return {
-      options: PRIVILEGES
+      options: PRIVILEGES,
+      selectedValue: ''
     }
   },
 
@@ -25,10 +27,19 @@ export default {
     'selected'
   ],
 
-  methods: {
+
+  watch: {
+    selected (val) {
+      this.selectedValue = this.selected
+    },
+    selectedValue (val) {
+      this.$emit('select', val)
+    }
   },
 
-  created () {
+  mounted () {
+    this.selectedValue = this.selected
   }
+
 }
 </script>

@@ -28,11 +28,13 @@
         <div class="t-box">
           <select-privileges
             :selected="user.privilege"
+            @select="val => { user.privilege = val }"
           ></select-privileges>
         </div>
         <div class="t-box">
           <select-languages
             :selected="user.language"
+            @select="val => { user.language = val }"
           ></select-languages>
         </div>
         <div class="t-box"><span><i class="fa fa-calendar-check-o"></i>Work History</span></div>

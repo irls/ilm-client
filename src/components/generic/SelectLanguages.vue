@@ -1,5 +1,5 @@
 <template>
-  <select v-model="selected" class="form-control">
+  <select v-model="selectedValue" class="form-control">
     <option disabled value="">Editor Languages</option>
     <option
       v-for="option in options"
@@ -18,7 +18,8 @@ export default {
 
   data () {
     return {
-      options: LANGUAGES
+      options: LANGUAGES,
+      selectedValue: ''
     }
   },
 
@@ -26,10 +27,18 @@ export default {
     'selected'
   ],
 
-  methods: {
+  watch: {
+    selected (val) {
+      this.selectedValue = this.selected
+    },
+    selectedValue (val) {
+      this.$emit('select', val)
+    }
   },
 
-  created () {
+  mounted () {
+    this.selectedValue = this.selected
   }
+
 }
 </script>
