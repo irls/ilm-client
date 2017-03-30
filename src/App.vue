@@ -51,5 +51,6 @@ export default {
   }
   body {
     background-color: #f2f1f1;
+    padding: 5px !important;
   }
 </style>
