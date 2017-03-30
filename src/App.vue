@@ -35,7 +35,7 @@ export default {
 
 
 <style>
-  #app {width: 98%; margin-left: 1%; margin-right: 1%}
+  /*#app {width: 98%; margin-left: 1%; margin-right: 1%}*/
   html {
       overflow: scroll;
       overflow-x: hidden;
@@ -48,5 +48,8 @@ export default {
   /* optional: show position indicator in red */
   ::-webkit-scrollbar-thumb {
       background: #FF0000;
+  }
+  body {
+    background-color: #f2f1f1;
   }
 </style>
