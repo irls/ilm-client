@@ -27,7 +27,7 @@ export default new Router({
     {
       path: '/books/edit/:bookid',
       component: Books
-    },
+    }, 
 
     {
       path: '/users',
@@ -52,7 +52,7 @@ export default new Router({
 
 
 
-
+    
     { path: '*', redirect: '/books' }
 
   ]

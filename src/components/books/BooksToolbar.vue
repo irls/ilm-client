@@ -1,4 +1,5 @@
 <template>
+<div id="toolbar">
 <table class="toolbartable"><tr>
 
   <td>
@@ -15,9 +16,14 @@
     </button>  &nbsp;
 
     <!-- Import Button -->
-    <router-link to="/books/import" tag='button' class='btn btn-default'>
-      <i class="glyphicon glyphicon-plus" @click='importBook'></i> Import
-    </router-link>   &nbsp;
+    <!--<router-link to="/books/import" tag='button' class='btn btn-default'>
+      <i class="glyphicon glyphicon-plus"></i> Import
+    </router-link>   &nbsp; -->
+
+    <button id="show-modal" @click="importBook"
+    class='btn btn-default'>
+      <i class="fa fa-pencil fa-lg"></i>  Import
+    </button>  &nbsp;
 
     <!-- Meta Filter -->
     <input type="text" @keyup="booksFilterChange" class="form-control" placeholder="Filter"></input> &nbsp;
@@ -41,15 +47,35 @@
   </td>
 
 </tr></table>
+
+  <BookImport v-if="showModal" @close="showModal = false">
+    <!--
+      you can use custom content here to overwrite
+      default content
+    -->
+    
+  </BookImport>
+
+</div>
 </template>
 
 <script>
+
+import BookImport from './BookImport'
+
 export default {
+  name: 'toolbar',
+  components: {
+    BookImport
+  },
+
   data () {
     return {
       filterStr: '',
+      showModal: false
     }
   },
+  
   methods: {
     booksFilterChange: function(el) {
       this.$store.commit('setCurrentBookFilter', {filter: el.target.value});
@@ -67,9 +93,12 @@ export default {
       //console.log('/books/edit/'+ this.$store.state.currentBookid)
       this.$router.push('/books/edit/'+ this.$store.state.currentBookid)
     },
-    importBook() {
 
+    importBook() {
+      console.log("event ok");
+      this.showModal = true;
     }
+
   },
 }
 </script>

@@ -12,6 +12,18 @@
         <div style='clear: both'> </div>
       </div>
 
+      <div class="download-area col-sm-12">
+        <button id="show-modal" @click="downloadBook" class="btn btn-primary">Download</button>
+      </div>
+
+      <BookDownload v-if="showModal" @close="showModal = false">
+          <!--
+            you can use custom content here to overwrite
+            default content
+          -->
+    
+      </BookDownload>
+
       <div class="book-listing">
           <fieldset>
               <legend>Book Metadata </legend>
@@ -107,7 +119,15 @@
 </template>
 
 <script>
+
+import BookDownload from './BookDownload'
+
+
 export default {
+  name: 'bookmeta',
+  components: {
+    BookDownload
+  },
   data () {
     return {
       pubTypes: [
@@ -129,9 +149,11 @@ export default {
       numberingOptions: ['x', 'x.x', 'x.x.x'],
       dirty: {
       },
-      visible: true
+      visible: true,
+      showModal: false
     }
   },
+  
   computed: {
     currentBook: function () {
       return this.$store.getters.currentBook
@@ -160,6 +182,10 @@ export default {
     },
     toggleVisibility: function (){
       this.visible = !this.visible
+    },
+
+    downloadBook() {
+      this.showModal = true;
     }
 
   }
@@ -170,6 +196,14 @@ export default {
 <style scoped src='./css/BookProperties.css'></style>
 
 <style scoped>
+
+
+  .download-area {
+    
+  }
+  .download-area button {
+    float: right;
+  }
   /* Wrapper around entire side editor */
   .sidebar { margin-top:0px; position: relative; margin-left:0; padding-left:0;}
 
