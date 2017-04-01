@@ -1,0 +1,41 @@
+{
+  "users": [
+    {
+      "name": "Sam Spade 1",
+      "email": "sam992@gmail.com",
+      "privilege": 12,
+      "language": "",
+      "enable": true
+    }, {
+      "name": "Sam Spade 2",
+      "email": "sam992@gmail.com",
+      "privilege": 13,
+      "language": "es",
+      "enable": true
+    }, {
+      "name": "Sam Spade 3",
+      "email": "sam992@gmail.com",
+      "privilege": 15,
+      "language": "du",
+      "enable": false
+    }, {
+      "name": "Sam Spade 4",
+      "email": "sam992@gmail.com",
+      "privilege": 16,
+      "language": "en",
+      "enable": true
+    }, {
+      "name": "Sam Spade 5",
+      "email": "sam992@gmail.com",
+      "privilege": 12,
+      "language": "en",
+      "enable": true
+    }, {
+      "name": "Sam Spade 6",
+      "email": "sam992@gmail.com",
+      "privilege": 12,
+      "language": "en",
+      "enable": true
+    }
+  ]
+}

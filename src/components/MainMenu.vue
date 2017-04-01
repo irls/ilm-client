@@ -52,7 +52,7 @@ export default {
   .navtable tr {vertical-align: top; font-size: 1.2em; }
   .navtable td {vertical-align: top; text-align: left;}
   .navtable td.logo {min-width: 20px; width: 20px;}
-    .logo img{max-width: 30px; margin:0; margin-left: -15px; margin-top: 2px; position: absolute;}
+    .logo img{max-width: 30px; margin:0; margin-left: -10px; margin-top: 2px; position: absolute;}
   .navtable td.menu {padding-left: 10px;}
   .navtable td.right {float: right; padding-right: 5px;}
 

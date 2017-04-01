@@ -1,0 +1,21 @@
+[
+  {
+    "rank": 12,
+    "name": "Admin"
+  }, {
+    "rank": 13,
+    "name": "Researcher"
+  }, {
+    "rank": 14,
+    "name": "Editor"
+  }, {
+    "rank": 15,
+    "name": "Voice Artist"
+  }, {
+    "rank": 16,
+    "name": "Audio Engineer"
+  }, {
+    "rank": 17,
+    "name": "Alignment"
+  }
+]

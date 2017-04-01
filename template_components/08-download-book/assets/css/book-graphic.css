@@ -1,0 +1,184 @@
+h4.modal-title {
+  text-align:left;
+  font-size:18px;
+  margin-top:17px;
+  display:inline-block;
+  float:left;
+  color:#00d1ff;
+}
+
+div.modal-header {
+  position:relative;
+}
+
+div.modal-body {
+  margin-top:20px;
+}
+
+.modal-footer {
+  padding:15px;
+  text-align:left;
+}
+
+h4.modal-title .fa-book {
+  font-size:30px;
+  margin-right:10px;
+  vertical-align:middle;
+}
+
+.modal-header {
+  border-bottom:1px solid #e5e5e5;
+}
+
+.book-cover img {
+  width:100%;
+}
+
+.book-list input {
+  margin-right:10px;
+  width:168px;
+}
+
+.book-list {
+  margin:5px 0;
+}
+
+.book-list img {
+  width:171px;
+  margin-right:6px;
+}
+
+.book-list span i:first-child {
+  font-size:17px;
+}
+
+.fa {
+  font-size:18px;
+}
+
+input {
+  border-radius:0;
+  border:1px solid #f1f2f3;
+  padding:5px;
+}
+
+.modal-dialog {
+  width:400px;
+  margin-top:10%;
+}
+
+select:focus, input:focus {
+  outline:none;
+  box-shadow:0 3px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+.right-sidebar i {
+  font-size:23px;
+}
+
+h4.modal-title {
+  text-align:left;
+  font-size:18px;
+  margin-top:17px;
+  display:inline-block;
+  float:left;
+  color:#00d1ff;
+}
+
+div.modal-header {
+  position:relative;
+  border-bottom:0px solid #e5e5e5;
+}
+
+div.modal-body {
+  margin-top:20px;
+}
+
+h4.modal-title {
+  text-align:left;
+  font-size:18px;
+  margin-top:17px;
+  display:inline-block;
+  float:left;
+  color:#00d1ff;
+}
+
+div.modal-header {
+  position:relative;
+}
+
+div.modal-body {
+  margin-top:20px;
+}
+
+.modal-footer {
+  padding:15px;
+  text-align:left;
+}
+
+h4.modal-title .fa-book {
+  font-size:30px;
+  margin-right:10px;
+  vertical-align:middle;
+}
+
+.modal-header {
+  border-bottom:1px solid #e5e5e5;
+}
+
+.fa {
+  font-size:18px;
+}
+
+input {
+  border-radius:0;
+  border:1px solid #f1f2f3;
+  padding:5px;
+}
+
+.modal-dialog {
+  width:400px;
+  margin-top:10%;
+}
+
+select:focus, input:focus {
+  outline:none;
+  box-shadow:0 3px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+.tab-heading .row {
+  margin:0;
+}
+
+.fuller h1, h4 {
+  color:#777;
+}
+
+.fa {
+  font-size:18px;
+}
+
+input {
+  border-radius:0;
+  border:1px solid #f1f2f3;
+  padding:5px;
+}
+
+.modal-dialog {
+  width:400px;
+  margin-top:10%;
+}
+
+select:focus, input:focus {
+  outline:none;
+  box-shadow:0 3px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+.right-sidebar i {
+  font-size:23px;
+}
+
+input {
+  padding:6px;
+}
+
