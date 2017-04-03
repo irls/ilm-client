@@ -139,4 +139,9 @@ export default {
           height: 31px
           color: #333
           margin: 0 10px
+        .form-control
+          min-width: 312px
+          .btn-content
+            margin: 2px 0
+
 </style>
