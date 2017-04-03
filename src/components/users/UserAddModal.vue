@@ -13,15 +13,15 @@
           <input type="text" class="form-control" placeholder="Email" name="email">
       </div>
       <div class="form-group"><span class="input-group-addon"></span>
-        <select-privileges
-          :selected="selectePrivilege"
-          @select="val => { selectePrivilege = val }"
-        ></select-privileges>
+        <select-roles
+          :selected="selecteRoles"
+          @select="val => { selecteRoles = val }"
+        ></select-roles>
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-globe"></i></span>
         <select-languages
-          :selected="selecteLanguage"
-          @select="val => { selecteLanguage = val }"
+          :selected="selecteLanguages"
+          @select="val => { selecteLanguages = val }"
         ></select-languages>
       </div>
     </div>
@@ -35,7 +35,7 @@
 <script>
 
 import { modal } from 'vue-strap'
-import SelectPrivileges from './../generic/SelectPrivileges'
+import SelectRoles from './../generic/SelectRoles'
 import SelectLanguages from './../generic/SelectLanguages'
 import modalMixin from './../../mixins/modal'
 
@@ -47,7 +47,7 @@ export default {
 
   components: {
     modal,
-    SelectPrivileges,
+    SelectRoles,
     SelectLanguages
   },
 
@@ -57,15 +57,15 @@ export default {
 
   data () {
     return {
-      selectePrivilege: '',
-      selecteLanguage: ''
+      selecteRoles: [],
+      selecteLanguages: []
     }
   },
 
   watch: {
     show () {
-      this.selectePrivilege = ''
-      this.selecteLanguage = ''
+      this.selecteRoles = []
+      this.selecteLanguages = []
     }
   },
 

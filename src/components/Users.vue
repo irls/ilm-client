@@ -26,17 +26,15 @@
         <div class="t-box"><span><i class="fa fa-user"></i>{{user.name}}</span></div>
         <div class="t-box"><span>{{user.email}}</span></div>
         <div class="t-box">
-          <select-privileges
-            class="form-control"
-            :selected="user.privilege"
-            @select="val => { user.privilege = val }"
-          ></select-privileges>
+          <select-roles
+            :selected="user.roles"
+            @select="val => { user.roles = val }"
+          ></select-roles>
         </div>
         <div class="t-box">
           <select-languages
-            class="form-control"
-            :selected="user.language"
-            @select="val => { user.language = val }"
+            :selected="user.languages"
+            @select="val => { user.languages = val }"
           ></select-languages>
         </div>
         <div class="t-box"><span><i class="fa fa-calendar-check-o"></i>Work History</span></div>
@@ -66,7 +64,7 @@
 <script>
 
 import axios from 'axios'
-import SelectPrivileges from './generic/SelectPrivileges'
+import SelectRoles from './generic/SelectRoles'
 import SelectLanguages from './generic/SelectLanguages'
 import UserAddModal from './users/UserAddModal'
 import Pagination from './generic/Pagination'
@@ -80,7 +78,7 @@ export default {
 
   components: {
     UserAddModal,
-    SelectPrivileges,
+    SelectRoles,
     SelectLanguages,
     Pagination
   },
@@ -176,9 +174,9 @@ export default {
       span
         display: inline-block
         margin: 6px 0
-      select
-        min-width: 134px
-        max-width: 100%
-        border: 1px solid #efecec!important
+      .form-control
+        width: 150px
+        .btn-content
+          margin: 2px 0
 
 </style>
