@@ -24,8 +24,10 @@
                 <div class="col-sm-9">
                   <input type="text" class="form-control" placeholder="Browse for File"><br>
                 </div>
-                <div class="col-sm-3">
-                  <button class="btn btn-default">Browse</button><br>
+                <div id="file_open_div" class="col-sm-3">
+                  <input type="file" class="file_open">
+                  <button id="btn_open" class="btn btn-default" @change="onFileChange">Browse</button><br>
+                  
                 </div>       
               </div>
 
@@ -54,22 +56,53 @@
       </div>
     </div>
   </transition>
+
 </template>
 
 
-
-
 <script>
+
+import axios from 'axios'
+
+const BASE_URL = 'http://localhost:8080';
+
 export default {
   data() {
     return {
-        
+        image: ''
     }
   },
   components: {
 
   },
   methods: {
+
+    onFileChange(e) {
+      console.log("upload");
+      var fieldName = e.target.name;
+      var fileList = e.target.files;
+      console.log(fieldName);
+      console.log(fileList);
+      if (fileList.length)
+        return;
+      const formData = new FormData();
+      Array
+        .from(Array(fileList.length).keys())
+        .map(x => {
+          formData.append(fieldName, fileList[x], fileList[x].name);
+        });
+      upload(formData);
+    },
+
+    upload(formData) {
+      const url = `${BASE_URL}/upload_books/upload`;
+      return axios.post(url, formData)
+      // get data
+      .then(x => x.data)
+      // add url field
+      .then(x => x.map(bk => Object.assign({},
+          bk, { url: `${BASE_URL}/upload_books/${bk.id}` })));
+    }
 
   },
 }
@@ -139,6 +172,18 @@ export default {
   padding-right:10px;
   border-bottom : solid 1px lightgrey;
   margin-bottom : 10px;
+}
+
+.file_open {
+  opacity: 0;
+  position: absolute;
+  top: 5px;
+  left: -80px;
+  cursor:pointer;
+}
+
+#btn_open {
+  cursor: pointer;
 }
 
 .header-title {

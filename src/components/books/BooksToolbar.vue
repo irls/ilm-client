@@ -48,12 +48,12 @@
 
 </tr></table>
 
+  <!-- Modal area -->
   <BookImport v-if="showModal" @close="showModal = false">
     <!--
       you can use custom content here to overwrite
       default content
-    -->
-    
+    -->    
   </BookImport>
 
 </div>

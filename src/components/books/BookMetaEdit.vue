@@ -21,7 +21,6 @@
             you can use custom content here to overwrite
             default content
           -->
-    
       </BookDownload>
 
       <div class="book-listing">
