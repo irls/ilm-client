@@ -19,18 +19,17 @@
 
           <div class="modal-body clearfix">
             <slot name="body">
-
+              <form enctype="multipart/form-data">
               <div class="info-field">
                 <div class="col-sm-9">
                   <input type="text" class="form-control" placeholder="Browse for File"><br>
                 </div>
                 <div id="file_open_div" class="col-sm-3">
-                  <input type="file" class="file_open">
-                  <button id="btn_open" class="btn btn-default" @change="onFileChange">Browse</button><br>
-                  
+                  <input type="file" class="file_open" @change="onFileChange">
+                  <button id="btn_open" class="btn btn-default">Browse</button><br> 
                 </div>       
               </div>
-
+              </form>
               <div class="info-field">
                 <div class="col-sm-9">
                   <input type="text" class="form-control" placeholder="URL">
@@ -73,16 +72,16 @@ export default {
     }
   },
   components: {
-
+    axios
   },
   methods: {
 
     onFileChange(e) {
       console.log("upload");
-      var fieldName = e.target.name;
+      var fieldName = "upload_book";
       var fileList = e.target.files;
       console.log(fieldName);
-      console.log(fileList);
+      console.log(fileList[0]);
       if (fileList.length)
         return;
       const formData = new FormData();
@@ -91,6 +90,7 @@ export default {
         .map(x => {
           formData.append(fieldName, fileList[x], fileList[x].name);
         });
+      alert(formData);
       upload(formData);
     },
 
