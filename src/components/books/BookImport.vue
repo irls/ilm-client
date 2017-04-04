@@ -14,8 +14,6 @@
           <div class="modal-body clearfix">
 
             <h4> Book Text </h4>
-<!--
-            <form enctype="multipart/form-data"> -->
 
               <div class="col-sm-12">
                 <div class="col-sm-7">
@@ -24,12 +22,14 @@
                     <input type="text" class="form-control" placeholder="URL" v-model="bookURL"/>
                   </div>
                 </div>
+
                 <div class="col-sm-5">
                   or &nbsp;&nbsp;&nbsp;
                   <label class='btn btn-default' type="file">
                     <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
                     <input type="file" v-show="false" @change="setBookFile" accept=".zip,.htm,.txt,.ocn">
                   </label>
+
                 </div>
                 <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
               </div>
@@ -73,9 +73,7 @@
                 <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
               </button>
 
-            <!-- </form> -->
           </div>
-
         </div>
       </div>
     </div>
