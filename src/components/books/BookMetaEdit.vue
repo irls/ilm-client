@@ -3,7 +3,7 @@
 
     <div id='bookmeta' v-if="currentBook">
       <div class='booktopinfo'>
-        <div class='coverimg'><img class='coverimg' v-bind:src="currentBook.meta.coverimg" /></div>
+        <div class='coverimg' @click="bookEditCoverModalActive = true"><img class='coverimg' v-bind:src="currentBook.meta.coverimg" /></div>
         <h4 class='title'>{{ currentBook.meta.title }}</h4>
         <h5 class='subtitle' v-if='currentBook.meta.subtitle'>{{ currentBook.meta.subtitle }}</h5>
         <h5 class='author'>{{ currentBook.meta.author }},
@@ -21,6 +21,10 @@
             you can use custom content here to overwrite
             default content
           -->
+<<<<<<< HEAD
+=======
+
+>>>>>>> 453e7536c3fb199c19d0bd0a7d385c78742a9a94
       </BookDownload>
 
       <div class="book-listing">
@@ -113,6 +117,13 @@
           </form>
       </fieldset>
   </div>
+
+  <book-edit-cover-modal
+    :show="bookEditCoverModalActive"
+    @closed="bookEditCoverModalActive = false"
+    :img="currentBook.meta"
+  ></book-edit-cover-modal>
+
 </div>
 
 </template>
@@ -120,12 +131,13 @@
 <script>
 
 import BookDownload from './BookDownload'
-
+import BookEditCoverModal from './BookEditCoverModal'
 
 export default {
   name: 'bookmeta',
   components: {
-    BookDownload
+    BookDownload,
+    BookEditCoverModal
   },
   data () {
     return {
@@ -149,10 +161,11 @@ export default {
       dirty: {
       },
       visible: true,
-      showModal: false
+      showModal: false,
+      bookEditCoverModalActive: false
     }
   },
-  
+
   computed: {
     currentBook: function () {
       return this.$store.getters.currentBook
@@ -198,7 +211,7 @@ export default {
 
 
   .download-area {
-    
+
   }
   .download-area button {
     float: right;

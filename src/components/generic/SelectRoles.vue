@@ -2,22 +2,23 @@
   <v-select
     :options="options"
     options-label="name"
-    options-value="code"
+    options-value="rank"
     v-model="selectedValue"
-    name="languages[]"
+    name="roles[]"
     :search="search"
     multiple
-    :placeholder="'Editor Languages'"
+    :placeholder="'Select Roles'"
   ></v-select>
 </template>
+
 <script>
 
 import { select } from 'vue-strap'
-import LANGUAGES from '../../../static/languages.json'
+import ROLES from '../../../static/roles.json'
 
 export default {
 
-  name: 'SelectLanguages',
+  name: 'SelectRoles',
 
   components: {
     'vSelect': select
@@ -25,7 +26,7 @@ export default {
 
   data () {
     return {
-      options: LANGUAGES,
+      options: ROLES,
       selectedValue: [],
       search: ''
     }
@@ -34,6 +35,7 @@ export default {
   props: [
     'selected'
   ],
+
 
   watch: {
     selected (val) {
