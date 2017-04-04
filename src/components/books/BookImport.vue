@@ -12,9 +12,7 @@
           </div>
 
           <div class="modal-body clearfix">
-
             <h4> Book Text </h4>
-
               <div class="col-sm-12">
                 <div class="col-sm-7">
                   <div class="input-group">
@@ -29,7 +27,6 @@
                     <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
                     <input type="file" v-show="false" @change="setBookFile" accept=".zip,.htm,.txt,.ocn">
                   </label>
-
                 </div>
                 <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
               </div>
@@ -83,9 +80,7 @@
 
 <script>
 
-import axios from 'axios'
 
-//const BASE_URL = 'http://localhost:8080';
 
 export default {
   data() {
@@ -104,17 +99,15 @@ export default {
     }
   },
   components: {
-    axios
+
   },
   computed: {
-
     selectedBookType: function() {
       return this.bookTypes[this.bookType];
     },
     saveDisabled: function() {
       return (!this.bookURL && !this. bookFile);
     }
-
   },
   methods: {
 
@@ -128,13 +121,17 @@ export default {
     },
 
     onFormSubmit() {
-      console.log(this.bookURL || this.bookFile, this.selectedBookType, this.audioURL || this.audioFile)
-      let api = this.$store.state.API_BASE + 'books'
-      console.log('API: '+ api)
       let auth = this.$store.state.auth
+      //console.log(auth);
 
+      let confirmed = auth.confirmRole('librarian');
+      console.log('Confirming role librarian: ', confirmed)
 
-      //console.log(this.$store.state.auth.roles)
+      let api = auth.getHttp()
+      api.post('/api/v1/books', { test: "hello world" }).then(function(response){
+         if (response.status===200) console.log(response.data)
+      }).catch(function(err){ console.log(err) });
+
 
     },
 

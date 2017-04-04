@@ -70,9 +70,7 @@
       // console.log("Setting up authentication object")
 
 
-      console.log(process.env);
-
-
+      //console.log(process.env);
 
       this.auth.configure({
         // An optional URL to API server, by default a current window location is used.

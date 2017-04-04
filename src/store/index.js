@@ -15,16 +15,11 @@ export const store = new Vuex.Store({
     currentUser: {},
     currentSession: {},
     isLoggedIn: false,
-    auth: superlogin,
-
+    auth: superlogin, 
     books: [],
     currentBookid: '',
     bookFilters: {filter: '', lang: 'en', importStatus: 'shared'},
     editMode: 'Editor',
-    // ilmserver: superlogin,
-    // ilmSession: {},
-    // ilmAuthError: '',
-    // API_BASE: (location.port === 80) ? 'https://ilm.dev2.us/api/v1/' : 'http://localhost:3000/api/v1/'
   },
   getters: {
     allBooks(state) {
