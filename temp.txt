@@ -17,20 +17,19 @@
             </slot>
           </div>
 
-          
           <div class="modal-body clearfix">
             <slot name="body">
-              
+              <form enctype="multipart/form-data">
               <div class="info-field">
                 <div class="col-sm-9">
-                  <input type="text" class="form-control" placeholder="Browse for File" v-model="file_names"><br>
+                  <input type="text" class="form-control" placeholder="Browse for File"><br>
                 </div>
                 <div id="file_open_div" class="col-sm-3">
                   <input type="file" class="file_open" @change="onFileChange">
                   <button id="btn_open" class="btn btn-default">Browse</button><br> 
                 </div>       
               </div>
-              
+              </form>
               <div class="info-field">
                 <div class="col-sm-9">
                   <input type="text" class="form-control" placeholder="URL">
@@ -49,12 +48,9 @@
               <div class="dropbox">
               </div>
               <br>
-              
               <button class="btn btn-default modal-default-button" @click="$emit('close')">Close</button>
-              <button class="btn btn-default" @click="onUpload">Upload</button>&nbsp;&nbsp;&nbsp;
             </slot>
           </div>
-          
         </div>
       </div>
     </div>
@@ -65,35 +61,47 @@
 
 <script>
 
-const data = new FormData();
+import axios from 'axios'
+
+const BASE_URL = 'http://localhost:3000';
 
 export default {
   data() {
     return {
-      file_names : ''
+        image: ''
     }
   },
   components: {
-    
+    axios
   },
   methods: {
 
-    onFileChange(e) {
-      var files = e.target.files || e.dataTransfer.files;
-      if (!files.length)
-        return;
-      data.set('files', files);
-      this.file_names = files[0].name;
+    upload(formData) {
+      const url = `${BASE_URL}/books`;
+      return axios.post(url, formData)
+      // get data
+      .then(x => x.data)
+      // add url field
+      .then(x => x.map(bk => Object.assign({},
+          bk, { url: `${BASE_URL}/books/${bk.id}` })));
     },
 
-    onUpload() {
-      if (!data)
+    onFileChange(e) {
+      console.log("upload");
+      var fieldName = "upload_book";
+      var fileList = e.target.files;
+      console.log(fieldName);
+      console.log(fileList[0]);
+      if (fileList.length == 0)
         return;
-      this.$http.post('http://localhost:3000/api/v1/books', data).then((response) => {
-        // result
-        alert(response.toString());
-        
-      });
+      const formData = new FormData();
+      Array
+        .from(Array(fileList.length).keys())
+        .map(x => {
+          formData.append(fieldName, fileList[x], fileList[x].name);
+        });
+      console.log(formData);
+      this.upload(formData);
     }
 
   },

@@ -3,6 +3,7 @@ import App from './App'
 import router from './router'
 import { store } from './store'
 import { sync } from 'vuex-router-sync'
+import VueResource from 'vue-resource'
 
 sync(store, router)
 
@@ -18,3 +19,5 @@ new Vue({
     //this.$store.dispatch('ilmAuth')
   }
 })
+
+Vue.use(VueResource);
