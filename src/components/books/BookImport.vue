@@ -5,21 +5,22 @@
         <div class="modal-container">
 
           <div class="modal-header">
-            <slot name="header">
+            <!-- <slot name="header">
               <div class="import-title">
-                <label>Book Import</label>
+                <label>Book Imports</label>
               </div>
-            </slot>
+            </slot> -->
             <slot name="header">
               <div class="header-title">
                 <label class="header-h"><img src='/static/bookstack.svg' class='book-logo'></label>
-                <h3 class="header-h">Import Book</h3></div>
+                <h3 class="header-h">Import New Book</h3></div>
             </slot>
           </div>
 
           
           <div class="modal-body clearfix">
             <slot name="body">
+<<<<<<< HEAD
               
               <div class="info-field">
                 <div class="col-sm-9">
@@ -34,16 +35,102 @@
               <div class="info-field">
                 <div class="col-sm-9">
                   <input type="text" class="form-control" placeholder="URL"><br>
+=======
+              <h4> Book Text </h4>
+
+              <form enctype="multipart/form-data">
+
+
+                <div class="col-sm-12">
+                  <div class="col-sm-7">
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                      <input type="text" class="form-control" placeholder="URL"/>
+                    </div>
+
+                  </div>
+                  <div class="col-sm-5">
+                    or &nbsp;&nbsp;&nbsp;
+                    <button class='btn btn-default' type="file">
+                      <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
+                    </button>
+                  </div>
+                  <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
                 </div>
-                <div class="col-sm-3">
-                  <button class="btn btn-default">Submit</button>
-                </div>       
-              </div>
-              
+
+                <br><br><br>
+
+                <div class="col-sm-12">
+                  <div class="col-sm-6">
+                    <div class="form-group">
+                      <label for="booktype">Book Type:</label>
+                      <select class="form-control" id="booktype">
+                        <option>Gutenberg HTML</option>
+                        <option>Ocean HTML</option>
+                        <option>Gutenberg Text</option>
+                        <option>Plain Text</option>
+                      </select>
+                    </div>
+                  </div>
+>>>>>>> 568e6f9e0eda46b7cfe9a0b531ccb94036e5618b
+                </div>
+                <br><br><br><br>
+
+
+                <h4> Book Audio </h4>
+
+
+                <div class="col-sm-12">
+                  <div class="col-sm-7">
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                      <input type="text" class="form-control" placeholder="URL"/>
+                    </div>
+                  </div>
+                  <div class="col-sm-5">
+                    or &nbsp;&nbsp;&nbsp;
+                    <button class='btn btn-default' type="file">
+                      <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
+                    </button>
+                  </div>
+                  <span class="help-block"> &nbsp; &nbsp; Audio file, ZIP files or playlist </span>
+                </div>
+
+                <br><br><br><br>
+
+                <button class="btn btn-primary modal-default-button" @click="$emit('close')">
+                  <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
+                </button>
+
+
+
+                <!-- <div class="info-field">
+                  <div class="col-sm-6">
+                    <input type="text" class="form-control" placeholder="URL">
+                    <button class="btn btn-default">Submit</button>
+                  </div>
+                  <div class="col-sm-2">
+
+                  </div>
+                </div>
+
+                <div class="info-field">
+                  <div class="col-sm-6">
+                    <input type="text" class="form-control" placeholder="Browse for File">
+                 </div>
+                  <div id="file_open_div" class="col-sm-2">
+                    <input type="file" class="file_open" @change="onFileChange">
+                    <button id="btn_open" class="btn btn-default">Browse</button>
+                  </div>
+                </div> -->
+
+              </form>
+
+
             </slot>
           </div>
 
-          <div class="modal-footer">
+          <!-- <div class="modal-footer">
             <slot name="footer">
               <label>Drop file here</label>
               <div class="dropbox">
@@ -53,8 +140,12 @@
               <button class="btn btn-default modal-default-button" @click="$emit('close')">Close</button>
               <button class="btn btn-default" @click="onUpload">Upload</button>&nbsp;&nbsp;&nbsp;
             </slot>
+<<<<<<< HEAD
           </div>
           
+=======
+          </div> -->
+>>>>>>> 568e6f9e0eda46b7cfe9a0b531ccb94036e5618b
         </div>
       </div>
     </div>
@@ -140,7 +231,8 @@ export default {
 
 .modal-header h3 {
   margin-top: 0;
-  color: #42b983;
+  color: #2e6da4;
+   /*#42b983;*/
 }
 
 .modal-header {
@@ -218,6 +310,11 @@ export default {
 .modal-leave-active .modal-container {
   -webkit-transform: scale(1.1);
   transform: scale(1.1);
+}
+
+
+.fa:hover {
+  color: inherit;
 }
 
 
