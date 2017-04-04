@@ -6,9 +6,9 @@
     <td class='menu'>
       <ul class="navlist">
         <router-link to="/books"   tag='li'><a>Books</a></router-link>
-        <router-link to="/users" class='presentation' tag='li'><a>Users</a></router-link>
-        <router-link to="/libraries" class='presentation' tag='li'><a>Libraries</a></router-link>
-        <router-link to="/assignments" class='presentation' tag='li'><a>Assignments</a></router-link>
+        <router-link to="/users" class='presentation' tag='li' v-show='$store.state.auth.confirmRole("admin")'><a>Users</a></router-link>
+        <router-link to="/libraries" class='presentation' tag='li'  ><a>Libraries</a></router-link>
+        <router-link to="/assignments" class='presentation' tag='li'  ><a>Assignments</a></router-link>
      </ul>
     </td>
     <td class='menu right'>
@@ -27,7 +27,11 @@
 export default {
   data () {
     return {
+
     }
+  },
+  computed: {
+
   }
 }
 </script>

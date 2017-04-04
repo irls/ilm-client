@@ -27,7 +27,7 @@
 </template>
 
 <script>
- import superlogin from 'superlogin-client'
+  import superlogin from 'superlogin-client'
 
   export default {
     data () {
@@ -69,11 +69,17 @@
     created: function() {
       // console.log("Setting up authentication object")
 
+
+      console.log(process.env);
+
+
+
       this.auth.configure({
         // An optional URL to API server, by default a current window location is used.
-        serverUrl: 'http://localhost:3000',
+        //serverUrl: 'http://localhost:3000',
+        serverUrl: process.env.ILM_API,
         // A list of API endpoints to automatically add the Authorization header to
-        endpoints: ['localhost:5984', 'ilm.cloudant.com'], // local couch db and cloudant
+        endpoints: [process.env.ILM_DB], // local couch db and cloudant
         // The authentication providers that are supported by your SuperLogin host
         providers: [],
         // Sets when to check if the session is expired during the setup. // false by default.

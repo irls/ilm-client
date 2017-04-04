@@ -8,3 +8,4 @@ test/e2e/reports
 selenium-debug.log
 config/env.dev.sh
 config/env.prod.sh
+Dockerfile
