@@ -20,22 +20,7 @@
           
           <div class="modal-body clearfix">
             <slot name="body">
-<<<<<<< HEAD
-              
-              <div class="info-field">
-                <div class="col-sm-9">
-                  <input type="text" class="form-control" placeholder="Browse for File" v-model="file_names"><br>
-                </div>
-                <div id="file_open_div" class="col-sm-3">
-                  <input type="file" class="file_open" @change="onFileChange">
-                  <button id="btn_open" class="btn btn-default">Browse</button><br> 
-                </div>       
-              </div>
-              
-              <div class="info-field">
-                <div class="col-sm-9">
-                  <input type="text" class="form-control" placeholder="URL"><br>
-=======
+
               <h4> Book Text </h4>
 
               <form enctype="multipart/form-data">
@@ -72,7 +57,7 @@
                       </select>
                     </div>
                   </div>
->>>>>>> 568e6f9e0eda46b7cfe9a0b531ccb94036e5618b
+
                 </div>
                 <br><br><br><br>
 
@@ -145,7 +130,7 @@
           
 =======
           </div> -->
->>>>>>> 568e6f9e0eda46b7cfe9a0b531ccb94036e5618b
+
         </div>
       </div>
     </div>
