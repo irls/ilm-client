@@ -33,7 +33,7 @@
               
               <div class="info-field">
                 <div class="col-sm-9">
-                  <input type="text" class="form-control" placeholder="URL">
+                  <input type="text" class="form-control" placeholder="URL"><br>
                 </div>
                 <div class="col-sm-3">
                   <button class="btn btn-default">Submit</button>
@@ -64,17 +64,18 @@
 
 
 <script>
-
+import Vue from 'vue'
 const data = new FormData();
 
 export default {
   data() {
     return {
-      file_names : ''
+      file_names : '',
+      auth: this.$store.state.auth,
     }
   },
   components: {
-    
+    Vue
   },
   methods: {
 
@@ -89,7 +90,13 @@ export default {
     onUpload() {
       if (!data)
         return;
-      this.$http.post('http://localhost:3000/api/v1/books', data).then((response) => {
+      console.log(this.auth._session.token);
+      console.log(this.auth._session.password);
+      
+      var url = 'http://localhost:3000/api/v1/books';
+      var author = 'Bearer ' + this.auth._session.token + ':' + this.auth._session.password;
+      Vue.http.headers.common['Authorization'] = author;
+      this.$http.post(url, data).then((response) => {
         // result
         alert(response.toString());
         
