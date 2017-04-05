@@ -145,7 +145,7 @@ export default {
       if (this.flag_book_browse) {
         if (this.flag_audio_browse) {
           // file browser of book, audio
-          this.$http.post(url, dataBook).then((response) => {
+          this.$http.post(url, { 'book': dataBook, 'audio': dataAudio, 'type_book': this.type_book }).then((response) => {
             // result
             alert(response.toString());
             
