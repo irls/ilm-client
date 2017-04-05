@@ -11,66 +11,83 @@
             </div>
           </div>
 
-          <div class="modal-body clearfix">
-            <h4> Book Text </h4>
-              <div class="col-sm-12">
-                <div class="col-sm-7">
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                    <input type="text" class="form-control" placeholder="URL" v-model="bookURL"/>
+
+
+            <div class="modal-body clearfix">
+
+            <form id="book_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent>
+
+              <h4> Book Text </h4>
+                <div class="col-sm-12">
+                  <div class="col-sm-7">
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                      <input type="text" class="form-control" placeholder="URL" v-model="bookURL"/>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-5">
+                    or &nbsp;&nbsp;&nbsp;
+                    <label class='btn btn-default' type="file">
+                      <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
+
+                      <input name="bookfiles" type="file" v-show="false" accept="application/zip,text/*" @change="onFilesChange($event)">
+
+                    </label>
+                  </div>
+                  <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
+                </div>
+
+                <br><br><br>
+
+                <div class="col-sm-12">
+                  <div class="col-sm-6">
+                    <div class="form-group">
+                      <label for="booktype">Book Type:</label>
+                      <select class="form-control" id="booktype" v-model="bookType">
+                        <option v-for='(type, index) in bookTypes' v-bind:value="index">{{type}}</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
+                <br><br><br><br>
 
-                <div class="col-sm-5">
-                  or &nbsp;&nbsp;&nbsp;
-                  <label class='btn btn-default' type="file">
-                    <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
-                    <input type="file" v-show="false" @change="setBookFile" accept=".zip,.htm,.txt,.ocn">
-                  </label>
-                </div>
-                <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
-              </div>
+                <h4> Book Audio </h4>
 
-              <br><br><br>
-
-              <div class="col-sm-12">
-                <div class="col-sm-6">
-                  <div class="form-group">
-                    <label for="booktype">Book Type:</label>
-                    <select class="form-control" id="booktype" v-model="bookType">
-                      <option v-for='(type, index) in bookTypes' v-bind:value="index">{{type}}</option>
-                    </select>
+                <div class="col-sm-12">
+                  <div class="col-sm-7">
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                      <input type="text" class="form-control" placeholder="URL" v-model="audioURL"/>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <br><br><br><br>
+                  <div class="col-sm-5">
+                    or &nbsp;&nbsp;&nbsp;
+                    <label class='btn btn-default' type="file">
+                      <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
-              <h4> Book Audio </h4>
 
-              <div class="col-sm-12">
-                <div class="col-sm-7">
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                    <input type="text" class="form-control" placeholder="URL" v-model="audioURL"/>
+                      <input name='audiofiles' type="file" v-show="false" multiple @change="onFilesChange($event)" accept="application/zip,audio/*">
+
+
+                    </label>
                   </div>
+                  <span class="help-block"> &nbsp; &nbsp; Audio file, ZIP files or playlist </span>
                 </div>
-                <div class="col-sm-5">
-                  or &nbsp;&nbsp;&nbsp;
-                  <label class='btn btn-default' type="file">
-                    <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
-                    <input type="file" v-show="false" @change="setAudioFile" accept=".zip,.wav,.mp3,.m4a,.m3u">
-                  </label>
-                </div>
-                <span class="help-block"> &nbsp; &nbsp; Audio file, ZIP files or playlist </span>
-              </div>
 
-              <br><br><br><br>
+                <br><br><br><br>
 
-              <button class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
-                <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
-              </button>
+                <button class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
+                  <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
+                </button>
 
-          </div>
+            </form>
+
+            <div id='uploadingMsg' v-show='isUploading'>
+               <h2> Uploading Files...   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
+            </div>
+
+          </div comment="clearfix">
         </div>
       </div>
     </div>
@@ -85,17 +102,19 @@
 export default {
   data() {
     return {
+        isUploading: false,
         bookURL: '',
-        bookFile: '',
         bookType: 0,
         audioURL: '',
-        audioFile: '',
         bookTypes: [
           'Gutenberg HTML',
           'Ocean HTML',
           'Gutenberg Text',
           'Plain Text',
-        ]
+        ],
+        uploadFiles: {bookfiles: 0, audiofiles: 0},
+        formData: new FormData(),
+
     }
   },
   components: {
@@ -106,38 +125,70 @@ export default {
       return this.bookTypes[this.bookType];
     },
     saveDisabled: function() {
-      return (!this.bookURL && !this. bookFile);
+      //return (!this.bookURL && !this. bookFile);
+      console.log(this.uploadFiles.bookfiles, this.bookURL.length)
+
+      return (this.uploadFiles.bookfiles==0 && this.bookURL.length==0)
     }
   },
   methods: {
 
-    setBookFile(e) {
-      var files = e.target.files || e.dataTransfer.files
-      if (files.length) this.bookFile = files[0]
-    },
-    setAudioFile(e) {
-      var files = e.target.files || e.dataTransfer.files
-      if (files.length) this.audioFile = files[0]
+    // setBookFile(e) {
+    //   var files = e.target.files || e.dataTransfer.files
+    //   if (!files.length) return
+    //
+    //   this.bookFile = files[0]
+    //
+    //   this.bookFormData = new FormData()
+    //   Array
+    //     .from(Array(files.length).keys())
+    //     .map(x => {
+    //       this.bookFormData.append("book_field", files[x], files[x].name);
+    //     });
+    //
+    // },
+    // setAudioFile(e) {
+    //   var files = e.target.files || e.dataTransfer.files
+    //   if (files.length) this.audioFile = files[0]
+    // },
+
+    onFilesChange(e) {
+      let fieldName = e.target.name
+      let fileList = e.target.files || e.dataTransfer.files
+      Array
+        .from(Array(fileList.length).keys())
+        .map(x => {
+          this.formData.append(fieldName, fileList[x], fileList[x].name);
+          this.uploadFiles[fieldName]++
+        });
+        //console.log("Files to upload, books:"+ this.uploadFiles.bookfiles + ", audio: "+ this.uploadFiles.audiofiles)
     },
 
     onFormSubmit() {
       let auth = this.$store.state.auth
-      //console.log(auth);
 
-      let confirmed = auth.confirmRole('librarian');
-      console.log('Confirming role librarian: ', confirmed)
+      let confirmed = auth.confirmRole('librarian');  // for testing only
+        console.log('Confirming role librarian: ', confirmed)
 
+      this.formData.append('bookType', this.bookTypes[this.bookType]);
+      if (!this.uploadFiles.bookfiles && this.bookURL.length) this.formData.append('bookURL', this.bookURL);
+      if (!this.uploadFiles.audiofiles && this.audioURL.length) this.formData.append('audioURL', this.audioURL);
+
+      // console.log("FormData: ", this.formData.keys(), this.formData.values())
+
+      this.isUploading = true;
       let api = auth.getHttp()
-      api.post('/api/v1/books', { test: "hello world" }).then(function(response){
-         if (response.status===200) console.log(response.data)
+      api.post('/api/v1/books', this.formData).then(function(response){
+        if (response.status===200) console.log(response.data)
       }).catch(function(err){ console.log(err) });
+
 
 
     },
 
     // onFileChange(e) {
     //   console.log("upload");
-    //   var fieldName = "upload_book";
+    //   var fieldName = "book_field";
     //   var fileList = e.target.files;
     //   console.log(fieldName);
     //   console.log(fileList[0]);
@@ -286,6 +337,9 @@ export default {
   color: inherit;
 }
 
+
+#uploadingMsg {text-align: center; padding-bottom: 1em;}
+#uploadingMsg h2 i {font-size: 24pt; color: silver}
 
 
 </style>
