@@ -9,7 +9,7 @@
             <slot name="header">
               <div class="header-title">
                 <label class="header-h"><img src='/static/bookstack.svg' class='book-logo'></label>
-                <h3 class="header-h">Import New Book</h3></div>
+                <h3 class="header-h">Import New Audio</h3></div>
             </slot>
           </div>
 
