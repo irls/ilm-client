@@ -8,7 +8,7 @@
             
             <slot name="header">
               <div class="header-title">
-                <label class="header-h"><img src='/static/bookstack.svg' class='book-logo'></label>
+                <label class="header-h"><img src='/static/audiostack.png' class='audio-logo'></label>
                 <h3 class="header-h">Import New Audio</h3></div>
             </slot>
           </div>
@@ -17,16 +17,28 @@
           <div class="modal-body clearfix">
             <slot name="body">
 
-              <h4> Book Text </h4>
+              <h4> Book Title </h4>
 
                 <div class="col-sm-12">
-                  <div class="col-sm-7">
+                  <div class="col-sm-12">
                     <div class="input-group">
                       <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                      <input type="text" class="form-control" placeholder="URL" v-model="file_name_book" />
+                      <input type="text" class="form-control" placeholder="Book Title" v-model='currentBook.meta.title' />
                     </div>
-
                   </div>
+                </div>
+
+                <br><br><br>
+                
+              <h4> Book Author </h4>
+                <div class="col-sm-12">
+                  <div class="col-sm-12">
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                      <input type="text" class="form-control" placeholder="Book Author" v-model='currentBook.meta.author' />
+                    </div>
+                  </div>
+                  <!--
                   <div class="col-sm-5">
                     or &nbsp;&nbsp;&nbsp;
                     <button class='btn btn-default' type="file">
@@ -35,10 +47,11 @@
                     </button>
                   </div>
                   <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
+                  -->
                 </div>
 
                 <br><br><br>
-
+                <!--
                 <div class="col-sm-12">
                   <div class="col-sm-6">
                     <div class="form-group">
@@ -51,10 +64,9 @@
                       </select>
                     </div>
                   </div>
-
                 </div>
                 <br><br><br><br>
-
+                -->
 
                 <h4> Book Audio </h4>
 
@@ -111,6 +123,11 @@ export default {
   },
   components: {
     Vue
+  },
+  computed: {
+    currentBook: function () {
+      return this.$store.getters.currentBook
+    }
   },
   methods: {
 
@@ -213,7 +230,7 @@ export default {
   padding-bottom:5px;
 }
 
-.book-logo {
+.audio-logo {
   width:50px;
   height:50px;
 }
