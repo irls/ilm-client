@@ -57,6 +57,13 @@ export default {
 
   data () {
     return {
+      name: "",
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      roles: [],
+      languages: [],
       selecteRoles: [],
       selecteLanguages: []
     }
