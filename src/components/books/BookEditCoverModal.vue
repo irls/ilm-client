@@ -1,34 +1,43 @@
 <template>
 
-  <modal id="bookEditCoverModal" :value="show" effect="fade" @closed="closed">
+  <modal id="bookEditCoverModal" :value="show" effect="fade" @closed="closed" @opened="opened">
     <div slot="modal-header" class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
       <h4 class="modal-title"><i class="fa fa-book"></i>Edit Cover</h4></div>
     </div>
     <div slot="modal-body" class="modal-body">
+
       <div class="row">
         <div class="col-md-4">
-          <div class="book-cover"><img :src="tmp.coverimg"></div>
+          <div class="bookCoverPreviewWrap">
+            <div class="book-cover"><img :src="tmp.coverimg"></div>
+            <div ref="livePreviewTitle" id="livePreviewTitle" class="ql-editor"></div>
+            <div ref="livePreviewAuthor" id="livePreviewAuthor" class="ql-editor"></div>
+          </div>
         </div>
         <div class="col-md-8">
           <div class="book-list">
-            <input type="text" placeholder="Citadel Of Faith" v-model="tmp.title">
-            <span><i class="fa fa-font"></i><i class="fa fa-font"></i></span>
+            <div ref="quillContainerTitle" id="quillContainerTitle"></div>
           </div>
-          <div class="book-list">
-            <img src="assets/img/book-slider.png">
+          <div class="book-list bookCoverCarouselWrap">
+            <carousel-3d :display="7" :width="90" :height="115.5">
+              <slide v-for="(bc, index) in bookcovers" :key="index"  :index="index">
+                <img :src="bc.src">
+              </slide>
+            </carousel-3d>
             <span><i class="fa fa-plus"></i><i class="fa fa-folder-open-o"></i></span>
           </div>
           <div class="book-list">
-            <input type="text" placeholder="Shogi Effendi" v-model="tmp.author">
-            <span><i class="fa fa-font"></i><i class="fa fa-font"></i></span>
+            <div ref="quillContainerAuthor" id="quillContainerAuthor"></div>
           </div>
         </div>
       </div>
+
     </div>
     <div slot="modal-footer" class="modal-footer">
       <button class="btn btn-primary" type="button" @click="ok">Save</button>
     </div>
+
   </modal>
 
 </template>
@@ -36,7 +45,27 @@
 <script>
 
 import { modal } from 'vue-strap'
+import { Carousel3d, Slide } from 'vue-carousel-3d'
+import Quill from 'quill'
+import '../../../node_modules/quill/dist/quill.core.css'
+import '../../../node_modules/quill/dist/quill.snow.css'
 import modalMixin from './../../mixins/modal'
+import BOOKCOVERS from '../../../static/bookcovers.json'
+
+const quillOptions = {
+  modules: {
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'font': [] }],
+      [{ 'align': [] }],
+      ['clean']
+    ]
+  },
+  placeholder: '',
+  theme: 'snow'
+}
 
 export default {
 
@@ -45,7 +74,9 @@ export default {
   mixins: [modalMixin],
 
   components: {
-    modal
+    modal,
+    Carousel3d,
+    Slide
   },
 
   props: {
@@ -55,11 +86,16 @@ export default {
 
   data () {
     return {
+      bookcovers: BOOKCOVERS,
       tmp: {
         coverimg: '',
         title: '',
         author: ''
-      }
+      },
+      quillTitle: null,
+      quillAuthor: null,
+      editorTitle: null,
+      editorAuthor: null
     }
   },
 
@@ -68,13 +104,36 @@ export default {
       this.tmp.coverimg = this.img.coverimg
       this.tmp.title = this.img.title
       this.tmp.author = this.img.author
+      this.quillTitle.pasteHTML(this.tmp.title)
+      this.quillAuthor.pasteHTML(this.tmp.author)
     }
   },
 
+  mounted () {
+    const vm = this
+
+    // Quill for Title
+    vm.quillTitle = new Quill(vm.$refs.quillContainerTitle, Object.assign(quillOptions, { placeholder: 'title' }))
+    vm.editorTitle = document.querySelector('#quillContainerTitle .ql-editor')
+    vm.quillTitle.on('text-change', function () {
+      vm.$refs.livePreviewTitle.innerHTML = vm.editorTitle.innerHTML
+    })
+
+    // Quill for Author
+    vm.quillAuthor = new Quill(vm.$refs.quillContainerAuthor, Object.assign(quillOptions, { placeholder: 'author' }))
+    vm.editorAuthor = document.querySelector('#quillContainerAuthor .ql-editor')
+    vm.quillAuthor.on('text-change', function () {
+      vm.$refs.livePreviewAuthor.innerHTML = vm.editorAuthor.innerHTML
+    })
+  },
+
   methods: {
+    opened () {
+      this.$nextTick(() => {
+        window.dispatchEvent(new Event('resize'))
+      })
+    },
     ok () {
-      this.img.title = this.tmp.title
-      this.img.author = this.tmp.author
       console.log('ok')
       this.closed()
     },
@@ -92,7 +151,7 @@ export default {
   i
     margin-right: 10px;
   .modal-dialog
-    width: 400px
+    width: 700px
     margin-top: 10%
 
     .modal-header
@@ -108,8 +167,34 @@ export default {
 
     .modal-body
       margin-top: 20px
-      .book-cover
-        img
+      .bookCoverPreviewWrap
+        position: relative
+        overflow: hidden
+        .book-cover
+          img
+            width: 100%
+        .ql-editor
+          position: absolute
+          top: 0
+          left: 0
           width: 100%
+          height: auto
+          background-color: transparent
 
+      .bookCoverCarouselWrap
+        display: flex
+        align-items: center
+        .carousel-3d-container
+          width: 80%
+          height: auto!important
+          min-height: 130px
+          .carousel-3d-slider
+            width: 90px!important
+            height: 115px!important
+            .carousel-3d-slide
+              background-color: transparent
+              border: none
+.ql-editor
+  width: 100%
+  height: 300px
 </style>
