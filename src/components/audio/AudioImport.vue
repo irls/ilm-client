@@ -91,7 +91,7 @@
                 <br><br><br><br>
 
                 <button class="btn btn-primary modal-default-button" @click="onUpload">
-                  <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
+                  <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Audio
                 </button>
 
             </slot>
