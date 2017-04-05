@@ -13,7 +13,9 @@
       </div>
 
       <div class="download-area col-sm-12">
-        <button id="show-modal" @click="downloadBook" class="btn btn-primary">Download</button>
+        <button id="show-modal" @click="downloadBook" class=" btn btn-primary btn_download">
+          <img src='/static/download.png' class='bookstack'/>
+        </button>
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false">
@@ -205,6 +207,16 @@ export default {
 
 <style scoped>
 
+  .btn_download {
+    border: 0px;
+    background-color: Transparent;
+    outline:none;
+  }
+
+  img.bookstack {
+    width: 60px;
+    opacity: .75
+  }
 
   .download-area {
 

@@ -5,11 +5,7 @@
         <div class="modal-container">
 
           <div class="modal-header">
-            <!-- <slot name="header">
-              <div class="import-title">
-                <label>Book Imports</label>
-              </div>
-            </slot> -->
+            
             <slot name="header">
               <div class="header-title">
                 <label class="header-h"><img src='/static/bookstack.svg' class='book-logo'></label>
@@ -17,18 +13,17 @@
             </slot>
           </div>
 
+          
           <div class="modal-body clearfix">
             <slot name="body">
+
               <h4> Book Text </h4>
-
-              <form enctype="multipart/form-data">
-
 
                 <div class="col-sm-12">
                   <div class="col-sm-7">
                     <div class="input-group">
                       <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                      <input type="text" class="form-control" placeholder="URL"/>
+                      <input type="text" class="form-control" placeholder="URL" v-model="file_name_book" />
                     </div>
 
                   </div>
@@ -36,6 +31,7 @@
                     or &nbsp;&nbsp;&nbsp;
                     <button class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
+                      <input name="book_import" type="file" class="file_open" @change="onBookFileChange"/>
                     </button>
                   </div>
                   <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
@@ -47,7 +43,7 @@
                   <div class="col-sm-6">
                     <div class="form-group">
                       <label for="booktype">Book Type:</label>
-                      <select class="form-control" id="booktype">
+                      <select class="form-control" id="booktype" v-model="type_book">
                         <option>Gutenberg HTML</option>
                         <option>Ocean HTML</option>
                         <option>Gutenberg Text</option>
@@ -55,6 +51,7 @@
                       </select>
                     </div>
                   </div>
+
                 </div>
                 <br><br><br><br>
 
@@ -66,13 +63,14 @@
                   <div class="col-sm-7">
                     <div class="input-group">
                       <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                      <input type="text" class="form-control" placeholder="URL"/>
+                      <input type="text" class="form-control" placeholder="URL" v-model="file_name_audio" />
                     </div>
                   </div>
                   <div class="col-sm-5">
                     or &nbsp;&nbsp;&nbsp;
                     <button class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
+                      <input name="audio_import" type="file" class="file_open" @change="onAudioFileChange"/>
                     </button>
                   </div>
                   <span class="help-block"> &nbsp; &nbsp; Audio file, ZIP files or playlist </span>
@@ -80,47 +78,13 @@
 
                 <br><br><br><br>
 
-                <button class="btn btn-primary modal-default-button" @click="$emit('close')">
+                <button class="btn btn-primary modal-default-button" @click="onUpload">
                   <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
                 </button>
 
-
-
-                <!-- <div class="info-field">
-                  <div class="col-sm-6">
-                    <input type="text" class="form-control" placeholder="URL">
-                    <button class="btn btn-default">Submit</button>
-                  </div>
-                  <div class="col-sm-2">
-
-                  </div>
-                </div>
-
-                <div class="info-field">
-                  <div class="col-sm-6">
-                    <input type="text" class="form-control" placeholder="Browse for File">
-                 </div>
-                  <div id="file_open_div" class="col-sm-2">
-                    <input type="file" class="file_open" @change="onFileChange">
-                    <button id="btn_open" class="btn btn-default">Browse</button>
-                  </div>
-                </div> -->
-
-              </form>
-
-
             </slot>
-          </div>
+          </div>    
 
-          <!-- <div class="modal-footer">
-            <slot name="footer">
-              <label>Drop file here</label>
-              <div class="dropbox">
-              </div>
-              <br>
-              <button class="btn btn-default modal-default-button" @click="$emit('close')">Close</button>
-            </slot>
-          </div> -->
         </div>
       </div>
     </div>
@@ -130,48 +94,76 @@
 
 
 <script>
-
-import axios from 'axios'
-
-const BASE_URL = 'http://localhost:8080';
+import Vue from 'vue'
+const dataBook = new FormData();
+const dataAudio = new FormData();
 
 export default {
   data() {
     return {
-        image: ''
+      file_name_book : '',
+      file_name_audio : '',
+      flag_book_browse : false,
+      flag_audio_browse : false,
+      type_book : '',
+      auth: this.$store.state.auth,
     }
   },
   components: {
-    axios
+    Vue
   },
   methods: {
 
-    onFileChange(e) {
-      console.log("upload");
-      var fieldName = "upload_book";
-      var fileList = e.target.files;
-      console.log(fieldName);
-      console.log(fileList[0]);
-      if (fileList.length)
+    onBookFileChange(e) {
+      var files = e.target.files || e.dataTransfer.files;
+      if (!files.length)
         return;
-      const formData = new FormData();
-      Array
-        .from(Array(fileList.length).keys())
-        .map(x => {
-          formData.append(fieldName, fileList[x], fileList[x].name);
-        });
-      alert(formData);
-      upload(formData);
+      dataBook.set('files', files);
+      this.file_name_book = files[0].name;
+      this.flag_book_browse = true;
+      console.log(this.type_book);
     },
 
-    upload(formData) {
-      const url = `${BASE_URL}/upload_books/upload`;
-      return axios.post(url, formData)
-      // get data
-      .then(x => x.data)
-      // add url field
-      .then(x => x.map(bk => Object.assign({},
-          bk, { url: `${BASE_URL}/upload_books/${bk.id}` })));
+    onAudioFileChange(e) {
+      var files = e.target.files || e.dataTransfer.files;
+      if (!files.length)
+        return;
+      dataAudio.set('files', files);
+      this.file_name_audio = files[0].name;
+      this.flag_audio_browse = true;
+      console.log(this.type_book);
+    },
+
+    onUpload() {
+      console.log(this.auth._session.token);
+      console.log(this.auth._session.password);
+      
+      var url = 'http://localhost:3000/api/v1/books';
+      var author = 'Bearer ' + this.auth._session.token + ':' + this.auth._session.password;
+      Vue.http.headers.common['Authorization'] = author;
+
+      if (this.flag_book_browse) {
+        if (this.flag_audio_browse) {
+          // file browser of book, audio
+          this.$http.post(url, { 'book': dataBook, 'audio': dataAudio, 'type_book': this.type_book }).then((response) => {
+            // result
+            alert(response.toString());
+            
+          });
+        } else {
+          // file browser of book, url of audio
+        }
+      } else {
+        if (this.flag_audio_browse) {
+          // url of book, file browser of audio
+        } else {
+          // url of book, audio
+        }
+      }
+
+      // close
+      this.$emit('close');
+          
     }
 
   },
