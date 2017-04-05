@@ -17,13 +17,28 @@
           <div class="modal-body clearfix">
             <slot name="body">
 
+            <h4> Book Information </h4>
+
+            <div class="col-sm-12">
+              <div class='booktopinfo'>
+                <div class='coverimg' @click="bookEditCoverModalActive = true"><img class='coverimg' v-bind:src="currentBook.meta.coverimg" /></div>
+                <h4 class='title'>{{ currentBook.meta.title }}</h4>
+                <h5 class='subtitle' v-if='currentBook.meta.subtitle'>{{ currentBook.meta.subtitle }}</h5>
+                <h5 class='author'>{{ currentBook.meta.author }},
+                <span class="pages">{{ Math.round(currentBook.meta.length / 300) }} pages &nbsp;
+                </span></h5>
+                <div style='clear: both'> </div>
+              </div>
+            </div>
+
+            <!--
               <h4> Book Title </h4>
 
                 <div class="col-sm-12">
                   <div class="col-sm-12">
                     <div class="input-group">
-                      <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                      <input type="text" class="form-control" placeholder="Book Title" v-model='currentBook.meta.title' />
+                      <span class="input-group-addon"><i class="fa fa-book"></i></span>
+                      <input type="text" class="form-control" placeholder="Book Title" v-model='currentBook.meta.title' disabled />
                     </div>
                   </div>
                 </div>
@@ -34,10 +49,13 @@
                 <div class="col-sm-12">
                   <div class="col-sm-12">
                     <div class="input-group">
-                      <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                      <input type="text" class="form-control" placeholder="Book Author" v-model='currentBook.meta.author' />
+                      <span class="input-group-addon"><i class="fa fa-book"></i></span>
+                      <input type="text" class="form-control" placeholder="Book Author" v-model='currentBook.meta.author' disabled />
                     </div>
                   </div>
+
+              -->
+
                   <!--
                   <div class="col-sm-5">
                     or &nbsp;&nbsp;&nbsp;
@@ -47,8 +65,9 @@
                     </button>
                   </div>
                   <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
-                  -->
+                  
                 </div>
+                -->
 
                 <br><br><br>
                 <!--
@@ -189,6 +208,18 @@ export default {
 
 
 <style scoped>
+
+div.coverimg {
+    width: 80px;
+    padding:0; padding-right: 8px;
+    float: left;
+    margin-left: 3px; margin-top: 0;
+    padding-bottom: 10px;}
+  img.coverimg {
+    max-width: 60px;
+  }
+  .author,  h4.title {margin: 0; padding-bottom: 10px; }
+  .subtitle {margin-top:0;}
 
 .modal-mask {
   position: fixed;
