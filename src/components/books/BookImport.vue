@@ -1,8 +1,8 @@
 <template>
   <transition name="modal">
-    <div class="modal-mask">
+    <div class="modal-mask" @click="$emit('close_modal')" >
       <div class="modal-wrapper">
-        <div class="modal-container">
+        <div class="modal-container" @click="$event.stopPropagation()">
 
           <div class="modal-header">
             <div class="header-title">
@@ -31,7 +31,7 @@
                     <label class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
-                      <input name="bookfiles" type="file" v-show="false" accept="application/zip,text/*" @change="onFilesChange($event)">
+                      <input name="bookfiles" type="file" v-show="false" accept="text/*" multiple @change="onFilesChange($event)">
 
                     </label>
                   </div>
@@ -44,9 +44,11 @@
                   <div class="col-sm-6">
                     <div class="form-group">
                       <label for="booktype">Book Type:</label>
+
                       <select class="form-control" id="booktype" v-model="bookType">
                         <option v-for='(type, index) in bookTypes' v-bind:value="index">{{type}}</option>
                       </select>
+
                     </div>
                   </div>
                 </div>
@@ -67,7 +69,7 @@
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
 
-                      <input name='audiofiles' type="file" v-show="false" multiple @change="onFilesChange($event)" accept="application/zip,audio/*">
+                      <input name='audiofiles' type="file" v-show="false" multiple @change="onFilesChange($event)" accept="audio/*">
 
 
                     </label>
@@ -84,7 +86,7 @@
             </form>
 
             <div id='uploadingMsg' v-show='isUploading'>
-               <h2> Uploading Files...   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
+               <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
             </div>
 
           </div comment="clearfix">
@@ -114,6 +116,7 @@ export default {
         ],
         uploadFiles: {bookfiles: 0, audiofiles: 0},
         formData: new FormData(),
+        uploadProgress: "Uploading Files...",
 
     }
   },
@@ -132,26 +135,15 @@ export default {
     }
   },
   methods: {
-
-    // setBookFile(e) {
-    //   var files = e.target.files || e.dataTransfer.files
-    //   if (!files.length) return
-    //
-    //   this.bookFile = files[0]
-    //
-    //   this.bookFormData = new FormData()
-    //   Array
-    //     .from(Array(files.length).keys())
-    //     .map(x => {
-    //       this.bookFormData.append("book_field", files[x], files[x].name);
-    //     });
-    //
-    // },
-    // setAudioFile(e) {
-    //   var files = e.target.files || e.dataTransfer.files
-    //   if (files.length) this.audioFile = files[0]
-    // },
-
+    formReset(){
+      this.isUploading= false
+      this.bookURL= ''
+      this.audioURL= ''
+      // clear formData
+      let entries = this.formData.entries()
+      for(let pair of entries) this.formData.delete(pair[0])
+      this.uploadFiles = {bookfiles: 0, audiofiles: 0}
+    },
     onFilesChange(e) {
       let fieldName = e.target.name
       let fileList = e.target.files || e.dataTransfer.files
@@ -161,26 +153,47 @@ export default {
           this.formData.append(fieldName, fileList[x], fileList[x].name);
           this.uploadFiles[fieldName]++
         });
-        //console.log("Files to upload, books:"+ this.uploadFiles.bookfiles + ", audio: "+ this.uploadFiles.audiofiles)
     },
 
     onFormSubmit() {
       let auth = this.$store.state.auth
 
-      let confirmed = auth.confirmRole('librarian');  // for testing only
-        console.log('Confirming role librarian: ', confirmed)
+
+      // let confirmed = auth.confirmRole('librarian');  // for testing only
+      //   console.log('Confirming role librarian: ', confirmed)
 
       this.formData.append('bookType', this.bookTypes[this.bookType]);
       if (!this.uploadFiles.bookfiles && this.bookURL.length) this.formData.append('bookURL', this.bookURL);
       if (!this.uploadFiles.audiofiles && this.audioURL.length) this.formData.append('audioURL', this.audioURL);
 
-      // console.log("FormData: ", this.formData.keys(), this.formData.values())
-
-      this.isUploading = true;
+      let vm = this
       let api = auth.getHttp()
-      api.post('/api/v1/books', this.formData).then(function(response){
-        if (response.status===200) console.log(response.data)
-      }).catch(function(err){ console.log(err) });
+
+      var config = {
+        onUploadProgress: function(progressEvent) {
+          var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total );
+          vm.uploadProgress = "Uploading Files... " + percentCompleted + "%";
+        }
+      }
+
+      this.isUploading = true
+      api.post('/api/v1/books', this.formData, config).then(function(response){
+        if (response.status===200) {
+          console.log('200 response', response.data);
+          // hide modal after one second
+          vm.uploadProgress = "Upload Successful"
+          setTimeout(function(){ vm.$emit('close_modal') }, 1000)
+        } else {
+          // not sure what we should be doing here
+          console.log('non-200 response. ', response);
+          vm.formReset()
+        }
+        //vm.isUploading = false;
+      }).catch(function(err){
+        console.log('error: '+ err)
+        //this.formReset()
+        vm.isUploading = false;
+      });
 
 
 

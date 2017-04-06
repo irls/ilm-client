@@ -20,8 +20,7 @@
       <i class="glyphicon glyphicon-plus"></i> Import
     </router-link>   &nbsp; -->
 
-    <button id="show-modal" @click="importBook"
-    class='btn btn-default'>
+    <button id="show-modal" @click="importBook" class='btn btn-default'>
       <i class="fa fa-pencil fa-lg"></i>  Import
     </button>  &nbsp;
 
@@ -49,11 +48,11 @@
 </tr></table>
 
   <!-- Modal area -->
-  <BookImport v-if="showModal" @close="showModal = false">
+  <BookImport v-if="showModal" @close_modal="showModal = false">
     <!--
       you can use custom content here to overwrite
       default content
-    -->    
+    -->
   </BookImport>
 
 </div>
@@ -75,7 +74,7 @@ export default {
       showModal: false
     }
   },
-  
+
   methods: {
     booksFilterChange: function(el) {
       this.$store.commit('setCurrentBookFilter', {filter: el.target.value});
