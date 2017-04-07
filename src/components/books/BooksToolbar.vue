@@ -1,6 +1,6 @@
 <template>
-<div id="toolbar">
-<table class="toolbartable"><tr>
+<div>
+<table class="toolbar"><tr>
 
   <td>
     <h3><img src='/static/bookstack.svg' class='bookstack'/>
@@ -103,8 +103,8 @@ export default {
 </script>
 
 
-<style scoped >
-.toolbartable {
+<style scoped>
+.toolbar {
    width: 100%;
    height: 4em;
    position: relative;
@@ -112,11 +112,11 @@ export default {
    padding-right: .25em;
    box-shadow: 0px 0px 3px 2px rgba(178, 191, 224, 0.53);
  }
-.toolbartable td {
+.toolbar td {
    text-align: left;
    padding-top:0; margin-top:0;
  }
-.toolbartable td.right {
+.toolbar td.right {
   text-align: right;
   position: inline;
   padding-top: 11px;
