@@ -69,6 +69,7 @@
     created: function() {
       // console.log("Setting up authentication object")
 
+      this.$store.state.process = process;
 
       //console.log(process.env);
 

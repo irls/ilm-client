@@ -5,17 +5,32 @@
     </td>
     <td class='menu'>
       <ul class="navlist">
-        <router-link to="/books"   tag='li'><a>Books</a></router-link>
-        <router-link to="/users" class='presentation' tag='li' v-show='$store.state.auth.confirmRole("admin")'><a>Users</a></router-link>
-        <router-link to="/libraries" class='presentation' tag='li'><a>Libraries</a></router-link>
-        <router-link to="/assignments" class='presentation' tag='li'><a>Assignments</a></router-link>
+
+        <router-link to="/books" tag='li'
+        v-show="isAdmin || isEditor || isLibrarian"
+        ><a>Books</a></router-link>
+
+        <router-link to="/users" class='presentation' tag='li'
+        v-show="isAdmin || isBookkeeper || isLibrarian"
+        ><a>Users</a></router-link>
+
+        <router-link to="/libraries" class='presentation' tag='li'
+        v-show="isAdmin || isLibrarian"
+        ><a>Libraries</a></router-link>
+
+        <router-link to="/assignments" class='presentation' tag='li'
+        v-show='true'><a>Assignments</a></router-link>
+
      </ul>
     </td>
     <td class='menu right'>
       <ul class="navlist">
-          <router-link class="presentation" to="/help" tag='li'><a>Help</a></router-link></router-link>
-          <router-link class="presentation" to="/contact" tag='li'><a>Contact</a></router-link>
-          <li v-if="$store.state.isLoggedIn" class="presentation"><a href="" @click="$store.state.auth.logout()">Logout</a></li>
+          <!-- <router-link class="presentation" to="/help" tag='li'><a>Help</a></router-link></router-link> -->
+          <!-- <router-link class="presentation" to="/contact" tag='li'><a>Contact</a></router-link> -->
+
+          <li class="presentation roles">({{allRolls.join(', ')}})</li>
+
+          <li v-if="$store.state.isLoggedIn" class="presentation"><a href="#" @click="$store.state.auth.logout()">Logout</a></li>
       </ul>
     </td></tr>
   </table>
@@ -24,25 +39,22 @@
 
 
 <script>
+import access from "../mixins/access.js"
+
+
 export default {
   data () {
     return {
-
+      // process: this.$store.state.process
     }
   },
-  computed: {
-
-  }
+  mixins: [access],
 }
 </script>
 
 
 
 <style scoped>
-  /*.nav.navbar-nav {margin-left: 1em}
-  .navbar-header a {margin: 0 !important; padding: 0;}
-  #navcol-2 .navbar-nav li a {font-size: 1.25em;}*/
-
 
   /* Navigation Menu Table (Oh yes I did!) */
   table.navtable {
@@ -68,5 +80,7 @@ export default {
   .navlist a {color: gray;}
   li.active a {color: black; text-decoration: none;}
   .navlist a:hover { text-decoration: none; }
+
+  li.presentation.roles {font-size: .75em; padding: 10px; margin: 10px; color: gray; font-style: italic; }
 
 </style>
