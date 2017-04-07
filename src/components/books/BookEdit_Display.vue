@@ -13,6 +13,9 @@ import BookDisplayHeader from './BookDisplayHeader'
 import BookTOC from './BookTOC'
 
 export default {
+
+  name: 'BookEditDisplay',
+
   data () {
     return {
       data: '',

@@ -10,9 +10,9 @@
       <td class='maincontent scrollable'>
         <template v-if="isEditMode()">
           <BookEdit v-if="bookEditMode()=='Editor'" />
-          <BookEdit_HTML v-else-if="bookEditMode()=='HTML'" />
-          <BookEdit_JSON v-else-if="bookEditMode()=='JSON'" />
-          <BookEdit_Display v-else="bookEditMode()=='Display'" />
+          <BookEditHtml v-else-if="bookEditMode()=='HTML'" />
+          <BookEditJson v-else-if="bookEditMode()=='JSON'" />
+          <BookEditDisplay v-else="bookEditMode()=='Display'" />
         </template>
         <BooksGrid v-else />
       </td><td class='collapseEditBar' @click='toggleMetaVisible' v-if='hasBookSelected()'>
@@ -31,9 +31,9 @@ import BookEditToolbar from './books/BookEditToolbar'
 import BooksGrid from './books/BooksGrid'
 import BookMetaEdit from './books/BookMetaEdit'
 import BookEdit from './books/BookEdit'
-import BookEdit_HTML from './books/BookEdit_HTML'
-import BookEdit_JSON from './books/BookEdit_JSON'
-import BookEdit_Display from './books/BookEdit_Display'
+import BookEditHtml from './books/BookEdit_HTML'
+import BookEditJson from './books/BookEdit_JSON'
+import BookEditDisplay from './books/BookEdit_Display'
 
 export default {
 
@@ -45,46 +45,58 @@ export default {
       colCount: 1
     }
   },
+
   components: {
-    BooksToolbar, BooksGrid, BookMetaEdit,
-    BookEditToolbar, BookEdit, BookEdit_HTML, BookEdit_JSON, BookEdit_Display
+    BooksToolbar,
+    BooksGrid,
+    BookMetaEdit,
+    BookEditToolbar,
+    BookEdit,
+    BookEditHtml,
+    BookEditJson,
+    BookEditDisplay
   },
+
   methods: {
-    toggleMetaVisible: function() {
+
+    toggleMetaVisible () {
       let doShow = !this.metaVisible
       if (doShow && this.hasBookSelected()) this.metaVisible = true
-       else this.metaVisible = false
+      else this.metaVisible = false
       this.recountRows()
     },
-    hasBookSelected: function() {
-      return !!this.$store.state.currentBookid;
-    },
-    isEditMode: function() {
-      return this.$store.state.route.path.indexOf('/books/edit')>-1
-    },
-    bookEditMode: function() {
-      return this.$store.getters.bookEditMode
-    },
-    recountRows: function() {
-      let count = 1;
-      if (this.hasBookSelected()) count++
-      if (this.metaVisible) count++;
-      //console.log('Rows: '+ count)
-      this.colCount = count;
+
+    hasBookSelected () {
+      return !!this.$store.state.currentBookid
     },
 
+    isEditMode () {
+      return this.$store.state.route.path.indexOf('/books/edit') > -1
+    },
+
+    bookEditMode () {
+      return this.$store.getters.bookEditMode
+    },
+
+    recountRows () {
+      let count = 1
+      if (this.hasBookSelected()) count++
+      if (this.metaVisible) count++
+      // console.log('Rows: '+ count)
+      this.colCount = count
+    }
+
   },
+
   watch: {
     '$store.state.route.params' (to, from) {
       // react to route changes...
       // console.log('Watching route: ',to,from)
-      this.recountRows();
-    },
-
+      this.recountRows()
+    }
   }
 }
 </script>
-
 
 <style scoped>
 

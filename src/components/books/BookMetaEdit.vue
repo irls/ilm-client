@@ -3,7 +3,7 @@
 
     <div id='bookmeta' v-if="currentBook">
       <div class='booktopinfo'>
-        <div class='coverimg'><img class='coverimg' v-bind:src="currentBook.meta.coverimg" /></div>
+        <div class='coverimg' @click="bookEditCoverModalActive = true"><img class='coverimg' v-bind:src="currentBook.meta.coverimg" /></div>
         <h4 class='title'>{{ currentBook.meta.title }}</h4>
         <h5 class='subtitle' v-if='currentBook.meta.subtitle'>{{ currentBook.meta.subtitle }}</h5>
         <h5 class='author'>{{ currentBook.meta.author }},
@@ -12,8 +12,17 @@
         <div style='clear: both'> </div>
       </div>
 
-      <div class="download-area col-sm-12">
-        <button id="show-modal" @click="downloadBook" class="btn btn-primary">Download</button>
+      <div class="download-area col-sm-6">
+        <br/>
+        <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
+          <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
+        </button>
+      </div>
+
+      <div class="download-area col-sm-6">
+        <button id="show-modal" @click="downloadBook" class="btn btn-primary btn_download">
+          <img src='/static/download.png' class='bookstack'/>
+        </button>
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false">
@@ -22,6 +31,13 @@
             default content
           -->
       </BookDownload>
+
+      <AudioImport v-if="showModal_audio" @close="showModal_audio = false">
+          <!--
+            you can use custom content here to overwrite
+            default content
+          -->
+      </AudioImport>
 
       <div class="book-listing">
           <fieldset>
@@ -113,6 +129,13 @@
           </form>
       </fieldset>
   </div>
+
+  <book-edit-cover-modal
+    :show="bookEditCoverModalActive"
+    @closed="bookEditCoverModalActive = false"
+    :img="currentBook.meta"
+  ></book-edit-cover-modal>
+
 </div>
 
 </template>
@@ -120,12 +143,15 @@
 <script>
 
 import BookDownload from './BookDownload'
-
+import BookEditCoverModal from './BookEditCoverModal'
+import AudioImport from '../audio/AudioImport'
 
 export default {
   name: 'bookmeta',
   components: {
-    BookDownload
+    BookDownload,
+    BookEditCoverModal,
+    AudioImport
   },
   data () {
     return {
@@ -149,10 +175,12 @@ export default {
       dirty: {
       },
       visible: true,
-      showModal: false
+      showModal: false,
+      showModal_audio: false,
+      bookEditCoverModalActive: false
     }
   },
-  
+
   computed: {
     currentBook: function () {
       return this.$store.getters.currentBook
@@ -183,8 +211,12 @@ export default {
       this.visible = !this.visible
     },
 
-    downloadBook() {
+    downloadBook: function() {
       this.showModal = true;
+    },
+
+    uploadAudio: function() {
+      this.showModal_audio = true;
     }
 
   }
@@ -196,12 +228,25 @@ export default {
 
 <style scoped>
 
+  .btn_download {
+    border: 0px;
+    background-color: Transparent;
+    outline:none;
+  }
+
+  img.bookstack {
+    width: 60px;
+    opacity: .75
+  }
 
   .download-area {
-    
+
   }
-  .download-area button {
+  .download-area .btn_download {
     float: right;
+  }
+  .download-area .btn_audio_upload {
+    float: left;
   }
   /* Wrapper around entire side editor */
   .sidebar { margin-top:0px; position: relative; margin-left:0; padding-left:0;}

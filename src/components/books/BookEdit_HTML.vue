@@ -18,6 +18,9 @@
 
 
 export default {
+
+  name: 'BookEditHtml',
+
   data () {
     return {
       data: '',

@@ -18,6 +18,9 @@
 
 
 export default {
+
+  name: 'BookEditJson',
+
   data () {
     return {
       data: '',
