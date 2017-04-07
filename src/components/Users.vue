@@ -54,11 +54,17 @@
             @select="val => { user.languages = val }"
           ></select-languages>
         </div>
-        <div class="t-box"><span><i class="fa fa-calendar-check-o"></i>Work History</span></div>
-        <div class="t-box"><span><i class="fa fa-unlock"></i>Pass Reset</span></div>
+        <div class="t-box"><a href="#"><span><i class="fa fa-calendar-check-o"></i>Work History</span></a></div>
+
+        <div class="t-box"><a href="#"><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
+
+        <!-- <button @click='' class='btn btn-default t-box'>
+          <i class="fa fa-unlock"></i>  Reset Password
+        </button>  &nbsp; -->
+
         <div class="t-box" @click="user.enable=!user.enable">
-          <template v-if="user.enable"><span>Enable </span><i class="fa fa-toggle-on"></i></template>
-          <template v-else><span>Disable </span><i class="fa fa-toggle-off"></i></template>
+          <template v-if="user.enable"><span>Active </span><i class="fa fa-toggle-on"></i></template>
+          <template v-else><span>Disabled </span><i class="fa fa-toggle-off"></i></template>
         </div>
       </div>
     </form>
@@ -188,7 +194,7 @@ export default {
 .tr .td:nth-child(6) {width: 12em;  }
 .tr .td:nth-child(7) {width: 8em; padding-right: 10px; }
 
-
+.user-form-box:nth-of-type(odd) {bakground-color: #f9f9f9}
 </style>
 
 <style lang="stylus">
