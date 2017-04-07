@@ -3,66 +3,33 @@
 
     <div class="table toolbar">
       <div class="tr">
-
         <div class='td'>
-<i class="fa fa-users"></i>
+          <i class="fa fa-users"></i>
         </div>
-
         <div class='td'>
-<h4>{{users.length}} Active Users</h4>
+          <h4>{{users.length}} Active Users</h4>
         </div>
-
         <div class='td'>
-<select class="userselect">
-  <option value="12" selected="">Show All</option>
-  <option value="13">Show Active</option>
-  <option value="14">Show Inactive</option>
-</select>
+          <select class="userselect">
+            <option value="12" selected="">Show All</option>
+            <option value="13">Show Active</option>
+            <option value="14">Show Inactive</option>
+          </select>
         </div>
-
         <div class='td auto'></div>
-
         <div class='td'>
-<a href="#"><i class="fa fa-calendar-check-o"></i> All Work History</a>
+          <a href="#"><i class="fa fa-calendar-check-o"></i> All Work History</a>
         </div>
-
         <div class='td'>
-<input type="text" class="form-control" v-model="filterKey" placeholder="Filter">
+          <input type="text" class="form-control" v-model="filterKey" placeholder="Filter">
         </div>
-
-
         <div class='td'>
-<a href="#" @click="userAddModalActive = true"><i class="fa fa-user-plus"></i> New User</a>
-        </div>
-
-    </div>
-  </div>
-
-    <!-- toolbar -->
-    <!-- <div class="toolbar">
-    <div class="user">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-5 item">
-
-            <i class="fa fa-users"></i>
-            <h4>{{users.length}} Active Users</h4>
-            <select class="userselect">
-              <option value="12" selected="">Show All</option>
-              <option value="13">Show Active</option>
-              <option value="14">Show Inactive</option>
-            </select>
-
-          </div>
-          <div class="col-md-7 item user-right">
-            <i class="fa fa-calendar-check-o"></i><a href="#">All Work History</a>
-            <span>Filter: </span><input type="text" v-model="filterKey">
-            <a href="#" @click="userAddModalActive = true"><i class="fa fa-user-plus"></i>New User</a>
-          </div>
+          <a href="#" @click="userAddModalActive = true"><i class="fa fa-user-plus"></i> New User</a>
         </div>
       </div>
     </div>
-  </div> -->
+
+
 
     <form class="user-form">
       <div v-for="user in pagedUsers" class="user-form-box">
@@ -183,19 +150,6 @@ export default {
   float: right;
   padding-right: 10px;
 }
-/*.row {
-  padding: 2px; padding-left: 0;
-}
-.item.user-right {
-  padding: 13px;
-}
-
-.row .item i {font-size: 26pt; margin-left: -5px; margin-top:3px; color:#555 !important; }
-.row .item h4 {font-size: 24px; display: inline-block;}
-.row .userselect {}
-.row .item select {padding-top:0;}*/
-
-
 
 .table {
   display: table;
