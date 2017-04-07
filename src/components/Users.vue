@@ -10,7 +10,7 @@
           <h4>{{users.length}} Active Users</h4>
         </div>
         <div class='td'>
-          <select class="userselect">
+          <select class="userselect form-control">
             <option value="12" selected="">Show All</option>
             <option value="13">Show Active</option>
             <option value="14">Show Inactive</option>
@@ -18,13 +18,20 @@
         </div>
         <div class='td auto'></div>
         <div class='td'>
-          <a href="#"><i class="fa fa-calendar-check-o"></i> All Work History</a>
+          <!-- <a href="#"><i class="fa fa-calendar-check-o"></i> All Work History</a> -->
+          <!-- Edit Button -->
+          <button @click='' class='btn btn-default'>
+            <i class="fa fa-calendar-check-o"></i>  All Work History
+          </button>  &nbsp;
         </div>
         <div class='td'>
           <input type="text" class="form-control" v-model="filterKey" placeholder="Filter">
         </div>
         <div class='td'>
-          <a href="#" @click="userAddModalActive = true"><i class="fa fa-user-plus"></i> New User</a>
+          <!-- <a href="#" @click="userAddModalActive = true"><i class="fa fa-user-plus"></i> New User</a> -->
+          <button @click='userAddModalActive = true' class='btn btn-default'>
+            <i class="fa fa-user-plus"></i>  New User
+          </button>  &nbsp;
         </div>
       </div>
     </div>
@@ -175,10 +182,10 @@ export default {
   .tr .td:nth-child(1) i {font-size: 24pt; color:#555;}
 .tr .td:nth-child(2) {width: 12em;}
   .tr .td:nth-child(2) h4 {font-size: 24px; padding-right: .5em;}
-.tr .td:nth-child(3) {font-size: 18px; width: 8em;}
+.tr .td:nth-child(3) {font-size: 18px; width: 8em; line-height: 1.5em}
 .tr .td:nth-child(4) {width: auto; }
 .tr .td:nth-child(5) {width: 10em; text-align: right;}
-.tr .td:nth-child(6) {width: 15em;  }
+.tr .td:nth-child(6) {width: 12em;  }
 .tr .td:nth-child(7) {width: 8em; padding-right: 10px; }
 
 
