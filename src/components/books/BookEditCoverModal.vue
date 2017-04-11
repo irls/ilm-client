@@ -25,7 +25,10 @@
                 <img :src="bc.src" @click="selectBookCover(index)">
               </slide>
             </carousel-3d>
-            <span><i class="fa fa-plus"></i><i class="fa fa-folder-open-o"></i></span>
+            <span class="addBookCoverBtnWrap">
+              <i class="fa fa-plus"></i><i class="fa fa-folder-open-o"></i>
+              <input type="file" @change="addBookCover"/>
+            </span>
           </div>
           <div class="book-list">
             <div ref="quillContainerAuthor" id="quillContainerAuthor"></div>
@@ -145,6 +148,10 @@ export default {
 
   methods: {
 
+    addBookCover (e) {
+      console.log('addedBookCover', e.target.files[0])
+    },
+
     // Make bookcover selectable on vue-carousel-3d
     selectBookCover (index) {
       this.tmp.coverimg = this.bookcovers[index].src
@@ -229,6 +236,18 @@ export default {
             .carousel-3d-slide
               background-color: transparent
               border: none
+        .addBookCoverBtnWrap
+          position: relative
+          input
+            cursor: pointer
+            position: absolute
+            top: 0
+            left: 0
+            right: 0
+            bottom: 0
+            opacity: 0
+          &:hover
+            color: green
 .ql-editor
   width: 100%
   height: 300px
