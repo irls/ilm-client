@@ -109,26 +109,6 @@ export default {
     }
   },
 
-  computed: {
-
-    titleStyles () {
-      return {
-        top: this.tmp.title.top + '%',
-        left: this.tmp.title.left + '%',
-        transform: 'scale(' + this.tmp.title.scale + ')'
-      }
-    },
-
-    authorStyles () {
-      return {
-        top: this.tmp.author.top + '%',
-        left: this.tmp.author.left + '%',
-        transform: 'scale(' + this.tmp.author.scale + ')'
-      }
-    }
-
-  },
-
   watch: {
     show () {
       this.tmp.coverimg = this.img.coverimg
@@ -174,17 +154,6 @@ export default {
       this.tmp.author.top = this.bookcovers[index].author.top
       this.tmp.author.left = this.bookcovers[index].author.left
       this.tmp.author.scale = this.bookcovers[index].title.scale
-    },
-
-    // Make the text movable on Bookcover -------------------------------------------------------
-    drag (e) {
-      console.log('drag')
-    },
-    dragstart (e) {
-      console.log('dragstart')
-    },
-    dragend (e) {
-      console.log('dragend')
     },
 
     // for this BookEditCoverModal Component -------------------------------------------------------
