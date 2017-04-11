@@ -55,12 +55,11 @@ import BOOKCOVERS from '../../../static/bookcovers.json'
 const quillOptions = {
   modules: {
     toolbar: [
-      ['bold', 'italic', 'underline', 'strike'],
+      ['bold', 'italic'],
       [{ 'size': ['small', false, 'large', 'huge'] }],
-      [{ 'color': [] }, { 'background': [] }],
+      [{ 'color': [] }],
       [{ 'font': [] }],
-      [{ 'align': [] }],
-      ['clean']
+      [{ 'align': [] }]
     ]
   },
   placeholder: '',
