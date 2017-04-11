@@ -8,7 +8,7 @@ import * as directives from './directives'
 
 sync(store, router)
 
-// register global utility filters.
+// register global directives.
 Object.keys(directives).forEach(key => {
   Vue.directive(key, directives[key])
 })
