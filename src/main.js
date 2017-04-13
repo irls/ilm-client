@@ -4,9 +4,14 @@ import router from './router'
 import { store } from './store'
 import { sync } from 'vuex-router-sync'
 import VueResource from 'vue-resource'
+import * as directives from './directives'
 
 sync(store, router)
 
+// register global directives.
+Object.keys(directives).forEach(key => {
+  Vue.directive(key, directives[key])
+})
 
 /* eslint-disable */
 new Vue({

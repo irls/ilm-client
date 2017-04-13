@@ -3,121 +3,141 @@
     "src": "/static/bookcovers/adj.png",
     "title": {
       "text": "Sample Title",
-      "top": 10,
-      "left": 10
+      "top": 33,
+      "left": 0,
+      "scale": 1
     },
     "author": {
       "text": "ShoGHI FFFFFNDI",
-      "top": 10,
-      "left": 10
+      "top": 192,
+      "left": 0,
+      "scale": 1
     }
   }, {
     "src": "https://placehold.it/90x115/2ecc71",
     "title": {
       "text": "Sample Title",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     },
     "author": {
       "text": "ShoGHI FFFFFNDI",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     }
   }, {
     "src": "https://placehold.it/90x115/1abc9c",
     "title": {
       "text": "Sample Title",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     },
     "author": {
       "text": "ShoGHI FFFFFNDI",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     }
   }, {
     "src": "https://placehold.it/90x115/2ecc71",
     "title": {
       "text": "Sample Title",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     },
     "author": {
       "text": "ShoGHI FFFFFNDI",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     }
   }, {
     "src": "https://placehold.it/90x115/1abc9c",
     "title": {
       "text": "Sample Title",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     },
     "author": {
       "text": "ShoGHI FFFFFNDI",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     }
   }, {
     "src": "https://placehold.it/90x115/2ecc71",
     "title": {
       "text": "Sample Title",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     },
     "author": {
       "text": "ShoGHI FFFFFNDI",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     }
   }, {
     "src": "https://placehold.it/90x115/1abc9c",
     "title": {
       "text": "Sample Title",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     },
     "author": {
       "text": "ShoGHI FFFFFNDI",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     }
   }, {
     "src": "https://placehold.it/90x115/f1c40f",
     "title": {
       "text": "Sample Title",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     },
     "author": {
       "text": "ShoGHI FFFFFNDI",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     }
   }, {
     "src": "https://placehold.it/90x115/f39c12",
     "title": {
       "text": "Sample Title",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     },
     "author": {
       "text": "ShoGHI FFFFFNDI",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     }
   }, {
     "src": "https://placehold.it/90x115/e67e22",
     "title": {
       "text": "Sample Title",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     },
     "author": {
       "text": "ShoGHI FFFFFNDI",
       "top": 10,
-      "left": 10
+      "left": 10,
+      "scale": 1
     }
   }
 ]
