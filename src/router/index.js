@@ -10,7 +10,7 @@ import Contact from '../components/Contact'
 
 Vue.use(Router)
 
-const NotFound = { template: '<p>Page not found</p>' }
+// const NotFound = { template: '<p>Page not found</p>' }
 
 export default new Router({
   mode: 'history',
@@ -27,7 +27,7 @@ export default new Router({
     {
       path: '/books/edit/:bookid',
       component: Books
-    }, 
+    },
 
     {
       path: '/users',
@@ -52,7 +52,7 @@ export default new Router({
 
 
 
-    
+
     { path: '*', redirect: '/books' }
 
   ]
