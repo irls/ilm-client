@@ -105,18 +105,12 @@
             console.log(change)
           })
 
-
-        // console.log("Logged in!")
-        // console.log(auth.getDbUrl('ilm_library_meta'))
-        // PouchDB.sync('ilm_library_meta', auth.getDbUrl('ilm_library_meta'), {live:true})
-        //   .on('change', function(change) { console.log(change) })
-        //
         // // get initial list of book
-        // var api = ilm_library_meta.hoodieApi()
-        // api.findAll(item => item.type==='book_meta').then(function(books_meta){
-        //   vu_this.$store.state.books_meta = books_meta
-        //   console.log("Books loaded: "+ books_meta.length)
-        // })
+        var api = ilm_library_meta.hoodieApi()
+        api.findAll(item => item.type==='book_meta').then(function(books_meta){
+          vu_this.$store.state.books_meta = books_meta 
+          console.log("Books loaded: "+ books_meta.length)
+        })
 
 
       })

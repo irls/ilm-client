@@ -92,7 +92,7 @@ export default {
       this.$store.commit('setCurrentBookFilter', {importStatus: el.target.value});
     },
     bookCount() {
-      return this.$store.state.books && this.$store.state.books.length;
+      return this.$store.state.books_meta && this.$store.state.books_meta.length;
     },
     editBook() {
       //console.log('/books/edit/'+ this.$store.state.currentBookid)
