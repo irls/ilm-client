@@ -2,7 +2,11 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios'
 import superlogin from 'superlogin-client'
+import PouchDB from 'pouchdb'
 
+
+
+const ilm_library = new PouchDB('ilm_library')
 
 Vue.use(Vuex)
 
@@ -10,19 +14,22 @@ const API_ALLBOOKS = '/static/books.json'
 
 export const store = new Vuex.Store({
   state: {
-    // auth
+    ilm_library_meta: {},
     currentUser: {},
     currentSession: {},
     isLoggedIn: false,
     auth: superlogin,
-    books: [],
+    ilm_library: ilm_library,
+    // books: [],
+    books_meta: [],
     currentBookid: '',
-    bookFilters: {filter: '', lang: 'en', importStatus: 'shared'},
-    editMode: 'Editor'
+    bookFilters: {filter: '', language: 'en', importStatus: 'shared'},
+    editMode: 'Editor',
   },
+
   getters: {
     allBooks (state) {
-      return state.books
+      return state.books_meta
     },
     currentBookFilters (state) {
       return state.bookFilters
@@ -36,16 +43,16 @@ export const store = new Vuex.Store({
       return state.editMode
     }
   },
+
   mutations: {
     setCurrentBookFilter (state, obj) { // replace any property of bookFilters
-      for (var prop in obj) if (['filter', 'lang', 'importStatus'].indexOf(prop) > -1) {
+      for (var prop in obj) if (['filter', 'language', 'importStatus'].indexOf(prop) > -1) {
         state.bookFilters[prop] = obj[prop]
       }
     },
     initiateBooks (state, books) {
       state.books = books
       if (state.route.params.hasOwnProperty('bookid')) state.currentBookid = state.route.params.bookid
-      // console.log('books', books)
     },
     setCurrentBook (state, bookid) {
       state.currentBookid = bookid
@@ -54,17 +61,25 @@ export const store = new Vuex.Store({
       state.editMode = editMode
     }
   },
+
   actions: {
     initiateBooks (context) {
-      axios.get(API_ALLBOOKS)
-        .then(response => {  // JSON responses are automatically parsed.
-          context.commit('initiateBooks', response.data.books)
-          // console.log(response.data.books)
-        })
-        .catch(e => {
-          // this.errors.push(e)
-          console.log('Error: ', e)
-        })
+
+      //state.ilm_library_meta = new PouchDB('ilm_library_meta')
+      // // setup sync
+      // superlogin.on('login', function(session){
+      //   PouchDB.sync('ilm_library_meta', superlogin.getDbUrl('ilm_library_meta'), {live:true})
+      //     .on('change', function(change) {
+      //       console.log(change)
+      //     })
+      // })
+      // // get initial list of book
+      // var api = this.state.ilm_library_meta.hoodieApi()
+      // api.findAll(item => item.type==='book_meta').then(function(books_meta){
+      //   this.state.books_meta = books_meta
+      //   console.log("Books loaded: "+ books_meta.length)
+      // })
+
     }
   }
 })

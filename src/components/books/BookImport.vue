@@ -31,7 +31,7 @@
                     <label class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
-                      <input name="bookfiles" type="file" v-show="false" accept="text/*" multiple @change="onFilesChange($event)">
+                      <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip" multiple @change="onFilesChange($event)">
 
                     </label>
                   </div>
@@ -54,7 +54,7 @@
                 </div>
                 <br><br><br><br>
 
-                <h4> Book Audio </h4>
+                <!-- <h4> Book Audio </h4>
 
                 <div class="col-sm-12">
                   <div class="col-sm-7">
@@ -69,7 +69,7 @@
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
 
-                      <input name='audiofiles' type="file" v-show="false" multiple @change="onFilesChange($event)" accept="audio/*">
+                      <input name='audioFiles' type="file" v-show="false" multiple @change="onFilesChange($event)" accept="audio/*,application/zip">
 
 
                     </label>
@@ -77,7 +77,7 @@
                   <span class="help-block"> &nbsp; &nbsp; Audio file, ZIP files or playlist </span>
                 </div>
 
-                <br><br><br><br>
+                <br><br><br><br> -->
 
                 <button class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
                   <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
@@ -114,7 +114,7 @@ export default {
           'Gutenberg Text',
           'Plain Text',
         ],
-        uploadFiles: {bookfiles: 0, audiofiles: 0},
+        uploadFiles: {bookFiles: 0, audioFiles: 0},
         formData: new FormData(),
         uploadProgress: "Uploading Files...",
 
@@ -129,9 +129,9 @@ export default {
     },
     saveDisabled: function() {
       //return (!this.bookURL && !this. bookFile);
-      console.log(this.uploadFiles.bookfiles, this.bookURL.length)
+      console.log(this.uploadFiles.bookFiles, this.bookURL.length)
 
-      return (this.uploadFiles.bookfiles==0 && this.bookURL.length==0)
+      return (this.uploadFiles.bookFiles==0 && this.bookURL.length==0)
     }
   },
   methods: {
@@ -142,7 +142,7 @@ export default {
       // clear formData
       let entries = this.formData.entries()
       for(let pair of entries) this.formData.delete(pair[0])
-      this.uploadFiles = {bookfiles: 0, audiofiles: 0}
+      this.uploadFiles = {bookFiles: 0, audioFiles: 0}
     },
     onFilesChange(e) {
       let fieldName = e.target.name
@@ -157,14 +157,14 @@ export default {
 
     onFormSubmit() {
       let auth = this.$store.state.auth
-
-
       // let confirmed = auth.confirmRole('librarian');  // for testing only
       //   console.log('Confirming role librarian: ', confirmed)
 
       this.formData.append('bookType', this.bookTypes[this.bookType]);
-      if (!this.uploadFiles.bookfiles && this.bookURL.length) this.formData.append('bookURL', this.bookURL);
-      if (!this.uploadFiles.audiofiles && this.audioURL.length) this.formData.append('audioURL', this.audioURL);
+      if (!this.uploadFiles.bookFiles && this.bookURL.length) this.formData.append('bookURL', this.bookURL);
+      if (!this.uploadFiles.audioFiles && this.audioURL.length) this.formData.append('audioURL', this.audioURL);
+
+      console.log('audioURL: ', this.audioURL.length, this.audioURL)
 
       let vm = this
       let api = auth.getHttp()

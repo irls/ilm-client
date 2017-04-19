@@ -36,16 +36,13 @@ import BookEditJson from './books/BookEdit_JSON'
 import BookEditDisplay from './books/BookEdit_Display'
 
 export default {
-
   name: 'Books',
-
   data () {
     return {
       metaVisible: false,
       colCount: 1
     }
   },
-
   components: {
     BooksToolbar,
     BooksGrid,
@@ -56,28 +53,22 @@ export default {
     BookEditJson,
     BookEditDisplay
   },
-
   methods: {
-
     toggleMetaVisible () {
       let doShow = !this.metaVisible
       if (doShow && this.hasBookSelected()) this.metaVisible = true
       else this.metaVisible = false
       this.recountRows()
     },
-
     hasBookSelected () {
       return !!this.$store.state.currentBookid
     },
-
     isEditMode () {
       return this.$store.state.route.path.indexOf('/books/edit') > -1
     },
-
     bookEditMode () {
       return this.$store.getters.bookEditMode
     },
-
     recountRows () {
       let count = 1
       if (this.hasBookSelected()) count++
@@ -85,7 +76,6 @@ export default {
       // console.log('Rows: '+ count)
       this.colCount = count
     }
-
   },
 
   watch: {
@@ -99,9 +89,6 @@ export default {
 </script>
 
 <style scoped>
-
- /*ul.nav.nav-tabs {margin-left: 3em; margin-top: 0; }*/
-
 /* Nudge the whole page up a bit */
  #booksarea {
      margin: 0; padding:0; margin-top: -10px;
@@ -150,28 +137,6 @@ div.bar {
 .collapsebtn:hover {
   color: green;
 }
-
-
-
-/*
-.clearfix:after {
-  content: "";
-  display: table;
-  clear: both;
-}
-
-.scrollable {
-  height: auto;
-  overflow: hidden;
-  backface-visibility: hidden;
-  overflow-y: auto !important;
-  will-change: overflow;
-  width: 100%;
-  display: flex;
-  height: 100vh;
-  position: relative;
-  will-change: overflow;
-}*/
 
 
 </style>

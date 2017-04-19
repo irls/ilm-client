@@ -28,7 +28,7 @@ export default {
       if (this.$route.params.hasOwnProperty('bookid'))
         this.setCurrentBookid(this.$route.params.bookid)
     }
-  },
+  }
 }
 </script>
 
