@@ -38,36 +38,36 @@ export default {
           addClass: 'bookid'
         },
 
-        // {
-        //   title: 'Subject',
-        //   path: 'category',
-        //   addClass: 'category'
-        // },
-        // {
-        //   title: 'Size',
-        //   path: 'length',
-        //   render (val) {
-        //     // return '~'+Math.round(val / 300) +'pg'
-        //     return `~${Math.round(val / 300)}pg`
-        //   }
-        // },
-        // {
-        //   title: 'Difficulty',
-        //   path: 'difficulty'
-        // },
-        // {
-        //   title: 'Published',
-        //   path: 'published',
-        //   html (val) {
-        //     // return `<i class='fa ${(val ? 'fa-check-square-o' : 'fa-square-o')}></i>`
-        //     // return "<i class='fa "+ (val ? "fa-check-square-o" : "fa-square-o") + "'></i>"
-        //     return '<i class="fa ' + (val ? 'fa-check-square-o' : 'fa-square-o') + '"></i>'
-        //   }
-        // },
-        // {
-        //   title: 'Type',
-        //   path: 'pubType'
-        // }
+        {
+          title: 'Subject',
+          path: 'category',
+          addClass: 'category'
+        },
+        {
+          title: 'Size',
+          path: 'length',
+          render (val) {
+            // return '~'+Math.round(val / 300) +'pg'
+            return `~${Math.round(val / 300)}pg`
+          }
+        },
+        {
+          title: 'Difficulty',
+          path: 'difficulty'
+        },
+        {
+          title: 'Published',
+          path: 'published',
+          html (val) {
+            // return `<i class='fa ${(val ? 'fa-check-square-o' : 'fa-square-o')}></i>`
+            // return "<i class='fa "+ (val ? "fa-check-square-o" : "fa-square-o") + "'></i>"
+            return '<i class="fa ' + (val ? 'fa-check-square-o' : 'fa-square-o') + '"></i>'
+          }
+        },
+        {
+          title: 'Type',
+          path: 'pubType'
+        }
       ],
       idField: '_id',
       selectedBooks: []
@@ -95,15 +95,18 @@ export default {
     books () { // filtered list of books
       let state = this.$store.state
       let books = this.$store.getters.allBooks
-      return books
-        .filter(book => book.language === state.bookFilters.language)
-        .filter(book => book.importStatus === state.bookFilters.importStatus)
+      console.log("Computed books: ", books.length)
+      let filteredbooks = books
+      //  .filter(book => book.language === state.bookFilters.language)
+      //  .filter(book => book.importStatus === state.bookFilters.importStatus)
         .filter(book => {
-          let str = `${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}` 
+          let str = `${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}`
           str = str.toLowerCase()
           let find = state.bookFilters.filter.toLowerCase().trim()
           return (str.indexOf(find) > -1)
         })
+      console.log("Computed books: ", filteredbooks.length)
+      return filteredbooks
     },
     booksMeta () { // because our grid does not work with nested values
       let result = []
