@@ -3,7 +3,7 @@
   <modal id="bookEditCoverModal" :value="show" effect="fade" @closed="closed" @opened="opened">
     <div slot="modal-header" class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
-      <h4 class="modal-title"><i class="fa fa-book"></i>Edit Cover</h4></div>
+      <h4 class="modal-title"><i class="fa fa-book"></i>Edit Cover</h4>
     </div>
     <div slot="modal-body" class="modal-body">
 
@@ -11,8 +11,8 @@
         <div class="col-md-4">
           <div class="bookCoverPreviewWrap">
             <div class="book-cover"><img :src="tmp.coverimg"></div>
-            <div ref="livePreviewTitle" id="livePreviewTitle" class="ql-editor"></div>
-            <div ref="livePreviewAuthor" id="livePreviewAuthor" class="ql-editor"></div>
+            <div ref="livePreviewTitle" id="livePreviewTitle" class="ql-editor" v-draggable="tmp.title"></div>
+            <div ref="livePreviewAuthor" id="livePreviewAuthor" class="ql-editor" v-draggable="tmp.author"></div>
           </div>
         </div>
         <div class="col-md-8">
@@ -21,11 +21,14 @@
           </div>
           <div class="book-list bookCoverCarouselWrap">
             <carousel-3d :display="7" :width="90" :height="115.5">
-              <slide v-for="(bc, index) in bookcovers" :key="index"  :index="index">
-                <img :src="bc.src">
+              <slide v-for="(bc, index) in bookcovers" :key="index" :index="index">
+                <img :src="bc.src" @click="selectBookCover(index)">
               </slide>
             </carousel-3d>
-            <span><i class="fa fa-plus"></i><i class="fa fa-folder-open-o"></i></span>
+            <span class="addBookCoverBtnWrap">
+              <i class="fa fa-plus"></i><i class="fa fa-folder-open-o"></i>
+              <input type="file" @change="addBookCover"/>
+            </span>
           </div>
           <div class="book-list">
             <div ref="quillContainerAuthor" id="quillContainerAuthor"></div>
@@ -55,12 +58,11 @@ import BOOKCOVERS from '../../../static/bookcovers.json'
 const quillOptions = {
   modules: {
     toolbar: [
-      ['bold', 'italic', 'underline', 'strike'],
+      ['bold', 'italic'],
       [{ 'size': ['small', false, 'large', 'huge'] }],
-      [{ 'color': [] }, { 'background': [] }],
+      [{ 'color': [] }],
       [{ 'font': [] }],
-      [{ 'align': [] }],
-      ['clean']
+      [{ 'align': [] }]
     ]
   },
   placeholder: '',
@@ -89,8 +91,19 @@ export default {
       bookcovers: BOOKCOVERS,
       tmp: {
         coverimg: '',
-        title: '',
-        author: ''
+        title: {
+          text: 'Sample Title',
+          top: 33,
+          left: 0,
+          scale: 1
+        },
+        author: {
+          text: 'ShoGHI FFFFFNDI',
+          top: 192,
+          left: 0,
+          scale: 1
+        }
+
       },
       quillTitle: null,
       quillAuthor: null,
@@ -102,10 +115,16 @@ export default {
   watch: {
     show () {
       this.tmp.coverimg = this.img.coverimg
-      this.tmp.title = this.img.title
-      this.tmp.author = this.img.author
-      this.quillTitle.pasteHTML(this.tmp.title)
-      this.quillAuthor.pasteHTML(this.tmp.author)
+      this.tmp.title.text = this.img.title
+      // this.tmp.title.top = this.img.title.top || 0
+      // this.tmp.title.left = this.img.title.left || 0
+      // this.tmp.title.scale = this.img.title.scale || 1
+      this.tmp.author.text = this.img.author
+      // this.tmp.author.top = this.img.author.top || 0
+      // this.tmp.author.left = this.img.author.left || 0
+      // this.tmp.author.scale = this.img.author.scale || 1
+      this.quillTitle.pasteHTML(this.tmp.title.text)
+      this.quillAuthor.pasteHTML(this.tmp.author.text)
     }
   },
 
@@ -128,15 +147,34 @@ export default {
   },
 
   methods: {
+
+    addBookCover (e) {
+      console.log('addedBookCover', e.target.files[0])
+    },
+
+    // Make bookcover selectable on vue-carousel-3d
+    selectBookCover (index) {
+      this.tmp.coverimg = this.bookcovers[index].src
+      this.tmp.title.top = this.bookcovers[index].title.top
+      this.tmp.title.left = this.bookcovers[index].title.left
+      this.tmp.title.scale = this.bookcovers[index].title.scale
+      this.tmp.author.top = this.bookcovers[index].author.top
+      this.tmp.author.left = this.bookcovers[index].author.left
+      this.tmp.author.scale = this.bookcovers[index].title.scale
+    },
+
+    // for this BookEditCoverModal Component -------------------------------------------------------
     opened () {
       this.$nextTick(() => {
         window.dispatchEvent(new Event('resize'))
       })
     },
+
     ok () {
       console.log('ok')
       this.closed()
     },
+
     cancel () {
       console.log('cancel')
       this.closed()
@@ -175,11 +213,15 @@ export default {
             width: 100%
         .ql-editor
           position: absolute
-          top: 0
-          left: 0
           width: 100%
           height: auto
           background-color: transparent
+          cursor: move
+          border: 1px dashed transparent
+          &:hover
+            border-color: rgba(#ccc, .7)
+            background-color: rgba(#fff, .1)
+
 
       .bookCoverCarouselWrap
         display: flex
@@ -194,6 +236,18 @@ export default {
             .carousel-3d-slide
               background-color: transparent
               border: none
+        .addBookCoverBtnWrap
+          position: relative
+          input
+            cursor: pointer
+            position: absolute
+            top: 0
+            left: 0
+            right: 0
+            bottom: 0
+            opacity: 0
+          &:hover
+            color: green
 .ql-editor
   width: 100%
   height: 300px

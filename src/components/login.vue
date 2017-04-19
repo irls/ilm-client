@@ -8,8 +8,10 @@
         <h3 class='title'>Login</h3>
         <div class="error-message" v-text="loginError"></div>
         <input type="text" name="user" placeholder="Email or Username" v-model="loginUser">
-        <input type="password" name="password" placeholder="Password" v-model="loginPassword">
-        <input type="submit" :class="{ 'disabled': !(loginUser && loginPassword) }" @click="user_login(loginUser, loginPassword)" value="Login" />
+        <input type="password" name="password" placeholder="Password" v-model="loginPassword"
+          @keyup="keycheck"
+        >
+        <input type="submit" :class="{ 'disabled': !(loginUser && loginPassword) }" @click="user_login" value="Login" />
         <div class="links"> <a @click="active = 'password'">Forgot your password?  <i class="fa fa-arrow-right"></i></a></div>
       </div>
 
@@ -28,11 +30,15 @@
 
 <script>
   import superlogin from 'superlogin-client'
+  import Vuex from 'vuex'
+  import axios from 'axios'
+  import hoodie from 'pouchdb-hoodie-api'
+  import PouchDB from 'pouchdb'
+  PouchDB.plugin(hoodie)
 
   export default {
     data () {
       return {
-
         active: 'login',
         auth: this.$store.state.auth,
 
@@ -44,18 +50,16 @@
         // Modal error messages
         loginError: '',
         passwordError: '',
-
-
       }
     },
     methods: {
-      user_login: function(username, password) {
-        if (!(username && password)) {
+      user_login: function() {
+        if (!(this.loginUser && this.loginPassword)) {
           this.loginError = 'Both Password and Username are required'
           return
         }
         var vu_this = this;
-        this.auth.login({username, password}).catch(function(error){
+        this.auth.login({username: this.loginUser, password: this.loginPassword}).catch(function(error){
           vu_this.loginError = error.message;
         })
       },
@@ -63,18 +67,22 @@
         this.auth.forgotPassword(email)
         alert("A login link has been sent by email to: "+ email)
         this.active = 'login'
+      },
+      keycheck: function(event) {
+        if (event.key == "Enter") this.user_login()
       }
 
     },
     created: function() {
-      // console.log("Setting up authentication object")
+      this.$store.state.process = process;
+      var vu_this = this
+      var auth = this.auth
+      var ilm_library_meta = new PouchDB('ilm_library_meta')
+      this.$store.state.ilm_library_meta = ilm_library_meta
 
-
-      //console.log(process.env);
-
-      this.auth.configure({
+      auth.configure({
         // An optional URL to API server, by default a current window location is used.
-        //serverUrl: 'http://localhost:3000',
+        // serverUrl: 'http://localhost:3000',
         serverUrl: process.env.ILM_API,
         // A list of API endpoints to automatically add the Authorization header to
         endpoints: [process.env.ILM_DB], // local couch db and cloudant
@@ -84,21 +92,50 @@
         checkExpired: true,
       })
 
-      var vu_this = this
       // login event
-      this.auth.on('login', function(session) {
+      auth.on('login', function(session) {
         if (session.password) {
           //console.log("Login successful, session: ", session)
-          vu_this.$store.state.currentUser = session;
-          vu_this.$store.state.isLoggedIn = true;
+          vu_this.$store.state.currentUser = session
+          vu_this.$store.state.isLoggedIn = true
         }
-      }, function(error){  })
+        //console.log(auth.getDbUrl('ilm_library_meta'))
+        PouchDB.sync('ilm_library_meta', auth.getDbUrl('ilm_library_meta'), {live:true})
+          .on('change', function(change) {
+            console.log(change)
+          })
+      })
       // logout event
-      this.auth.on('logout', function(message) {
+      auth.on('logout', function(message) {
         //console.log("Logout: ", message)
         vu_this.$store.state.currentUser = {};
         vu_this.$store.state.isLoggedIn = false;
-      }, function(error){  })
+      })
+
+      //
+      // window.setInterval(function(){
+      //   // verify user is logged in every 30 seconds
+      //   auth.refresh()
+      //   auth.checkExpired()
+      // }, 60000);
+
+
+      // setup sync
+      auth.on('login', function(session){
+        console.log("Logged in!")
+        console.log(auth.getDbUrl('ilm_library_meta'))
+        PouchDB.sync('ilm_library_meta', auth.getDbUrl('ilm_library_meta'), {live:true})
+          .on('change', function(change) { console.log(change) })
+      })
+
+      // get initial list of book
+      var api = ilm_library_meta.hoodieApi()
+      api.findAll(item => item.type==='book_meta').then(function(books_meta){
+        vu_this.$store.state.books_meta = books_meta
+        console.log("Books loaded: "+ books_meta.length)
+
+        
+      })
 
     }
   }

@@ -1,25 +1,42 @@
 <template>
   <div>
 
-    <div class="user">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-5">
-            <h4><i class="fa fa-users"></i>{{users.length}} Active Users</h4>
-            <select>
-              <option value="12" selected="">Show All</option>
-              <option value="13">Show Active</option>
-              <option value="14">Show Inactive</option>
-            </select>
-          </div>
-          <div class="col-md-7 user-right">
-            <i class="fa fa-calendar-check-o"></i><a href="#">All Work History</a>
-            <span>Filter: </span><input type="text" v-model="filterKey">
-            <a href="#" @click="userAddModalActive = true"><i class="fa fa-user-plus"></i>New User</a>
-          </div>
+    <div class="table toolbar">
+      <div class="tr">
+        <div class='td'>
+          <i class="fa fa-users"></i>
+        </div>
+        <div class='td'>
+          <h4>{{users.length}} Active Users</h4>
+        </div>
+        <div class='td'>
+          <select class="userselect form-control">
+            <option value="12" selected="">Show All</option>
+            <option value="13">Show Active</option>
+            <option value="14">Show Inactive</option>
+          </select>
+        </div>
+        <div class='td auto'></div>
+        <div class='td'>
+          <!-- <a href="#"><i class="fa fa-calendar-check-o"></i> All Work History</a> -->
+          <!-- Edit Button -->
+          <button @click='' class='btn btn-default'>
+            <i class="fa fa-calendar-check-o"></i>  All Work History
+          </button>  &nbsp;
+        </div>
+        <div class='td'>
+          <input type="text" class="form-control" v-model="filterKey" placeholder="Filter">
+        </div>
+        <div class='td'>
+          <!-- <a href="#" @click="userAddModalActive = true"><i class="fa fa-user-plus"></i> New User</a> -->
+          <button @click='userAddModalActive = true' class='btn btn-default'>
+            <i class="fa fa-user-plus"></i>  New User
+          </button>  &nbsp;
         </div>
       </div>
     </div>
+
+
 
     <form class="user-form">
       <div v-for="user in pagedUsers" class="user-form-box">
@@ -37,11 +54,17 @@
             @select="val => { user.languages = val }"
           ></select-languages>
         </div>
-        <div class="t-box"><span><i class="fa fa-calendar-check-o"></i>Work History</span></div>
-        <div class="t-box"><span><i class="fa fa-unlock"></i>Pass Reset</span></div>
+        <div class="t-box"><a href="#"><span><i class="fa fa-calendar-check-o"></i>Work History</span></a></div>
+
+        <div class="t-box"><a href="#"><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
+
+        <!-- <button @click='' class='btn btn-default t-box'>
+          <i class="fa fa-unlock"></i>  Reset Password
+        </button>  &nbsp; -->
+
         <div class="t-box" @click="user.enable=!user.enable">
-          <template v-if="user.enable"><span>Enable </span><i class="fa fa-toggle-on"></i></template>
-          <template v-else><span>Disable </span><i class="fa fa-toggle-off"></i></template>
+          <template v-if="user.enable"><span>Active </span><i class="fa fa-toggle-on"></i></template>
+          <template v-else><span>Disabled </span><i class="fa fa-toggle-off"></i></template>
         </div>
       </div>
     </form>
@@ -117,6 +140,62 @@ export default {
 
 }
 </script>
+
+
+<style scoped>
+.toolbar {
+   width: 100%;
+   height: 4em;
+   position: relative;
+   padding-left: .25em;
+   padding-right: .25em;
+   box-shadow: 0px 0px 3px 2px rgba(178, 191, 224, 0.53);
+   margin-top: -10px;
+ }
+.toolbar td {
+   text-align: left;
+   padding-top:0; margin-top:0;
+ }
+.toolbar td.right {
+  text-align: right;
+  position: inline;
+  padding-top: 11px;
+  float: right;
+  padding-right: 10px;
+}
+
+.table {
+  display: table;
+  /*border-spacing: 15px;*/
+  padding: 0;
+}
+.tr {
+ display: table-row;
+}
+.td {
+  display: table-cell;
+  vertical-align: middle;
+  white-space: nowrap;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 5px;
+}
+
+.td input.form-control {display: inline-block !important;}
+
+.tr .td:nth-child(1) {padding-left:10px; width: 4em;}
+  .tr .td:nth-child(1) i {font-size: 24pt; color:#555;}
+.tr .td:nth-child(2) {width: 12em;}
+  .tr .td:nth-child(2) h4 {font-size: 24px; padding-right: .5em;}
+.tr .td:nth-child(3) {font-size: 18px; width: 8em; line-height: 1.5em}
+.tr .td:nth-child(4) {width: auto; }
+.tr .td:nth-child(5) {width: 10em; text-align: right;}
+.tr .td:nth-child(6) {width: 12em;  }
+.tr .td:nth-child(7) {width: 8em; padding-right: 10px; }
+
+.user-form-box:nth-of-type(odd) {bakground-color: #f9f9f9}
+</style>
 
 <style lang="stylus">
 .user i

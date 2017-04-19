@@ -28,7 +28,7 @@ export default {
       if (this.$route.params.hasOwnProperty('bookid'))
         this.setCurrentBookid(this.$route.params.bookid)
     }
-  },
+  }
 }
 </script>
 
@@ -40,6 +40,7 @@ export default {
       overflow: scroll;
       overflow-x: hidden;
       min-width: 769px;
+
   }
   ::-webkit-scrollbar {
       width: 0px;  /* remove scrollbar space */
@@ -50,7 +51,7 @@ export default {
       background: #FF0000;
   }
   body {
-    background-color: #f2f1f1;
+    background-color: white;
     padding: 5px !important;
   }
 </style>

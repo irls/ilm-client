@@ -1,6 +1,6 @@
 <template>
-<div id="toolbar">
-<table class="toolbartable"><tr>
+<div>
+<table class="toolbar"><tr>
 
   <td>
     <h3><img src='/static/bookstack.svg' class='bookstack'/>
@@ -10,17 +10,13 @@
 
   <td class="right">
     <!-- Edit Button -->
-    <button v-if='$store.state.currentBookid' @click='editBook'
-    class='btn btn-default'>
+    <button v-if="$store.state.currentBookid && (isAdmin || isEditor || isLibrarian)"
+      @click='editBook' class='btn btn-default'>
       <i class="fa fa-pencil fa-lg"></i>  Edit
     </button>  &nbsp;
 
     <!-- Import Button -->
-    <!--<router-link to="/books/import" tag='button' class='btn btn-default'>
-      <i class="glyphicon glyphicon-plus"></i> Import
-    </router-link>   &nbsp; -->
-
-    <button id="show-modal" @click="importBook" class='btn btn-default'>
+    <button id="show-modal" @click="importBook" class="btn btn-default" v-show="isAdmin || isLibrarian">
       <i class="fa fa-pencil fa-lg"></i>  Import
     </button>  &nbsp;
 
@@ -34,14 +30,7 @@
 
     <!-- Language Dropdown -->
     <select @change="booksLanguageChange">
-      <option value="en">English</option>
-      <option value="es">Spanish</option>
-      <option value="du">German</option>
-      <option value="ru">Russian</option>
-      <option value="ar">Arabic</option>
-      <option value="fa">Farsi</option>
-      <option value="cn">Chinese</option>
-      <option value="ru">Romanian</option>
+      <option v-for="(name, code) in languages" :value="code">{{name}}</option>
     </select>
   </td>
 
@@ -61,19 +50,35 @@
 <script>
 
 import BookImport from './BookImport'
+import access from "../../mixins/access.js"
 
 export default {
+  data () {
+    return {
+      filterStr: '',
+      showModal: false,
+      languages: {
+        en: "English",
+        es: "Spanish",
+        du: "German",
+        ru: "Russian",
+        ar: "Arabic",
+        fa: "Farsi",
+        cn: "Chinese",
+        ro: "Romanian",
+      }
+    }
+  },
+
   name: 'toolbar',
+
+
   components: {
     BookImport
   },
 
-  data () {
-    return {
-      filterStr: '',
-      showModal: false
-    }
-  },
+  mixins: [access],
+
 
   methods: {
     booksFilterChange: function(el) {
@@ -81,6 +86,7 @@ export default {
     },
     booksLanguageChange: function(el) {
       this.$store.commit('setCurrentBookFilter', {lang: el.target.value});
+      console.log(el.target.value);
     },
     booksTypeChange: function(el) {
       this.$store.commit('setCurrentBookFilter', {importStatus: el.target.value});
@@ -103,8 +109,8 @@ export default {
 </script>
 
 
-<style scoped >
-.toolbartable {
+<style scoped>
+.toolbar {
    width: 100%;
    height: 4em;
    position: relative;
@@ -112,11 +118,11 @@ export default {
    padding-right: .25em;
    box-shadow: 0px 0px 3px 2px rgba(178, 191, 224, 0.53);
  }
-.toolbartable td {
+.toolbar td {
    text-align: left;
    padding-top:0; margin-top:0;
  }
-.toolbartable td.right {
+.toolbar td.right {
   text-align: right;
   position: inline;
   padding-top: 11px;
