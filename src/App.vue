@@ -18,16 +18,20 @@ export default {
     MainMenu, Login
   },
   methods: {
-    setCurrentBookid: function(bookid) {
-      this.$store.commit('setCurrentBook', bookid)
-    }
+    // loadBook: function(bookid) {
+    //   this.$store.dispatch('loadBook', bookid)
+    // }
   },
   watch: {
     '$route' () {
-      //console.log(this.$route)
       if (this.$route.params.hasOwnProperty('bookid'))
-        this.setCurrentBookid(this.$route.params.bookid)
+        this.$store.dispatch('loadBook', this.$route.params.bookid)
+        //this.loadBook(this.$route.params.bookid)
     }
+  },
+  created: function() {
+    // initiate books list
+    this.$store.dispatch('updateBooksList')
   }
 }
 </script>

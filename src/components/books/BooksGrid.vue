@@ -38,23 +38,23 @@ export default {
           addClass: 'bookid'
         },
 
-        {
-          title: 'Subject',
-          path: 'category',
-          addClass: 'category'
-        },
-        {
-          title: 'Size',
-          path: 'length',
-          render (val) {
-            // return '~'+Math.round(val / 300) +'pg'
-            return `~${Math.round(val / 300)}pg`
-          }
-        },
-        {
-          title: 'Difficulty',
-          path: 'difficulty'
-        },
+        // {
+        //   title: 'Subject',
+        //   path: 'category',
+        //   addClass: 'category'
+        // },
+        // {
+        //   title: 'Size',
+        //   path: 'length',
+        //   render (val) {
+        //     // return '~'+Math.round(val / 300) +'pg'
+        //     return `~${Math.round(val / 300)}pg`
+        //   }
+        // },
+        // {
+        //   title: 'Difficulty',
+        //   path: 'difficulty'
+        // },
         {
           title: 'Published',
           path: 'published',
@@ -83,29 +83,23 @@ export default {
       let bookid = ev.bookid
       if (bookid) {
         this.selectedBooks = [bookid]
-        this.$store.commit('setCurrentBook', bookid)
-        this.$router.replace({ path: '/books/' + bookid })
+        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
       }
     }
-    // setFilter (filter) {
-      // filterQuery = filter.trim()
-    // }
   },
   computed: {
     books () { // filtered list of books
       let state = this.$store.state
       let books = this.$store.getters.allBooks
-      console.log("Computed books: ", books.length)
+      //console.log("Computed books: ", books.length)
       let filteredbooks = books
-      //  .filter(book => book.language === state.bookFilters.language)
-      //  .filter(book => book.importStatus === state.bookFilters.importStatus)
+        .filter(book => (book.language === state.bookFilters.language))
+        .filter(book => book.importStatus === state.bookFilters.importStatus)
         .filter(book => {
-          let str = `${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}`
-          str = str.toLowerCase()
+          let str = `${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}`.toLowerCase()
           let find = state.bookFilters.filter.toLowerCase().trim()
           return (str.indexOf(find) > -1)
-        })
-      console.log("Computed books: ", filteredbooks.length)
+        }) 
       return filteredbooks
     },
     booksMeta () { // because our grid does not work with nested values
