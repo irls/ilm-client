@@ -36,7 +36,7 @@ export const store = new Vuex.Store({
     currentBookFilters (state) {
       return state.bookFilters
     },
-    currentBook (state) { 
+    currentBook (state) {
       return state.currentBookMeta
     },
     bookEditMode (state) {
@@ -121,11 +121,7 @@ export const store = new Vuex.Store({
           context.commit('SET_CURRENTBOOK', meta, book)
         })
       })
-
-
-
-
-
+      
     },
   }
 })
