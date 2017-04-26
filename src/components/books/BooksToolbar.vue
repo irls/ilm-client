@@ -16,7 +16,7 @@
     </button>  &nbsp;
 
     <!-- Import Button -->
-    <button id="show-modal" @click="importBook" class="btn btn-default" v-show="isAdmin || isLibrarian">
+    <button id="show-modal" @click="importBook" class="btn btn-default" v-if="(isAdmin || isLibrarian)">
       <i class="fa fa-pencil fa-lg"></i>  Import
     </button>  &nbsp;
 
@@ -36,13 +36,8 @@
 
 </tr></table>
 
-  <!-- Modal area -->
-  <BookImport v-if="showModal" @close_modal="showModal = false">
-    <!--
-      you can use custom content here to overwrite
-      default content
-    -->
-  </BookImport>
+  <!-- Import Books Modal Popup -->
+  <BookImport v-if="showImportBooksModal" @close_modal="showImportBooksModal=false" />
 
 </div>
 </template>
@@ -56,7 +51,7 @@ export default {
   data () {
     return {
       filterStr: '',
-      showModal: false,
+      showImportBooksModal: false,
       languages: {
         en: "English",
         es: "Spanish",
@@ -82,17 +77,17 @@ export default {
 
   methods: {
     booksFilterChange: function(el) {
-      this.$store.commit('setCurrentBookFilter', {filter: el.target.value});
+      this.$store.commit('SET_CURRENTBOOK_FILTER', {filter: el.target.value});
     },
     booksLanguageChange: function(el) {
-      this.$store.commit('setCurrentBookFilter', {lang: el.target.value});
-      console.log(el.target.value);
+      this.$store.commit('SET_CURRENTBOOK_FILTER', {language: el.target.value});
+      //console.log("language: "+el.target.value);
     },
     booksTypeChange: function(el) {
-      this.$store.commit('setCurrentBookFilter', {importStatus: el.target.value});
+      this.$store.commit('SET_CURRENTBOOK_FILTER', {importStatus: el.target.value});
     },
     bookCount() {
-      return this.$store.state.books.length;
+      return this.$store.state.books_meta && this.$store.state.books_meta.length;
     },
     editBook() {
       //console.log('/books/edit/'+ this.$store.state.currentBookid)
@@ -101,7 +96,7 @@ export default {
 
     importBook() {
       console.log("event ok");
-      this.showModal = true;
+      this.showImportBooksModal = true;
     }
 
   },

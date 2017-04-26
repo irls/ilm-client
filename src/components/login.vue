@@ -30,17 +30,13 @@
 
 <script>
   import superlogin from 'superlogin-client'
-  import Vuex from 'vuex'
-  import axios from 'axios'
-  import hoodie from 'pouchdb-hoodie-api'
   import PouchDB from 'pouchdb'
-  PouchDB.plugin(hoodie)
 
   export default {
     data () {
       return {
         active: 'login',
-        auth: this.$store.state.auth,
+        //auth: this.$store.state.auth,
 
         // Modal text fields
         loginUser: '',
@@ -59,9 +55,8 @@
           return
         }
         var vu_this = this;
-        this.auth.login({username: this.loginUser, password: this.loginPassword}).catch(function(error){
-          vu_this.loginError = error.message;
-        })
+        this.$store.state.auth.login({username: this.loginUser, password: this.loginPassword})
+          .catch((error) => vu_this.loginError = error.message)
       },
       user_passwordreset: function(email) {
         this.auth.forgotPassword(email)
@@ -74,15 +69,8 @@
 
     },
     created: function() {
-      this.$store.state.process = process;
-      var vu_this = this
-      var auth = this.auth
-      var ilm_library_meta = new PouchDB('ilm_library_meta')
-      this.$store.state.ilm_library_meta = ilm_library_meta
-
-      auth.configure({
+      this.$store.state.auth.configure({
         // An optional URL to API server, by default a current window location is used.
-        // serverUrl: 'http://localhost:3000',
         serverUrl: process.env.ILM_API,
         // A list of API endpoints to automatically add the Authorization header to
         endpoints: [process.env.ILM_DB], // local couch db and cloudant
@@ -93,48 +81,26 @@
       })
 
       // login event
+      let vu_this = this
+      let auth = this.$store.state.auth
       auth.on('login', function(session) {
         if (session.password) {
-          //console.log("Login successful, session: ", session)
-          vu_this.$store.state.currentUser = session
-          vu_this.$store.state.isLoggedIn = true
+          vu_this.$store.commit('RESET_LOGIN_STATE')
+          // this can only be set up after login
+          PouchDB.sync('ilm_library_meta', auth.getDbUrl('ilm_library_meta'), {live:true})
+            .on('change', (change) => vu_this.$store.dispatch('updateBooksList'))
+          // load intial book
+          let bookid = vu_this.$route.params.bookid
+          if (bookid) vu_this.$router.replace({ path: '/books/' + bookid })
+          //vu_this.$store.dispatch('loadBook', bookid)
         }
-        //console.log(auth.getDbUrl('ilm_library_meta'))
-        PouchDB.sync('ilm_library_meta', auth.getDbUrl('ilm_library_meta'), {live:true})
-          .on('change', function(change) {
-            console.log(change)
-          })
       })
       // logout event
       auth.on('logout', function(message) {
-        //console.log("Logout: ", message)
-        vu_this.$store.state.currentUser = {};
-        vu_this.$store.state.isLoggedIn = false;
-      })
-
-      //
-      // window.setInterval(function(){
-      //   // verify user is logged in every 30 seconds
-      //   auth.refresh()
-      //   auth.checkExpired()
-      // }, 60000);
-
-
-      // setup sync
-      auth.on('login', function(session){
-        console.log("Logged in!")
-        console.log(auth.getDbUrl('ilm_library_meta'))
-        PouchDB.sync('ilm_library_meta', auth.getDbUrl('ilm_library_meta'), {live:true})
-          .on('change', function(change) { console.log(change) })
-      })
-
-      // get initial list of book
-      var api = ilm_library_meta.hoodieApi()
-      api.findAll(item => item.type==='book_meta').then(function(books_meta){
-        vu_this.$store.state.books_meta = books_meta
-        console.log("Books loaded: "+ books_meta.length)
-
-        
+        // for testing only
+        vu_this.$store.dispatch('emptyDB')
+        //
+        window.setTimeout( () => vu_this.$store.commit('RESET_LOGIN_STATE'), 1000)
       })
 
     }

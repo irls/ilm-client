@@ -5,9 +5,9 @@ import { store } from './store'
 import { sync } from 'vuex-router-sync'
 import VueResource from 'vue-resource'
 import * as directives from './directives'
-import superlogin from 'superlogin-client'
-import PouchDB from 'pouchdb'
-import hoodieApi from 'pouchdb-hoodie-api'
+// import superlogin from 'superlogin-client'
+// import PouchDB from 'pouchdb'
+// import hoodieApi from 'pouchdb-hoodie-api'
 
 sync(store, router)
 // register global directives.
@@ -21,10 +21,6 @@ new Vue({
   router,
   store,
   render: h => h(App),
-  created: function() {
-
-    
-  }
 })
 
 Vue.use(VueResource);

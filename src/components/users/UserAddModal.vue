@@ -6,11 +6,20 @@
       <h4 class="modal-title"><i class="fa fa-user"></i>Add User</h4><i class="fa fa-user user-icon"></i></div>
     </div>
     <div slot="modal-body" class="modal-body">
+      <div class="form-group"><span class="input-group-addon"></span>
+          <input type="text" class="form-control" placeholder="Real Name" v-model="name">
+      </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-user"></i></span>
-          <input type="text" class="form-control" placeholder="User Name">
+          <input type="text" class="form-control" placeholder="Username" v-model="username">
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
-          <input type="text" class="form-control" placeholder="Email" name="email">
+          <input type="text" class="form-control" placeholder="Email" name="email" v-model="email">
+      </div>
+      <div class="form-group"><span class="input-group-addon"></span>
+          <input type="password" class="form-control" placeholder="Password" v-model="password">
+      </div>
+      <div class="form-group"><span class="input-group-addon"></span>
+          <input type="password" class="form-control" placeholder="Confirm Password" v-model="confirmPassword">
       </div>
       <div class="form-group"><span class="input-group-addon"></span>
         <select-roles
@@ -57,6 +66,13 @@ export default {
 
   data () {
     return {
+      name: "",
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      roles: [],
+      languages: [],
       selecteRoles: [],
       selecteLanguages: []
     }
@@ -71,7 +87,25 @@ export default {
 
   methods: {
     ok () {
-      console.log('ok')
+      let auth = this.$store.state.auth;
+      let confirmed = auth.confirmRole('admin');
+      let api = auth.getHttp();
+      let newUser = {
+        name: this.name,
+        username: this.username,
+        email: this.email,
+        password: this.password,
+        confirmPassword: this.confirmPassword,
+        roles: this.roles,
+        languages: this.languages,
+      };
+      api.post('/api/v1/users', newUser)
+        .then(function(response){
+          
+        })
+        .catch(function(error){
+          
+        });
       this.closed()
     },
     cancel () {

@@ -32,42 +32,42 @@ export default {
           path: 'author',
           addClass: 'author'
         },
-        {
-          title: 'BookID',
-          path: 'bookid',
-          addClass: 'bookid'
-        },
+        // {
+        //   title: 'BookID',
+        //   path: 'bookid',
+        //   addClass: 'bookid'
+        // },
 
         // {
         //   title: 'Subject',
         //   path: 'category',
         //   addClass: 'category'
         // },
-        // {
-        //   title: 'Size',
-        //   path: 'length',
-        //   render (val) {
-        //     // return '~'+Math.round(val / 300) +'pg'
-        //     return `~${Math.round(val / 300)}pg`
-        //   }
-        // },
+        {
+          title: 'Size',
+          path: 'wordcount',
+          render (val) {
+            // return '~'+Math.round(val / 300) +'pg'
+            return `${Math.round(val / 300)} pages`
+          }
+        },
         // {
         //   title: 'Difficulty',
         //   path: 'difficulty'
         // },
-        // {
-        //   title: 'Published',
-        //   path: 'published',
-        //   html (val) {
-        //     // return `<i class='fa ${(val ? 'fa-check-square-o' : 'fa-square-o')}></i>`
-        //     // return "<i class='fa "+ (val ? "fa-check-square-o" : "fa-square-o") + "'></i>"
-        //     return '<i class="fa ' + (val ? 'fa-check-square-o' : 'fa-square-o') + '"></i>'
-        //   }
-        // },
-        // {
-        //   title: 'Type',
-        //   path: 'pubType'
-        // }
+        {
+          title: 'Published',
+          path: 'published',
+          html (val) {
+            // return `<i class='fa ${(val ? 'fa-check-square-o' : 'fa-square-o')}></i>`
+            // return "<i class='fa "+ (val ? "fa-check-square-o" : "fa-square-o") + "'></i>"
+            return '<i class="fa ' + (val ? 'fa-check-square-o' : 'fa-square-o') + '"></i>'
+          }
+        },
+        {
+          title: 'Type',
+          path: 'pubType'
+        }
       ],
       idField: '_id',
       selectedBooks: []
@@ -82,28 +82,31 @@ export default {
       // console.log(ev.bookid)
       let bookid = ev.bookid
       if (bookid) {
-        this.selectedBooks = [bookid]
-        this.$store.commit('setCurrentBook', bookid)
-        this.$router.replace({ path: '/books/' + bookid })
+        //this.selectedBooks = [bookid]
+        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
       }
     }
-    // setFilter (filter) {
-      // filterQuery = filter.trim()
-    // }
+  },
+  watch: {
+    '$route' () {
+      if (this.$route.params.hasOwnProperty('bookid'))
+        this.selectedBooks = [this.$route.params.bookid]
+    }
   },
   computed: {
     books () { // filtered list of books
       let state = this.$store.state
       let books = this.$store.getters.allBooks
-      return books
-        .filter(book => book.language === state.bookFilters.language)
+      //console.log("Computed books: ", books.length)
+      let filteredbooks = books
+        .filter(book => (book.language === state.bookFilters.language))
         .filter(book => book.importStatus === state.bookFilters.importStatus)
         .filter(book => {
-          let str = `${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}` 
-          str = str.toLowerCase()
+          let str = `${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}`.toLowerCase()
           let find = state.bookFilters.filter.toLowerCase().trim()
           return (str.indexOf(find) > -1)
         })
+      return filteredbooks
     },
     booksMeta () { // because our grid does not work with nested values
       let result = []
