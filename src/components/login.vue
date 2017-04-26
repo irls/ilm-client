@@ -89,6 +89,10 @@
           // this can only be set up after login
           PouchDB.sync('ilm_library_meta', auth.getDbUrl('ilm_library_meta'), {live:true})
             .on('change', (change) => vu_this.$store.dispatch('updateBooksList'))
+          // load intial book
+          let bookid = vu_this.$route.params.bookid
+          if (bookid) vu_this.$router.replace({ path: '/books/' + bookid })
+          //vu_this.$store.dispatch('loadBook', bookid)
         }
       })
       // logout event
