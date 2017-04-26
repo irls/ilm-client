@@ -129,7 +129,7 @@ export default {
     },
     saveDisabled: function() {
       //return (!this.bookURL && !this. bookFile);
-      console.log(this.uploadFiles.bookFiles, this.bookURL.length)
+      //console.log(this.uploadFiles.bookFiles, this.bookURL.length)
 
       return (this.uploadFiles.bookFiles==0 && this.bookURL.length==0)
     }
@@ -156,77 +156,37 @@ export default {
     },
 
     onFormSubmit() {
-      let auth = this.$store.state.auth
-      // let confirmed = auth.confirmRole('librarian');  // for testing only
-      //   console.log('Confirming role librarian: ', confirmed)
+      let vu_this = this
+      let api = this.$store.state.auth.getHttp()
 
       this.formData.append('bookType', this.bookTypes[this.bookType]);
       if (!this.uploadFiles.bookFiles && this.bookURL.length) this.formData.append('bookURL', this.bookURL);
       if (!this.uploadFiles.audioFiles && this.audioURL.length) this.formData.append('audioURL', this.audioURL);
 
-      console.log('audioURL: ', this.audioURL.length, this.audioURL)
-
-      let vm = this
-      let api = auth.getHttp()
-
       var config = {
         onUploadProgress: function(progressEvent) {
           var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total );
-          vm.uploadProgress = "Uploading Files... " + percentCompleted + "%";
+          vu_this.uploadProgress = "Uploading Files... " + percentCompleted + "%";
         }
       }
 
       this.isUploading = true
       api.post('/api/v1/books', this.formData, config).then(function(response){
         if (response.status===200) {
-          console.log('200 response', response.data);
           // hide modal after one second
-          vm.uploadProgress = "Upload Successful"
-          setTimeout(function(){ vm.$emit('close_modal') }, 1000)
+          vu_this.uploadProgress = "Upload Successful"
+          setTimeout(function(){ vu_this.$emit('close_modal') }, 1000)
         } else {
           // not sure what we should be doing here
-          console.log('non-200 response. ', response);
-          vm.formReset()
+          vu_this.formReset()
         }
-        //vm.isUploading = false;
-      }).catch(function(err){
+      }).catch((err) => {
         console.log('error: '+ err)
-        //this.formReset()
-        vm.isUploading = false;
+        vu_this.formReset()
+        setTimeout(function(){ vu_this.$emit('close_modal') }, 1000)
       });
 
-
-
     },
-
-    // onFileChange(e) {
-    //   console.log("upload");
-    //   var fieldName = "book_field";
-    //   var fileList = e.target.files;
-    //   console.log(fieldName);
-    //   console.log(fileList[0]);
-    //   if (fileList.length)
-    //     return;
-    //   const formData = new FormData();
-    //   Array
-    //     .from(Array(fileList.length).keys())
-    //     .map(x => {
-    //       formData.append(fieldName, fileList[x], fileList[x].name);
-    //     });
-    //   alert(formData);
-    //   upload(formData);
-    // },
-
-    // upload(formData) {
-    //   const url = `${BASE_URL}/upload_books/upload`;
-    //   return axios.post(url, formData)
-    //   // get data
-    //   .then(x => x.data)
-    //   // add url field
-    //   .then(x => x.map(bk => Object.assign({},
-    //       bk, { url: `${BASE_URL}/upload_books/${bk.id}` })));
-    // }
-
   },
 }
 </script>
