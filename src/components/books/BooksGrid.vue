@@ -32,25 +32,25 @@ export default {
           path: 'author',
           addClass: 'author'
         },
-        {
-          title: 'BookID',
-          path: 'bookid',
-          addClass: 'bookid'
-        },
+        // {
+        //   title: 'BookID',
+        //   path: 'bookid',
+        //   addClass: 'bookid'
+        // },
 
         // {
         //   title: 'Subject',
         //   path: 'category',
         //   addClass: 'category'
         // },
-        // {
-        //   title: 'Size',
-        //   path: 'length',
-        //   render (val) {
-        //     // return '~'+Math.round(val / 300) +'pg'
-        //     return `~${Math.round(val / 300)}pg`
-        //   }
-        // },
+        {
+          title: 'Size',
+          path: 'wordcount',
+          render (val) {
+            // return '~'+Math.round(val / 300) +'pg'
+            return `${Math.round(val / 300)} pages`
+          }
+        },
         // {
         //   title: 'Difficulty',
         //   path: 'difficulty'
@@ -82,9 +82,15 @@ export default {
       // console.log(ev.bookid)
       let bookid = ev.bookid
       if (bookid) {
-        this.selectedBooks = [bookid]
+        //this.selectedBooks = [bookid]
         this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
       }
+    }
+  },
+  watch: {
+    '$route' () {
+      if (this.$route.params.hasOwnProperty('bookid'))
+        this.selectedBooks = [this.$route.params.bookid]
     }
   },
   computed: {
@@ -99,7 +105,7 @@ export default {
           let str = `${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}`.toLowerCase()
           let find = state.bookFilters.filter.toLowerCase().trim()
           return (str.indexOf(find) > -1)
-        }) 
+        })
       return filteredbooks
     },
     booksMeta () { // because our grid does not work with nested values

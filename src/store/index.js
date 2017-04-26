@@ -21,6 +21,7 @@ export const store = new Vuex.Store({
 
     currentBookid: '',
     currentBook: {},
+    currentBookMeta: {},
     currentBook_dirty: false,
     currentBookMeta_dirty: false,
 
@@ -36,10 +37,7 @@ export const store = new Vuex.Store({
       return state.bookFilters
     },
     currentBook (state) {
-      // return state.books.find(book => book.bookid == state.route.params.bookid)
-      // console.log(state.route.params.bookid)
-      if (!state.books) return '';
-      return state.books.find(book => book.meta.bookid === state.currentBookid)
+      return state.currentBookMeta
     },
     bookEditMode (state) {
       return state.editMode
@@ -61,8 +59,13 @@ export const store = new Vuex.Store({
     //   if (state.route.params.hasOwnProperty('bookid')) state.currentBookid = state.route.params.bookid
     // },
 
-    SET_CURRENTBOOK (state, bookid) {
-      state.currentBookid = bookid
+    SET_CURRENTBOOK (state, meta, book) {
+      //console.log(meta, book)
+      state.currentBookid = meta._id
+      state.currentBook = book
+      state.currentBookMeta = meta
+      state.currentBook_dirty = false
+      state.currentBookMeta_dirty = false
     },
 
     setEditMode (state, editMode) {
@@ -98,14 +101,27 @@ export const store = new Vuex.Store({
     },
     loadBook (context, bookid) {
       console.log("loading currentBook: ", bookid)
-      // if no currentbookid, exit
+      if (!bookid) return  // if no currentbookid, exit
+      if (bookid === context.state.currentBookid) return // skip if already loaded
+
       // if currentbook exists, check if currrent book needs saving
+      let state = context.state
+      let oldBook = state.currentBookid;
+
+      if (oldBook && state.currentBook_dirty || state.currentBookMeta_dirty) {
+        // save old state
+      }
 
       // check if new book is in cache
       // if cached locally, load
       // now query to see if book matches latest _rev
       // if not, load latest version and replace
-      context.commit('SET_CURRENTBOOK', bookid)
+      PouchDB(state.auth.getDbUrl('ilm_library_meta')).get(bookid).then(function(meta) {
+        PouchDB(state.auth.getDbUrl('ilm_library')).get(bookid).then(function(book) {
+          context.commit('SET_CURRENTBOOK', meta, book)
+        })
+      })
+      
     },
   }
 })
