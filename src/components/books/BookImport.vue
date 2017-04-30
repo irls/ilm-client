@@ -6,8 +6,10 @@
 
           <div class="modal-header">
             <div class="header-title">
-              <img src='/static/bookstack.svg' class='book-logo'>
-              <h3 class="header-h">Import New Book</h3>
+              <img src='/static/bookstack.svg' class='book-logo'> <h3 class="header-h">Import New Book</h3>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')">
+              <i class="fa fa-times-circle-o" aria-hidden="true"></i>
+              </button>
             </div>
           </div>
 
@@ -313,6 +315,8 @@ export default {
 
 #uploadingMsg {text-align: center; padding-bottom: 1em;}
 #uploadingMsg h2 i {font-size: 24pt; color: silver}
+
+button.close i.fa {font-size: 18pt; padding-right: .5em;}
 
 
 </style>

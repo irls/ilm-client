@@ -3,13 +3,13 @@
     "src": "/static/bookcovers/adj.png",
     "title": {
       "text": "Sample Title",
-      "top": 33,
+      "top": 13,
       "left": 0,
       "scale": 1
     },
     "author": {
       "text": "Shoghi Effendi",
-      "top": 192,
+      "top": 142,
       "left": 0,
       "scale": 1
     }

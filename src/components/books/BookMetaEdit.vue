@@ -3,7 +3,9 @@
 
     <div id='bookmeta' v-if="currentBook">
       <div class='booktopinfo'>
-        <div class='coverimg' @click="bookEditCoverModalActive = true"><img v-bind:src="currentBook.coverimg" /></div>
+        <div class='coverimg' @click="bookEditCoverModalActive = true">
+          <img v-bind:src="currentBook.coverimg" />
+        </div>
         <h4 class='title'>{{ currentBook.title }}</h4>
         <h5 class='subtitle' v-if='currentBook.subtitle'>{{ currentBook.subtitle }}</h5>
         <h5 class='author'>{{ currentBook.author }},
@@ -13,10 +15,10 @@
       </div>
 
       <div class="download-area col-sm-6">
-        <br/>
+
         <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
           <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
-        </button>
+        </button>    <br/>
       </div>
 
       <div class="download-area col-sm-6">
@@ -246,7 +248,7 @@ export default {
     float: right;
   }
   .download-area .btn_audio_upload {
-    float: left;
+    float: left;  margin: 10px; margin-left: -15px;
   }
   /* Wrapper around entire side editor */
   .sidebar { margin-top:0px; position: relative; margin-left:0; padding-left:0;}
