@@ -61,7 +61,7 @@ export default {
       this.recountRows()
     },
     hasBookSelected () {
-      return !!this.$store.state.currentBookid
+      return !!this.$store.state.currentBook
     },
     isEditMode () {
       return this.$store.state.route.path.indexOf('/books/edit') > -1

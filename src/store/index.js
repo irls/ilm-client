@@ -19,7 +19,7 @@ export const store = new Vuex.Store({
     auth: superlogin,
     books_meta: [],
 
-    currentBookid: '',
+    //currentBookid: '',
     currentBook: {},
     currentBookMeta: {},
     currentBook_dirty: false,
@@ -63,7 +63,7 @@ export const store = new Vuex.Store({
 
     SET_CURRENTBOOK (state, meta) {
       console.log('SET_CURRENTBOOK', meta)
-      state.currentBookid = meta._id
+      // state.currentBookid = meta._id
       //state.currentBook = book
       state.currentBookMeta = meta
       state.currentBook_dirty = false
@@ -103,12 +103,12 @@ export const store = new Vuex.Store({
     },
     loadBook (context, bookid) {
       console.log("loading currentBook: ", bookid)
-      if (!bookid) return  // if no currentbookid, exit
+      // if (!bookid) return  // if no currentbookid, exit
       // if (bookid === context.state.currentBookid) return // skip if already loaded
 
       // if currentbook exists, check if currrent book needs saving
       var state = context.state
-      let oldBook = state.currentBookid;
+      let oldBook = (state.currentBook && state.currentBook._id);
 
       if (oldBook && state.currentBook_dirty || state.currentBookMeta_dirty) {
         // save old state

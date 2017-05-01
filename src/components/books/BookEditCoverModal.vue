@@ -31,8 +31,8 @@
       <div class="col-md-12">
 
         <div class="col-sm-4">
-          <img :src="uploadImage" class="preview_upload" v-show="uploadImage.length>10" />
-          <img :src="uploadImageBlank" class="preview_upload" v-show="uploadImage.length<10" />
+          <img :src="uploadImage" class="preview_upload" v-show="uploadImage.length>0" />
+          <img :src="uploadImageBlank" class="preview_upload" v-show="uploadImage.length<1" />
         </div>
 
         <div class="col-sm-8">
@@ -40,16 +40,14 @@
             <span class="input-group-addon"><i class="fa fa-globe"></i></span>
             <input type="text" class="form-control" placeholder="URL" v-model="uploadImage" />
           </div>
+
            <br> &nbsp;&nbsp;&nbsp;  or <br><br>
+
           <label class='btn btn-default' type="file">
             <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
             <input name="coverFile" type="file" v-show="false" accept="image/*"  @change="onFilesChange($event)"><br>
-
           </label>
         </div>
-
-
-
 
 
       </div>
@@ -272,11 +270,13 @@ export default {
 
     onFilesChange(e) {
       var files = e.target.files || e.dataTransfer.files;
+      //console.log('*** onFilesChange', files)
       if (!files.length) return;
       this.createImage(files[0]);
     },
 
     createImage(file) {
+      //console.log('*** Creating new image', file)
       var reader = new FileReader();
       var vm = this;
       reader.onload = (e) => { vm.uploadImage = e.target.result };
@@ -297,12 +297,11 @@ export default {
 
       return ilm_library_files.get(bookid).catch(function (err) {
         if (err.name==='not_found') return ilm_library_files.put({_id:bookid, type:'book'}).then(doc => doc)
-      }).then(function(files) {
-        //console.log('Files: ', files)
-        files._attachments = (files._attachments || {})
-        files._attachments.coverimg = {content_type: mime, data: urlData}
-        return ilm_library_files.put(files).then(function(doc) {
-          //console.log('just put file attachements in. ', doc)
+         else console.log('Oops, we should not ever be here... ', err)
+      }).then(function(doc) {
+        doc._attachments = (doc._attachments || {})
+        doc._attachments.coverimg = {content_type: mime, data: urlData}
+        return ilm_library_files.put(doc).then(function(doc) {
           var ilm_library_meta = new PouchDB('ilm_library_meta')
           return ilm_library_meta.get(bookid).then(doc => {
             console.log('finally got here!')
@@ -311,7 +310,7 @@ export default {
             vm.img.coverimg = coverimg
             return ilm_library_meta.put(doc)
           })
-        })
+        }).catch((err) => console.log(err))
       }).catch(function (err) {
         // handle any errors
       });
@@ -319,7 +318,7 @@ export default {
     },
 
     uploadNewImageURL(url) {
-      console.log('loading url: ', url)
+      //console.log('loading url: ', url)
       var vm = this
       return new Promise(function(resolve, reject){
         var image = new Image();
