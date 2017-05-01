@@ -47,8 +47,9 @@ export default {
       return block.classes.trim()
     },
     currentBookContent: function(){
-      let book = this.currentBook;
-      let blocks = this.currentBookContentBlocks;
+      let book = this.$store.state.currentBook
+      let meta = this.$store.state.currentBookMeta
+      let blocks = this.currentBookContentBlocks
       let displayHTML= '';
       for (let block of blocks) {
         let tag = this.block_tag(block.type)
@@ -56,7 +57,7 @@ export default {
         let parnum = (block.type=='par' && block.hasOwnProperty('parnum')) ? ` data-parnum="${block.parnum}"` : ''
         let secnum = (block.type=='header' && block.hasOwnProperty('secnum'))?` data-section="${block.secnum}"`:''
         let lang = ' lang="en"  dir="ltr"';
-        let language = block.hasOwnProperty('lang') ? block.lang : book.meta.lang
+        let language = block.hasOwnProperty('lang') ? block.lang : meta.lang
         if (language) {
           lang = ` lang="${language}"`
           lang += ['fa','ar','iw'].indexOf(language)>-1 ? ` dir="rtl"` : ` dir="ltr"`

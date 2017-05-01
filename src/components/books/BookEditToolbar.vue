@@ -1,9 +1,8 @@
 <template>
   <table class="toolbar"><tr>
     <td>
-      <h3 v-if="currentBook().meta.title.length"><i class="fa fa-pencil fa-lg"></i>
-       {{currentBook().meta.title}}
-      </h3>
+      <h3 v-if="$store.state.currentBook" class='title'>
+        <i class="fa fa-pencil"></i> {{$store.state.currentBook.title}} </h3>
     </td>
 
     <td class='right'>
@@ -33,16 +32,17 @@ export default {
         'HTML': 'HTML',
         'JSON': 'JSON',
         'Display': 'Display'
-      }
+      },
+      //currentBook: this.$store.state.currentBook,
+
     }
   },
   methods: {
     currentBook: function() {
-      if (this.$store.getters.currentBook) return this.$store.getters.currentBook
-      else return {title:''}
+      return this.$store.state.currentBook
     },
     getEditMode: function() {
-      let editMode = this.$store.getters.bookEditMode()
+      let editMode = this.$store.state.editMode
       return editMode
     },
     viewSelect: function(val) {
@@ -124,6 +124,10 @@ button:hover {
 
 #viewmode, button.booksbtn {
   display: inline; float: right; padding-left: 10px; padding-right: 10px;
+}
+
+h3.title i {
+  font-size: 24pt;
 }
 
 </style>

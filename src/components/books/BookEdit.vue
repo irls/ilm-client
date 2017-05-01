@@ -43,7 +43,7 @@ export default {
     return {
       data: '',
       isEditing: false,
-      book: {}
+      book: this.$store.state.currentBook
     }
   },
   components: {
@@ -99,14 +99,15 @@ export default {
 
   },
   computed: {
-    currentBook: function() {
-      this.book = this.$store.getters.currentBook
-      return this.book
-    },
-    currentBookContentBlocks: function () {
+    // currentBook: function() {
+    //   this.book = this.$store.state.currentBook
+    //   console.log(this.book)
+    //   return this.book
+    // },
+    currentBookContentBlocks: function() {
       //console.log("currentBookContentBlocks", this.currentBook)
-      this.book = this.currentBook
-      if (this.book.hasOwnProperty('content')) {
+      //this.book = this.$store.state.currentBook
+      if (this.book && this.book.content) {
         //console.log(this.book.content_blocks)
         return this.book.content
       }
