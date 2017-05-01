@@ -98,7 +98,9 @@
       // logout event
       auth.on('logout', function(message) {
         // for testing only
-        vu_this.$store.dispatch('emptyDB')
+        //vu_this.$store.dispatch('emptyDB')
+        PouchDB('ilm_library_meta').destroy();
+
         //
         window.setTimeout( () => vu_this.$store.commit('RESET_LOGIN_STATE'), 1000)
       })
