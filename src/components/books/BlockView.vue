@@ -16,16 +16,17 @@
           <!-- All block classes -->
           <span v-for='classType of Object.keys(blockClasses)' class='menulink'>
             &nbsp; &nbsp; &nbsp;
-            <dropdown :visible="visible" :position="position" @clickOut="visible = false">
+            <!-- <dropdown :visible="visible" :position="position" @clickOut="visible = false">
 
               {{classType}} <i class="fa fa-caret-square-o-down" @click="visible = true"></i>
-              <!-- <div class="inlineBlock hero is-primary" @click="visible = true">
+              <div class="inlineBlock hero is-primary" @click="visible = true">
                 <div class="hero-body">Link</div>
-              </div> -->
+              </div>
               <div slot="dropdown" class="dialog">
                 Content
               </div>
-            </dropdown>
+
+            </dropdown> -->
 
 
 
@@ -242,7 +243,7 @@ div.content {
  width: 100%;
 }
 .blockinfo-content {
-  /*display: none;*/
+  display: none;
 }
 .blockinfo .edit {
   font-size: 1.25em; padding-right: 3em;
@@ -296,7 +297,7 @@ i.fa-microphone:hover, i.fa-stop-circle-o:hover  {color: maroon}
 
 
 
-/*
+/**/
 
 
 div.par {display: block;}
@@ -306,7 +307,7 @@ div.viewercontent.ocean div.content.par.dropcap::first-letter {
   float: left !important; padding-left:0; font-style: 10em;; text-indent:0; color: darkgreen;
   margin-right: .1em; font-size: 3em; margin-top: -.12em; margin-bottom: -.5em;
 }
-*/
+
 
 .menulink:hover {cursor: pointer; color: navy;}
 

@@ -37,12 +37,14 @@ export const store = new Vuex.Store({
       return state.bookFilters
     },
     currentBook (state) {
-      return state.currentBookMeta
+      return state.currentBook
     },
     bookEditMode (state) {
       return state.editMode
     }
   },
+
+
 
   mutations: {
     SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
@@ -59,10 +61,10 @@ export const store = new Vuex.Store({
     //   if (state.route.params.hasOwnProperty('bookid')) state.currentBookid = state.route.params.bookid
     // },
 
-    SET_CURRENTBOOK (state, meta, book) {
-      //console.log(meta, book)
+    SET_CURRENTBOOK (state, meta) {
+      console.log('SET_CURRENTBOOK', meta)
       state.currentBookid = meta._id
-      state.currentBook = book
+      //state.currentBook = book
       state.currentBookMeta = meta
       state.currentBook_dirty = false
       state.currentBookMeta_dirty = false
@@ -102,10 +104,10 @@ export const store = new Vuex.Store({
     loadBook (context, bookid) {
       console.log("loading currentBook: ", bookid)
       if (!bookid) return  // if no currentbookid, exit
-      if (bookid === context.state.currentBookid) return // skip if already loaded
+      // if (bookid === context.state.currentBookid) return // skip if already loaded
 
       // if currentbook exists, check if currrent book needs saving
-      let state = context.state
+      var state = context.state
       let oldBook = state.currentBookid;
 
       if (oldBook && state.currentBook_dirty || state.currentBookMeta_dirty) {
@@ -118,7 +120,10 @@ export const store = new Vuex.Store({
       // if not, load latest version and replace
       PouchDB(state.auth.getDbUrl('ilm_library_meta')).get(bookid).then(function(meta) {
         PouchDB(state.auth.getDbUrl('ilm_library')).get(bookid).then(function(book) {
-          context.commit('SET_CURRENTBOOK', meta, book)
+          //console.log('meta: ', meta)
+          //console.log('book: ', book)
+          context.state.currentBook = book
+          context.commit('SET_CURRENTBOOK', meta)
         })
       })
 

@@ -15,10 +15,9 @@
       </div>
 
       <div class="download-area col-sm-6">
-
         <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
           <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
-        </button>    <br/>
+        </button> 
       </div>
 
       <div class="download-area col-sm-6">
@@ -179,16 +178,18 @@ export default {
       visible: true,
       showModal: false,
       showModal_audio: false,
-      bookEditCoverModalActive: false
+      bookEditCoverModalActive: false,
+      // currentBook: this.$store.state.currentBook,
     }
   },
 
   computed: {
     currentBook: function () {
-      return this.$store.getters.currentBook
+      return this.$store.state.currentBookMeta
     },
     suggestTranslatedId: function () {
-      return this.currentBook.bookid.split('-').slice(0,-1).join('-')+'-?'
+      //console.log(this.currentBook)
+      if (this.currentBook) return this.currentBook.bookid.split('-').slice(0,-1).join('-')+'-?'
     }
   },
   methods: {
@@ -242,7 +243,7 @@ export default {
   }
 
   .download-area {
-
+    margin: 10px; margin-left:0; padding-left:0;
   }
   .download-area .btn_download {
     float: right;
@@ -254,7 +255,7 @@ export default {
   .sidebar { margin-top:0px; position: relative; margin-left:0; padding-left:0;}
 
   /* Main book cover image */
-  .coverimg {
+  div.coverimg {
     min-width: 60px;
     min-height: 80px;
     width: 80px;
@@ -264,6 +265,7 @@ export default {
     background: white;
     box-shadow: inset 0px 0px 3px 3px rgba(0,0,0,0.06);
     cursor: pointer;
+    position: relative;
   }
   .coverimg img {
     width: 100%;
