@@ -17,7 +17,7 @@
       <div class="download-area col-sm-6">
         <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
           <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
-        </button> 
+        </button>
       </div>
 
       <div class="download-area col-sm-6">
@@ -243,7 +243,7 @@ export default {
   }
 
   .download-area {
-    margin: 10px; margin-left:0; padding-left:0;
+    margin-left:15px; padding-left:0;
   }
   .download-area .btn_download {
     float: right;
