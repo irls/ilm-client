@@ -3,7 +3,9 @@
 
     <div id='bookmeta' v-if="currentBook">
       <div class='booktopinfo'>
-        <div class='coverimg' @click="bookEditCoverModalActive = true"><img v-bind:src="currentBook.coverimg" /></div>
+        <div class='coverimg' @click="bookEditCoverModalActive = true">
+          <img v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+        </div>
         <h4 class='title'>{{ currentBook.title }}</h4>
         <h5 class='subtitle' v-if='currentBook.subtitle'>{{ currentBook.subtitle }}</h5>
         <h5 class='author'>{{ currentBook.author }},
@@ -13,10 +15,10 @@
       </div>
 
       <div class="download-area col-sm-6">
-        <br/>
+
         <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
           <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
-        </button>
+        </button>    <br/>
       </div>
 
       <div class="download-area col-sm-6">
@@ -246,7 +248,7 @@ export default {
     float: right;
   }
   .download-area .btn_audio_upload {
-    float: left;
+    float: left;  margin: 10px; margin-left: -15px;
   }
   /* Wrapper around entire side editor */
   .sidebar { margin-top:0px; position: relative; margin-left:0; padding-left:0;}
@@ -255,17 +257,16 @@ export default {
   .coverimg {
     min-width: 60px;
     min-height: 80px;
-    padding:0px; padding-right: 8px; margin: 5px;
+    width: 80px;
+    padding:0; margin: 5px; margin-right: 8px;
     float: left;
     margin-left: 3px; margin-top: 0;
-    padding-bottom: 10px;
     background: white;
     box-shadow: inset 0px 0px 3px 3px rgba(0,0,0,0.06);
     cursor: pointer;
   }
   .coverimg img {
-    max-width: 50px;
-    /*width: 50px;*/
+    width: 100%;
   }
   .author,  h4.title {margin: 0; padding-bottom: 0; }
   .subtitle {margin-top:0;}

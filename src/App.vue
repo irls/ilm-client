@@ -3,6 +3,7 @@
     <MainMenu v-if="$store.state.isLoggedIn"></MainMenu>
     <router-view v-if="$store.state.isLoggedIn"></router-view>
     <Login v-if="!$store.state.isLoggedIn"></Login>
+    <!-- <CanvasAbsolute/> -->
   </div>
 </template>
 
@@ -16,6 +17,7 @@ export default {
   name: 'app',
   components: {
     MainMenu, Login
+    // , CanvasAbsolute
   },
   methods: {
     // loadBook: function(bookid) {

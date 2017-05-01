@@ -91,7 +91,7 @@ export const store = new Vuex.Store({
         .then((books) => context.commit('SET_BOOKLIST', books))
     },
     emptyDB(context) {
-      PouchDB('ilm_library_meta').remove()
+      PouchDB('ilm_library_meta').destroy();
     },
 
     deleteCurrentBook(context) {
@@ -121,7 +121,7 @@ export const store = new Vuex.Store({
           context.commit('SET_CURRENTBOOK', meta, book)
         })
       })
-      
+
     },
   }
 })
