@@ -6,6 +6,7 @@
     <!-- Paragraph number column -->
     <td class='num'>
       <div class='number'>      <!-- Because a td cannot force height -->
+
         <!-- Show parnum only on paragraphs -->
         <template v-if="b.type=='par'">
           <div @click='editBlockid(b)'>{{ b.parnum ? b.parnum : '' }}</div>

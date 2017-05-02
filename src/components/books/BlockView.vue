@@ -8,6 +8,7 @@
       <div class='blockinfo'><div class='blockinfo-content'>
         <div class='edit'><i class="fa fa-pencil-square-o fa-lg" @click='clickEvent(b)'></i></div>
         <div class='type'>
+
           <!-- Block Type selector -->
           <select v-model='block.type'>
             <option v-for="(type, index) in blockTypes" :value="type">{{ type }}</option>
@@ -43,8 +44,6 @@
           </select>
 
 
-
-
         </div>
         <div class='classes' v-if='block.classes.length'><i>{{block.classes}}</i></div>
       </div></div><div class='clearfix'></div>
@@ -78,7 +77,9 @@
 
 
 <script>
-import dropdown from 'vue-my-dropdown';
+import dropdown from 'vue-my-dropdown'
+import access from "../../mixins/access.js"
+
 
 export default {
   data () {
@@ -116,8 +117,9 @@ export default {
   },
   props: ['block'],
   components: {
-    dropdown
+    dropdown,
   },
+  mixins: [access],
   methods: {
     block_tag: function(type) {
       return 'p'
@@ -140,6 +142,7 @@ export default {
 
     },
     cssList: function(classes){
+      if (isArray(classes)) classes = classes.join(' ')
       let list = classes.trim().toLowerCase().split(' ').filter(item => item.trim().length>0)
       return [...new Set(list)]
     },
@@ -150,20 +153,22 @@ export default {
       }
     },
     addClass: function(clss) {
-      this.block.classes = this.cssList(this.block.classes + ' ' + clss).split(' ')
+      let newlist = this.cssList(this.block.classes.concat(clss.split(' ')))
+      this.block.classes = newlist
     },
     addTypeClass: function(clss) {
+      clss = clss.toLowerCase().trim()
+      // the idea is that we have to remove other type classes to add a new one
       //console.log('addTypeClass:  ', clss)
-      let classes = this.cssList(this.block.classes + ' ' + clss)
+      let newClasses = this.cssList(this.block.classes.concat(clss.split(' ')))
       let typeClasses = this.blockTypeClasses[this.block.type]
       // delete other type classes except the one selected
       for (let typClass of this.blockTypeClasses[this.block.type]) {
-        if (typClass!=clss && classes.indexOf(typClass)>-1) {
-          classes.splice(classes.indexOf(typClass), 1)
+        if (typClass!=clss && newClasses.indexOf(typClass)>-1) {
+          newClasses.splice(newClasses.indexOf(typClass), 1)
         }
       }
-
-      this.block.classes = classes.join(' ');
+      this.block.classes = newClasses;
     },
 
 

@@ -10,7 +10,7 @@
 
   <td class="right">
     <!-- Edit Button -->
-    <button v-if="$store.state.currentBookid && (isAdmin || isEditor || isLibrarian)"
+    <button v-if="$store.state.currentBook && (isAdmin || isEditor || isLibrarian)"
       @click='editBook' class='btn btn-default'>
       <i class="fa fa-pencil fa-lg"></i>  Edit
     </button>  &nbsp;
@@ -90,8 +90,8 @@ export default {
       return this.$store.state.books_meta && this.$store.state.books_meta.length;
     },
     editBook() {
-      //console.log('/books/edit/'+ this.$store.state.currentBookid)
-      this.$router.push('/books/edit/'+ this.$store.state.currentBookid)
+      //console.log('/books/edit/'+ this.$store.state.currentBook._id)
+      this.$router.push('/books/edit/'+ this.$store.state.currentBook._id)
     },
 
     importBook() {
