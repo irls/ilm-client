@@ -1,12 +1,10 @@
 <template>
-
 <table class='visual'>
-  <tr v-for="b in currentBookContentBlocks" colspan="2">
 
+  <tr v-for="b in parlist" colspan="2">
     <!-- Paragraph number column -->
     <td class='num'>
       <div class='number'>      <!-- Because a td cannot force height -->
-
         <!-- Show parnum only on paragraphs -->
         <template v-if="b.type=='par'">
           <div @click='editBlockid(b)'>{{ b.parnum ? b.parnum : '' }}</div>
@@ -15,7 +13,6 @@
             <i class="fa fa-eye" v-else @click='hideParNum(b)'></i>
           </div>
         </template>
-
         <!-- add/remove paragraph controls -->
         <div class='parctrl'>
           <i class="fa fa-plus" aria-hidden="true" @click='insertBlockBelow(b)'></i>
@@ -23,35 +20,41 @@
         </div>
       </div>
     </td>
-
     <td class='content'>
       <BlockView v-if='!isEditing' :block="b" />
       <!-- <BlockEdit v-else /> -->
     </td>
-
-
   </tr>
-</table>
+  <infinite-loading :on-infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
 
+</table>
 </template>
 
 <script>
 import ContextMenu from '../generic/ContextMenu'
 import BlockView from './BlockView'
+import InfiniteLoading from 'vue-infinite-loading'
 
 export default {
   data () {
     return {
       data: '',
       isEditing: false,
-      book: this.$store.state.currentBook
+      book: this.$store.state.currentBook,
+      meta: this.$store.state.currentBookMeta,
+      parlist: [],
     }
   },
   components: {
-    ContextMenu, BlockView
+    ContextMenu, BlockView, InfiniteLoading
   },
   methods: {
-
+    onInfiniteScroll() {
+      let index = this.parlist.length
+      let step = 3 // number of paragaphs to grab at a time
+      this.parlist = this.parlist.concat(this.book.content.slice(index, index+step));
+      this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
+    },
     hasClass: function(block, cssclass) {
       let list = block.classes.toLowerCase().trim().split(' ');
       return (list.indexOf(cssclass.toLowerCase()) > -1)
