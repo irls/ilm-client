@@ -6,14 +6,18 @@
 
       <!-- Editor toolbar, only visible for editors -->
       <div class='blockinfo'><div class='blockinfo-content'>
-        <div class='edit'><i class="fa fa-pencil-square-o fa-lg" @click='clickEvent(b)'></i></div>
-        <div class='type'>
 
+<template v-show="isAdmin || isEditor || isLibrarian">
+        <div class='edit_buttons'>
+          <i class="fa fa-trash-o fa-lg deletebutton" @click='deleteBlock(b)'></i> &nbsp;
+          <i class="fa fa-pencil-square-o fa-lg editbutton" @click='clickEvent(b)'></i>
+        </div> &nbsp;
+
+        <div class='type'>
           <!-- Block Type selector -->
           <select v-model='block.type'>
             <option v-for="(type, index) in blockTypes" :value="type">{{ type }}</option>
-          </select>
-
+          </select> 
           <!-- All block classes -->
           <span v-for='classType of Object.keys(blockClasses)' class='menulink'>
             &nbsp; &nbsp; &nbsp;
@@ -29,9 +33,6 @@
 
             </dropdown> -->
 
-
-
-
             <!-- <select>
               <option v-for="(clss, index) in blockClasses[classType]" :value="clss">{{ clss }}</option>
             </select> -->
@@ -42,9 +43,9 @@
           <select v-if='blockTypeClasses.length>0' v-model='blockTypeClass'>
             <option v-for="(clss, index) in blockTypeClasses" :value="clss">{{ clss }}</option>
           </select>
-
-
         </div>
+</template>
+
         <div class='classes' v-if='block.classes.length'><i>{{block.classes}}</i></div>
       </div></div><div class='clearfix'></div>
 
@@ -55,6 +56,8 @@
 
     <!-- Editing, Proofing and Recording Tools -->
     <td class='editing' v-if='!isEditing'>
+
+<template v-show="isAdmin || isReader">
       <!-- audio play and record -->
       <div class="tools audio">
         <i class="fa fa-play-circle-o fa-lg" @click='clickEvent(b)' v-if='!isPlaying'></i>
@@ -62,11 +65,15 @@
         <i class="fa fa-microphone fa-lg" @click='clickEvent(b)' v-if='!isRecording'></i>
         <i class="fa fa-stop-circle-o fa-lg" @click='clickEvent(b)' v-if='isRecording'></i>
       </div>
+</template>
+
+<template v-show="isAdmin || isEditor || isLibrarian">
       <!-- editor approve and comment -->
       <div class="tools editor">
         <i class="fa fa-thumbs-o-up fa-lg" @click='clickEvent(b)'></i>
         <i class="fa fa-comment-o fa-lg" @click='clickEvent(b)'></i>
       </div>
+</template>
 
     </td>
 
@@ -74,12 +81,9 @@
 </template>
 
 
-
-
 <script>
 import dropdown from 'vue-my-dropdown'
 import access from "../../mixins/access.js"
-
 
 export default {
   data () {
@@ -108,14 +112,12 @@ export default {
         Size: ['xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
         Font: [' ', 'typewriter', 'oldbook', 'modern']
       },
-
       isRecording: false,
       isPlaying: false,
       isEditing: false,
-
     }
   },
-  props: ['block'],
+  props: ['block', 'blid'],
   components: {
     dropdown,
   },
@@ -139,7 +141,6 @@ export default {
     setTypeClass: function(type, clss) {
       // remove type classes besides this one
       // add this one
-
     },
     cssList: function(classes){
       if (isArray(classes)) classes = classes.join(' ')
@@ -170,9 +171,11 @@ export default {
       }
       this.block.classes = newClasses;
     },
-
-
-
+    deleteBlock: function(block, blid) {
+      if (confirm("Are you sure you want to delete this block?")) {
+        console.log('deleting block: ', blid)
+      }
+    },
   },
   computed: {
     cleanCSS: function(block){
@@ -187,22 +190,16 @@ export default {
       if (this.blockTypeClasses.hasOwnProperty(this.block.type)) return this.blockTypeClasses[this.block.type];
       else return [];
     },
-    // blockTypeClass: function() {
-    //   return this.classTypeMatch(this.block.type)
-    // }
   },
   watch: {
     'block.type' (to, from) {
       //console.log('block type changed', to, from)
       // identify existing classes matching 'to', set as new blockTypeClass
       this.blockTypeClass = this.classTypeMatch(to)
-
-
     },
     'blockTypeClass' (to, from) {
       //console.log('adding class:  ', to)
       this.addTypeClass(to)
-
     }
   }
 }
@@ -253,13 +250,12 @@ div.content {
 .blockinfo .edit {
   font-size: 1.25em; padding-right: 3em;
   display: inline;
-
 }
 .blockinfo .type {
- color: gray;
- font-weight: bold;
- border-radius: 3px;
-   display: inline;
+  color: gray;
+  font-weight: bold;
+  border-radius: 3px;
+  display: inline;
 }
 .blockinfo .classes {
    float: right;
@@ -299,12 +295,6 @@ i.fa-microphone:hover, i.fa-stop-circle-o:hover  {color: maroon}
   clear: both;
 }
 
-
-
-
-/**/
-
-
 div.par {display: block;}
 
 div.viewercontent.ocean div.content.par.dropcap::first-letter {
@@ -313,8 +303,7 @@ div.viewercontent.ocean div.content.par.dropcap::first-letter {
   margin-right: .1em; font-size: 3em; margin-top: -.12em; margin-bottom: -.5em;
 }
 
-
 .menulink:hover {cursor: pointer; color: navy;}
-
+.edit_buttons { cursor: pointer; display: inline;}
 
 </style>

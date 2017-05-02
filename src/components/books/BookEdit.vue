@@ -1,10 +1,11 @@
 <template>
 <table class='visual'>
 
-  <tr v-for="b in parlist" colspan="2">
+  <tr v-for="(b, blid) in parlist" colspan="2">
     <!-- Paragraph number column -->
     <td class='num'>
       <div class='number'>      <!-- Because a td cannot force height -->
+
         <!-- Show parnum only on paragraphs -->
         <template v-if="b.type=='par'">
           <div @click='editBlockid(b)'>{{ b.parnum ? b.parnum : '' }}</div>
@@ -13,6 +14,7 @@
             <i class="fa fa-eye" v-else @click='hideParNum(b)'></i>
           </div>
         </template>
+
         <!-- add/remove paragraph controls -->
         <div class='parctrl'>
           <i class="fa fa-plus" aria-hidden="true" @click='insertBlockBelow(b)'></i>
@@ -21,7 +23,7 @@
       </div>
     </td>
     <td class='content'>
-      <BlockView v-if='!isEditing' :block="b" />
+      <BlockView v-if='!isEditing' :block="b" :blid="blid" />
       <!-- <BlockEdit v-else /> -->
     </td>
   </tr>
@@ -135,7 +137,7 @@ export default {
 </script>
 
 
-<style scope>
+<style>
 .visual {display: table; width: 100%;  }
 .visual tr {vertical-align: top; }
 /*numbering*/
@@ -156,15 +158,16 @@ export default {
 .number.greyed {color: silver; font-style: italic; font-size: .75em;}
 
 /*eye button*/
-div.togglebid {margin-left:-.25em; margin-top:-.5em; color: rgba(83, 114, 86, 1);
- /*display: block;*/
-
- display: none;
+div.togglebid {
+  margin-left:0; margin-top:-.25em; color: rgba(83, 114, 86, 1);
+  display: none;
 }
 .togglebid:hover { cursor:pointer;}
 .togglebid.greyed {color: rgba(150, 73, 55, .5);}
 
-.parctrl {position: absolute; bottom:-3px;
+/*.togglebid:hover */
+
+.parctrl {position: absolute; bottom: 20px;
    display: none;
 }
 .parctrl i {
@@ -176,13 +179,20 @@ div.togglebid {margin-left:-.25em; margin-top:-.5em; color: rgba(83, 114, 86, 1)
    padding: 2px; padding-right: 11px; padding-bottom:10px;
    margin-left: 1px; margin-top: 2px;
 }
-.parctrl i:hover { color: darkgreen; background: #F0FFF0; border: 1px solid darkgreen;
- cursor: pointer;
+.parctrl i:hover {
+  color: darkgreen; background: #F0FFF0; border: 1px solid darkgreen;
+  cursor: pointer;
 }
 .parctrl i.fa-minus:hover { color: maroon; background: pink; border: 1px solid maroon}
 
 td.num:hover > .number .parctrl{ display: block; }
 td.num:hover > .number .togglebid {display: block;}
+
+td.num:hover > td.content table.viewer td.viewercontent div.content  {
+  background: rgba(219, 232, 255, .3);
+  border: .25px solid rgba(219, 232, 255, 1);
+  border-radius: .25em;
+}
 
 
 </style>
