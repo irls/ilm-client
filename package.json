@@ -25,6 +25,7 @@
     "superlogin-client": "^0.5.0",
     "vue": "^2.1.10",
     "vue-carousel-3d": "^0.1.8",
+    "vue-infinite-loading": "^2.0.4",
     "vue-my-dropdown": "^2.0.2",
     "vue-resource": "^1.2.1",
     "vue-round-filter": "^1.1.2",

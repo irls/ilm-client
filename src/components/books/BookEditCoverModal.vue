@@ -284,6 +284,7 @@ export default {
     },
 
     uploadNewImageData(urlData) {
+      if (urlData.length<1) return;
       var vm = this
       // cut out mime type part
       var mime = urlData.substring(urlData.indexOf(':')+1, urlData.indexOf(';'))
@@ -347,7 +348,7 @@ export default {
         var vm = this
         var image = vm.uploadImage
         // exit if no new external image
-        if (this.uploadImage.indexOf('ilm_library_files'>-1)) this.closed()
+        //if (this.uploadImage.indexOf('ilm_library_files'>-1)) this.closed()
 
         vm.showUploadMsg() // show progress message until the form closes
         // if already data format, upload else, convert to data then upload

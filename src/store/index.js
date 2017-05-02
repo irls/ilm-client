@@ -62,7 +62,7 @@ export const store = new Vuex.Store({
     // },
 
     SET_CURRENTBOOK (state, meta) {
-      console.log('SET_CURRENTBOOK', meta)
+      //console.log('SET_CURRENTBOOK', meta)
       // state.currentBookid = meta._id
       //state.currentBook = book
       state.currentBookMeta = meta
@@ -102,7 +102,7 @@ export const store = new Vuex.Store({
       // clear currentBookid
     },
     loadBook (context, bookid) {
-      console.log("loading currentBook: ", bookid)
+      //console.log("loading currentBook: ", bookid)
       // if (!bookid) return  // if no currentbookid, exit
       // if (bookid === context.state.currentBookid) return // skip if already loaded
 
