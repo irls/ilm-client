@@ -1,39 +1,57 @@
 <template>
-<table class='visual'>
+<div id="editviewarea">
 
-  <tr v-for="b in parlist" colspan="2">
+  <div class="savechanges" v-if="edited.length">
+    <button class="btn btn-default save" @click="saveChanges">
+      <i class="fa fa-floppy-o" aria-hidden="true"></i> &nbsp; Save Changes
+    </button>
+    <button class="btn btn-default discard" @click="discardChanges">
+      <i class="fa fa-ban" aria-hidden="true"></i> &nbsp; Discard Changes
+    </button>
+  </div>
+
+  <table class='visual'>
+
+  <tr v-for="(block, blid) in parlist" colspan="2">
     <!-- Paragraph number column -->
     <td class='num'>
-      <div class='number'>      <!-- Because a td cannot force height -->
+      <div class='number'>  <!-- Because a td cannot force height -->
+
         <!-- Show parnum only on paragraphs -->
-        <template v-if="b.type=='par'">
-          <div @click='editBlockid(b)'>{{ b.parnum ? b.parnum : '' }}</div>
+        <template v-if="block.type=='par'">
+          <div @click='editBlockid(block)'>{{ block.parnum ? block.parnum : '' }}</div>
           <div class="togglebid">
-            <i class="fa fa-eye-slash" v-if="b.parnum" @click='showParNum(b)'></i>
-            <i class="fa fa-eye" v-else @click='hideParNum(b)'></i>
+            <i class="fa fa-eye-slash" v-if="block.parnum" @click='showParNum(block)'></i>
+            <i class="fa fa-eye" v-else @click='hideParNum(block)'></i>
           </div>
         </template>
+
         <!-- add/remove paragraph controls -->
         <div class='parctrl'>
-          <i class="fa fa-plus" aria-hidden="true" @click='insertBlockBelow(b)'></i>
-          <i class="fa fa-minus" aria-hidden="true" @click='removeBlock(b)'></i>
+          <i class="fa fa-plus" aria-hidden="true" @click='insertBlockBelow(block)'></i>
+          <i class="fa fa-minus" aria-hidden="true" @click='removeBlock(block)'></i>
         </div>
+
       </div>
     </td>
     <td class='content'>
-      <BlockView v-if='!isEditing' :block="b" />
+      <BlockView v-if='!isEditing' :block="block" :blid="blid" @edited="blockEdit(blid, $event)" />
       <!-- <BlockEdit v-else /> -->
     </td>
   </tr>
   <infinite-loading :on-infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
 
 </table>
+</div>
 </template>
 
 <script>
 import ContextMenu from '../generic/ContextMenu'
 import BlockView from './BlockView'
 import InfiniteLoading from 'vue-infinite-loading'
+import Vue from 'vue'
+import access from "../../mixins/access.js"
+import PouchDB from 'pouchdb'
 
 export default {
   data () {
@@ -43,8 +61,10 @@ export default {
       book: this.$store.state.currentBook,
       meta: this.$store.state.currentBookMeta,
       parlist: [],
+      edited: [], // list of edits
     }
   },
+  mixins: [access],
   components: {
     ContextMenu, BlockView, InfiniteLoading
   },
@@ -52,8 +72,16 @@ export default {
     onInfiniteScroll() {
       let index = this.parlist.length
       let step = 3 // number of paragaphs to grab at a time
-      this.parlist = this.parlist.concat(this.book.content.slice(index, index+step));
-      this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
+      let tmp = []
+      for (let i = index; i < index + step; i++) if (i<this.book.content.length) {
+        let newObj = {}
+        Object.assign(newObj, this.book.content[i])
+        tmp.push(newObj)
+      }
+      if (tmp.length>0) {
+        this.parlist = this.parlist.concat(tmp);
+        this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
+      } else this.$refs.infiniteLoading.$emit('$InfiniteLoading:complete');
     },
     hasClass: function(block, cssclass) {
       let list = block.classes.toLowerCase().trim().split(' ');
@@ -95,7 +123,58 @@ export default {
     editBlockid: function(block) {
       alert('Editing block id '+block.id)
     },
+    saveChanges: function() {
+      // how do we insert new blocks?
+      console.log('Saving '+this.edited.length+' changes...')
+      var vm = this
+      var book = vm.$store.state.currentBook
+      this.edited.forEach(blid => {
+        Object.assign(book.content[blid], vm.parlist[blid])
+      })
+      // delete deleted blocks
+      book.content = book.content.filter(block => !block._deleted)
+      // split splitted blocks
 
+      // save to DB
+      var db = this.libraryDB() // gets authenticated instance of ilm_library db
+      db.get(book._id).then(function(doc){
+        doc.content = book.content
+        db.put(doc).then(doc => vm.$store.state.currentBook = doc)
+         .catch(err => console.log(err))
+      })
+
+      /*
+      // reload book??
+      var currentLoaded = this.parlist.length
+      var position = document.getElementById('editviewarea').scrollTop
+      this.parlist = [];
+      for (let i=0; i<currentLoaded; i++) {
+        var obj = {}
+        Object.assign(obj, book.content[i])
+        this.parlist.push(obj)
+      }
+      document.getElementById('editviewarea').scrollTop = position*/
+    },
+    discardChanges: function() {
+      console.log('Discarding Changes...')
+      var vm = this
+      this.parlist.forEach(function(item, i) {
+        if (item.edited) {
+          let newObj = {}
+          Object.assign(newObj, vm.book.content[i])
+          Vue.set(vm.parlist, i, newObj);
+        }
+      })
+      this.edited = [];
+    },
+    blockEdit: function (blid, block) {
+      this.edited = [...new Set(this.edited)] // es6 way of _uniq
+      if (block.edited) this.edited.push(blid)
+       else this.edited = this.edited.filter(item => item!=blid)
+      this.edited = [...new Set(this.edited)]
+      Vue.set(this.parlist, blid, block);
+      console.log(this.edited)
+    }
 
 
 
@@ -135,7 +214,7 @@ export default {
 </script>
 
 
-<style scope>
+<style>
 .visual {display: table; width: 100%;  }
 .visual tr {vertical-align: top; }
 /*numbering*/
@@ -156,15 +235,16 @@ export default {
 .number.greyed {color: silver; font-style: italic; font-size: .75em;}
 
 /*eye button*/
-div.togglebid {margin-left:-.25em; margin-top:-.5em; color: rgba(83, 114, 86, 1);
- /*display: block;*/
-
- display: none;
+div.togglebid {
+  margin-left:0; margin-top:-.25em; color: rgba(83, 114, 86, 1);
+  display: none;
 }
 .togglebid:hover { cursor:pointer;}
 .togglebid.greyed {color: rgba(150, 73, 55, .5);}
 
-.parctrl {position: absolute; bottom:-3px;
+/*.togglebid:hover */
+
+.parctrl {position: absolute; bottom: 20px;
    display: none;
 }
 .parctrl i {
@@ -176,13 +256,25 @@ div.togglebid {margin-left:-.25em; margin-top:-.5em; color: rgba(83, 114, 86, 1)
    padding: 2px; padding-right: 11px; padding-bottom:10px;
    margin-left: 1px; margin-top: 2px;
 }
-.parctrl i:hover { color: darkgreen; background: #F0FFF0; border: 1px solid darkgreen;
- cursor: pointer;
+.parctrl i:hover {
+  color: darkgreen; background: #F0FFF0; border: 1px solid darkgreen;
+  cursor: pointer;
 }
 .parctrl i.fa-minus:hover { color: maroon; background: pink; border: 1px solid maroon}
 
 td.num:hover > .number .parctrl{ display: block; }
 td.num:hover > .number .togglebid {display: block;}
+
+td.num:hover > td.content table.viewer td.viewercontent div.content  {
+  background: rgba(219, 232, 255, .3);
+  border: .25px solid rgba(219, 232, 255, 1);
+  border-radius: .25em;
+}
+
+#editviewarea {position: relative;}
+.savechanges {position: fixed; z-index: 1000; left: 1em; bottom:1em;}
+.savechanges button.save {box-shadow: 1px 1px 5px 3px rgba(0,150,0,0.5);}
+.savechanges button.discard {box-shadow: 1px 1px 5px 3px rgba(150,0,21,0.5); margin-left: 1em}
 
 
 </style>
