@@ -34,8 +34,18 @@ export default {
     onInfiniteScroll() {
       let index = this.parlist.length
       let step = 3 // number of paragaphs to grab at a time
-      this.parlist = this.parlist.concat(this.book.content.slice(index, index+step));
-      this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
+      //this.parlist = this.parlist.concat(this.book.content.slice(index, index+step));
+      //this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
+
+      let tmp = []
+      for (let i = index; i < index + step; i++) if (i<this.book.content.length) {
+        tmp.push(Object.assign(this.book.content[i]))
+      }
+      if (tmp.length>0) {
+        this.parlist = this.parlist.concat(tmp);
+        this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
+      } else this.$refs.infiniteLoading.$emit('$InfiniteLoading:complete');
+
     },
   },
 

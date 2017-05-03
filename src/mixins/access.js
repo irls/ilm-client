@@ -16,5 +16,16 @@ export default {
       if (this.$store.state.auth.confirmRole('reader')) result.push('reader')
       return result;
     }
+  },
+  methods: {
+    libraryDB () {
+      if (!this.$store.state.isLoggedIn) {
+        console.log("Cannot get library instance until logged in! ")
+        return false
+      }
+      //console.log('db: ', this.$store.state.auth.getDbUrl('ilm_library'))
+      return new PouchDB(this.$store.state.auth.getDbUrl('ilm_library'))
+    },
+
   }
 }

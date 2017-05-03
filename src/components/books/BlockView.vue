@@ -2,22 +2,23 @@
   <table class='viewer'><tr colspan="2">
 
     <!-- Paragraph content Column -->
-    <td class='viewercontent ocean'>
+    <td class='viewercontent ocean' v-if="!deleted">
 
       <!-- Editor toolbar, only visible for editors -->
       <div class='blockinfo'><div class='blockinfo-content'>
 
 <template v-show="isAdmin || isEditor || isLibrarian">
+
         <div class='edit_buttons'>
-          <i class="fa fa-trash-o fa-lg deletebutton" @click='deleteBlock(b)'></i> &nbsp;
-          <i class="fa fa-pencil-square-o fa-lg editbutton" @click='clickEvent(b)'></i>
+          <i class="fa fa-trash-o fa-lg deletebutton" @click='deleteBlock()'></i> &nbsp;
+          <i class="fa fa-pencil-square-o fa-lg editbutton" @click='editBlock()'></i>
         </div> &nbsp;
 
         <div class='type'>
           <!-- Block Type selector -->
           <select v-model='block.type'>
             <option v-for="(type, index) in blockTypes" :value="type">{{ type }}</option>
-          </select> 
+          </select>
           <!-- All block classes -->
           <span v-for='classType of Object.keys(blockClasses)' class='menulink'>
             &nbsp; &nbsp; &nbsp;
@@ -51,11 +52,20 @@
 
       <!-- Content -->
       <div :class="[block.classes ? block.classes : '', 'content', block.type]"
-       v-html='block.content.trim()' @mouseup='textSelected'></div>
+       v-html='block.content' @mouseup='textSelected'></div>
+    </td>
+
+    <td v-else>
+      <div>
+        <button class="btn btn-default undeletebutton" @click="unDeleteBlock()">
+          <i class="fa fa-trash" aria-hidden="true"></i>
+          <i class="fa fa-undo" aria-hidden="true"></i> &nbsp; Undo Delete
+        </button>
+      </div>
     </td>
 
     <!-- Editing, Proofing and Recording Tools -->
-    <td class='editing' v-if='!isEditing'>
+    <td class='editing' v-if='!isEditing' v-show="!deleted">
 
 <template v-show="isAdmin || isReader">
       <!-- audio play and record -->
@@ -89,6 +99,8 @@ export default {
   data () {
     return {
       visible: false,
+      deleted: false,
+      modified: false,
       blockType: '',
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClass: '',
@@ -123,9 +135,9 @@ export default {
   },
   mixins: [access],
   methods: {
-    block_tag: function(type) {
-      return 'p'
-    },
+    // block_tag: function(type) {
+    //   return 'p'
+    // },
     textSelected: function(event) {
       //console.log( event)
     },
@@ -145,7 +157,7 @@ export default {
     cssList: function(classes){
       if (isArray(classes)) classes = classes.join(' ')
       let list = classes.trim().toLowerCase().split(' ').filter(item => item.trim().length>0)
-      return [...new Set(list)]
+      return [...new Set(list)] // es6 way of _uniq
     },
     classTypeMatch: function(type) {
       let allClasses = this.cssList(this.block.classes)
@@ -171,11 +183,29 @@ export default {
       }
       this.block.classes = newClasses;
     },
-    deleteBlock: function(block, blid) {
-      if (confirm("Are you sure you want to delete this block?")) {
-        console.log('deleting block: ', blid)
-      }
+    deleteBlock: function() {
+      let block = this.block
+      let blid = this.blid
+      block._deleted = true
+      this.deleted = true
+      block.edited = true;
+      console.log('toggle delete block: ', blid, block._deleted)
+      this.$emit('edited', block)
     },
+    unDeleteBlock: function() {
+      let block = this.block
+      let blid = this.blid
+      if (!block._deleted) return;
+      block._deleted = false
+      this.deleted = false
+      block.edited = false;
+      this.$emit('edited', block)
+    },
+    editBlock: function() {
+
+
+      this.$emit('edited', block)
+    }
   },
   computed: {
     cleanCSS: function(block){
@@ -192,14 +222,17 @@ export default {
     },
   },
   watch: {
-    'block.type' (to, from) {
-      //console.log('block type changed', to, from)
-      // identify existing classes matching 'to', set as new blockTypeClass
-      this.blockTypeClass = this.classTypeMatch(to)
-    },
-    'blockTypeClass' (to, from) {
-      //console.log('adding class:  ', to)
-      this.addTypeClass(to)
+    // 'block.type' (to, from) {
+    //   //console.log('block type changed', to, from)
+    //   // identify existing classes matching 'to', set as new blockTypeClass
+    //   this.blockTypeClass = this.classTypeMatch(to)
+    // },
+    // 'blockTypeClass' (to, from) {
+    //   //console.log('adding class:  ', to)
+    //   this.addTypeClass(to)
+    // },
+    'block.edited': function(to, from) {
+       console.log('Just caught a fresh change to block')
     }
   }
 }
@@ -303,7 +336,8 @@ div.viewercontent.ocean div.content.par.dropcap::first-letter {
   margin-right: .1em; font-size: 3em; margin-top: -.12em; margin-bottom: -.5em;
 }
 
-.menulink:hover {cursor: pointer; color: navy;}
-.edit_buttons { cursor: pointer; display: inline;}
+.menulink:hover { cursor: pointer; color: navy; }
+.edit_buttons { cursor: pointer; display: inline; }
+.undeletebutton { text-align: center; font-size: 12pt; margin-bottom:-55px; margin-left: 1em;}
 
 </style>
