@@ -1,8 +1,17 @@
 <template>
   <table class='viewer'><tr colspan="2">
 
+    <!-- if block is deleted, just show an undelete button -->
+    <td v-if="deleted">
+      <div>
+        <button class="btn btn-default undeletebutton" @click="unDeleteBlock()">
+          <i class="fa fa-trash" aria-hidden="true"></i>
+          <i class="fa fa-undo" aria-hidden="true"></i> &nbsp; Undo Delete
+        </button>
+      </div>
+    </td>
     <!-- Paragraph content Column -->
-    <td class='viewercontent ocean' v-if="!deleted">
+    <td class='viewercontent ocean' v-else>
 
       <!-- Editor toolbar, only visible for editors -->
       <div class='blockinfo'><div class='blockinfo-content'>
@@ -19,6 +28,7 @@
           <select v-model='block.type'>
             <option v-for="(type, index) in blockTypes" :value="type">{{ type }}</option>
           </select>
+
           <!-- All block classes -->
           <span v-for='classType of Object.keys(blockClasses)' class='menulink'>
             &nbsp; &nbsp; &nbsp;
@@ -41,31 +51,23 @@
 
 
           <!-- Type specific classes -->
-          <select v-if='blockTypeClasses.length>0' v-model='blockTypeClass'>
+          <!-- <select v-if='blockTypeClasses.length>0' v-model='blockTypeClass'>
             <option v-for="(clss, index) in blockTypeClasses" :value="clss">{{ clss }}</option>
-          </select>
+          </select> -->
         </div>
 </template>
 
-        <div class='classes' v-if='block.classes.length'><i>{{block.classes}}</i></div>
+        <div class='classes' v-if='cleanClasses().length>0'><i>{{ cleanClasses() }}</i></div>
       </div></div><div class='clearfix'></div>
 
       <!-- Content -->
-      <div :class="[block.classes ? block.classes : '', 'content', block.type]"
-       v-html='block.content' @mouseup='textSelected'></div>
-    </td>
+      <hr v-if="block.type==='hr'" :class="displayClasses()" :id="block.id"/>
+      <div v-else :class="displayClasses()" v-html='block.content' :id="block.id"></div>
 
-    <td v-else>
-      <div>
-        <button class="btn btn-default undeletebutton" @click="unDeleteBlock()">
-          <i class="fa fa-trash" aria-hidden="true"></i>
-          <i class="fa fa-undo" aria-hidden="true"></i> &nbsp; Undo Delete
-        </button>
-      </div>
     </td>
 
     <!-- Editing, Proofing and Recording Tools -->
-    <td class='editing' v-if='!isEditing' v-show="!deleted">
+    <td class='editing' v-if='!isEditing' v-show="!deleted && block.type!='hr'">
 
 <template v-show="isAdmin || isReader">
       <!-- audio play and record -->
@@ -103,7 +105,7 @@ export default {
       modified: false,
       blockType: '',
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
-      blockTypeClass: '',
+      //blockTypes: '',
       blockTypeClasses: {
         title: [' ', 'subtitle', 'author', 'translator'],
         header: [' ', 'chapter', 'selection', 'letter', 'talk', 'date', 'venue'],
@@ -138,26 +140,41 @@ export default {
     // block_tag: function(type) {
     //   return 'p'
     // },
-    textSelected: function(event) {
-      //console.log( event)
-    },
-    clickEvent: function (block) {
 
-    },
-    getSelectedTypeClass: function(type) {
-
-    },
-    getTypeClasses: function(type) {
-      if (this.blockTypeClasses.hasOwnProperty(type)) return this.blockTypeClasses[type];
-    },
-    setTypeClass: function(type, clss) {
-      // remove type classes besides this one
-      // add this one
-    },
+    // textSelected: function(event) {
+    //   //console.log( event)
+    // },
+    // clickEvent: function (block) {
+    //
+    // },
+    // getSelectedTypeClass: function(type) {
+    //
+    // },
+    // getTypeClasses: function(type) {
+    //   if (this.blockTypeClasses.hasOwnProperty(type)) return this.blockTypeClasses[type];
+    // },
+    // setTypeClass: function(type, clss) {
+    //   // remove type classes besides this one
+    //   // add this one
+    // },
     cssList: function(classes){
-      if (isArray(classes)) classes = classes.join(' ')
+      if (Array.isArray(classes)) classes = classes.join(' ')
       let list = classes.trim().toLowerCase().split(' ').filter(item => item.trim().length>0)
       return [...new Set(list)] // es6 way of _uniq
+    },
+    cleanClasses: function(){
+      var vm = this
+      var classes = this.block.classes
+      classes = classes.join(' ').trim().toLowerCase().split(' ').filter(item => {
+        item.trim().length>0 && (vm.blockTypes.indexOf(item)<0)
+      })
+      return classes
+    },
+    displayClasses: function() {
+      var classes = this.cleanClasses()
+      classes.push(this.block.type)
+      classes.push('content')
+      return [...new Set(classes)].join(' ')
     },
     classTypeMatch: function(type) {
       let allClasses = this.cssList(this.block.classes)
@@ -166,73 +183,42 @@ export default {
       }
     },
     addClass: function(clss) {
-      let newlist = this.cssList(this.block.classes.concat(clss.split(' ')))
-      this.block.classes = newlist
-    },
-    addTypeClass: function(clss) {
-      clss = clss.toLowerCase().trim()
-      // the idea is that we have to remove other type classes to add a new one
-      //console.log('addTypeClass:  ', clss)
-      let newClasses = this.cssList(this.block.classes.concat(clss.split(' ')))
-      let typeClasses = this.blockTypeClasses[this.block.type]
-      // delete other type classes except the one selected
-      for (let typClass of this.blockTypeClasses[this.block.type]) {
-        if (typClass!=clss && newClasses.indexOf(typClass)>-1) {
-          newClasses.splice(newClasses.indexOf(typClass), 1)
-        }
-      }
-      this.block.classes = newClasses;
+      var oldList = this.cssList()
+      this.block.classes.push(clss.trim().toLowerCase())
+      this.block.classes = this.cssList()
+      if (this.block.classes != oldList) this.block.edited = true;
     },
     deleteBlock: function() {
-      let block = this.block
-      let blid = this.blid
-      block._deleted = true
+      this.block._deleted = true
       this.deleted = true
-      block.edited = true;
-      console.log('toggle delete block: ', blid, block._deleted)
-      this.$emit('edited', block)
+      this.block.edited = true
     },
     unDeleteBlock: function() {
-      let block = this.block
-      let blid = this.blid
-      if (!block._deleted) return;
-      block._deleted = false
+      if (!this.block._deleted) return;
+      this.block._deleted = false
       this.deleted = false
-      block.edited = false;
-      this.$emit('edited', block)
+      this.block.edited = false
     },
     editBlock: function() {
-
-
-      this.$emit('edited', block)
-    }
+      this.block.edited = true;
+    },
   },
+
   computed: {
-    cleanCSS: function(block){
-      let list = cssList(this.block.classes +' '+ this.block.type);
-      for (let type of this.blockTypes) {
-        if (type!=this.block.type && list.indexOf(type)>-1) list.splice(list.indexOf(type), 1)
-      }
-      this.block.classes = list.join(' ')
-      return this.block.classes
-    },
-    blockTypeClasses: function() {
-      if (this.blockTypeClasses.hasOwnProperty(this.block.type)) return this.blockTypeClasses[this.block.type];
-      else return [];
-    },
   },
   watch: {
-    // 'block.type' (to, from) {
-    //   //console.log('block type changed', to, from)
-    //   // identify existing classes matching 'to', set as new blockTypeClass
-    //   this.blockTypeClass = this.classTypeMatch(to)
-    // },
-    // 'blockTypeClass' (to, from) {
-    //   //console.log('adding class:  ', to)
-    //   this.addTypeClass(to)
-    // },
+    'block._deleted': function(to, from) {
+      // console.log('toggle delete: ', to)
+      this.deleted = to
+    },
+    'block.type': function(to, from) {
+      // console.log('Block type change: ', from, to, 'edited: '+this.block.edited)
+      if (this.blockTypes.indexOf(to)<0) this.block.type = from
+        else this.block.edited = true
+    },
     'block.edited': function(to, from) {
-       console.log('Just caught a fresh change to block')
+       // console.log('Block '+this.blid+' Edited', from, to)
+       this.$emit('edited', this.block)
     }
   }
 }

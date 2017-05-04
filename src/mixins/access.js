@@ -1,3 +1,5 @@
+import PouchDB from 'pouchdb'
+
 export default {
   computed: {
     isAdmin: function() {return this.$store.state.auth.confirmRole('admin')},

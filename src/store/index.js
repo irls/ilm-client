@@ -19,11 +19,12 @@ export const store = new Vuex.Store({
     auth: superlogin,
     books_meta: [],
 
-    //currentBookid: '',
+    currentBookid: '',
     currentBook: {},
     currentBookMeta: {},
     currentBook_dirty: false,
     currentBookMeta_dirty: false,
+
 
     bookFilters: {filter: '', language: 'en', importStatus: 'staging'},
     editMode: 'Editor',
@@ -68,13 +69,12 @@ export const store = new Vuex.Store({
       state.currentBookMeta = meta
       state.currentBook_dirty = false
       state.currentBookMeta_dirty = false
+      state.currentBookid = meta._id
     },
 
     setEditMode (state, editMode) {
       state.editMode = editMode
     },
-
-
 
     SET_BOOKLIST (state, books) {
       state.books_meta = books
