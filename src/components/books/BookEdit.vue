@@ -1,5 +1,5 @@
 <template>
-<div id="editviewarea">
+<div id="editviewarea" :class="{scrollable: showScrollbar}">
 
   <div class="savechanges" v-if="edited.length">
     <button class="btn btn-default save" @click="saveChanges">
@@ -63,6 +63,7 @@ export default {
       parlist: [],
       edited: [], // list of edits
       autoload: true,
+      showScrollbar: false
     }
   },
   mixins: [access],
@@ -71,19 +72,44 @@ export default {
   },
   methods: {
     onInfiniteScroll() {
+      var vm = this
+      let loadCount = vm.loadBlocks(50)
+      if (loadCount>0) {
+        vm.autoLoadBlocks();
+        this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
+      } else {
+        this.$refs.infiniteLoading.$emit('$InfiniteLoading:complete');
+      }
+    },
+    autoLoadBlocks: function() {
+      var vm = this
+      setTimeout(function(){
+        let loadCount = vm.loadBlocks(100)
+        if (loadCount>0) {
+          //console.log("  ...added "+loadCount+" blocks...")
+          vm.autoLoadBlocks();
+        } else {
+          //console.log('Finished loading blocks') // show scrollbars here
+          //vm.showScrollbar= true
+        }
+      }, 1)
+    },
+
+    loadBlocks: function(step) {
       let index = this.parlist.length
-      let step = 3 // number of paragaphs to grab at a time
       let tmp = []
       for (let i = index; i < index + step; i++) if (i<this.book.content.length) {
         let newBlock = Object.assign({}, this.book.content[i])
-        newBlock.edited = false;
+        newBlock.edited = false
+        newBlock._deleted = false
         tmp.push(newBlock)
       }
       if (tmp.length>0) {
         this.parlist = this.parlist.concat(tmp);
-        this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
-      } else this.$refs.infiniteLoading.$emit('$InfiniteLoading:complete');
+        return tmp.length;
+      } else return 0
     },
+
     hasClass: function(block, cssclass) {
       let list = block.classes.toLowerCase().trim().split(' ');
       return (list.indexOf(cssclass.toLowerCase()) > -1)
@@ -295,5 +321,8 @@ td.num:hover > td.content table.viewer td.viewercontent div.content  {
 .savechanges button.save {box-shadow: 1px 1px 5px 3px rgba(0,150,0,0.5);}
 .savechanges button.discard {box-shadow: 1px 1px 5px 3px rgba(150,0,21,0.5); margin-left: 1em}
 
+.scrollable {
+  overflow-y: auto;
+}
 
 </style>
