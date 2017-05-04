@@ -22,6 +22,7 @@
 
 <script>
 import ButtonRadioGroup from '../generic/ButtonRadioGroup'
+import access from "../../mixins/access.js"
 
 export default {
   data () {
@@ -37,6 +38,7 @@ export default {
 
     }
   },
+  mixins: [access],
   methods: {
     currentBook: function() {
       return this.$store.state.currentBook
@@ -70,12 +72,9 @@ export default {
   //     console.log('Caught event changeEditMode', editMode)
   //   }
   // },
-  // created: function () {
-  //   this.$on('changeEditMode', function(editMode){
-  //     this.editMode = editMode
-  //     console.log('Caught event changeEditMode with on', editMode)
-  //   });
-  // }
+  created: function () {
+    if (!this.isAdmin) delete this.editModes.JSON;
+  }
 }
 </script>
 

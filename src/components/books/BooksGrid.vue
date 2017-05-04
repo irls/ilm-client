@@ -106,6 +106,7 @@ export default {
           let find = state.bookFilters.filter.toLowerCase().trim()
           return (str.indexOf(find) > -1)
         })
+      this.selectedBooks = [this.$route.params.bookid]
       return filteredbooks
     },
     booksMeta () { // because our grid does not work with nested values

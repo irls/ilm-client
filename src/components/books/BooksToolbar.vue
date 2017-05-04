@@ -10,7 +10,7 @@
 
   <td class="right">
     <!-- Edit Button -->
-    <button v-if="$store.state.currentBook && (isAdmin || isEditor || isLibrarian)"
+    <button v-if="$store.state.currentBookid && (isAdmin || isEditor || isLibrarian)"
       @click='editBook' class='btn btn-default'>
       <i class="fa fa-pencil fa-lg"></i>  Edit
     </button>  &nbsp;

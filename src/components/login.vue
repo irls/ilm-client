@@ -81,18 +81,22 @@
       })
 
       // login event
-      let vu_this = this
+      let vm = this
       let auth = this.$store.state.auth
       auth.on('login', function(session) {
         if (session.password) {
-          vu_this.$store.commit('RESET_LOGIN_STATE')
+          vm.$store.commit('RESET_LOGIN_STATE')
           // this can only be set up after login
           PouchDB.sync('ilm_library_meta', auth.getDbUrl('ilm_library_meta'), {live:true})
-            .on('change', (change) => vu_this.$store.dispatch('updateBooksList'))
+            .on('change', (change) => {
+              vm.$store.dispatch('updateBooksList')
+            })
           // load intial book
-          let bookid = vu_this.$route.params.bookid
-          if (bookid) vu_this.$router.replace({ path: '/books/' + bookid })
-          //vu_this.$store.dispatch('loadBook', bookid)
+          let bookid = vm.$route.params.bookid
+          if (bookid) {
+            vm.$store.dispatch('loadBook', bookid)
+            vm.$router.replace({ path: '/books/' + bookid })
+          }
         }
       })
       // logout event
@@ -102,7 +106,7 @@
         PouchDB('ilm_library_meta').destroy();
 
         //
-        window.setTimeout( () => vu_this.$store.commit('RESET_LOGIN_STATE'), 1000)
+        window.setTimeout( () => vm.$store.commit('RESET_LOGIN_STATE'), 1000)
       })
 
     }

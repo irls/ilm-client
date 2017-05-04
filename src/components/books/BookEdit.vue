@@ -6,7 +6,7 @@
       <i class="fa fa-floppy-o" aria-hidden="true"></i> &nbsp; Save Changes
     </button>
     <button class="btn btn-default discard" @click="discardChanges">
-      <i class="fa fa-ban" aria-hidden="true"></i> &nbsp; Discard Changes
+      <i class="fa fa-ban" aria-hidden="true"></i> &nbsp; Discard {{edited.length}} Changes
     </button>
   </div>
 
@@ -39,7 +39,7 @@
       <!-- <BlockEdit v-else /> -->
     </td>
   </tr>
-  <infinite-loading :on-infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
+  <infinite-loading v-if="autoload" :on-infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
 
 </table>
 </div>
@@ -62,6 +62,7 @@ export default {
       meta: this.$store.state.currentBookMeta,
       parlist: [],
       edited: [], // list of edits
+      autoload: true,
     }
   },
   mixins: [access],
@@ -74,9 +75,9 @@ export default {
       let step = 3 // number of paragaphs to grab at a time
       let tmp = []
       for (let i = index; i < index + step; i++) if (i<this.book.content.length) {
-        let newObj = {}
-        Object.assign(newObj, this.book.content[i])
-        tmp.push(newObj)
+        let newBlock = Object.assign({}, this.book.content[i])
+        newBlock.edited = false;
+        tmp.push(newBlock)
       }
       if (tmp.length>0) {
         this.parlist = this.parlist.concat(tmp);
@@ -125,47 +126,67 @@ export default {
     },
     saveChanges: function() {
       // how do we insert new blocks?
-      console.log('Saving '+this.edited.length+' changes...')
       var vm = this
       var book = vm.$store.state.currentBook
-      this.edited.forEach(blid => {
-        Object.assign(book.content[blid], vm.parlist[blid])
+      this.parlist.forEach((block, blid) => {
+        if (block.edited) {
+          // console.log("Replacing edited block #"+blid)
+          delete block.edited
+          book.content[blid] = Object.assign({}, block)
+        }
       })
+
       // delete deleted blocks
-      book.content = book.content.filter(block => !block._deleted)
+      book.content = book.content.filter(function(block, blid) {
+        //if (block._deleted) console.log('Deleting block #', blid)
+        return !block._deleted
+      })
       // split splitted blocks
 
       // save to DB
+      vm.autoload = false
       var db = this.libraryDB() // gets authenticated instance of ilm_library db
       db.get(book._id).then(function(doc){
-        doc.content = book.content
-        db.put(doc).then(doc => vm.$store.state.currentBook = doc)
-         .catch(err => console.log(err))
+        doc.content = book.content // does this create a copy or a reference?
+        db.put(doc).then(doc => {
+          db.get(doc.id).then(newdoc => {
+            vm.book = newdoc
+            vm.reloadBookDisplay(vm)
+            vm.edited = [];
+            //console.log('emptied edited list: ', this.edited)
+          })
+        }).catch(err => console.log(err))
       })
 
-      /*
-      // reload book??
+    },
+    reloadBookDisplay: function(vm) {   // reload book?
       var currentLoaded = this.parlist.length
       var position = document.getElementById('editviewarea').scrollTop
-      this.parlist = [];
+      vm.parlist = [] // why is this not working??
       for (let i=0; i<currentLoaded; i++) {
-        var obj = {}
-        Object.assign(obj, book.content[i])
-        this.parlist.push(obj)
+        var obj = Object.assign({}, this.book.content[i])
+        obj.edited = false
+        obj._deleted = false
+        vm.parlist.push(obj)
       }
-      document.getElementById('editviewarea').scrollTop = position*/
+      document.getElementById('editviewarea').scrollTop = position
+      vm.autoload = true
     },
     discardChanges: function() {
       console.log('Discarding Changes...')
       var vm = this
       this.parlist.forEach(function(item, i) {
         if (item.edited) {
-          let newObj = {}
-          Object.assign(newObj, vm.book.content[i])
-          Vue.set(vm.parlist, i, newObj);
+          let newObj = Object.assign({}, vm.book.content[i])
+          newObj.edited = false
+          newObj._deleted = false
+          // Vue.set(vm.parlist, i, newObj)
+          vm.parlist[i] = newObj
+          console.log("Replaced block "+i, newObj)
         }
       })
       this.edited = [];
+      //console.log('emptied edited list: ', this.edited)
     },
     blockEdit: function (blid, block) {
       this.edited = [...new Set(this.edited)] // es6 way of _uniq
@@ -173,12 +194,10 @@ export default {
        else this.edited = this.edited.filter(item => item!=blid)
       this.edited = [...new Set(this.edited)]
       Vue.set(this.parlist, blid, block);
-      console.log(this.edited)
+      // console.log(this.parlist[blid], block)
+      // console.log(this.parlist[blid]===block ? "blocks match": "blocks don't match")
+      // console.log(this.edited)
     }
-
-
-
-
 
   },
   computed: {
