@@ -2,14 +2,16 @@
   <div class='bookeditor'>
 
     <h3>Meta Data</h3>
-   
-   <pre contenteditable="true" class="json-text" v-html="metajson"></pre>
+<div class="box">
+   <button id="save" @click="savemeta" class=" button save fa fa-floppy-o"></button>
+   <pre id="metadata" contenteditable="true" class="json-text " v-html="metajson"></pre>
+</div>
 
-    <h3>Content</h3>
-    <pre contenteditable="true" class="json-text" v-html="contentjson"></pre>
- <!-- 
-      <div v-for="bl in currentBookContentBlocks" v-html='bl.content'></div>
-     <div :data-id="bl.id" :class='bl.classes' v-html="bl.content"/></div> -->
+<h3>Content</h3>
+<div>    
+   <button id="save2" @click="savecontent" class=" button save fa fa-floppy-o"></button>    
+    <pre id="contentdata" contenteditable="true" class="json-text" v-html="contentjson"></pre>
+</div>
 
   </div>
 </template>
@@ -47,6 +49,18 @@ export default {
         e.preventDefault();
         e.stopPropagation();
       }  
+    },
+
+    savemeta: function() { 
+      let t =  document.getElementById('metadata').textContent;
+      try { this.$store.state.currentBookMeta = JSON.parse(t); alert("saved!"); }
+      catch(e) { alert('An error has occurred: '+e.message);}
+    },
+
+    savecontent: function() {
+      let t = document.getElementById('contentdata').textContent;
+      try { this.$store.state.currentBook = JSON.parse(t); alert("saved!"); }
+      catch(e) { alert('An error has occurred: '+e.message);}
     }
 
   },
@@ -76,7 +90,7 @@ export default {
     },
 
     contentjson: function() {
-      let x = Object.assign({}, this.$store.state.currentBook.content);
+      let x = Object.assign({}, this.$store.state.currentBook);
       let str = JSON.stringify(x, undefined, 4);
       return str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
         function (match) {
@@ -108,7 +122,12 @@ export default {
 
 
 <style>
+  pre {
+    background-color: black;
+    color: white;
+  }
 
+  .save {float:right;}
   .string { color: green; }
   .num { color: darkorange; }
   .boolean { color: blue; }
