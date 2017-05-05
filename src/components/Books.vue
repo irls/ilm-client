@@ -15,10 +15,11 @@
           <BookEditDisplay v-else="bookEditMode()=='Display'" />
         </template>
         <BooksGrid v-else />
-      </td><td class='collapseEditBar' @click='toggleMetaVisible' v-if='hasBookSelected()'>
+
+      </td><td class='collapseEditBar' @click='toggleMetaVisible'>
         <div class="bar"><i :class="[metaVisible ? 'fa-chevron-right' : 'fa-chevron-left' , 'fa collapsebtn']" aria-hidden="true"></i></div>
       </td><td class='metaedit' v-if='metaVisible'>
-        <BookMetaEdit v-if='metaVisible'/>
+        <BookMetaEdit v-show='metaVisible'/>
       </td>
     </tr></table>
 
@@ -40,7 +41,9 @@ export default {
   data () {
     return {
       metaVisible: false,
-      colCount: 1
+      metaAvailable: false,
+      colCount: 1,
+      currentBookId: this.$store.state.currentBookid
     }
   },
   components: {
@@ -55,13 +58,17 @@ export default {
   },
   methods: {
     toggleMetaVisible () {
-      let doShow = !this.metaVisible
-      if (doShow && this.hasBookSelected()) this.metaVisible = true
-      else this.metaVisible = false
-      this.recountRows()
+      let id = this.$store.state.currentBookid
+      this.metaAvailable = id
+      this.metaVisible = !this.metaVisible
+      if (!this.metaAvailable) this.metaVisible = false;
+      // let doShow = !this.metaVisible
+      // if (doShow && this.$store.state.hasBookSelected()) this.metaVisible = true
+      // else this.metaVisible = false
+      // this.recountRows()
     },
     hasBookSelected () {
-      return !!this.$store.state.currentBook
+      return !!this.currentBookId
     },
     isEditMode () {
       return this.$store.state.route.path.indexOf('/books/edit') > -1
@@ -84,6 +91,15 @@ export default {
       // console.log('Watching route: ',to,from)
       this.recountRows()
     }
+  },
+
+  created: function() {
+    var vm=this
+    this.$events.on('SET_CURRENTBOOK_EVENT', function(){
+      //  console.log('WTH')
+        vm.metaAvailable = true
+        vm.currentBookId = vm.$store.state.currentBookid
+     })
   }
 }
 </script>

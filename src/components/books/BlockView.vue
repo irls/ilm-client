@@ -16,11 +16,11 @@
       <!-- Editor toolbar, only visible for editors -->
       <div class='blockinfo'><div class='blockinfo-content'>
 
-<template v-show="isAdmin || isEditor || isLibrarian">
+<template v-show="isAdmin || isEditor || isLibrarian" v-if="!isEditing">
 
         <div class='edit_buttons'>
           <i class="fa fa-trash-o fa-lg deletebutton" @click='deleteBlock()'></i> &nbsp;
-          <i class="fa fa-pencil-square-o fa-lg editbutton" @click='editBlock()'></i>
+          <i class="fa fa-pencil-square-o fa-lg editbutton" @click='showEditor()'></i>
         </div> &nbsp;
 
         <div class='type'>
@@ -61,15 +61,22 @@
       </div></div><div class='clearfix'></div>
 
       <!-- Content -->
-      <hr v-if="block.type==='hr'" :class="displayClasses()" :id="block.id"/>
-      <div v-else :class="displayClasses()" v-html='block.content' :id="block.id"></div>
+      <template v-if="isEditing" v-on:keyup.esc="hideEditor()">
+        <div class="wysiwygeditor_wrapper">
+        <trumbowyg :content="block.content" svgPath="/static/icons.svg" @tbwchange="editedContent" class="wysiwygeditor" v-on:keyup.esc="hideEditor()"></trumbowyg></div>
+      </template>
+      <template v-else>
+        <hr v-if="block.type==='hr'" :class="displayClasses()" :id="block.id"/>
+        <div v-else :class="displayClasses()" v-html='block.content' :id="block.id"></div>
+      </template>
+
 
     </td>
 
     <!-- Editing, Proofing and Recording Tools -->
-    <td class='editing' v-if='!isEditing' v-show="!deleted && block.type!='hr'">
+    <td class='editing' v-show="!deleted && block.type!='hr'">
 
-<template v-show="isAdmin || isReader">
+<template v-show="isAdmin || isReader" v-if='!isEditing'>
       <!-- audio play and record -->
       <div class="tools audio">
         <i class="fa fa-play-circle-o fa-lg" @click='clickEvent(b)' v-if='!isPlaying'></i>
@@ -79,7 +86,7 @@
       </div>
 </template>
 
-<template v-show="isAdmin || isEditor || isLibrarian">
+<template v-show="isAdmin || isEditor || isLibrarian" v-if='!isEditing'>
       <!-- editor approve and comment -->
       <div class="tools editor">
         <i class="fa fa-thumbs-o-up fa-lg" @click='clickEvent(b)'></i>
@@ -96,6 +103,12 @@
 <script>
 import dropdown from 'vue-my-dropdown'
 import access from "../../mixins/access.js"
+import Vue from 'vue'
+// import wysiwyg from "vue-wysiwyg";
+import jQuery from 'jquery'
+import Trumbowyg from '../generic/Trumbowyg'
+import VueEvents from 'vue-events'
+
 
 export default {
   data () {
@@ -103,6 +116,7 @@ export default {
       visible: false,
       deleted: false,
       modified: false,
+      // currentEditingBlockId: this.$store.state.currentEditingBlockId,
       blockType: '',
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       //blockTypes: '',
@@ -129,11 +143,12 @@ export default {
       isRecording: false,
       isPlaying: false,
       isEditing: false,
+      editorOptions: {}
     }
   },
   props: ['block', 'blid'],
   components: {
-    dropdown,
+    dropdown,Trumbowyg
   },
   mixins: [access],
   methods: {
@@ -199,13 +214,35 @@ export default {
       this.deleted = false
       this.block.edited = false
     },
-    editBlock: function() {
-      this.block.edited = true;
+    editedContent: function(newContent) {
+      console.log("Editor content changed... ")
+      this.block.content = newContent
+      this.block.edited = true
     },
+    showEditor: function() {
+      var vm = this
+      if (this.isEditing) this.isEditing = false
+        else {
+          this.$events.emit('currentEditingBlockId', this.blid)
+          setTimeout(function(){vm.isEditing = true}, 50)
+          //vm.isEditing = true;
+        }
+    },
+    hideEditor: function(){
+      console.log("Caught ESC")
+      this.$events.emit('currentEditingBlockId', '')
+    }
+  },
+  mounted() {
+    var vm = this
+    this.$events.on('currentEditingBlockId', function(blid) {
+      if (blid != vm.blid) vm.isEditing = false
+    })
+    // window.addEventListener('keydown', function(key){
+    //   console.log("keydown: ", key)
+    // })
   },
 
-  computed: {
-  },
   watch: {
     'block._deleted': function(to, from) {
       // console.log('toggle delete: ', to)
@@ -219,8 +256,13 @@ export default {
     'block.edited': function(to, from) {
        // console.log('Block '+this.blid+' Edited', from, to)
        this.$emit('edited', this.block)
-    }
-  }
+    },
+
+  },
+
+
+
+
 }
 </script>
 
@@ -325,5 +367,7 @@ div.viewercontent.ocean div.content.par.dropcap::first-letter {
 .menulink:hover { cursor: pointer; color: navy; }
 .edit_buttons { cursor: pointer; display: inline; }
 .undeletebutton { text-align: center; font-size: 12pt; margin-bottom:-55px; margin-left: 1em;}
+
+.wysiwygeditor_wrapper {padding: 10px; padding-right: 1em; }
 
 </style>
