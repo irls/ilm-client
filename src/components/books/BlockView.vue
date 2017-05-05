@@ -148,7 +148,7 @@ export default {
   },
   props: ['block', 'blid'],
   components: {
-    dropdown,Trumbowyg
+    dropdown, Trumbowyg
   },
   mixins: [access],
   methods: {
@@ -216,6 +216,7 @@ export default {
     },
     editedContent: function(newContent) {
       console.log("Editor content changed... ")
+      newContent = newContent.replace(/<[\/]?p.*?>/ig, '')
       this.block.content = newContent
       this.block.edited = true
     },
@@ -238,9 +239,6 @@ export default {
     this.$events.on('currentEditingBlockId', function(blid) {
       if (blid != vm.blid) vm.isEditing = false
     })
-    // window.addEventListener('keydown', function(key){
-    //   console.log("keydown: ", key)
-    // })
   },
 
   watch: {
