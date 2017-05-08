@@ -49,30 +49,49 @@
                 <tr class='title'><td>Title</td><td><input v-model='currentBook.title'></td></tr>
                 <tr class='subtitle'><td>Subtitle</td><td><input v-model='currentBook.subtitle'></td></tr>
 
-                <tr class='category'><td>Category</td><td><select class="form-control"
-                   v-model='currentBook.category'>
-                  <option v-for="(value, index) in subjectCategories" :value="value">{{ value }}</option>
-                </select></td></tr>
+                <tr class='category'>
+                  <td>Category</td>
+                  <td>
+                    <select class="form-control" v-model='currentBook.category'>
+                      <option v-for="(value, index) in subjectCategories" :value="value">{{ value }}</option>
+                    </select>
+                  </td>
+                </tr>
 
-                <tr class='language'><td>Language</td><td><select class="form-control"
-                   v-model='currentBook.lang'>
-                  <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
-                </select></td></tr>
+                <tr class='language'>
+                  <td>Language</td>
+                  <td>
+                    <select class="form-control" v-model='currentBook.lang'>
+                      <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
+                    </select>
+                  </td>
+                </tr>
 
-                <tr class='sections'><td>Sections</td><td><input v-model='currentBook.sectionName'></td></tr>
-                <tr class='numbering'><td>Numbering</td><td>
-
-                  <select class="form-control" v-model='currentBook.numbering'>
-                  <option v-for="(value, key) in numberingOptions" :value="value">{{ value }}</option>
-                </select>
+                <tr class='sections'>
+                  <td>Sections</td>
+                  <td><input v-model='currentBook.sectionName'></td>
+                </tr>
+                <tr class='numbering'>
+                  <td>Numbering</td>
+                  <td>
+                    <select class="form-control" v-model='currentBook.numbering'>
+                      <option v-for="(value, key) in numberingOptions" :value="value">{{ value }}</option>
+                    </select>
 
                   <!-- <input v-model='currentBook.numbering'> -->
+                  </td>
+                </tr>
 
-                </td></tr>
+                <tr class='trans'>
+                  <td>Translator</td>
+                  <td><input v-model='currentBook.translator'></td>
+                </tr>
+                <tr class='transfrom'>
+                  <td>Tr From</td>
+                  <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
+                  <td><input v-model="currentBook.transfrom"></td>
+                </tr>
 
-                <tr class='trans'><td>Translator</td> <td><input v-model='currentBook.translator'></td></tr>
-                <tr class='transfrom'><td>Tr From</td> <td><input v-model='currentBook.transfrom'
-                    :placeholder="suggestTranslatedId"></td></tr>
               </table>
           </fieldset>
       </div>
@@ -129,15 +148,15 @@
             </table>
           </form>
       </fieldset>
+    </div>
+
+    <book-edit-cover-modal
+      :show="bookEditCoverModalActive"
+      @closed="bookEditCoverModalActive = false"
+      :img="currentBook"
+    ></book-edit-cover-modal>
+
   </div>
-
-  <book-edit-cover-modal
-    :show="bookEditCoverModalActive"
-    @closed="bookEditCoverModalActive = false"
-    :img="currentBook"
-  ></book-edit-cover-modal>
-
-</div>
 
 </template>
 
@@ -148,7 +167,7 @@ import BookEditCoverModal from './BookEditCoverModal'
 import AudioImport from '../audio/AudioImport'
 
 export default {
-  name: 'bookmeta',
+  name: 'BookMetaEdit',
   components: {
     BookDownload,
     BookEditCoverModal,

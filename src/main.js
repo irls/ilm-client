@@ -9,7 +9,13 @@ import * as directives from './directives'
 // import PouchDB from 'pouchdb'
 // import hoodieApi from 'pouchdb-hoodie-api'
 
+// for debugging
+if (process.env.NODE_ENV === 'development') Vue.config.debug = true
+
+// sync the router with the vuex store.
+// this registers `store.state.route`
 sync(store, router)
+
 // register global directives.
 Object.keys(directives).forEach(key => {
   Vue.directive(key, directives[key])
