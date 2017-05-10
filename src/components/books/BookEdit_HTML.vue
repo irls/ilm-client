@@ -1,56 +1,76 @@
 <template>
   <div class='bookeditor'>
-
-     <h1> Book HTML Editor Component </h1>
-
-    <!-- <table class='editor'>
-     <tr><td rowspan =
-    </table> -->
-
-
-      <div v-for="bl in currentBookContentBlocks" v-html='bl.content'></div>
-      <!-- <div :data-id="bl.id" :class='bl.classes' v-html="bl.content"/></div> -->
-
+  <button id="save2" @click="savecontent" class=" button save fa fa-floppy-o"></button>  
+    <pre v-text="bookhtml" contenteditable="true" id="contentHTML"></pre>
+    
   </div>
 </template>
 
 <script>
+ import pretty from'pretty';
+ import cheerio from 'cheerio';
 
-
-export default {
+ export default { 
 
   name: 'BookEditHtml',
-
-  data () {
+  
+  data() { 
     return {
       data: '',
-      tagtypes: {
-        par: 'p',
-        header: 'h1',
-        subheader: 'h3'
-      }
+      componentState: 'start'
     }
   },
-  components: {
+  
+  methods:{
+     savecontent: function(){
+      let data = [];
+      let t = document.getElementById('contentHTML').outerHTML;
+      t = t.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+      let c = cheerio.load(t);
+      c('#book').find("div").each(function(i, el){
+        let item = {};
+        item.id = c(el).attr('id');
+        if(c(this).data('parnum')){ item.parnum = c(this).data('parnum');}
+        item.content = c(this).text();
+        item.classes = c(this).attr('class').split(' ');
+        data.push(item);
+      });
+      try { this.$store.state.currentBook.content = JSON.parse(JSON.stringify(data));}
+      catch(e) { alert('An error has occurred: '+e.message);}
+    }
+  },
 
+  components: {
   },
-  methods: {
-    block_tag: function(type) {
-      return 'p'
-    }
-  },
+
   computed: {
-    currentBook: function() {
-      return this.$store.getters.currentBook
-    },
-    currentBookContentBlocks: function () {
-      if (this.$store.getters.currentBook && this.$store.getters.currentBook.hasOwnProperty('content_blocks')) return this.$store.getters.currentBook.content_blocks
-      else return []
+    bookhtml: function() {
+      let book = this.$store.getters.currentBook;
+      let h = document.createElement('div');
+      h.setAttribute('ID', 'book');
+      book.content.forEach( function(block){
+        let div = document.createElement('div');
+        let t = document.createTextNode(block.content);
+        div.appendChild(t);
+        div.setAttribute('id', block.id);
+        block.classes.forEach(function(c){div.className += c+' ';});
+        div.className = div.className.trim();
+        if(block.hasOwnProperty("parnum")){div.dataset.parnum = block.parnum;}
+        h.appendChild(div);
+      });
+      return pretty(h.outerHTML).replace(/&lt;/g, '<').replace(/&gt;/g, '>');
     }
-  },
-}
+  }  
+  
+ }
 </script>
 
 
-<style>
+<style scoped>
+pre {
+    white-space: pre-wrap;
+    background-color: purple;
+    color: yellow;
+}
+ .save {float:right;}
 </style>

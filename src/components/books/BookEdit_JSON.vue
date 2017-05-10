@@ -36,14 +36,9 @@ export default {
   },
 
   components: {
-
   },
 
   methods: {
-    block_tag: function(type) {
-      return 'p'
-    },
-
     blockEnter: function(msg, e) {
       if(e) {
         e.preventDefault();
@@ -53,13 +48,13 @@ export default {
 
     savemeta: function() { 
       let t =  document.getElementById('metadata').textContent;
-      try { this.$store.state.currentBookMeta = JSON.parse(t); alert("saved!"); }
+      try { this.$store.state.currentBookMeta = JSON.parse(t); }
       catch(e) { alert('An error has occurred: '+e.message);}
     },
 
     savecontent: function() {
       let t = document.getElementById('contentdata').textContent;
-      try { this.$store.state.currentBook = JSON.parse(t); alert("saved!"); }
+      try { this.$store.state.currentBook = JSON.parse(t); }
       catch(e) { alert('An error has occurred: '+e.message);}
     }
 
@@ -121,8 +116,9 @@ export default {
 
 
 
-<style>
+<style scoped>
   pre {
+    white-space: pre-wrap;
     background-color: black;
     color: white;
   }
