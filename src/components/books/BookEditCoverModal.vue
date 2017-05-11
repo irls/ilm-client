@@ -11,100 +11,91 @@
       </div>
     </div>
 
-<div slot="modal-body" class="modal-body">
+    <div slot="modal-body" class="modal-body">
 
-  <!-- Selection tabs for Upload or Create forms -->
-  <div class="row tabs">
-    <ul class="nav nav-tabs">
-      <li :class="{active: uploadMode}"><a data-toggle="tab" href="#upload_pane" @click="uploadMode = !uploadMode">Upload</a></li>
-      <li :class="{active: !uploadMode}"><a data-toggle="tab" href="#create_pane" @click="uploadMode = !uploadMode">Create New</a></li>
-    </ul>
-  </div>
-
-
-<div class="tab-content">
-  <!-- Selection tabs for Upload or Create forms -->
-
-
-  <div id="upload_pane" class="tab-pane fade in"  :class="{active: uploadMode}">
-    <div class="row">
-      <div class="col-md-12">
-
-        <div class="col-sm-4">
-          <img :src="uploadImage" class="preview_upload" v-show="uploadImage.length>0" />
-          <img :src="uploadImageBlank" class="preview_upload" v-show="uploadImage.length<1" />
-        </div>
-
-        <div class="col-sm-8">
-          <div class="input-group">
-            <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-            <input type="text" class="form-control" placeholder="URL" v-model="uploadImage" />
-          </div>
-
-           <br> &nbsp;&nbsp;&nbsp;  or <br><br>
-
-          <label class='btn btn-default' type="file">
-            <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
-            <input name="coverFile" type="file" v-show="false" accept="image/*"  @change="onFilesChange($event)"><br>
-          </label>
-        </div>
-
-
+      <!-- Selection tabs for Upload or Create forms -->
+      <div class="row tabs">
+        <ul class="nav nav-tabs">
+          <li :class="{active: uploadMode}"><a data-toggle="tab" href="#upload_pane" @click="uploadMode = !uploadMode">Upload</a></li>
+          <li :class="{active: !uploadMode}"><a data-toggle="tab" href="#create_pane" @click="uploadMode = !uploadMode">Create New</a></li>
+        </ul>
       </div>
-    </div>
-  </div>
 
+      <div class="tab-content">
+        <!-- Selection tabs for Upload or Create forms -->
 
-   <div id="create_pane" class="tab-pane fade in"  :class="{active: !uploadMode}">
-      <div class="row">
+        <div id="upload_pane" class="tab-pane fade in"  :class="{active: uploadMode}">
+          <div class="row">
+            <div class="col-md-12">
 
-        <!-- left column, display preview -->
-        <div class="col-md-4">
-          <div id="bookCoverPreviewMain">
-            <div class="bookCoverPreviewWrap">
-              <div class="book-cover"><img :src="tmp.coverimg"></div>
-              <div ref="livePreviewTitle" id="livePreviewTitle" class="ql-editor" v-draggable="tmp.title"></div>
-              <div ref="livePreviewAuthor" id="livePreviewAuthor" class="ql-editor" v-draggable="tmp.author"></div>
+              <div class="col-sm-4">
+                <img :src="uploadImage" class="preview_upload" v-show="uploadImage.length>0" />
+                <img :src="uploadImageBlank" class="preview_upload" v-show="uploadImage.length<1" />
+              </div>
+
+              <div class="col-sm-8">
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                  <input type="text" class="form-control" placeholder="URL" v-model="uploadImage" />
+                </div>
+
+                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
+
+                <label class='btn btn-default' type="file">
+                  <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
+                  <input name="coverFile" type="file" v-show="false" accept="image/*"  @change="onFilesChange($event)"><br>
+                </label>
+              </div>
+
             </div>
           </div>
         </div>
 
-        <!-- right column edit controls -->
-        <div class="col-md-8">
-          <div class="book-list">
-            <!-- <div ref="quillContainerTitle" id="quillContainerTitle"></div> -->
-          </div>
-          <div class="book-list bookCoverCarouselWrap">
-            <carousel-3d :display="7" :width="90" :height="115.5">
-              <slide v-for="(bc, index) in bookcovers" :key="index" :index="index">
-                <img :src="bc.src" @click="selectBookCover(index)">
-              </slide>
-            </carousel-3d>
-            <span class="addBookCoverBtnWrap">
-              <i class="fa fa-plus"></i><i class="fa fa-folder-open-o"></i>
-              <input type="file" @change="addBookCover"/>
-            </span>
-          </div>
-          <div class="book-list">
-            <!-- <div ref="quillContainerAuthor" id="quillContainerAuthor"></div> -->
-          </div>
-        </div>
+        <div id="create_pane" class="tab-pane fade in"  :class="{active: !uploadMode}">
+          <div class="row">
 
-      </div> <!-- row? -->
-   </div> <!-- Create Pane -->
+            <!-- left column, display preview -->
+            <div class="col-md-4">
+              <div id="bookCoverPreviewMain">
+                <div class="bookCoverPreviewWrap">
+                  <div class="book-cover"><img :src="tmp.coverimg"></div>
+                  <div ref="livePreviewTitle" id="livePreviewTitle" class="ql-editor" v-draggable="tmp.title"></div>
+                  <div ref="livePreviewAuthor" id="livePreviewAuthor" class="ql-editor" v-draggable="tmp.author"></div>
+                </div>
+              </div>
+            </div>
 
- </div> <!-- tabbed content for create -->
+            <!-- right column edit controls -->
+            <div class="col-md-8">
+              <div class="book-list">
+                <!-- <div ref="quillContainerTitle" id="quillContainerTitle"></div> -->
+              </div>
+              <div class="book-list bookCoverCarouselWrap">
+                <carousel-3d :display="7" :width="90" :height="115.5">
+                  <slide v-for="(bc, index) in bookcovers" :key="index" :index="index">
+                    <img :src="bc.src" @click="selectBookCover(index)">
+                  </slide>
+                </carousel-3d>
+                <span class="addBookCoverBtnWrap">
+                  <i class="fa fa-plus"></i><i class="fa fa-folder-open-o"></i>
+                  <input type="file" @change="addBookCover"/>
+                </span>
+              </div>
+              <div class="book-list">
+                <!-- <div ref="quillContainerAuthor" id="quillContainerAuthor"></div> -->
+              </div>
+            </div>
 
-</div> <!-- modal body -->
+          </div> <!-- row? -->
+        </div> <!-- Create Pane -->
 
+      </div> <!-- tabbed content for create -->
 
+    </div> <!-- modal body -->
 
-
-<div id='uploadingMsg' v-show='isUploading'>
-   <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
-</div>
-
-
+    <div id='uploadingMsg' v-show='isUploading'>
+       <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
+    </div>
 
     <div slot="modal-footer" class="modal-footer">
       <button class="btn btn-primary" type="button" @click="ok">Save</button>
@@ -119,31 +110,32 @@
 
 import { modal } from 'vue-strap'
 import { Carousel3d, Slide } from 'vue-carousel-3d'
-import Quill from 'quill'
+// import Quill from 'quill'
 import '../../../node_modules/quill/dist/quill.core.css'
 import '../../../node_modules/quill/dist/quill.snow.css'
 import modalMixin from './../../mixins/modal'
 import BOOKCOVERS from '../../../static/bookcovers.json'
 // import Canvas2Image from 'canvas2image'
 import html2canvas from 'html2canvas'
-import axios from 'axios'
+// import axios from 'axios'
 import PouchDB from 'pouchdb'
+import superlogin from 'superlogin-client'
 
-const quillOptions = {
-  modules: {
-    toolbar: [
-      ['bold', 'italic'],
-      // [{ 'size': ['normal', 'large'] }],
-      [{ 'color': [] }],
-      [{ 'font': [] }],
-      [{ 'direction': 'rtl'}],
-      //  [{ 'align': [] }]
-    ]
-  },
-  // formats: [{align: 'center'}],
-  placeholder: '',
-  theme: 'snow'
-}
+// const quillOptions = {
+//   modules: {
+//     toolbar: [
+//       ['bold', 'italic'],
+//       // [{ 'size': ['normal', 'large'] }],
+//       [{ 'color': [] }],
+//       [{ 'font': [] }],
+//       [{ 'direction': 'rtl' }]
+//       //  [{ 'align': [] }]
+//     ]
+//   },
+//   // formats: [{align: 'center'}],
+//   placeholder: '',
+//   theme: 'snow'
+// }
 
 export default {
   name: 'BookEditCoverModal',
@@ -196,7 +188,7 @@ export default {
 
   watch: {
     show () {
-      //this.tmp.coverimg = this.img.coverimg
+      // this.tmp.coverimg = this.img.coverimg
       this.tmp.title.text = this.img.title
       // this.tmp.title.top = this.img.title.top || 0
       // this.tmp.title.left = this.img.title.left || 0
@@ -210,22 +202,19 @@ export default {
       // this.quillTitle.pasteHTML(this.tmp.title.text)
       // this.quillAuthor.pasteHTML(this.tmp.author.text)
 
-      //console.log("Showing cover editor with book: ", this.img)
+      // console.log("Showing cover editor with book: ", this.img)
     }
 
 
   },
 
   activated () {
-      //  this.uploadImage = this.img.coverimg
-
-        console.log('activated')
+    //  this.uploadImage = this.img.coverimg
+    console.log('activated')
   },
 
   mounted () {
-    const vm = this
-
-
+    // const vm = this
 
     // Quill for Title
     // vm.quillTitle = new Quill(vm.$refs.quillContainerTitle, Object.assign(quillOptions, { placeholder: 'title' }))
@@ -268,38 +257,44 @@ export default {
       this.uploadImage = this.img.coverimg
     },
 
-    onFilesChange(e) {
-      var files = e.target.files || e.dataTransfer.files;
-      //console.log('*** onFilesChange', files)
-      if (!files.length) return;
-      this.createImage(files[0]);
+    onFilesChange (e) {
+      var files = e.target.files || e.dataTransfer.files
+      // console.log('*** onFilesChange', files)
+      if (!files.length) return
+      this.createImage(files[0])
     },
 
-    createImage(file) {
-      //console.log('*** Creating new image', file)
-      var reader = new FileReader();
-      var vm = this;
-      reader.onload = (e) => { vm.uploadImage = e.target.result };
-      reader.readAsDataURL(file);
+    createImage (file) {
+      // console.log('*** Creating new image', file)
+      var reader = new FileReader()
+      var vm = this
+      reader.onload = e => { vm.uploadImage = e.target.result }
+      reader.readAsDataURL(file)
     },
 
-    uploadNewImageData(urlData) {
-      if (urlData.length<1) return;
+    uploadNewImageData (urlData) {
+      if (urlData.length < 1) return
       var vm = this
       // cut out mime type part
-      var mime = urlData.substring(urlData.indexOf(':')+1, urlData.indexOf(';'))
+      var mime = urlData.substring(urlData.indexOf(':') + 1, urlData.indexOf(';'))
       // cut out data part
-      var urlData = urlData.substring(urlData.indexOf(',')+1)
+      var urlData = urlData.substring(urlData.indexOf(',') + 1)
       // the book id is critical for the path
       var bookid = this.img.bookid
-      var dburl = this.$store.state.auth.getDbUrl('ilm_library_files')
-      var coverimg = dburl.replace(/^(http[s]?:\/\/)(.*?\:.*?@)(.*?)$/m, '$1$3')+'/'+bookid+'/coverimg'
+
+      console.log('bookid:', bookid)
+
+      var dburl = superlogin.getDbUrl('ilm_library_files')
+      if (process.env.DOCKER) dburl = dburl.replace('couchdb', 'localhost')
+      // var dburl = this.$store.state.auth.getDbUrl('ilm_library_files')
+
+      var coverimg = dburl.replace(/^(http[s]?:\/\/)(.*?\:.*?@)(.*?)$/m, '$1$3')+'/' + bookid + '/coverimg'
       var ilm_library_files = new PouchDB(dburl)
 
       return ilm_library_files.get(bookid).catch(function (err) {
-        if (err.name==='not_found') return ilm_library_files.put({_id:bookid, type:'book'}).then(doc => doc)
-         else console.log('Oops, we should not ever be here... ', err)
-      }).then(function(doc) {
+        if (err.name === 'not_found') return ilm_library_files.put({_id: bookid, type: 'book'}).then(doc => doc)
+        else console.log('Oops, we should not ever be here... ', err)
+      }).then(doc => {
         doc._attachments = (doc._attachments || {})
         doc._attachments.coverimg = {content_type: mime, data: urlData}
         return ilm_library_files.put(doc).then(function(doc) {
@@ -311,96 +306,95 @@ export default {
             vm.img.coverimg = coverimg
             return ilm_library_meta.put(doc)
           })
-        }).catch((err) => console.log(err))
-      }).catch(function (err) {
+        }).catch(err => console.log(err))
+      }).catch(err => {
         // handle any errors
-      });
-
-    },
-
-    uploadNewImageURL(url) {
-      //console.log('loading url: ', url)
-      var vm = this
-      return new Promise(function(resolve, reject){
-        var image = new Image();
-        image.crossOrigin="anonymous"
-        image.onload = function () {
-          var canvas = document.createElement('canvas');
-          canvas.width = this.naturalWidth; // or 'width' if you want a special/scaled size
-          canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
-          canvas.getContext('2d').drawImage(this, 0, 0);
-          resolve(vm.uploadNewImageData(canvas.toDataURL('image/png')));
-        };
-        image.src = url;
       })
     },
 
-    showUploadMsg() {
+    uploadNewImageURL (url) {
+      // console.log('loading url: ', url)
+      var vm = this
+      return new Promise((resolve, reject) => {
+        var image = new Image()
+        image.crossOrigin = 'anonymous'
+        image.onload = function () {
+          var canvas = document.createElement('canvas')
+          canvas.width = this.naturalWidth // or 'width' if you want a special/scaled size
+          canvas.height = this.naturalHeight // or 'height' if you want a special/scaled size
+          canvas.getContext('2d').drawImage(this, 0, 0)
+          resolve(vm.uploadNewImageData(canvas.toDataURL('image/png')))
+        }
+        image.src = url
+      })
+    },
+
+    showUploadMsg () {
 
     },
 
-    closeWithDelay() {
+    closeWithDelay () {
       setTimeout(this.closed, 1000)
     },
 
-    ok() {
+    ok () {
       if (this.uploadMode) { // user uploded or browesed for image
         var vm = this
         var image = vm.uploadImage
         // exit if no new external image
-        //if (this.uploadImage.indexOf('ilm_library_files'>-1)) this.closed()
+        // if (this.uploadImage.indexOf('ilm_library_files'>-1)) this.closed()
 
         vm.showUploadMsg() // show progress message until the form closes
         // if already data format, upload else, convert to data then upload
         // yeah, I don't really get how to do an await...
-        if (image.indexOf('http')===0) vm.uploadNewImageURL(image).then(vm.closeWithDelay)
-          else vm.uploadNewImageData(image).then(vm.closeWithDelay)
-      } else  {
+        if (image.indexOf('http') === 0) vm.uploadNewImageURL(image).then(vm.closeWithDelay)
+        else vm.uploadNewImageData(image).then(vm.closeWithDelay)
+      } else {
         // generate PNG image from preview using something like html2canvas
         this.captureBookImage()
       }
     },
 
     captureBookImage () {
-      var source = document.getElementById("bookCoverPreviewMain");
-      var img = document.getElementById("bookImagePreview");
+      var source = document.getElementById('bookCoverPreviewMain')
+      var img = document.getElementById('bookImagePreview')
       var scale = 1
-      img.width = source.clientWidth; // display at same size
+      img.width = source.clientWidth // display at same size
       this.captureCanvas(source, scale).then(function(newCanvas){
         // console.log("got here ok")
-        img.src = newCanvas.toDataURL(); // defaults to png
+        img.src = newCanvas.toDataURL() // defaults to png
       })
     },
 
     // Capture and scale functionality
     // https://jsfiddle.net/nkhsLbpf/30/
     captureCanvas (source, scale) {
-      return new Promise(function(resolve, reject) {
+      return new Promise((resolve, reject) => {
         // isolate source with temp copy to root (causes flash)
-        var temp = document.body.appendChild(source.cloneNode(true));
+        var temp = document.body.appendChild(source.cloneNode(true))
         temp.style.position = 'fixed'
         temp.style.top = '0'
         temp.style.left = '0'
         temp.style.zIndex = '-100000'
         document.body.style.position = 'relative'
         // set up custom renderer
-        var renderer = function(width, height) {
-          html2canvas.CanvasRenderer.apply(this, arguments);
-          this.canvas.width = this.width = width * scale;
-          this.canvas.height = this.height = height * scale;
-          this.ctx.scale(scale, scale);
+        var renderer = function (width, height) {
+          html2canvas.CanvasRenderer.apply(this, arguments)
+          this.canvas.width = this.width = width * scale
+          this.canvas.height = this.height = height * scale
+          this.ctx.scale(scale, scale)
         }
-        renderer.prototype = Object.create(html2canvas.CanvasRenderer.prototype);
+        renderer.prototype = Object.create(html2canvas.CanvasRenderer.prototype)
         html2canvas(temp, {
           renderer: renderer,
-          onrendered: (newCanvas) => {
-            document.body.removeChild(temp);
+          onrendered: newCanvas => {
+            document.body.removeChild(temp)
             resolve(newCanvas)
           },
           useCORS: true,
           width: temp.offsetWidth * scale,
           height: temp.offsetHeight * scale
-        });
+        })
       })
     },
 

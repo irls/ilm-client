@@ -16,6 +16,7 @@
     "axios": "^0.15.3",
     "html2canvas": "^0.5.0-beta4",
     "install": "^0.8.7",
+    "lodash": "^4.17.4",
     "npm": "^4.3.0",
     "pouchdb": "^6.1.2",
     "pouchdb-hoodie-api": "^2.0.0",

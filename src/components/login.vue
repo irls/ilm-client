@@ -29,88 +29,105 @@
 </template>
 
 <script>
-  import superlogin from 'superlogin-client'
-  import PouchDB from 'pouchdb'
+import { mapMutations, mapActions } from 'vuex'
+import superlogin from 'superlogin-client'
+import PouchDB from 'pouchdb'
 
-  export default {
-    data () {
-      return {
-        active: 'login',
-        //auth: this.$store.state.auth,
+export default {
 
-        // Modal text fields
-        loginUser: '',
-        loginPassword: '',
-        passwordEmail: '',
+  data () {
+    return {
+      active: 'login',
 
-        // Modal error messages
-        loginError: '',
-        passwordError: '',
-      }
-    },
-    methods: {
-      user_login: function() {
-        if (!(this.loginUser && this.loginPassword)) {
-          this.loginError = 'Both Password and Username are required'
-          return
-        }
-        var vu_this = this;
-        this.$store.state.auth.login({username: this.loginUser, password: this.loginPassword})
-          .catch((error) => vu_this.loginError = error.message)
-      },
-      user_passwordreset: function(email) {
-        this.auth.forgotPassword(email)
-        alert("A login link has been sent by email to: "+ email)
-        this.active = 'login'
-      },
-      keycheck: function(event) {
-        if (event.key == "Enter") this.user_login()
-      }
+      // Modal text fields
+      loginUser: '',
+      loginPassword: '',
+      passwordEmail: '',
 
-    },
-    created: function() {
-      this.$store.state.auth.configure({
-        // An optional URL to API server, by default a current window location is used.
-        serverUrl: process.env.ILM_API,
-        // A list of API endpoints to automatically add the Authorization header to
-        endpoints: [process.env.ILM_DB], // local couch db and cloudant
-        // The authentication providers that are supported by your SuperLogin host
-        providers: [],
-        // Sets when to check if the session is expired during the setup. // false by default.
-        checkExpired: true,
-      })
-
-      // login event
-      let vm = this
-      let auth = this.$store.state.auth
-      auth.on('login', function(session) {
-        if (session.password) {
-          vm.$store.commit('RESET_LOGIN_STATE')
-          // this can only be set up after login
-          PouchDB.sync('ilm_library_meta', auth.getDbUrl('ilm_library_meta'), {live:true})
-            .on('change', (change) => {
-              vm.$store.dispatch('updateBooksList')
-            })
-          // load intial book
-          let bookid = vm.$route.params.bookid
-          if (bookid) {
-            vm.$store.dispatch('loadBook', bookid)
-            vm.$router.replace({ path: '/books/' + bookid })
-          }
-        }
-      })
-      // logout event
-      auth.on('logout', function(message) {
-        // for testing only
-        //vu_this.$store.dispatch('emptyDB')
-        PouchDB('ilm_library_meta').destroy();
-
-        //
-        window.setTimeout( () => vm.$store.commit('RESET_LOGIN_STATE'), 1000)
-      })
-
+      // Modal error messages
+      loginError: '',
+      passwordError: ''
     }
+  },
+
+  created () {
+    superlogin.configure({
+      serverUrl: process.env.ILM_API,
+      endpoints: [process.env.ILM_DB],
+      providers: [],
+      checkExpired: true
+    })
+
+    // login event
+    let vm = this
+    superlogin.on('login', session => {
+      if (session.password) {
+        vm.RESET_LOGIN_STATE()
+
+        var dbPath = superlogin.getDbUrl('ilm_library_meta')
+        if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
+
+        // this can only be set up after login
+        PouchDB.sync('ilm_library_meta', dbPath, { live: true })
+          .on('change', change => {
+            vm.$store.dispatch('updateBooksList')
+          })
+        // load intial book
+        let bookid = vm.$route.params.bookid
+        if (bookid) {
+          vm.$store.dispatch('loadBook', bookid)
+          vm.$router.replace({ path: '/books/' + bookid })
+        }
+      }
+    })
+
+    // logout event
+    superlogin.on('logout', message => {
+      // for testing only
+      // vu_this.$store.dispatch('emptyDB')
+      PouchDB('ilm_library_meta').destroy()
+      //
+
+      window.setTimeout(() => {
+        this.RESET_LOGIN_STATE()
+      }, 1000)
+    })
+  },
+
+  methods: {
+
+    ...mapMutations([
+      'RESET_LOGIN_STATE'
+    ]),
+
+    ...mapActions([
+      'updateBooksList'
+    ]),
+
+    user_login () {
+      if (!(this.loginUser && this.loginPassword)) {
+        this.loginError = 'Both Password and Username are required'
+        return
+      }
+      superlogin.login({
+        username: this.loginUser,
+        password: this.loginPassword
+      }).catch(error => {
+        this.loginError = error.message
+      })
+    },
+    user_passwordreset (email) {
+      this.auth.forgotPassword(email)
+      alert('A login link has been sent by email to: ' + email)
+      this.active = 'login'
+    },
+    keycheck (event) {
+      if (event.key === 'Enter') this.user_login()
+    }
+
   }
+
+}
 </script>
 
 

@@ -41,71 +41,69 @@
       </AudioImport>
 
       <div class="book-listing">
-          <fieldset>
-              <legend>Book Metadata </legend>
-              <table class='properties' style=''>
-                <tr class='bookid'><td>Book Id</td><td class='disabled'>{{currentBook.bookid}}</td></tr>
+        <fieldset>
+          <legend>Book Metadata </legend>
+          <table class='properties' style=''>
+            <tr class='bookid'><td>Book Id</td><td class='disabled'>{{currentBook.bookid}}</td></tr>
 
-                <tr class='title'><td>Title</td><td><input v-model='currentBook.title'></td></tr>
-                <tr class='subtitle'><td>Subtitle</td><td><input v-model='currentBook.subtitle'></td></tr>
+            <tr class='title'><td>Title</td><td><input v-model='currentBook.title'></td></tr>
+            <tr class='subtitle'><td>Subtitle</td><td><input :value='currentBook.subtitle' @input="update('subtitle', $event)"></td></tr>
 
-                <tr class='category'>
-                  <td>Category</td>
-                  <td>
-                    <select class="form-control" v-model='currentBook.category'>
-                      <option v-for="(value, index) in subjectCategories" :value="value">{{ value }}</option>
-                    </select>
-                  </td>
-                </tr>
+            <tr class='category'>
+              <td>Category</td>
+              <td>
+                <select class="form-control" v-model='currentBook.category'>
+                  <option v-for="(value, index) in subjectCategories" :value="value">{{ value }}</option>
+                </select>
+              </td>
+            </tr>
 
-                <tr class='language'>
-                  <td>Language</td>
-                  <td>
-                    <select class="form-control" v-model='currentBook.lang'>
-                      <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
-                    </select>
-                  </td>
-                </tr>
+            <tr class='language'>
+              <td>Language</td>
+              <td>
+                <select class="form-control" v-model='currentBook.lang'>
+                  <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
+                </select>
+              </td>
+            </tr>
 
-                <tr class='sections'>
-                  <td>Sections</td>
-                  <td><input v-model='currentBook.sectionName'></td>
-                </tr>
-                <tr class='numbering'>
-                  <td>Numbering</td>
-                  <td>
-                    <select class="form-control" v-model='currentBook.numbering'>
-                      <option v-for="(value, key) in numberingOptions" :value="value">{{ value }}</option>
-                    </select>
+            <tr class='sections'>
+              <td>Sections</td>
+              <td><input v-model='currentBook.sectionName'></td>
+            </tr>
+            <tr class='numbering'>
+              <td>Numbering</td>
+              <td>
+                <select class="form-control" v-model='currentBook.numbering'>
+                  <option v-for="(value, key) in numberingOptions" :value="value">{{ value }}</option>
+                </select>
 
-                  <!-- <input v-model='currentBook.numbering'> -->
-                  </td>
-                </tr>
+              <!-- <input v-model='currentBook.numbering'> -->
+              </td>
+            </tr>
 
-                <tr class='trans'>
-                  <td>Translator</td>
-                  <td><input v-model='currentBook.translator'></td>
-                </tr>
-                <tr class='transfrom'>
-                  <td>Tr From</td>
-                  <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
-                  <td><input v-model="currentBook.transfrom"></td>
-                </tr>
+            <tr class='trans'>
+              <td>Translator</td>
+              <td><input v-model='currentBook.translator'></td>
+            </tr>
+            <tr class='transfrom'>
+              <td>Tr From</td>
+              <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
+              <td><input v-model="currentBook.transfrom"></td>
+            </tr>
 
-              </table>
-          </fieldset>
+          </table>
+        </fieldset>
       </div>
 
-
       <fieldset class='description brief'>
-          <legend>Brief Description </legend>
-          <textarea>{{ currentBook.description_short }}</textarea>
+        <legend>Brief Description </legend>
+        <textarea>{{ currentBook.description_short }}</textarea>
       </fieldset>
       <fieldset class='description long'>
-          <legend>Long Description </legend>
-          <textarea>{{ currentBook.description }}</textarea>
+        <legend>Long Description </legend>
+        <textarea>{{ currentBook.description }}</textarea>
       </fieldset>
-
 
       <fieldset class="publish">
         <!-- Fieldset Legend -->
@@ -119,34 +117,34 @@
         </template>
 
         <!-- Publication Options -->
-          <form>
-            <table class='properties publication'>
-              <template v-if="currentBook.importStatus == 'staging'">
-                <tr><td rowspan='2'>
-                  <button class="btn btn-primary sharebtn" @click="shareBook"> Move book to Library</button>
-                </td></tr>
-              </template>
-              <template v-else>
+        <form>
+          <table class='properties publication'>
+            <template v-if="currentBook.importStatus == 'staging'">
+              <tr><td rowspan='2'>
+                <button class="btn btn-primary sharebtn" @click="shareBook"> Move book to Library</button>
+              </td></tr>
+            </template>
+            <template v-else>
 
-                <tr><td>Published</td> <td class='published'>
-                  <i :class="[currentBook.published ? 'fa-toggle-on' : 'fa-toggle-off', 'fa pubtoggle']"
-                    @click='publishedToggle'
-                  ></i>
-                </td></tr>
+              <tr><td>Published</td> <td class='published'>
+                <i :class="[currentBook.published ? 'fa-toggle-on' : 'fa-toggle-off', 'fa pubtoggle']"
+                  @click='publishedToggle'
+                ></i>
+              </td></tr>
 
-                <tr v-if="currentBook.published"><td>Type</td> <td class='pubtype'>
-                  <select class="form-control" v-model='currentBook.pubType'>
-                    <option v-for="(value, index) in pubTypes" :value="value">{{ value }}</option>
-                  </select>
-                </td></tr>
+              <tr v-if="currentBook.published"><td>Type</td> <td class='pubtype'>
+                <select class="form-control" v-model='currentBook.pubType'>
+                  <option v-for="(value, index) in pubTypes" :value="value">{{ value }}</option>
+                </select>
+              </td></tr>
 
-                <tr v-if="currentBook.published"><td>Ver. #{{ currentBook.version }}</td> <td class='version'>
-                  <button class="btn btn-primary new-version" @click="newVersion"> Save New Version</button>
-                </td></tr>
+              <tr v-if="currentBook.published"><td>Ver. #{{ currentBook.version }}</td> <td class='version'>
+                <button class="btn btn-primary new-version" @click="newVersion"> Save New Version</button>
+              </td></tr>
 
-              </template>
-            </table>
-          </form>
+            </template>
+          </table>
+        </form>
       </fieldset>
     </div>
 
@@ -162,34 +160,39 @@
 
 <script>
 
+import { mapGetters, mapActions } from 'vuex'
 import BookDownload from './BookDownload'
 import BookEditCoverModal from './BookEditCoverModal'
 import AudioImport from '../audio/AudioImport'
+import _ from 'lodash'
 
 export default {
+
   name: 'BookMetaEdit',
+
   components: {
     BookDownload,
     BookEditCoverModal,
     AudioImport
   },
+
   data () {
     return {
       pubTypes: [
-        "Public", "Hidden", "Encumbered", "Research", "Private"
+        'Public', 'Hidden', 'Encumbered', 'Research', 'Private'
       ],
       subjectCategories: [
         'Stories', 'Verse', 'History', 'Ideas', 'Science'
       ],
       languages: {
-        en: "English",
-        es: "Spanish",
-        du: "German",
-        ru: "Russian",
-        ar: "Arabic",
-        fa: "Farsi",
-        cn: "Chinese",
-        ru: "Romanian"
+        en: 'English',
+        es: 'Spanish',
+        du: 'German',
+        ru: 'Russian',
+        ar: 'Arabic',
+        fa: 'Farsi',
+        cn: 'Chinese',
+        ro: 'Romanian'
       },
       numberingOptions: ['x', 'x.x', 'x.x.x'],
       dirty: {
@@ -198,47 +201,85 @@ export default {
       showModal: false,
       showModal_audio: false,
       bookEditCoverModalActive: false,
-      // currentBook: this.$store.state.currentBook,
+      currentBook: {}
     }
   },
 
   computed: {
-    currentBook: function () {
-      return this.$store.state.currentBookMeta
-    },
+
+    ...mapGetters(['currentBookMeta']),
+
+    // currentBook () {
+    //   return Object.assign({}, this.currentBookMeta)
+    //   // return this.$store.state.currentBookMeta
+    // },
+
     suggestTranslatedId: function () {
-      //console.log(this.currentBook)
-      if (this.currentBook) return this.currentBook.bookid.split('-').slice(0,-1).join('-')+'-?'
+      // console.log(this.currentBook)
+      if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
     }
   },
+
+  watch: {
+
+    currentBookMeta: {
+      handler (val) {
+        this.init()
+      },
+      deep: true
+    }
+
+  },
+
+  // created () {
+  //   this.init()
+  // },
+
   methods: {
-    languageName: function(code) {
-      if (this.languages[code]) return this.languages[code];
+
+    ...mapActions([
+      'liveUpdateBookMeta'
+    ]),
+
+    init () {
+      this.currentBook = Object.assign({}, this.currentBookMeta)
     },
-    publishedToggle: function() {
+
+    update: _.debounce(function (key, event) {
+      this.liveUpdateBookMeta(this.currentBook)
+      // this.liveUpdateBookMeta({
+      //   key: key,
+      //   value: event.target.value
+      // })
+    }, 300),
+
+    languageName (code) {
+      if (this.languages[code]) return this.languages[code]
+    },
+    publishedToggle () {
       this.currentBook.published = !this.currentBook.published
     },
-    shareBook: function() {
-      if (confirm("This will share the book with the entire library. Usually this is done after rudimentary formatting and text cleanup. Are you sure it is ready?")) {
-        this.currentBook.published = 'false';
-        this.currentBook.pubType = 'Hidden';
-        this.currentBook.version = '1.0';
-        this.currentBook.importStatus = 'shared';
+    shareBook () {
+      if (confirm('This will share the book with the entire library. Usually this is done after rudimentary formatting and text cleanup. Are you sure it is ready?')) {
+        this.currentBook.published = 'false'
+        this.currentBook.pubType = 'Hidden'
+        this.currentBook.version = '1.0'
+        this.currentBook.importStatus = 'shared'
       }
     },
-    newVersion: function() {
-      this.currentBook.version = (parseFloat(this.currentBook.version)+0.1).toFixed(1).toString();
+    newVersion () {
+      this.currentBook.version = (parseFloat(this.currentBook.version) + 0.1).toFixed(1).toString()
     },
-    toggleVisibility: function (){
+    toggleVisibility () {
       this.visible = !this.visible
     },
 
-    downloadBook: function() {
-      this.showModal = true;
+    downloadBook () {
+      this.showModal = true
     },
 
-    uploadAudio: function() {
-      this.showModal_audio = true;
+    uploadAudio () {
+      this.showModal_audio = true
     }
 
   }

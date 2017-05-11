@@ -1,4 +1,5 @@
 import PouchDB from 'pouchdb'
+import superlogin from 'superlogin-client'
 
 export default {
   computed: {
@@ -22,12 +23,15 @@ export default {
   methods: {
     libraryDB () {
       if (!this.$store.state.isLoggedIn) {
-        console.log("Cannot get library instance until logged in! ")
+        console.log('Cannot get library instance until logged in! ')
         return false
       }
-      //console.log('db: ', this.$store.state.auth.getDbUrl('ilm_library'))
-      return new PouchDB(this.$store.state.auth.getDbUrl('ilm_library'))
-    },
+
+      var dbPath = superlogin.getDbUrl('ilm_library')
+      if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
+
+      return new PouchDB(dbPath)
+    }
 
   }
 }
