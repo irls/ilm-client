@@ -98,7 +98,6 @@ export default {
           let find = this.bookFilters.filter.toLowerCase().trim()
           return (str.indexOf(find) > -1)
         })
-      // this.selectedBooks = [this.$route.params.bookid]
       return filteredbooks
     },
 
@@ -107,6 +106,10 @@ export default {
       for (let book of this.books) result.push(book)
       return result
     }
+  },
+
+  created () {
+    this.selectedBooks = [this.$route.params.bookid]
   },
 
   watch: {

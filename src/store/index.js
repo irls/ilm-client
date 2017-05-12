@@ -49,6 +49,7 @@ export const store = new Vuex.Store({
     allRolls: state => state.allRolls,
     allBooks: state => state.books_meta,
     bookFilters: state => state.bookFilters,
+    currentBookid: state => state.currentBookid,
     currentBook: state => state.currentBook,
     currentBookMeta: state => state.currentBookMeta,
     bookEditMode: state => state.editMode
@@ -69,7 +70,11 @@ export const store = new Vuex.Store({
     //   if (state.route.params.hasOwnProperty('bookid')) state.currentBookid = state.route.params.bookid
     // },
 
-    SET_CURRENTBOOK (state, meta) {
+    SET_CURRENTBOOK (state, book) {
+      state.currentBook = book
+    },
+
+    SET_CURRENTBOOK_META (state, meta) {
       // state.currentBookid = meta._id
       // state.currentBook = book
       state.currentBookMeta = meta
@@ -122,7 +127,7 @@ export const store = new Vuex.Store({
     },
 
     loadBook ({commit, state}, bookid) {
-      // console.log("loading currentBook: ", bookid)
+      // console.log('loading currentBook: ', bookid)
       // if (!bookid) return  // if no currentbookid, exit
       // if (bookid === context.state.currentBookid) return // skip if already loaded
 
@@ -144,34 +149,10 @@ export const store = new Vuex.Store({
 
       PouchDB(dbPathA).get(bookid).then(meta => {
         PouchDB(dbPathB).get(bookid).then(book => {
-          state.currentBook = book
-          commit('SET_CURRENTBOOK', meta)
+          commit('SET_CURRENTBOOK', book)
+          commit('SET_CURRENTBOOK_META', meta)
         })
       })
-    },
-
-    liveUpdateBookMeta ({commit, state}, meta) {
-      var dbPath = superlogin.getDbUrl('ilm_library_meta')
-      if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
-      var bookid = state.currentBookid
-
-      var db = new PouchDB(dbPath)
-
-      db.get(bookid).then(doc => {
-        console.log(doc)
-        // return db.put({
-        //   _id: bookid,
-        //   _rev: doc._rev,
-        //   meta: meta
-          // [data.key]: data.value
-        // })
-      }).then(response => {
-        console.log(response)
-      }).catch(err => {
-        console.log(err)
-      })
-
-        // state.currentBookMeta = meta
     }
 
   }

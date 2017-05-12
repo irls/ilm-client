@@ -15,12 +15,6 @@
       </div>
 
       <div class="download-area col-sm-6">
-        <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
-          <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
-        </button>
-      </div>
-
-      <div class="download-area col-sm-6">
         <!-- <button id="show-modal" @click="downloadBook" class="btn btn-primary btn_download">
           <img src='/static/download.png' class='bookstack'/>
         </button> -->
@@ -43,16 +37,26 @@
       <div class="book-listing">
         <fieldset>
           <legend>Book Metadata </legend>
-          <table class='properties' style=''>
-            <tr class='bookid'><td>Book Id</td><td class='disabled'>{{currentBook.bookid}}</td></tr>
+          <table class='properties'>
 
-            <tr class='title'><td>Title</td><td><input v-model='currentBook.title'></td></tr>
-            <tr class='subtitle'><td>Subtitle</td><td><input :value='currentBook.subtitle' @input="update('subtitle', $event)"></td></tr>
+            <tr class='bookid'>
+              <td>Book Id</td>
+              <td class='disabled'>{{currentBook.bookid}}</td>
+            </tr>
+
+            <tr class='title'>
+              <td>Title</td>
+              <td><input v-model='currentBook.title' @input="update('title', $event)"></td>
+            </tr>
+            <tr class='subtitle'>
+              <td>Subtitle</td>
+              <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)"></td>
+            </tr>
 
             <tr class='category'>
               <td>Category</td>
               <td>
-                <select class="form-control" v-model='currentBook.category'>
+                <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid">
                   <option v-for="(value, index) in subjectCategories" :value="value">{{ value }}</option>
                 </select>
               </td>
@@ -61,7 +65,7 @@
             <tr class='language'>
               <td>Language</td>
               <td>
-                <select class="form-control" v-model='currentBook.lang'>
+                <select class="form-control" v-model='currentBook.lang' @change="change('lang')" :key="currentBookid">
                   <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
                 </select>
               </td>
@@ -69,27 +73,28 @@
 
             <tr class='sections'>
               <td>Sections</td>
-              <td><input v-model='currentBook.sectionName'></td>
+              <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)"></td>
             </tr>
+
             <tr class='numbering'>
               <td>Numbering</td>
               <td>
-                <select class="form-control" v-model='currentBook.numbering'>
+                <select class="form-control" v-model='currentBook.numbering' @change="change('numbering')" :key="currentBookid">
                   <option v-for="(value, key) in numberingOptions" :value="value">{{ value }}</option>
                 </select>
-
-              <!-- <input v-model='currentBook.numbering'> -->
+                <!-- <input v-model='currentBook.numbering'> -->
               </td>
             </tr>
 
             <tr class='trans'>
               <td>Translator</td>
-              <td><input v-model='currentBook.translator'></td>
+              <td><input v-model='currentBook.translator' @input="update('translator', $event)"></td>
             </tr>
+
             <tr class='transfrom'>
               <td>Tr From</td>
               <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
-              <td><input v-model="currentBook.transfrom"></td>
+              <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)"></td>
             </tr>
 
           </table>
@@ -98,11 +103,12 @@
 
       <fieldset class='description brief'>
         <legend>Brief Description </legend>
-        <textarea>{{ currentBook.description_short }}</textarea>
+        <textarea v-model='currentBook.description_short' @input="update('description_short', $event)"></textarea>
       </fieldset>
+
       <fieldset class='description long'>
         <legend>Long Description </legend>
-        <textarea>{{ currentBook.description }}</textarea>
+        <textarea v-model='currentBook.description' @input="update('description', $event)"></textarea>
       </fieldset>
 
       <fieldset class="publish">
@@ -146,6 +152,13 @@
           </table>
         </form>
       </fieldset>
+
+      <div class="download-area col-sm-6">
+        <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
+          <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
+        </button>
+      </div>
+
     </div>
 
     <book-edit-cover-modal
@@ -160,11 +173,13 @@
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters } from 'vuex'
+import superlogin from 'superlogin-client'
 import BookDownload from './BookDownload'
 import BookEditCoverModal from './BookEditCoverModal'
 import AudioImport from '../audio/AudioImport'
 import _ from 'lodash'
+import PouchDB from 'pouchdb'
 
 export default {
 
@@ -207,15 +222,9 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookMeta']),
-
-    // currentBook () {
-    //   return Object.assign({}, this.currentBookMeta)
-    //   // return this.$store.state.currentBookMeta
-    // },
+    ...mapGetters(['currentBookid', 'currentBookMeta']),
 
     suggestTranslatedId: function () {
-      // console.log(this.currentBook)
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
     }
   },
@@ -231,27 +240,39 @@ export default {
 
   },
 
-  // created () {
-  //   this.init()
-  // },
+  created () {
+    this.init()
+  },
 
   methods: {
-
-    ...mapActions([
-      'liveUpdateBookMeta'
-    ]),
 
     init () {
       this.currentBook = Object.assign({}, this.currentBookMeta)
     },
 
     update: _.debounce(function (key, event) {
-      this.liveUpdateBookMeta(this.currentBook)
-      // this.liveUpdateBookMeta({
-      //   key: key,
-      //   value: event.target.value
-      // })
+      this.liveUpdate(key, event.target.value)
     }, 300),
+
+    change (key) {
+      this.liveUpdate(key, this.currentBook[key])
+    },
+
+    liveUpdate (key, value) {
+      var dbPath = superlogin.getDbUrl('ilm_library_meta')
+      if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
+
+      var db = new PouchDB(dbPath)
+      var api = db.hoodieApi()
+
+      api.update(this.currentBookid, {
+        [key]: value
+      }).then(doc => {
+        console.log('success DB update: ', doc)
+      }).catch(err => {
+        console.log('error DB pdate: ', err)
+      })
+    },
 
     languageName (code) {
       if (this.languages[code]) return this.languages[code]

@@ -7,10 +7,8 @@
   </div>
 </template>
 
-
-
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import MainMenu from './components/MainMenu'
 import Login from './components/login'
 
@@ -28,26 +26,23 @@ export default {
   watch: {
     '$route' () {
       if (this.$route.params.hasOwnProperty('bookid')) {
-        this.$store.dispatch('loadBook', this.$route.params.bookid)
+        this.loadBook(this.$route.params.bookid)
       }
-      // this.loadBook(this.$route.params.bookid)
     }
   },
 
   created () {
     // initiate books list
-    this.$store.dispatch('updateBooksList')
+    this.updateBooksList()
   },
 
   methods: {
-    // loadBook: function(bookid) {
-    //   this.$store.dispatch('loadBook', bookid)
-    // }
+
+    ...mapActions(['loadBook', 'updateBooksList'])
+
   }
 }
 </script>
-
-
 
 <style lang="stylus">
 /*#app {width: 98%; margin-left: 1%; margin-right: 1%}*/
