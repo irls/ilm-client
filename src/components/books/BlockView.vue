@@ -24,14 +24,26 @@
         </div> &nbsp;
 
         <div class='type'>
+
           <!-- Block Type selector -->
           <select v-model='block.type'>
             <option v-for="(type, index) in blockTypes" :value="type">{{ type }}</option>
           </select>
 
+          &nbsp; &nbsp;
+          <a href="">Title <i class="fa fa-sort-desc" aria-hidden="true"></i></a>
+
+          <select @select="addCss('title', $event)">
+            <option v-for="(type, index) in blockTypeClasses.title" :value="type">{{ type }}</option>
+          </select>
+
+
+
           <!-- All block classes -->
           <span v-for='classType of Object.keys(blockClasses)' class='menulink'>
-            &nbsp; &nbsp; &nbsp;
+
+
+
             <!-- <dropdown :visible="visible" :position="position" @clickOut="visible = false">
 
               {{classType}} <i class="fa fa-caret-square-o-down" @click="visible = true"></i>
@@ -129,12 +141,23 @@ export default {
         aside: ['fn', 'inline'],
         hr: [' ', 'section', 'large', 'small']
       },
+      classStyles: ['Author','Justify','Whitespace','Textstyle','Padding','Format','Size','Font'],
+      currentClasses: {
+        Author: '',
+        Justify: '',
+        Whitespace: '',
+        Textstyle: '',
+        Padding: '',
+        Format: '',
+        Size: '',
+        Font: ''
+      },
       typeClasses: [' ', 'subtitle', 'author', 'translator'], // classes available for this type
       blockClasses: {
         Author: [' ', 'bab', 'baha', 'shoghi', 'sacred', 'bible', 'muhammad', 'quran', 'jesus', 'ali', 'tradition', 'husayn'],
         Justify: [' ', 'center', 'right', 'left'],
         Whitespace: [' ', 'verse', 'pre'],
-        Style: [' ', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline', 'rulebelow', 'bookgraphic'],
+        Textstyle: [' ', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline', 'rulebelow', 'bookgraphic'],
         Padding: ['nopad', 'nopad-top', 'nopad-bottom', 'pad', 'pad-top', 'pad-bottom'],
         Format: ['blockquote', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer'],
         Size: ['xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
@@ -152,6 +175,19 @@ export default {
   },
   mixins: [access],
   methods: {
+    getSelectedClasses: function(classes) {
+      var selected = {Author: '', Justify: '', Whitespace: '',
+        Textstyle: '',
+        Padding: '',
+        Format: '',
+        Size: '',
+        Font: ''
+      }
+
+    },
+    selectedToClasses: function(selected) {
+
+    },
     // block_tag: function(type) {
     //   return 'p'
     // },
@@ -172,6 +208,11 @@ export default {
     //   // remove type classes besides this one
     //   // add this one
     // },
+    addCss: function(title, val){
+      console.log('Adding CSS', title, val)
+
+    },
+
     cssList: function(classes){
       if (Array.isArray(classes)) classes = classes.join(' ')
       let list = classes.trim().toLowerCase().split(' ').filter(item => item.trim().length>0)
@@ -215,7 +256,7 @@ export default {
       this.block.edited = false
     },
     editedContent: function(newContent) {
-      console.log("Editor content changed... ")
+      //console.log("Editor content changed... ")
       newContent = newContent.replace(/<[\/]?p.*?>/ig, '')
       this.block.content = newContent
       this.block.edited = true
