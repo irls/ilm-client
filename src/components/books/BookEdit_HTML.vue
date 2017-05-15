@@ -69,8 +69,8 @@
 <style scoped>
 pre {
     white-space: pre-wrap;
-    background-color: purple;
-    color: yellow;
+    background-color: black;
+    color: white;
 }
  .save {float:right;}
 </style>
