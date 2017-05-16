@@ -10,10 +10,10 @@
       <tr :colspan="colCount">
         <td class='maincontent scrollable'>
           <template v-if="isEditMode()">
-            <BookEdit v-if="bookEditMode()=='Editor'" />
-            <BookEditHtml v-else-if="bookEditMode()=='HTML'" />
-            <BookEditJson v-else-if="bookEditMode()=='JSON'" />
-            <BookEditDisplay v-else="bookEditMode()=='Display'" />
+            <BookEdit v-if="bookEditMode == 'Editor'" />
+            <BookEditHtml v-else-if="bookEditMode == 'HTML'" />
+            <BookEditJson v-else-if="bookEditMode == 'JSON'" />
+            <BookEditDisplay v-else="bookEditMode == 'Display'" />
           </template>
           <BooksGrid v-else />
         </td>
@@ -54,7 +54,7 @@ export default {
       metaVisible: false,
       metaAvailable: false,
       colCount: 1,
-      currentBookId: this.$store.state.currentBookid
+      currentBookid: this.$store.state.currentBookid
     }
   },
 
@@ -96,9 +96,10 @@ export default {
     isEditMode () {
       return this.$store.state.route.path.indexOf('/books/edit') > -1
     },
-    bookEditMode () {
-      return this.bookEditMode
-    },
+    // bookEditMode () {
+    //   // return this.bookEditMode
+    //   return this.$store.getters.bookEditMode
+    // },
     recountRows () {
       let count = 1
       if (this.hasBookSelected()) count++
@@ -123,7 +124,7 @@ export default {
     this.$events.on('SET_CURRENTBOOK_EVENT', function(){
       //  console.log('WTH')
         vm.metaAvailable = true
-        vm.currentBookId = vm.$store.state.currentBookid
+        vm.currentBookid = vm.$store.state.currentBookid
      })
 */
 
