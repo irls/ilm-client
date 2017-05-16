@@ -28,6 +28,9 @@ export default {
       //console.log('db: ', this.$store.state.auth.getDbUrl('ilm_library'))
       return new PouchDB(this.$store.state.auth.getDbUrl('ilm_library'))
     },
+    libraryDBmeta(){
+      return new PouchDB(this.$store.state.auth.getDbUrl('ilm_library_meta'))
+    }
 
   }
 }
