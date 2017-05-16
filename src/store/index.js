@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import axios from 'axios'
+// import axios from 'axios'
 import superlogin from 'superlogin-client'
 import hoodie from 'pouchdb-hoodie-api'
 import PouchDB from 'pouchdb'
@@ -11,12 +11,20 @@ PouchDB.plugin(hoodie)
 
 Vue.use(Vuex)
 
-const API_ALLBOOKS = '/static/books.json'
+// const API_ALLBOOKS = '/static/books.json'
 
 export const store = new Vuex.Store({
   state: {
-    isLoggedIn: false,
     auth: superlogin,
+    isLoggedIn: false,
+    isAdmin: false,
+    isEditor: false,
+    isLibrarian: false,
+    isBookkeeper: false,
+    isEngineer: false,
+    isReader: false,
+    allRolls: [],
+
     books_meta: [],
 
     currentBookid: '',
@@ -26,29 +34,30 @@ export const store = new Vuex.Store({
     currentBookMeta_dirty: false,
     currentEditingBlockId: '',
 
-
     bookFilters: {filter: '', language: 'en', importStatus: 'staging'},
-    editMode: 'Editor',
+    editMode: 'Editor'
   },
 
   getters: {
-    allBooks (state) {
-      return state.books_meta
-    },
-    currentBookFilters (state) {
-      return state.bookFilters
-    },
-    currentBook (state) {
-      return state.currentBook
-    },
-    bookEditMode (state) {
-      return state.editMode
-    }
+    auth: state => state.auth,
+    isLoggedIn: state => state.isLoggedIn,
+    isAdmin: state => state.isAdmin,
+    isEditor: state => state.isEditor,
+    isLibrarian: state => state.isLibrarian,
+    isBookkeeper: state => state.isBookkeeper,
+    isEngineer: state => state.isEngineer,
+    isReader: state => state.isReader,
+    allRolls: state => state.allRolls,
+    allBooks: state => state.books_meta,
+    bookFilters: state => state.bookFilters,
+    currentBookid: state => state.currentBookid,
+    currentBook: state => state.currentBook,
+    currentBookMeta: state => state.currentBookMeta,
+    bookEditMode: state => state.editMode
   },
 
-
-
   mutations: {
+
     SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
       for (var prop in obj) if (['filter', 'language', 'importStatus'].indexOf(prop) > -1) {
         state.bookFilters[prop] = obj[prop]
@@ -57,16 +66,18 @@ export const store = new Vuex.Store({
       }
     },
 
-
     // initiateBooks (state, books) {
     //   state.books = books
     //   if (state.route.params.hasOwnProperty('bookid')) state.currentBookid = state.route.params.bookid
     // },
 
-    SET_CURRENTBOOK (state, meta) {
-      //console.log('SET_CURRENTBOOK', meta)
+    SET_CURRENTBOOK (state, book) {
+      state.currentBook = book
+    },
+
+    SET_CURRENTBOOK_META (state, meta) {
       // state.currentBookid = meta._id
-      //state.currentBook = book
+      // state.currentBook = book
       state.currentBookMeta = meta
       state.currentBook_dirty = false
       state.currentBookMeta_dirty = false
@@ -81,36 +92,49 @@ export const store = new Vuex.Store({
     SET_BOOKLIST (state, books) {
       state.books_meta = books
     },
-    RESET_LOGIN_STATE (state) {
-      state.isLoggedIn = state.auth.authenticated()
-    }
 
+    RESET_LOGIN_STATE (state) {
+      state.isLoggedIn = superlogin.authenticated()
+      state.isAdmin = superlogin.confirmRole('admin')
+      state.isEditor = superlogin.confirmRole('editor')
+      state.isLibrarian = superlogin.confirmRole('librarian')
+      state.isBookkeeper = superlogin.confirmRole('bookkeeper')
+      state.isEngineer = superlogin.confirmRole('engineer')
+      state.isReader = superlogin.confirmRole('reader')
+      // state.allRolls =
+    },
+
+    updateBookMeta (state, meta) {
+      state.currentBookMeta = meta
+    }
 
   },
 
   actions: {
-    updateBooksList(context) {
-      let ilm_library_meta = PouchDB('ilm_library_meta').hoodieApi()
-      ilm_library_meta.findAll(item => (item.type==='book_meta' && !item.hasOwnProperty('_deleted')))
-        .then((books) => context.commit('SET_BOOKLIST', books))
-    },
-    emptyDB(context) {
-      PouchDB('ilm_library_meta').destroy();
+
+    updateBooksList (context) {
+      let ilmLibraryMeta = PouchDB('ilm_library_meta').hoodieApi()
+      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted')))
+        .then(books => context.commit('SET_BOOKLIST', books))
     },
 
-    deleteCurrentBook(context) {
+    emptyDB (context) {
+      PouchDB('ilm_library_meta').destroy()
+    },
+
+    deleteCurrentBook (context) {
       // get _id for both book and meta
       // set _deleted=true on both
       // clear currentBookid
     },
-    loadBook (context, bookid) {
-      //console.log("loading currentBook: ", bookid)
+
+    loadBook ({commit, state}, bookid) {
+      // console.log('loading currentBook: ', bookid)
       // if (!bookid) return  // if no currentbookid, exit
       // if (bookid === context.state.currentBookid) return // skip if already loaded
 
       // if currentbook exists, check if currrent book needs saving
-      var state = context.state
-      let oldBook = (state.currentBook && state.currentBook._id);
+      let oldBook = (state.currentBook && state.currentBook._id)
 
       if (oldBook && state.currentBook_dirty || state.currentBookMeta_dirty) {
         // save old state
@@ -120,15 +144,18 @@ export const store = new Vuex.Store({
       // if cached locally, load
       // now query to see if book matches latest _rev
       // if not, load latest version and replace
-      PouchDB(state.auth.getDbUrl('ilm_library_meta')).get(bookid).then(function(meta) {
-        PouchDB(state.auth.getDbUrl('ilm_library')).get(bookid).then(function(book) {
-          //console.log('meta: ', meta)
-          //console.log('book: ', book)
-          context.state.currentBook = book
-          context.commit('SET_CURRENTBOOK', meta)
+      var dbPathA = superlogin.getDbUrl('ilm_library_meta')
+      if (process.env.DOCKER) dbPathA = dbPathA.replace('couchdb', 'localhost')
+      var dbPathB = superlogin.getDbUrl('ilm_library')
+      if (process.env.DOCKER) dbPathB = dbPathB.replace('couchdb', 'localhost')
+
+      PouchDB(dbPathA).get(bookid).then(meta => {
+        PouchDB(dbPathB).get(bookid).then(book => {
+          commit('SET_CURRENTBOOK', book)
+          commit('SET_CURRENTBOOK_META', meta)
         })
       })
+    }
 
-    },
   }
 })

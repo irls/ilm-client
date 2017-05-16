@@ -1,21 +1,29 @@
 <template>
   <div>
     <Grid id='books_grid'
-          :data="booksMeta"
-          :columns="headers"
-          :rowsPerPage="100"
-          @clickRow="rowClick"
-          :selected="selectedBooks"
-          :idField="idField"
-          :filter-key="''">
+      :data="booksMeta"
+      :columns="headers"
+      :rowsPerPage="100"
+      @clickRow="rowClick"
+      :selected="selectedBooks"
+      :idField="idField"
+      :filter-key="''">
     </Grid>
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import Grid from '../generic/Grid'
 
 export default {
+
+  name: 'BooksGrid',
+
+  components: {
+    Grid
+  },
+
   data () {
     return {
       headers: [
@@ -73,48 +81,55 @@ export default {
       selectedBooks: []
     }
   },
-  components: {
-    Grid
-  },
-  methods: {
-    // A row in the table has been clicked. Returns Vue data object bound to the row.
-    rowClick (ev) {
-      // console.log(ev.bookid)
-      let bookid = ev.bookid
-      if (bookid) {
-        //this.selectedBooks = [bookid]
-        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
-      }
-    }
-  },
-  watch: {
-    '$route' () {
-      if (this.$route.params.hasOwnProperty('bookid'))
-        this.selectedBooks = [this.$route.params.bookid]
-    }
-  },
+
   computed: {
+
+    ...mapGetters([
+      'bookFilters',
+      'allBooks'
+    ]),
+
     books () { // filtered list of books
-      let state = this.$store.state
-      let books = this.$store.getters.allBooks
-      //console.log("Computed books: ", books.length)
-      let filteredbooks = books
-        .filter(book => (book.language === state.bookFilters.language))
-        .filter(book => book.importStatus === state.bookFilters.importStatus)
+      let filteredbooks = this.allBooks
+        .filter(book => (book.language === this.bookFilters.language))
+        .filter(book => book.importStatus === this.bookFilters.importStatus)
         .filter(book => {
           let str = `${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}`.toLowerCase()
-          let find = state.bookFilters.filter.toLowerCase().trim()
+          let find = this.bookFilters.filter.toLowerCase().trim()
           return (str.indexOf(find) > -1)
         })
-      this.selectedBooks = [this.$route.params.bookid]
       return filteredbooks
     },
+
     booksMeta () { // because our grid does not work with nested values
       let result = []
       for (let book of this.books) result.push(book)
       return result
     }
+  },
+
+  created () {
+    this.selectedBooks = [this.$route.params.bookid]
+  },
+
+  watch: {
+    '$route' () {
+      if (this.$route.params.hasOwnProperty('bookid')) {
+        this.selectedBooks = [this.$route.params.bookid]
+      }
+    }
+  },
+
+  methods: {
+    // A row in the table has been clicked. Returns Vue data object bound to the row.
+    rowClick (ev) {
+      let bookid = ev.bookid
+      if (bookid) {
+        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
+      }
+    }
   }
+
 }
 </script>
 

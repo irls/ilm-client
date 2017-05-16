@@ -5,7 +5,7 @@
         <div class="modal-container">
 
           <div class="modal-header">
-            
+
             <slot name="header">
               <div class="header-title">
                 <label class="header-h"><img src='/static/audiostack.png' class='audio-logo'></label>
@@ -13,15 +13,17 @@
             </slot>
           </div>
 
-          
+
           <div class="modal-body clearfix">
             <slot name="body">
 
             <h4> Book Information </h4>
 
             <div class="col-sm-12">
-              <div class='booktopinfo'>
-                <div class='coverimg' @click="bookEditCoverModalActive = true"><img class='coverimg' v-bind:src="currentBook.meta.coverimg" /></div>
+              <div class='booktopinfo' v-if="currentBook.meta">
+                <div class='coverimg' @click="bookEditCoverModalActive = true">
+                  <img class='coverimg' v-bind:src="currentBook.meta.coverimg" />
+                </div>
                 <h4 class='title'>{{ currentBook.meta.title }}</h4>
                 <h5 class='subtitle' v-if='currentBook.meta.subtitle'>{{ currentBook.meta.subtitle }}</h5>
                 <h5 class='author'>{{ currentBook.meta.author }},
@@ -44,7 +46,7 @@
                 </div>
 
                 <br><br><br>
-                
+
               <h4> Book Author </h4>
                 <div class="col-sm-12">
                   <div class="col-sm-12">
@@ -65,7 +67,7 @@
                     </button>
                   </div>
                   <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
-                  
+
                 </div>
                 -->
 
@@ -114,7 +116,7 @@
                 </button>
 
             </slot>
-          </div>    
+          </div>
 
         </div>
       </div>
@@ -173,7 +175,7 @@ export default {
     onUpload: function() {
       console.log(this.auth._session.token);
       console.log(this.auth._session.password);
-      
+
       var url = 'http://localhost:3000/api/v1/books';
       var author = 'Bearer ' + this.auth._session.token + ':' + this.auth._session.password;
       Vue.http.headers.common['Authorization'] = author;
@@ -184,7 +186,7 @@ export default {
           this.$http.post(url, { 'book': dataBook, 'audio': dataAudio, 'type_book': this.type_book }).then((response) => {
             // result
             alert(response.toString());
-            
+
           });
         } else {
           // file browser of book, url of audio
@@ -199,7 +201,7 @@ export default {
 
       // close
       this.$emit('close');
-          
+
     }
 
   },

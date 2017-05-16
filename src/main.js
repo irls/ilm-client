@@ -9,6 +9,11 @@ import * as directives from './directives'
 //import 'expose-loader?jquery!jquery'
 import VueEvents from 'vue-events'
 
+// for debugging
+if (process.env.NODE_ENV === 'development') Vue.config.debug = true
+
+// sync the router with the vuex store.
+// this registers `store.state.route`
 sync(store, router)
 
 // register global directives.

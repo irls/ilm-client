@@ -43,63 +43,64 @@
 </template>
 
 <script>
-
+import { mapGetters } from 'vuex'
 import BookImport from './BookImport'
-import access from "../../mixins/access.js"
 
 export default {
-  data () {
-    return {
-      filterStr: '',
-      showImportBooksModal: false,
-      languages: {
-        en: "English",
-        es: "Spanish",
-        du: "German",
-        ru: "Russian",
-        ar: "Arabic",
-        fa: "Farsi",
-        cn: "Chinese",
-        ro: "Romanian",
-      }
-    }
-  },
 
   name: 'toolbar',
-
 
   components: {
     BookImport
   },
 
-  mixins: [access],
+  data () {
+    return {
+      filterStr: '',
+      showImportBooksModal: false,
+      languages: {
+        en: 'English',
+        es: 'Spanish',
+        du: 'German',
+        ru: 'Russian',
+        ar: 'Arabic',
+        fa: 'Farsi',
+        cn: 'Chinese',
+        ro: 'Romanian'
+      }
+    }
+  },
 
+  computed: mapGetters([
+    'isLoggedIn',
+    'isAdmin',
+    'isEditor',
+    'isLibrarian'
+  ]),
 
   methods: {
-    booksFilterChange: function(el) {
-      this.$store.commit('SET_CURRENTBOOK_FILTER', {filter: el.target.value});
+    booksFilterChange (el) {
+      this.$store.commit('SET_CURRENTBOOK_FILTER', {filter: el.target.value})
     },
-    booksLanguageChange: function(el) {
-      this.$store.commit('SET_CURRENTBOOK_FILTER', {language: el.target.value});
-      //console.log("language: "+el.target.value);
+    booksLanguageChange (el) {
+      this.$store.commit('SET_CURRENTBOOK_FILTER', {language: el.target.value})
+      // console.log("language: "+el.target.value)
     },
-    booksTypeChange: function(el) {
-      this.$store.commit('SET_CURRENTBOOK_FILTER', {importStatus: el.target.value});
+    booksTypeChange (el) {
+      this.$store.commit('SET_CURRENTBOOK_FILTER', {importStatus: el.target.value})
     },
-    bookCount() {
-      return this.$store.state.books_meta && this.$store.state.books_meta.length;
+    bookCount () {
+      return this.$store.state.books_meta && this.$store.state.books_meta.length
     },
-    editBook() {
-      //console.log('/books/edit/'+ this.$store.state.currentBook._id)
-      this.$router.push('/books/edit/'+ this.$store.state.currentBook._id)
+    editBook () {
+      // console.log('/books/edit/'+ this.$store.state.currentBook._id)
+      this.$router.push('/books/edit/' + this.$store.state.currentBook._id)
     },
-
-    importBook() {
-      console.log("event ok");
-      this.showImportBooksModal = true;
+    importBook () {
+      console.log('event ok')
+      this.showImportBooksModal = true
     }
-
-  },
+  }
 }
 </script>
 
