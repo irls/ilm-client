@@ -5,11 +5,12 @@ import { store } from './store'
 import { sync } from 'vuex-router-sync'
 import VueResource from 'vue-resource'
 import * as directives from './directives'
-// import superlogin from 'superlogin-client'
-// import PouchDB from 'pouchdb'
-// import hoodieApi from 'pouchdb-hoodie-api'
+//import jQuery from 'jquery'
+//import 'expose-loader?jquery!jquery'
+import VueEvents from 'vue-events'
 
 sync(store, router)
+
 // register global directives.
 Object.keys(directives).forEach(key => {
   Vue.directive(key, directives[key])
@@ -24,3 +25,4 @@ new Vue({
 })
 
 Vue.use(VueResource);
+Vue.use(VueEvents)

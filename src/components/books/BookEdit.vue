@@ -35,8 +35,8 @@
       </div>
     </td>
     <td class='content'>
-      <BlockView v-if='!isEditing' :block="block" :blid="blid" @edited="blockEdit(blid, $event)" />
-      <!-- <BlockEdit v-else /> -->
+      <BlockView :block="block" :blid="blid" @edited="blockEdit(blid, $event)"
+       @editing="blockEditing(blid, $event)" />
     </td>
   </tr>
   <infinite-loading v-if="autoload" :on-infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
@@ -52,6 +52,7 @@ import InfiniteLoading from 'vue-infinite-loading'
 import Vue from 'vue'
 import access from "../../mixins/access.js"
 import PouchDB from 'pouchdb'
+
 
 export default {
   data () {
@@ -75,7 +76,7 @@ export default {
       var vm = this
       let loadCount = vm.loadBlocks(50)
       if (loadCount>0) {
-        vm.autoLoadBlocks();
+        //vm.autoLoadBlocks();
         this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
       } else {
         this.$refs.infiniteLoading.$emit('$InfiniteLoading:complete');
@@ -151,6 +152,7 @@ export default {
       alert('Editing block id '+block.id)
     },
     saveChanges: function() {
+      this.$events.emit('currentEditingBlockId', '')
       // how do we insert new blocks?
       var vm = this
       var book = vm.$store.state.currentBook
@@ -186,6 +188,7 @@ export default {
 
     },
     reloadBookDisplay: function(vm) {   // reload book?
+      this.$events.emit('currentEditingBlockId', '')
       var currentLoaded = this.parlist.length
       var position = document.getElementById('editviewarea').scrollTop
       vm.parlist = [] // why is this not working??
@@ -199,6 +202,7 @@ export default {
       vm.autoload = true
     },
     discardChanges: function() {
+      this.$events.emit('currentEditingBlockId', '')
       console.log('Discarding Changes...')
       var vm = this
       this.parlist.forEach(function(item, i) {
@@ -223,8 +227,18 @@ export default {
       // console.log(this.parlist[blid], block)
       // console.log(this.parlist[blid]===block ? "blocks match": "blocks don't match")
       // console.log(this.edited)
+    },
+    blockEditing: function(blid, block) {
+
     }
 
+  },
+  mounted: function() {
+    var vm = this
+    window.addEventListener('keydown', function(key){
+      console.log("keydown: ", key)
+      if (key.code==='Escape' || key.keyCode===27) vm.$events.emit('currentEditingBlockId', '')
+    })
   },
   computed: {
     // currentBook: function() {

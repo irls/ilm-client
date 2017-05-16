@@ -26,9 +26,11 @@ export default {
   },
   watch: {
     '$route' () {
-      if (this.$route.params.hasOwnProperty('bookid'))
+      if (this.$route.params.hasOwnProperty('bookid')) {
         this.$store.dispatch('loadBook', this.$route.params.bookid)
-        //this.loadBook(this.$route.params.bookid)
+        this.$events.emit('SET_CURRENTBOOK_EVENT')
+      }
+
     }
   },
   created: function() {
