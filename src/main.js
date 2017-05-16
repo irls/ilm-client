@@ -5,9 +5,9 @@ import { store } from './store'
 import { sync } from 'vuex-router-sync'
 import VueResource from 'vue-resource'
 import * as directives from './directives'
-// import superlogin from 'superlogin-client'
-// import PouchDB from 'pouchdb'
-// import hoodieApi from 'pouchdb-hoodie-api'
+//import jQuery from 'jquery'
+//import 'expose-loader?jquery!jquery'
+import VueEvents from 'vue-events'
 
 // for debugging
 if (process.env.NODE_ENV === 'development') Vue.config.debug = true
@@ -30,3 +30,4 @@ new Vue({
 })
 
 Vue.use(VueResource);
+Vue.use(VueEvents)

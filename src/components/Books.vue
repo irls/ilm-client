@@ -31,7 +31,6 @@
         </td>
       </tr>
     </table>
-
   </div>
 </template>
 
@@ -53,7 +52,9 @@ export default {
   data () {
     return {
       metaVisible: false,
-      colCount: 1
+      metaAvailable: false,
+      colCount: 1,
+      currentBookId: this.$store.state.currentBookid
     }
   },
 
@@ -80,10 +81,14 @@ export default {
 
   methods: {
     toggleMetaVisible () {
-      let doShow = !this.metaVisible
-      if (doShow && this.hasBookSelected()) this.metaVisible = true
-      else this.metaVisible = false
-      this.recountRows()
+      let id = this.$store.state.currentBookid
+      this.metaAvailable = id
+      this.metaVisible = !this.metaVisible
+      if (!this.metaAvailable) this.metaVisible = false;
+      // let doShow = !this.metaVisible
+      // if (doShow && this.$store.state.hasBookSelected()) this.metaVisible = true
+      // else this.metaVisible = false
+      // this.recountRows()
     },
     hasBookSelected () {
       return !!this.currentBook
@@ -101,8 +106,28 @@ export default {
       // console.log('Rows: '+ count)
       this.colCount = count
     }
-  }
 
+/*
+  },
+
+  watch: {
+    '$store.state.route.params' (to, from) {
+      // react to route changes...
+      // console.log('Watching route: ',to,from)
+      this.recountRows()
+    }
+  },
+
+  created: function() {
+    var vm=this
+    this.$events.on('SET_CURRENTBOOK_EVENT', function(){
+      //  console.log('WTH')
+        vm.metaAvailable = true
+        vm.currentBookId = vm.$store.state.currentBookid
+     })
+*/
+
+  }
 }
 </script>
 

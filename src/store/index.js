@@ -32,6 +32,7 @@ export const store = new Vuex.Store({
     currentBookMeta: {},
     currentBook_dirty: false,
     currentBookMeta_dirty: false,
+    currentEditingBlockId: '',
 
     bookFilters: {filter: '', language: 'en', importStatus: 'staging'},
     editMode: 'Editor'
@@ -81,6 +82,7 @@ export const store = new Vuex.Store({
       state.currentBook_dirty = false
       state.currentBookMeta_dirty = false
       state.currentBookid = meta._id
+
     },
 
     setEditMode (state, editMode) {
