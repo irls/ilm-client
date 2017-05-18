@@ -20,19 +20,10 @@
         </button> -->
       </div>
 
-      <BookDownload v-if="showModal" @close="showModal = false">
-          <!--
-            you can use custom content here to overwrite
-            default content
-          -->
-      </BookDownload>
+      <BookDownload v-if="showModal" @close="showModal = false" />
 
-      <AudioImport v-if="showModal_audio" @close="showModal_audio = false">
-          <!--
-            you can use custom content here to overwrite
-            default content
-          -->
-      </AudioImport>
+      <AudioImport v-if="showModal_audio" @close="showModal_audio = false"
+       :book="currentBook" />
 
       <div class="book-listing">
         <fieldset>
@@ -300,6 +291,7 @@ export default {
     },
 
     uploadAudio () {
+      console.log("hello there")
       this.showModal_audio = true
     }
 

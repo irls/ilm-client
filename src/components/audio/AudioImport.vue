@@ -1,6 +1,6 @@
 <template>
   <transition name="modal">
-    <div class="modal-mask" @click="$emit('close_audioimport')" >
+    <div class="modal-mask" @click="$emit('close')" >
       <div class="modal-wrapper">
         <div class="modal-container" @click="$event.stopPropagation()">
 
@@ -11,7 +11,7 @@
                 <label class="header-h"><img src='/static/audiostack.png' class='audio-logo'></label>
                 <h3 class="header-h">Import New Audiobook</h3></div>
 
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_audioimport')">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close')">
                 <i class="fa fa-times-circle-o" aria-hidden="true"></i>
                 </button>
 
@@ -45,7 +45,7 @@
                     or &nbsp;&nbsp;&nbsp;
                     <button class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
-                      <input name="audio_import" type="file" class="file_open" accept="audio/*" @change="onAudioFileChange"/>
+                      <input name="audio_import" type="file" class="file_open" accept="audio/*" @change="onAudioFileChange" multiple />
                     </button>
                   </div>
                   <span class="help-block"> &nbsp; &nbsp; Audio file, ZIP files or playlist </span>
@@ -128,6 +128,7 @@ export default {
         .from(Array(fileList.length).keys())
         .map(x => {
           formData.append(fieldName, fileList[x], fileList[x].name);
+          console.log('Field name: ', fieldName)
           this.uploadFiles++
         });
     },
@@ -151,7 +152,7 @@ export default {
         if (response.status===200) {
           // hide modal after one second
           vm.uploadProgress = "Upload Successful"
-          setTimeout(function(){ vm.$emit('close_audioimport') }, 1000)
+          setTimeout(function(){ vm.formReset(); vm.$emit('close');  }, 1000)
         } else {
           // not sure what we should be doing here
           vm.formReset()
@@ -159,7 +160,7 @@ export default {
       }).catch((err) => {
         console.log('error: '+ err)
         vm.formReset()
-        setTimeout(function(){ vm.$emit('close_audioimport') }, 1000)
+        setTimeout(function(){ vm.$emit('close') }, 1000)
       });
 
 
@@ -190,7 +191,7 @@ export default {
       // }
 
       // close
-      //this.$emit('close_audioimport');
+      //this.$emit('close');
 
     }
 
