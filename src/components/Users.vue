@@ -45,13 +45,13 @@
         <div class="t-box">
           <select-roles
             :selected="user.roles"
-            @select="val => { user.roles = val }"
+            @select="updateUser(user._id, 'roles', $event)"
           ></select-roles>
         </div>
         <div class="t-box">
           <select-languages
-            :selected="user.languages"
-            @select="val => { user.languages = val }"
+            :selected="user.languages || []"
+            @select="updateUser(user._id, 'languages', $event)"
           ></select-languages>
         </div>
         <div class="t-box"><a href="#"><span><i class="fa fa-calendar-check-o"></i>Work History</span></a></div>
@@ -62,7 +62,7 @@
           <i class="fa fa-unlock"></i>  Reset Password
         </button>  &nbsp; -->
 
-        <div class="t-box" @click="user.enable=!user.enable">
+        <div class="t-box" @click="updateUser(user._id, 'enable', !user.enable)">
           <template v-if="user.enable"><span>Active </span><i class="fa fa-toggle-on"></i></template>
           <template v-else><span>Disabled </span><i class="fa fa-toggle-off"></i></template>
         </div>
@@ -92,8 +92,11 @@ import SelectLanguages from './generic/SelectLanguages'
 import UserAddModal from './users/UserAddModal'
 import Pagination from './generic/Pagination'
 import { filteredData, pagedData } from '../filters'
+import PouchDB from 'pouchdb'
+import superlogin from 'superlogin-client'
+import { mapGetters } from 'vuex'
 
-const API_ALLUSERS = '/static/users.json'
+const API_ALLUSERS = process.env.ILM_API + '/api/v1/users'
 
 export default {
 
@@ -124,18 +127,78 @@ export default {
 
     filteredUsers () {
       return filteredData(this.users, this.filterKey)
-    }
+    },
+    
+    ...mapGetters([
+      'isLoggedIn',
+      'isAdmin',
+      'isEditor',
+      'isLibrarian'
+    ]),
 
+  },
+  mounted () {
+    var self = this
+    /*axios.get(API_ALLUSERS)
+    .then(response => {
+      self.users = response.data
+    })
+    .catch(err => {
+      console.log('Error: ', err);
+    })*/
+    PouchDB.sync('ilm_users', superlogin.getDbUrl('ilm_users'), { live: true }).on('change', change => {
+      self.updateUsersList()
+    }).catch(err => {
+      //console.log('Error sync ilm_users')
+      //console.log(err)
+    })
+    self.updateUsersList()
   },
 
   created () {
-    axios.get(API_ALLUSERS)
-    .then(response => {
-      this.users = response.data.users
-    })
-    .catch(err => {
-      console.log('Error: ', err)
-    })
+    
+  },
+  
+  methods: {
+    updateUser(user_id, field, new_value) {
+      
+      var ilmUsers = PouchDB('ilm_users')
+      var user = ilmUsers.get(user_id).then(user => {
+        
+        if (!_.isEqual(user[field], new_value)) {
+          user[field] = new_value
+          var dbPath = superlogin.getDbUrl('ilm_users')
+          if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
+
+          var db = new PouchDB(dbPath)
+          var api = db.hoodieApi()
+
+          api.update(user_id, {
+            [field]: new_value
+          }).then(doc => {
+            
+          }).catch(err => {
+            console.log('error DB pdate: ', err)
+          })
+        }
+      }).catch(error => {})
+      return false
+    },
+    
+    updateUsersList() {
+      var self = this
+      let ilmUsers = PouchDB('ilm_users').hoodieApi()
+      ilmUsers.findAll()
+      .then(users => {
+        self.users = users
+      }).catch(err => {
+        console.log('Error getting all users', err)
+      })
+    }
+  },
+  
+  watch: {
+    
   }
 
 }

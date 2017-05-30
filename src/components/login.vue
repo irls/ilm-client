@@ -32,6 +32,7 @@
 import { mapMutations, mapActions } from 'vuex'
 import superlogin from 'superlogin-client'
 import PouchDB from 'pouchdb'
+import axios from 'axios'
 
 export default {
 
@@ -78,6 +79,7 @@ export default {
           vm.$store.dispatch('loadBook', bookid)
           vm.$router.replace({ path: '/books/' + bookid })
         }
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
       }
     })
 
@@ -86,6 +88,7 @@ export default {
       // for testing only
       // vu_this.$store.dispatch('emptyDB')
       PouchDB('ilm_library_meta').destroy()
+      PouchDB('ilm_users').destroy()
       //
 
       window.setTimeout(() => {
