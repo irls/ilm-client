@@ -139,19 +139,7 @@ export default {
   },
   mounted () {
     var self = this
-    /*axios.get(API_ALLUSERS)
-    .then(response => {
-      self.users = response.data
-    })
-    .catch(err => {
-      console.log('Error: ', err);
-    })*/
-    PouchDB.sync('ilm_users', superlogin.getDbUrl('ilm_users'), { live: true }).on('change', change => {
-      self.updateUsersList()
-    }).catch(err => {
-      //console.log('Error sync ilm_users')
-      //console.log(err)
-    })
+    
     self.updateUsersList()
   },
 
@@ -162,7 +150,7 @@ export default {
   methods: {
     updateUser(user_id, field, new_value) {
       
-      var ilmUsers = PouchDB('ilm_users')
+      /*var ilmUsers = PouchDB('ilm_users')
       var user = ilmUsers.get(user_id).then(user => {
         
         if (!_.isEqual(user[field], new_value)) {
@@ -182,17 +170,17 @@ export default {
           })
         }
       }).catch(error => {})
-      return false
+      return false*/
     },
     
     updateUsersList() {
       var self = this
-      let ilmUsers = PouchDB('ilm_users').hoodieApi()
-      ilmUsers.findAll()
-      .then(users => {
-        self.users = users
-      }).catch(err => {
-        console.log('Error getting all users', err)
+      axios.get(API_ALLUSERS)
+      .then(response => {
+        self.users = response.data
+      })
+      .catch(err => {
+        console.log('Error: ', err);
       })
     }
   },

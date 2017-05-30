@@ -88,7 +88,6 @@ export default {
       // for testing only
       // vu_this.$store.dispatch('emptyDB')
       PouchDB('ilm_library_meta').destroy()
-      PouchDB('ilm_users').destroy()
       //
 
       window.setTimeout(() => {
