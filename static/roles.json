@@ -1,21 +1,27 @@
 [
   {
-    "rank": 12,
+    "rank": "admin",
     "name": "Admin"
   }, {
-    "rank": 13,
+    "rank": "researcher",
     "name": "Researcher"
   }, {
-    "rank": 14,
+    "rank": "editor",
     "name": "Editor"
   }, {
-    "rank": 15,
+    "rank": "voice_artist",
     "name": "Voice Artist"
   }, {
-    "rank": 16,
+    "rank": "audio_engineer",
     "name": "Audio Engineer"
   }, {
-    "rank": 17,
+    "rank": "alignment",
     "name": "Alignment"
+  }, {
+    "rank": "user",
+    "name": "User"
+  }, {
+    "rank": "librarian",
+    "name": "Librarian"
   }
 ]

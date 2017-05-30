@@ -3,13 +3,13 @@
     {
       "name": "Sam Spade 1",
       "email": "sam992@gmail.com",
-      "roles": [12],
+      "roles": ["admin", "user"],
       "languages": ["es", "en"],
       "enable": true
     }, {
       "name": "Sam Spade 2",
       "email": "sam992@gmail.com",
-      "roles": [13],
+      "roles": ["editor", "user"],
       "languages": ["es"],
       "enable": true
     }, {
