@@ -149,28 +149,21 @@ export default {
   
   methods: {
     updateUser(user_id, field, new_value) {
-      
-      /*var ilmUsers = PouchDB('ilm_users')
-      var user = ilmUsers.get(user_id).then(user => {
-        
-        if (!_.isEqual(user[field], new_value)) {
-          user[field] = new_value
-          var dbPath = superlogin.getDbUrl('ilm_users')
-          if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
-
-          var db = new PouchDB(dbPath)
-          var api = db.hoodieApi()
-
-          api.update(user_id, {
-            [field]: new_value
-          }).then(doc => {
-            
-          }).catch(err => {
-            console.log('error DB pdate: ', err)
-          })
-        }
-      }).catch(error => {})
-      return false*/
+      var self = this
+      var user = self.users.find(usr => {
+        return usr._id == user_id
+      })
+      if (user && !_.isEqual(user[field], new_value)) {
+        var request = {}
+        request[field] = new_value
+        axios.patch(API_ALLUSERS + '/' + user_id, request).then(response => {
+          
+          if (response.data.ok === true) {
+            user[field] = new_value
+            console.log('Update', user, self.users)
+          }
+        })
+      }
     },
     
     updateUsersList() {
