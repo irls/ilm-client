@@ -160,7 +160,7 @@ export default {
           
           if (response.data.ok === true) {
             user[field] = new_value
-            console.log('Update', user, self.users)
+            //console.log('Update', user, self.users)
           }
         })
       }
