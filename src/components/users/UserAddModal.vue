@@ -87,6 +87,11 @@ export default {
 
   watch: {
     show () {
+      this.name = ""
+      this.username = ""
+      this.email = ""
+      this.password = ""
+      this.confirmPassword = ""
       this.roles = []
       this.languages = []
       this.errors = {}
@@ -114,7 +119,7 @@ export default {
       api.post('/api/v1/users', newUser)
         .then(function(response){
           if (response.status == 200) {
-            self.closed()
+            self.$emit('closed', true)
           } else {
             self.errors = response.validationErrors
           }
@@ -128,8 +133,8 @@ export default {
         });
     },
     cancel () {
-      console.log('cancel')
-      this.closed()
+      //console.log('cancel')
+      this.$emit('closed', false)
     }
   }
 

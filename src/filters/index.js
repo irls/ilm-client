@@ -1,4 +1,4 @@
-function filteredData (data, filterKey) {
+function filteredData (data, filterKey, filters) {
   var filterKeyString = filterKey && filterKey.toLowerCase()
   var results = data
   if (filterKeyString) {

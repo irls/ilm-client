@@ -10,10 +10,10 @@
           <h4>{{users.length}} Active Users</h4>
         </div>
         <div class='td'>
-          <select class="userselect form-control">
-            <option value="12" selected="">Show All</option>
-            <option value="13">Show Active</option>
-            <option value="14">Show Inactive</option>
+          <select class="userselect form-control" v-model="filter['enable']" v-on:change="filterChange">
+            <option selected="">Show All</option>
+            <option value="1">Show Active</option>
+            <option value="0">Show Inactive</option>
           </select>
         </div>
         <div class='td auto'></div>
@@ -78,7 +78,7 @@
 
     <user-add-modal
       :show="userAddModalActive"
-      @closed="userAddModalActive = false"
+      @closed="addUserModalClose"
     ></user-add-modal>
 
   </div>
@@ -115,7 +115,10 @@ export default {
       filterKey: '',
       currentPage: 0,
       rowsPerPage: 2,
-      userAddModalActive: false
+      userAddModalActive: false,
+      filter: {
+          'enable': ''
+        }
     }
   },
 
@@ -126,7 +129,7 @@ export default {
     },
 
     filteredUsers () {
-      return filteredData(this.users, this.filterKey)
+      return filteredData(this.users, this.filterKey, this.filter)
     },
     
     ...mapGetters([
@@ -175,6 +178,17 @@ export default {
       .catch(err => {
         console.log('Error: ', err);
       })
+    },
+
+    addUserModalClose(result) {
+      this.userAddModalActive = false
+      if (result === true) {
+        this.updateUsersList()
+      }
+    },
+    
+    filterChange() {
+      //console.log('Filter changed')
     }
   },
   
