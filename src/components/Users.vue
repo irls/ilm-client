@@ -11,7 +11,7 @@
         </div>
         <div class='td'>
           <select class="userselect form-control" v-model="filter['enable']" v-on:change="filterChange">
-            <option selected="">Show All</option>
+            <option value="" selected="">Show All</option>
             <option value="1">Show Active</option>
             <option value="0">Show Inactive</option>
           </select>
@@ -54,9 +54,9 @@
             @select="updateUser(user._id, 'languages', $event)"
           ></select-languages>
         </div>
-        <div class="t-box"><a href="#"><span><i class="fa fa-calendar-check-o"></i>Work History</span></a></div>
+        <div class="t-box"><a href="#" v-on:click="workHistoryModal(user._id)"><span><i class="fa fa-calendar-check-o"></i>Work History</span></a></div>
 
-        <div class="t-box"><a href="#"><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
+        <div class="t-box"><a href="#" v-on:click=""><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
 
         <!-- <button @click='' class='btn btn-default t-box'>
           <i class="fa fa-unlock"></i>  Reset Password
@@ -80,6 +80,11 @@
       :show="userAddModalActive"
       @closed="addUserModalClose"
     ></user-add-modal>
+    <work-history-modal
+      :show="workHistoryModalActive"
+      @closed="workHistoryModalClose"
+      :workHistory="workHistory"
+    ></work-history-modal>
 
   </div>
 </template>
@@ -90,11 +95,11 @@ import axios from 'axios'
 import SelectRoles from './generic/SelectRoles'
 import SelectLanguages from './generic/SelectLanguages'
 import UserAddModal from './users/UserAddModal'
+import WorkHistoryModal from './users/WorkHistoryModal'
 import Pagination from './generic/Pagination'
 import { filteredData, pagedData } from '../filters'
 import PouchDB from 'pouchdb'
 import superlogin from 'superlogin-client'
-import { mapGetters } from 'vuex'
 
 const API_ALLUSERS = process.env.ILM_API + '/api/v1/users'
 
@@ -104,11 +109,12 @@ export default {
 
   components: {
     UserAddModal,
+    WorkHistoryModal,
     SelectRoles,
     SelectLanguages,
     Pagination
   },
-
+  
   data () {
     return {
       users: [],
@@ -116,9 +122,12 @@ export default {
       currentPage: 0,
       rowsPerPage: 2,
       userAddModalActive: false,
+      passwordResetModalActive: false,
+      workHistoryModalActive: false,
       filter: {
-          'enable': ''
-        }
+        'enable': ''
+      },
+      workHistory: {}
     }
   },
 
@@ -128,16 +137,12 @@ export default {
       return pagedData(this.filteredUsers, this.currentPage, this.rowsPerPage)
     },
 
-    filteredUsers () {
-      return filteredData(this.users, this.filterKey, this.filter)
+    filteredUsers: {
+      //cache: false,
+      get() {
+        return filteredData(this.users, this.filterKey, this.filter)
+      }
     },
-    
-    ...mapGetters([
-      'isLoggedIn',
-      'isAdmin',
-      'isEditor',
-      'isLibrarian'
-    ]),
 
   },
   mounted () {
@@ -188,7 +193,20 @@ export default {
     },
     
     filterChange() {
-      //console.log('Filter changed')
+      var tmp = this.filter
+      this.filter = null
+      this.filter = tmp// trick to force computed value reload since it does not observe object changes
+    },
+    
+    workHistoryModal(user_id) {
+      this.workHistory = null
+      this.workHistory = {'user_id': user_id}
+      this.workHistoryModalActive = true
+    },
+    
+    workHistoryModalClose() {
+      this.workHistory = {}
+      this.workHistoryModalActive = false
     }
   },
   
