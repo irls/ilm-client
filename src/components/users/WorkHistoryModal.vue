@@ -31,19 +31,19 @@ export default {
   },
 
   props: {
-    show: Boolean
+    show: Boolean,
+    workHistory: Object
   },
 
   data () {
     return {
-      workHistory: {
-        'user_id': ''
-      }
     }
   },
 
   watch: {
-    
+    show() {
+      
+    }
   },
 
   methods: {

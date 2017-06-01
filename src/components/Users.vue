@@ -199,7 +199,6 @@ export default {
     },
     
     workHistoryModal(user_id) {
-      this.workHistory = null
       this.workHistory = {'user_id': user_id}
       this.workHistoryModalActive = true
     },
@@ -252,9 +251,9 @@ export default {
   display: table-cell;
   vertical-align: middle;
   white-space: nowrap;
-  position: relative;
+  /*position: relative;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%);*/
   padding: 5px;
 }
 
