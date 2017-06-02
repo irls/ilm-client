@@ -25,6 +25,11 @@
       </div>
     </div>
   </div>
+  <alert v-show="hasPasswordResetError" placement="top" duration="" type="danger" width="400px">
+    <span class="icon-info-circled alert-icon-float-left"></span>
+
+    <p>{{passwordResetError}}</p>
+  </alert>
 </div>
 </template>
 
@@ -33,6 +38,7 @@ import { mapMutations, mapActions } from 'vuex'
 import superlogin from 'superlogin-client'
 import PouchDB from 'pouchdb'
 import axios from 'axios'
+import { alert } from 'vue-strap'
 
 export default {
 
@@ -47,8 +53,14 @@ export default {
 
       // Modal error messages
       loginError: '',
-      passwordError: ''
+      passwordError: '',
+      hasPasswordResetError: false,
+      passwordResetError: ''
     }
+  },
+  
+  components: {
+    alert
   },
 
   created () {
@@ -119,9 +131,21 @@ export default {
       })
     },
     user_passwordreset (email) {
-      this.auth.forgotPassword(email)
-      alert('A login link has been sent by email to: ' + email)
-      this.active = 'login'
+      var self = this
+      axios.post(process.env.ILM_API + '/api/v1/new-password', {'email': email}).then(function(response){
+        console.log(response)
+        if (response.data.ok === true) {
+          self.active = 'login'
+        } else {
+          
+        }
+      })
+      .catch(function(e){
+        //console.log(e.response.data.message)
+        self.hasPasswordResetError = true
+        self.passwordResetError = e.response.data.message
+        setTimeout(function(){self.hasPasswordResetError = false}, 5000)
+      })
     },
     keycheck (event) {
       if (event.key === 'Enter') this.user_login()

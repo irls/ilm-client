@@ -38,6 +38,11 @@
 
 
 
+    <alert v-show="passwordChanged" placement="top-right" duration="3000" type="success" width="400px">
+      <span class="icon-ok-circled alert-icon-float-left"></span>
+      
+      <p>Password reset.</p>
+    </alert>
     <form class="user-form">
       <div v-for="user in pagedUsers" class="user-form-box">
         <div class="t-box"><span><i class="fa fa-user"></i>{{user.name}}</span></div>
@@ -56,7 +61,7 @@
         </div>
         <div class="t-box"><a href="#" v-on:click="workHistoryModal(user._id)"><span><i class="fa fa-calendar-check-o"></i>Work History</span></a></div>
 
-        <div class="t-box"><a href="#" v-on:click=""><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
+        <div class="t-box"><a href="#" v-on:click="resetPassword(user.email)"><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
 
         <!-- <button @click='' class='btn btn-default t-box'>
           <i class="fa fa-unlock"></i>  Reset Password
@@ -100,6 +105,7 @@ import Pagination from './generic/Pagination'
 import { filteredData, pagedData } from '../filters'
 import PouchDB from 'pouchdb'
 import superlogin from 'superlogin-client'
+import { alert } from 'vue-strap'
 
 const API_ALLUSERS = process.env.ILM_API + '/api/v1/users'
 
@@ -112,7 +118,8 @@ export default {
     WorkHistoryModal,
     SelectRoles,
     SelectLanguages,
-    Pagination
+    Pagination,
+    alert
   },
   
   data () {
@@ -127,7 +134,8 @@ export default {
       filter: {
         'enable': ''
       },
-      workHistory: {}
+      workHistory: {},
+      passwordChanged: false
     }
   },
 
@@ -206,6 +214,20 @@ export default {
     workHistoryModalClose() {
       this.workHistory = {}
       this.workHistoryModalActive = false
+    },
+    
+    resetPassword(email) {
+      //console.log({'email': email}, arguments)
+      var self = this
+      axios.post(process.env.ILM_API + '/api/v1/new-password', {'email': email}).then(function(response){
+        if (response.data.ok === true) {
+          self.passwordChanged = true
+          setTimeout(function(){self.passwordChanged = false}, 5000)
+        } else {
+        }
+      })
+      .catch(function(e){
+      })
     }
   },
   
