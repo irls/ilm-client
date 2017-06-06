@@ -102,6 +102,7 @@ export default {
       PouchDB('ilm_library_meta').destroy()
       //
 
+      axios.defaults.headers.common['Authorization'] = false;
       window.setTimeout(() => {
         this.RESET_LOGIN_STATE()
       }, 1000)
