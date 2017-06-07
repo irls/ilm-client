@@ -1,4 +1,4 @@
-function filteredData (data, filterKey) {
+function filteredData (data, filterKey, filters) {
   var filterKeyString = filterKey && filterKey.toLowerCase()
   var results = data
   if (filterKeyString) {
@@ -8,6 +8,16 @@ function filteredData (data, filterKey) {
       })
     })
   }
+  if (filters) {
+    for (var filter in filters) {
+      if (typeof filters[filter] !== 'undefined' && filters[filter] !== '') {
+        results = results.filter(row => {
+          return row[filter] == filters[filter]
+        })
+      }
+    }
+  }
+  
   return results
 }
 

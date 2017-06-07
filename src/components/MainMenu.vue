@@ -30,7 +30,7 @@
 
           <li class="presentation roles">({{allRolls.join(', ')}})</li>
 
-          <li v-if="$store.state.isLoggedIn" class="presentation"><a href="#" @click="$store.state.auth.logout()">Logout</a></li>
+          <li v-if="$store.state.isLoggedIn" class="presentation"><a href="#" v-on:click.stop.prevent="$store.state.auth.logout()">Logout</a></li>
       </ul>
     </td></tr>
   </table>

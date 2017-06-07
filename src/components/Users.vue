@@ -10,10 +10,10 @@
           <h4>{{users.length}} Active Users</h4>
         </div>
         <div class='td'>
-          <select class="userselect form-control">
-            <option value="12" selected="">Show All</option>
-            <option value="13">Show Active</option>
-            <option value="14">Show Inactive</option>
+          <select class="userselect form-control" v-model="filter['enable']" v-on:change="filterChange">
+            <option value="" selected="">Show All</option>
+            <option value="1">Show Active</option>
+            <option value="0">Show Inactive</option>
           </select>
         </div>
         <div class='td auto'></div>
@@ -38,6 +38,11 @@
 
 
 
+    <alert v-show="passwordChanged" placement="top-right" duration="3000" type="success" width="400px">
+      <span class="icon-ok-circled alert-icon-float-left"></span>
+      
+      <p>Password reset.</p>
+    </alert>
     <form class="user-form">
       <div v-for="user in pagedUsers" class="user-form-box">
         <div class="t-box"><span><i class="fa fa-user"></i>{{user.name}}</span></div>
@@ -45,24 +50,24 @@
         <div class="t-box">
           <select-roles
             :selected="user.roles"
-            @select="val => { user.roles = val }"
+            @select="updateUser(user._id, 'roles', $event)"
           ></select-roles>
         </div>
         <div class="t-box">
           <select-languages
-            :selected="user.languages"
-            @select="val => { user.languages = val }"
+            :selected="user.languages || []"
+            @select="updateUser(user._id, 'languages', $event)"
           ></select-languages>
         </div>
-        <div class="t-box"><a href="#"><span><i class="fa fa-calendar-check-o"></i>Work History</span></a></div>
+        <div class="t-box"><a href="#" v-on:click="workHistoryModal(user._id)"><span><i class="fa fa-calendar-check-o"></i>Work History</span></a></div>
 
-        <div class="t-box"><a href="#"><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
+        <div class="t-box"><a href="#" v-on:click="resetPassword(user.email)"><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
 
         <!-- <button @click='' class='btn btn-default t-box'>
           <i class="fa fa-unlock"></i>  Reset Password
         </button>  &nbsp; -->
 
-        <div class="t-box" @click="user.enable=!user.enable">
+        <div class="t-box" @click="updateUser(user._id, 'enable', !user.enable)">
           <template v-if="user.enable"><span>Active </span><i class="fa fa-toggle-on"></i></template>
           <template v-else><span>Disabled </span><i class="fa fa-toggle-off"></i></template>
         </div>
@@ -78,8 +83,13 @@
 
     <user-add-modal
       :show="userAddModalActive"
-      @closed="userAddModalActive = false"
+      @closed="addUserModalClose"
     ></user-add-modal>
+    <work-history-modal
+      :show="workHistoryModalActive"
+      @closed="workHistoryModalClose"
+      :workHistory="workHistory"
+    ></work-history-modal>
 
   </div>
 </template>
@@ -90,10 +100,14 @@ import axios from 'axios'
 import SelectRoles from './generic/SelectRoles'
 import SelectLanguages from './generic/SelectLanguages'
 import UserAddModal from './users/UserAddModal'
+import WorkHistoryModal from './users/WorkHistoryModal'
 import Pagination from './generic/Pagination'
 import { filteredData, pagedData } from '../filters'
+import PouchDB from 'pouchdb'
+import superlogin from 'superlogin-client'
+import { alert } from 'vue-strap'
 
-const API_ALLUSERS = '/static/users.json'
+const API_ALLUSERS = process.env.ILM_API + '/api/v1/users'
 
 export default {
 
@@ -101,18 +115,27 @@ export default {
 
   components: {
     UserAddModal,
+    WorkHistoryModal,
     SelectRoles,
     SelectLanguages,
-    Pagination
+    Pagination,
+    alert
   },
-
+  
   data () {
     return {
       users: [],
       filterKey: '',
       currentPage: 0,
       rowsPerPage: 2,
-      userAddModalActive: false
+      userAddModalActive: false,
+      passwordResetModalActive: false,
+      workHistoryModalActive: false,
+      filter: {
+        'enable': ''
+      },
+      workHistory: {},
+      passwordChanged: false
     }
   },
 
@@ -122,20 +145,94 @@ export default {
       return pagedData(this.filteredUsers, this.currentPage, this.rowsPerPage)
     },
 
-    filteredUsers () {
-      return filteredData(this.users, this.filterKey)
-    }
+    filteredUsers: {
+      //cache: false,
+      get() {
+        return filteredData(this.users, this.filterKey, this.filter)
+      }
+    },
 
+  },
+  mounted () {
+    var self = this
+    
+    self.updateUsersList()
   },
 
   created () {
-    axios.get(API_ALLUSERS)
-    .then(response => {
-      this.users = response.data.users
-    })
-    .catch(err => {
-      console.log('Error: ', err)
-    })
+    
+  },
+  
+  methods: {
+    updateUser(user_id, field, new_value) {
+      var self = this
+      var user = self.users.find(usr => {
+        return usr._id == user_id
+      })
+      if (user && !_.isEqual(user[field], new_value)) {
+        var request = {}
+        request[field] = new_value
+        axios.patch(API_ALLUSERS + '/' + user_id, request).then(response => {
+          
+          if (response.data.ok === true) {
+            user[field] = new_value
+            //console.log('Update', user, self.users)
+          }
+        })
+      }
+    },
+    
+    updateUsersList() {
+      var self = this
+      axios.get(API_ALLUSERS)
+      .then(response => {
+        self.users = response.data
+      })
+      .catch(err => {
+        console.log('Error: ', err);
+      })
+    },
+
+    addUserModalClose(result) {
+      this.userAddModalActive = false
+      if (result === true) {
+        this.updateUsersList()
+      }
+    },
+    
+    filterChange() {
+      var tmp = this.filter
+      this.filter = null
+      this.filter = tmp// trick to force computed value reload since it does not observe object changes
+    },
+    
+    workHistoryModal(user_id) {
+      this.workHistory = {'user_id': user_id}
+      this.workHistoryModalActive = true
+    },
+    
+    workHistoryModalClose() {
+      this.workHistory = {}
+      this.workHistoryModalActive = false
+    },
+    
+    resetPassword(email) {
+      //console.log({'email': email}, arguments)
+      var self = this
+      axios.post(process.env.ILM_API + '/api/v1/new-password', {'email': email}).then(function(response){
+        if (response.data.ok === true) {
+          self.passwordChanged = true
+          setTimeout(function(){self.passwordChanged = false}, 5000)
+        } else {
+        }
+      })
+      .catch(function(e){
+      })
+    }
+  },
+  
+  watch: {
+    
   }
 
 }
@@ -176,9 +273,9 @@ export default {
   display: table-cell;
   vertical-align: middle;
   white-space: nowrap;
-  position: relative;
+  /*position: relative;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%);*/
   padding: 5px;
 }
 
