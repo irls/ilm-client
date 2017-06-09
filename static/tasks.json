@@ -1,0 +1,48 @@
+{
+  "list": [
+    {
+      "type": "Tasks type 1",
+      "list": [
+        {
+          "type": "Subtype 1",
+          "list": [
+            {
+              "book_title": "Book 1",
+              "book_id": 1,
+              "book_pages": 102
+            },
+            {
+              "book_title": "Book 2",
+              "book_id": 2,
+              "book_pages": 100
+            }
+          ]
+        },
+        {
+          "type": "Subtype 1.2",
+          "list": [
+            {
+              "book_title": "Book 3",
+              "book_id": 3,
+              "book_pages": 102
+            },
+            {
+              "book_title": "Book 4",
+              "book_id": 4,
+              "book_pages": 100
+            }
+          ]
+        }
+      ]
+    }, {
+      "type": "Tasks type 2",
+      "list": [
+        {
+          "type": "Subtype 2",
+          "list": []
+        }
+      ]
+    }
+  ],
+  "total": 0
+}

@@ -23,5 +23,13 @@
   }, {
     "rank": "librarian",
     "name": "Librarian"
+  },
+  {
+    "rank": "proofer",
+    "name": "Proofer"
+  },
+  {
+    "rank": "engineer",
+    "name": "Engineer"
   }
 ]
