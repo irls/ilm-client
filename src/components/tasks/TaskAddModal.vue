@@ -21,7 +21,11 @@
       </div>
       <div class="form-group" v-if="showField('name')">
         <label>Book</label>
-        <input type="text" class="form-control" v-model="name" />
+        <div v-for="n in Object.keys(name)" class="form-group book-row">
+          <input type="text" class="form-control" v-model="name[n]" />
+          <i class="fa fa-minus-circle" v-if="name.length > 1" v-on:click="removeBook(n)"></i>
+        </div>
+        <i class="fa fa-plus-circle add-book" v-on:click="addBook()"></i>
         <div v-if="errors.name" v-for="err in errors.name" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group" v-if="showField('roles.editor')">
@@ -80,7 +84,7 @@ export default {
       subtype: '',
       subtypes: [],
       roles: {},
-      name: '',
+      name: [''],
       fields_by_type: {
         '1': {
           'name': {'require': true},
@@ -143,7 +147,7 @@ export default {
     },
     validate() {
       this.errors = {}
-      console.log(this.roles)
+      //console.log(this.roles)
       if (!this.type) {
         if (!this.errors['type']) {
           this.errors['type'] = []
@@ -153,11 +157,23 @@ export default {
         for (var field in this.fields_by_type[this.type]) {
           let check = this.fields_by_type[this.type][field]
           if (Object.keys(check).indexOf('require') !== -1) {
-            if (check['require'] === true && !this[field]) {
-              if (!this.errors[field]) {
-                this.errors[field] = []
+            if (check['require'] === true) {
+              let has_error = false
+              if (this[field] instanceof Array) {
+                for (let n in this[field]) {
+                  if (!this[field][n]) {
+                    has_error = true
+                  }
+                }
+              } else {
+                has_error = !this[field]
               }
-              this.errors[field].push('Required')
+              if (has_error) {
+                if (!this.errors[field]) {
+                  this.errors[field] = []
+                }
+                this.errors[field].push('Required')
+              }
             }
           } else {
             for (let i in check) {
@@ -172,6 +188,12 @@ export default {
         } 
       }
       return Object.keys(this.errors).length == 0
+    },
+    addBook() {
+      this.name.push('')
+    },
+    removeBook(n) {
+      this.name.splice(n, 1)
     }
   },
   computed: {
@@ -191,7 +213,7 @@ export default {
       this.type = ''
       this.subtype = ''
       this.roles = {}
-      this.name = ''
+      this.name = ['']
       this.errors = {}
     }
   }
@@ -200,5 +222,13 @@ export default {
 <style scoped>
 .error-message {
   margin-left: 0%;
+}
+i.add-book {
+  float: right;
+  margin-top: -40px;
+}
+.book-row input {
+  width: 90%;
+  display: inline-block;
 }
 </style>

@@ -83,6 +83,7 @@ export default {
   
   methods: {
     getTasks() {
+      //axios.get(process.env.ILM_API + '/api/v1/tasks')
       var self = this
       axios.get(TASKS_URL).then(tasks => {
         self.tasks = tasks.data
