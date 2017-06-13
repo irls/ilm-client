@@ -66,7 +66,7 @@
 import { modal } from 'vue-strap'
 import modalMixin from './../../mixins/modal'
 import axios from 'axios'
-const TASKS_URL = process.env.ILM_API + '/api/v1/tasks'
+const TASKS_URL = process.env.ILM_API + '/api/v1/task'
 export default {
   name: 'TaskAddModal',
   components: {
@@ -75,13 +75,24 @@ export default {
   mixins: [modalMixin],
   props: {
     show: Boolean,
-    task_types: Array,
     users: Object
   },
   data() {
     return {
       type: '',
       subtype: '',
+      task_types: [
+        {
+          'id': 1,
+          'title': 'Import book with audio',
+          'subtypes': []
+        },
+        {
+          'id': 2,
+          'title': 'Import book without audio',
+          'subtypes': []
+        }
+      ],
       subtypes: [],
       roles: {},
       name: [''],
@@ -202,11 +213,11 @@ export default {
   watch: {
     type(val) {
       var self = this
-      var selected = this.task_types.filter(t => {
+      var selected = this.task_types.find(t => {
         return t.id == val
       })
-      if (selected && selected.length == 1) {
-        self.subtypes = selected[0].subtypes
+      if (selected) {
+        self.subtypes = selected.subtypes
       }
     },
     show() {

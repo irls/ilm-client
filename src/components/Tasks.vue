@@ -15,7 +15,6 @@
       </div>
       <task-add-modal 
         :show="taskAddModalActive"
-        :task_types="task_types"
         :users="users"
         @closed="taskAddModalClose">
         
@@ -23,7 +22,7 @@
       <div v-for="task in tasks.list" class="tasks-box table">
         <div class="task-type tr">
           <div class="td">
-            <h2><i class="fa fa-book"></i>&nbsp;{{task.type}}&nbsp;({{task.list.length}})</h2>
+            <h2><i class="fa fa-book"></i>&nbsp;{{task.type}}&nbsp;({{task.total}})</h2>
           </div>
         </div>
         <div v-for="subtask in task.list" class="subtasks-box tr">
@@ -47,8 +46,10 @@ import { VueTabs, VTab } from 'vue-nav-tabs'
 import 'vue-nav-tabs/dist/vue-tabs.min.css'
 import axios from 'axios'
 import TaskAddModal from './tasks/TaskAddModal'
-const TASKS_URL = '/static/tasks.json'//process.env.ILM_API + '/api/v1/tasks'
-const TASK_TYPES_URL = '/static/task_types.json'//process.env.ILM_API + '/api/v1/tasks/types'
+import superlogin from 'superlogin-client'
+var BPromise = require('bluebird');
+const TASKS_URL = process.env.ILM_API + '/api/v1/tasks/user/'
+const TASK_TYPES_URL = process.env.ILM_API + '/api/v1/tasks/types'
 const TASK_USERS_URL = process.env.ILM_API + '/api/v1/tasks/users'
 export default {
   data () {
@@ -76,29 +77,82 @@ export default {
   },
   
   mounted() {
-    this.getTasks()
-    this.getTaskTypes()
-    this.getTaskUsers()
+    var self = this
+    self.getTaskTypes().then(function(){
+      self.getTasks()
+    })
+    self.getTaskUsers()
   },
   
   methods: {
     getTasks() {
       //axios.get(process.env.ILM_API + '/api/v1/tasks')
       var self = this
-      axios.get(TASKS_URL).then(tasks => {
-        self.tasks = tasks.data
+      axios.get(TASKS_URL + superlogin.getSession().user_id).then(tasks => {
+        //console.log(self.task_types, tasks)
+        let tasks_formatted = {total: 0, list: []}
+        tasks.data.rows.forEach((record) => {
+          let subtype = self.task_types.tasks.find((s_type) => {
+            return s_type._id == record.type
+          })
+          console.log(subtype, record.type)
+          let type = self.task_types.categories.find((tt) => {
+            return tt._id == subtype.category_id
+          })
+          let existing_record = tasks_formatted.list.find((t) => {
+            return t.type_id == type._id
+          })
+          if (!existing_record) {
+            if (type) {
+              tasks_formatted.list.push({
+                type: type.title,
+                type_id: type._id,
+                list: [],
+                total: 0
+              })
+              existing_record = tasks_formatted.list[tasks_formatted.list.length - 1]
+            }
+          }
+          if (existing_record) {
+            let existing_subtype_record = existing_record.list.find((erl) => {
+              return erl.type_id == subtype._id
+            })
+            if (!existing_subtype_record) {
+              existing_record.list.push({
+                type: subtype.title,
+                type_id: subtype._id,
+                list: []
+              })
+              existing_subtype_record = existing_record.list[existing_record.list.length - 1]
+            }
+            existing_subtype_record.list.push({
+              book_title: record.title,
+              book_id: record.book_id
+            })
+            tasks_formatted.total++
+            existing_record.total++
+          }
+        })
+        self.tasks = tasks_formatted
+        //console.log(self.tasks)
       })
       .catch(error => {})
     },
     taskAddModalClose(create) {
       this.taskAddModalActive = false
+      if (create) {
+        this.getTasks()
+      }
     },
     getTaskTypes() {
       var self = this
-      axios.get(TASK_TYPES_URL).then(types => {
+      return axios.get(TASK_TYPES_URL).then(types => {
         self.task_types = types.data
+        return BPromise.resolve(self.task_types)
       })
-      .catch(error => {})
+      .catch(error => {
+        return BPromise.reject({})
+      })
     },
     getTaskUsers() {
       var self = this
