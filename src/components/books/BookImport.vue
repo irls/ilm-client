@@ -33,7 +33,7 @@
                     <label class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
-                      <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip" multiple @change="onFilesChange($event)">
+                      <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip" :multiple="multiple" @change="onFilesChange($event)">
 
                     </label>
                   </div>
@@ -118,9 +118,14 @@ export default {
         ],
         uploadFiles: {bookFiles: 0, audioFiles: 0},
         formData: new FormData(),
-        uploadProgress: "Uploading Files...",
-
+        uploadProgress: "Uploading Files..."
     }
+  },
+  props: {
+      'multiple': {
+        type: Boolean,
+        default: true
+      }
   },
   components: {
 
@@ -177,7 +182,7 @@ export default {
         if (response.status===200) {
           // hide modal after one second
           vu_this.uploadProgress = "Upload Successful"
-          setTimeout(function(){ vu_this.$emit('close_modal') }, 1000)
+          setTimeout(function(){ vu_this.$emit('close_modal', response) }, 1000)
         } else {
           // not sure what we should be doing here
           vu_this.formReset()

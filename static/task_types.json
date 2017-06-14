@@ -1,25 +1,33 @@
 [
   {
-    "id": 1,
-    "title": "Type 1",
+    "_id": "book-and-collection",
+    "title": "Book and collection Task",
     "subtypes": [
       {
-        "id": 1,
-        "title": "Subtype 1.1"
+        "_id": "staged-books-formatting",
+        "title": "Staged books needed formatting"
       },
       {
-        "id": 2,
-        "title": "Subtype 1.2"
+        "_id": "formatted-books-proofread",
+        "title": "Formatted books needing proofread"
+      },
+      {
+        "_id": "proofread-books-need-publish",
+        "title": "Proofread books, needing published"
+      },
+      {
+        "_id": "upload-book",
+        "title": "Upload book"
       }
     ]
   },
   {
-    "id": 2,
-    "title": "Type 2",
+    "_id": "audio-tasks",
+    "title": "Audio tasks",
     "subtypes": [
       {
-        "id": 3,
-        "title": "Subtype 2.2"
+        "_id": "book-needing-audio",
+        "title": "Book needing audio"
       }
     ]
   }

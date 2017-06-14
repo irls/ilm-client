@@ -19,6 +19,8 @@
         @closed="taskAddModalClose">
         
       </task-add-modal>
+      <!-- Import Books Modal Popup -->
+      <BookImport v-if="showImportBooksModal" :multiple="false" @close_modal="importBookClose" />
       <div v-for="task in tasks.list" class="tasks-box table">
         <div class="task-type tr">
           <div class="td">
@@ -31,7 +33,11 @@
           </div>
           <div class="subtask-items-box td">
             <div v-for="item in subtask.list" class="subtask-item-box">
-              <a :href="'/books/edit/' + item.book_id">{{item.book_title}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
+              <button class="btn btn-default" v-if="!item.book_id && subtask.type_id == 1" v-on:click="importBook(item.task_id)">
+                <i class="fa fa-pencil"></i>
+                Import book "{{item.book_title}}"
+              </button>
+              <a v-else :href="'/books/edit/' + item.book_id">{{item.book_title}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
             </div>
           </div>
         </div>
@@ -47,10 +53,9 @@ import 'vue-nav-tabs/dist/vue-tabs.min.css'
 import axios from 'axios'
 import TaskAddModal from './tasks/TaskAddModal'
 import superlogin from 'superlogin-client'
+import BookImport from './books/BookImport'
 var BPromise = require('bluebird');
-const TASKS_URL = process.env.ILM_API + '/api/v1/tasks/user/'
-const TASK_TYPES_URL = process.env.ILM_API + '/api/v1/tasks/types'
-const TASK_USERS_URL = process.env.ILM_API + '/api/v1/tasks/users'
+const API_URL = process.env.ILM_API + '/api/v1/'
 export default {
   data () {
     return {
@@ -66,14 +71,17 @@ export default {
         'proofer': [],
         'engineer': [],
         'reader': []
-      }
+      },
+      showImportBooksModal: false,
+      import_book_task_id: ''
     }
   },
   
   components: {
     VueTabs,
     VTab,
-    TaskAddModal
+    TaskAddModal,
+    BookImport
   },
   
   mounted() {
@@ -88,14 +96,14 @@ export default {
     getTasks() {
       //axios.get(process.env.ILM_API + '/api/v1/tasks')
       var self = this
-      axios.get(TASKS_URL + superlogin.getSession().user_id).then(tasks => {
+      axios.get(API_URL + 'tasks/user/' + superlogin.getSession().user_id).then(tasks => {
         //console.log(self.task_types, tasks)
         let tasks_formatted = {total: 0, list: []}
         tasks.data.rows.forEach((record) => {
           let subtype = self.task_types.tasks.find((s_type) => {
             return s_type._id == record.type
           })
-          console.log(subtype, record.type)
+          //console.log(subtype, record.type)
           let type = self.task_types.categories.find((tt) => {
             return tt._id == subtype.category_id
           })
@@ -127,7 +135,8 @@ export default {
             }
             existing_subtype_record.list.push({
               book_title: record.title,
-              book_id: record.book_id
+              book_id: record.book_id,
+              task_id: record._id
             })
             tasks_formatted.total++
             existing_record.total++
@@ -146,7 +155,7 @@ export default {
     },
     getTaskTypes() {
       var self = this
-      return axios.get(TASK_TYPES_URL).then(types => {
+      return axios.get(API_URL + 'tasks/types').then(types => {
         self.task_types = types.data
         return BPromise.resolve(self.task_types)
       })
@@ -156,7 +165,7 @@ export default {
     },
     getTaskUsers() {
       var self = this
-      axios.get(TASK_USERS_URL).then(users => {
+      axios.get(API_URL + 'tasks/users').then(users => {
         for (var role in self.users) {
           self.users[role] = []
           for (var i in users.data) {
@@ -167,6 +176,23 @@ export default {
         }
       })
       .catch(error => {})
+    },
+    importBook(task_id) {
+      this.showImportBooksModal = true
+      this.import_book_task_id = task_id
+    },
+    importBookClose(response) {
+      let self = this
+      this.showImportBooksModal = false
+      //console.log(response)
+      if (this.import_book_task_id && response && response.data instanceof Array && response.data[0] && response.data[0].ok == true) {
+        axios.put(API_URL + 'task/' + self.import_book_task_id + '/link_book', {book_id: response.data[0].id})
+          .then((response) => {
+            self.getTasks()
+          })
+          .catch((err) => {})
+      }
+      this.import_book_task_id = ''
     }
   }
 }

@@ -101,6 +101,16 @@
         <legend>Long Description </legend>
         <textarea v-model='currentBook.description' @input="update('description', $event)"></textarea>
       </fieldset>
+      
+      <fieldset>
+        <legend>Upload book task</legend>
+        <select class="form-control" v-model="bookTaskId">
+          <option></option>
+          <option v-for="task in userTasks" :value="task._id">{{task.title}}</option>
+        </select>
+        <div v-if="linkTaskError" class="error-message" v-text="linkTaskError"></div>
+        <button class="btn btn-primary" v-on:click="linkTask">Update</button>
+      </fieldset>
 
       <fieldset class="publish">
         <!-- Fieldset Legend -->
@@ -171,6 +181,9 @@ import BookEditCoverModal from './BookEditCoverModal'
 import AudioImport from '../audio/AudioImport'
 import _ from 'lodash'
 import PouchDB from 'pouchdb'
+import axios from 'axios'
+
+const API_URL = process.env.ILM_API + '/api/v1/'
 
 export default {
 
@@ -207,7 +220,10 @@ export default {
       showModal: false,
       showModal_audio: false,
       bookEditCoverModalActive: false,
-      currentBook: {}
+      currentBook: {},
+      userTasks: [],
+      bookTaskId: '',
+      linkTaskError: ''
     }
   },
 
@@ -218,6 +234,10 @@ export default {
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
     }
+  },
+  
+  mounted() {
+    this.getTasks()
   },
 
   watch: {
@@ -293,6 +313,36 @@ export default {
     uploadAudio () {
       console.log("hello there")
       this.showModal_audio = true
+    },
+    
+    linkTask() {
+      let self = this
+      self.linkTaskError = ''
+      if (!self.bookTaskId) {
+        self.linkTaskError = 'Required'
+      } else {
+        axios.put(API_URL + 'task/' + self.bookTaskId + '/link_book', {book_id: self.currentBook._id})
+          .then((response) => {
+            self.getTasks()
+          })
+          .catch((err) => {})
+      }
+    },
+    
+    getTasks() {
+      this.userTasks = []
+      var self = this
+      axios.get(API_URL + 'tasks/user/' + superlogin.getSession().user_id + '?filter[type][]=1').then(tasks => {
+        tasks.data.rows.forEach((record) => {
+          if (record.type == 1) {
+            self.userTasks.push(record)
+            if (record.book_id == self.currentBook._id) {
+              self.bookTaskId = record._id
+            }
+          }
+        })
+      })
+      .catch(error => {})
     }
 
   }
