@@ -20,7 +20,7 @@
         
       </task-add-modal>
       <!-- Import Books Modal Popup -->
-      <BookImport v-if="showImportBooksModal" :multiple="false" @close_modal="importBookClose" />
+      <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose" />
       <div v-for="task in tasks.list" class="tasks-box table">
         <div class="task-type tr">
           <div class="td">
@@ -72,7 +72,7 @@ export default {
         'engineer': [],
         'reader': []
       },
-      showImportBooksModal: false,
+      show_import_book_modal: false,
       import_book_task_id: ''
     }
   },
@@ -178,19 +178,21 @@ export default {
       .catch(error => {})
     },
     importBook(task_id) {
-      this.showImportBooksModal = true
+      this.show_import_book_modal = true
       this.import_book_task_id = task_id
     },
     importBookClose(response) {
       let self = this
-      this.showImportBooksModal = false
+      this.show_import_book_modal = false
       //console.log(response)
       if (this.import_book_task_id && response && response.data instanceof Array && response.data[0] && response.data[0].ok == true) {
         axios.put(API_URL + 'task/' + self.import_book_task_id + '/link_book', {book_id: response.data[0].id})
           .then((response) => {
             self.getTasks()
           })
-          .catch((err) => {})
+          .catch((err) => {
+            
+          })
       }
       this.import_book_task_id = ''
     }

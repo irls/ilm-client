@@ -94,6 +94,11 @@
           </div comment="clearfix">
         </div>
       </div>
+      <alert v-show="bookUploadError" placement="top" duration="3000" type="danger" width="400px">
+        <span class="icon-ok-circled alert-icon-float-left"></span>
+
+        <p>{{bookUploadError}}.</p>
+      </alert>
     </div>
   </transition>
 </template>
@@ -101,7 +106,7 @@
 
 <script>
 
-
+import { alert } from 'vue-strap'
 
 export default {
   data() {
@@ -118,7 +123,8 @@ export default {
         ],
         uploadFiles: {bookFiles: 0, audioFiles: 0},
         formData: new FormData(),
-        uploadProgress: "Uploading Files..."
+        uploadProgress: "Uploading Files...",
+        bookUploadError: false
     }
   },
   props: {
@@ -128,7 +134,7 @@ export default {
       }
   },
   components: {
-
+    alert
   },
   computed: {
     selectedBookType: function() {
@@ -188,9 +194,9 @@ export default {
           vu_this.formReset()
         }
       }).catch((err) => {
-        console.log('error: '+ err)
+        vu_this.bookUploadError = err.response.data.message
         vu_this.formReset()
-        setTimeout(function(){ vu_this.$emit('close_modal') }, 1000)
+        setTimeout(function(){ vu_this.$emit('close_modal') }, 4000)
       });
 
     },

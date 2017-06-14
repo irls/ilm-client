@@ -16,7 +16,7 @@
     </button>  &nbsp;
 
     <!-- Import Button -->
-    <button id="show-modal" @click="importBook" class="btn btn-default" v-if="(isAdmin || isLibrarian)">
+    <button id="show-modal" @click="importBook" class="btn btn-default" v-if="(isAdmin || isLibrarian || isEditor)">
       <i class="fa fa-pencil fa-lg"></i>  Import
     </button>  &nbsp;
 
