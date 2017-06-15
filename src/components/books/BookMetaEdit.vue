@@ -221,10 +221,13 @@ export default {
       showModal_audio: false,
       bookEditCoverModalActive: false,
       currentBook: {},
-      userTasks: [],
       bookTaskId: '',
       linkTaskError: ''
     }
+  },
+  
+  props: {
+    userTasks: Array
   },
 
   computed: {
@@ -237,7 +240,12 @@ export default {
   },
   
   mounted() {
-    this.getTasks()
+    var self = this
+    self.userTasks.forEach((record) => {
+      if (record.book_id == self.currentBook._id) {
+        self.bookTaskId = record._id
+      }
+    })
   },
 
   watch: {
@@ -327,24 +335,7 @@ export default {
           })
           .catch((err) => {})
       }
-    },
-    
-    getTasks() {
-      this.userTasks = []
-      var self = this
-      axios.get(API_URL + 'tasks/user/' + superlogin.getSession().user_id + '?filter[type][]=1').then(tasks => {
-        tasks.data.rows.forEach((record) => {
-          if (record.type == 1) {
-            self.userTasks.push(record)
-            if (record.book_id == self.currentBook._id) {
-              self.bookTaskId = record._id
-            }
-          }
-        })
-      })
-      .catch(error => {})
     }
-
   }
 }
 </script>

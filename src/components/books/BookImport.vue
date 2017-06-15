@@ -53,6 +53,15 @@
 
                     </div>
                   </div>
+                  <div class="col-sm-6" v-if="!userTaskId">
+                    <div class="form-group">
+                      <label for="usertask">Task:</label>
+                      <select class="form-control" id="usertask" v-model="userTaskIdLocal">
+                        <option value=""></option>
+                        <option v-for="userTask in userTasks" v-if="userTask.book_id == null" :value="userTask._id">{{userTask.title}}</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
                 <br><br><br><br>
 
@@ -107,6 +116,9 @@
 <script>
 
 import { alert } from 'vue-strap'
+import axios from 'axios'
+
+const API_URL = process.env.ILM_API + '/api/v1/'
 
 export default {
   data() {
@@ -124,17 +136,28 @@ export default {
         uploadFiles: {bookFiles: 0, audioFiles: 0},
         formData: new FormData(),
         uploadProgress: "Uploading Files...",
-        bookUploadError: false
+        bookUploadError: false,
+        userTaskIdLocal: null
     }
   },
   props: {
       'multiple': {
         type: Boolean,
         default: true
+      },
+      'userTasks': {
+        type: Array
+      },
+      'userTaskId': {
+        type: String,
+        default: null
       }
   },
   components: {
     alert
+  },
+  mounted() {
+    this.userTaskIdLocal = this.userTaskId
   },
   computed: {
     selectedBookType: function() {
@@ -188,12 +211,23 @@ export default {
         if (response.status===200) {
           // hide modal after one second
           vu_this.uploadProgress = "Upload Successful"
-          setTimeout(function(){ vu_this.$emit('close_modal', response) }, 1000)
+          if (vu_this.userTaskIdLocal && response.data instanceof Array && response.data[0] && response.data[0].ok == true) {
+            axios.put(API_URL + 'task/' + vu_this.userTaskIdLocal + '/link_book', {book_id: response.data[0].id})
+              .then((link_response) => {
+                setTimeout(function(){ vu_this.$emit('close_modal', response) }, 1000)
+              })
+              .catch((err) => {
+                setTimeout(function(){ vu_this.$emit('close_modal', response) }, 1000)
+              })
+          } else {
+            setTimeout(function(){ vu_this.$emit('close_modal', response) }, 1000)
+          }
         } else {
           // not sure what we should be doing here
           vu_this.formReset()
         }
       }).catch((err) => {
+        console.log(err)
         vu_this.bookUploadError = err.response.data.message
         vu_this.formReset()
         setTimeout(function(){ vu_this.$emit('close_modal') }, 4000)

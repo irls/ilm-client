@@ -37,7 +37,7 @@
 </tr></table>
 
   <!-- Import Books Modal Popup -->
-  <BookImport v-if="showImportBooksModal" @close_modal="showImportBooksModal=false" />
+  <BookImport v-if="showImportBooksModal" @close_modal="importBooksModalClose" :userTasks="userTasks" />
 
 </div>
 </template>
@@ -70,6 +70,10 @@ export default {
       }
     }
   },
+  
+  props: {
+    userTasks: Array
+  },
 
   computed: mapGetters([
     'isLoggedIn',
@@ -99,6 +103,10 @@ export default {
     importBook () {
       console.log('event ok')
       this.showImportBooksModal = true
+    },
+    importBooksModalClose(uploaded) {
+      this.showImportBooksModal=false
+      this.$emit('import_finished', uploaded)
     }
   }
 }
