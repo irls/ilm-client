@@ -49,6 +49,13 @@
         </select>
         <div v-if="errors['roles.proofer']" v-for="err in errors['roles.proofer']" class="error-message" v-text="err"></div>
       </div>
+      <div class="form-group" v-if="showField('roles.narrator')">
+        <label>Narrator</label>
+        <select class="form-control" v-model="roles['narrator']">
+          <option v-for="user_narrator in users['narrator']" :value="user_narrator._id">{{user_narrator.email}}</option>
+        </select>
+        <div v-if="errors['roles.narrator']" v-for="err in errors['roles.narrator']" class="error-message" v-text="err"></div>
+      </div>
       <div class="form-group" v-if="showField('roles.engineer')">
         <label>Engineer</label>
         <select class="form-control" v-model="roles['engineer']">
@@ -108,8 +115,9 @@ export default {
         '2': {
           'name': {'require': true},
           'roles': {
-            'reader': {'require': true}, 
+            'editor': {'require': true}, 
             'proofer': {'require': true}, 
+            'narrator': {'require': true}, 
             'engineer': {'require': true}
           }
         }

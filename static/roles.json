@@ -31,5 +31,13 @@
   {
     "rank": "engineer",
     "name": "Engineer"
+  },
+  {
+    "rank": "reader",
+    "name": "Reader"
+  },
+  {
+    "rank": "narrator",
+    "name": "Narrator"
   }
 ]

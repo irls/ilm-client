@@ -7,7 +7,7 @@
             <h3><i class="fa fa-arrow-circle-o-right"></i>&nbsp;{{tasks.total}} Current tasks in your Queue</h3>
           </div>
           <div class='td'>
-            <button @click='taskAddModalActive = true' class='btn btn-default'>
+            <button @click='taskAddModalActive = true' class='btn btn-default' v-if="isAdmin || isLibrarian">
               <i class="fa fa-plus"></i>&nbsp;New Task
             </button>
           </div>
@@ -54,6 +54,7 @@ import axios from 'axios'
 import TaskAddModal from './tasks/TaskAddModal'
 import superlogin from 'superlogin-client'
 import BookImport from './books/BookImport'
+import { mapGetters } from 'vuex'
 var BPromise = require('bluebird');
 const API_URL = process.env.ILM_API + '/api/v1/'
 export default {
@@ -70,7 +71,8 @@ export default {
         'editor': [],
         'proofer': [],
         'engineer': [],
-        'reader': []
+        'reader': [],
+        'narrator': []
       },
       show_import_book_modal: false,
       import_book_task_id: ''
@@ -83,6 +85,11 @@ export default {
     TaskAddModal,
     BookImport
   },
+  
+  computed: mapGetters([
+    'isAdmin',
+    'isLibrarian'
+  ]),
   
   mounted() {
     var self = this
