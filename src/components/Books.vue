@@ -123,9 +123,7 @@ export default {
       var self = this
       axios.get(API_URL + 'tasks/user/' + superlogin.getSession().user_id + '?filter[type][]=1&filter[type][]=2').then(tasks => {
         tasks.data.rows.forEach((record) => {
-          if (record.type == 1) {
-            self.userTasks.push(record)
-          }
+          self.userTasks.push(record)
         })
       })
       .catch(error => {})
