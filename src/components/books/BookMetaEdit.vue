@@ -124,34 +124,32 @@
         </template>
 
         <!-- Publication Options -->
-        <form>
-          <table class='properties publication'>
-            <template v-if="currentBook.importStatus == 'staging'">
-              <tr><td rowspan='2'>
-                <button class="btn btn-primary sharebtn" @click="shareBook"> Move book to Library</button>
-              </td></tr>
-            </template>
-            <template v-else>
+        <table class='properties publication'>
+          <template v-if="currentBook.importStatus == 'staging'">
+            <tr><td rowspan='2'>
+              <button class="btn btn-primary sharebtn" @click="shareBook"> Move book to Library</button>
+            </td></tr>
+          </template>
+          <template v-else>
 
-              <tr><td>Published</td> <td class='published'>
-                <i :class="[currentBook.published ? 'fa-toggle-on' : 'fa-toggle-off', 'fa pubtoggle']"
-                  @click='publishedToggle'
-                ></i>
-              </td></tr>
+            <tr><td>Published</td> <td class='published'>
+              <i :class="[currentBook.published ? 'fa-toggle-on' : 'fa-toggle-off', 'fa pubtoggle']"
+                @click='publishedToggle'
+              ></i>
+            </td></tr>
 
-              <tr v-if="currentBook.published"><td>Type</td> <td class='pubtype'>
-                <select class="form-control" v-model='currentBook.pubType'>
-                  <option v-for="(value, index) in pubTypes" :value="value">{{ value }}</option>
-                </select>
-              </td></tr>
+            <tr v-if="currentBook.published"><td>Type</td> <td class='pubtype'>
+              <select class="form-control" v-model='currentBook.pubType'>
+                <option v-for="(value, index) in pubTypes" :value="value">{{ value }}</option>
+              </select>
+            </td></tr>
 
-              <tr v-if="currentBook.published"><td>Ver. #{{ currentBook.version }}</td> <td class='version'>
-                <button class="btn btn-primary new-version" @click="newVersion"> Save New Version</button>
-              </td></tr>
+            <tr v-if="currentBook.published"><td>Ver. #{{ currentBook.version }}</td> <td class='version'>
+              <button class="btn btn-primary new-version" @click="newVersion"> Save New Version</button>
+            </td></tr>
 
-            </template>
-          </table>
-        </form>
+          </template>
+        </table>
       </fieldset>
 
       <div class="download-area col-sm-6">
@@ -301,10 +299,21 @@ export default {
     },
     shareBook () {
       if (confirm('This will share the book with the entire library. Usually this is done after rudimentary formatting and text cleanup. Are you sure it is ready?')) {
-        this.currentBook.published = 'false'
-        this.currentBook.pubType = 'Hidden'
-        this.currentBook.version = '1.0'
-        this.currentBook.importStatus = 'shared'
+        var self = this
+        var update = {}
+        update[self.currentBook._id] = {
+          published: 'false',
+          pubType: 'Hidden',
+          version: '1.0',
+          importStatus: 'shared'
+        }
+        axios.patch(API_URL + 'books/' + self.currentBook._id, update)
+          .then((result) => {
+            self.currentBook.published = 'false'
+            self.currentBook.pubType = 'Hidden'
+            self.currentBook.version = '1.0'
+            self.currentBook.importStatus = 'shared'
+          })
       }
     },
     newVersion () {

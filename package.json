@@ -40,7 +40,8 @@
     "vue-strap": "github:wffranco/vue-strap",
     "vuex": "^2.2.1",
     "vuex-router-sync": "^4.1.2",
-    "vue-nav-tabs": "^0.2.2"
+    "vue-nav-tabs": "^0.2.2",
+    "vue2-filters": "^0.1.9"
   },
   "devDependencies": {
     "autoprefixer": "^6.7.2",

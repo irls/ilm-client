@@ -1,6 +1,6 @@
 <template>
   <vue-tabs>
-    <v-tab title="My Tasks">
+    <v-tab title="My Tasks" :beforeChange="onTabChange">
       <div class="table toolbar">
         <div class="tr">
           <div class='td'>
@@ -43,7 +43,12 @@
         </div>
       </div>
     </v-tab>
-    <v-tab title="Work History"></v-tab>
+    <v-tab title="Work History">
+      <TaskHistory :task_types="task_types" :current_user="true"></TaskHistory>
+    </v-tab>
+    <v-tab v-if="isAdmin" title="Total work history">
+      <TaskHistory :task_types="task_types" :current_user="false"></TaskHistory>
+    </v-tab>
   </vue-tabs>
 </template>
 
@@ -52,6 +57,7 @@ import { VueTabs, VTab } from 'vue-nav-tabs'
 import 'vue-nav-tabs/dist/vue-tabs.min.css'
 import axios from 'axios'
 import TaskAddModal from './tasks/TaskAddModal'
+import TaskHistory from './tasks/TaskHistory'
 import superlogin from 'superlogin-client'
 import BookImport from './books/BookImport'
 import { mapGetters } from 'vuex'
@@ -83,7 +89,8 @@ export default {
     VueTabs,
     VTab,
     TaskAddModal,
-    BookImport
+    BookImport,
+    TaskHistory
   },
   
   computed: mapGetters([
@@ -103,7 +110,7 @@ export default {
     getTasks() {
       //axios.get(process.env.ILM_API + '/api/v1/tasks')
       var self = this
-      axios.get(API_URL + 'tasks/user/' + superlogin.getSession().user_id).then(tasks => {
+      axios.get(API_URL + 'tasks').then(tasks => {
         //console.log(self.task_types, tasks)
         let tasks_formatted = {total: 0, list: []}
         tasks.data.rows.forEach((record) => {
@@ -142,7 +149,7 @@ export default {
             }
             existing_subtype_record.list.push({
               book_title: record.title,
-              book_id: record.book_id,
+              book_id: record.bookid,
               task_id: record._id
             })
             tasks_formatted.total++
@@ -194,6 +201,9 @@ export default {
       //console.log(response)
       self.getTasks()
       self.import_book_task_id = ''
+    },
+    onTabChange() {
+      return true
     }
   }
 }
