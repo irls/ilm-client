@@ -183,7 +183,7 @@ export default {
         for (var role in self.users) {
           self.users[role] = []
           for (var i in users.data) {
-            if (users.data[i].roles.indexOf(role) != -1) {
+            if (users.data[i].roles.indexOf(role) != -1 || users.data[i].roles.indexOf('admin') != -1) {
               self.users[role].push(users.data[i])
             }
           }
