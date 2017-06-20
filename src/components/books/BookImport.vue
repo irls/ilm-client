@@ -90,6 +90,11 @@
 
                 <br><br><br><br> -->
 
+                <ul id="selectedBooks">
+                  <li v-for="book in selectedBooks">
+                    {{ book.name }} - {{ humanFileSize(book.size, true) }}
+                  </li>
+               </ul>
                 <button class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
                   <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
                 </button>
@@ -137,7 +142,8 @@ export default {
         formData: new FormData(),
         uploadProgress: "Uploading Files...",
         bookUploadError: false,
-        userTaskIdLocal: null
+        userTaskIdLocal: null,
+        selectedBooks: []
     }
   },
   props: {
@@ -183,6 +189,11 @@ export default {
     onFilesChange(e) {
       let fieldName = e.target.name
       let fileList = e.target.files || e.dataTransfer.files
+      this.selectedBooks = [];
+      this.formData = new FormData();
+      for(let file of fileList) {
+          this.selectedBooks.push({name: file.name, size: file.size});
+      }
       Array
         .from(Array(fileList.length).keys())
         .map(x => {
@@ -234,6 +245,21 @@ export default {
       });
 
     },
+    humanFileSize(bytes, si) {
+        var thresh = si ? 1000 : 1024;
+        if(Math.abs(bytes) < thresh) {
+            return bytes + ' B';
+        }
+        var units = si
+            ? ['kB','MB','GB','TB','PB','EB','ZB','YB']
+            : ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
+        var u = -1;
+        do {
+            bytes /= thresh;
+            ++u;
+        } while(Math.abs(bytes) >= thresh && u < units.length - 1);
+        return bytes.toFixed(1)+' '+units[u];
+    }
   },
 }
 </script>
