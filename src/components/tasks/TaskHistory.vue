@@ -30,14 +30,17 @@
       </ol>
     </div>
     <accordion v-if="all_users" :one-at-atime="true">
-      <panel v-for="row in work_history_total" :is-open="false" :header="row.user + ': ' + row.user_role">
-        <div v-for="task_type in row.list">
-          <h3><i class="fa fa-user"></i>&nbsp;{{task_type.type}}</h3>
-          <ol>
-            <li v-for="task in task_type.list">{{task.book_title}}</li>
-          </ol>
-        </div>
-      </panel>
+      <div v-for="row in work_history_total" class="task-panel">
+        <i class="fa fa-user"></i>
+        <panel :is-open="false" :header="row.user + ': ' + row.user_role" v-bind:key="row.user">
+          <div v-for="task_type in row.list">
+            <h4><i class="fa fa-book"></i>&nbsp;{{task_type.type}} - {{minutesToHours(task_type.estimate)}} {{minutesToHours(task_type.estimate) | pluralize('hour')}}</h4>
+            <ol>
+              <li v-for="task in task_type.list"><a :href="'/books/edit/' + task.bookid">{{task.book_title}}, {{minutesToHours(task.estimate)}} {{minutesToHours(task.estimate) | pluralize('hour')}}</a></li>
+            </ol>
+          </div>
+        </panel>
+      </div>
     </accordion>
     
   </div>
@@ -48,6 +51,7 @@ import Vue2Filters from 'vue2-filters'
 import axios from 'axios'
 import { datepicker, accordion, panel } from 'vue-strap'
 import { mapGetters } from 'vuex'
+import ROLES from '../../../static/roles.json'
 
 Vue.use(Vue2Filters)
 const API_URL = process.env.ILM_API + '/api/v1/'
@@ -116,6 +120,9 @@ export default {
       }
       axios.get(self.url + '?filter[from]=' + self.filter.from + '&filter[to]=' + self.filter.to)
         .then((response) => {
+          if (self.filter.to != $('.date-to-filter input.datepicker-input').val()) {
+            $('.date-to-filter input.datepicker-input').val(self.filter.to).trigger('change')
+          }
           if (self.all_users) {
             self.parseWorkHistoryAll(response.data)
           } else {
@@ -126,9 +133,6 @@ export default {
     parseWorkHistory(data) {
       var self = this
       //console.log(self.filter, $('.date-to-filter input.datepicker-input').val())
-      if (self.filter.to != $('.date-to-filter input.datepicker-input').val()) {
-        $('.date-to-filter input.datepicker-input').val(self.filter.to).trigger('change')
-      }
       let work_history_formatted = {
         list: [],
         total: 0
@@ -169,10 +173,16 @@ export default {
           return tt._id == row.type
         })
         if (!existing_user_record) {
+          let user_roles = ''
+          ROLES.forEach((role) => {
+            if (role.rank != 'user' && row.executor_roles.indexOf(role.rank) !== -1) {
+              user_roles+=role.name + ', '
+            }
+          })
           work_history_formatted.push({
             user_id: row.executor,
-            user: row.executor,
-            user_role: '222',
+            user: row.executor_name,
+            user_role: user_roles.replace(/, $/, ''),
             list: []
           })
           existing_user_record = work_history_formatted[work_history_formatted.length - 1]
@@ -184,13 +194,16 @@ export default {
           existing_user_record.list.push({
             type_id: row.type,
             type: subtype ? subtype.title : '',
-            list: []
+            list: [],
+            estimate: 0
           })
           existing_type_record = existing_user_record.list[existing_user_record.list.length - 1]
         }
+        existing_type_record.estimate+= row.estimate
         existing_type_record.list.push({
           bookid: row.bookid,
-          book_title: row.book_title
+          book_title: row.book_title,
+          estimate: row.estimate
         })
       })
       self.work_history_total = work_history_formatted
@@ -251,20 +264,20 @@ export default {
 .date-filter {
   width: 10em;
 }
-/*.datepicker table tr td, .datepicker table tr th{
-    text-align:center;
-    width:30px;
-    height:30px;
-    border-radius:4px;
-    border:none
+.panel-title {
+  font-size: 20px;
 }
-.datepicker table tr td.year,.datepicker table tr th.year{
-    width:90px;
+.task-panel {
+  position: relative;
+  font-size: 20px;
 }
-.datepicker table tr td.month,.datepicker table tr th.month{
-    width:60px;
+.task-panel i.fa-user {
+  position: absolute; 
+  top: 7px; 
+  left: 10px; 
+  font-size: 25px;
 }
-.datepicker table tr td.day,.datepicker table tr th.day{
-    width:30px;
-}*/
+.task-panel .panel-heading h4 {
+  margin-left: 25px;
+}
 </style>
