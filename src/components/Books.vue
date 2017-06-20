@@ -85,7 +85,7 @@ export default {
       this.recountRows()
     }
   },
-  
+
   mounted() {
     this.getTasks()
   },
@@ -121,7 +121,7 @@ export default {
     getTasks() {
       this.userTasks = []
       var self = this
-      axios.get(API_URL + 'tasks/user/' + superlogin.getSession().user_id + '?filter[type][]=1&filter[type][]=2').then(tasks => {
+      axios.get(API_URL + 'tasks/user/' + superlogin.getSession().user_id + '?type=1').then(tasks => {
         tasks.data.rows.forEach((record) => {
           self.userTasks.push(record)
         })
