@@ -108,7 +108,7 @@
           </div comment="clearfix">
         </div>
       </div>
-      <alert v-show="bookUploadError" placement="top" duration="3000" type="danger" width="400px">
+      <alert :value="bookUploadError != false" placement="top" duration="3000" type="danger" width="400px">
         <span class="icon-ok-circled alert-icon-float-left"></span>
 
         <p>{{bookUploadError}}.</p>
@@ -241,7 +241,7 @@ export default {
         console.log(err)
         vu_this.bookUploadError = err.response.data.message
         vu_this.formReset()
-        setTimeout(function(){ vu_this.$emit('close_modal') }, 4000)
+        setTimeout(function(){ vu_this.$emit('close_modal') }, 3000)
       });
 
     },

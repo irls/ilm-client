@@ -114,7 +114,7 @@ export const store = new Vuex.Store({
 
     updateBooksList (context) {
       let ilmLibraryMeta = PouchDB('ilm_library_meta').hoodieApi()
-      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted')))
+      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted') && (item.owner == context.state.auth.getSession().user_id || item.private == false)))
         .then(books => context.commit('SET_BOOKLIST', books))
     },
 

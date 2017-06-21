@@ -102,7 +102,7 @@
         <textarea v-model='currentBook.description' @input="update('description', $event)"></textarea>
       </fieldset>
       
-      <fieldset>
+      <fieldset v-if="currentBook.private">
         <legend>Upload book task</legend>
         <select class="form-control" v-model="bookTaskId">
           <option></option>
@@ -112,7 +112,7 @@
         <button class="btn btn-primary" v-on:click="linkTask">Update</button>
       </fieldset>
 
-      <fieldset class="publish">
+      <fieldset class="publish" v-if="isLibrarian">
         <!-- Fieldset Legend -->
         <template v-if="currentBook.importStatus == 'staging'">
           <legend>Staging Document (not shared with library)</legend>
@@ -151,6 +151,10 @@
           </template>
         </table>
       </fieldset>
+      <fieldset v-if="isOwner && currentBook.private">
+        <legend>Share book</legend>
+        <button class="btn btn-primary" v-on:click="sharePrivateBook">Share book</button>
+      </fieldset>
 
       <div class="download-area col-sm-6">
         <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
@@ -165,6 +169,12 @@
       @closed="bookEditCoverModalActive = false"
       :img="currentBook"
     ></book-edit-cover-modal>
+    
+    <alert v-model="hasShareBookError" placement="top" :duration="3000" type="danger" width="400px">
+      <span class="icon-ok-circled alert-icon-float-left"></span>
+
+      <p>{{sharePrivateBookError}}.</p>
+    </alert>
 
   </div>
 
@@ -180,6 +190,8 @@ import AudioImport from '../audio/AudioImport'
 import _ from 'lodash'
 import PouchDB from 'pouchdb'
 import axios from 'axios'
+import { alert } from 'vue-strap'
+var BPromise = require('bluebird');
 
 const API_URL = process.env.ILM_API + '/api/v1/'
 
@@ -190,7 +202,8 @@ export default {
   components: {
     BookDownload,
     BookEditCoverModal,
-    AudioImport
+    AudioImport,
+    alert
   },
 
   data () {
@@ -220,7 +233,10 @@ export default {
       bookEditCoverModalActive: false,
       currentBook: {},
       bookTaskId: '',
-      linkTaskError: ''
+      linkTaskError: '',
+      isOwner: false,
+      sharePrivateBookError: '',
+      hasShareBookError: false
     }
   },
   
@@ -230,7 +246,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'isLibrarian']),
 
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
@@ -240,7 +256,7 @@ export default {
   mounted() {
     var self = this
     self.userTasks.forEach((record) => {
-      if (record.book_id == self.currentBook._id) {
+      if (record.bookid == self.currentBook._id) {
         self.bookTaskId = record._id
       }
     })
@@ -251,6 +267,12 @@ export default {
     currentBookMeta: {
       handler (val) {
         this.init()
+      },
+      deep: true
+    },
+    sharePrivateBookError: {
+      handler(val) {
+        this.hasShareBookError = val.length > 0
       },
       deep: true
     }
@@ -265,6 +287,7 @@ export default {
 
     init () {
       this.currentBook = Object.assign({}, this.currentBookMeta)
+      this.isOwner = this.currentBook.owner == superlogin.getSession().user_id
     },
 
     update: _.debounce(function (key, event) {
@@ -282,12 +305,14 @@ export default {
       var db = new PouchDB(dbPath)
       var api = db.hoodieApi()
 
-      api.update(this.currentBookid, {
+      return api.update(this.currentBookid, {
         [key]: value
       }).then(doc => {
         console.log('success DB update: ', doc)
+        return BPromise.resolve(doc)
       }).catch(err => {
         console.log('error DB pdate: ', err)
+        return BPromise.reject(err)
       })
     },
 
@@ -299,21 +324,10 @@ export default {
     },
     shareBook () {
       if (confirm('This will share the book with the entire library. Usually this is done after rudimentary formatting and text cleanup. Are you sure it is ready?')) {
-        var self = this
-        var update = {}
-        update[self.currentBook._id] = {
-          published: 'false',
-          pubType: 'Hidden',
-          version: '1.0',
-          importStatus: 'shared'
-        }
-        axios.patch(API_URL + 'books/' + self.currentBook._id, update)
-          .then((result) => {
-            self.currentBook.published = 'false'
-            self.currentBook.pubType = 'Hidden'
-            self.currentBook.version = '1.0'
-            self.currentBook.importStatus = 'shared'
-          })
+        this.currentBook.published = 'false'
+        this.currentBook.pubType = 'Hidden'
+        this.currentBook.version = '1.0'
+        this.currentBook.importStatus = 'shared'
       }
     },
     newVersion () {
@@ -343,6 +357,26 @@ export default {
             self.getTasks()
           })
           .catch((err) => {})
+      }
+    },
+    sharePrivateBook() {
+      var self = this
+      self.sharePrivateBookError = ''
+      if (!self.bookTaskId) {
+        self.sharePrivateBookError = 'No linked task, please link task'
+      } else if (confirm('This will make book visible to others and send it to the proofer. Continue?')) {
+        //axios.put(API_URL + 'books/' + self.currentBook._id + '/share_private')
+        self.liveUpdate('private', false)
+          .then((doc) => {
+            axios.put(API_URL + 'task/' + self.bookTaskId + '/to_approve')
+              .then((doc) => {
+                self.currentBook.private = false
+              })
+              .catch((err) => {
+              })
+          })
+          .catch((err) => {
+          })
       }
     }
   }
