@@ -37,17 +37,17 @@
 
             <tr class='title'>
               <td>Title</td>
-              <td><input v-model='currentBook.title' @input="update('title', $event)"></td>
+              <td><input v-model='currentBook.title' @input="update('title', $event)" :disabled="!allowEdit"></td>
             </tr>
             <tr class='subtitle'>
               <td>Subtitle</td>
-              <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)"></td>
+              <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)" :disabled="!allowEdit"></td>
             </tr>
 
             <tr class='category'>
               <td>Category</td>
               <td>
-                <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid">
+                <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowEdit">
                   <option v-for="(value, index) in subjectCategories" :value="value">{{ value }}</option>
                 </select>
               </td>
@@ -56,7 +56,7 @@
             <tr class='language'>
               <td>Language</td>
               <td>
-                <select class="form-control" v-model='currentBook.lang' @change="change('lang')" :key="currentBookid">
+                <select class="form-control" v-model='currentBook.lang' @change="change('lang')" :key="currentBookid" :disabled="!allowEdit">
                   <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
                 </select>
               </td>
@@ -64,13 +64,13 @@
 
             <tr class='sections'>
               <td>Sections</td>
-              <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)"></td>
+              <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)" :disabled="!allowEdit"></td>
             </tr>
 
             <tr class='numbering'>
               <td>Numbering</td>
               <td>
-                <select class="form-control" v-model='currentBook.numbering' @change="change('numbering')" :key="currentBookid">
+                <select class="form-control" v-model='currentBook.numbering' @change="change('numbering')" :key="currentBookid" :disabled="!allowEdit">
                   <option v-for="(value, key) in numberingOptions" :value="value">{{ value }}</option>
                 </select>
                 <!-- <input v-model='currentBook.numbering'> -->
@@ -79,13 +79,13 @@
 
             <tr class='trans'>
               <td>Translator</td>
-              <td><input v-model='currentBook.translator' @input="update('translator', $event)"></td>
+              <td><input v-model='currentBook.translator' @input="update('translator', $event)" :disabled="!allowEdit"></td>
             </tr>
 
             <tr class='transfrom'>
               <td>Tr From</td>
               <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
-              <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)"></td>
+              <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!allowEdit"></td>
             </tr>
 
           </table>
@@ -94,12 +94,12 @@
 
       <fieldset class='description brief'>
         <legend>Brief Description </legend>
-        <textarea v-model='currentBook.description_short' @input="update('description_short', $event)"></textarea>
+        <textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowEdit"></textarea>
       </fieldset>
 
       <fieldset class='description long'>
         <legend>Long Description </legend>
-        <textarea v-model='currentBook.description' @input="update('description', $event)"></textarea>
+        <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowEdit"></textarea>
       </fieldset>
       
       <fieldset v-if="currentBook.private">
@@ -110,6 +110,16 @@
         </select>
         <div v-if="linkTaskError" class="error-message" v-text="linkTaskError"></div>
         <button class="btn btn-primary" v-on:click="linkTask">Update</button>
+      </fieldset>
+      <fieldset v-if="hasTask('metadata_approve')" class="approve-metadata">
+        <legend>Reject book metadata</legend>
+        <div class="form-group">
+          <textarea v-model="approveMetadataComment"></textarea>
+        </div>
+        <div class="form-group">
+          <!-- <button class="btn btn-primary" v-on:click="setMetadataStatus(1)">Approve</button> -->
+          <button class="btn btn-danger" v-on:click="setMetadataStatus(-1)">Reject</button>
+        </div>
       </fieldset>
 
       <fieldset class="publish" v-if="isLibrarian">
@@ -151,12 +161,21 @@
           </template>
         </table>
       </fieldset>
-      <fieldset v-if="isOwner && currentBook.private">
+      <fieldset v-if="isOwner && hasTask('metadata')">
         <legend>Share book</legend>
         <button class="btn btn-primary" v-on:click="sharePrivateBook">Share book</button>
       </fieldset>
+      <fieldset v-if="hasTask('metadata_fix')">
+        <legend>Update book</legend>
+        <div class="form-group">
+          <strong class="fix-message" v-html="getTask(5).comment"></strong>
+        </div>
+        <div class="form-group">
+          <button class="btn btn-primary" v-on:click="setMetadataStatus(1)">Update book</button>
+        </div>
+      </fieldset>
 
-      <div class="download-area col-sm-6">
+      <div class="download-area col-sm-6" v-if="allowEdit">
         <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
           <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
         </button>
@@ -170,10 +189,10 @@
       :img="currentBook"
     ></book-edit-cover-modal>
     
-    <alert v-model="hasShareBookError" placement="top" :duration="3000" type="danger" width="400px">
+    <alert v-model="hasError" placement="top" :duration="3000" type="danger" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
 
-      <p>{{sharePrivateBookError}}.</p>
+      <p>{{errorMessage}}.</p>
     </alert>
 
   </div>
@@ -235,18 +254,21 @@ export default {
       bookTaskId: '',
       linkTaskError: '',
       isOwner: false,
-      sharePrivateBookError: '',
-      hasShareBookError: false
+      errorMessage: '',//to display validation errors for some cases, e.g. on sharing book
+      hasError: false,//has some validation error, e.g. on sharing book
+      allowEdit: false,
+      currentBookTasks: {"tasks": []},//list of tasks linked to current book for current user
+      approveMetadataComment: ''
     }
   },
   
   props: {
-    userTasks: Array
+    userTasks: Array//tasks list for editor to link this book to a task before sharing
   },
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'isLibrarian']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'isLibrarian', 'isEditor', 'isAdmin']),
 
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
@@ -270,9 +292,17 @@ export default {
       },
       deep: true
     },
-    sharePrivateBookError: {
+    errorMessage: {
       handler(val) {
-        this.hasShareBookError = val.length > 0
+        this.hasError = val.length > 0
+      },
+      deep: true
+    },
+    hasError: {
+      handler(val) {
+        if (val === false) {
+          this.errorMessage = ''
+        }
       },
       deep: true
     }
@@ -288,6 +318,7 @@ export default {
     init () {
       this.currentBook = Object.assign({}, this.currentBookMeta)
       this.isOwner = this.currentBook.owner == superlogin.getSession().user_id
+      this.loadBookTask()
     },
 
     update: _.debounce(function (key, event) {
@@ -361,9 +392,8 @@ export default {
     },
     sharePrivateBook() {
       var self = this
-      self.sharePrivateBookError = ''
       if (!self.bookTaskId) {
-        self.sharePrivateBookError = 'No linked task, please link task'
+        self.errorMessage = 'No linked task, please link task'
       } else if (confirm('This will make book visible to others and send it to the proofer. Continue?')) {
         //axios.put(API_URL + 'books/' + self.currentBook._id + '/share_private')
         self.liveUpdate('private', false)
@@ -371,6 +401,7 @@ export default {
             axios.put(API_URL + 'task/' + self.bookTaskId + '/to_approve')
               .then((doc) => {
                 self.currentBook.private = false
+                self.loadBookTask()
               })
               .catch((err) => {
               })
@@ -378,6 +409,58 @@ export default {
           .catch((err) => {
           })
       }
+    },
+    hasTask(type) {
+      return this.currentBookTasks.assignments && this.currentBookTasks.assignments.indexOf(type) !== -1;
+    },
+    getTask(type) {
+      let task = this.currentBookTasks.tasks.find((t) => {
+        return t.type == type
+      })
+      return task ? task : {}
+    },
+    setMetadataStatus(status) {
+      if ([-1, 1].indexOf(status) === -1) {
+        return false
+      }
+      if (status == -1 && !this.approveMetadataComment) {
+        this.errorMessage = 'Please specify a comment'
+      } else {
+        var self = this
+        if (status == -1) {
+          axios.put(API_URL + 'task/' + self.currentBookTasks.task._id + '/metadata_reject', {comment: self.approveMetadataComment})
+            .then((response) => {
+              self.loadBookTask()
+            }).
+            catch(err => {
+              self.errorMessage = err.message
+            })
+        } else if (status == 1) {
+          axios.put(API_URL + 'task/' + self.currentBookTasks.task._id + '/metadata_update', {})
+            .then((response) => {
+              self.loadBookTask()
+            }).
+            catch(err => {
+              self.errorMessage = err.message
+            })
+        }
+      }
+    },
+    loadBookTask() {
+      var self = this
+      axios.get(API_URL + 'tasks/book/' + this.currentBook._id)
+        .then((list) => {
+          list.data.tasks.forEach(t => {
+            if (t.comment) {
+              t.comment = t.comment.replace('\n', '<br>');
+            }
+          })
+          self.currentBookTasks = list.data
+          self.allowEdit = self.isLibrarian || 
+            self.isAdmin || 
+            (self.isOwner && (self.hasTask('metadata') || self.hasTask('metadata_fix')))
+            })
+        .catch((err) => {})
     }
   }
 }
@@ -443,6 +526,10 @@ export default {
   fieldset.description.brief textarea {
     min-height: 50px;
   }
+  fieldset.approve-metadata textarea {
+    width: 100%;
+    min-height: 100px;
+  }
 
   /* Properties editor area */
   table.properties {margin:0; padding:0; width:100%; font-size: 1em;
@@ -461,5 +548,10 @@ export default {
   i.pubtoggle {cursor: pointer;}
   button.new-version { font-size: 1em; }
   button.sharebtn {width: 100%}
+  
+  .fix-message {
+    color: red;
+    background-color: yellow;
+  }
 
 </style>
