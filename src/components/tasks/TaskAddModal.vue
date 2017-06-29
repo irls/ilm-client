@@ -2,7 +2,7 @@
   <modal id="taskAddModal" :value="show" effect="fade" @closed="closed">
     <div slot="modal-header" class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
-      <h4 class="modal-title">Add Task</h4>
+      <h4 class="modal-title">Add Job</h4>
     </div>
     <div slot="modal-body" class="modal-body">
       <div class="form-group">
@@ -20,7 +20,7 @@
         <div v-if="errors.subtype" v-for="err in errors.subtype" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group" v-if="showField('name')">
-        <label>Book</label>
+        <label>Title</label>
         <div v-for="n in Object.keys(name)" class="form-group book-row">
           <input type="text" class="form-control" v-model="name[n]" />
           <i class="fa fa-minus-circle" v-if="name.length > 1" v-on:click="removeBook(n)"></i>
@@ -62,6 +62,11 @@
           <option v-for="user_engineer in users['engineer']" :value="user_engineer._id">{{user_engineer.email}}</option>
         </select>
         <div v-if="errors['roles.engineer']" v-for="err in errors['roles.engineer']" class="error-message" v-text="err"></div>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea v-model="description" class="form-control" rows="5"></textarea>
+        <div v-if="errors.type" v-for="err in errors.type" class="error-message" v-text="err"></div>
       </div>
     </div>
     <div slot="modal-footer" class="modal-footer">
@@ -122,7 +127,8 @@ export default {
           }
         }
       },
-      errors: {}
+      errors: {},
+      description: ''
     }
   },
   methods: {
@@ -140,7 +146,8 @@ export default {
         name: self.name,
         type: self.type,
         //subtype: self.subtype,
-        roles: self.roles
+        roles: self.roles,
+        description: self.description
       }
       axios.post(TASKS_URL, task)
         .then(response => {
@@ -234,6 +241,7 @@ export default {
       this.roles = {}
       this.name = ['']
       this.errors = {}
+      this.description = ''
     }
   }
 }

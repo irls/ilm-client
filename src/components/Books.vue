@@ -26,6 +26,7 @@
           <book-meta-edit
             v-if='metaVisible'
             :userTasks="userTasks"
+            @task_linked="getTasks()"
           ></book-meta-edit>
           <!-- <BookMetaEdit v-if='metaVisible'/> -->
         </td>
@@ -46,8 +47,8 @@ import BookEditJson from './books/BookEdit_JSON'
 import BookEditDisplay from './books/BookEdit_Display'
 import axios from 'axios'
 import superlogin from 'superlogin-client'
+import api_config from '../mixins/api_config.js'
 
-const API_URL = process.env.ILM_API + '/api/v1/'
 
 export default {
 
@@ -85,6 +86,7 @@ export default {
       this.recountRows()
     }
   },
+  mixins: [api_config],
 
   mounted() {
     this.getTasks()
@@ -121,7 +123,7 @@ export default {
     getTasks() {
       this.userTasks = []
       var self = this
-      axios.get(API_URL + 'tasks/user/' + superlogin.getSession().user_id + '?type=1').then(tasks => {
+      axios.get(self.API_URL + 'tasks/user/' + superlogin.getSession().user_id + '?type=2').then(tasks => {
         tasks.data.rows.forEach((record) => {
           self.userTasks.push(record)
         })

@@ -102,7 +102,7 @@
         <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowEdit"></textarea>
       </fieldset>
       
-      <fieldset v-if="currentBook.private">
+      <!-- <fieldset v-if="currentBook.private">
         <legend>Upload book task</legend>
         <select class="form-control" v-model="bookTaskId">
           <option></option>
@@ -110,8 +110,8 @@
         </select>
         <div v-if="linkTaskError" class="error-message" v-text="linkTaskError"></div>
         <button class="btn btn-primary" v-on:click="linkTask">Update</button>
-      </fieldset>
-      <fieldset v-if="hasTask('metadata_approve')" class="approve-metadata">
+      </fieldset> -->
+      <fieldset v-if="tc_hasTask('metadata_approve')" class="approve-metadata">
         <legend>Reject book metadata</legend>
         <div class="form-group">
           <textarea v-model="approveMetadataComment"></textarea>
@@ -161,14 +161,14 @@
           </template>
         </table>
       </fieldset>
-      <fieldset v-if="isOwner && hasTask('metadata')">
+      <fieldset v-if="isOwner && tc_hasTask('metadata_cleanup')">
         <legend>Share book</legend>
-        <button class="btn btn-primary" v-on:click="sharePrivateBook">Share book</button>
+        <button class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Share book</button>
       </fieldset>
-      <fieldset v-if="hasTask('metadata_fix')">
+      <fieldset v-if="tc_hasTask('metadata_fix')">
         <legend>Update book</legend>
         <div class="form-group">
-          <strong class="fix-message" v-html="getTask(5).comment"></strong>
+          <strong class="fix-message" v-html="tc_getTask(5).comment"></strong>
         </div>
         <div class="form-group">
           <button class="btn btn-primary" v-on:click="setMetadataStatus(1)">Update book</button>
@@ -194,6 +194,10 @@
 
       <p>{{errorMessage}}.</p>
     </alert>
+    
+    <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Share" cancel-text="Cancel" title="Share book" @ok="sharePrivateBook()">
+      <div v-html="sharePrivateBookMessage"></div>
+    </modal>
 
   </div>
 
@@ -209,10 +213,10 @@ import AudioImport from '../audio/AudioImport'
 import _ from 'lodash'
 import PouchDB from 'pouchdb'
 import axios from 'axios'
-import { alert } from 'vue-strap'
+import { alert, modal } from 'vue-strap'
+import task_controls from '../../mixins/task_controls.js'
+import api_config from '../../mixins/api_config.js'
 var BPromise = require('bluebird');
-
-const API_URL = process.env.ILM_API + '/api/v1/'
 
 export default {
 
@@ -222,7 +226,8 @@ export default {
     BookDownload,
     BookEditCoverModal,
     AudioImport,
-    alert
+    alert,
+    modal
   },
 
   data () {
@@ -257,8 +262,9 @@ export default {
       errorMessage: '',//to display validation errors for some cases, e.g. on sharing book
       hasError: false,//has some validation error, e.g. on sharing book
       allowEdit: false,
-      currentBookTasks: {"tasks": []},//list of tasks linked to current book for current user
-      approveMetadataComment: ''
+      approveMetadataComment: '',
+      showSharePrivateBookModal: false,
+      sharePrivateBookMessage: ''
     }
   },
   
@@ -275,6 +281,8 @@ export default {
     }
   },
   
+  mixins: [task_controls, api_config],
+  
   mounted() {
     var self = this
     self.userTasks.forEach((record) => {
@@ -282,6 +290,7 @@ export default {
         self.bookTaskId = record._id
       }
     })
+    //self.tc_loadBookTask()
   },
 
   watch: {
@@ -305,6 +314,15 @@ export default {
         }
       },
       deep: true
+    },
+    tc_currentBookTasks: {
+      handler(val) {
+        this.allowEdit = this.isLibrarian || 
+              this.isAdmin || 
+              (this.tc_hasTask('metadata_cleanup') || this.tc_hasTask('metadata_fix'))
+        let next_user = this.tc_currentBookTasks.type == 1 ? 'proofer' : 'narrator';
+        this.sharePrivateBookMessage = 'This will make book visible to others and send it to the ' + next_user + '. Continue?';
+      }
     }
 
   },
@@ -318,7 +336,6 @@ export default {
     init () {
       this.currentBook = Object.assign({}, this.currentBookMeta)
       this.isOwner = this.currentBook.owner == superlogin.getSession().user_id
-      this.loadBookTask()
     },
 
     update: _.debounce(function (key, event) {
@@ -383,25 +400,27 @@ export default {
       if (!self.bookTaskId) {
         self.linkTaskError = 'Required'
       } else {
-        axios.put(API_URL + 'task/' + self.bookTaskId + '/link_book', {book_id: self.currentBook._id})
+        axios.put(self.API_URL + 'task/' + self.bookTaskId + '/link_book', {book_id: self.currentBook._id})
           .then((response) => {
-            self.getTasks()
+            //self.getTasks()
+            self.$emit('task_linked')
           })
           .catch((err) => {})
       }
     },
     sharePrivateBook() {
       var self = this
+      self.showSharePrivateBookModal = false
       if (!self.bookTaskId) {
         self.errorMessage = 'No linked task, please link task'
-      } else if (confirm('This will make book visible to others and send it to the proofer. Continue?')) {
+      } else {
         //axios.put(API_URL + 'books/' + self.currentBook._id + '/share_private')
         self.liveUpdate('private', false)
           .then((doc) => {
-            axios.put(API_URL + 'task/' + self.bookTaskId + '/to_approve')
+            axios.put(self.API_URL + 'task/' + self.bookTaskId + '/finish_cleanup')
               .then((doc) => {
                 self.currentBook.private = false
-                self.loadBookTask()
+                self.tc_loadBookTask()
               })
               .catch((err) => {
               })
@@ -409,15 +428,6 @@ export default {
           .catch((err) => {
           })
       }
-    },
-    hasTask(type) {
-      return this.currentBookTasks.assignments && this.currentBookTasks.assignments.indexOf(type) !== -1;
-    },
-    getTask(type) {
-      let task = this.currentBookTasks.tasks.find((t) => {
-        return t.type == type
-      })
-      return task ? task : {}
     },
     setMetadataStatus(status) {
       if ([-1, 1].indexOf(status) === -1) {
@@ -428,39 +438,23 @@ export default {
       } else {
         var self = this
         if (status == -1) {
-          axios.put(API_URL + 'task/' + self.currentBookTasks.task._id + '/metadata_reject', {comment: self.approveMetadataComment})
+          axios.put(self.API_URL + 'task/' + self.tc_currentBookTasks.task._id + '/metadata_reject', {comment: self.approveMetadataComment})
             .then((response) => {
-              self.loadBookTask()
+              self.tc_loadBookTask()
             }).
             catch(err => {
               self.errorMessage = err.message
             })
         } else if (status == 1) {
-          axios.put(API_URL + 'task/' + self.currentBookTasks.task._id + '/metadata_update', {})
+          axios.put(self.API_URL + 'task/' + self.tc_currentBookTasks.task._id + '/metadata_update', {})
             .then((response) => {
-              self.loadBookTask()
+              self.tc_loadBookTask()
             }).
             catch(err => {
               self.errorMessage = err.message
             })
         }
       }
-    },
-    loadBookTask() {
-      var self = this
-      axios.get(API_URL + 'tasks/book/' + this.currentBook._id)
-        .then((list) => {
-          list.data.tasks.forEach(t => {
-            if (t.comment) {
-              t.comment = t.comment.replace('\n', '<br>');
-            }
-          })
-          self.currentBookTasks = list.data
-          self.allowEdit = self.isLibrarian || 
-            self.isAdmin || 
-            (self.isOwner && (self.hasTask('metadata') || self.hasTask('metadata_fix')))
-            })
-        .catch((err) => {})
     }
   }
 }
