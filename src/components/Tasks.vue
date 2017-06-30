@@ -13,35 +13,38 @@
           </div>
         </div>
       </div>
-      <task-add-modal 
+      <task-add-modal
         :show="taskAddModalActive"
         :users="users"
         @closed="taskAddModalClose">
-        
+
       </task-add-modal>
       <!-- Import Books Modal Popup -->
       <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose" :userTaskId="import_book_task_id" />
-      <div v-for="task in tasks.list" class="tasks-box table">
+      <div v-for="job in tasks.list" class="tasks-box table">
         <div class="task-type tr">
           <div class="td">
-            <h2><i class="fa fa-book"></i>&nbsp;{{task.type}}&nbsp;({{task.total}})</h2>
+            <h2><i class="fa fa-book"></i>&nbsp;{{job.title}}&nbsp;({{job.total}})</h2>
           </div>
         </div>
-        <div v-for="subtask in task.list" class="subtasks-box tr">
-          <div class="subtask-title-box td">
-            <h4>({{subtask.list.length}})&nbsp;{{subtask.type}}</h4>
+        <div v-for="task in job.tasks" class="subtasks-box tr">
+          <div class="task-title-box td">
+            <h4>(1)&nbsp;{{task.title}}</h4>
           </div>
+
           <div class="subtask-items-box td">
-            <div v-for="item in subtask.list" class="subtask-item-box">
-              <button class="btn btn-default" v-if="!item.book_id && subtask.type_id == 1" v-on:click="importBook(item.task_id)">
-                <i class="fa fa-pencil"></i>
-                Import book "{{item.book_title}}"
+            <div class="subtask-item-box">
+              <button class="btn btn-default" v-if="!job.bookid && task.type == 1" v-on:click="importBook(job._id)">
+                <i class="fa fa-pencil"></i>Import book "{{job.title}}"
               </button>
-              <a v-else :href="'/books/edit/' + item.book_id">{{item.book_title}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
+              <a v-else :href="'/books/edit/' + job.bookid">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
             </div>
           </div>
+
         </div>
+
       </div>
+
     </v-tab>
     <v-tab title="Work History">
       <TaskHistory :task_types="task_types" :current_user="true"></TaskHistory>
@@ -60,7 +63,7 @@ import TaskAddModal from './tasks/TaskAddModal'
 import TaskHistory from './tasks/TaskHistory'
 import superlogin from 'superlogin-client'
 import BookImport from './books/BookImport'
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 var BPromise = require('bluebird');
 const API_URL = process.env.ILM_API + '/api/v1/'
 export default {
@@ -84,7 +87,7 @@ export default {
       import_book_task_id: ''
     }
   },
-  
+
   components: {
     VueTabs,
     VTab,
@@ -92,12 +95,12 @@ export default {
     BookImport,
     TaskHistory
   },
-  
+
   computed: mapGetters([
     'isAdmin',
     'isLibrarian'
   ]),
-  
+
   mounted() {
     var self = this
     self.getTaskTypes().then(function(){
@@ -105,59 +108,30 @@ export default {
     })
     self.getTaskUsers()
   },
-  
+
   methods: {
     getTasks() {
       //axios.get(process.env.ILM_API + '/api/v1/tasks')
-      var self = this
       axios.get(API_URL + 'tasks').then(tasks => {
-        //console.log(self.task_types, tasks)
-        let tasks_formatted = {total: 0, list: []}
-        tasks.data.rows.forEach((record) => {
-          let subtype = self.task_types.tasks.find((s_type) => {
-            return s_type._id == record.type
-          })
-          //console.log(subtype, record.type)
-          let type = self.task_types.categories.find((tt) => {
-            return tt._id == subtype.category_id
-          })
-          let existing_record = tasks_formatted.list.find((t) => {
-            return t.type_id == type._id
-          })
-          if (!existing_record) {
-            if (type) {
-              tasks_formatted.list.push({
-                type: type.title,
-                type_id: type._id,
-                list: [],
-                total: 0
-              })
-              existing_record = tasks_formatted.list[tasks_formatted.list.length - 1]
-            }
-          }
-          if (existing_record) {
-            let existing_subtype_record = existing_record.list.find((erl) => {
-              return erl.type_id == subtype._id
-            })
-            if (!existing_subtype_record) {
-              existing_record.list.push({
-                type: subtype.title,
-                type_id: subtype._id,
-                list: []
-              })
-              existing_subtype_record = existing_record.list[existing_record.list.length - 1]
-            }
-            existing_subtype_record.list.push({
-              book_title: record.title,
-              book_id: record.bookid,
-              task_id: record._id
-            })
-            tasks_formatted.total++
-            existing_record.total++
-          }
-        })
-        self.tasks = tasks_formatted
-        //console.log(self.tasks)
+        let tasks_formatted = {total: 0, list: []};
+        let jobs = tasks.data.rows;
+        for (let jobId in jobs) {
+          console.log('jobs', jobs[jobId]);
+          this.getBookMeta(jobs[jobId].bookid).then(meta => {
+              jobs[jobId].title = meta.title;
+          }).catch(error => {});
+
+          jobs[jobId].tasks.forEach((elTask)=>{
+              elTask.title = this.task_types.tasks.find((s_type) => {
+                  return s_type._id == elTask.type
+              }).title;
+          });
+
+          tasks_formatted.list.push(jobs[jobId]);
+          jobs[jobId].total = jobs[jobId].tasks.length;
+          tasks_formatted.total += jobs[jobId].total;
+        }
+        this.tasks = tasks_formatted
       })
       .catch(error => {})
     },
@@ -204,7 +178,11 @@ export default {
     },
     onTabChange() {
       return true
-    }
+    },
+
+    ...mapActions([
+        'getBookMeta'
+    ])
   }
 }
 </script>
@@ -255,7 +233,7 @@ export default {
   margin-left: 35px;
 }
 .tasks-box .task-type {
-  
+
 }
 .subtasks-box {
   display: table-row;
@@ -265,7 +243,7 @@ export default {
   width: 5em;
 }
 .subtask-items-box {
-  
+
 }
 .subtask-item-box {
   padding: 5px 10px;

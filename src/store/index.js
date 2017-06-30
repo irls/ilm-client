@@ -155,6 +155,12 @@ export const store = new Vuex.Store({
           commit('SET_CURRENTBOOK_META', meta)
         })
       })
+    },
+
+    getBookMeta ({}, bookid) {
+        var dbPathA = superlogin.getDbUrl('ilm_library_meta')
+        if (process.env.DOCKER) dbPathA = dbPathA.replace('couchdb', 'localhost')
+        return PouchDB(dbPathA).get(bookid);
     }
 
   }
