@@ -4,6 +4,7 @@ import Vuex from 'vuex'
 import superlogin from 'superlogin-client'
 import hoodie from 'pouchdb-hoodie-api'
 import PouchDB from 'pouchdb'
+import axios from 'axios'
 PouchDB.plugin(hoodie)
 
 // const ilm_library = new PouchDB('ilm_library')
@@ -35,7 +36,11 @@ export const store = new Vuex.Store({
     currentEditingBlockId: '',
 
     bookFilters: {filter: '', language: 'en', importStatus: 'staging'},
-    editMode: 'Editor'
+    editMode: 'Editor',
+    allowBookEditMode: false,
+    tc_currentBookTasks: {"tasks": [], "task": {}},
+    tc_tasksByBlock: {},
+    API_URL: process.env.ILM_API + '/api/v1/'
   },
 
   getters: {
@@ -53,7 +58,10 @@ export const store = new Vuex.Store({
     currentBookid: state => state.currentBookid,
     currentBook: state => state.currentBook,
     currentBookMeta: state => state.currentBookMeta,
-    bookEditMode: state => state.editMode
+    bookEditMode: state => state.editMode,
+    allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode),
+    tc_currentBookTasks: state => state.tc_currentBookTasks,
+    tc_tasksByBlock: state => state.tc_tasksByBlock
   },
 
   mutations: {
@@ -106,6 +114,10 @@ export const store = new Vuex.Store({
 
     updateBookMeta (state, meta) {
       state.currentBookMeta = meta
+    },
+
+    ALLOW_BOOK_EDIT_MODE (state, allow) {
+      state.allowBookEditMode = allow;
     }
 
   },
@@ -114,7 +126,7 @@ export const store = new Vuex.Store({
 
     updateBooksList (context) {
       let ilmLibraryMeta = PouchDB('ilm_library_meta').hoodieApi()
-      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted')))
+      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted') && (item.owner == context.state.auth.getSession().user_id || item.private == false)))
         .then(books => context.commit('SET_BOOKLIST', books))
     },
 
@@ -128,7 +140,7 @@ export const store = new Vuex.Store({
       // clear currentBookid
     },
 
-    loadBook ({commit, state}, bookid) {
+    loadBook ({commit, state, dispatch}, bookid) {
       // console.log('loading currentBook: ', bookid)
       // if (!bookid) return  // if no currentbookid, exit
       // if (bookid === context.state.currentBookid) return // skip if already loaded
@@ -153,8 +165,36 @@ export const store = new Vuex.Store({
         PouchDB(dbPathB).get(bookid).then(book => {
           commit('SET_CURRENTBOOK', book)
           commit('SET_CURRENTBOOK_META', meta)
+          dispatch('tc_loadBookTask')
         })
       })
+    },
+
+    getBookMeta ({}, bookid) {
+        var dbPathA = superlogin.getDbUrl('ilm_library_meta')
+        if (process.env.DOCKER) dbPathA = dbPathA.replace('couchdb', 'localhost')
+        return PouchDB(dbPathA).get(bookid);
+    },
+
+    tc_loadBookTask({state, commit}) {
+      if (state.currentBookid) {
+        axios.get(state.API_URL + 'tasks/book/' + state.currentBookid)
+          .then((list) => {
+            state.tc_tasksByBlock = {}
+            list.data.tasks.forEach(t => {
+              if (t.comment) {
+                t.comment = t.comment.replace('\n', '<br>');
+              }
+              if (t.blockid) {
+                state.tc_tasksByBlock[t.blockid] = t
+              }
+            })
+
+            state.tc_currentBookTasks = list.data
+            commit('ALLOW_BOOK_EDIT_MODE', state.tc_currentBookTasks.tasks.length > 0);
+          })
+          .catch((err) => {})
+      }
     }
 
   }

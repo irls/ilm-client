@@ -10,13 +10,13 @@
 
   <td class="right">
     <!-- Edit Button -->
-    <button v-if="$store.state.currentBookid && (isAdmin || isEditor || isLibrarian)"
+    <button v-if="allowBookEditMode"
       @click='editBook' class='btn btn-default'>
       <i class="fa fa-pencil fa-lg"></i>  Edit
     </button>  &nbsp;
 
     <!-- Import Button -->
-    <button id="show-modal" @click="importBook" class="btn btn-default" v-if="(isAdmin || isLibrarian)">
+    <button id="show-modal" @click="importBook" class="btn btn-default" v-if="(isAdmin || isLibrarian || isEditor)">
       <i class="fa fa-pencil fa-lg"></i>  Import
     </button>  &nbsp;
 
@@ -37,7 +37,7 @@
 </tr></table>
 
   <!-- Import Books Modal Popup -->
-  <BookImport v-if="showImportBooksModal" @close_modal="showImportBooksModal=false" />
+  <BookImport v-if="showImportBooksModal" @close_modal="importBooksModalClose" :userTasks="userTasks" />
 
 </div>
 </template>
@@ -70,12 +70,17 @@ export default {
       }
     }
   },
+  
+  props: {
+    userTasks: Array
+  },
 
   computed: mapGetters([
     'isLoggedIn',
     'isAdmin',
     'isEditor',
-    'isLibrarian'
+    'isLibrarian',
+    'allowBookEditMode'
   ]),
 
   methods: {
@@ -99,6 +104,10 @@ export default {
     importBook () {
       console.log('event ok')
       this.showImportBooksModal = true
+    },
+    importBooksModalClose(uploaded) {
+      this.showImportBooksModal=false
+      this.$emit('import_finished', uploaded)
     }
   }
 }

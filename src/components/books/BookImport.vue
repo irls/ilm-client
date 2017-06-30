@@ -33,7 +33,7 @@
                     <label class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
-                      <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip" multiple @change="onFilesChange($event)">
+                      <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip" :multiple="multiple" @change="onFilesChange($event)">
 
                     </label>
                   </div>
@@ -51,6 +51,15 @@
                         <option v-for='(type, index) in bookTypes' v-bind:value="index">{{type}}</option>
                       </select>
 
+                    </div>
+                  </div>
+                  <div class="col-sm-6" v-if="!userTaskId">
+                    <div class="form-group" v-if="userTasks.length">
+                      <label for="usertask">Task:</label>
+                      <select class="form-control" id="usertask" v-model="userTaskIdLocal">
+                        <option value=""></option>
+                        <option v-for="userTask in userTasks" v-if="userTask.book_id == null" :value="userTask._id">{{userTask.title}}</option>
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -81,6 +90,11 @@
 
                 <br><br><br><br> -->
 
+                <ul id="selectedBooks">
+                  <li v-for="book in selectedBooks">
+                    {{ book.name }} - {{ humanFileSize(book.size, true) }}
+                  </li>
+               </ul>
                 <button class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
                   <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
                 </button>
@@ -94,6 +108,11 @@
           </div comment="clearfix">
         </div>
       </div>
+      <alert :value="bookUploadError != false" placement="top" duration="3000" type="danger" width="400px">
+        <span class="icon-ok-circled alert-icon-float-left"></span>
+
+        <p>{{bookUploadError}}.</p>
+      </alert>
     </div>
   </transition>
 </template>
@@ -101,7 +120,10 @@
 
 <script>
 
+import { alert } from 'vue-strap'
+import axios from 'axios'
 
+const API_URL = process.env.ILM_API + '/api/v1/'
 
 export default {
   data() {
@@ -119,11 +141,29 @@ export default {
         uploadFiles: {bookFiles: 0, audioFiles: 0},
         formData: new FormData(),
         uploadProgress: "Uploading Files...",
-
+        bookUploadError: false,
+        userTaskIdLocal: null,
+        selectedBooks: []
     }
   },
+  props: {
+      'multiple': {
+        type: Boolean,
+        default: true
+      },
+      'userTasks': {
+        type: Array
+      },
+      'userTaskId': {
+        type: String,
+        default: null
+      }
+  },
   components: {
-
+    alert
+  },
+  mounted() {
+    this.userTaskIdLocal = this.userTaskId
   },
   computed: {
     selectedBookType: function() {
@@ -149,6 +189,11 @@ export default {
     onFilesChange(e) {
       let fieldName = e.target.name
       let fileList = e.target.files || e.dataTransfer.files
+      this.selectedBooks = [];
+      this.formData = new FormData();
+      for(let file of fileList) {
+          this.selectedBooks.push({name: file.name, size: file.size});
+      }
       Array
         .from(Array(fileList.length).keys())
         .map(x => {
@@ -177,18 +222,44 @@ export default {
         if (response.status===200) {
           // hide modal after one second
           vu_this.uploadProgress = "Upload Successful"
-          setTimeout(function(){ vu_this.$emit('close_modal') }, 1000)
+          if (vu_this.userTaskIdLocal && response.data instanceof Array && response.data[0] && response.data[0].ok == true) {
+            axios.put(API_URL + 'task/' + vu_this.userTaskIdLocal + '/link_book', {book_id: response.data[0].id})
+              .then((link_response) => {
+                setTimeout(function(){ vu_this.$emit('close_modal', response) }, 1000)
+              })
+              .catch((err) => {
+                setTimeout(function(){ vu_this.$emit('close_modal', response) }, 1000)
+              })
+          } else {
+            setTimeout(function(){ vu_this.$emit('close_modal', response) }, 1000)
+          }
         } else {
           // not sure what we should be doing here
           vu_this.formReset()
         }
       }).catch((err) => {
-        console.log('error: '+ err)
+        console.log(err)
+        vu_this.bookUploadError = err.response.data.message
         vu_this.formReset()
-        setTimeout(function(){ vu_this.$emit('close_modal') }, 1000)
+        setTimeout(function(){ vu_this.$emit('close_modal') }, 3000)
       });
 
     },
+    humanFileSize(bytes, si) {
+        var thresh = si ? 1000 : 1024;
+        if(Math.abs(bytes) < thresh) {
+            return bytes + ' B';
+        }
+        var units = si
+            ? ['kB','MB','GB','TB','PB','EB','ZB','YB']
+            : ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
+        var u = -1;
+        do {
+            bytes /= thresh;
+            ++u;
+        } while(Math.abs(bytes) >= thresh && u < units.length - 1);
+        return bytes.toFixed(1)+' '+units[u];
+    }
   },
 }
 </script>

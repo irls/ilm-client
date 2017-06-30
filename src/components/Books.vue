@@ -3,7 +3,7 @@
 
     <div class='toolbar clearfix'>
       <BookEditToolbar v-if="isEditMode()" />
-      <BooksToolbar v-else />
+      <BooksToolbar v-else :userTasks="userTasks" @import_finished="bookImportFinished" />
     </div>
 
     <table id='bodytable'>
@@ -25,7 +25,8 @@
         <td class='metaedit' v-if='metaVisible'>
           <book-meta-edit
             v-if='metaVisible'
-
+            :userTasks="userTasks"
+            @task_linked="getTasks()"
           ></book-meta-edit>
           <!-- <BookMetaEdit v-if='metaVisible'/> -->
         </td>
@@ -44,6 +45,10 @@ import BookEdit from './books/BookEdit'
 import BookEditHtml from './books/BookEdit_HTML'
 import BookEditJson from './books/BookEdit_JSON'
 import BookEditDisplay from './books/BookEdit_Display'
+import axios from 'axios'
+import superlogin from 'superlogin-client'
+import api_config from '../mixins/api_config.js'
+
 
 export default {
 
@@ -54,7 +59,8 @@ export default {
       metaVisible: false,
       metaAvailable: false,
       colCount: 1,
-      currentBookid: this.$store.state.currentBookid
+      currentBookid: this.$store.state.currentBookid,
+      userTasks: []
     }
   },
 
@@ -66,7 +72,9 @@ export default {
     BookEdit,
     BookEditHtml,
     BookEditJson,
-    BookEditDisplay
+    BookEditDisplay,
+    axios,
+    superlogin
   },
 
   computed: mapGetters(['bookEditMode', 'currentBook']),
@@ -77,6 +85,11 @@ export default {
       // console.log('Watching route: ',to,from)
       this.recountRows()
     }
+  },
+  mixins: [api_config],
+
+  mounted() {
+    this.getTasks()
   },
 
   methods: {
@@ -106,6 +119,21 @@ export default {
       if (this.metaVisible) count++
       // console.log('Rows: '+ count)
       this.colCount = count
+    },
+    getTasks() {
+      this.userTasks = []
+      var self = this
+      axios.get(self.API_URL + 'tasks/user/' + superlogin.getSession().user_id + '?type=2').then(tasks => {
+        tasks.data.rows.forEach((record) => {
+          self.userTasks.push(record)
+        })
+      })
+      .catch(error => {})
+    },
+    bookImportFinished(result) {
+      if (result) {
+        this.getTasks()
+      }
     }
 
 /*

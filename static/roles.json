@@ -23,5 +23,21 @@
   }, {
     "rank": "librarian",
     "name": "Librarian"
+  },
+  {
+    "rank": "proofer",
+    "name": "Proofer"
+  },
+  {
+    "rank": "engineer",
+    "name": "Engineer"
+  },
+  {
+    "rank": "reader",
+    "name": "Reader"
+  },
+  {
+    "rank": "narrator",
+    "name": "Narrator"
   }
 ]

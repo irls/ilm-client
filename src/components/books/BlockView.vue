@@ -17,8 +17,7 @@
       <div class='blockinfo'><div class='blockinfo-content'>
 
 <template v-show="isAdmin || isEditor || isLibrarian" v-if="!isEditing">
-
-        <div class='edit_buttons'>
+        <div class='edit_buttons' v-if="isShowEdit">
           <i class="fa fa-trash-o fa-lg deletebutton" @click='deleteBlock()'></i> &nbsp;
           <i class="fa fa-pencil-square-o fa-lg editbutton" @click='showEditor()'></i>
         </div> &nbsp;
@@ -26,14 +25,14 @@
         <div class='type'>
 
           <!-- Block Type selector -->
-          <select v-model='block.type'>
+          <select v-model='block.type' v-if="isShowEdit">
             <option v-for="(type, index) in blockTypes" :value="type">{{ type }}</option>
           </select>
 
           &nbsp; &nbsp;
-          <a href="">Title <i class="fa fa-sort-desc" aria-hidden="true"></i></a>
+          <a href="" v-if="isShowEdit">Title <i class="fa fa-sort-desc" aria-hidden="true"></i></a>
 
-          <select @select="addCss('title', $event)">
+          <select @select="addCss('title', $event)" v-if="isShowEdit">
             <option v-for="(type, index) in blockTypeClasses.title" :value="type">{{ type }}</option>
           </select>
 
@@ -70,7 +69,9 @@
 </template>
 
         <div class='classes' v-if='cleanClasses().length>0'><i>{{ cleanClasses() }}</i></div>
-      </div></div><div class='clearfix'></div>
+      </div></div>
+      <strong class="fix-message" v-html="subtask.comment"></strong>
+      <div class='clearfix'></div>
 
       <!-- Content -->
       <template v-if="isEditing" v-on:keyup.esc="hideEditor()">
@@ -95,6 +96,9 @@
         <i class="fa fa-pause-circle-o fa-lg" @click='clickEvent(b)' v-if='isPlaying'></i>
         <i class="fa fa-microphone fa-lg" @click='clickEvent(b)' v-if='!isRecording'></i>
         <i class="fa fa-stop-circle-o fa-lg" @click='clickEvent(b)' v-if='isRecording'></i>
+        <!-- <i class="fa fa-remove" v-if="isShowRejectBlockAction" v-on:click="showRejectContentModal = true" title="Reject content"></i>
+        <i class="fa fa-check" v-if="isShowCorrectBlockAction" v-on:click="fixBlockContent()" title="Content fixed"></i>
+        <i class="fa fa-check" v-if="isShowApproveContentFixAction" v-on:click="fixBlockContent()" title="Content fix approved"></i> -->
       </div>
 </template>
 
@@ -105,6 +109,9 @@
         <i class="fa fa-comment-o fa-lg" @click='clickEvent(b)'></i>
       </div>
 </template>
+<modal v-model="showRejectContentModal" effect="fade" ok-text="Reject" cancel-text="Cancel" title="Reject block content" @ok="rejectBlockContent()">
+  <textarea v-model="rejectBlockContentMessage" class="reject-block-message"></textarea>
+</modal>
 
     </td>
 
@@ -120,6 +127,9 @@ import Vue from 'vue'
 import jQuery from 'jquery'
 import Trumbowyg from '../generic/Trumbowyg'
 import VueEvents from 'vue-events'
+import { modal } from 'vue-strap'
+import axios from 'axios'
+import api_config from '../../mixins/api_config.js'
 
 
 export default {
@@ -166,14 +176,16 @@ export default {
       isRecording: false,
       isPlaying: false,
       isEditing: false,
-      editorOptions: {}
+      editorOptions: {},
+      showRejectContentModal: false,
+      rejectBlockContentMessage: ''
     }
   },
-  props: ['block', 'blid'],
+  props: ['block', 'blid', 'isShowRejectBlockAction', 'isShowCorrectBlockAction', 'isShowEdit', 'mainTaskId', 'subtask', 'isShowApproveContentFixAction'],
   components: {
-    dropdown, Trumbowyg
+    dropdown, Trumbowyg, modal
   },
-  mixins: [access],
+  mixins: [access, api_config],
   methods: {
     getSelectedClasses: function(classes) {
       var selected = {Author: '', Justify: '', Whitespace: '',
@@ -230,6 +242,9 @@ export default {
       var classes = this.cleanClasses()
       classes.push(this.block.type)
       classes.push('content')
+      if (this.subtask.comment) {
+        classes.push('has-fix-comment')
+      }
       return [...new Set(classes)].join(' ')
     },
     classTypeMatch: function(type) {
@@ -273,7 +288,38 @@ export default {
     hideEditor: function(){
       console.log("Caught ESC")
       this.$events.emit('currentEditingBlockId', '')
+    },
+    rejectBlockContent() {
+      var self = this
+      if (self.rejectBlockContentMessage) {
+        axios.put(self.API_URL + 'task/' + self.mainTaskId + '/reject_block_content', {
+          'message': self.rejectBlockContentMessage,
+          'blockid': self.block.id
+        })
+          .then((resp) => {
+            self.showRejectContentModal = false
+            self.rejectBlockContentMessage = ''
+            self.$emit('block_content_rejected')
+          })
+          .catch((err) => {
+            self.rejectBlockContentMessage = ''
+            self.showRejectContentModal = false
+          });
+      }
+    },
+    fixBlockContent() {
+      var self = this
+      axios.put(self.API_URL + 'task/' + self.mainTaskId + '/fix_block_content', {
+        'blockid': self.block.id
+      })
+        .then((resp) => {
+          self.$emit('block_content_fixed')
+        })
+        .catch((err) => {
+          
+        });
     }
+    
   },
   mounted() {
     var vm = this
@@ -296,6 +342,16 @@ export default {
        // console.log('Block '+this.blid+' Edited', from, to)
        this.$emit('edited', this.block)
     },
+    'rejectBlockId': function(to, from) {
+      if (from == null) {
+        this.showRejectContentModal = true
+      }
+    },
+    'showRejectContentModal': function(to, from) {
+      if (to === false) {
+        this.rejectBlockId = null
+      }
+    }
 
   },
 
@@ -408,5 +464,9 @@ div.viewercontent.ocean div.content.par.dropcap::first-letter {
 .undeletebutton { text-align: center; font-size: 12pt; margin-bottom:-55px; margin-left: 1em;}
 
 .wysiwygeditor_wrapper {padding: 10px; padding-right: 1em; }
+
+.reject-block-message { width: 100%; min-height: 100px; }
+.fix-message { color: red; background-color: yellow; }
+.has-fix-comment { border: 1px solid red !important; }
 
 </style>

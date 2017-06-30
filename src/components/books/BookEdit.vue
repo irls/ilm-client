@@ -35,8 +35,19 @@
       </div>
     </td>
     <td class='content'>
-      <BlockView :block="block" :blid="blid" @edited="blockEdit(blid, $event)"
-       @editing="blockEditing(blid, $event)" />
+      <BlockView 
+       :isShowRejectBlockAction="tc_isShowRejectBlockAction(block.id)" 
+       :isShowCorrectBlockAction="tc_isShowCorrectBlockAction(block.id)"
+       :isShowEdit="tc_isShowEdit(block.id)"
+       :block="block" 
+       :blid="blid" 
+       :mainTaskId="$store.state.tc_currentBookTasks.task._id"
+       :subtask="$store.state.tc_tasksByBlock[block.id] || {}"
+       :isShowApproveContentFixAction="tc_isShowApproveContentFixAction(block.id)"
+       @edited="blockEdit(blid, $event)"
+       @editing="blockEditing(blid, $event)" 
+       @block_content_rejected="tc_loadBookTask()"
+       @block_content_fixed="tc_loadBookTask()"/>
     </td>
   </tr>
   <infinite-loading v-if="autoload" :on-infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
@@ -52,6 +63,7 @@ import InfiniteLoading from 'vue-infinite-loading'
 import Vue from 'vue'
 import access from "../../mixins/access.js"
 import PouchDB from 'pouchdb'
+import task_controls from '../../mixins/task_controls.js'
 
 
 export default {
@@ -67,7 +79,7 @@ export default {
       showScrollbar: false
     }
   },
-  mixins: [access],
+  mixins: [access, task_controls],
   components: {
     ContextMenu, BlockView, InfiniteLoading
   },
@@ -239,6 +251,7 @@ export default {
       console.log("keydown: ", key)
       if (key.code==='Escape' || key.keyCode===27) vm.$events.emit('currentEditingBlockId', '')
     })
+    //this.tc_loadBookTask()
   },
   computed: {
     // currentBook: function() {
