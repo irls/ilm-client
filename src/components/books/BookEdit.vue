@@ -36,14 +36,14 @@
     </td>
     <td class='content'>
       <BlockView 
-       :isShowRejectBlockAction="isShowRejectBlockAction(block.id)" 
-       :isShowCorrectBlockAction="isShowCorrectBlockAction(block.id)"
-       :isShowEdit="isShowEdit(block.id)"
+       :isShowRejectBlockAction="tc_isShowRejectBlockAction(block.id)" 
+       :isShowCorrectBlockAction="tc_isShowCorrectBlockAction(block.id)"
+       :isShowEdit="tc_isShowEdit(block.id)"
        :block="block" 
        :blid="blid" 
-       :mainTaskId="tc_currentBookTasks.task._id"
-       :subtask="tc_tasksByBlock[block.id] || {}"
-       :isShowApproveContentFixAction="isShowApproveContentFixAction(block.id)"
+       :mainTaskId="$store.state.tc_currentBookTasks.task._id"
+       :subtask="$store.state.tc_tasksByBlock[block.id] || {}"
+       :isShowApproveContentFixAction="tc_isShowApproveContentFixAction(block.id)"
        @edited="blockEdit(blid, $event)"
        @editing="blockEditing(blid, $event)" 
        @block_content_rejected="tc_loadBookTask()"
@@ -242,18 +242,6 @@ export default {
     },
     blockEditing: function(blid, block) {
 
-    },
-    isShowRejectBlockAction(blockid) {
-      return this.tc_hasTask('content_approve') && this.tc_currentBookTasks.rejected_blocks.content.indexOf(blockid) === -1;
-    },
-    isShowCorrectBlockAction(blockid) {
-      return this.tc_tasksByBlock[blockid] && this.tc_tasksByBlock[blockid].type == 6
-    },
-    isShowEdit(blockid) {
-      return this.tc_hasTask('content_cleanup') || (this.tc_tasksByBlock[blockid] && [6].indexOf(this.tc_tasksByBlock[blockid].type) !== -1)
-    },
-    isShowApproveContentFixAction(blockid) {
-      return this.tc_tasksByBlock[blockid] && this.tc_tasksByBlock[blockid].type == 7;
     }
 
   },
