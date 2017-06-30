@@ -37,17 +37,17 @@
 
             <tr class='title'>
               <td>Title</td>
-              <td><input v-model='currentBook.title' @input="update('title', $event)" :disabled="!allowEdit"></td>
+              <td><input v-model='currentBook.title' @input="update('title', $event)" :disabled="!tc_allowMetadataEdit()"></td>
             </tr>
             <tr class='subtitle'>
               <td>Subtitle</td>
-              <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)" :disabled="!allowEdit"></td>
+              <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)" :disabled="!tc_allowMetadataEdit()"></td>
             </tr>
 
             <tr class='category'>
               <td>Category</td>
               <td>
-                <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowEdit">
+                <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!tc_allowMetadataEdit()">
                   <option v-for="(value, index) in subjectCategories" :value="value">{{ value }}</option>
                 </select>
               </td>
@@ -56,7 +56,7 @@
             <tr class='language'>
               <td>Language</td>
               <td>
-                <select class="form-control" v-model='currentBook.lang' @change="change('lang')" :key="currentBookid" :disabled="!allowEdit">
+                <select class="form-control" v-model='currentBook.lang' @change="change('lang')" :key="currentBookid" :disabled="!tc_allowMetadataEdit()">
                   <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
                 </select>
               </td>
@@ -64,13 +64,13 @@
 
             <tr class='sections'>
               <td>Sections</td>
-              <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)" :disabled="!allowEdit"></td>
+              <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)" :disabled="!tc_allowMetadataEdit()"></td>
             </tr>
 
             <tr class='numbering'>
               <td>Numbering</td>
               <td>
-                <select class="form-control" v-model='currentBook.numbering' @change="change('numbering')" :key="currentBookid" :disabled="!allowEdit">
+                <select class="form-control" v-model='currentBook.numbering' @change="change('numbering')" :key="currentBookid" :disabled="!tc_allowMetadataEdit()">
                   <option v-for="(value, key) in numberingOptions" :value="value">{{ value }}</option>
                 </select>
                 <!-- <input v-model='currentBook.numbering'> -->
@@ -79,13 +79,13 @@
 
             <tr class='trans'>
               <td>Translator</td>
-              <td><input v-model='currentBook.translator' @input="update('translator', $event)" :disabled="!allowEdit"></td>
+              <td><input v-model='currentBook.translator' @input="update('translator', $event)" :disabled="!tc_allowMetadataEdit()"></td>
             </tr>
 
             <tr class='transfrom'>
               <td>Tr From</td>
               <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
-              <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!allowEdit"></td>
+              <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!tc_allowMetadataEdit()"></td>
             </tr>
 
           </table>
@@ -94,12 +94,12 @@
 
       <fieldset class='description brief'>
         <legend>Brief Description </legend>
-        <textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowEdit"></textarea>
+        <textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!tc_allowMetadataEdit()"></textarea>
       </fieldset>
 
       <fieldset class='description long'>
         <legend>Long Description </legend>
-        <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowEdit"></textarea>
+        <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!tc_allowMetadataEdit()"></textarea>
       </fieldset>
       
       <!-- <fieldset v-if="currentBook.private">
@@ -162,8 +162,8 @@
         </table>
       </fieldset>
       <fieldset v-if="isOwner && tc_hasTask('metadata_cleanup')">
-        <legend>Share book</legend>
-        <button class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Share book</button>
+        <legend>Cleanup finished</legend>
+        <button class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Text cleanup finished</button>
       </fieldset>
       <fieldset v-if="tc_hasTask('metadata_fix')">
         <legend>Update book</legend>
@@ -175,7 +175,7 @@
         </div>
       </fieldset>
 
-      <div class="download-area col-sm-6" v-if="allowEdit">
+      <div class="download-area col-sm-6" v-if="tc_allowMetadataEdit()">
         <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
           <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
         </button>
@@ -196,7 +196,7 @@
     </alert>
     
     <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Share" cancel-text="Cancel" title="Share book" @ok="sharePrivateBook()">
-      <div v-html="sharePrivateBookMessage"></div>
+      <div v-html="getSharePrivateBookMessage()"></div>
     </modal>
 
   </div>
@@ -261,10 +261,8 @@ export default {
       isOwner: false,
       errorMessage: '',//to display validation errors for some cases, e.g. on sharing book
       hasError: false,//has some validation error, e.g. on sharing book
-      allowEdit: false,
       approveMetadataComment: '',
-      showSharePrivateBookModal: false,
-      sharePrivateBookMessage: ''
+      showSharePrivateBookModal: false
     }
   },
   
@@ -314,15 +312,6 @@ export default {
         }
       },
       deep: true
-    },
-    tc_currentBookTasks: {
-      handler(val) {
-        this.allowEdit = this.isLibrarian || 
-              this.isAdmin || 
-              (this.tc_hasTask('metadata_cleanup') || this.tc_hasTask('metadata_fix'))
-        let next_user = this.tc_currentBookTasks.type == 1 ? 'proofer' : 'narrator';
-        this.sharePrivateBookMessage = 'This will make book visible to others and send it to the ' + next_user + '. Continue?';
-      }
     }
 
   },
@@ -420,7 +409,7 @@ export default {
             axios.put(self.API_URL + 'task/' + self.bookTaskId + '/finish_cleanup')
               .then((doc) => {
                 self.currentBook.private = false
-                self.tc_loadBookTask()
+                self.$store.dispatch('tc_loadBookTask')
               })
               .catch((err) => {
               })
@@ -455,6 +444,10 @@ export default {
             })
         }
       }
+    },
+    getSharePrivateBookMessage() {
+      let next_user = this.$store.state.tc_currentBookTasks.type == 1 ? 'proofer' : 'narrator';
+      return 'This will make book visible to others and send it to the ' + next_user + '. Continue?';
     }
   }
 }

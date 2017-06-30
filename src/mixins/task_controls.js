@@ -4,45 +4,38 @@ import api_config from './api_config.js'
 export default {
     data() {
       return {
-        tc_test: 'Test property',
-        tc_currentBookTasks: {"tasks": [], "task": {}},//list of tasks linked to current book for current user
-        tc_tasksByBlock: {}
+        tc_test: 'Test property'
       }
     },
     mounted() {
-      this.tc_loadBookTask()
+      
     },
     mixins: [api_config],
     methods: {
-      tc_loadBookTask() {
-        var self = this
-        if (this.$store.state.currentBookid) {
-          axios.get(self.API_URL + 'tasks/book/' + this.$store.state.currentBookid)
-            .then((list) => {
-              self.tc_tasksByBlock = {}
-              list.data.tasks.forEach(t => {
-                if (t.comment) {
-                  t.comment = t.comment.replace('\n', '<br>');
-                }
-                if (t.blockid) {
-                  self.tc_tasksByBlock[t.blockid] = t
-                }
-              })
-              
-              self.tc_currentBookTasks = list.data
-
-            })
-            .catch((err) => {})
-        }
-      },
+      
       tc_hasTask(type) {
-        return this.tc_currentBookTasks.assignments && this.tc_currentBookTasks.assignments.indexOf(type) !== -1;
+        return this.$store.state.tc_currentBookTasks.assignments && this.$store.state.tc_currentBookTasks.assignments.indexOf(type) !== -1;
       },
       tc_getTask(type) {
-        let task = this.tc_currentBookTasks.tasks.find((t) => {
+        let task = this.$store.state.tc_currentBookTasks.tasks.find((t) => {
           return t.type == type
         })
         return task ? task : {}
+      },
+      tc_isShowRejectBlockAction(blockid) {
+        return this.tc_hasTask('content_approve') && this.$store.state.tc_currentBookTasks.rejected_blocks.content.indexOf(blockid) === -1;
+      },
+      tc_isShowCorrectBlockAction(blockid) {
+        return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 6
+      },
+      tc_isShowEdit(blockid) {
+        return this.tc_hasTask('content_cleanup') || (this.$store.state.tc_tasksByBlock[blockid] && [6].indexOf(this.$store.state.tc_tasksByBlock[blockid].type) !== -1)
+      },
+      tc_isShowApproveContentFixAction(blockid) {
+        return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 7;
+      },
+      tc_allowMetadataEdit() {
+        return this.tc_hasTask('metadata_cleanup') || this.tc_hasTask('metadata_fix')
       }
     }
 }

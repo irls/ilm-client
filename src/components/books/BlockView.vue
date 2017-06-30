@@ -96,9 +96,9 @@
         <i class="fa fa-pause-circle-o fa-lg" @click='clickEvent(b)' v-if='isPlaying'></i>
         <i class="fa fa-microphone fa-lg" @click='clickEvent(b)' v-if='!isRecording'></i>
         <i class="fa fa-stop-circle-o fa-lg" @click='clickEvent(b)' v-if='isRecording'></i>
-        <i class="fa fa-remove" v-if="isShowRejectBlockAction" v-on:click="showRejectContentModal = true" title="Reject content"></i>
+        <!-- <i class="fa fa-remove" v-if="isShowRejectBlockAction" v-on:click="showRejectContentModal = true" title="Reject content"></i>
         <i class="fa fa-check" v-if="isShowCorrectBlockAction" v-on:click="fixBlockContent()" title="Content fixed"></i>
-        <i class="fa fa-check" v-if="isShowApproveContentFixAction" v-on:click="fixBlockContent()" title="Content fix approved"></i>
+        <i class="fa fa-check" v-if="isShowApproveContentFixAction" v-on:click="fixBlockContent()" title="Content fix approved"></i> -->
       </div>
 </template>
 

@@ -10,7 +10,7 @@
 
   <td class="right">
     <!-- Edit Button -->
-    <button v-if="$store.state.currentBookid && (isAdmin || isEditor || isLibrarian || true)"
+    <button v-if="allowBookEditMode"
       @click='editBook' class='btn btn-default'>
       <i class="fa fa-pencil fa-lg"></i>  Edit
     </button>  &nbsp;
@@ -79,7 +79,8 @@ export default {
     'isLoggedIn',
     'isAdmin',
     'isEditor',
-    'isLibrarian'
+    'isLibrarian',
+    'allowBookEditMode'
   ]),
 
   methods: {
