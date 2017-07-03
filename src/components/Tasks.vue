@@ -21,13 +21,15 @@
       </task-add-modal>
       <!-- Import Books Modal Popup -->
       <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose" :userTaskId="import_book_task_id" />
-      <div v-for="job in tasks.list" class="tasks-box table">
-        <div class="task-type tr">
-          <div class="td">
+      <div class="table tasks-box">
+      <section v-for="job in tasks.list">
+        <div class="tr">
+          <div class="td task-type">
             <h2><i class="fa fa-book"></i>&nbsp;{{job.title}}&nbsp;({{job.total}})</h2>
           </div>
+          <!--<div class="td"></div>-->
         </div>
-        <div v-for="task in job.tasks" class="subtasks-box tr">
+        <div v-for="task in job.tasks" class="tr subtasks-box">
           <div class="task-title-box td">
             <h4>(1)&nbsp;{{task.title}}</h4>
           </div>
@@ -40,11 +42,11 @@
               <a v-else :href="'/books/edit/' + job.bookid">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
             </div>
           </div>
-
         </div>
-
+      </section>
+      <!--<section v-for="job in tasks.list">-->
       </div>
-
+      <!--<div class="table  tasks-box">-->
     </v-tab>
     <v-tab title="Work History">
       <TaskHistory :task_types="task_types" :current_user="true"></TaskHistory>
@@ -116,10 +118,14 @@ export default {
         let tasks_formatted = {total: 0, list: []};
         let jobs = tasks.data.rows;
         for (let jobId in jobs) {
-          console.log('jobs', jobs[jobId]);
+          console.log('jobs[jobId].title', jobs[jobId].title);
           this.getBookMeta(jobs[jobId].bookid).then(meta => {
               jobs[jobId].title = meta.title;
           }).catch(error => {});
+
+          tasks_formatted.list.push(jobs[jobId]);
+          jobs[jobId].total = jobs[jobId].tasks.length;
+          tasks_formatted.total += jobs[jobId].total;
 
           jobs[jobId].tasks.forEach((elTask)=>{
               elTask.title = this.task_types.tasks.find((s_type) => {
@@ -127,9 +133,6 @@ export default {
               }).title;
           });
 
-          tasks_formatted.list.push(jobs[jobId]);
-          jobs[jobId].total = jobs[jobId].tasks.length;
-          tasks_formatted.total += jobs[jobId].total;
         }
         this.tasks = tasks_formatted
       })
@@ -220,7 +223,7 @@ export default {
   padding: 0;
 }
 .tr {
- display: table-row;
+  display: table-row;
 }
 .td {
   display: table-cell;
@@ -232,11 +235,9 @@ export default {
   width: 100%;
   margin-left: 35px;
 }
-.tasks-box .task-type {
 
-}
-.subtasks-box {
-  display: table-row;
+.task-type.td {
+  width: 500px;
 }
 .subtask-title-box {
   padding: 5px 25px 5px 5px;
@@ -251,9 +252,6 @@ export default {
 .tasks-box .task-type i.fa {
   font-size: 35px;
   margin-left: -35px;
-}
-.subtask-list-box {
-  display: inline-block;
 }
 .subtasks-box:nth-of-type(even) {
   background-color: #f9f9f9;
