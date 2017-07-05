@@ -126,6 +126,7 @@ export default {
     },
     parseWorkHistory(data) {
       //var work_history_formatted = []
+      this.submissions = 0
       for (let user_id in data) {
         let user = data[user_id];
         for (let bookid in user.books) {
