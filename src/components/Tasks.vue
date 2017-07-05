@@ -38,7 +38,7 @@
 
             <div class="subtask-items-box td">
               <div class="subtask-item-box">
-                <button class="btn btn-default" v-if="!job.bookid && task.type == 1" v-on:click="importBook(job._id)">
+                <button class="btn btn-default" v-if="task.type == 1" v-on:click="importBook(job._id)">
                   <i class="fa fa-pencil"></i>Import book "{{job.title}}"
                 </button>
                 <a v-else :href="'/books/edit/' + job.bookid">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
@@ -202,7 +202,13 @@ export default {
 </script>
 
 
-<style scoped>
+<style lang="less" scoped>
+.fa {
+    margin-right: 8px;
+    position: relative;
+    top: 1px;
+}
+
 .toolbar {
    width: 100%;
    position: relative;
@@ -241,6 +247,9 @@ export default {
   vertical-align: middle;
   white-space: nowrap;
   padding: 5px;
+  &.task-title-box {
+      width: 300px;
+  }
 }
 .tasks-box {
   width: 100%;
