@@ -39,7 +39,7 @@
 
             <div class="subtask-items-box td">
               <div class="subtask-item-box">
-                <button class="btn btn-default" v-if="task.type == 1" v-on:click="importBook(job._id)">
+                <button class="btn btn-default" v-if="task.type == 1" v-on:click="importBook(task._id)">
                   <i class="fa fa-pencil"></i>Import book "{{job.title}}"
                 </button>
                 <a v-else :href="'/books/edit/' + job.bookid">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>

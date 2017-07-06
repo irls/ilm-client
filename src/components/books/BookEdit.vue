@@ -41,7 +41,7 @@
        :isShowEdit="tc_isShowEdit(block.id)"
        :block="block" 
        :blid="blid" 
-       :mainTaskId="$store.state.tc_currentBookTasks.task._id"
+       :mainTaskId="$store.state.tc_currentBookTasks.job._id"
        :subtask="$store.state.tc_tasksByBlock[block.id] || {}"
        :isShowApproveContentFixAction="tc_isShowApproveContentFixAction(block.id)"
        @edited="blockEdit(blid, $event)"

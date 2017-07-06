@@ -95,9 +95,10 @@
                     {{ book.name }} - {{ humanFileSize(book.size, true) }}
                   </li>
                </ul>
-                <button class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
+                <button v-if="userTaskId" class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
                   <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
                 </button>
+                <span v-if="!userTaskId" class="label label-danger">Book should be imported from task. You have no import book task assigned</span>
 
             </form>
 
@@ -209,7 +210,8 @@ export default {
       this.formData.append('bookType', this.bookTypes[this.bookType]);
       if (!this.uploadFiles.bookFiles && this.bookURL.length) this.formData.append('bookURL', this.bookURL);
       if (!this.uploadFiles.audioFiles && this.audioURL.length) this.formData.append('audioURL', this.audioURL);
-
+      this.formData.append('taskId', this.userTaskId);
+      
       var config = {
         onUploadProgress: function(progressEvent) {
           var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total );
@@ -223,7 +225,7 @@ export default {
           // hide modal after one second
           vu_this.uploadProgress = "Upload Successful"
           if (vu_this.userTaskIdLocal && response.data instanceof Array && response.data[0] && response.data[0].ok == true) {
-            axios.put(API_URL + 'task/' + vu_this.userTaskIdLocal + '/link_book', {book_id: response.data[0].id})
+            axios.put(API_URL + 'task/' + vu_this.userTaskIdLocal + '/link_book', {})
               .then((link_response) => {
                 setTimeout(function(){ vu_this.$emit('close_modal', response) }, 1000)
               })
