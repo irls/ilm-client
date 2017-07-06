@@ -23,6 +23,7 @@
       <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose" :userTaskId="import_book_task_id" />
       <div class="table tasks-box">
       <section v-for="job in tasks.list">
+      <template v-if="job.total > 0">
         <div class="tr">
           <div class="td task-type">
             <h2><i class="fa fa-book" data-toggle="tooltip" v-bind:title="job.description"></i>&nbsp;{{job.title}}&nbsp;({{job.total}})&nbsp;<i :class="[job.tasksVisible ? 'fa-chevron-up' : 'fa-chevron-down' , 'fa collapsebtn']" aria-hidden="true" @click='job.tasksVisible = !job.tasksVisible'></i></h2>
@@ -30,7 +31,7 @@
           <!--<div class="td"></div>-->
         </div>
         <transition name="fade">
-        <section v-if="job.tasksVisible">
+        <template v-if="job.tasksVisible">
           <div v-for="task in job.tasks" class="tr subtasks-box">
             <div class="task-title-box td">
               <h4>({{task.count}})&nbsp;{{task.title}}</h4>
@@ -45,8 +46,10 @@
               </div>
             </div>
           </div>
-        </section>
+        </template>
         </transition>
+      </template>
+      <!--<template v-if="job.tasks.length">-->
       </section>
       <!--<section v-for="job in tasks.list">-->
       </div>
