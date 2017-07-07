@@ -37,17 +37,17 @@
 
             <tr class='title'>
               <td>Title</td>
-              <td><input v-model='currentBook.title' @input="update('title', $event)" :disabled="!tc_allowMetadataEdit()"></td>
+              <td><input v-model='currentBook.title' @input="update('title', $event)" :disabled="!allowMetadataEdit"></td>
             </tr>
             <tr class='subtitle'>
               <td>Subtitle</td>
-              <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)" :disabled="!tc_allowMetadataEdit()"></td>
+              <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)" :disabled="!allowMetadataEdit"></td>
             </tr>
 
             <tr class='category'>
               <td>Category</td>
               <td>
-                <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!tc_allowMetadataEdit()">
+                <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
                   <option v-for="(value, index) in subjectCategories" :value="value">{{ value }}</option>
                 </select>
               </td>
@@ -56,7 +56,7 @@
             <tr class='language'>
               <td>Language</td>
               <td>
-                <select class="form-control" v-model='currentBook.lang' @change="change('lang')" :key="currentBookid" :disabled="!tc_allowMetadataEdit()">
+                <select class="form-control" v-model='currentBook.lang' @change="change('lang')" :key="currentBookid" :disabled="!allowMetadataEdit">
                   <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
                 </select>
               </td>
@@ -64,13 +64,13 @@
 
             <tr class='sections'>
               <td>Sections</td>
-              <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)" :disabled="!tc_allowMetadataEdit()"></td>
+              <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)" :disabled="!allowMetadataEdit"></td>
             </tr>
 
             <tr class='numbering'>
               <td>Numbering</td>
               <td>
-                <select class="form-control" v-model='currentBook.numbering' @change="change('numbering')" :key="currentBookid" :disabled="!tc_allowMetadataEdit()">
+                <select class="form-control" v-model='currentBook.numbering' @change="change('numbering')" :key="currentBookid" :disabled="!allowMetadataEdit">
                   <option v-for="(value, key) in numberingOptions" :value="value">{{ value }}</option>
                 </select>
                 <!-- <input v-model='currentBook.numbering'> -->
@@ -79,13 +79,13 @@
 
             <tr class='trans'>
               <td>Translator</td>
-              <td><input v-model='currentBook.translator' @input="update('translator', $event)" :disabled="!tc_allowMetadataEdit()"></td>
+              <td><input v-model='currentBook.translator' @input="update('translator', $event)" :disabled="!allowMetadataEdit"></td>
             </tr>
 
             <tr class='transfrom'>
               <td>Tr From</td>
               <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
-              <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!tc_allowMetadataEdit()"></td>
+              <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
             </tr>
 
           </table>
@@ -94,32 +94,12 @@
 
       <fieldset class='description brief'>
         <legend>Brief Description </legend>
-        <textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!tc_allowMetadataEdit()"></textarea>
+        <textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit"></textarea>
       </fieldset>
 
       <fieldset class='description long'>
         <legend>Long Description </legend>
-        <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!tc_allowMetadataEdit()"></textarea>
-      </fieldset>
-      
-      <!-- <fieldset v-if="currentBook.private">
-        <legend>Upload book task</legend>
-        <select class="form-control" v-model="bookTaskId">
-          <option></option>
-          <option v-for="task in userTasks" :value="task._id">{{task.title}}</option>
-        </select>
-        <div v-if="linkTaskError" class="error-message" v-text="linkTaskError"></div>
-        <button class="btn btn-primary" v-on:click="linkTask">Update</button>
-      </fieldset> -->
-      <fieldset v-if="tc_hasTask('metadata_approve')" class="approve-metadata">
-        <legend>Reject book metadata</legend>
-        <div class="form-group">
-          <textarea v-model="approveMetadataComment"></textarea>
-        </div>
-        <div class="form-group">
-          <!-- <button class="btn btn-primary" v-on:click="setMetadataStatus(1)">Approve</button> -->
-          <button class="btn btn-danger" v-on:click="setMetadataStatus(-1)">Reject</button>
-        </div>
+        <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
       </fieldset>
 
       <fieldset class="publish" v-if="isLibrarian">
@@ -165,17 +145,8 @@
         <legend>Cleanup finished</legend>
         <button class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Text cleanup finished</button>
       </fieldset>
-      <fieldset v-if="tc_hasTask('metadata_fix')">
-        <legend>Update book</legend>
-        <div class="form-group">
-          <strong class="fix-message" v-html="tc_getTask(5).comment"></strong>
-        </div>
-        <div class="form-group">
-          <button class="btn btn-primary" v-on:click="setMetadataStatus(1)">Update book</button>
-        </div>
-      </fieldset>
 
-      <div class="download-area col-sm-6" v-if="tc_allowMetadataEdit()">
+      <div class="download-area col-sm-6" v-if="allowMetadataEdit">
         <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
           <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
         </button>
@@ -262,7 +233,8 @@ export default {
       errorMessage: '',//to display validation errors for some cases, e.g. on sharing book
       hasError: false,//has some validation error, e.g. on sharing book
       approveMetadataComment: '',
-      showSharePrivateBookModal: false
+      showSharePrivateBookModal: false,
+      allowMetadataEdit: false
     }
   },
   
@@ -282,13 +254,13 @@ export default {
   mixins: [task_controls, api_config],
   
   mounted() {
-    var self = this
-    self.userTasks.forEach((record) => {
-      if (record.bookid == self.currentBook._id) {
-        self.bookTaskId = record._id
+    for (let id in this.$store.state.tc_currentBookTasks.tasks) {
+      let record = this.$store.state.tc_currentBookTasks.tasks[id]
+      if (record.type == 2) {
+       this.bookTaskId = record._id
       }
-    })
-    //self.tc_loadBookTask()
+    }
+    this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor
   },
 
   watch: {

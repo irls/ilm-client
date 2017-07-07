@@ -33,9 +33,6 @@ export default {
       },
       tc_isShowApproveContentFixAction(blockid) {
         return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 7;
-      },
-      tc_allowMetadataEdit() {
-        return this.tc_hasTask('metadata_cleanup') || this.tc_hasTask('metadata_fix')
       }
     }
 }
