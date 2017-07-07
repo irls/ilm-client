@@ -14,10 +14,12 @@
         <div style='clear: both'> </div>
       </div>
 
+      <div class="row">
       <div class="download-area col-sm-6">
         <!-- <button id="show-modal" @click="downloadBook" class="btn btn-primary btn_download">
           <img src='/static/download.png' class='bookstack'/>
         </button> -->
+      </div>
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false" />
@@ -146,10 +148,12 @@
         <button class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Text cleanup finished</button>
       </fieldset>
 
-      <div class="download-area col-sm-6" v-if="allowMetadataEdit">
-        <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
-          <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
-        </button>
+      <div class="row">
+        <div class="download-area col-sm-6" v-if="allowMetadataEdit">
+          <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
+            <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
+          </button>
+        </div>
       </div>
 
     </div>
@@ -159,13 +163,13 @@
       @closed="bookEditCoverModalActive = false"
       :img="currentBook"
     ></book-edit-cover-modal>
-    
+
     <alert v-model="hasError" placement="top" :duration="3000" type="danger" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
 
       <p>{{errorMessage}}.</p>
     </alert>
-    
+
     <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Share" cancel-text="Cancel" title="Share book" @ok="sharePrivateBook()">
       <div v-html="getSharePrivateBookMessage()"></div>
     </modal>
@@ -237,7 +241,7 @@ export default {
       allowMetadataEdit: false
     }
   },
-  
+
   props: {
     userTasks: Array//tasks list for editor to link this book to a task before sharing
   },
@@ -250,9 +254,9 @@ export default {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
     }
   },
-  
+
   mixins: [task_controls, api_config],
-  
+
   mounted() {
     for (let id in this.$store.state.tc_currentBookTasks.tasks) {
       let record = this.$store.state.tc_currentBookTasks.tasks[id]
@@ -354,7 +358,7 @@ export default {
       console.log("hello there")
       this.showModal_audio = true
     },
-    
+
     linkTask() {
       let self = this
       self.linkTaskError = ''
@@ -507,7 +511,7 @@ export default {
   i.pubtoggle {cursor: pointer;}
   button.new-version { font-size: 1em; }
   button.sharebtn {width: 100%}
-  
+
   .fix-message {
     color: red;
     background-color: yellow;
