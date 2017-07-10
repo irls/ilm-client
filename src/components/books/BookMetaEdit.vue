@@ -394,33 +394,6 @@ export default {
           })
       }
     },
-    setMetadataStatus(status) {
-      if ([-1, 1].indexOf(status) === -1) {
-        return false
-      }
-      if (status == -1 && !this.approveMetadataComment) {
-        this.errorMessage = 'Please specify a comment'
-      } else {
-        var self = this
-        if (status == -1) {
-          axios.put(self.API_URL + 'task/' + self.tc_currentBookTasks.task._id + '/metadata_reject', {comment: self.approveMetadataComment})
-            .then((response) => {
-              self.tc_loadBookTask()
-            }).
-            catch(err => {
-              self.errorMessage = err.message
-            })
-        } else if (status == 1) {
-          axios.put(self.API_URL + 'task/' + self.tc_currentBookTasks.task._id + '/metadata_update', {})
-            .then((response) => {
-              self.tc_loadBookTask()
-            }).
-            catch(err => {
-              self.errorMessage = err.message
-            })
-        }
-      }
-    },
     getSharePrivateBookMessage() {
       let next_user = this.$store.state.tc_currentBookTasks.type == 1 ? 'proofer' : 'narrator';
       return 'This will make book visible to others and send it to the ' + next_user + '. Continue?';
