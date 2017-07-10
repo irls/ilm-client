@@ -243,7 +243,7 @@ export default {
   },
 
   props: {
-    userTasks: Array//tasks list for editor to link this book to a task before sharing
+    
   },
 
   computed: {
