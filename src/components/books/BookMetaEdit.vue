@@ -243,7 +243,7 @@ export default {
   },
 
   props: {
-    userTasks: Array//tasks list for editor to link this book to a task before sharing
+    
   },
 
   computed: {
@@ -392,33 +392,6 @@ export default {
           })
           .catch((err) => {
           })
-      }
-    },
-    setMetadataStatus(status) {
-      if ([-1, 1].indexOf(status) === -1) {
-        return false
-      }
-      if (status == -1 && !this.approveMetadataComment) {
-        this.errorMessage = 'Please specify a comment'
-      } else {
-        var self = this
-        if (status == -1) {
-          axios.put(self.API_URL + 'task/' + self.tc_currentBookTasks.task._id + '/metadata_reject', {comment: self.approveMetadataComment})
-            .then((response) => {
-              self.tc_loadBookTask()
-            }).
-            catch(err => {
-              self.errorMessage = err.message
-            })
-        } else if (status == 1) {
-          axios.put(self.API_URL + 'task/' + self.tc_currentBookTasks.task._id + '/metadata_update', {})
-            .then((response) => {
-              self.tc_loadBookTask()
-            }).
-            catch(err => {
-              self.errorMessage = err.message
-            })
-        }
       }
     },
     getSharePrivateBookMessage() {
