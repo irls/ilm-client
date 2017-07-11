@@ -251,7 +251,7 @@ export default {
   white-space: nowrap;
   padding: 5px;
   &.task-title-box {
-      width: 300px;
+      width: 500px;
   }
 }
 .tasks-box {
@@ -260,7 +260,7 @@ export default {
 }
 
 .task-type.td {
-  width: 500px;
+  width: 550px;
 }
 .subtask-title-box {
   padding: 5px 25px 5px 5px;
