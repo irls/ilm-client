@@ -21,30 +21,39 @@
       </task-add-modal>
       <!-- Import Books Modal Popup -->
       <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose" :userTaskId="import_book_task_id" />
-      <div v-for="job in tasks.list" class="tasks-box table">
-        <div class="task-type tr">
-          <div class="td">
-            <h2><i class="fa fa-book"></i>&nbsp;{{job.title}}&nbsp;({{job.total}})</h2>
+      <div class="table tasks-box">
+      <section v-for="job in tasks.list">
+      <template v-if="job.total > 0">
+        <div class="tr">
+          <div class="td task-type">
+            <h2><i class="fa fa-book" data-toggle="tooltip" v-bind:title="job.description"></i>&nbsp;{{job.title}}&nbsp;({{job.total}})&nbsp;<i :class="[job.tasksVisible ? 'fa-chevron-up' : 'fa-chevron-down' , 'fa collapsebtn']" aria-hidden="true" @click='job.tasksVisible = !job.tasksVisible'></i></h2>
           </div>
+          <!--<div class="td"></div>-->
         </div>
-        <div v-for="task in job.tasks" class="subtasks-box tr">
-          <div class="task-title-box td">
-            <h4>(1)&nbsp;{{task.title}}</h4>
-          </div>
+        <transition name="fade">
+        <template v-if="job.tasksVisible">
+          <div v-for="task in job.tasks" class="tr subtasks-box">
+            <div class="task-title-box td">
+              <h4>({{task.count}})&nbsp;{{task.title}}</h4>
+            </div>
 
-          <div class="subtask-items-box td">
-            <div class="subtask-item-box">
-              <button class="btn btn-default" v-if="!job.bookid && task.type == 1" v-on:click="importBook(job._id)">
-                <i class="fa fa-pencil"></i>Import book "{{job.title}}"
-              </button>
-              <a v-else :href="'/books/edit/' + job.bookid">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
+            <div class="subtask-items-box td">
+              <div class="subtask-item-box">
+                <button class="btn btn-default" v-if="task.type == 1" v-on:click="importBook(task._id)">
+                  <i class="fa fa-pencil"></i>Import book "{{job.title}}"
+                </button>
+                <a v-else :href="'/books/edit/' + job.bookid">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
+              </div>
             </div>
           </div>
-
-        </div>
-
+        </template>
+        </transition>
+      </template>
+      <!--<template v-if="job.tasks.length">-->
+      </section>
+      <!--<section v-for="job in tasks.list">-->
       </div>
-
+      <!--<div class="table  tasks-box">-->
     </v-tab>
     <v-tab title="Work History">
       <TaskHistory :task_types="task_types" :current_user="true"></TaskHistory>
@@ -116,22 +125,30 @@ export default {
         let tasks_formatted = {total: 0, list: []};
         let jobs = tasks.data.rows;
         for (let jobId in jobs) {
-          console.log('jobs', jobs[jobId]);
+
           this.getBookMeta(jobs[jobId].bookid).then(meta => {
               jobs[jobId].title = meta.title;
           }).catch(error => {});
 
-          jobs[jobId].tasks.forEach((elTask)=>{
-              elTask.title = this.task_types.tasks.find((s_type) => {
-                  return s_type._id == elTask.type
-              }).title;
-          });
-
           tasks_formatted.list.push(jobs[jobId]);
           jobs[jobId].total = jobs[jobId].tasks.length;
           tasks_formatted.total += jobs[jobId].total;
+          jobs[jobId].tasksVisible = false;
+
+          jobs[jobId].tasks = jobs[jobId].tasks.reduce((acc, val)=>{
+            let key = 'type_'+val.type;
+            if (acc.hasOwnProperty(key)) acc[key].count ++;
+            else {
+                val.title = this.task_types.tasks.find((s_type) => {
+                    return s_type._id == val.type
+                }).title;
+                acc[key] = {count:1, ...val};
+            }
+            return  acc;
+          }, {} );
+
         }
-        this.tasks = tasks_formatted
+        this.tasks = tasks_formatted;
       })
       .catch(error => {})
     },
@@ -188,7 +205,13 @@ export default {
 </script>
 
 
-<style scoped>
+<style lang="less" scoped>
+.fa {
+    margin-right: 8px;
+    position: relative;
+    top: 1px;
+}
+
 .toolbar {
    width: 100%;
    position: relative;
@@ -220,23 +243,24 @@ export default {
   padding: 0;
 }
 .tr {
- display: table-row;
+  display: table-row;
 }
 .td {
   display: table-cell;
   vertical-align: middle;
   white-space: nowrap;
   padding: 5px;
+  &.task-title-box {
+      width: 500px;
+  }
 }
 .tasks-box {
   width: 100%;
   margin-left: 35px;
 }
-.tasks-box .task-type {
 
-}
-.subtasks-box {
-  display: table-row;
+.task-type.td {
+  width: 550px;
 }
 .subtask-title-box {
   padding: 5px 25px 5px 5px;
@@ -248,14 +272,27 @@ export default {
 .subtask-item-box {
   padding: 5px 10px;
 }
-.tasks-box .task-type i.fa {
+.tasks-box .task-type i.fa.fa-book{
   font-size: 35px;
   margin-left: -35px;
 }
-.subtask-list-box {
-  display: inline-block;
-}
 .subtasks-box:nth-of-type(even) {
   background-color: #f9f9f9;
+}
+
+.collapsebtn {
+    width: 30px; height: 30px;
+    display: inline-block;
+    background: white;
+    padding: 5px;
+    border: .5px solid rgb(204, 212, 226);
+    border-radius: 25px;
+    box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.2);
+    color: rgba(204, 212, 226, 1);
+    cursor: pointer;
+
+    &:hover {
+      color: green;
+    }
 }
 </style>

@@ -25,8 +25,6 @@
         <td class='metaedit' v-if='metaVisible'>
           <book-meta-edit
             v-if='metaVisible'
-            :userTasks="userTasks"
-            @task_linked="getTasks()"
           ></book-meta-edit>
           <!-- <BookMetaEdit v-if='metaVisible'/> -->
         </td>

@@ -38,8 +38,9 @@ export const store = new Vuex.Store({
     bookFilters: {filter: '', language: 'en', importStatus: 'staging'},
     editMode: 'Editor',
     allowBookEditMode: false,
-    tc_currentBookTasks: {"tasks": [], "task": {}},
+    tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": []},
     tc_tasksByBlock: {},
+    tc_userTasks: [],
     API_URL: process.env.ILM_API + '/api/v1/'
   },
 
@@ -90,7 +91,7 @@ export const store = new Vuex.Store({
       state.currentBook_dirty = false
       state.currentBookMeta_dirty = false
       state.currentBookid = meta._id
-
+      
     },
 
     setEditMode (state, editMode) {
@@ -118,16 +119,51 @@ export const store = new Vuex.Store({
 
     ALLOW_BOOK_EDIT_MODE (state, allow) {
       state.allowBookEditMode = allow;
+    },
+    
+    TASK_LIST_LOADED (state) {
+      for (let jobid in state.tc_userTasks) {
+        let job = state.tc_userTasks[jobid]
+        if (job.bookid == state.currentBookid) {
+          /*if (t.comment) {
+            t.comment = t.comment.replace('\n', '<br>');
+          }
+          if (t.blockid) {
+            state.tc_tasksByBlock[t.blockid] = t
+          }*/
+          let assignments = []
+          job.tasks.forEach(t => {
+            switch (t.type) {
+              case 2: // cleanup text
+                assignments.push('metadata');
+                assignments.push('metadata_cleanup');
+                assignments.push('content');
+                assignments.push('content_cleanup');
+                break;
+              case 4: // approve book
+                assignments.push('content');
+                assignments.push('content_approve');
+                break;
+
+            }
+          })
+          state.tc_currentBookTasks = {job: job, tasks: job.tasks, assignments: assignments}
+        }
+      }
+      state.allowBookEditMode = state.tc_currentBookTasks.tasks.length > 0;
     }
 
   },
 
   actions: {
 
-    updateBooksList (context) {
+    updateBooksList ({state, commit, dispatch}) {
       let ilmLibraryMeta = PouchDB('ilm_library_meta').hoodieApi()
-      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted') && (item.owner == context.state.auth.getSession().user_id || item.private == false)))
-        .then(books => context.commit('SET_BOOKLIST', books))
+      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted') && (item.owner == state.auth.getSession().user_id || item.private == false)))
+        .then(books => {
+          commit('SET_BOOKLIST', books)
+          dispatch('tc_loadBookTask')
+        })
     },
 
     emptyDB (context) {
@@ -165,10 +201,12 @@ export const store = new Vuex.Store({
         PouchDB(dbPathB).get(bookid).then(book => {
           commit('SET_CURRENTBOOK', book)
           commit('SET_CURRENTBOOK_META', meta)
-          dispatch('tc_loadBookTask')
+          commit('TASK_LIST_LOADED')
         })
       })
     },
+    
+    
 
     getBookMeta ({}, bookid) {
         var dbPathA = superlogin.getDbUrl('ilm_library_meta')
@@ -177,24 +215,29 @@ export const store = new Vuex.Store({
     },
 
     tc_loadBookTask({state, commit}) {
-      if (state.currentBookid) {
-        axios.get(state.API_URL + 'tasks/book/' + state.currentBookid)
-          .then((list) => {
-            state.tc_tasksByBlock = {}
-            list.data.tasks.forEach(t => {
-              if (t.comment) {
-                t.comment = t.comment.replace('\n', '<br>');
-              }
-              if (t.blockid) {
-                state.tc_tasksByBlock[t.blockid] = t
-              }
-            })
-
-            state.tc_currentBookTasks = list.data
-            commit('ALLOW_BOOK_EDIT_MODE', state.tc_currentBookTasks.tasks.length > 0);
-          })
-          .catch((err) => {})
+      axios.get(state.API_URL + 'tasks')
+        .then((list) => {
+          state.tc_tasksByBlock = {}
+          state.tc_userTasks = list.data.rows
+          commit('TASK_LIST_LOADED')
+        })
+        .catch((err) => {})
+    },
+    
+    tc_setCurrentBookTasks({state}) {
+      for (let jobid in state.tc_userTasks) {
+        let job = state.tc_userTasks[jobid]
+        if (job.bookid == state.currentBookid) {
+          /*if (t.comment) {
+            t.comment = t.comment.replace('\n', '<br>');
+          }
+          if (t.blockid) {
+            state.tc_tasksByBlock[t.blockid] = t
+          }*/
+          state.tc_currentBookTasks = {job: job, tasks: job.tasks}
+        }
       }
+      commit('ALLOW_BOOK_EDIT_MODE', state.tc_currentBookTasks.tasks.length > 0);
     }
 
   }

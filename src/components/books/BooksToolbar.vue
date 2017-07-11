@@ -15,11 +15,6 @@
       <i class="fa fa-pencil fa-lg"></i>  Edit
     </button>  &nbsp;
 
-    <!-- Import Button -->
-    <button id="show-modal" @click="importBook" class="btn btn-default" v-if="(isAdmin || isLibrarian || isEditor)">
-      <i class="fa fa-pencil fa-lg"></i>  Import
-    </button>  &nbsp;
-
     <!-- Meta Filter -->
     <input type="text" @keyup="booksFilterChange" class="form-control" placeholder="Filter"></input> &nbsp;
 

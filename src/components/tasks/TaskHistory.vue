@@ -3,7 +3,7 @@
     <div class="table toolbar">
       <div class="tr">
         <div class='td'>
-          <h3 v-if="!all_users"><i class="fa fa-calendar"></i>&nbsp;Work history, {{work_history.total}} {{work_history.total | pluralize('Submission')}}</h3>
+          <h3 v-if="!all_users"><i class="fa fa-calendar"></i>&nbsp;Work history, {{submissions}} {{submissions | pluralize('Submission')}}</h3>
           <h3 v-else><i class="fa fa-calendar"></i>&nbsp;Total Work history</h3>
         </div>
         <div class="td"></div>
@@ -21,22 +21,22 @@
         </div>
       </div>
     </div>
-    <div v-for="task in work_history.list" class="task-history" v-if="!all_users">
-      <h3><i class="fa fa-book"></i>&nbsp;{{task.type}} - {{task.estimate}} {{task.estimate | pluralize('hour')}}</h3>
+    <div v-for="book in work_history_total.books" class="task-history" v-if="!all_users">
+      <h3><i class="fa fa-book"></i>&nbsp;{{book.book.title}}</h3>
       <ol class="task-history-row">
-        <li v-for="subtask in task.list">
-          <a :href="'/books/edit/' + subtask.bookid">{{subtask.book_title}}, {{subtask.estimate}} {{subtask.estimate | pluralize('hour')}}</a>
+        <li v-for="task in book.tasks">
+          <a :href="'/books/edit/' + book.book._id">{{task.title}}, {{task.count}} {{task.count | pluralize('task')}}, {{task.estimate}} {{task.estimate | pluralize('hour')}}</a>
         </li>
       </ol>
     </div>
-    <accordion v-if="all_users" :one-at-atime="true">
+    <accordion v-if="all_users && work_history_total" :one-at-atime="true">
       <div v-for="row in work_history_total" class="task-panel">
         <i class="fa fa-user"></i>
-        <panel :is-open="false" :header="row.user + ': ' + row.user_role" v-bind:key="row.user">
-          <div v-for="task_type in row.list">
-            <h4><i class="fa fa-book"></i>&nbsp;{{task_type.type}} - {{minutesToHours(task_type.estimate)}} {{minutesToHours(task_type.estimate) | pluralize('hour')}}</h4>
+        <panel :is-open="false" :header="row.user.name + ': ' + row.user.roles_combined" v-bind:key="row.user">
+          <div v-for="book in row.books">
+            <h4><i class="fa fa-book"></i>&nbsp;{{book.book.title}}</h4>
             <ol>
-              <li v-for="task in task_type.list"><a :href="'/books/edit/' + task.bookid">{{task.book_title}}, {{minutesToHours(task.estimate)}} {{minutesToHours(task.estimate) | pluralize('hour')}}</a></li>
+              <li v-for="task in book.tasks"><a :href="'/books/edit/' + book.book._id">{{task.title}}, {{task.count}} {{task.count | pluralize('task')}}, {{task.estimate}} {{task.estimate | pluralize('hour')}}</a></li>
             </ol>
           </div>
         </panel>
@@ -52,24 +52,21 @@ import axios from 'axios'
 import { datepicker, accordion, panel } from 'vue-strap'
 import { mapGetters } from 'vuex'
 import ROLES from '../../../static/roles.json'
-
+import api_config from '../../mixins/api_config.js'
 Vue.use(Vue2Filters)
-const API_URL = process.env.ILM_API + '/api/v1/'
+
 export default {
   data() {
     return {
-      work_history: {
-        list: [],
-        total: 0
-      },
-      work_history_total: [],
+      work_history_total: {},
       date_filter_format: 'MMMM/dd/yyyy',
       filter: {
         from: '',
         to: ''
       },
       url: '',
-      all_users: false
+      all_users: false,
+      submissions: 0
     }
   },
 
@@ -84,25 +81,26 @@ export default {
     panel
   },
   
+  mixins: [
+    api_config
+  ],
+  
   computed: mapGetters([
-    'isAdmin'
+    'isAdmin', 'allBooks'
   ]),
 
   mounted() {
-    var self = this
-    self.all_users = !self.current_user && self.isAdmin
-    self.url = !self.all_users ? API_URL + 'task_history/my' : API_URL + 'task_history'
-    self.getWorkHistory()
+    this.all_users = !this.current_user && this.isAdmin
+    this.url = !this.all_users ? this.API_URL + 'tasks/history/my' : this.API_URL + 'tasks/history'
+    this.getWorkHistory()
   },
   
   watch: {
     'filter.from': function() {
-      var self = this
-      self.getWorkHistory()
+      this.getWorkHistory()
     },
     'filter.to': function() {
-      var self = this
-      self.getWorkHistory()
+      this.getWorkHistory()
     }
   },
 
@@ -123,90 +121,51 @@ export default {
           if (self.filter.to != $('.date-to-filter input.datepicker-input').val()) {
             $('.date-to-filter input.datepicker-input').val(self.filter.to).trigger('change')
           }
-          if (self.all_users) {
-            self.parseWorkHistoryAll(response.data)
-          } else {
-            self.parseWorkHistory(response.data)
-          }
+          self.parseWorkHistory(response.data)
         });
     },
     parseWorkHistory(data) {
-      var self = this
-      //console.log(self.filter, $('.date-to-filter input.datepicker-input').val())
-      let work_history_formatted = {
-        list: [],
-        total: 0
-      }
-      data.rows.forEach((row) => {
-        let subtype = self.task_types.tasks.find((tt) => {
-          return tt._id == row.type
-        })
-        if (subtype) {
-          let existing_list_record = work_history_formatted.list.find((l) => {
-            return l.type_id == subtype._id
-          })
-          if (!existing_list_record) {
-            work_history_formatted.list.push({
-              type_id: subtype._id,
-              type: subtype.title,
-              list: [],
-              estimate: 0
+      //var work_history_formatted = []
+      this.submissions = 0
+      for (let user_id in data) {
+        let user = data[user_id];
+        for (let bookid in user.books) {
+          let _book = user.books[bookid];
+          let book = _book.book
+          let meta = this.allBooks.find(b => {
+            return b.bookid == bookid;
+          });
+          book.title = meta ? meta.title : '<book>';
+          book._id = bookid;
+          for (let taskid in _book.tasks) {
+            let task = _book.tasks[taskid]
+            let _task = this.task_types.tasks.find(t => {
+              return t._id == taskid
             })
-            existing_list_record = work_history_formatted.list[work_history_formatted.list.length - 1]
+            task.title = _task ? _task.title : '<task>'
+            task.estimate = this.minutesToHours(task.estimate)
+            this.submissions+= task.count
           }
-          row.estimate = self.minutesToHours(row.estimate)
-          existing_list_record.list.push(row)
-          existing_list_record.estimate+= row.estimate
-          work_history_formatted.total++
         }
-      })
-      self.work_history = work_history_formatted
-    },
-    parseWorkHistoryAll(data) {
-      var self = this
-      var work_history_formatted = []
-      data.rows.forEach((row) => {
-        let existing_user_record = work_history_formatted.find((whr) => {
-          return whr.user_id == row.executor
-        })
-        let subtype = self.task_types.tasks.find((tt) => {
-          return tt._id == row.type
-        })
-        if (!existing_user_record) {
-          let user_roles = ''
-          ROLES.forEach((role) => {
-            if (role.rank != 'user' && row.executor_roles.indexOf(role.rank) !== -1) {
-              user_roles+=role.name + ', '
-            }
+        //work_history_formatted.push(data[user_id])
+        user.user.roles_combined = ''
+        user.user.roles.forEach(r => {
+          let role = ROLES.find(_r => {
+            return _r.rank != 'user' && _r.rank == r
           })
-          work_history_formatted.push({
-            user_id: row.executor,
-            user: row.executor_name,
-            user_role: user_roles.replace(/, $/, ''),
-            list: []
-          })
-          existing_user_record = work_history_formatted[work_history_formatted.length - 1]
-        }
-        let existing_type_record = existing_user_record.list.find((eur) => {
-          return eur.type_id == row.type
-        })
-        if (!existing_type_record) {
-          existing_user_record.list.push({
-            type_id: row.type,
-            type: subtype ? subtype.title : '',
-            list: [],
-            estimate: 0
-          })
-          existing_type_record = existing_user_record.list[existing_user_record.list.length - 1]
-        }
-        existing_type_record.estimate+= row.estimate
-        existing_type_record.list.push({
-          bookid: row.bookid,
-          book_title: row.book_title,
-          estimate: row.estimate
-        })
-      })
-      self.work_history_total = work_history_formatted
+          if (role) {
+            user.user.roles_combined+= role.name + ', '
+          }
+        });
+        user.user.roles_combined = user.user.roles_combined.replace(/, $/, '')
+      }
+      if (this.all_users) {
+        this.work_history_total = data
+      } else {
+        let keys = Object.keys(data)
+        this.work_history_total = keys.length > 0 ? data[keys[0]] : []
+      }
+      //console.log(this.work_history_total)
     },
     minutesToHours(minutes, precision) {
       if (minutes % 60 == 0) {

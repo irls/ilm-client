@@ -23,7 +23,8 @@
         <label>Title</label>
         <div v-for="n in Object.keys(name)" class="form-group book-row">
           <input type="text" class="form-control" v-model="name[n]" />
-          <i class="fa fa-minus-circle" v-if="name.length > 1" v-on:click="removeBook(n)"></i>
+          <i class="fa fa-minus-circle" v-if="name.length > 1" v-on:click="removeBook(n)"></i><br/>
+          <input type="text" class="form-control" v-model="id[n]" disabled />
         </div>
         <i class="fa fa-plus-circle add-book" v-on:click="addBook()"></i>
         <div v-if="errors.name" v-for="err in errors.name" class="error-message" v-text="err"></div>
@@ -64,9 +65,16 @@
         <div v-if="errors['roles.engineer']" v-for="err in errors['roles.engineer']" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group">
+        <label>Language</label>
+        <select class="form-control" v-model="lang">
+          <option v-for="l in langs" :value="l">{{l}}</option>
+        </select>
+        <div v-if="errors.lang" v-for="err in errors.lang" class="error-message" v-text="err"></div>
+      </div>
+      <div class="form-group">
         <label>Description</label>
         <textarea v-model="description" class="form-control" rows="5"></textarea>
-        <div v-if="errors.type" v-for="err in errors.type" class="error-message" v-text="err"></div>
+        <div v-if="errors.description" v-for="err in errors.description" class="error-message" v-text="err"></div>
       </div>
     </div>
     <div slot="modal-footer" class="modal-footer">
@@ -78,6 +86,7 @@
 import { modal } from 'vue-strap'
 import modalMixin from './../../mixins/modal'
 import axios from 'axios'
+var getSlug = require('speakingurl')
 const TASKS_URL = process.env.ILM_API + '/api/v1/task'
 export default {
   name: 'TaskAddModal',
@@ -108,6 +117,8 @@ export default {
       subtypes: [],
       roles: {},
       name: [''],
+      lang: '',
+      langs: ['en', 'ua'],
       fields_by_type: {
         '1': {
           'name': {'require': true},
@@ -115,7 +126,8 @@ export default {
             'editor': {'require': true}, 
             'proofer': {'require': true}, 
             'engineer': {'require': true}
-          }
+          },
+          'lang': {'require': true}
         },
         '2': {
           'name': {'require': true},
@@ -124,11 +136,13 @@ export default {
             'proofer': {'require': true}, 
             'narrator': {'require': true}, 
             'engineer': {'require': true}
-          }
+          },
+          'lang': {'require': true}
         }
       },
       errors: {},
-      description: ''
+      description: '',
+      id: ['']
     }
   },
   methods: {
@@ -147,11 +161,29 @@ export default {
         type: self.type,
         //subtype: self.subtype,
         roles: self.roles,
-        description: self.description
+        description: self.description,
+        id: self.id
       }
       axios.post(TASKS_URL, task)
         .then(response => {
-          self.$emit('closed', true)
+          self.errors = null
+          self.errors = {}// force re render errors
+          if (Object.keys(response.data.errors).length > 0) {
+            for (let _id in self.id) {
+              if (typeof response.data.errors[self.id[_id]] == 'undefined') {
+                console.log(_id, self.id[_id])
+                self.removeBook(_id)
+              } else {
+                if (!self.errors['name']) {
+                  self.errors['name'] = [];
+                }
+                self.errors['name'].push(self.id[_id] + ': ' + response.data.errors[self.id[_id]])
+                console.log(self.errors)
+              }
+            }
+          } else {
+            self.$emit('closed', true)
+          }
         })
         .catch(error => {
         })
@@ -220,6 +252,13 @@ export default {
     },
     removeBook(n) {
       this.name.splice(n, 1)
+    },
+    generateIds() {
+      this.id = ['']
+      for (let i in this.name) {
+        let _id = (getSlug(this.name[i])) + '_' + (this.lang ? this.lang : '')
+        this.id[i] = _id
+      }
     }
   },
   computed: {
@@ -242,6 +281,16 @@ export default {
       this.name = ['']
       this.errors = {}
       this.description = ''
+      this.lang = ''
+    },
+    'name': {
+      handler(val) {
+        this.generateIds()
+      },
+      deep: true
+    },
+    lang() {
+      this.generateIds()
     }
   }
 }
