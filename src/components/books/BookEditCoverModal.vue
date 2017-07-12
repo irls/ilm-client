@@ -298,13 +298,13 @@ export default {
         doc._attachments = (doc._attachments || {})
         doc._attachments.coverimg = {content_type: mime, data: urlData}
         return ilm_library_files.put(doc).then(function(doc) {
-          var ilm_library_meta = new PouchDB('ilm_library_meta')
-          return ilm_library_meta.get(bookid).then(doc => {
+          var ilm_content_meta = new PouchDB('ilm_content_meta')
+          return ilm_content_meta.get(bookid).then(doc => {
             console.log('finally got here!')
             console.log('coverimg: ', coverimg)
             doc.coverimg = coverimg
             vm.img.coverimg = coverimg
-            return ilm_library_meta.put(doc)
+            return ilm_content_meta.put(doc)
           })
         }).catch(err => console.log(err))
       }).catch(err => {

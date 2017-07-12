@@ -7,8 +7,8 @@ import PouchDB from 'pouchdb'
 import axios from 'axios'
 PouchDB.plugin(hoodie)
 
-// const ilm_library = new PouchDB('ilm_library')
-// const ilm_library_meta = new PouchDB('ilm_library_meta')
+// const ilm_content = new PouchDB('ilm_content')
+// const ilm_content_meta = new PouchDB('ilm_content_meta')
 
 Vue.use(Vuex)
 
@@ -158,7 +158,7 @@ export const store = new Vuex.Store({
   actions: {
 
     updateBooksList ({state, commit, dispatch}) {
-      let ilmLibraryMeta = PouchDB('ilm_library_meta').hoodieApi()
+      let ilmLibraryMeta = PouchDB('ilm_content_meta').hoodieApi()
       ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted') && (item.owner == state.auth.getSession().user_id || item.private == false)))
         .then(books => {
           commit('SET_BOOKLIST', books)
@@ -167,7 +167,7 @@ export const store = new Vuex.Store({
     },
 
     emptyDB (context) {
-      PouchDB('ilm_library_meta').destroy()
+      PouchDB('ilm_content_meta').destroy()
     },
 
     deleteCurrentBook (context) {
@@ -192,9 +192,9 @@ export const store = new Vuex.Store({
       // if cached locally, load
       // now query to see if book matches latest _rev
       // if not, load latest version and replace
-      var dbPathA = superlogin.getDbUrl('ilm_library_meta')
+      var dbPathA = superlogin.getDbUrl('ilm_content_meta')
       if (process.env.DOCKER) dbPathA = dbPathA.replace('couchdb', 'localhost')
-      var dbPathB = superlogin.getDbUrl('ilm_library')
+      var dbPathB = superlogin.getDbUrl('ilm_content')
       if (process.env.DOCKER) dbPathB = dbPathB.replace('couchdb', 'localhost')
 
       PouchDB(dbPathA).get(bookid).then(meta => {
@@ -209,7 +209,7 @@ export const store = new Vuex.Store({
     
 
     getBookMeta ({}, bookid) {
-        var dbPathA = superlogin.getDbUrl('ilm_library_meta')
+        var dbPathA = superlogin.getDbUrl('ilm_content_meta')
         if (process.env.DOCKER) dbPathA = dbPathA.replace('couchdb', 'localhost')
         return PouchDB(dbPathA).get(bookid);
     },

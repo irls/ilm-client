@@ -28,17 +28,17 @@ export default {
       }
       
       // WHAT IS THE DOCKER ENV? AND HOW IS SUPERLOGIN INITIALIZED? (AUTH IS AN INITIALIZED SUPERLOGIN)
-      // var dbPath = superlogin.getDbUrl('ilm_library')
+      // var dbPath = superlogin.getDbUrl('ilm_content')
       // if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
       // return new PouchDB(dbPath)
 
       // this.$store.state.auth IS A CONFIGURED, AUTHENTICATED SUPERLOGIN INSTANCE
-      return new PouchDB(this.$store.state.auth.getDbUrl('ilm_library'))
+      return new PouchDB(this.$store.state.auth.getDbUrl('ilm_content'))
     },
     
     libraryDBmeta(){
       // WHY DO WE HAVE THIS? THIS SHOULD ALREADY BE LIVE SYNCED, WE DON'T NEED TO CONNECT MORE THAN ONCE
-      return new PouchDB(this.$store.state.auth.getDbUrl('ilm_library_meta'))
+      return new PouchDB(this.$store.state.auth.getDbUrl('ilm_content_meta'))
     }
 
   }

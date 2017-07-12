@@ -185,7 +185,7 @@ export default {
 
       // save to DB
       vm.autoload = false
-      var db = this.libraryDB() // gets authenticated instance of ilm_library db
+      var db = this.libraryDB() // gets authenticated instance of ilm_content db
       db.get(book._id).then(function(doc){
         doc.content = book.content // does this create a copy or a reference?
         db.put(doc).then(doc => {

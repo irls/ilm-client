@@ -53,15 +53,6 @@
 
                     </div>
                   </div>
-                  <div class="col-sm-6" v-if="!userTaskId">
-                    <div class="form-group" v-if="userTasks.length">
-                      <label for="usertask">Task:</label>
-                      <select class="form-control" id="usertask" v-model="userTaskIdLocal">
-                        <option value=""></option>
-                        <option v-for="userTask in userTasks" v-if="userTask.book_id == null" :value="userTask._id">{{userTask.title}}</option>
-                      </select>
-                    </div>
-                  </div>
                 </div>
                 <br><br><br><br>
 
@@ -151,9 +142,6 @@ export default {
       'multiple': {
         type: Boolean,
         default: true
-      },
-      'userTasks': {
-        type: Array
       },
       'userTaskId': {
         type: String,

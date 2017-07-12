@@ -32,7 +32,7 @@
 </tr></table>
 
   <!-- Import Books Modal Popup -->
-  <BookImport v-if="showImportBooksModal" @close_modal="importBooksModalClose" :userTasks="userTasks" />
+  <BookImport v-if="showImportBooksModal" @close_modal="importBooksModalClose" />
 
 </div>
 </template>
@@ -67,7 +67,7 @@ export default {
   },
   
   props: {
-    userTasks: Array
+    
   },
 
   computed: mapGetters([

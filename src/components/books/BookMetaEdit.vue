@@ -312,7 +312,7 @@ export default {
     },
 
     liveUpdate (key, value) {
-      var dbPath = superlogin.getDbUrl('ilm_library_meta')
+      var dbPath = superlogin.getDbUrl('ilm_content_meta')
       if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
 
       var db = new PouchDB(dbPath)

@@ -3,7 +3,7 @@
 
     <div class='toolbar clearfix'>
       <BookEditToolbar v-if="isEditMode()" />
-      <BooksToolbar v-else :userTasks="userTasks" @import_finished="bookImportFinished" />
+      <BooksToolbar v-else @import_finished="bookImportFinished" />
     </div>
 
     <table id='bodytable'>
@@ -57,8 +57,7 @@ export default {
       metaVisible: false,
       metaAvailable: false,
       colCount: 1,
-      currentBookid: this.$store.state.currentBookid,
-      userTasks: []
+      currentBookid: this.$store.state.currentBookid
     }
   },
 
@@ -87,7 +86,7 @@ export default {
   mixins: [api_config],
 
   mounted() {
-    this.getTasks()
+    
   },
 
   methods: {
@@ -118,20 +117,8 @@ export default {
       // console.log('Rows: '+ count)
       this.colCount = count
     },
-    getTasks() {
-      this.userTasks = []
-      var self = this
-      axios.get(self.API_URL + 'tasks/user/' + superlogin.getSession().user_id + '?type=2').then(tasks => {
-        tasks.data.rows.forEach((record) => {
-          self.userTasks.push(record)
-        })
-      })
-      .catch(error => {})
-    },
     bookImportFinished(result) {
-      if (result) {
-        this.getTasks()
-      }
+      
     }
 
 /*
