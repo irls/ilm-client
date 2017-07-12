@@ -127,7 +127,7 @@ export default {
       users: [],
       filterKey: '',
       currentPage: 0,
-      rowsPerPage: 2,
+      rowsPerPage: 10,
       userAddModalActive: false,
       passwordResetModalActive: false,
       workHistoryModalActive: false,

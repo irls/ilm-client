@@ -6,7 +6,10 @@
       <h4 class="modal-title"><i class="fa fa-calendar-check-o"></i>Work history</h4></div>
     </div>
     <div slot="modal-body" class="modal-body">
-      Work history for {{workHistory.user_id}}
+      
+      <div v-if="workHistory.user_id">
+        <taskHistory :user_id="workHistory.user_id" :in_modal="true"></taskHistory>
+      </div>
     </div>
     <div slot="modal-footer" class="modal-footer">
       <button class="btn btn-primary" type="button" @click="closed">OK</button>
@@ -19,6 +22,7 @@
 
 import { modal } from 'vue-strap'
 import modalMixin from './../../mixins/modal'
+import taskHistory from '../tasks/TaskHistory'
 
 export default {
 
@@ -27,7 +31,7 @@ export default {
   mixins: [modalMixin],
 
   components: {
-    modal
+    modal, taskHistory
   },
 
   props: {
@@ -60,7 +64,7 @@ export default {
   i
     margin-right: 10px;
   .modal-dialog
-    width: 400px
+    width: 600px
     margin-top: 10%
 
     .modal-header

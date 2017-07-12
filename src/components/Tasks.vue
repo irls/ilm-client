@@ -56,10 +56,10 @@
       <!--<div class="table  tasks-box">-->
     </v-tab>
     <v-tab title="Work History">
-      <TaskHistory :task_types="task_types" :current_user="true"></TaskHistory>
+      <TaskHistory :_task_types="task_types" :current_user="true"></TaskHistory>
     </v-tab>
     <v-tab v-if="isAdmin" title="Total work history">
-      <TaskHistory :task_types="task_types" :current_user="false"></TaskHistory>
+      <TaskHistory :_task_types="task_types" :current_user="false"></TaskHistory>
     </v-tab>
   </vue-tabs>
 </template>

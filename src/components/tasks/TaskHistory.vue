@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="table toolbar">
+    <div class="table toolbar" v-if="!in_modal">
       <div class="tr">
         <div class='td'>
           <h3 v-if="!all_users"><i class="fa fa-calendar"></i>&nbsp;Work history, {{submissions}} {{submissions | pluralize('Submission')}}</h3>
@@ -53,6 +53,7 @@ import { datepicker, accordion, panel } from 'vue-strap'
 import { mapGetters } from 'vuex'
 import ROLES from '../../../static/roles.json'
 import api_config from '../../mixins/api_config.js'
+var BPromise = require('bluebird');
 Vue.use(Vue2Filters)
 
 export default {
@@ -66,13 +67,18 @@ export default {
       },
       url: '',
       all_users: false,
-      submissions: 0
+      submissions: 0,
+      task_types: []
     }
   },
+  
+  name: 'taskHistory',
 
   props: [
-    'task_types',
-    'current_user'
+    '_task_types',
+    'current_user',
+    'user_id',
+    'in_modal'
   ],
   
   components: {
@@ -90,9 +96,17 @@ export default {
   ]),
 
   mounted() {
-    this.all_users = !this.current_user && this.isAdmin
-    this.url = !this.all_users ? this.API_URL + 'tasks/history/my' : this.API_URL + 'tasks/history'
-    this.getWorkHistory()
+    this.all_users = !this.current_user && !this.user_id && this.isAdmin
+    this.url = !this.all_users ? (this.user_id ? this.API_URL + 'tasks/history/user/' + this.user_id : this.API_URL + 'tasks/history/my') : this.API_URL + 'tasks/history'
+    if (!this._task_types) {
+      this.getTaskTypes()
+        .then(tt => {
+          this.getWorkHistory()
+        })
+    } else {
+      this.task_types = this._task_types
+      this.getWorkHistory()
+    }
   },
   
   watch: {
@@ -176,6 +190,15 @@ export default {
     },
     filterChanged() {
       console.log(this.filter)
+    },
+    getTaskTypes() {
+      return axios.get(this.API_URL + 'tasks/types').then(types => {
+        this.task_types = types.data
+        return BPromise.resolve(this.task_types)
+      })
+      .catch(error => {
+        return BPromise.reject({})
+      })
     }
   }
 }
