@@ -78,7 +78,18 @@
       </div>
     </div>
     <div slot="modal-footer" class="modal-footer">
-      <button class="btn btn-primary" type="button" @click="save">Submit </button>
+      <div class="col-sm-3 pull-right">
+        <button class="btn btn-primary" type="button" @click="save">Submit </button>
+      </div>
+      <div class="col-sm-6 pull-right">
+        <!-- Import Books Modal Popup -->
+        <BookImport :isModal="false" 
+          :bookId="createdJob.bookid" 
+          :multiple="false" 
+          :forceUpload="typeof createdJob.bookid != 'undefined'" 
+          @close_modal="bookImportFinished"
+          @books_changed="bookListChanged" />
+      </div>
     </div>
   </modal>
 </template>
@@ -86,12 +97,15 @@
 import { modal } from 'vue-strap'
 import modalMixin from './../../mixins/modal'
 import axios from 'axios'
+import superlogin from 'superlogin-client'
+import BookImport from '../books/BookImport'
 var getSlug = require('speakingurl')
 const TASKS_URL = process.env.ILM_API + '/api/v1/task'
 export default {
   name: 'TaskAddModal',
   components: {
-    modal
+    modal,
+    BookImport
   },
   mixins: [modalMixin],
   props: {
@@ -142,7 +156,9 @@ export default {
       },
       errors: {},
       description: '',
-      id: ['']
+      id: [''],
+      createdJob: {},
+      importingBooksList: []
     }
   },
   methods: {
@@ -162,7 +178,8 @@ export default {
         //subtype: self.subtype,
         roles: self.roles,
         description: self.description,
-        id: self.id
+        id: self.id,
+        hasBooks: this.importingBooksList.length > 0
       }
       axios.post(TASKS_URL, task)
         .then(response => {
@@ -171,18 +188,19 @@ export default {
           if (Object.keys(response.data.errors).length > 0) {
             for (let _id in self.id) {
               if (typeof response.data.errors[self.id[_id]] == 'undefined') {
-                console.log(_id, self.id[_id])
+                //console.log(_id, self.id[_id])
                 self.removeBook(_id)
               } else {
                 if (!self.errors['name']) {
                   self.errors['name'] = [];
                 }
                 self.errors['name'].push(self.id[_id] + ': ' + response.data.errors[self.id[_id]])
-                console.log(self.errors)
+                //console.log(self.errors)
               }
             }
           } else {
-            self.$emit('closed', true)
+            self.createdJob = response.data.insert_jobs[0]
+            //self.$emit('closed', true)
           }
         })
         .catch(error => {
@@ -259,10 +277,16 @@ export default {
         let _id = (getSlug(this.name[i])) + '_' + (this.lang ? this.lang : '')
         this.id[i] = _id
       }
+    },
+    bookImportFinished() {
+      this.$emit('closed', true)
+    },
+    bookListChanged(list) {
+      this.importingBooksList = list
     }
   },
   computed: {
-    
+      
   },
   watch: {
     type(val) {
@@ -282,6 +306,8 @@ export default {
       this.errors = {}
       this.description = ''
       this.lang = ''
+      this.createdJob = null
+      this.createdJob = {}
     },
     'name': {
       handler(val) {

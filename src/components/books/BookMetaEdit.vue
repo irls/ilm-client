@@ -143,7 +143,7 @@
           </template>
         </table>
       </fieldset>
-      <fieldset v-if="isOwner && tc_hasTask('metadata_cleanup')">
+      <fieldset v-if="tc_hasTask('metadata_cleanup')">
         <legend>Cleanup finished</legend>
         <button class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Text cleanup finished</button>
       </fieldset>

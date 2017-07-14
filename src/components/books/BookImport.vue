@@ -1,6 +1,6 @@
 <template>
   <transition name="modal">
-    <div class="modal-mask" @click="$emit('close_modal')" >
+    <div class="modal-mask" @click="$emit('close_modal')" v-if="isModal" >
       <div class="modal-wrapper">
         <div class="modal-container" @click="$event.stopPropagation()">
 
@@ -86,10 +86,10 @@
                     {{ book.name }} - {{ humanFileSize(book.size, true) }}
                   </li>
                </ul>
-                <button v-if="userTaskId" class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
+                <button v-if="importTaskId" class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
                   <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
                 </button>
-                <span v-if="!userTaskId" class="label label-danger">Book should be imported from task. You have no import book task assigned</span>
+                <span v-if="!importTaskId" class="label label-danger">Book should be imported from task. You have no import book task assigned</span>
 
             </form>
 
@@ -105,6 +105,30 @@
 
         <p>{{bookUploadError}}.</p>
       </alert>
+    </div>
+    <div v-else>
+      <div v-show="!isUploading">
+        <div>
+          <label class='btn btn-default' type="file">
+            <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
+
+            <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip" 
+                   :multiple="multiple" 
+                   @change="onFilesChange($event)"
+                   v-bind:value="fileValue">
+
+          </label>
+        </div>
+        <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
+        <ul id="selectedBooks">
+          <li class="book-import-list" v-for="book in selectedBooks">
+            <i class="fa fa-remove" v-on:click="formReset()"></i>{{ book.name }} - {{ humanFileSize(book.size, true) }}
+          </li>
+        </ul>
+      </div>
+      <div id='uploadingMsg' v-show='isUploading'>
+        <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
+      </div>
     </div>
   </transition>
 </template>
@@ -134,8 +158,8 @@ export default {
         formData: new FormData(),
         uploadProgress: "Uploading Files...",
         bookUploadError: false,
-        userTaskIdLocal: null,
-        selectedBooks: []
+        selectedBooks: [],
+        fileValue: ''
     }
   },
   props: {
@@ -143,7 +167,19 @@ export default {
         type: Boolean,
         default: true
       },
-      'userTaskId': {
+      'importTaskId': {
+        type: String,
+        default: null
+      },
+      'isModal': {
+        type: Boolean,
+        default: true
+      },
+      'forceUpload': {
+        type: Boolean,
+        default: false
+      },
+      'bookId': {
         type: String,
         default: null
       }
@@ -152,7 +188,7 @@ export default {
     alert
   },
   mounted() {
-    this.userTaskIdLocal = this.userTaskId
+    
   },
   computed: {
     selectedBookType: function() {
@@ -173,7 +209,10 @@ export default {
       // clear formData
       let entries = this.formData.entries()
       for(let pair of entries) this.formData.delete(pair[0])
+      //document.getElementById('bookFiles').value = null
       this.uploadFiles = {bookFiles: 0, audioFiles: 0}
+      this.selectedBooks = []
+      this.$emit('books_changed', this.selectedBooks)
     },
     onFilesChange(e) {
       let fieldName = e.target.name
@@ -189,16 +228,22 @@ export default {
           this.formData.append(fieldName, fileList[x], fileList[x].name);
           this.uploadFiles[fieldName]++
         });
+      this.$emit('books_changed', this.selectedBooks)
     },
 
     onFormSubmit() {
+      if (!this.isModal && this.selectedBooks.length == 0) {// called on Job creation and no file was selected
+        this.$emit('close_modal', false)
+        return
+      }
       let vu_this = this
       let api = this.$store.state.auth.getHttp()
 
       this.formData.append('bookType', this.bookTypes[this.bookType]);
       if (!this.uploadFiles.bookFiles && this.bookURL.length) this.formData.append('bookURL', this.bookURL);
       if (!this.uploadFiles.audioFiles && this.audioURL.length) this.formData.append('audioURL', this.audioURL);
-      this.formData.append('taskId', this.userTaskId);
+      this.formData.append('taskId', this.importTaskId);
+      this.formData.append('bookId', this.bookId);
       
       var config = {
         onUploadProgress: function(progressEvent) {
@@ -212,16 +257,16 @@ export default {
         if (response.status===200) {
           // hide modal after one second
           vu_this.uploadProgress = "Upload Successful"
-          if (vu_this.userTaskIdLocal && response.data instanceof Array && response.data[0] && response.data[0].ok == true) {
-            axios.put(API_URL + 'task/' + vu_this.userTaskIdLocal + '/link_book', {})
+          if (vu_this.importTaskId && response.data instanceof Array && response.data[0] && response.data[0].ok == true) {
+            axios.put(API_URL + 'task/' + vu_this.importTaskId + '/link_book', {})
               .then((link_response) => {
-                setTimeout(function(){ vu_this.$emit('close_modal', response) }, 1000)
+                vu_this.closeForm(response)
               })
               .catch((err) => {
-                setTimeout(function(){ vu_this.$emit('close_modal', response) }, 1000)
+                vu_this.closeForm(response)
               })
           } else {
-            setTimeout(function(){ vu_this.$emit('close_modal', response) }, 1000)
+            vu_this.closeForm(response)
           }
         } else {
           // not sure what we should be doing here
@@ -249,8 +294,22 @@ export default {
             ++u;
         } while(Math.abs(bytes) >= thresh && u < units.length - 1);
         return bytes.toFixed(1)+' '+units[u];
+    },
+    closeForm(response) {
+      let self = this
+      setTimeout(function(){ 
+        self.formReset()
+        self.$emit('close_modal', response) 
+      }, 1000)
     }
   },
+  watch: {
+    forceUpload(val) {
+      if (val === true) {
+        this.onFormSubmit()
+      }
+    }
+  }
 }
 </script>
 
@@ -378,6 +437,9 @@ export default {
 #uploadingMsg h2 i {font-size: 24pt; color: silver}
 
 button.close i.fa {font-size: 18pt; padding-right: .5em;}
+
+.book-import-list { list-style-type: none; }
+.book-import-list i { padding: 0px 5px 0px 0px; }
 
 
 </style>
