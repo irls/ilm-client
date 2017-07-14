@@ -20,7 +20,9 @@
 
       </task-add-modal>
       <!-- Import Books Modal Popup -->
-      <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose" :userTaskId="import_book_task_id" />
+      <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose" 
+                  :importTaskId="import_book_task_id"
+                  :bookId="import_book_id" />
       <div class="table tasks-box">
       <section v-for="job in tasks.list">
       <template v-if="job.total > 0">
@@ -39,7 +41,7 @@
 
             <div class="subtask-items-box td">
               <div class="subtask-item-box">
-                <button class="btn btn-default" v-if="task.type == 1" v-on:click="importBook(task._id)">
+                <button class="btn btn-default" v-if="task.type == 1" v-on:click="importBook(task)">
                   <i class="fa fa-pencil"></i>Import book "{{job.title}}"
                 </button>
                 <a v-else :href="'/books/edit/' + job.bookid">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
@@ -93,7 +95,8 @@ export default {
         'narrator': []
       },
       show_import_book_modal: false,
-      import_book_task_id: ''
+      import_book_task_id: '',
+      import_book_id: ''
     }
   },
 
@@ -182,8 +185,9 @@ export default {
       })
       .catch(error => {})
     },
-    importBook(task_id) {
-      this.import_book_task_id = task_id
+    importBook(task) {
+      this.import_book_task_id = task._id
+      this.import_book_id = task.bookid
       this.show_import_book_modal = true
     },
     importBookClose(response) {

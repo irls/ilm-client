@@ -143,7 +143,7 @@
           </template>
         </table>
       </fieldset>
-      <fieldset v-if="isOwner && tc_hasTask('metadata_cleanup')">
+      <fieldset v-if="tc_hasTask('metadata_cleanup')">
         <legend>Cleanup finished</legend>
         <button class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Text cleanup finished</button>
       </fieldset>
@@ -312,7 +312,7 @@ export default {
     },
 
     liveUpdate (key, value) {
-      var dbPath = superlogin.getDbUrl('ilm_library_meta')
+      var dbPath = superlogin.getDbUrl('ilm_content_meta')
       if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
 
       var db = new PouchDB(dbPath)

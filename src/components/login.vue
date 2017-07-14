@@ -77,11 +77,11 @@ export default {
       if (session.password) {
         vm.RESET_LOGIN_STATE()
 
-        var dbPath = superlogin.getDbUrl('ilm_library_meta')
+        var dbPath = superlogin.getDbUrl('ilm_content_meta')
         if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
 
         // this can only be set up after login
-        PouchDB.sync('ilm_library_meta', dbPath, { live: true })
+        PouchDB.sync('ilm_content_meta', dbPath, { live: true })
           .on('change', change => {
             vm.$store.dispatch('updateBooksList')
           })
@@ -99,7 +99,7 @@ export default {
     superlogin.on('logout', message => {
       // for testing only
       // vu_this.$store.dispatch('emptyDB')
-      PouchDB('ilm_library_meta').destroy()
+      PouchDB('ilm_content_meta').destroy()
       //
 
       axios.defaults.headers.common['Authorization'] = false;
