@@ -19,16 +19,10 @@
           lang: this.language,
           btns: [
               ['viewHTML'],
-              // ['formatting'],
-               'btnGrp-semantic',
+               'btnGrp-design',
               ['superscript', 'subscript'],
-              ['link'],
-              // ['insertImage'],
-              //  'btnGrp-justify',
                'btnGrp-lists',
-              // ['horizontalRule'],
               ['removeformat'],
-              // ['fullscreen']
           ],
           removeformatPasted: true,
           autogrow: true,
