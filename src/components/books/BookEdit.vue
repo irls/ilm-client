@@ -1,126 +1,101 @@
 <template>
-<div id="editviewarea" :class="{scrollable: showScrollbar}">
+<div class="container-fluid">
 
-  <div class="savechanges" v-if="edited.length">
-    <button class="btn btn-default save" @click="saveChanges">
-      <i class="fa fa-floppy-o" aria-hidden="true"></i> &nbsp; Save Changes
-    </button>
-    <button class="btn btn-default discard" @click="discardChanges">
-      <i class="fa fa-ban" aria-hidden="true"></i> &nbsp; Discard {{edited.length}} Changes
-    </button>
-  </div>
 
-  <table class='visual'>
-
-  <tr v-for="(block, blid) in parlist" colspan="2">
-    <!-- Paragraph number column -->
-    <td class='num'>
-      <div class='number'>  <!-- Because a td cannot force height -->
-
-        <!-- Show parnum only on paragraphs -->
-        <template v-if="block.type=='par'">
-          <div @click='editBlockid(block)'>{{ block.parnum ? block.parnum : '' }}</div>
-          <div class="togglebid">
-            <i class="fa fa-eye-slash" v-if="block.parnum" @click='showParNum(block)'></i>
-            <i class="fa fa-eye" v-else @click='hideParNum(block)'></i>
-          </div>
-        </template>
-
-        <!-- add/remove paragraph controls -->
-        <div class='parctrl'>
-          <i class="fa fa-plus" aria-hidden="true" @click='insertBlockBelow(block)'></i>
-          <i class="fa fa-minus" aria-hidden="true" @click='removeBlock(block)'></i>
+    <template v-for="(sublist, page_Idx) in parlist">
+    <div class="row" v-for="(block, block_Idx) in sublist">
+        <div class='col'>
+          <BookBlockView
+              :block="block"
+          />
         </div>
+        <!--<div class='col'>-->
+    </div>
+    <!--<div class="row"-->
+    </template>
 
-      </div>
-    </td>
-    <td class='content'>
-      <BlockView 
-       :isShowRejectBlockAction="tc_isShowRejectBlockAction(block.id)" 
-       :isShowCorrectBlockAction="tc_isShowCorrectBlockAction(block.id)"
-       :isShowEdit="tc_isShowEdit(block.id)"
-       :block="block" 
-       :blid="blid" 
-       :mainTaskId="$store.state.tc_currentBookTasks.job._id"
-       :subtask="$store.state.tc_tasksByBlock[block.id] || {}"
-       :isShowApproveContentFixAction="tc_isShowApproveContentFixAction(block.id)"
-       @edited="blockEdit(blid, $event)"
-       @editing="blockEditing(blid, $event)" 
-       @block_content_rejected="tc_loadBookTask()"
-       @block_content_fixed="tc_loadBookTask()"/>
-    </td>
-  </tr>
-  <infinite-loading v-if="autoload" :on-infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
+    <infinite-loading v-if="autoload" :on-infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>
 
-</table>
 </div>
+<!--<div class="container">-->
 </template>
 
 <script>
-import ContextMenu from '../generic/ContextMenu'
-import BlockView from './BlockView'
+
+import { mapGetters, mapState } from 'vuex'
+import BookBlockView from './BookBlockView'
 import InfiniteLoading from 'vue-infinite-loading'
 import Vue from 'vue'
 import access from "../../mixins/access.js"
-import PouchDB from 'pouchdb'
-import task_controls from '../../mixins/task_controls.js'
-
+import taskControls from '../../mixins/task_controls.js'
 
 export default {
   data () {
     return {
-      data: '',
-      isEditing: false,
-      book: this.$store.state.currentBook,
-      meta: this.$store.state.currentBookMeta,
+      page: 0,
       parlist: [],
-      edited: [], // list of edits
-      autoload: true,
-      showScrollbar: false
+      autoload: true
     }
   },
-  mixins: [access, task_controls],
+  computed: {
+      // --- From store --- //
+      ...mapState({
+          block: 'bookBlock'
+      }),
+      ...mapGetters({
+          book: 'currentBook',
+          meta: 'currentBookMeta'
+      })
+  },
+  mixins: [access, taskControls],
   components: {
-    ContextMenu, BlockView, InfiniteLoading
+      BookBlockView, InfiniteLoading
   },
   methods: {
-    onInfiniteScroll() {
-      var vm = this
-      let loadCount = vm.loadBlocks(50)
-      if (loadCount>0) {
-        //vm.autoLoadBlocks();
-        this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
-      } else {
-        this.$refs.infiniteLoading.$emit('$InfiniteLoading:complete');
-      }
-    },
-    autoLoadBlocks: function() {
-      var vm = this
-      setTimeout(function(){
-        let loadCount = vm.loadBlocks(100)
-        if (loadCount>0) {
-          //console.log("  ...added "+loadCount+" blocks...")
-          vm.autoLoadBlocks();
-        } else {
-          //console.log('Finished loading blocks') // show scrollbars here
-          //vm.showScrollbar= true
-        }
-      }, 1)
+    test() {
+        //this.parlist.splice(0,1);
+        //console.log(this.parlist);
+        window.scrollTo(0, document.body.scrollHeight-500);
     },
 
-    loadBlocks: function(step) {
-      let index = this.parlist.length
-      let tmp = []
-      for (let i = index; i < index + step; i++) if (i<this.book.content.length) {
-        let newBlock = Object.assign({}, this.book.content[i])
-        newBlock.edited = false
-        newBlock._deleted = false
-        tmp.push(newBlock)
+    onScrollBookUp() {
+      console.log('onScrollBookUp, page: ', this.page);
+      if (this.page>1) {
+          this.page--;
+      } else {
+          this.$refs.scrollBookUp.$emit('$InfiniteLoading:loaded');
       }
-      if (tmp.length>0) {
-        this.parlist = this.parlist.concat(tmp);
-        return tmp.length;
-      } else return 0
+      console.log('onScrollBookUp');
+    },
+
+    onScrollBookDown() {
+        console.log('onScrollBookDown, page:', this.page);
+        this.loadBlocks(this.page++, 20).then((loaded)=>{
+            if (loaded > 0) {
+                this.$refs.scrollBookDown.$emit('$InfiniteLoading:loaded');
+            } else {
+                this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
+            }
+            console.log('loaded', loaded);
+        });
+    },
+
+    loadBlocks: function(page, onpage) {
+      console.log('loadBlocks from:', page * onpage, ' to:', (page + 1) * onpage);
+      return new Promise((resolve, reject) => {
+          setTimeout(() => {
+              //if (this.parlist.length > 2) this.parlist.splice(0,1);
+              let tmp = [];
+              for (let i = page * onpage; i < (page + 1) * onpage; i++)
+              if (i < this.book.content.length) {
+                  let newBlock = { ...this.block, ...this.book.content[i] }
+                  newBlock.idx = i;
+                  tmp.push(newBlock);
+              }
+              if (tmp.length>0) this.parlist.push(tmp)//([...tmp]);
+              resolve(tmp.length);
+          }, 1000);
+      })
     },
 
     hasClass: function(block, cssclass) {
@@ -130,24 +105,7 @@ export default {
     showID: function(block) {
       return ((block.type==='par') && this.hasClass(block, 'parnum'))
     },
-    renumberPar(block, newNum) {
 
-    },
-    renumberPars(from, startnum) {
-
-    },
-    toggleIDvisibility(block) {
-      if (!block.type=="par") return; // this should only apply to par types
-      if (this.showID(block)) {
-        // append _ to id, user can edit later if this is not sufficent
-        // if X.y format, loop through folowing blocks with same X and decrement y
-           // else, loop through all remaining blocks and decrement
-      } else {
-        // remove _ to make block numeric
-        // if
-
-      }
-    },
     hideParNum: function(block) {
       alert('Removing Paragraph Number'+ block.id)
     },
@@ -160,25 +118,25 @@ export default {
     removeBlock: function(block) {
       alert('Merging block into '+block.id)
     },
-    editBlockid: function(block) {
+    editBlockId: function(block) {
       alert('Editing block id '+block.id)
     },
     saveChanges: function() {
-      this.$events.emit('currentEditingBlockId', '')
+      this.$events.emit('currentEditingBlockId')
       // how do we insert new blocks?
       var vm = this
       var book = vm.$store.state.currentBook
-      this.parlist.forEach((block, blid) => {
+      this.parlist.forEach((block, bl_id) => {
         if (block.edited) {
-          // console.log("Replacing edited block #"+blid)
+          // console.log("Replacing edited block #"+bl_id)
           delete block.edited
-          book.content[blid] = Object.assign({}, block)
+          book.content[bl_id] = Object.assign({}, block)
         }
       })
 
       // delete deleted blocks
-      book.content = book.content.filter(function(block, blid) {
-        //if (block._deleted) console.log('Deleting block #', blid)
+      book.content = book.content.filter(function(block, bl_id) {
+        //if (block._deleted) console.log('Deleting block #', bl_id)
         return !block._deleted
       })
       // split splitted blocks
@@ -199,157 +157,28 @@ export default {
       })
 
     },
-    reloadBookDisplay: function(vm) {   // reload book?
-      this.$events.emit('currentEditingBlockId', '')
-      var currentLoaded = this.parlist.length
-      var position = document.getElementById('editviewarea').scrollTop
-      vm.parlist = [] // why is this not working??
-      for (let i=0; i<currentLoaded; i++) {
-        var obj = Object.assign({}, this.book.content[i])
-        obj.edited = false
-        obj._deleted = false
-        vm.parlist.push(obj)
-      }
-      document.getElementById('editviewarea').scrollTop = position
-      vm.autoload = true
-    },
-    discardChanges: function() {
-      this.$events.emit('currentEditingBlockId', '')
-      console.log('Discarding Changes...')
-      var vm = this
-      this.parlist.forEach(function(item, i) {
-        if (item.edited) {
-          let newObj = Object.assign({}, vm.book.content[i])
-          newObj.edited = false
-          newObj._deleted = false
-          // Vue.set(vm.parlist, i, newObj)
-          vm.parlist[i] = newObj
-          console.log("Replaced block "+i, newObj)
-        }
-      })
-      this.edited = [];
-      //console.log('emptied edited list: ', this.edited)
-    },
-    blockEdit: function (blid, block) {
-      this.edited = [...new Set(this.edited)] // es6 way of _uniq
-      if (block.edited) this.edited.push(blid)
-       else this.edited = this.edited.filter(item => item!=blid)
-      this.edited = [...new Set(this.edited)]
-      Vue.set(this.parlist, blid, block);
-      // console.log(this.parlist[blid], block)
-      // console.log(this.parlist[blid]===block ? "blocks match": "blocks don't match")
-      // console.log(this.edited)
-    },
-    blockEditing: function(blid, block) {
 
+
+
+    eventKeyDown: function(key) {
+        if (key.code==='Escape' || key.keyCode===27) this.$events.emit('currentEditingBlock_id', key);
     }
-
+  },
+  events: {
+      'currentEditingBlock_id' : function (key) {
+          //console.log("keydown: ", key)
+      }
   },
   mounted: function() {
-    var vm = this
-    window.addEventListener('keydown', function(key){
-      console.log("keydown: ", key)
-      if (key.code==='Escape' || key.keyCode===27) vm.$events.emit('currentEditingBlockId', '')
-    })
-    //this.tc_loadBookTask()
-  },
-  computed: {
-    // currentBook: function() {
-    //   this.book = this.$store.state.currentBook
-    //   console.log(this.book)
-    //   return this.book
-    // },
-    currentBookContentBlocks: function() {
-      //console.log("currentBookContentBlocks", this.currentBook)
-      //this.book = this.$store.state.currentBook
-      if (this.book && this.book.content) {
-        //console.log(this.book.content_blocks)
-        return this.book.content
-      }
-      else return []
-    }
-  },
-  // beforeCreate: function() {
-  //   this.componentState = 'beforeCreate'
-  // },
-  // created: function() {
-  //   this.componentState = 'created'
-  // },
-  // beforeMount: function() {
-  //   this.componentState = 'beforeMount'
-  // },
-  // mounted: function() {
-  //   this.componentState = 'mounted'
-  // },
-
+      // --- Remove the old listener to avoid duplication --- //
+      // --- Otherwise after hot-update there will be several listeners for window --- //
+      window.removeEventListener('keydown', this.eventKeyDown);
+      window.addEventListener('keydown', this.eventKeyDown);
+  }
 }
 </script>
 
 
-<style>
-.visual {display: table; width: 100%;  }
-.visual tr {vertical-align: top; }
-/*numbering*/
-.visual td.num{
-  min-width: 1.5em; padding-top: 1em; position: relative;
-  min-height: 200px;  display: table-cell;
-}
-/*Content*/
-.visual td.content {width: 100%; padding: 0;
-  vertical-align: top;
-  /*border: 1px solid green;*/
-}
-
-/*Block Numbering */
-.number {min-height: 3em; display: block;
-  padding-right: .5em; padding-left: 3px; margin-top: 1em;
-}
-.number.greyed {color: silver; font-style: italic; font-size: .75em;}
-
-/*eye button*/
-div.togglebid {
-  margin-left:0; margin-top:-.25em; color: rgba(83, 114, 86, 1);
-  display: none;
-}
-.togglebid:hover { cursor:pointer;}
-.togglebid.greyed {color: rgba(150, 73, 55, .5);}
-
-/*.togglebid:hover */
-
-.parctrl {position: absolute; bottom: 20px;
-   display: none;
-}
-.parctrl i {
-   font-size: .75em;
-   padding:0; margin:0; background: white; width: .75em; height: .75em;
-   display: block; color: gray;
-  border: 1px solid silver;
-   border-radius: 3px;
-   padding: 2px; padding-right: 11px; padding-bottom:10px;
-   margin-left: 1px; margin-top: 2px;
-}
-.parctrl i:hover {
-  color: darkgreen; background: #F0FFF0; border: 1px solid darkgreen;
-  cursor: pointer;
-}
-.parctrl i.fa-minus:hover { color: maroon; background: pink; border: 1px solid maroon}
-
-td.num:hover > .number .parctrl{ display: block; }
-td.num:hover > .number .togglebid {display: block;}
-
-td.num:hover > td.content table.viewer td.viewercontent div.content  {
-  background: rgba(219, 232, 255, .3);
-  border: .25px solid rgba(219, 232, 255, 1);
-  border-radius: .25em;
-}
-
-#editviewarea {position: relative;}
-.savechanges {position: fixed; z-index: 1000; left: 1em; bottom:1em;}
-.savechanges button.save {box-shadow: 1px 1px 5px 3px rgba(0,150,0,0.5);}
-.savechanges button.discard {box-shadow: 1px 1px 5px 3px rgba(150,0,21,0.5); margin-left: 1em}
-
-.scrollable {
-  overflow-y: auto;
-}
+<style lang="less">
 
 </style>

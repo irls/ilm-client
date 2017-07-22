@@ -23,10 +23,7 @@
           </div>
         </td>
         <td class='metaedit' v-if='metaVisible'>
-          <book-meta-edit
-            v-if='metaVisible'
-          ></book-meta-edit>
-          <!-- <BookMetaEdit v-if='metaVisible'/> -->
+          <book-meta-edit v-if='metaVisible'></book-meta-edit>
         </td>
       </tr>
     </table>
@@ -79,14 +76,13 @@ export default {
   watch: {
     '$store.state.route.params' (to, from) {
       // react to route changes...
-      // console.log('Watching route: ',to,from)
       this.recountRows()
     }
   },
   mixins: [api_config],
 
   mounted() {
-    
+
   },
 
   methods: {
@@ -95,10 +91,6 @@ export default {
       this.metaAvailable = id
       this.metaVisible = !this.metaVisible
       if (!this.metaAvailable) this.metaVisible = false;
-      // let doShow = !this.metaVisible
-      // if (doShow && this.$store.state.hasBookSelected()) this.metaVisible = true
-      // else this.metaVisible = false
-      // this.recountRows()
     },
     hasBookSelected () {
       return !!this.currentBook
@@ -106,41 +98,15 @@ export default {
     isEditMode () {
       return this.$store.state.route.path.indexOf('/books/edit') > -1
     },
-    // bookEditMode () {
-    //   // return this.bookEditMode
-    //   return this.$store.getters.bookEditMode
-    // },
     recountRows () {
       let count = 1
       if (this.hasBookSelected()) count++
       if (this.metaVisible) count++
-      // console.log('Rows: '+ count)
       this.colCount = count
     },
     bookImportFinished(result) {
-      
+
     }
-
-/*
-  },
-
-  watch: {
-    '$store.state.route.params' (to, from) {
-      // react to route changes...
-      // console.log('Watching route: ',to,from)
-      this.recountRows()
-    }
-  },
-
-  created: function() {
-    var vm=this
-    this.$events.on('SET_CURRENTBOOK_EVENT', function(){
-      //  console.log('WTH')
-        vm.metaAvailable = true
-        vm.currentBookid = vm.$store.state.currentBookid
-     })
-*/
-
   }
 }
 </script>

@@ -16,11 +16,12 @@
       <!-- Editor toolbar, only visible for editors -->
       <div class='blockinfo'><div class='blockinfo-content'>
 
-<template v-show="isAdmin || isEditor || isLibrarian" v-if="!isEditing">
+        <template v-show="isAdmin || isEditor || isLibrarian" v-if="!isEditing">
+
         <div class='edit_buttons' v-if="isShowEdit">
-          <i class="fa fa-trash-o fa-lg deletebutton" @click='deleteBlock()'></i> &nbsp;
+          <i class="fa fa-trash-o fa-lg deletebutton" @click='deleteBlock()'></i>&nbsp;
           <i class="fa fa-pencil-square-o fa-lg editbutton" @click='showEditor()'></i>
-        </div> &nbsp;
+        </div>
 
         <div class='type'>
 
@@ -35,41 +36,16 @@
           <select @select="addCss('title', $event)" v-if="isShowEdit">
             <option v-for="(type, index) in blockTypeClasses.title" :value="type">{{ type }}</option>
           </select>
-
-
-
           <!-- All block classes -->
           <span v-for='classType of Object.keys(blockClasses)' class='menulink'>
-
-
-
-            <!-- <dropdown :visible="visible" :position="position" @clickOut="visible = false">
-
-              {{classType}} <i class="fa fa-caret-square-o-down" @click="visible = true"></i>
-              <div class="inlineBlock hero is-primary" @click="visible = true">
-                <div class="hero-body">Link</div>
-              </div>
-              <div slot="dropdown" class="dialog">
-                Content
-              </div>
-
-            </dropdown> -->
-
-            <!-- <select>
-              <option v-for="(clss, index) in blockClasses[classType]" :value="clss">{{ clss }}</option>
-            </select> -->
           </span>
-
-
-          <!-- Type specific classes -->
-          <!-- <select v-if='blockTypeClasses.length>0' v-model='blockTypeClass'>
-            <option v-for="(clss, index) in blockTypeClasses" :value="clss">{{ clss }}</option>
-          </select> -->
         </div>
-</template>
+        </template>
 
         <div class='classes' v-if='cleanClasses().length>0'><i>{{ cleanClasses() }}</i></div>
+
       </div></div>
+      <!-- <div class='blockinfo'><div class='blockinfo-content'>-->
       <strong class="fix-message" v-html="subtask.comment"></strong>
       <div class='clearfix'></div>
 
@@ -123,9 +99,7 @@
 import dropdown from 'vue-my-dropdown'
 import access from "../../mixins/access.js"
 import Vue from 'vue'
-// import wysiwyg from "vue-wysiwyg";
 import jQuery from 'jquery'
-import Trumbowyg from '../generic/Trumbowyg'
 import VueEvents from 'vue-events'
 import { modal } from 'vue-strap'
 import axios from 'axios'
@@ -181,9 +155,9 @@ export default {
       rejectBlockContentMessage: ''
     }
   },
-  props: ['block', 'blid', 'isShowRejectBlockAction', 'isShowCorrectBlockAction', 'isShowEdit', 'mainTaskId', 'subtask', 'isShowApproveContentFixAction'],
+  props: ['block', 'blockId', 'isShowRejectBlockAction', 'isShowCorrectBlockAction', 'isShowEdit', 'mainTaskId', 'subtask', 'isShowApproveContentFixAction'],
   components: {
-    dropdown, Trumbowyg, modal
+    dropdown, modal
   },
   mixins: [access, api_config],
   methods: {
@@ -280,7 +254,7 @@ export default {
       var vm = this
       if (this.isEditing) this.isEditing = false
         else {
-          this.$events.emit('currentEditingBlockId', this.blid)
+          this.$events.emit('currentEditingBlockId', this.blockId)
           setTimeout(function(){vm.isEditing = true}, 50)
           //vm.isEditing = true;
         }
@@ -316,15 +290,15 @@ export default {
           self.$emit('block_content_fixed')
         })
         .catch((err) => {
-          
+
         });
     }
-    
+
   },
   mounted() {
     var vm = this
-    this.$events.on('currentEditingBlockId', function(blid) {
-      if (blid != vm.blid) vm.isEditing = false
+    this.$events.on('currentEditingBlockId', function(blockId) {
+      if (blockId != vm.blockId) vm.isEditing = false
     })
   },
 
@@ -339,7 +313,7 @@ export default {
         else this.block.edited = true
     },
     'block.edited': function(to, from) {
-       // console.log('Block '+this.blid+' Edited', from, to)
+       // console.log('Block '+this.blockId+' Edited', from, to)
        this.$emit('edited', this.block)
     },
     'rejectBlockId': function(to, from) {

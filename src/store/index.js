@@ -14,7 +14,17 @@ Vue.use(Vuex)
 
 // const API_ALLBOOKS = '/static/books.json'
 
+const BookBlock = new Vuex.Store({
+    state: {
+        parnum: false,
+        deleted: false
+    }
+});
+
 export const store = new Vuex.Store({
+  modules: {
+      bookBlock: BookBlock
+  },
   state: {
     auth: superlogin,
     isLoggedIn: false,
@@ -91,7 +101,7 @@ export const store = new Vuex.Store({
       state.currentBook_dirty = false
       state.currentBookMeta_dirty = false
       state.currentBookid = meta._id
-      
+
     },
 
     setEditMode (state, editMode) {
@@ -120,7 +130,7 @@ export const store = new Vuex.Store({
     ALLOW_BOOK_EDIT_MODE (state, allow) {
       state.allowBookEditMode = allow;
     },
-    
+
     TASK_LIST_LOADED (state) {
       for (let jobid in state.tc_userTasks) {
         let job = state.tc_userTasks[jobid]
@@ -205,8 +215,8 @@ export const store = new Vuex.Store({
         })
       })
     },
-    
-    
+
+
 
     getBookMeta ({}, bookid) {
         var dbPathA = superlogin.getDbUrl('ilm_content_meta')
@@ -223,7 +233,7 @@ export const store = new Vuex.Store({
         })
         .catch((err) => {})
     },
-    
+
     tc_setCurrentBookTasks({state}) {
       for (let jobid in state.tc_userTasks) {
         let job = state.tc_userTasks[jobid]
