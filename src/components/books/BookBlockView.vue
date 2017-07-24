@@ -40,11 +40,15 @@
         </div>
         </td><!--<td controls-left>-->
 
+        <!-- Content -->
         <td class="content-center">
-            <div class="content-wrap" v-html="block.content">
+            <div class="content-wrap" v-html="block.content"
+            @contextmenu.prevent="$refs.blockCntx.openMenu">
             </div>
+            <block-context-menu ref="blockCntx"></block-context-menu>
             <!--<div class="content-wrap">-->
         </td>
+        <!-- /Content -->
 
         <td class="controls-right"></td>
 
@@ -60,6 +64,7 @@
 <script>
 import Vue from 'vue'
 require('./vendor/medium-editor.min.js');
+import BlockContextMenu from '../generic/BlockContextMenu'
 
 export default {
   data () {
@@ -75,6 +80,9 @@ export default {
           hr: [' ', 'section', 'large', 'small']
       },
     }
+  },
+  components: {
+      'block-context-menu': BlockContextMenu
   },
   props: ['block'],
   mounted: function() {
@@ -155,10 +163,23 @@ tr.middle {
 
     td.content-center {
         width: 100%;
+        padding-right: 5px;
+        position: relative;
         .content-wrap {
-            border: 1px solid silver;
-            border-radius: 3px;
-            padding: 5px 10px;
+            padding: 6px 11px;
+
+            &:hover {
+                border: 1px solid silver;
+                border-radius: 8px;
+                padding: 5px 10px;
+                background: rgba(219, 232, 255, .3);
+            }
+            &:focus {
+                outline: none;
+                border-radius: 8px;
+                border-color: #9ecaed;
+                box-shadow: 0 0 10px #9ecaed;
+            }
         }
     }
 
