@@ -22,7 +22,7 @@
 
 <script>
 
-import { mapGetters, mapState } from 'vuex'
+import { mapGetters, mapState, mapActions } from 'vuex'
 import BookBlockView from './BookBlockView'
 import InfiniteLoading from 'vue-infinite-loading'
 import Vue from 'vue'
@@ -52,6 +52,8 @@ export default {
       BookBlockView, InfiniteLoading
   },
   methods: {
+    ...mapActions(['loadBlocks']),
+
     test() {
         //this.parlist.splice(0,1);
         //console.log(this.parlist);
@@ -70,36 +72,51 @@ export default {
 
     onScrollBookDown() {
         console.log('onScrollBookDown, page:', this.page);
-        this.loadBlocks(this.page++, 20).then((loaded)=>{
-            if (loaded > 0) {
+        console.log( this.meta._id );
+        this.loadBlocks({
+            book_id: this.meta._id,
+            page: this.page++,
+            onpage: 20
+        }).then((result)=>{
+            let tmp = [];
+            if (result.length > 0) {
+                result.forEach((el, idx, arr)=>{
+                    let newBlock = { ...this.block, ...el.value }
+                    //console.log('el.doc', el.doc);
+                    //newBlock.idx = idx;
+                    tmp.push(newBlock);
+                });
+
+                if (tmp.length>0) this.parlist.push(tmp)//([...tmp]);
                 this.$refs.scrollBookDown.$emit('$InfiniteLoading:loaded');
             } else {
                 this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
             }
-            console.log('loaded', loaded);
+            console.log('loaded', result);
         }).catch((err)=>{
+            if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
             console.log('Error: ', err.message);
         });
     },
 
-    loadBlocks: function(page, onpage) {
-      console.log('loadBlocks from:', page * onpage, ' to:', (page + 1) * onpage);
-      return new Promise((resolve, reject) => {
-          setTimeout(() => {
-              if (typeof(this.book.content)==='undefined') return reject({message: 'book not found'});
-              //if (this.parlist.length > 2) this.parlist.splice(0,1);
-              let tmp = [];
-              for (let i = page * onpage; i < (page + 1) * onpage; i++)
-              if (i < this.book.content.length) {
-                  let newBlock = { ...this.block, ...this.book.content[i] }
-                  newBlock.idx = i;
-                  tmp.push(newBlock);
-              }
-              if (tmp.length>0) this.parlist.push(tmp)//([...tmp]);
-              return resolve(tmp.length);
-          }, 1000);
-      })
-    },
+//     loadBlocks: function(page, onpage) {
+//       console.log('loadBlocks from:', page * onpage, ' to:', (page + 1) * onpage);
+//       return new Promise((resolve, reject) => {
+//           setTimeout(() => {
+//               if (typeof(this.book.content)==='undefined') return reject({message: 'book not found'});
+//               //if (this.parlist.length > 2) this.parlist.splice(0,1);
+//               let tmp = [];
+//               for (let i = page * onpage; i < (page + 1) * onpage; i++)
+//               if (i < this.book.content.length) {
+//                   let newBlock = { ...this.block, ...this.book.content[i] }
+//                   newBlock.idx = i;
+//                   tmp.push(newBlock);
+//               }
+//               if (tmp.length>0) this.parlist.push(tmp)//([...tmp]);
+//               return resolve(tmp.length);
+//           }, 1000);
+//       })
+//     },
 
     hasClass: function(block, cssclass) {
       let list = block.classes.toLowerCase().trim().split(' ');

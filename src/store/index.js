@@ -235,10 +235,6 @@ export const store = new Vuex.Store({
       }, 500)
     },
 
-    emptyDB (context) {
-        //PouchDB('ilm_content_meta').destroy()
-    },
-
     updateBooksList ({state, commit, dispatch}) {
       console.log('updateBooksList');
       let ilmLibraryMeta = state.metaDB.hoodieApi()
@@ -249,18 +245,16 @@ export const store = new Vuex.Store({
         })
     },
 
-
-
     deleteCurrentBook (context) {
       // get _id for both book and meta
       // set _deleted=true on both
       // clear currentBookid
     },
 
-    loadBook ({commit, state, dispatch}, bookid) {
-       console.log('loading currentBook: ', bookid)
-      // if (!bookid) return  // if no currentbookid, exit
-      // if (bookid === context.state.currentBookid) return // skip if already loaded
+    loadBook ({commit, state, dispatch}, book_id) {
+       console.log('loading currentBook: ', book_id)
+      // if (!book_id) return  // if no currentbookid, exit
+      // if (book_id === context.state.currentBookid) return // skip if already loaded
 
       // if currentbook exists, check if currrent book needs saving
       let oldBook = (state.currentBook && state.currentBook._id)
@@ -269,8 +263,8 @@ export const store = new Vuex.Store({
         // save old state
       }
 
-      state.metaDB.get(bookid).then(meta => {
-        state.contentDB.get(bookid).then(book => {
+      state.metaDB.get(book_id).then(meta => {
+        state.contentDB.get(book_id).then(book => {
           commit('SET_CURRENTBOOK', book)
           commit('SET_CURRENTBOOK_META', meta)
           commit('TASK_LIST_LOADED')
@@ -288,9 +282,24 @@ export const store = new Vuex.Store({
     },
 
     getBookMeta ({}, bookid) {
-        var dbPathA = superlogin.getDbUrl('ilm_content_meta')
-        if (process.env.DOCKER) dbPathA = dbPathA.replace('couchdb', 'localhost')
-        return PouchDB(dbPathA).get(bookid);
+        return state.metaDB.get(bookid);
+    },
+
+    loadBlocks ({commit, state, dispatch}, params) {
+
+        console.log(params);
+        return state.contentDB
+        .query('blocks/all', {
+            startkey: ["gek-finn_en"],
+            //include_docs: true,
+            skip: params.page * params.onpage,
+            limit: params.onpage
+        }).then(function (res) {
+            return res.rows;
+        }).catch(function (err) {
+            return err;
+        });
+
     },
 
     tc_loadBookTask({state, commit}) {
