@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import BooksToolbar from './books/BooksToolbar'
 import BookEditToolbar from './books/BookEditToolbar'
 import BooksGrid from './books/BooksGrid'
@@ -82,7 +82,11 @@ export default {
   mixins: [api_config],
 
   mounted() {
-
+        // load intial book
+        if (this.$route.params.hasOwnProperty('bookid')) {
+            this.loadBook(this.$route.params.bookid)
+            this.$router.replace({ path: '/books/' + this.$route.params.bookid })
+        }
   },
 
   methods: {
@@ -106,7 +110,9 @@ export default {
     },
     bookImportFinished(result) {
 
-    }
+    },
+
+    ...mapActions(['loadBook', 'updateBooksList'])
   }
 }
 </script>

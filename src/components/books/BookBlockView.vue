@@ -41,12 +41,16 @@
         </td><!--<td controls-left>-->
 
         <!-- Content -->
-        <td class="content-center">
-            <div class="content-wrap" v-html="block.content"
+        <td class="content-center ocean">
+            <div class="content-wrap content" v-html="block.content"
+            v-bind:class="block.type"
+            @input="input"
             @contextmenu.prevent="$refs.blockCntx.openMenu">
             </div>
-            <block-context-menu ref="blockCntx"></block-context-menu>
             <!--<div class="content-wrap">-->
+            <block-context-menu ref="blockCntx"
+            :update="update"
+            ></block-context-menu>
         </td>
         <!-- /Content -->
 
@@ -87,6 +91,16 @@ export default {
   props: ['block'],
   mounted: function() {
        let editor = new MediumEditor('.content-wrap');
+  },
+  methods: {
+      update: function() {
+          console.log('update');
+          this.block.content += 'BBB';
+      },
+      input: function(el) {
+           console.log('input', el.innerHTML());
+           el.target.focus();
+      }
   }
 }
 </script>
@@ -96,6 +110,10 @@ export default {
 <style lang='less' scoped>
 
 @variable: 90px;
+
+.ocean {
+    padding: 0;
+}
 
 table.block-content {
     width: 100%;
@@ -136,6 +154,7 @@ tr.middle {
             width: 35px;
             height: 42px;
             padding: 0 5px;
+            padding-top: 6px;
 
             &.-shifted {
                 height: 78px;
@@ -165,6 +184,7 @@ tr.middle {
         width: 100%;
         padding-right: 5px;
         position: relative;
+
         .content-wrap {
             padding: 6px 11px;
 

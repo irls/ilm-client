@@ -77,6 +77,8 @@ export default {
                 this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
             }
             console.log('loaded', loaded);
+        }).catch((err)=>{
+            console.log('Error: ', err.message);
         });
     },
 
@@ -84,6 +86,7 @@ export default {
       console.log('loadBlocks from:', page * onpage, ' to:', (page + 1) * onpage);
       return new Promise((resolve, reject) => {
           setTimeout(() => {
+              if (typeof(this.book.content)==='undefined') return reject({message: 'book not found'});
               //if (this.parlist.length > 2) this.parlist.splice(0,1);
               let tmp = [];
               for (let i = page * onpage; i < (page + 1) * onpage; i++)
@@ -93,7 +96,7 @@ export default {
                   tmp.push(newBlock);
               }
               if (tmp.length>0) this.parlist.push(tmp)//([...tmp]);
-              resolve(tmp.length);
+              return resolve(tmp.length);
           }, 1000);
       })
     },
@@ -178,7 +181,7 @@ export default {
 }
 </script>
 
-
+<style lang="less" src="./css/ocean.less"></style>
 <style lang="less">
 
 </style>

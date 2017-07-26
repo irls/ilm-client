@@ -1,7 +1,7 @@
 <template>
-<ul class="right-click-menu" tabindex="-1" ref="right" v-if="viewMenu"  v-bind:style="{ top:top, left:left }" @blur="closeMenu" @click="closeMenu">
+<ul class="right-click-menu" tabindex="-1" ref="right" v-if="viewMenu"  v-bind:style="{ top:top, left:left }" @blur="closeMenu" @click="update">
     <li>{{ top }}</li>
-    <li>{{ left }}<!--@blur="closeMenu"--></li>
+    <li>{{ left }}</li>
 </ul>
 </template>
 
@@ -10,9 +10,9 @@ import Vue from 'vue'
 
   export default {
     name: 'block-context-menu',
-    props: {
-
-    },
+    props: [
+        'update'
+    ],
     data() {
       return {
             viewMenu: false,
@@ -58,8 +58,6 @@ import Vue from 'vue'
     }
   }
 </script>
-
-
 
 <style lang='less' scoped>
 

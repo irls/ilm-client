@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-// import axios from 'axios'
 import superlogin from 'superlogin-client'
 import hoodie from 'pouchdb-hoodie-api'
 import PouchDB from 'pouchdb'
@@ -11,6 +10,9 @@ PouchDB.plugin(hoodie)
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
 Vue.use(Vuex)
+
+const ILM_CONTENT = 'ilm_content';
+const ILM_CONTENT_META = 'ilm_content_meta';
 
 // const API_ALLBOOKS = '/static/books.json'
 
@@ -35,6 +37,12 @@ export const store = new Vuex.Store({
     isEngineer: false,
     isReader: false,
     allRolls: [],
+
+    metaDB: false,
+    contentDB: false,
+
+    metaRemoteDB: false,
+    contentRemoteDB: false,
 
     books_meta: [],
 
@@ -76,6 +84,18 @@ export const store = new Vuex.Store({
   },
 
   mutations: {
+
+    set_localDB (state, payload) {
+        state[payload.dbProp] = new PouchDB(payload.dbName);
+    },
+
+    set_remoteDB (state, payload) {
+        let dbPath = superlogin.getDbUrl(payload.dbName);
+        if (process.env.DOCKER) {
+            dbPath = dbPath.replace('couchdb', 'localhost')
+        }
+        state[payload.dbProp] = new PouchDB(dbPath);
+    },
 
     SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
       for (var prop in obj) if (['filter', 'language', 'importStatus'].indexOf(prop) > -1) {
@@ -167,8 +187,61 @@ export const store = new Vuex.Store({
 
   actions: {
 
+    emptyDB (context) {
+      PouchDB('ilm_content_meta').destroy()
+    },
+
+    // login event
+    connectDB ({ state, commit, dispatch }, session) {
+        commit('RESET_LOGIN_STATE');
+        commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
+        commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
+        commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
+        commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
+
+        state.metaDB.replicate.from(state.metaRemoteDB)
+        .on('complete', (info)=>{
+            dispatch('updateBooksList');
+            state.metaDB.sync(state.metaRemoteDB, {live: true, retry: true})
+            .on('change', (change)=>{
+                console.log('metaDB change', change);
+                dispatch('updateBooksList');
+                dispatch('reloadBookMeta');
+            })
+            .on('error', (err)=>{
+              // handle errors
+            })
+        });
+
+        state.contentDB.replicate.from(state.contentRemoteDB)
+        .on('complete', (info)=>{
+            state.contentDB.sync(state.contentRemoteDB, {live: true, retry: true})
+            .on('change', (change)=>{
+                console.log('contentDB change', change);
+            })
+            .on('error', (err)=>{
+              // handle errors
+            })
+        });
+    },
+
+    // logout event
+    disconnectDB ({ state, commit }) {
+      axios.defaults.headers.common['Authorization'] = false;
+      window.setTimeout(() => {
+          if (state.metaDB) state.metaDB.destroy()
+          if (state.contentDB) state.contentDB.destroy()
+          commit('RESET_LOGIN_STATE');
+      }, 500)
+    },
+
+    emptyDB (context) {
+        //PouchDB('ilm_content_meta').destroy()
+    },
+
     updateBooksList ({state, commit, dispatch}) {
-      let ilmLibraryMeta = PouchDB('ilm_content_meta').hoodieApi()
+      console.log('updateBooksList');
+      let ilmLibraryMeta = state.metaDB.hoodieApi()
       ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted') && (item.editor == state.auth.getSession().user_id || item.private == false)))
         .then(books => {
           commit('SET_BOOKLIST', books)
@@ -176,9 +249,7 @@ export const store = new Vuex.Store({
         })
     },
 
-    emptyDB (context) {
-      PouchDB('ilm_content_meta').destroy()
-    },
+
 
     deleteCurrentBook (context) {
       // get _id for both book and meta
@@ -187,7 +258,7 @@ export const store = new Vuex.Store({
     },
 
     loadBook ({commit, state, dispatch}, bookid) {
-      // console.log('loading currentBook: ', bookid)
+       console.log('loading currentBook: ', bookid)
       // if (!bookid) return  // if no currentbookid, exit
       // if (bookid === context.state.currentBookid) return // skip if already loaded
 
@@ -198,25 +269,23 @@ export const store = new Vuex.Store({
         // save old state
       }
 
-      // check if new book is in cache
-      // if cached locally, load
-      // now query to see if book matches latest _rev
-      // if not, load latest version and replace
-      var dbPathA = superlogin.getDbUrl('ilm_content_meta')
-      if (process.env.DOCKER) dbPathA = dbPathA.replace('couchdb', 'localhost')
-      var dbPathB = superlogin.getDbUrl('ilm_content')
-      if (process.env.DOCKER) dbPathB = dbPathB.replace('couchdb', 'localhost')
-
-      PouchDB(dbPathA).get(bookid).then(meta => {
-        PouchDB(dbPathB).get(bookid).then(book => {
+      state.metaDB.get(bookid).then(meta => {
+        state.contentDB.get(bookid).then(book => {
           commit('SET_CURRENTBOOK', book)
           commit('SET_CURRENTBOOK_META', meta)
           commit('TASK_LIST_LOADED')
         })
-      })
+      }).catch((err)=>{})
     },
 
-
+    reloadBookMeta ({commit, state, dispatch}) {
+        console.log('reloadBookMeta', state.currentBookMeta._id);
+        if (state.currentBookMeta._id) {
+            state.metaDB.get(state.currentBookMeta._id).then((meta) => {
+                commit('SET_CURRENTBOOK_META', meta)
+            })
+        }
+    },
 
     getBookMeta ({}, bookid) {
         var dbPathA = superlogin.getDbUrl('ilm_content_meta')

@@ -34,9 +34,8 @@
 </template>
 
 <script>
-import { mapMutations, mapActions } from 'vuex'
+import { mapActions } from 'vuex'
 import superlogin from 'superlogin-client'
-import PouchDB from 'pouchdb'
 import axios from 'axios'
 import { alert } from 'vue-strap'
 
@@ -58,7 +57,7 @@ export default {
       passwordResetError: ''
     }
   },
-  
+
   components: {
     alert
   },
@@ -71,52 +70,26 @@ export default {
       checkExpired: true
     })
 
+    superlogin.removeAllListeners('login');
     // login event
-    let vm = this
-    superlogin.on('login', session => {
-      if (session.password) {
-        vm.RESET_LOGIN_STATE()
-
-        var dbPath = superlogin.getDbUrl('ilm_content_meta')
-        if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
-
-        // this can only be set up after login
-        PouchDB.sync('ilm_content_meta', dbPath, { live: true })
-          .on('change', change => {
-            vm.$store.dispatch('updateBooksList')
-          })
-        // load intial book
-        let bookid = vm.$route.params.bookid
-        if (bookid) {
-          vm.$store.dispatch('loadBook', bookid)
-          vm.$router.replace({ path: '/books/' + bookid })
+    superlogin.once('login', (session) => {
+        console.log('login?');
+        if (session.token) {
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
+            this.connectDB(session);
         }
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
-      }
-    })
+    });
 
     // logout event
-    superlogin.on('logout', message => {
-      // for testing only
-      // vu_this.$store.dispatch('emptyDB')
-      PouchDB('ilm_content_meta').destroy()
-      //
-
-      axios.defaults.headers.common['Authorization'] = false;
-      window.setTimeout(() => {
-        this.RESET_LOGIN_STATE()
-      }, 1000)
+    superlogin.on('logout', (message) => {
+          console.log('logout?',);
+          this.disconnectDB();
     })
   },
 
   methods: {
-
-    ...mapMutations([
-      'RESET_LOGIN_STATE'
-    ]),
-
     ...mapActions([
-      'updateBooksList'
+      'connectDB', 'disconnectDB'
     ]),
 
     user_login () {
@@ -138,7 +111,7 @@ export default {
         if (response.data.ok === true) {
           self.active = 'login'
         } else {
-          
+
         }
       })
       .catch(function(e){
