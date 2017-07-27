@@ -134,13 +134,18 @@ export const store = new Vuex.Store({
           let assignments = []
           job.tasks.forEach(t => {
             switch (t.type) {
-              case 2: // cleanup text
+              case 'text-cleanup': // cleanup text
                 assignments.push('metadata');
                 assignments.push('metadata_cleanup');
                 assignments.push('content');
                 assignments.push('content_cleanup');
+                if (job.type == 'with-audio') {
+                  if (!state.currentBookMeta.hasMasteredAudio) {
+                    assignments.push('upload_audio');
+                  }
+                }
                 break;
-              case 4: // approve book
+              case '': // approve book
                 assignments.push('content');
                 assignments.push('content_approve');
                 break;
@@ -212,6 +217,20 @@ export const store = new Vuex.Store({
         var dbPathA = superlogin.getDbUrl('ilm_content_meta')
         if (process.env.DOCKER) dbPathA = dbPathA.replace('couchdb', 'localhost')
         return PouchDB(dbPathA).get(bookid);
+    },
+    
+    getAudioBook ({state}, bookid) {
+      return axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
+        .then(audio => {
+          if (audio.data && audio.data.rows && audio.data.rows[0]) {
+            return audio.data.rows[0].doc;
+          } else {
+            return {};
+          }
+        })
+        .catch(error => {
+          return {};
+        });
     },
 
     tc_loadBookTask({state, commit}) {

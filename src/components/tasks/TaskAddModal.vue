@@ -118,12 +118,12 @@ export default {
       subtype: '',
       task_types: [
         {
-          'id': 1,
+          'id': 'with-audio',
           'title': 'Import book with audio',
           'subtypes': []
         },
         {
-          'id': 2,
+          'id': 'without-audio',
           'title': 'Import book without audio',
           'subtypes': []
         }
@@ -134,7 +134,7 @@ export default {
       lang: '',
       langs: ['en', 'ua'],
       fields_by_type: {
-        '1': {
+        'with-audio': {
           'name': {'require': true},
           'roles': {
             'editor': {'require': true}, 
@@ -143,7 +143,7 @@ export default {
           },
           'lang': {'require': true}
         },
-        '2': {
+        'without-audio': {
           'name': {'require': true},
           'roles': {
             'editor': {'require': true}, 

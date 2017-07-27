@@ -138,6 +138,7 @@
 
 import { alert } from 'vue-strap'
 import axios from 'axios'
+import api_config from '../../mixins/api_config.js'
 
 const API_URL = process.env.ILM_API + '/api/v1/'
 
@@ -162,6 +163,7 @@ export default {
         fileValue: ''
     }
   },
+  mixins: [api_config],
   props: {
       'multiple': {
         type: Boolean,
@@ -258,15 +260,15 @@ export default {
           // hide modal after one second
           vu_this.uploadProgress = "Upload Successful"
           if (vu_this.importTaskId && response.data instanceof Array && response.data[0] && response.data[0].ok == true) {
-            axios.put(API_URL + 'task/' + vu_this.importTaskId + '/link_book', {})
+            axios.put(API_URL + 'task/' + vu_this.importTaskId + '/book_imported', {})
               .then((link_response) => {
-                vu_this.closeForm(response)
+                vu_this.closeForm(true)
               })
               .catch((err) => {
-                vu_this.closeForm(response)
+                vu_this.closeForm(false)
               })
           } else {
-            vu_this.closeForm(response)
+            vu_this.closeForm(true)
           }
         } else {
           // not sure what we should be doing here

@@ -25,9 +25,23 @@
       <BookDownload v-if="showModal" @close="showModal = false" />
 
       <AudioImport v-if="showModal_audio" @close="showModal_audio = false"
-       :book="currentBook" />
+       :book="currentBook"
+       :importTask="importTask"
+       :audiobook="audiobook" 
+       :allowDownload="false" />
 
       <div class="book-listing">
+        <div class="row">
+          <div v-if="tc_hasTask('metadata_cleanup')" class="col-sm-4">
+            <button v-if="!textCleanupProcess" class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Text cleanup finished</button>
+            <div v-else class="preloader-small"></div>
+          </div>
+          <div v-if="tc_hasTask('upload_audio')" class="col-sm-3">
+            <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
+              <i class="fa fa-file-audio-o"></i>&nbsp;Import Audio
+            </button>
+          </div>
+        </div>
         <fieldset>
           <legend>Book Metadata </legend>
           <table class='properties'>
@@ -143,18 +157,6 @@
           </template>
         </table>
       </fieldset>
-      <fieldset v-if="tc_hasTask('metadata_cleanup')">
-        <legend>Cleanup finished</legend>
-        <button class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Text cleanup finished</button>
-      </fieldset>
-
-      <div class="row">
-        <div class="download-area col-sm-6" v-if="allowMetadataEdit">
-          <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
-            <i class="fa fa-pencil fa-lg"></i>&nbsp;Import Audio
-          </button>
-        </div>
-      </div>
 
     </div>
 
@@ -169,6 +171,12 @@
 
       <p>{{errorMessage}}.</p>
     </alert>
+    
+    <alert v-model="hasMessage" placement="top" :duration="3000" type="info" width="400px">
+      <span class="icon-ok-circled alert-icon-float-left"></span>
+
+      <p>{{infoMessage}}.</p>
+    </alert>
 
     <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Share" cancel-text="Cancel" title="Share book" @ok="sharePrivateBook()">
       <div v-html="getSharePrivateBookMessage()"></div>
@@ -180,7 +188,7 @@
 
 <script>
 
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import superlogin from 'superlogin-client'
 import BookDownload from './BookDownload'
 import BookEditCoverModal from './BookEditCoverModal'
@@ -231,14 +239,19 @@ export default {
       showModal_audio: false,
       bookEditCoverModalActive: false,
       currentBook: {},
-      bookTaskId: '',
+      cleanupTask: {},
+      importTask: {},
       linkTaskError: '',
       isOwner: false,
       errorMessage: '',//to display validation errors for some cases, e.g. on sharing book
       hasError: false,//has some validation error, e.g. on sharing book
+      hasMessage: false,//has some info message
+      infoMessage: '',//to display info on action finished
       approveMetadataComment: '',
       showSharePrivateBookModal: false,
-      allowMetadataEdit: false
+      allowMetadataEdit: false,
+      textCleanupProcess: false,
+      audiobook: {}
     }
   },
 
@@ -260,11 +273,16 @@ export default {
   mounted() {
     for (let id in this.$store.state.tc_currentBookTasks.tasks) {
       let record = this.$store.state.tc_currentBookTasks.tasks[id]
-      if (record.type == 2) {
-       this.bookTaskId = record._id
+      if (record.type == 'text-cleanup') {
+       this.cleanupTask = record
+      } else if (record.type == 'import-book') {
+        this.importTask = record
       }
     }
     this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor
+    this.getAudioBook(this.currentBookMeta.bookid).then(audio => {
+      this.audiobook = audio;
+    })
   },
 
   watch: {
@@ -285,6 +303,20 @@ export default {
       handler(val) {
         if (val === false) {
           this.errorMessage = ''
+        }
+      },
+      deep: true
+    },
+    infoMessage: {
+      handler(val) {
+        this.hasMessage = val.length > 0
+      },
+      deep: true
+    },
+    hasMessage: {
+      handler(val) {
+        if (val === false) {
+          this.infoMessage = ''
         }
       },
       deep: true
@@ -362,10 +394,10 @@ export default {
     linkTask() {
       let self = this
       self.linkTaskError = ''
-      if (!self.bookTaskId) {
+      if (!self.cleanupTask._id) {
         self.linkTaskError = 'Required'
       } else {
-        axios.put(self.API_URL + 'task/' + self.bookTaskId + '/link_book', {book_id: self.currentBook._id})
+        axios.put(self.API_URL + 'task/' + self.cleanupTask._id + '/link_book', {book_id: self.currentBook._id})
           .then((response) => {
             //self.getTasks()
             self.$emit('task_linked')
@@ -374,30 +406,37 @@ export default {
       }
     },
     sharePrivateBook() {
+      this.textCleanupProcess = true
       var self = this
       self.showSharePrivateBookModal = false
-      if (!self.bookTaskId) {
+      if (!self.cleanupTask._id) {
         self.errorMessage = 'No linked task, please link task'
+        self.textCleanupProcess = false
       } else {
         //axios.put(API_URL + 'books/' + self.currentBook._id + '/share_private')
         self.liveUpdate('private', false)
           .then((doc) => {
-            axios.put(self.API_URL + 'task/' + self.bookTaskId + '/finish_cleanup')
+            axios.put(self.API_URL + 'task/' + self.cleanupTask._id + '/finish_cleanup')
               .then((doc) => {
                 self.currentBook.private = false
                 self.$store.dispatch('tc_loadBookTask')
+                self.textCleanupProcess = false
+                self.infoMessage = 'Text cleanup task finished'
               })
               .catch((err) => {
+                self.textCleanupProcess = false
               })
           })
           .catch((err) => {
+            self.textCleanupProcess = false
           })
       }
     },
     getSharePrivateBookMessage() {
       let next_user = this.$store.state.tc_currentBookTasks.type == 1 ? 'proofer' : 'narrator';
       return 'This will make book visible to others and send it to the ' + next_user + '. Continue?';
-    }
+    },
+    ...mapActions(['getAudioBook'])
   }
 }
 </script>
@@ -488,6 +527,11 @@ export default {
   .fix-message {
     color: red;
     background-color: yellow;
+  }
+  .preloader-small {
+      background: url(/static/preloader-snake-small.gif);
+      width: 34px;
+      height: 34px;
   }
 
 </style>

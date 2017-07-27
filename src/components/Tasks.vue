@@ -23,6 +23,11 @@
       <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose" 
                   :importTaskId="import_book_task_id"
                   :bookId="import_book_id" />
+      <AudioImport v-if="show_import_audio_modal" @close="importAudioClose" 
+                  :book="import_book"
+                  :importTask="import_audio_task"
+                  :audiobook="task_audiobook" 
+                  :multiple="audio_import_multiple"/>
       <div class="table tasks-box">
       <section v-for="job in tasks.list">
       <template v-if="job.total > 0">
@@ -32,24 +37,32 @@
           </div>
           <!--<div class="td"></div>-->
         </div>
-        <transition name="fade">
-        <template v-if="job.tasksVisible">
-          <div v-for="task in job.tasks" class="tr subtasks-box">
+        <transition-group name="fade">
+        <div v-if="job.tasksVisible" :key="job.title">
+          <div v-for="task in job.tasks" class="tr subtasks-box" :key="task._id">
             <div class="task-title-box td">
               <h4>({{task.count}})&nbsp;{{task.title}}</h4>
             </div>
 
             <div class="subtask-items-box td">
               <div class="subtask-item-box">
-                <button class="btn btn-default" v-if="task.type == 1" v-on:click="importBook(task)">
-                  <i class="fa fa-pencil"></i>Import book "{{job.title}}"
-                </button>
+                <div v-if="task.type == 'import-book'">
+                  <button class="btn btn-default" v-if="job.status == 'import_text'" v-on:click="importBook(task)">
+                    <i class="fa fa-pencil"></i>Import book "{{job.title}}"
+                  </button>
+                  <button class="btn btn-default" v-if="job.status == 'staging'" v-on:click="importAudio(task, job.meta)">
+                    <i class="fa fa-file-audio-o"></i>Import audio
+                  </button>
+                </div>
+                <div v-else-if="task.type == 'master-audio'">
+                  <span class="import-link" v-on:click="importExportAudio(task, job.meta, job.audio)">Import audio</span>
+                </div>
                 <a v-else :href="'/books/edit/' + job.bookid">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
               </div>
             </div>
           </div>
-        </template>
-        </transition>
+        </div>
+        </transition-group>
       </template>
       <!--<template v-if="job.tasks.length">-->
       </section>
@@ -74,6 +87,7 @@ import TaskAddModal from './tasks/TaskAddModal'
 import TaskHistory from './tasks/TaskHistory'
 import superlogin from 'superlogin-client'
 import BookImport from './books/BookImport'
+import AudioImport from './audio/AudioImport'
 import { mapGetters, mapActions } from 'vuex'
 var BPromise = require('bluebird');
 const API_URL = process.env.ILM_API + '/api/v1/'
@@ -95,8 +109,13 @@ export default {
         'narrator': []
       },
       show_import_book_modal: false,
+      show_import_audio_modal: false,
       import_book_task_id: '',
-      import_book_id: ''
+      import_audio_task: {},
+      import_book_id: '',
+      import_book: {},
+      task_audiobook: {},
+      audio_import_multiple: true
     }
   },
 
@@ -105,7 +124,8 @@ export default {
     VTab,
     TaskAddModal,
     BookImport,
-    TaskHistory
+    TaskHistory,
+    AudioImport
   },
 
   computed: mapGetters([
@@ -131,7 +151,12 @@ export default {
 
           this.getBookMeta(jobs[jobId].bookid).then(meta => {
               jobs[jobId].title = meta.title;
+              jobs[jobId].status = meta.status;
+              jobs[jobId].meta = meta
           }).catch(error => {});
+          this.getAudioBook(jobs[jobId].bookid).then(audio => {
+            jobs[jobId].audio = audio;
+          })
 
           tasks_formatted.list.push(jobs[jobId]);
           jobs[jobId].total = jobs[jobId].tasks.length;
@@ -190,19 +215,45 @@ export default {
       this.import_book_id = task.bookid
       this.show_import_book_modal = true
     },
+    importAudio(task, book_meta) {
+      this.import_book = book_meta
+      this.import_audio_task = task
+      this.show_import_audio_modal = true
+      this.audio_import_multiple = true
+      this.task_audiobook = {}
+    },
+    importExportAudio(task, book_meta, book_audio) {
+      this.import_book = book_meta
+      this.import_audio_task = task
+      this.show_import_audio_modal = true
+      this.audio_import_multiple = false
+      this.task_audiobook = book_audio || {}
+    },
     importBookClose(response) {
+      if (response) {
+        this.$router.replace({ path: '/books/' + this.import_book_id })
+        return
+      }
       let self = this
       self.show_import_book_modal = false
       //console.log(response)
       self.getTasks()
       self.import_book_task_id = ''
     },
+    importAudioClose(response) {
+      this.show_import_audio_modal = false
+      this.import_book = {}
+      this.import_audio_task = {};
+      this.import_book_id = ''
+      this.task_audiobook = {}
+      this.getTasks()
+    },
     onTabChange() {
       return true
     },
 
     ...mapActions([
-        'getBookMeta'
+        'getBookMeta', 'getAudioBook'
     ])
   }
 }
@@ -298,5 +349,9 @@ export default {
     &:hover {
       color: green;
     }
+}
+.subtask-item-box .import-link {
+    text-decoration: underline;
+    cursor: pointer;
 }
 </style>
