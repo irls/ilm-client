@@ -205,25 +205,23 @@ tr.middle {
 
         .content-wrap {
             padding: 6px 11px;
-            box-shadow: 0 0 10px transparent;
-            transition: 0.8s;
+            border-radius: 8px;
+            box-shadow: none;
+            transition: box-shadow 900ms;
 
             &:hover {
                 border: 1px solid silver;
-                border-radius: 8px;
                 padding: 5px 10px;
                 background: rgba(219, 232, 255, .3);
             }
             &:focus {
                 outline: none;
-                border-radius: 8px;
                 border-color: #9ecaed;
                 box-shadow: 0 0 10px #9ecaed;
             }
             &.updated {
-                border-radius: 8px;
                 box-shadow: 0 0 10px green;
-                transition: 0.3s;
+                transition: box-shadow 200ms;
             }
         }
     }
