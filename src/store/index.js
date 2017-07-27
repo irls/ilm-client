@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 import superlogin from 'superlogin-client'
 import hoodie from 'pouchdb-hoodie-api'
 import PouchDB from 'pouchdb'
+const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
 
@@ -40,6 +41,7 @@ export const store = new Vuex.Store({
 
     metaDB: false,
     contentDB: false,
+    contentDBWatch: false,
 
     metaRemoteDB: false,
     contentRemoteDB: false,
@@ -80,7 +82,8 @@ export const store = new Vuex.Store({
     bookEditMode: state => state.editMode,
     allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode),
     tc_currentBookTasks: state => state.tc_currentBookTasks,
-    tc_tasksByBlock: state => state.tc_tasksByBlock
+    tc_tasksByBlock: state => state.tc_tasksByBlock,
+    contentDBWatch: state => state.contentDBWatch
   },
 
   mutations: {
@@ -95,6 +98,17 @@ export const store = new Vuex.Store({
             dbPath = dbPath.replace('couchdb', 'localhost')
         }
         state[payload.dbProp] = new PouchDB(dbPath);
+    },
+
+    set_contentDBWatch (state, syncPointer) {
+        state.contentDBWatch =syncPointer;
+    },
+
+    stop_contentDBWatch (state) {
+        if (state.contentDBWatch) {
+            state.contentDBWatch.cancel();
+            state.contentDBWatch = false;
+        }
     },
 
     SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
@@ -193,6 +207,7 @@ export const store = new Vuex.Store({
 
     // login event
     connectDB ({ state, commit, dispatch }, session) {
+        console.log('connectDB');
         commit('RESET_LOGIN_STATE');
         commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
@@ -264,11 +279,12 @@ export const store = new Vuex.Store({
       }
 
       state.metaDB.get(book_id).then(meta => {
-        state.contentDB.get(book_id).then(book => {
-          commit('SET_CURRENTBOOK', book)
-          commit('SET_CURRENTBOOK_META', meta)
-          commit('TASK_LIST_LOADED')
-        })
+        commit('SET_CURRENTBOOK_META', meta)
+        commit('TASK_LIST_LOADED')
+//         state.contentDB.get(book_id).then(book => {
+//           commit('SET_CURRENTBOOK', book)
+//
+//         })
       }).catch((err)=>{})
     },
 
@@ -286,18 +302,61 @@ export const store = new Vuex.Store({
     },
 
     loadBlocks ({commit, state, dispatch}, params) {
-
-        console.log(params);
         return state.contentDB
-        .query('blocks/all', {
-            startkey: ["gek-finn_en"],
-            //include_docs: true,
+        .query('filters_byBook/byBook', {
+            startkey: [params.book_id],
+            include_docs: true,
             skip: params.page * params.onpage,
             limit: params.onpage
         }).then(function (res) {
             return res.rows;
         }).catch(function (err) {
             return err;
+        });
+    },
+
+    watchBlocks ({commit, state, dispatch}, params) {
+        commit('stop_contentDBWatch');
+        let contentDBWatch = state.contentDB.changes({
+            since: 'now',
+            live: true,
+            include_docs: true,
+            filter: function (doc) {
+                return doc.bookid === params.book_id;
+            }
+        });
+        contentDBWatch.removeAllListeners('change');
+        contentDBWatch
+        .on('complete', function(info) {
+            console.log('contentDBWatch Cancelled');
+        }).on('error', function (err) {
+            console.log(err);
+        });
+        commit('set_contentDBWatch', contentDBWatch);
+        return true;
+    },
+
+    putBlock ({commit, state, dispatch}, block) {
+
+      let defBlock = [
+          '_id',
+          '_rev',
+          'tag',
+          'content',
+          'classes',
+          'type',
+          'bookid',
+          'index'
+      ]
+
+        let cleanBlock = _.pick(block, defBlock);
+        console.log('putBlock', cleanBlock);
+        state.contentDB.get(cleanBlock._id).then(function(doc) {
+            return state.contentDB.put(cleanBlock);
+        }).then((response)=>{
+          // handle response
+        }).catch((err) =>{
+            console.log('Block save error:', err);
         });
 
     },

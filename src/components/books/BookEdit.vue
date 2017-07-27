@@ -6,7 +6,8 @@
     <div class="row" v-for="(block, block_Idx) in sublist">
         <div class='col'>
           <BookBlockView
-              :block="block"
+              v-bind:block="block"
+              v-bind:putBlock ="updBlock"
           />
         </div>
         <!--<div class='col'>-->
@@ -44,7 +45,8 @@ export default {
       }),
       ...mapGetters({
           book: 'currentBook',
-          meta: 'currentBookMeta'
+          meta: 'currentBookMeta',
+          watchBlk: 'contentDBWatch'
       })
   },
   mixins: [access, taskControls],
@@ -52,7 +54,7 @@ export default {
       BookBlockView, InfiniteLoading
   },
   methods: {
-    ...mapActions(['loadBlocks']),
+    ...mapActions(['loadBlocks', 'watchBlocks', 'putBlock']),
 
     test() {
         //this.parlist.splice(0,1);
@@ -81,42 +83,40 @@ export default {
             let tmp = [];
             if (result.length > 0) {
                 result.forEach((el, idx, arr)=>{
-                    let newBlock = { ...this.block, ...el.value }
-                    //console.log('el.doc', el.doc);
-                    //newBlock.idx = idx;
+                    let newBlock = { ...this.block, ...el.doc }
                     tmp.push(newBlock);
                 });
-
                 if (tmp.length>0) this.parlist.push(tmp)//([...tmp]);
+
                 this.$refs.scrollBookDown.$emit('$InfiniteLoading:loaded');
             } else {
                 this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
             }
-            console.log('loaded', result);
+            //console.log('loaded', result);
         }).catch((err)=>{
             if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
             console.log('Error: ', err.message);
         });
     },
 
-//     loadBlocks: function(page, onpage) {
-//       console.log('loadBlocks from:', page * onpage, ' to:', (page + 1) * onpage);
+    refreshBlock (change) {
+        console.log("refreshBlock: ", change)
+
+        this.parlist.forEach((el, idx0, arr)=>{
+            el.forEach((block, idx1)=>{
+                if (block._id === change.id) {
+                    Vue.set(this.parlist[idx0], idx1, { ...this.parlist[idx0][idx1], ...change.doc});
+                }
+            });
+        });
+    },
+
 //       return new Promise((resolve, reject) => {
 //           setTimeout(() => {
 //               if (typeof(this.book.content)==='undefined') return reject({message: 'book not found'});
-//               //if (this.parlist.length > 2) this.parlist.splice(0,1);
-//               let tmp = [];
-//               for (let i = page * onpage; i < (page + 1) * onpage; i++)
-//               if (i < this.book.content.length) {
-//                   let newBlock = { ...this.block, ...this.book.content[i] }
-//                   newBlock.idx = i;
-//                   tmp.push(newBlock);
-//               }
-//               if (tmp.length>0) this.parlist.push(tmp)//([...tmp]);
-//               return resolve(tmp.length);
 //           }, 1000);
 //       })
-//     },
+
 
     hasClass: function(block, cssclass) {
       let list = block.classes.toLowerCase().trim().split(' ');
@@ -141,41 +141,11 @@ export default {
     editBlockId: function(block) {
       alert('Editing block id '+block.id)
     },
-    saveChanges: function() {
-      this.$events.emit('currentEditingBlockId')
-      // how do we insert new blocks?
-      var vm = this
-      var book = vm.$store.state.currentBook
-      this.parlist.forEach((block, bl_id) => {
-        if (block.edited) {
-          // console.log("Replacing edited block #"+bl_id)
-          delete block.edited
-          book.content[bl_id] = Object.assign({}, block)
-        }
-      })
 
-      // delete deleted blocks
-      book.content = book.content.filter(function(block, bl_id) {
-        //if (block._deleted) console.log('Deleting block #', bl_id)
-        return !block._deleted
-      })
-      // split splitted blocks
-
-      // save to DB
-      vm.autoload = false
-      var db = this.libraryDB() // gets authenticated instance of ilm_content db
-      db.get(book._id).then(function(doc){
-        doc.content = book.content // does this create a copy or a reference?
-        db.put(doc).then(doc => {
-          db.get(doc.id).then(newdoc => {
-            vm.book = newdoc
-            vm.reloadBookDisplay(vm)
-            vm.edited = [];
-            //console.log('emptied edited list: ', this.edited)
-          })
-        }).catch(err => console.log(err))
-      })
-
+    updBlock: function (block) {
+        this.putBlock(block)
+        .then(()=>{})
+        .catch((err)=>{})
     },
 
 
@@ -185,15 +155,23 @@ export default {
     }
   },
   events: {
-      'currentEditingBlock_id' : function (key) {
+      currentEditingBlock_id : function (key) {
           //console.log("keydown: ", key)
       }
   },
   mounted: function() {
+      console.log('Mounted?');
       // --- Remove the old listener to avoid duplication --- //
       // --- Otherwise after hot-update there will be several listeners for window --- //
       window.removeEventListener('keydown', this.eventKeyDown);
       window.addEventListener('keydown', this.eventKeyDown);
+
+      this.watchBlocks({book_id: this.meta._id})
+      .then(()=>{
+          this.watchBlk.on('change', (change) => {
+              this.refreshBlock(change);
+          })
+      });
   }
 }
 </script>

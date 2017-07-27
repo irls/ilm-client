@@ -4,18 +4,21 @@
         <!-- Editor toolbar, only visible for editors -->
         <td class="controls-top" colspan="3">
           <div class="controls-top-wrap" data-toggle="tooltip" v-bind:title="JSON.stringify(block)">
-          <div class="-hidden">
-              <i class="fa fa-trash-o fa-lg"></i>
-              <i class="fa fa-pencil-square-o fa-lg"></i>
-              <!-- Block Type selector -->
-              <select v-model='block.type'>
-                  <option v-for="(type, index) in blockTypes" :value="type">{{ type }}</option>
-              </select>
-              <!-- Block Class selector -->
-              <select>
-                <option v-for="(type, index) in blockTypeClasses.title" :value="type">{{ type }}</option>
-              </select>
-          </div>
+              <div class="-hidden">
+                  <i class="fa fa-trash-o fa-lg"></i>
+                  <i class="fa fa-pencil-square-o fa-lg"></i>
+                  <!-- Block Type selector -->
+                  <select v-model='block.type'>
+                      <option v-for="(type, index) in blockTypes" :value="type">{{ type }}</option>
+                  </select>
+                  <!-- Block Class selector -->
+                  <select>
+                    <option v-for="(type, index) in blockTypeClasses.title" :value="type">{{ type }}</option>
+                  </select>
+
+                  <button class="btn-save" @click="assembleBlock()"><i class="fa fa-save fa-lg"></i></button>
+              </div>
+              <!--<div class="-hidden">-->
           </div>
         </td>
     </tr><!--<tr class="top"-->
@@ -42,8 +45,10 @@
 
         <!-- Content -->
         <td class="content-center ocean">
-            <div class="content-wrap content" v-html="block.content"
-            v-bind:class="block.type"
+            <div class="content-wrap content"
+            ref="blockContent"
+            v-html="block.content"
+            v-bind:class="[ block.type, { 'updated': isUpdated }]"
             @input="input"
             @contextmenu.prevent="$refs.blockCntx.openMenu">
             </div>
@@ -83,12 +88,13 @@ export default {
           aside: ['fn', 'inline'],
           hr: [' ', 'section', 'large', 'small']
       },
+      isUpdated: false
     }
   },
   components: {
       'block-context-menu': BlockContextMenu
   },
-  props: ['block'],
+  props: ['block', 'putBlock'],
   mounted: function() {
        let editor = new MediumEditor('.content-wrap');
   },
@@ -98,8 +104,20 @@ export default {
           this.block.content += 'BBB';
       },
       input: function(el) {
-           console.log('input', el.innerHTML());
-           el.target.focus();
+          el.target.focus();
+      },
+      assembleBlock: function(el) {
+          this.block.content = this.$refs.blockContent.innerHTML;
+          this.putBlock(this.block);
+      }
+  },
+  watch: {
+      'block._rev' (newVal){
+          console.log('block._rev', newVal);
+          this.isUpdated = true;
+          setTimeout(() => {
+              this.isUpdated = false;
+          }, 2000);
       }
   }
 }
@@ -187,6 +205,8 @@ tr.middle {
 
         .content-wrap {
             padding: 6px 11px;
+            box-shadow: 0 0 10px transparent;
+            transition: 0.8s;
 
             &:hover {
                 border: 1px solid silver;
@@ -199,6 +219,11 @@ tr.middle {
                 border-radius: 8px;
                 border-color: #9ecaed;
                 box-shadow: 0 0 10px #9ecaed;
+            }
+            &.updated {
+                border-radius: 8px;
+                box-shadow: 0 0 10px green;
+                transition: 0.3s;
             }
         }
     }
@@ -239,6 +264,9 @@ tr.bottom {
     .fa-minus:hover {
         border-color: maroon;
         color: maroon;
+    }
+    .btn-save {
+
     }
 }
 
