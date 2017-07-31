@@ -1,79 +1,102 @@
 <template>
-<table class="block-content">
-    <tr class="top">
-        <!-- Editor toolbar, only visible for editors -->
-        <td class="controls-top" colspan="3">
-          <div class="controls-top-wrap" data-toggle="tooltip" v-bind:title="JSON.stringify(block)">
-              <div class="-hidden">
-                  <i class="fa fa-trash-o fa-lg"></i>
-                  <i class="fa fa-pencil-square-o fa-lg"></i>
+<div class="table-body -block">
+    <div class="table-cell controls-left">
+        <div class="table-row">
+            <span>{{block.parnum?block.parnum:'&nbsp;'}}</span>
+        </div>
+        <div class="table-row">
+            <!-- Show parnum only on paragraphs -->
+            <div class='par-ctrl -hidden'>
+                <i class="fa fa-paragraph"></i>
+            </div>
+            <div class='par-ctrl -hidden'>
+                <i class="glyphicon glyphicon-volume-up"></i>
+                <i class="glyphicon glyphicon-volume-off"></i>
+            </div>
+        </div>
+    </div>
+    <div class="table-cell">
+        <div class="table-body -content">
+            <div class="table-row controls-top"
+            data-toggle="tooltip" v-bind:title="JSON.stringify(block)">
+
+              <div class="par-ctrl -hidden -left">
+                <popover placement="top" content="content">
+                  <i class="glyphicon glyphicon-menu-hamburger"></i>
+                </popover>
+
+                  <!--<i class="fa fa-trash-o fa-lg"></i>-->
+                  <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
                   <!-- Block Type selector -->
+                  <label>type
                   <select v-model='block.type'>
                       <option v-for="(type, index) in blockTypes" :value="type">{{ type }}</option>
                   </select>
+                  </label>
                   <!-- Block Class selector -->
+                  <label>class
                   <select>
-                    <option v-for="(type, index) in blockTypeClasses.title" :value="type">{{ type }}</option>
+                    <option v-for="(style, index) in blockTypeClasses.title" :value="style">{{ style }}</option>
                   </select>
-
-                  <button class="btn-save" @click="assembleBlock()"><i class="fa fa-save fa-lg"></i></button>
+                  </label>
               </div>
               <!--<div class="-hidden">-->
-          </div>
-        </td>
-    </tr><!--<tr class="top"-->
 
-    <tr class="middle">
-
-        <td class="controls-left">
-        <div class="controls-left-wrap" v-bind:class="[block.type=='par' ? '-shifted' : '']">
-            <!-- Show parnum only on paragraphs -->
-            <template v-if="block.type=='par'">
-              <div class="parnum">{{block.parnum ? block.parnum : ''}}</div>
-              <div class="toggle-view -hidden">
-                <i class="fa fa-eye-slash" v-if="block.parnum"></i>
-                <i class="fa fa-eye" v-else ></i>
+              <div class="par-ctrl -hidden -right">
+                  <i class="fa fa-play-circle-o"></i>
+                  <i class="fa fa-microphone"></i>
               </div>
-            </template>
-            <!-- add/remove paragraph controls -->
-            <div class='par-ctrl -hidden'>
-              <i class="fa fa-plus" aria-hidden="true"></i>
-              <i class="fa fa-minus" aria-hidden="true"></i>
+              <!--<div class="-hidden">-->
+
             </div>
+            <!--<div class="table-row controls-top">-->
+
+            <div class="table-row ocean -relative">
+                <hr v-if="block.type=='hr'" />
+
+                <div v-else class="content-wrap"
+                ref="blockContent"
+                v-html="block.content"
+                v-bind:class="[ block.type, block.classes, { 'updated': isUpdated }]"
+                @click=""
+                @input="input"
+                @contextmenu.prevent="$refs.blockCntx.openMenu">
+                </div>
+                <!--<div class="content-wrap">-->
+
+                <block-context-menu ref="blockCntx"
+                :update="update"
+                ></block-context-menu>
+
+            </div>
+            <!--<div class="table-row ocean">-->
+
+            <div class="table-row controls-bottom">
+                <div class="save-block -hidden -left"
+                v-bind:class="{ '-disabled': !isChanged }"
+                @click="assembleBlock()">
+                    <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
+                </div>
+              <div class="par-ctrl -hidden -right">
+                  <span><i class="fa fa-flag-o"></i></span>
+                  <span><i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
+                  <span><i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
+              </div>
+              <!--<div class="-hidden">-->
+            </div>
+            <!--<div class="table-row controls-bottom">-->
         </div>
-        </td><!--<td controls-left>-->
-
-        <!-- Content -->
-        <td class="content-center ocean">
-            <div class="content-wrap content"
-            ref="blockContent"
-            v-html="block.content"
-            v-bind:class="[ block.type, { 'updated': isUpdated }]"
-            @input="input"
-            @contextmenu.prevent="$refs.blockCntx.openMenu">
-            </div>
-            <!--<div class="content-wrap">-->
-            <block-context-menu ref="blockCntx"
-            :update="update"
-            ></block-context-menu>
-        </td>
-        <!-- /Content -->
-
-        <td class="controls-right"></td>
-
-
-    </tr><!--<tr class="middle">-->
-
-    <tr class="bottom">
-        <td colspan="3"></td>
-    </tr><!--<tr class="bottom"-->
-</table>
+    </div>
+    <div class="table-cell controls-right">
+    </div>
+</div>
 </template>
 
 <script>
 import Vue from 'vue'
 require('./vendor/medium-editor.min.js');
-import BlockContextMenu from '../generic/BlockContextMenu'
+import BlockContextMenu from '../generic/BlockContextMenu';
+import { popover, dropdown } from 'vue-strap'
 
 export default {
   data () {
@@ -88,11 +111,14 @@ export default {
           aside: ['fn', 'inline'],
           hr: [' ', 'section', 'large', 'small']
       },
+      isChanged: false,
       isUpdated: false
     }
   },
   components: {
-      'block-context-menu': BlockContextMenu
+      'block-context-menu': BlockContextMenu,
+      'popover': popover,
+      'dropdown': dropdown
   },
   props: ['block', 'putBlock'],
   mounted: function() {
@@ -104,11 +130,13 @@ export default {
           this.block.content += 'BBB';
       },
       input: function(el) {
+          this.isChanged = true;
           el.target.focus();
       },
       assembleBlock: function(el) {
           this.block.content = this.$refs.blockContent.innerHTML;
           this.putBlock(this.block);
+          this.isChanged = false;
       }
   },
   watch: {
@@ -126,88 +154,110 @@ export default {
 <style src='./css/medium-editor/medium-editor.min.css'></style>
 <style src='./css/medium-editor/flat.min.css'></style>
 <style lang='less' scoped>
-
 @variable: 90px;
-
 .ocean {
     padding: 0;
 }
 
-table.block-content {
+.table-body {
+    display: table;
     width: 100%;
-}
 
-tr.top {
-    height: 32px;
-
-    td {
-        width: 100%;
+    &.-block {
+        margin-bottom: 20px;
     }
 
-    .controls-top-wrap {
-        margin-left: 50px;
-    }
-
-    .-hidden {
-        display: none;
-    }
-
-    &:hover {
+    &.-content {
         .-hidden {
-            display: block;
+            visibility: hidden;
         }
+
+        &:hover {
+            .-hidden {
+                visibility: visible;
+            }
+        }
+    }
+
+    .-left {
+        float: left;
+    }
+    .-right {
+        float: right;
     }
 }
 
-tr.middle {
+.table-cell {
+    display: table-cell;
 
-    td {
-        vertical-align: top;
-    }
+    &.controls-left {
+        width: 50px;
+        padding-left: 15px;
 
-    td.controls-left {
-        vertical-align: top;
-        /*background: gray;*/
-        .controls-left-wrap {
-            width: 35px;
-            height: 42px;
-            padding: 0 5px;
-            padding-top: 6px;
+        .-hidden {
+            visibility: hidden;
+        }
 
-            &.-shifted {
-                height: 78px;
-                margin-top: -20px;
-            }
-
+        &:hover {
             .-hidden {
-                display: none;
+                visibility: visible;
             }
-
-            &:hover {
-                .-hidden {
-                    display: block;
-                }
-            }
-        }
-        .parnum {
-            height: 18px;
-            margin-left: 2px;
-        }
-        .fa {
-            margin-left: 3px;
         }
     }
 
-    td.content-center {
-        width: 100%;
-        padding-right: 5px;
-        position: relative;
+    &.controls-right {
+        width: 100px;
+    }
 
-        .content-wrap {
-            padding: 6px 11px;
-            border-radius: 8px;
-            box-shadow: none;
-            transition: box-shadow 900ms;
+}
+
+.table-row {
+    display: table-row;
+    &.-relative {
+        position: relative;
+    }
+    &.controls-top {
+         i, select {
+            margin-right: 15px;
+         }
+         label {
+            margin-bottom: 0;
+            font-weight: normal;
+         }
+         select {
+            border: none;
+         }
+    }
+
+    &.controls-bottom {
+         span {
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        .save-block {
+            cursor: pointer;
+            border: 1px solid silver;
+            border-radius: 3px;
+            padding: 0 3px 1px 3px;
+            &:hover {
+                background: rgba(204, 255, 217, 0.2);
+            }
+            &.-disabled {
+/*                cursor: not-allowed;
+                &:hover {
+                    background: rgba(100, 100, 100, 0.2);
+                }*/
+                visibility: hidden;
+            }
+        }
+    }
+
+    .content-wrap {
+        margin: 6px 0 4px 0;
+        padding: 6px 11px;
+        border-radius: 8px;
+        box-shadow: none;
+        transition: box-shadow 900ms;
 
             &:hover {
                 border: 1px solid silver;
@@ -220,26 +270,16 @@ tr.middle {
                 box-shadow: 0 0 10px #9ecaed;
             }
             &.updated {
-                box-shadow: 0 0 10px green;
+                box-shadow: 0 0 10px rgba(56, 171, 53, 0.7);
                 transition: box-shadow 200ms;
             }
-        }
-    }
-
-    td.controls-right {
-        background: blue;
-        vertical-align: top;
     }
 }
 
-tr.bottom {
-    display: none;
-    width: 100%;
-}
-
-.fa {
+.fa, .glyphicon {
     cursor: pointer;
     color: gray;
+    font-size: 18px;
 }
 
 .fa:hover {
@@ -247,24 +287,15 @@ tr.bottom {
 }
 
 .par-ctrl {
-    .fa-plus, .fa-minus {
-        border: 1px solid silver;
-        border-radius: 3px;
-        cursor: pointer;
-        width: 18px; height: 18px;
-        padding: 0 0 0 1px;
-        /*background: #F0FFF0;*/
+    .fa-paragraph {
+        margin-left: 4px;
     }
-    .fa-plus:hover {
-        border-color: darkgreen;
-        color: darkgreen;
-    }
-    .fa-minus:hover {
-        border-color: maroon;
-        color: maroon;
-    }
-    .btn-save {
-
+    .glyphicon-volume-up, .glyphicon-volume-off {
+        margin-left: 3px;
+     }
+    .glyphicon-menu-hamburger {
+        font-size: 20px;
+        top: 5px;
     }
 }
 
