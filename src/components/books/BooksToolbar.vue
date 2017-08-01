@@ -65,9 +65,9 @@ export default {
       }
     }
   },
-  
+
   props: {
-    
+
   },
 
   computed: mapGetters([
@@ -94,7 +94,7 @@ export default {
     },
     editBook () {
       // console.log('/books/edit/'+ this.$store.state.currentBook._id)
-      this.$router.push('/books/edit/' + this.$store.state.currentBook._id)
+      this.$router.push('/books/edit/' + this.$store.state.currentBookMeta._id)
     },
     importBook () {
       console.log('event ok')

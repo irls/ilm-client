@@ -21,7 +21,9 @@ export default {
     // , CanvasAbsolute
   },
 
-  computed: mapGetters(['isLoggedIn']),
+  computed: {
+      ...mapGetters(['isLoggedIn']),
+  },
 
   watch: {
     '$route' () {
@@ -32,14 +34,11 @@ export default {
   },
 
   created () {
-    // initiate books list
-    this.updateBooksList()
+
   },
 
   methods: {
-
     ...mapActions(['loadBook', 'updateBooksList'])
-
   }
 }
 </script>

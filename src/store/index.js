@@ -1,9 +1,9 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-// import axios from 'axios'
 import superlogin from 'superlogin-client'
 import hoodie from 'pouchdb-hoodie-api'
 import PouchDB from 'pouchdb'
+const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
 
@@ -12,9 +12,22 @@ PouchDB.plugin(hoodie)
 
 Vue.use(Vuex)
 
+const ILM_CONTENT = 'ilm_content';
+const ILM_CONTENT_META = 'ilm_content_meta';
+
 // const API_ALLBOOKS = '/static/books.json'
 
+const BookBlock = new Vuex.Store({
+    state: {
+        parnum: false,
+        deleted: false
+    }
+});
+
 export const store = new Vuex.Store({
+  modules: {
+      bookBlock: BookBlock
+  },
   state: {
     auth: superlogin,
     isLoggedIn: false,
@@ -25,6 +38,13 @@ export const store = new Vuex.Store({
     isEngineer: false,
     isReader: false,
     allRolls: [],
+
+    metaDB: false,
+    contentDB: false,
+    contentDBWatch: false,
+
+    metaRemoteDB: false,
+    contentRemoteDB: false,
 
     books_meta: [],
 
@@ -62,10 +82,34 @@ export const store = new Vuex.Store({
     bookEditMode: state => state.editMode,
     allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode),
     tc_currentBookTasks: state => state.tc_currentBookTasks,
-    tc_tasksByBlock: state => state.tc_tasksByBlock
+    tc_tasksByBlock: state => state.tc_tasksByBlock,
+    contentDBWatch: state => state.contentDBWatch
   },
 
   mutations: {
+
+    set_localDB (state, payload) {
+        state[payload.dbProp] = new PouchDB(payload.dbName);
+    },
+
+    set_remoteDB (state, payload) {
+        let dbPath = superlogin.getDbUrl(payload.dbName);
+        if (process.env.DOCKER) {
+            dbPath = dbPath.replace('couchdb', 'localhost')
+        }
+        state[payload.dbProp] = new PouchDB(dbPath);
+    },
+
+    set_contentDBWatch (state, syncPointer) {
+        state.contentDBWatch =syncPointer;
+    },
+
+    stop_contentDBWatch (state) {
+        if (state.contentDBWatch) {
+            state.contentDBWatch.cancel();
+            state.contentDBWatch = false;
+        }
+    },
 
     SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
       for (var prop in obj) if (['filter', 'language', 'importStatus'].indexOf(prop) > -1) {
@@ -91,7 +135,7 @@ export const store = new Vuex.Store({
       state.currentBook_dirty = false
       state.currentBookMeta_dirty = false
       state.currentBookid = meta._id
-      
+
     },
 
     setEditMode (state, editMode) {
@@ -120,7 +164,7 @@ export const store = new Vuex.Store({
     ALLOW_BOOK_EDIT_MODE (state, allow) {
       state.allowBookEditMode = allow;
     },
-    
+
     TASK_LIST_LOADED (state) {
       for (let jobid in state.tc_userTasks) {
         let job = state.tc_userTasks[jobid]
@@ -157,17 +201,63 @@ export const store = new Vuex.Store({
 
   actions: {
 
+    emptyDB (context) {
+      PouchDB('ilm_content_meta').destroy()
+    },
+
+    // login event
+    connectDB ({ state, commit, dispatch }, session) {
+        console.log('connectDB');
+        commit('RESET_LOGIN_STATE');
+        commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
+        commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
+        commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
+        commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
+
+        state.metaDB.replicate.from(state.metaRemoteDB)
+        .on('complete', (info)=>{
+            dispatch('updateBooksList');
+            state.metaDB.sync(state.metaRemoteDB, {live: true, retry: true})
+            .on('change', (change)=>{
+                console.log('metaDB change', change);
+                dispatch('updateBooksList');
+                dispatch('reloadBookMeta');
+            })
+            .on('error', (err)=>{
+              // handle errors
+            })
+        });
+
+        state.contentDB.replicate.from(state.contentRemoteDB)
+        .on('complete', (info)=>{
+            state.contentDB.sync(state.contentRemoteDB, {live: true, retry: true})
+            .on('change', (change)=>{
+                console.log('contentDB change', change);
+            })
+            .on('error', (err)=>{
+              // handle errors
+            })
+        });
+    },
+
+    // logout event
+    disconnectDB ({ state, commit }) {
+      axios.defaults.headers.common['Authorization'] = false;
+      window.setTimeout(() => {
+          if (state.metaDB) state.metaDB.destroy()
+          if (state.contentDB) state.contentDB.destroy()
+          commit('RESET_LOGIN_STATE');
+      }, 500)
+    },
+
     updateBooksList ({state, commit, dispatch}) {
-      let ilmLibraryMeta = PouchDB('ilm_content_meta').hoodieApi()
+      console.log('updateBooksList');
+      let ilmLibraryMeta = state.metaDB.hoodieApi()
       ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted') && (item.editor == state.auth.getSession().user_id || item.private == false)))
         .then(books => {
           commit('SET_BOOKLIST', books)
           dispatch('tc_loadBookTask')
         })
-    },
-
-    emptyDB (context) {
-      PouchDB('ilm_content_meta').destroy()
     },
 
     deleteCurrentBook (context) {
@@ -176,10 +266,10 @@ export const store = new Vuex.Store({
       // clear currentBookid
     },
 
-    loadBook ({commit, state, dispatch}, bookid) {
-      // console.log('loading currentBook: ', bookid)
-      // if (!bookid) return  // if no currentbookid, exit
-      // if (bookid === context.state.currentBookid) return // skip if already loaded
+    loadBook ({commit, state, dispatch}, book_id) {
+       console.log('loading currentBook: ', book_id)
+      // if (!book_id) return  // if no currentbookid, exit
+      // if (book_id === context.state.currentBookid) return // skip if already loaded
 
       // if currentbook exists, check if currrent book needs saving
       let oldBook = (state.currentBook && state.currentBook._id)
@@ -188,30 +278,87 @@ export const store = new Vuex.Store({
         // save old state
       }
 
-      // check if new book is in cache
-      // if cached locally, load
-      // now query to see if book matches latest _rev
-      // if not, load latest version and replace
-      var dbPathA = superlogin.getDbUrl('ilm_content_meta')
-      if (process.env.DOCKER) dbPathA = dbPathA.replace('couchdb', 'localhost')
-      var dbPathB = superlogin.getDbUrl('ilm_content')
-      if (process.env.DOCKER) dbPathB = dbPathB.replace('couchdb', 'localhost')
-
-      PouchDB(dbPathA).get(bookid).then(meta => {
-        PouchDB(dbPathB).get(bookid).then(book => {
-          commit('SET_CURRENTBOOK', book)
-          commit('SET_CURRENTBOOK_META', meta)
-          commit('TASK_LIST_LOADED')
-        })
-      })
+      state.metaDB.get(book_id).then(meta => {
+        commit('SET_CURRENTBOOK_META', meta)
+        commit('TASK_LIST_LOADED')
+//         state.contentDB.get(book_id).then(book => {
+//           commit('SET_CURRENTBOOK', book)
+//
+//         })
+      }).catch((err)=>{})
     },
-    
-    
+
+    reloadBookMeta ({commit, state, dispatch}) {
+        console.log('reloadBookMeta', state.currentBookMeta._id);
+        if (state.currentBookMeta._id) {
+            state.metaDB.get(state.currentBookMeta._id).then((meta) => {
+                commit('SET_CURRENTBOOK_META', meta)
+            })
+        }
+    },
 
     getBookMeta ({}, bookid) {
-        var dbPathA = superlogin.getDbUrl('ilm_content_meta')
-        if (process.env.DOCKER) dbPathA = dbPathA.replace('couchdb', 'localhost')
-        return PouchDB(dbPathA).get(bookid);
+        return state.metaDB.get(bookid);
+    },
+
+    loadBlocks ({commit, state, dispatch}, params) {
+        return state.contentDB
+        .query('filters_byBook/byBook', {
+            startkey: [params.book_id],
+            include_docs: true,
+            skip: params.page * params.onpage,
+            limit: params.onpage
+        }).then(function (res) {
+            return res.rows;
+        }).catch(function (err) {
+            return err;
+        });
+    },
+
+    watchBlocks ({commit, state, dispatch}, params) {
+        commit('stop_contentDBWatch');
+        let contentDBWatch = state.contentDB.changes({
+            since: 'now',
+            live: true,
+            include_docs: true,
+            filter: function (doc) {
+                return doc.bookid === params.book_id;
+            }
+        });
+        contentDBWatch.removeAllListeners('change');
+        contentDBWatch
+        .on('complete', function(info) {
+            console.log('contentDBWatch Cancelled');
+        }).on('error', function (err) {
+            console.log(err);
+        });
+        commit('set_contentDBWatch', contentDBWatch);
+        return true;
+    },
+
+    putBlock ({commit, state, dispatch}, block) {
+
+      let defBlock = [
+          '_id',
+          '_rev',
+          'tag',
+          'content',
+          'classes',
+          'type',
+          'bookid',
+          'index'
+      ]
+
+        let cleanBlock = _.pick(block, defBlock);
+        console.log('putBlock', cleanBlock);
+        state.contentDB.get(cleanBlock._id).then(function(doc) {
+            return state.contentDB.put(cleanBlock);
+        }).then((response)=>{
+          // handle response
+        }).catch((err) =>{
+            console.log('Block save error:', err);
+        });
+
     },
 
     tc_loadBookTask({state, commit}) {
@@ -223,7 +370,7 @@ export const store = new Vuex.Store({
         })
         .catch((err) => {})
     },
-    
+
     tc_setCurrentBookTasks({state}) {
       for (let jobid in state.tc_userTasks) {
         let job = state.tc_userTasks[jobid]
