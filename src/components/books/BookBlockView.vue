@@ -35,8 +35,8 @@
                   </label>
                   <!-- Block Class selector -->
                   <label>class
-                  <select>
-                    <option v-for="(style, index) in blockTypeClasses.title" :value="style">{{ style }}</option>
+                  <select v-model='block.classes'>
+                    <option v-for="(style, index) in blockClasses" :value="style">{{ style }}</option>
                   </select>
                   </label>
               </div>
@@ -121,6 +121,11 @@ export default {
       'dropdown': dropdown
   },
   props: ['block', 'putBlock'],
+  computed: {
+      blockClasses : function () {
+          return this.blockTypeClasses[this.block.type];
+      }
+  },
   mounted: function() {
        let editor = new MediumEditor('.content-wrap');
   },
@@ -135,6 +140,7 @@ export default {
       },
       assembleBlock: function(el) {
           this.block.content = this.$refs.blockContent.innerHTML;
+          this.block.classes = [this.block.classes];
           this.putBlock(this.block);
           this.isChanged = false;
       }
