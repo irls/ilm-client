@@ -297,7 +297,7 @@ export const store = new Vuex.Store({
         }
     },
 
-    getBookMeta ({}, bookid) {
+    getBookMeta ({state}, bookid) {
         return state.metaDB.get(bookid);
     },
 
