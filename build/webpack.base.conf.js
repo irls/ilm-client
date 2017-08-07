@@ -23,6 +23,9 @@ module.exports = {
     extensions: ['.js', '.vue', '.json'],
     alias: {
       '@': resolve('src'),
+      'medium-editor': path.resolve(__dirname, "../node_modules/medium-editor/dist/js/medium-editor.min.js"),
+      'medium-editor-css': path.resolve(__dirname, "../node_modules/medium-editor/dist/css/medium-editor.min.css"),
+      'medium-editor-theme': path.resolve(__dirname, "../node_modules/medium-editor/dist/css/themes/flat.min.css"),
     }
   },
   module: {

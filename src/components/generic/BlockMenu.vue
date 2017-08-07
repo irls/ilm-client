@@ -7,8 +7,6 @@
     @mouseleave="closeMenu"
     @click="closeMenu">
     <slot></slot>
-    <li>top: {{top}}</li>
-    <li>left: {{left}}</li>
 </ul>
 </template>
 
@@ -16,7 +14,7 @@
 import Vue from 'vue'
 
   export default {
-    name: 'block-context-menu',
+    name: 'block-menu',
     props: [
         'update'
     ],
@@ -34,8 +32,28 @@ import Vue from 'vue'
 
             let dir = this.$refs.menu.getAttribute('dir') || 'top';
 
-            this.left = x + 2 + 'px';
-            this.top = y + window.pageYOffset + 'px';
+            switch(dir) {
+              case 'top' :
+              {   /*(window.pageYOffset<110?110:0) - hack because of layout*/
+                  if (y < this.$refs.menu.offsetHeight + (window.pageYOffset<120?120:0)) {
+                      this.top = target.offsetHeight + 'px';
+                  } else {
+                      this.top = - this.$refs.menu.offsetHeight - 5 + 'px';
+                  }
+                  this.left = 0 + 'px';
+              }
+              break;
+              default : // case bottom
+              {
+                  if (window.innerHeight < y + this.$refs.menu.offsetHeight) {
+                      this.top = - this.$refs.menu.offsetHeight - 5 + 'px';
+                  } else {
+                      this.top = target.offsetHeight + 'px';
+                  }
+                  this.left = 0 + 'px';
+              }
+              break;
+          };
 
         },
 
@@ -47,18 +65,18 @@ import Vue from 'vue'
 
         open: function(e) {
             e.preventDefault();
-            this.viewMenu = true;
-            this.setMenu(e.x, e.y, e.target);
-            this.$refs.menu.focus();
-
-            Vue.nextTick(function() {
+//             if (this.viewMenu == true) {
+//                 this.closeMenu();
+//             } else {
+                this.viewMenu = true;
                 this.setMenu(e.x, e.y, e.target);
                 this.$refs.menu.focus();
-            }.bind(this));
 
-            //console.log('target', e.target);
-            //console.log('target.offsetParent', e.target.offsetParent);
-            //console.log('selection', window.getSelection());
+                Vue.nextTick(function() {
+                    this.setMenu(e.x, e.y, e.target);
+                    this.$refs.menu.focus();
+                }.bind(this));
+//             }
         }
     },
     watch: {

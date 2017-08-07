@@ -17,13 +17,31 @@
     </div>
     <div class="table-cell">
         <div class="table-body -content">
-            <div class="table-row controls-top"
-            data-toggle="tooltip" v-bind:title="JSON.stringify(block)">
+            <div class="table-row controls-top">
+            <!--data-toggle="tooltip" v-bind:title="JSON.stringify(block)">-->
 
               <div class="par-ctrl -hidden -left">
-                <popover placement="top" content="content">
-                  <i class="glyphicon glyphicon-menu-hamburger"></i>
-                </popover>
+                  <span class="block-menu" style="position: relative;">
+                  <i class="glyphicon glyphicon-menu-hamburger"
+                  @click.prevent="$refs.blockMenu.open">
+                  </i>
+                  <block-menu
+                      ref="blockMenu"
+                      dir="top"
+                      :update="update">
+                    <li @click="update">Show hidden flags</li>
+                    <li class="separator"></li>
+                    <li>Insert block before</li>
+                    <li>Insert block after</li>
+                    <li>Delete block</li>
+                    <li>Split block</li>
+                    <li>Join with previous block</li>
+                    <li>Join with next block</li>
+                    <li class="separator"></li>
+                    <li @click="discard">Discard un-saved changes</li>
+                    <li>Revert to original audio</li>
+                  </block-menu>
+                  </span>
 
                   <!--<i class="fa fa-trash-o fa-lg"></i>-->
                   <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
@@ -51,22 +69,27 @@
             </div>
             <!--<div class="table-row controls-top">-->
 
-            <div class="table-row ocean -relative">
+            <div class="table-row ocean">
                 <hr v-if="block.type=='hr'" />
 
                 <div v-else class="content-wrap"
                 ref="blockContent"
                 v-html="block.content"
                 v-bind:class="[ block.type, block.classes, { 'updated': isUpdated }]"
-                @click=""
+                @click="onClick"
                 @input="input"
-                @contextmenu.prevent="$refs.blockCntx.openMenu">
+                @contextmenu.prevent="onContext">
                 </div>
                 <!--<div class="content-wrap">-->
 
-                <block-context-menu ref="blockCntx"
-                :update="update"
-                ></block-context-menu>
+                <block-cntx-menu
+                    ref="blockCntx"
+                    dir="bottom"
+                    :update="update"
+                >
+                  <li>{{ block.type }}</li>
+                  <li>{{ block.classes }}</li>
+                </block-cntx-menu>
 
             </div>
             <!--<div class="table-row ocean">-->
@@ -94,13 +117,17 @@
 
 <script>
 import Vue from 'vue'
-require('./vendor/medium-editor.min.js');
+//require('./vendor/medium-editor.min.js');
+require('medium-editor');
+require('medium-editor-css');
+require('medium-editor-theme');
+import BlockMenu from '../generic/BlockMenu';
 import BlockContextMenu from '../generic/BlockContextMenu';
-import { popover, dropdown } from 'vue-strap'
 
 export default {
   data () {
     return {
+      editor: false,
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClasses: {
           title: [' ', 'subtitle', 'author', 'translator'],
@@ -116,9 +143,8 @@ export default {
     }
   },
   components: {
-      'block-context-menu': BlockContextMenu,
-      'popover': popover,
-      'dropdown': dropdown
+      'block-menu': BlockMenu,
+      'block-cntx-menu': BlockContextMenu,
   },
   props: ['block', 'putBlock'],
   computed: {
@@ -127,16 +153,41 @@ export default {
       }
   },
   mounted: function() {
-       let editor = new MediumEditor('.content-wrap');
+      this.editor = new MediumEditor('.content-wrap', {
+          toolbar: {
+              buttons: ['bold', 'italic', 'underline', 'anchor', 'quote'],
+          }
+      });
+//       this.editor.subscribe('hideToolbar', (data, editable)=>{
+//
+//       });
+//       this.editor.subscribe('positionToolbar', ()=>{
+//
+//       })
   },
   methods: {
+      onClick: function() {
+          $('.medium-editor-toolbar').each(function(){
+                $(this).css('display', 'inline-block');
+          });
+      },
+      onContext: function(e) {
+          $('.medium-editor-toolbar').each(function(){
+              $(this).css('display', 'none');
+          });
+          this.$refs.blockCntx.open(e);
+      },
       update: function() {
           console.log('update');
-          this.block.content += 'BBB';
       },
       input: function(el) {
           this.isChanged = true;
           el.target.focus();
+      },
+      discard: function(el) {
+          this.$refs.blockContent.innerHTML = this.block.content;
+          this.isChanged = false;
+          this.$refs.blockContent.focus();
       },
       assembleBlock: function(el) {
           this.block.content = this.$refs.blockContent.innerHTML;
@@ -157,8 +208,6 @@ export default {
 }
 </script>
 
-<style src='./css/medium-editor/medium-editor.min.css'></style>
-<style src='./css/medium-editor/flat.min.css'></style>
 <style lang='less' scoped>
 @variable: 90px;
 .ocean {
