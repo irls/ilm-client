@@ -76,9 +76,9 @@
                 ref="blockContent"
                 v-html="block.content"
                 v-bind:class="[ block.type, block.classes, { 'updated': isUpdated }]"
-                @click=""
+                @click="onClick"
                 @input="input"
-                @contextmenu.prevent="$refs.blockCntx.open">
+                @contextmenu.prevent="onContext">
                 </div>
                 <!--<div class="content-wrap">-->
 
@@ -127,6 +127,7 @@ import BlockContextMenu from '../generic/BlockContextMenu';
 export default {
   data () {
     return {
+      editor: false,
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClasses: {
           title: [' ', 'subtitle', 'author', 'translator'],
@@ -152,9 +153,30 @@ export default {
       }
   },
   mounted: function() {
-       let editor = new MediumEditor('.content-wrap');
+      this.editor = new MediumEditor('.content-wrap', {
+          toolbar: {
+              buttons: ['bold', 'italic', 'underline', 'anchor', 'quote'],
+          }
+      });
+//       this.editor.subscribe('hideToolbar', (data, editable)=>{
+//
+//       });
+//       this.editor.subscribe('positionToolbar', ()=>{
+//
+//       })
   },
   methods: {
+      onClick: function() {
+          $('.medium-editor-toolbar').each(function(){
+                $(this).css('display', 'inline-block');
+          });
+      },
+      onContext: function(e) {
+          $('.medium-editor-toolbar').each(function(){
+              $(this).css('display', 'none');
+          });
+          this.$refs.blockCntx.open(e);
+      },
       update: function() {
           console.log('update');
       },

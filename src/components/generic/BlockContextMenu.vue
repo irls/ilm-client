@@ -46,7 +46,6 @@ import Vue from 'vue'
         },
 
         open: function(e) {
-            console.log('cntx-open');
             e.preventDefault();
             this.viewMenu = true;
             this.setMenu(e.x, e.y, e.target);
@@ -56,6 +55,10 @@ import Vue from 'vue'
                 this.setMenu(e.x, e.y, e.target);
                 this.$refs.menu.focus();
             }.bind(this));
+
+            //console.log('target', e.target);
+            //console.log('target.offsetParent', e.target.offsetParent);
+            //console.log('selection', window.getSelection());
         }
     },
     watch: {
