@@ -29,7 +29,7 @@
                   :audiobook="task_audiobook" 
                   :multiple="audio_import_multiple"/>
       <div class="table tasks-box">
-      <section v-for="job in tasks.list">
+      <section v-for="job in tasks.list"><!-- tc_userTasks -->
       <template v-if="job.total > 0">
         <div class="tr">
           <div class="td task-type">
@@ -130,60 +130,72 @@ export default {
 
   computed: mapGetters([
     'isAdmin',
-    'isLibrarian'
+    'isLibrarian',
+    'tc_userTasks'
   ]),
+  
+  watch: {
+    'tc_userTasks': {
+      handler(val) {
+        this.parseTasks();
+      },
+      deep: true
+    }
+  },
 
   mounted() {
     var self = this
     self.getTaskTypes().then(function(){
-      self.getTasks()
+      self.parseTasks();
     })
     self.getTaskUsers()
   },
 
   methods: {
-    getTasks() {
-      //axios.get(process.env.ILM_API + '/api/v1/tasks')
-      axios.get(API_URL + 'tasks').then(tasks => {
-        let tasks_formatted = {total: 0, list: []};
-        let jobs = tasks.data.rows;
-        for (let jobId in jobs) {
+    parseTasks() {
+      let tasks_formatted = {total: 0, list: []};
+      let jobs = Object.assign({}, this.tc_userTasks.list);
+      for (let jobId in jobs) {
+        jobs[jobId] = Object.assign({}, this.tc_userTasks.list[jobId]);
+        this.getBookMeta(jobs[jobId].bookid).then(meta => {
+            jobs[jobId].title = meta.title;
+            jobs[jobId].status = meta.status;
+            jobs[jobId].meta = meta
+        }).catch(error => {});
+        this.getAudioBook(jobs[jobId].bookid).then(audio => {
+          jobs[jobId].audio = audio;
+        })
 
-          this.getBookMeta(jobs[jobId].bookid).then(meta => {
-              jobs[jobId].title = meta.title;
-              jobs[jobId].status = meta.status;
-              jobs[jobId].meta = meta
-          }).catch(error => {});
-          this.getAudioBook(jobs[jobId].bookid).then(audio => {
-            jobs[jobId].audio = audio;
-          })
+        tasks_formatted.list.push(jobs[jobId]);
+        jobs[jobId].total = jobs[jobId].tasks.length;
+        tasks_formatted.total += jobs[jobId].total;
+        jobs[jobId].tasksVisible = false;
 
-          tasks_formatted.list.push(jobs[jobId]);
-          jobs[jobId].total = jobs[jobId].tasks.length;
-          tasks_formatted.total += jobs[jobId].total;
-          jobs[jobId].tasksVisible = false;
-
-          jobs[jobId].tasks = jobs[jobId].tasks.reduce((acc, val)=>{
-            let key = 'type_'+val.type;
-            if (acc.hasOwnProperty(key)) acc[key].count ++;
-            else {
-                val.title = this.task_types.tasks.find((s_type) => {
-                    return s_type._id == val.type
-                }).title;
-                acc[key] = {count:1, ...val};
-            }
-            return  acc;
-          }, {} );
-
+        let tasks_list = [];
+        for (let _t in this.tc_userTasks.list[jobId].tasks) {
+          tasks_list.push(Object.assign({}, this.tc_userTasks.list[jobId].tasks[_t]));
         }
-        this.tasks = tasks_formatted;
-      })
-      .catch(error => {})
+        jobs[jobId].tasks = Object.assign({}, this.tc_userTasks.list[jobId].tasks);
+        jobs[jobId].tasks = tasks_list.reduce((acc, val)=>{
+          let key = 'type_'+val.type;
+          if (acc.hasOwnProperty(key)) acc[key].count ++;
+          else {
+              val.title = this.task_types.tasks.find((s_type) => {
+                  return s_type._id == val.type
+              }).title;
+              acc[key] = {count:1, ...val};
+          }
+          return  acc;
+        }, {} );
+
+      }
+      this.tasks = tasks_formatted;
     },
     taskAddModalClose(create) {
       this.taskAddModalActive = false
       if (create) {
-        this.getTasks()
+        this.$store.dispatch('tc_loadBookTask')
+        //this.getTasks()
       }
     },
     getTaskTypes() {
@@ -237,7 +249,8 @@ export default {
       let self = this
       self.show_import_book_modal = false
       //console.log(response)
-      self.getTasks()
+      //self.getTasks()
+      self.$store.dispatch('tc_loadBookTask')
       self.import_book_task_id = ''
     },
     importAudioClose(response) {
@@ -246,7 +259,8 @@ export default {
       this.import_audio_task = {};
       this.import_book_id = ''
       this.task_audiobook = {}
-      this.getTasks()
+      //this.getTasks()
+      this.$store.dispatch('tc_loadBookTask')
     },
     onTabChange() {
       return true

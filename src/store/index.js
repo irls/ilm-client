@@ -14,6 +14,7 @@ Vue.use(Vuex)
 
 const ILM_CONTENT = 'ilm_content';
 const ILM_CONTENT_META = 'ilm_content_meta';
+const ILM_TASKS = 'ilm_tasks';
 
 // const API_ALLBOOKS = '/static/books.json'
 
@@ -42,9 +43,11 @@ export const store = new Vuex.Store({
     metaDB: false,
     contentDB: false,
     contentDBWatch: false,
+    tasksDB: false,
 
     metaRemoteDB: false,
     contentRemoteDB: false,
+    tasksRemoteDB: false,
 
     books_meta: [],
 
@@ -60,7 +63,7 @@ export const store = new Vuex.Store({
     allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": []},
     tc_tasksByBlock: {},
-    tc_userTasks: [],
+    tc_userTasks: {list: [], total: 0},
     API_URL: process.env.ILM_API + '/api/v1/'
   },
 
@@ -83,6 +86,7 @@ export const store = new Vuex.Store({
     allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode),
     tc_currentBookTasks: state => state.tc_currentBookTasks,
     tc_tasksByBlock: state => state.tc_tasksByBlock,
+    tc_userTasks: state => state.tc_userTasks,
     contentDBWatch: state => state.contentDBWatch
   },
 
@@ -166,8 +170,10 @@ export const store = new Vuex.Store({
     },
 
     TASK_LIST_LOADED (state) {
-      for (let jobid in state.tc_userTasks) {
-        let job = state.tc_userTasks[jobid]
+      state.tc_userTasks.total = 0;
+      for (let jobid in state.tc_userTasks.list) {
+        let job = Object.assign({}, state.tc_userTasks.list[jobid])
+        state.tc_userTasks.total+= job.tasks.length
         if (job.bookid == state.currentBookid) {
           /*if (t.comment) {
             t.comment = t.comment.replace('\n', '<br>');
@@ -216,8 +222,10 @@ export const store = new Vuex.Store({
         commit('RESET_LOGIN_STATE');
         commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
+        commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
+        commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
 
         state.metaDB.replicate.from(state.metaRemoteDB)
         .on('complete', (info)=>{
@@ -242,6 +250,14 @@ export const store = new Vuex.Store({
             .on('error', (err)=>{
               // handle errors
             })
+        });
+        state.tasksDB.replicate.from(state.tasksRemoteDB)
+        .on('complete', (info) => {
+          state.tasksDB.sync(state.tasksRemoteDB, {live: true, retry: true})
+          .on('change', (change) => {
+            //console.log('Tasks DB change', change);
+            dispatch('tc_loadBookTask');
+          })
         });
     },
 
@@ -384,15 +400,15 @@ export const store = new Vuex.Store({
       axios.get(state.API_URL + 'tasks')
         .then((list) => {
           state.tc_tasksByBlock = {}
-          state.tc_userTasks = list.data.rows
+          state.tc_userTasks = {list: list.data.rows, total: 0}
           commit('TASK_LIST_LOADED')
         })
         .catch((err) => {})
     },
 
     tc_setCurrentBookTasks({state}) {
-      for (let jobid in state.tc_userTasks) {
-        let job = state.tc_userTasks[jobid]
+      for (let jobid in state.tc_userTasks.list) {
+        let job = state.tc_userTasks.list[jobid]
         if (job.bookid == state.currentBookid) {
           /*if (t.comment) {
             t.comment = t.comment.replace('\n', '<br>');
