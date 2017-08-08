@@ -17,8 +17,8 @@
     </div>
     <div class="table-cell">
         <div class="table-body -content">
-            <div class="table-row controls-top">
-            <!--data-toggle="tooltip" v-bind:title="JSON.stringify(block)">-->
+            <div class="table-row controls-top"
+            data-toggle="tooltip" v-bind:title="JSON.stringify(block)">
 
               <div class="par-ctrl -hidden -left">
                   <span class="block-menu" style="position: relative;">
@@ -60,8 +60,19 @@
               </div>
               <!--<div class="-hidden">-->
 
-              <div class="par-ctrl -hidden -right">
-                  <i class="fa fa-play-circle-o"></i>
+              <div class="par-ctrl -audio -hidden -right">
+                  <template v-if="player">
+                      <i class="fa fa-play-circle-o" v-if="!isAudStarted"
+                      @click="audPlay(block._id, $event)"></i>
+                      <template v-else>
+                        <i class="fa fa-stop-circle-o"
+                          @click="audStop(block._id, $event)"></i>
+                        <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
+                          @click="audPause(block._id, $event)"></i>
+                        <i class="fa fa-play-circle-o" v-else
+                          @click="audResume(block._id, $event)"></i>
+                        </template>
+                  </template>
                   <i class="fa fa-microphone"></i>
               </div>
               <!--<div class="-hidden">-->
@@ -75,7 +86,9 @@
                 <div v-else class="content-wrap"
                 ref="blockContent"
                 v-html="block.content"
-                v-bind:class="[ block.type, block.classes, { 'updated': isUpdated }]"
+                :id="block._id"
+                :class="[ block.type, block.classes, { 'updated': isUpdated, 'playing': isAudStarted }]"
+                :data-audiosrc="block.audiosrc"
                 @click="onClick"
                 @input="input"
                 @contextmenu.prevent="onContext">
@@ -117,10 +130,10 @@
 
 <script>
 import Vue from 'vue'
-//require('./vendor/medium-editor.min.js');
 require('medium-editor');
 require('medium-editor-css');
 require('medium-editor-theme');
+import ReadAlong from 'readalong'
 import BlockMenu from '../generic/BlockMenu';
 import BlockContextMenu from '../generic/BlockContextMenu';
 
@@ -128,6 +141,7 @@ export default {
   data () {
     return {
       editor: false,
+      player: false,
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClasses: {
           title: [' ', 'subtitle', 'author', 'translator'],
@@ -139,7 +153,9 @@ export default {
           hr: [' ', 'section', 'large', 'small']
       },
       isChanged: false,
-      isUpdated: false
+      isUpdated: false,
+      isAudStarted: false,
+      isAudPaused: false
     }
   },
   components: {
@@ -158,12 +174,30 @@ export default {
               buttons: ['bold', 'italic', 'underline', 'anchor', 'quote'],
           }
       });
-//       this.editor.subscribe('hideToolbar', (data, editable)=>{
-//
-//       });
-//       this.editor.subscribe('positionToolbar', ()=>{
-//
-//       })
+//       this.editor.subscribe('hideToolbar', (data, editable)=>{});
+//       this.editor.subscribe('positionToolbar', ()=>{})
+
+      if (!this.player && this.block.audiosrc) {
+          this.player = new ReadAlong({
+              forceLineScroll: false
+          },{
+              on_start: ()=>{
+                  this.isAudStarted = true;
+                  this.isAudPaused = false;
+              },
+              on_pause: ()=>{
+                  this.isAudPaused = true;
+              },
+              on_resume: ()=>{
+                  this.isAudPaused = false;
+              },
+              on_complete: ()=>{
+                  this.isAudStarted = false;
+                  this.isAudPaused = false;
+                  this.audCleanClasses(block_id, ev);
+              }
+          });
+      }
   },
   methods: {
       onClick: function() {
@@ -194,6 +228,32 @@ export default {
           this.block.classes = [this.block.classes];
           this.putBlock(this.block);
           this.isChanged = false;
+      },
+      audPlay: function(block_id, ev) {
+          this.audCleanClasses(block_id, ev);
+          this.player.playBlock(block_id);
+      },
+      audPause: function(block_id, ev) {
+          this.player.pause();
+      },
+      audResume: function(block_id, ev) {
+          this.player.resume();
+      },
+      audStop: function(block_id, ev) {
+          this.player.pause();
+          this.isAudStarted = false;
+          this.isAudPaused = false;
+          this.audCleanClasses(block_id, ev);
+      },
+      audCleanClasses: function(block_id, ev) {
+          let reading_class = this.player.config.reading_class
+          $('#'+block_id).find('.'+reading_class).each(function(){
+                $(this).removeClass(reading_class);
+          });
+          let trail_class = this.player.config.trail_class
+          $('#'+block_id).find('.'+trail_class).each(function(){
+                $(this).removeClass(trail_class);
+          });
       }
   },
   watch: {
@@ -208,7 +268,7 @@ export default {
 }
 </script>
 
-<style lang='less' scoped>
+<style lang='less'>
 @variable: 90px;
 .ocean {
     padding: 0;
@@ -309,14 +369,16 @@ export default {
 
     .content-wrap {
         margin: 6px 0 4px 0;
-        padding: 6px 11px;
+        /*padding: 6px 11px;*/
+        padding: 3.2px;
         border-radius: 8px;
         box-shadow: none;
         transition: box-shadow 900ms;
 
             &:hover {
                 border: 1px solid silver;
-                padding: 5px 10px;
+                /*padding: 5px 10px;*/
+                padding: 2.2px;
                 background: rgba(219, 232, 255, .3);
             }
             &:focus {
@@ -352,6 +414,82 @@ export default {
         font-size: 20px;
         top: 5px;
     }
+    &.-audio {
+        .fa {
+            font-size: 22px;
+        }
+    }
 }
 
+  .content-wrap {
+      w {position: relative;}
+  }
+  /* A tricky way to create a lightweight highlight effect */
+  .content-wrap[data-audiosrc].playing {
+      w[data-map] {
+        background: linear-gradient(
+            transparent,
+            transparent 50%,
+            rgba(0,255,0,.2) 55%,
+            transparent 70%,
+            transparent
+        );
+        /*cursor: pointer*/
+      }
+      w:not([data-map]) {
+        background: linear-gradient(
+            transparent,
+            transparent 30%,
+            rgba(255,0,0,.3) 55%,
+            transparent 80%,
+            transparent
+        );
+      }
+
+      /* hover effect to show which word is affected */
+      w.audio-highlight {
+          border-bottom: 5px solid rgb(226,226,226);
+          border-radius: 3px;
+      }
+      w.audio-trail {
+          border-bottom: 5px solid rgb(240,240,240);
+          border-radius: 3px;
+      }
+      /* gap markers -- although CSS content messes up wrapping and is tricky to detect clicks */
+      w[data-gap] {margin-right: 52px} /* Make room for marker */
+      w[data-gapbefore] {margin-left: 50px} /* Make room marker */
+      w[data-gap]:after, w[data-gapbefore]:before {
+        cursor: pointer;
+        padding: 5px;
+        margin: 5px;
+        position: absolute;
+        width: auto;
+        border-radius: .5em;
+        border: 1px solid gray;
+        background: silver;
+        font: 10pt 'FontAwesome';
+      }
+      w[data-gap]:after {
+          content: '\f060\00A0\f1c7';
+          margin-left: 4px;
+      }
+      w[data-gapbefore]:before {
+          content: '\f1c7\00A0\f061';
+          left: -50px;
+      }
+      w.audio-highlight {
+          background: linear-gradient(
+              transparent 20%,
+              rgba(255,255,0,.8) 55%,
+              transparent 80%
+          );
+      }
+      w.audio-trail {
+          background: linear-gradient(
+              transparent 30%,
+              rgba(255,255,0,.4) 55%,
+              transparent 70%
+          );
+      }
+  }
 </style>
