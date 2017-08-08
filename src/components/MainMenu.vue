@@ -19,7 +19,7 @@
         ><a>Libraries</a></router-link>
 
         <router-link to="/assignments" class='presentation' tag='li'
-        v-show='true'><a>Assignments</a></router-link>
+        v-show='true'><a>Assignments</a><sup>{{tc_userTasks.total}}</sup></router-link>
 
      </ul>
     </td>
@@ -40,6 +40,7 @@
 
 <script>
 import access from "../mixins/access.js"
+import { mapGetters } from 'vuex'
 
 
 export default {
@@ -49,6 +50,9 @@ export default {
     }
   },
   mixins: [access],
+  computed: 
+    mapGetters (['tc_userTasks'])
+  
 }
 </script>
 
