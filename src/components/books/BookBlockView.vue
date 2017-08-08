@@ -237,6 +237,7 @@ export default {
           this.player.pause();
       },
       audResume: function(block_id, ev) {
+          this.audCleanClasses(block_id, ev);
           this.player.resume();
       },
       audStop: function(block_id, ev) {
