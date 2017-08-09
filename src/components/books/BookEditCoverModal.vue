@@ -110,9 +110,6 @@
 
 import { modal } from 'vue-strap'
 import { Carousel3d, Slide } from 'vue-carousel-3d'
-// import Quill from 'quill'
-import '../../../node_modules/quill/dist/quill.core.css'
-import '../../../node_modules/quill/dist/quill.snow.css'
 import modalMixin from './../../mixins/modal'
 import BOOKCOVERS from '../../../static/bookcovers.json'
 // import Canvas2Image from 'canvas2image'
