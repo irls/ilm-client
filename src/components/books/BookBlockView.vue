@@ -194,7 +194,7 @@ export default {
               on_complete: ()=>{
                   this.isAudStarted = false;
                   this.isAudPaused = false;
-                  this.audCleanClasses(block_id, ev);
+                  this.audCleanClasses(this.block._id, {});
               }
           });
       }
