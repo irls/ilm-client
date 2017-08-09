@@ -48,11 +48,10 @@ import Vue from 'vue'
         open: function(e) {
             e.preventDefault();
             this.viewMenu = true;
-            this.setMenu(e.x, e.y, e.target);
+            this.setMenu(e.clientX, e.clientY, e.target);
             this.$refs.menu.focus();
-
             Vue.nextTick(function() {
-                this.setMenu(e.x, e.y, e.target);
+                this.setMenu(e.clientX, e.clientY, e.target);
                 this.$refs.menu.focus();
             }.bind(this));
 
