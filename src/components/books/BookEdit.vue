@@ -44,7 +44,7 @@ export default {
   computed: {
       // --- From store --- //
       ...mapState({
-          block: 'bookBlock'
+          bookBlock: 'bookBlock'
       }),
       ...mapGetters({
           book: 'currentBook',
@@ -87,7 +87,12 @@ export default {
             let tmp = [];
             if (result.length > 0) {
                 result.forEach((el, idx, arr)=>{
-                    let newBlock = { ...this.block, ...el.doc }
+                    //let newBlock = {...this.bookBlock, ...el.doc }
+                    let newBlock = Object.assign({
+                        parnum: false,
+                        deleted: false,
+                        footnotes: []
+                    }, el.doc);
                     tmp.push(newBlock);
                 });
                 if (tmp.length>0) this.parlist.push(tmp)//([...tmp]);

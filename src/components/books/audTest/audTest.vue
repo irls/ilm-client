@@ -29,7 +29,8 @@ export default {
         ],
         "type": "par",
         "bookid": "wrapper-1_en",
-        "index": 0.02
+        "index": 0.02,
+        "footnotes": []
       }
     }
   },

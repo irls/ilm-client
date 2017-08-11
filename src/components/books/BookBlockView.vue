@@ -1,5 +1,5 @@
 <template>
-<div class="table-body -block">
+<div class="table-body -block" :id="block._id">
     <div class="table-cell controls-left">
         <div class="table-row">
             <span>{{block.parnum?block.parnum:'&nbsp;'}}</span>
@@ -16,7 +16,9 @@
         </div>
     </div>
     <div class="table-cell">
-        <div class="table-body -content">
+        <div class="table-body -content"
+        @mouseleave="onBlur"
+        @click="onBlur">
             <div class="table-row controls-top"
             data-toggle="tooltip" v-bind:title="JSON.stringify(block)">
 
@@ -84,13 +86,15 @@
                 <hr v-if="block.type=='hr'" />
 
                 <div v-else class="content-wrap"
+                :id="'content-'+block._id"
                 ref="blockContent"
                 v-html="block.content"
-                :id="block._id"
                 :class="[ block.type, block.classes, { 'updated': isUpdated, 'playing': isAudStarted }]"
                 :data-audiosrc="block.audiosrc"
                 @click="onClick"
-                @input="input"
+                @input="onInput"
+                @mouseenter="onHover"
+
                 @contextmenu.prevent="onContext">
                 </div>
                 <!--<div class="content-wrap">-->
@@ -100,12 +104,31 @@
                     dir="bottom"
                     :update="update"
                 >
-                  <li>{{ block.type }}</li>
-                  <li>{{ block.classes }}</li>
+                  <li v-if="selection.collapsed" @click="addFootnote">Add footnote</li>
+                  <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
 
             </div>
             <!--<div class="table-row ocean">-->
+
+            <div class="table-row content-footnotes"
+              v-if="block.footnotes.length > 0">
+              <div class="table-body footnote"
+                v-for="(footnote, footnote_Idx) in block.footnotes">
+                <div class="table-row">
+                  <div class="table-cell -num">{{footnote_Idx+1}}.</div>
+                  <div class="table-cell -text"
+                    :class="['js-footnote-val']"
+                    contenteditable="true"
+                    @input="commitFootnote(footnote_Idx, $event)"
+                    v-html="footnote">
+                  </div>
+                  <div class="table-cell -control">
+                    <span @click="delFootnote(footnote_Idx)"><i class="fa fa-trash"></i></span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div class="table-row controls-bottom">
                 <div class="save-block -hidden -left"
@@ -142,6 +165,7 @@ export default {
     return {
       editor: false,
       player: false,
+      selection: false,
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClasses: {
           title: [' ', 'subtitle', 'author', 'translator'],
@@ -166,7 +190,10 @@ export default {
   computed: {
       blockClasses : function () {
           return this.blockTypeClasses[this.block.type];
-      }
+      }/*,
+      footnotes : function () {
+          return this.this.block.footnotes ? this.this.block.footnotes : [];
+      }*/
   },
   mounted: function() {
       this.editor = new MediumEditor('.content-wrap', {
@@ -200,61 +227,99 @@ export default {
       }
   },
   methods: {
+      onHover: function() {
+        this.$refs.blockContent.focus();
+      },
+      onBlur: function() {
+        if (this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
+      },
       onClick: function() {
-          $('.medium-editor-toolbar').each(function(){
-                $(this).css('display', 'inline-block');
-          });
+        $('.medium-editor-toolbar').each(function(){
+              $(this).css('display', 'inline-block');
+        });
       },
       onContext: function(e) {
-          $('.medium-editor-toolbar').each(function(){
-              $(this).css('display', 'none');
-          });
-          this.$refs.blockCntx.open(e);
+        $('.medium-editor-toolbar').each(function(){
+            $(this).css('display', 'none');
+        });
+        this.selection = window.getSelection().getRangeAt(0).cloneRange();
+        //console.log(this.selection);
+        this.$refs.blockCntx.open(e);
       },
       update: function() {
-          console.log('update');
+        console.log('update');
       },
-      input: function(el) {
-          this.isChanged = true;
-          el.target.focus();
+      onInput: function(el) {
+        this.isChanged = true;
+        el.target.focus();
       },
       discard: function(el) {
-          this.$refs.blockContent.innerHTML = this.block.content;
-          this.isChanged = false;
-          this.$refs.blockContent.focus();
+        this.$refs.blockContent.innerHTML = this.block.content;
+        this.isChanged = false;
+        this.$refs.blockContent.focus();
       },
       assembleBlock: function(el) {
-          this.block.content = this.$refs.blockContent.innerHTML;
-          this.block.classes = [this.block.classes];
-          this.putBlock(this.block);
-          this.isChanged = false;
+        this.block.content = this.$refs.blockContent.innerHTML;
+        this.block.classes = [this.block.classes];
+        this.putBlock(this.block);
+        this.isChanged = false;
       },
       audPlay: function(block_id, ev) {
-          this.audCleanClasses(block_id, ev);
-          this.player.playBlock(block_id);
+        this.audCleanClasses(block_id, ev);
+        this.player.playBlock('content-'+block_id);
       },
       audPause: function(block_id, ev) {
-          this.player.pause();
+        this.player.pause();
       },
       audResume: function(block_id, ev) {
-          this.audCleanClasses(block_id, ev);
-          this.player.resume();
+        this.audCleanClasses(block_id, ev);
+        this.player.resume();
       },
       audStop: function(block_id, ev) {
-          this.player.pause();
-          this.isAudStarted = false;
-          this.isAudPaused = false;
-          this.audCleanClasses(block_id, ev);
+        this.player.pause();
+        this.isAudStarted = false;
+        this.isAudPaused = false;
+        this.audCleanClasses(block_id, ev);
       },
       audCleanClasses: function(block_id, ev) {
-          let reading_class = this.player.config.reading_class
-          $('#'+block_id).find('.'+reading_class).each(function(){
-                $(this).removeClass(reading_class);
-          });
-          let trail_class = this.player.config.trail_class
-          $('#'+block_id).find('.'+trail_class).each(function(){
-                $(this).removeClass(trail_class);
-          });
+        let reading_class = this.player.config.reading_class
+        $('#'+block_id).find('.'+reading_class).each(function(){
+          $(this).removeClass(reading_class);
+        });
+        let trail_class = this.player.config.trail_class
+        $('#'+block_id).find('.'+trail_class).each(function(){
+          $(this).removeClass(trail_class);
+        });
+      },
+      addFootnote: function() {
+        let el = document.createElement('SUP');
+        el.className = 'js-footnote-el';
+        el.setAttribute('data-idx', this.block.footnotes.length);
+        this.selection.insertNode(el);
+        let pos = this.updFootnotes(this.block.footnotes.length);
+        this.block.footnotes.splice(pos, 0, '');
+        this.isChanged = true;
+      },
+      delFootnote: function(pos) {
+        $('#'+this.block._id).find(`.js-footnote-el[data-idx='${pos+1}']`).remove();
+        this.updFootnotes();
+        this.block.footnotes.splice(pos, 1);
+        this.isChanged = true;
+      },
+      updFootnotes: function(c_pos = 0) {
+        let pos = 0;
+        $('#'+this.block._id).find('.js-footnote-el').each(function(idx) {
+          if ($(this).data('idx') == c_pos) pos = idx;
+          $(this).text(idx+1).attr('data-idx', idx+1);
+        });
+        return pos;
+      },
+      commitFootnote: function(pos, ev) {
+        this.block.footnotes[pos] = ev.target.innerText.trim();
+      },
+
+      test: function() {
+          console.log('addFootnote'+this.block._id, this.block.footnotes);
       }
   },
   watch: {
@@ -300,6 +365,31 @@ export default {
     }
     .-right {
         float: right;
+    }
+
+    &.footnote {
+      margin-top: 5px;
+      margin-bottom: 10px;
+
+      .table-row {
+
+      }
+
+      .-num {
+        padding-right: 5px;
+        padding-top: 3px;
+      }
+      .-text {
+        width: 100%;
+        background: rgba(204, 255, 217, 0.5);
+        padding: 3px;
+        height: 21px;
+        min-height: 21px;
+      }
+      .-control {
+        padding-left: 10px;
+
+      }
     }
 }
 
@@ -369,28 +459,28 @@ export default {
     }
 
     .content-wrap {
-        margin: 6px 0 4px 0;
-        /*padding: 6px 11px;*/
-        padding: 3.2px;
-        border-radius: 8px;
-        box-shadow: none;
-        transition: box-shadow 900ms;
+      margin: 6px 0 4px 0;
+      /*padding: 6px 11px;*/
+      padding: 3.2px;
+      border-radius: 8px;
+      box-shadow: none;
+      transition: box-shadow 900ms;
 
-            &:hover {
-                border: 1px solid silver;
-                /*padding: 5px 10px;*/
-                padding: 2.2px;
-                background: rgba(219, 232, 255, .3);
-            }
-            &:focus {
-                outline: none;
-                border-color: #9ecaed;
-                box-shadow: 0 0 10px #9ecaed;
-            }
-            &.updated {
-                box-shadow: 0 0 10px rgba(56, 171, 53, 0.7);
-                transition: box-shadow 200ms;
-            }
+      &:hover {
+          border: 1px solid silver;
+          /*padding: 5px 10px;*/
+          padding: 2.2px;
+          background: rgba(219, 232, 255, .3);
+      }
+      &:focus {
+          outline: none;
+          border-color: #9ecaed;
+          box-shadow: 0 0 10px #9ecaed;
+      }
+      &.updated {
+          box-shadow: 0 0 10px rgba(56, 171, 53, 0.7);
+          transition: box-shadow 200ms;
+      }
     }
 }
 

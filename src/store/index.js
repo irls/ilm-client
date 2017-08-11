@@ -21,7 +21,8 @@ const ILM_TASKS = 'ilm_tasks';
 const BookBlock = new Vuex.Store({
     state: {
         parnum: false,
-        deleted: false
+        deleted: false,
+        footnotes: []
     }
 });
 
@@ -364,6 +365,7 @@ export const store = new Vuex.Store({
           '_rev',
           'tag',
           'content',
+          'footnotes',
           'classes',
           'type',
           'bookid',
@@ -381,7 +383,7 @@ export const store = new Vuex.Store({
         });
 
     },
-    
+
     getAudioBook ({state}, bookid) {
       return axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
         .then(audio => {
