@@ -40,7 +40,7 @@
                     <li>Join with previous block</li>
                     <li>Join with next block</li>
                     <li class="separator"></li>
-                    <li @click="discard">Discard un-saved changes</li>
+                    <li @click="discardBlock">Discard un-saved changes</li>
                     <li>Revert to original audio</li>
                   </block-menu>
                   </span>
@@ -153,6 +153,7 @@
 
 <script>
 import Vue from 'vue'
+import { mapGetters, mapActions } from 'vuex'
 require('medium-editor');
 require('medium-editor-css');
 require('medium-editor-theme');
@@ -186,14 +187,15 @@ export default {
       'block-menu': BlockMenu,
       'block-cntx-menu': BlockContextMenu,
   },
-  props: ['block', 'putBlock'],
+  props: ['block', 'putBlock', 'getBlock'],
   computed: {
       blockClasses : function () {
           return this.blockTypeClasses[this.block.type];
-      }/*,
-      footnotes : function () {
-          return this.this.block.footnotes ? this.this.block.footnotes : [];
-      }*/
+      },
+      ...mapGetters({
+          book: 'currentBook',
+          meta: 'currentBookMeta'
+      })
   },
   mounted: function() {
       this.editor = new MediumEditor('.content-wrap', {
@@ -253,10 +255,13 @@ export default {
         this.isChanged = true;
         el.target.focus();
       },
-      discard: function(el) {
-        this.$refs.blockContent.innerHTML = this.block.content;
-        this.isChanged = false;
-        this.$refs.blockContent.focus();
+      discardBlock: function(block_id, ev) {
+        this.getBlock(this.block._id)
+        .then((block)=>{
+          this.$refs.blockContent.innerHTML = this.block.content;
+          this.isChanged = false;
+          this.$refs.blockContent.focus();
+        });
       },
       assembleBlock: function(el) {
         this.block.content = this.$refs.blockContent.innerHTML;
@@ -316,6 +321,7 @@ export default {
       },
       commitFootnote: function(pos, ev) {
         this.block.footnotes[pos] = ev.target.innerText.trim();
+        this.isChanged = true;
       },
 
       test: function() {
@@ -323,12 +329,15 @@ export default {
       }
   },
   watch: {
-      'block._rev' (newVal){
+      'block._rev' (newVal) {
           console.log('block._rev', newVal);
           this.isUpdated = true;
           setTimeout(() => {
               this.isUpdated = false;
           }, 2000);
+      },
+      'block.type' (newVal) {
+        this.isChanged = true;
       }
   }
 }

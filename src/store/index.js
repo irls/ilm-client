@@ -18,18 +18,13 @@ const ILM_TASKS = 'ilm_tasks';
 
 // const API_ALLBOOKS = '/static/books.json'
 
-const BookBlock = new Vuex.Store({
-    state: {
-        parnum: false,
-        deleted: false,
-        footnotes: []
-    }
-});
+const BookBlock = function(){
+  this.parnum = false;
+  this.deleted = false;
+  this.footnotes = [];
+}
 
 export const store = new Vuex.Store({
-  modules: {
-      bookBlock: BookBlock
-  },
   state: {
     auth: superlogin,
     isLoggedIn: false,
@@ -88,7 +83,8 @@ export const store = new Vuex.Store({
     tc_currentBookTasks: state => state.tc_currentBookTasks,
     tc_tasksByBlock: state => state.tc_tasksByBlock,
     tc_userTasks: state => state.tc_userTasks,
-    contentDBWatch: state => state.contentDBWatch
+    contentDBWatch: state => state.contentDBWatch,
+    newBlock: state => BookBlock
   },
 
   mutations: {
@@ -323,6 +319,13 @@ export const store = new Vuex.Store({
         return state.metaDB.get(bookid);
     },
 
+    getBlock ({commit, state, dispatch}, block_id) {
+        return state.contentDB
+        .get(block_id)
+        .then(res => res)
+        .catch(err => err);
+    },
+
     loadBlocks ({commit, state, dispatch}, params) {
         return state.contentDB
         .query('filters_byBook/byBook', {
@@ -330,11 +333,8 @@ export const store = new Vuex.Store({
             include_docs: true,
             skip: params.page * params.onpage,
             limit: params.onpage
-        }).then(function (res) {
-            return res.rows;
-        }).catch(function (err) {
-            return err;
-        });
+        }).then(res => res.rows)
+        .catch(err => err);
     },
 
     watchBlocks ({commit, state, dispatch}, params) {

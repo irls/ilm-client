@@ -7,8 +7,9 @@
     <div class="row" v-for="(block, block_Idx) in sublist">
         <div class='col'>
           <BookBlockView
-              v-bind:block="block"
-              v-bind:putBlock ="updBlock"
+              :block="block"
+              :putBlock ="putBlockProxy"
+              :getBlock ="getBlockProxy"
           />
         </div>
         <!--<div class='col'>-->
@@ -44,12 +45,13 @@ export default {
   computed: {
       // --- From store --- //
       ...mapState({
-          bookBlock: 'bookBlock'
+          //bookBlock: 'bookBlock'
       }),
       ...mapGetters({
           book: 'currentBook',
           meta: 'currentBookMeta',
-          watchBlk: 'contentDBWatch'
+          watchBlk: 'contentDBWatch',
+          newBlock: 'newBlock'
       })
   },
   mixins: [access, taskControls],
@@ -58,7 +60,7 @@ export default {
       audTest
   },
   methods: {
-    ...mapActions(['loadBlocks', 'watchBlocks', 'putBlock']),
+    ...mapActions(['loadBlocks', 'watchBlocks', 'putBlock', 'getBlock']),
 
     test() {
         //this.parlist.splice(0,1);
@@ -88,11 +90,7 @@ export default {
             if (result.length > 0) {
                 result.forEach((el, idx, arr)=>{
                     //let newBlock = {...this.bookBlock, ...el.doc }
-                    let newBlock = Object.assign({
-                        parnum: false,
-                        deleted: false,
-                        footnotes: []
-                    }, el.doc);
+                    let newBlock = Object.assign(new this.newBlock(), el.doc);
                     tmp.push(newBlock);
                 });
                 if (tmp.length>0) this.parlist.push(tmp)//([...tmp]);
@@ -109,15 +107,13 @@ export default {
     },
 
     refreshBlock (change) {
-        console.log("refreshBlock: ", change)
-
-        this.parlist.forEach((el, idx0, arr)=>{
-            el.forEach((block, idx1)=>{
-                if (block._id === change.id) {
-                    Vue.set(this.parlist[idx0], idx1, { ...this.parlist[idx0][idx1], ...change.doc});
-                }
-            });
+      this.parlist.forEach((el, idx0, arr)=>{
+        el.forEach((block, idx1)=>{
+          if (block._id === change.id) {
+            Vue.set(this.parlist[idx0], idx1, { ...this.parlist[idx0][idx1], ...change.doc});
+          }
         });
+      });
     },
 
 //       return new Promise((resolve, reject) => {
@@ -151,13 +147,27 @@ export default {
       alert('Editing block id '+block.id)
     },
 
-    updBlock: function (block) {
-        this.putBlock(block)
-        .then(()=>{})
-        .catch((err)=>{})
+    putBlockProxy: function (block) {
+      return this.putBlock(block)
+      .then(()=>{})
+      .catch((err)=>{})
     },
 
-
+    getBlockProxy: function (block_id) {
+      return this.getBlock(block_id)
+      .then((res)=>{
+        this.parlist.forEach((el, idx0, arr)=>{
+          el.forEach((block, idx1)=>{
+            if (block._id === res._id) {
+              Vue.set(this.parlist[idx0], idx1, { ...this.parlist[idx0][idx1], ...res});
+            }
+          });
+        });
+      })
+      .catch((err)=>{
+        console.log(err);
+      })
+    },
 
     eventKeyDown: function(key) {
         if (key.code==='Escape' || key.keyCode===27) this.$events.emit('currentEditingBlock_id', key);
