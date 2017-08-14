@@ -69,11 +69,11 @@ import Vue from 'vue'
 //                 this.closeMenu();
 //             } else {
                 this.viewMenu = true;
-                this.setMenu(e.x, e.y, e.target);
+                this.setMenu(e.clientX, e.clientY, e.target);
                 this.$refs.menu.focus();
 
                 Vue.nextTick(function() {
-                    this.setMenu(e.x, e.y, e.target);
+                    this.setMenu(e.clientX, e.clientY, e.target);
                     this.$refs.menu.focus();
                 }.bind(this));
 //             }

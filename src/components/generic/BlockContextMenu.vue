@@ -3,9 +3,9 @@
     class="click-menu"
     tabindex="-1"
     v-bind:style="{ visibility: viewMenu?'visible':'hidden', top:top, left:left }"
-    @blur="closeMenu"
-    @mouseleave="closeMenu"
-    @click="closeMenu">
+    @blur="close"
+
+    @click="close">
     <slot></slot>
     <li>top: {{top}}</li>
     <li>left: {{left}}</li>
@@ -39,21 +39,49 @@ import Vue from 'vue'
 
         },
 
-        closeMenu: function() {
+        getSelectionCoords: function() {
+          let sel = document.selection, range;
+          let x = 0, y = 0, width = 0, height = 0;
+          if (sel) {
+              if (sel.type != "Control") {
+                  range = sel.createRange();
+                  x = range.boundingLeft;
+                  y = range.boundingTop;
+                  width = range.boundingWidth;
+                  height = range.boundingHeight;
+              }
+          } else if (window.getSelection) {
+              sel = window.getSelection();
+              if (sel.rangeCount) {
+                  range = sel.getRangeAt(0).cloneRange();
+                  if (range.getBoundingClientRect) {
+                      let rect = range.getBoundingClientRect();
+                      x = rect.left;
+                      y = rect.top;
+                      width = rect.right - rect.left;
+                      height = rect.bottom - rect.top;
+                  }
+              }
+          }
+          return { x: x, y: y, width: width, height: height };
+        },
+
+        close: function() {
             this.viewMenu = false;
             this.top = 0 + 'px';
             this.left = 0 + 'px';
         },
 
-        open: function(e) {
-            e.preventDefault();
+        open: function(ev) {
+            ev.preventDefault();
+            let coords = this.getSelectionCoords();
+            coords.x = coords.x + coords.width;
             this.viewMenu = true;
-            this.setMenu(e.x, e.y, e.target);
-            this.$refs.menu.focus();
-
+            this.setMenu(coords.x, coords.y, ev.target);
+            //this.$refs.menu.focus();
             Vue.nextTick(function() {
-                this.setMenu(e.x, e.y, e.target);
-                this.$refs.menu.focus();
+                this.setMenu(coords.x, coords.y, ev.target);
+                //this.$refs.menu.focus();
             }.bind(this));
 
             //console.log('target', e.target);
