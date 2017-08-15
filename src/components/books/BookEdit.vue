@@ -109,6 +109,9 @@ export default {
         this.parlist.forEach((el, idx0, arr)=>{
             el.forEach((block, idx1)=>{
                 if (block._id === change.id) {
+                    if (change.doc.audiosrc) {
+                      change.doc.audiosrc = process.env.ILM_API + change.doc.audiosrc;
+                    }
                     Vue.set(this.parlist[idx0], idx1, { ...this.parlist[idx0][idx1], ...change.doc});
                 }
             });
