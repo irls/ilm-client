@@ -19,8 +19,8 @@
         <div class="table-body -content"
         @mouseleave="onBlur"
         @click="onBlur">
-            <div class="table-row controls-top"
-            data-toggle="tooltip" v-bind:title="JSON.stringify(block)">
+            <div class="table-row controls-top">
+            <!--data-toggle="tooltip" v-bind:title="JSON.stringify(block)">-->
 
               <div class="par-ctrl -hidden -left">
                   <span class="block-menu" style="position: relative;">
@@ -154,9 +154,7 @@
 <script>
 import Vue from 'vue'
 import { mapGetters, mapActions } from 'vuex'
-require('medium-editor');
-require('medium-editor-css');
-require('medium-editor-theme');
+import { QuoteButton, QuotePreview } from '../generic/ExtMediumEditor';
 import ReadAlong from 'readalong'
 import BlockMenu from '../generic/BlockMenu';
 import BlockContextMenu from '../generic/BlockContextMenu';
@@ -167,6 +165,12 @@ export default {
       editor: false,
       player: false,
       selection: false,
+      quotesList: [
+        { id: 1, text: 'bahai' },
+        { id: 2, text: 'ba1hai' },
+        { id: 3, text: 'ba1hai' },
+        { id: 4, text: 'ba12hai' }
+      ],
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClasses: {
           title: [' ', 'subtitle', 'author', 'translator'],
@@ -198,9 +202,21 @@ export default {
       })
   },
   mounted: function() {
+      //console.log('HighlighterButton', HighlighterButton);
       this.editor = new MediumEditor('.content-wrap', {
           toolbar: {
-              buttons: ['bold', 'italic', 'underline', 'anchor', 'quote'],
+            buttons: [
+              'bold', 'italic', 'underline',
+              'superscript', 'subscript',
+              'orderedlist', 'unorderedlist',
+//               'html', 'anchor',
+              'quoteButton'
+            ]
+          },
+          quotesList: this.quotesList,
+          extensions: {
+            'quoteButton': new QuoteButton(),
+            'quotePreview': new QuotePreview()
           }
       });
 //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
@@ -230,7 +246,7 @@ export default {
   },
   methods: {
       onHover: function() {
-        this.$refs.blockContent.focus();
+        //this.$refs.blockContent.focus();
       },
       onBlur: function() {
         if (this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
@@ -338,6 +354,9 @@ export default {
       },
       'block.type' (newVal) {
         this.isChanged = true;
+      },
+      'quotesList' (newVal) {
+        //console.log('quotesList', newVal);
       }
   }
 }
@@ -591,5 +610,44 @@ export default {
               transparent 70%
           );
       }
+  }
+
+  [data-author]{
+    background-color: rgba(255,255,0,.4);
+  }
+
+  .medium-editor-toolbar-form {
+
+    .quote-input {
+      position: relative;
+      height: 300px;
+    }
+
+    ul.quotes-list {
+      display: flex;
+      flex-direction: column;
+      margin-top: -12px;
+      border: 1px solid #dbdbdb;
+      border-radius: 0 0 3px 3px;
+      position: absolute;
+      width: 100%;
+      overflow: hidden;
+      z-index: 999999;
+
+      li {
+        width: 100%;
+        flex-wrap: wrap;
+        background: white;
+        margin: 0;
+        border-bottom: 1px solid #eee;
+        color: #363636;
+        padding: 7px;
+        cursor: pointer;
+
+        &.highlighted {
+          background: #f8f8f8
+        }
+      }
+    }
   }
 </style>
