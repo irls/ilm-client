@@ -264,6 +264,7 @@ export const store = new Vuex.Store({
       window.setTimeout(() => {
           if (state.metaDB) state.metaDB.destroy()
           if (state.contentDB) state.contentDB.destroy()
+          if (state.tasksDB) state.tasksDB.destroy()
           commit('RESET_LOGIN_STATE');
       }, 500)
     },
@@ -330,10 +331,18 @@ export const store = new Vuex.Store({
         return state.contentDB
         .query('filters_byBook/byBook', {
             startkey: [params.book_id],
+            endkey: [params.book_id, {}],
             include_docs: true,
             skip: params.page * params.onpage,
             limit: params.onpage
-        }).then(res => res.rows)
+        }).then(function (res) {
+            res.rows.forEach(b => {
+              if (b.doc.audiosrc) {
+                b.doc.audiosrc = process.env.ILM_API + b.doc.audiosrc;
+              }
+            });
+            return res.rows;
+        })
         .catch(err => err);
     },
 

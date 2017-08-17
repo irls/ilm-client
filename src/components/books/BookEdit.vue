@@ -107,13 +107,16 @@ export default {
     },
 
     refreshBlock (change) {
-      this.parlist.forEach((el, idx0, arr)=>{
-        el.forEach((block, idx1)=>{
-          if (block._id === change.id) {
-            Vue.set(this.parlist[idx0], idx1, { ...this.parlist[idx0][idx1], ...change.doc});
-          }
+        this.parlist.forEach((el, idx0, arr)=>{
+            el.forEach((block, idx1)=>{
+                if (block._id === change.id) {
+                    if (change.doc.audiosrc) {
+                      change.doc.audiosrc = process.env.ILM_API + change.doc.audiosrc;
+                    }
+                    Vue.set(this.parlist[idx0], idx1, { ...this.parlist[idx0][idx1], ...change.doc});
+                }
+            });
         });
-      });
     },
 
 //       return new Promise((resolve, reject) => {
