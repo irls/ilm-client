@@ -1,10 +1,10 @@
 require ('medium-editor')
 require ('medium-editor-css')
 require ('medium-editor-theme')
+import { rangeUtils } from './RangeUtils';
 
 let QuoteButton = MediumEditor.Extension.extend({
   name: 'quoteButton',
-  selected: false,
   quoteForm: false,
   quoteFormInput: false,
   quoteFormList: false,
@@ -35,18 +35,38 @@ let QuoteButton = MediumEditor.Extension.extend({
     return this.button;
   },
 
+  isAlreadyApplied: function (node) {
+    let quoteNode = rangeUtils.getSelectedTags()[0];
+    return quoteNode.nodeName.toLowerCase() === 'w' && quoteNode.dataset.author;
+  },
+
+  isActive: function () {
+    return this.button.classList.contains('medium-editor-button-active');
+  },
+
+  setInactive: function () {
+    this.button.classList.remove('medium-editor-button-active');
+  },
+
+  setActive: function () {
+    this.button.classList.add('medium-editor-button-active');
+  },
+
+  showForm: function (opts) {
+    this.base.saveSelection();
+    this.insertForm();
+    this.getForm().classList.add('medium-editor-toolbar-form-active');
+    this.hideToolbarDefaultActions();
+    if (opts.value) this.quoteFormInput.value = opts.value;
+  },
 
   doQuoteSave: function () {
-      //var opts = this.getFormOpts();
       this.base.restoreSelection();
-
-      //this.execAction(this.action, opts);
       //this.base.checkSelection();
 
       let value = this.quoteFormInput.value;
       let quote = document.createElement("w");
       quote.dataset.author = value;
-
 
       if (window.getSelection) {
         let sel = window.getSelection();
@@ -66,14 +86,8 @@ let QuoteButton = MediumEditor.Extension.extend({
   handleClick: function (event) {
     event.preventDefault();
     event.stopPropagation();
-    //this.base.checkContentChanged();
-    //var range = MediumEditor.selection.getSelectionRange(this.document);
-    this.base.saveSelection();
-    this.selected = this.base.exportSelection();
-    //console.log(this.selected);
-    this.insertForm();
-    this.getForm().classList.add('medium-editor-toolbar-form-active');
-    this.hideToolbarDefaultActions();
+
+    this.showForm({});
   },
 
   handleHideToolbar: function () {
@@ -85,6 +99,7 @@ let QuoteButton = MediumEditor.Extension.extend({
     this.destroy();
     this.showToolbarDefaultActions();
     this.doQuoteSave();
+    this.base.checkContentChanged();
   },
 
   handleCloseClick: function (event) {
@@ -106,6 +121,7 @@ let QuoteButton = MediumEditor.Extension.extend({
         toolbar.showToolbarDefaultActions();
     }
   },
+
   createQuoteForm: function () {
     var form = this.document.createElement('div');
 
@@ -215,6 +231,7 @@ let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
   init: function () {
     MediumEditor.extensions.anchorPreview.prototype.init.apply(this, arguments);
   },
+
   handleEditableMouseover: function (event) {
     var target = MediumEditor.util.traverseUp(event.target, function (element) {
       return element.dataset.author;
@@ -273,7 +290,33 @@ let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
     this.attachPreviewHandlers();
 
     return this;
-},
+  },
+  handleClick: function (event) {
+      var anchorExtension = this.base.getExtensionByName('quoteButton'),
+          activeAnchor = this.activeAnchor;
+
+      if (anchorExtension && activeAnchor) {
+          event.preventDefault();
+
+          this.base.selectElement(this.activeAnchor);
+
+          // Using setTimeout + delay because:
+          // We may actually be displaying the anchor form, which should be controlled by delay
+          this.base.delay(function () {
+              if (activeAnchor) {
+                  var opts = {
+                      value: activeAnchor.dataset.author,
+                      target: activeAnchor.dataset.author,
+                      //buttonClass: activeAnchor.getAttribute('class')
+                  };
+                  anchorExtension.showForm(opts);
+                  activeAnchor = null;
+              }
+          }.bind(this));
+      }
+
+      this.hidePreview();
+  },
 });
 
 export {
