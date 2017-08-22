@@ -1,18 +1,20 @@
 require ('medium-editor')
 require ('medium-editor-css')
 require ('medium-editor-theme')
-import { rangeUtils } from './RangeUtils';
 
 let QuoteButton = MediumEditor.Extension.extend({
   name: 'quoteButton',
   quoteForm: false,
   quoteFormInput: false,
   quoteFormList: false,
-  inString: '',
+  value: '',
   isListOpen: false,
+
+  wrapNode: 'w',
 
   formSaveLabel: '&#10003;',
   formCloseLabel: '&times;',
+  formRemoveLabel: '&#xf056;',
 
   init: function (params) {
     this.button = this.document.createElement('button');
@@ -22,6 +24,8 @@ let QuoteButton = MediumEditor.Extension.extend({
 
     this.on(this.button, 'click', this.handleClick.bind(this));
     this.subscribe('hideToolbar', this.handleHideToolbar.bind(this));
+
+    this.addQuotesStyles(this.getEditorOption('quotesList'));
   },
 
   getForm: function () {
@@ -36,8 +40,19 @@ let QuoteButton = MediumEditor.Extension.extend({
   },
 
   isAlreadyApplied: function (node) {
-    let quoteNode = rangeUtils.getSelectedTags()[0];
-    return quoteNode.nodeName.toLowerCase() === 'w' && quoteNode.dataset.author;
+    if (this.quoteForm) this.destroy();
+    //-- A trick to keep right selection for Mozilla -- { --//
+    if (window.getSelection && !window.getSelection().extentNode) {
+      this.base.saveSelection();
+      this.base.restoreSelection();
+    }
+    //-- } -- end --//
+    if (node.nodeName.toLowerCase() === this.wrapNode && node.dataset.author) {
+      this.value = node.dataset.author;
+      return true
+    }
+    this.value = '';
+    return false;
   },
 
   isActive: function () {
@@ -58,29 +73,84 @@ let QuoteButton = MediumEditor.Extension.extend({
     this.getForm().classList.add('medium-editor-toolbar-form-active');
     this.hideToolbarDefaultActions();
     if (opts.value) this.quoteFormInput.value = opts.value;
+    else this.quoteFormInput.value = this.value;
   },
 
   doQuoteSave: function () {
-      this.base.restoreSelection();
-      //this.base.checkSelection();
+    this.base.restoreSelection();
 
-      let value = this.quoteFormInput.value;
-      let quote = document.createElement("w");
+    let value = this.quoteFormInput.value.trim();
+    if (value.length) {
+      let quote = document.createElement(this.wrapNode);
       quote.dataset.author = value;
+      if (this.isActive()) this.doQuoteRemove();
 
       if (window.getSelection) {
         let sel = window.getSelection();
         if (sel.rangeCount) {
-            let range = sel.getRangeAt(0).cloneRange();
-            range.surroundContents(quote);
-            sel.removeAllRanges();
-            sel.addRange(range);
+          let range = sel.getRangeAt(0);
+          quote.appendChild(range.extractContents());
+          range.insertNode(quote);
         }
       }
 
       let list = this.getEditorOption('quotesList');
-      let check = list.filter(o => o.text === value)
-      if (check.length == 0) list.push({ id: 99, text: value });
+      let check = -1;
+      let colors = [];
+      list.forEach((item, index) => {
+        if (item.text === value) check = index;
+        colors.push(item.color);
+      });
+      let color = this.genColor(colors);
+      if (check == -1) {
+        let color = this.genColor(colors);
+        list.unshift({ text: value, color: color });
+      } else {
+        let moved = list.splice(check, 1);
+        list.unshift(moved[0]);
+      }
+      this.getEditorOption('onQuoteSave').call();
+      this.addQuotesStyles(list);
+      this.triggerEvent(this.base.getFocusedElement(), 'input');
+      this.base.restoreSelection();
+    }
+    this.base.checkSelection();
+  },
+
+  doQuoteRemove: function () {
+      this.base.restoreSelection();
+      if (window.getSelection) {
+        let sel = window.getSelection();
+        if (sel.rangeCount) {
+          let range = sel.getRangeAt(0).cloneRange();
+          let node = range.startContainer;
+          while (node && node.nodeName.toLowerCase() !== this.wrapNode) {
+            node = node.parentNode;
+          }
+          let parent = node.parentNode;
+          while (node.firstChild) parent.insertBefore(node.firstChild, node);
+          parent.removeChild(node);
+          this.value = '';
+          this.setInactive();
+          this.triggerEvent(this.base.getFocusedElement(), 'input');
+          this.base.restoreSelection();
+        }
+      }
+      this.base.checkSelection();
+  },
+
+  triggerEvent: function(el, type) {
+    if ('createEvent' in document) {
+      // modern browsers, IE9+
+      var e = document.createEvent('HTMLEvents');
+      e.initEvent(type, false, true);
+      el.dispatchEvent(e);
+    } else {
+      // IE 8
+      var e = document.createEventObject();
+      e.eventType = type;
+      el.fireEvent('on'+e.eventType, e);
+    }
   },
 
   handleClick: function (event) {
@@ -97,14 +167,23 @@ let QuoteButton = MediumEditor.Extension.extend({
   handleSaveClick: function (event) {
     event.preventDefault();
     this.destroy();
-    this.showToolbarDefaultActions();
     this.doQuoteSave();
+    this.showToolbarDefaultActions();
+    this.base.checkContentChanged();
+  },
+
+  handleRemoveClick: function (event) {
+    event.preventDefault();
+    this.destroy();
+    this.doQuoteRemove();
+    this.showToolbarDefaultActions();
     this.base.checkContentChanged();
   },
 
   handleCloseClick: function (event) {
     event.preventDefault();
     this.destroy();
+    this.base.restoreSelection();
     this.showToolbarDefaultActions();
   },
 
@@ -112,6 +191,7 @@ let QuoteButton = MediumEditor.Extension.extend({
     var toolbar = this.base.getExtensionByName('toolbar');
     if (toolbar) {
         toolbar.hideToolbarDefaultActions();
+        toolbar.setToolbarPosition();
     }
   },
 
@@ -119,6 +199,7 @@ let QuoteButton = MediumEditor.Extension.extend({
     var toolbar = this.base.getExtensionByName('toolbar');
     if (toolbar) {
         toolbar.showToolbarDefaultActions();
+        toolbar.setToolbarPosition();
     }
   },
 
@@ -141,7 +222,7 @@ let QuoteButton = MediumEditor.Extension.extend({
   createQuoteListItem: function (content) {
     var item = this.document.createElement('li');
     item.className = 'quotes-list-item';
-    item.innerHTML = content.text;
+    item.innerHTML = `<div style="float: left;">${content.text}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
     return item;
   },
 
@@ -153,9 +234,17 @@ let QuoteButton = MediumEditor.Extension.extend({
       '</a>'
     );
 
+    if (this.value.length) {
+      template.push(
+        '<a href="#" class="medium-editor-toolbar-remove">',
+        this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-minus-circle"></i>' : this.formCloseLabel,
+        '</a>');
+    }
+
     template.push('<a href="#" class="medium-editor-toolbar-close">',
       this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-times"></i>' : this.formCloseLabel,
       '</a>');
+
     return template.join('');
   },
 
@@ -168,10 +257,16 @@ let QuoteButton = MediumEditor.Extension.extend({
     this.on(this.quoteFormInput, 'input', this.onInput.bind(this));
     this.on(this.quoteFormInput, 'focus', this.onFocus.bind(this));
     var close = this.getForm().querySelector('.medium-editor-toolbar-close'),
-        save = this.getForm().querySelector('.medium-editor-toolbar-save')
+        save = this.getForm().querySelector('.medium-editor-toolbar-save'),
+        remove = this.getForm().querySelector('.medium-editor-toolbar-remove')
 
     this.on(close, 'click', this.handleCloseClick.bind(this));
     this.on(save, 'click', this.handleSaveClick.bind(this), true);
+    if (remove) this.on(remove, 'click', this.handleRemoveClick.bind(this), true);
+
+    if (this.value.length) {
+
+    }
   },
 
   updateList: function (value) {
@@ -224,6 +319,44 @@ let QuoteButton = MediumEditor.Extension.extend({
     }
   },
 
+  genColor: function (exceptColors) {
+    let letters = '6789ABCD'.split('');
+    let color = '';
+    do {
+      color = '#';
+      for (let i = 0; i < 6; i++ ) {
+          color += letters[Math.floor(Math.random() * letters.length)];
+      }
+    } while (exceptColors.filter(item=>item==color).length>0);
+    return color;
+  },
+
+  addQuotesStyles: function (quotesList) {
+    let id = "quotes-styles";
+    let prevStyles = document.getElementById(id);
+    if (prevStyles && prevStyles.parentNode) {
+      prevStyles.parentNode.removeChild(prevStyles);
+    }
+
+    let styleNode = document.createElement('style');
+    styleNode.type = "text/css";
+    styleNode.id = id;
+
+    let styles = '';
+    quotesList.forEach(item=>{
+      styles+= `[data-author="${item.text}"] {color: ${item.color};}`
+    })
+
+    // browser detection (based on prototype.js)
+    if(!!(window.attachEvent && !window.opera)) {
+      styleNode.styleSheet.cssText = styles;
+    } else {
+      let styleText = document.createTextNode(styles);
+      styleNode.appendChild(styleText);
+    }
+    document.getElementsByTagName('head')[0].appendChild(styleNode);
+  }
+
 });
 
 let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
@@ -267,8 +400,8 @@ let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
   },
 
   showPreview: function (anchorEl) {
-    if (this.anchorPreview.classList.contains('medium-editor-anchor-preview-active') ||
-            anchorEl.getAttribute('data-disable-preview')) {
+    if (this.anchorPreview.classList.contains('medium-editor-anchor-preview-active')
+      || anchorEl.getAttribute('data-disable-preview')) {
         return true;
     }
 
@@ -291,32 +424,33 @@ let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
 
     return this;
   },
+
   handleClick: function (event) {
-      var anchorExtension = this.base.getExtensionByName('quoteButton'),
-          activeAnchor = this.activeAnchor;
+    var anchorExtension = this.base.getExtensionByName('quoteButton'),
+      activeAnchor = this.activeAnchor;
 
-      if (anchorExtension && activeAnchor) {
-          event.preventDefault();
+    if (anchorExtension && activeAnchor) {
+      event.preventDefault();
 
-          this.base.selectElement(this.activeAnchor);
+      this.base.selectElement(this.activeAnchor);
 
-          // Using setTimeout + delay because:
-          // We may actually be displaying the anchor form, which should be controlled by delay
-          this.base.delay(function () {
-              if (activeAnchor) {
-                  var opts = {
-                      value: activeAnchor.dataset.author,
-                      target: activeAnchor.dataset.author,
-                      //buttonClass: activeAnchor.getAttribute('class')
-                  };
-                  anchorExtension.showForm(opts);
-                  activeAnchor = null;
-              }
-          }.bind(this));
-      }
+      // Using setTimeout + delay because:
+      // We may actually be displaying the anchor form, which should be controlled by delay
+      this.base.delay(function () {
+          if (activeAnchor) {
+              var opts = {
+                  value: activeAnchor.dataset.author,
+                  target: activeAnchor.dataset.author,
+                  //buttonClass: activeAnchor.getAttribute('class')
+              };
+              anchorExtension.showForm(opts);
+              activeAnchor = null;
+          }
+      }.bind(this));
+    }
 
-      this.hidePreview();
-  },
+    this.hidePreview();
+  }
 });
 
 export {

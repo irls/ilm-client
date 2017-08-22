@@ -136,6 +136,9 @@
                 @click="assembleBlock()">
                     <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
                 </div>
+                <!--<div class="-left">
+                  Changed: {{isChanged}}
+                </div>-->
               <div class="par-ctrl -hidden -right">
                   <span><i class="fa fa-flag-o"></i></span>
                   <span><i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
@@ -165,12 +168,6 @@ export default {
       editor: false,
       player: false,
       selection: false,
-      quotesList: [
-        { id: 1, text: 'bahai' },
-        { id: 2, text: 'ba1hai' },
-        { id: 3, text: 'ba1hai' },
-        { id: 4, text: 'ba12hai' }
-      ],
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClasses: {
           title: [' ', 'subtitle', 'author', 'translator'],
@@ -198,11 +195,14 @@ export default {
       },
       ...mapGetters({
           book: 'currentBook',
-          meta: 'currentBookMeta'
+          meta: 'currentBookMeta',
+          authors: 'authors'
       })
   },
+  beforeDestroy:  function() {
+    if (this.editor) this.editor.destroy();
+  },
   mounted: function() {
-      //console.log('HighlighterButton', HighlighterButton);
       this.editor = new MediumEditor('.content-wrap', {
           toolbar: {
             buttons: [
@@ -213,7 +213,9 @@ export default {
               'quoteButton'
             ]
           },
-          quotesList: this.quotesList,
+          buttonLabels: 'fontawesome',
+          quotesList: this.authors,
+          onQuoteSave: this.onQuoteSave,
           extensions: {
             'quoteButton': new QuoteButton(),
             'quotePreview': new QuotePreview()
@@ -245,6 +247,12 @@ export default {
       }
   },
   methods: {
+      ...mapActions(['putMetaAuthors']),
+      onQuoteSave: function() {
+        this.putMetaAuthors(this.authors).then(()=>{
+          this.update();
+        });
+      },
       onHover: function() {
         //this.$refs.blockContent.focus();
       },
@@ -266,6 +274,8 @@ export default {
       },
       update: function() {
         console.log('update');
+        //this.isChanged = true;
+        //Vue.set(this, 'isChanged', true);
       },
       onInput: function(el) {
         this.isChanged = true;
@@ -354,9 +364,6 @@ export default {
       },
       'block.type' (newVal) {
         this.isChanged = true;
-      },
-      'quotesList' (newVal) {
-        //console.log('quotesList', newVal);
       }
   }
 }
@@ -518,6 +525,10 @@ export default {
     font-size: 18px;
 }
 
+.medium-editor-toolbar .fa {
+    color: #FFFFFF;
+}
+
 .fa:hover {
     color: #505050;
 }
@@ -612,8 +623,8 @@ export default {
       }
   }
 
-  [data-author]{
-    background-color: rgba(255,255,0,.4);
+  [data-author] {
+    color: teal;
   }
 
   .medium-editor-toolbar-form {

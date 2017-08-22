@@ -84,7 +84,16 @@ export const store = new Vuex.Store({
     tc_tasksByBlock: state => state.tc_tasksByBlock,
     tc_userTasks: state => state.tc_userTasks,
     contentDBWatch: state => state.contentDBWatch,
-    newBlock: state => BookBlock
+    newBlock: state => BookBlock,
+    authors: state => {
+      let result = [];
+      if (state.currentBookMeta.authors) {
+        state.currentBookMeta.authors.forEach((author)=>{
+          result.push({ text: author.name, color: author.color })
+        })
+      }
+      return result;
+    }
   },
 
   mutations: {
@@ -307,7 +316,6 @@ export const store = new Vuex.Store({
     },
 
     reloadBookMeta ({commit, state, dispatch}) {
-        console.log('reloadBookMeta', state.currentBookMeta._id);
         if (state.currentBookMeta._id) {
             state.metaDB.get(state.currentBookMeta._id).then((meta) => {
                 commit('SET_CURRENTBOOK_META', meta)
@@ -373,7 +381,6 @@ export const store = new Vuex.Store({
       ]
 
         let cleanBlock = _.pick(block, defBlock);
-        console.log('putBlock', cleanBlock);
         state.contentDB.get(cleanBlock._id).then(function(doc) {
             return state.contentDB.put(cleanBlock);
         }).then((response)=>{
@@ -382,6 +389,19 @@ export const store = new Vuex.Store({
             console.log('Block save error:', err);
         });
 
+    },
+
+    putMetaAuthors ({commit, state, dispatch}, authors) {
+      let metaAuthors = [];
+      authors.forEach((item)=>{
+        metaAuthors.push({ name: item.text, color: item.color });
+      })
+      state.metaDB.get(state.currentBookMeta._id).then(function(doc) {
+        doc.authors = metaAuthors;
+        return state.metaDB.put(doc);
+      }).catch((err) =>{
+        console.log('Meta save error:', err);
+      });
     },
 
     getAudioBook ({state}, bookid) {
