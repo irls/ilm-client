@@ -1,8 +1,6 @@
 <template>
 <div class="container-fluid">
 
-    <audTest/>
-
     <template v-for="(sublist, page_Idx) in parlist">
     <div class="row" v-for="(block, block_Idx) in sublist">
         <div class='col'>
@@ -32,8 +30,6 @@ import Vue from 'vue'
 import access from "../../mixins/access.js"
 import taskControls from '../../mixins/task_controls.js'
 
-import audTest from './audTest/audTest'
-
 export default {
   data () {
     return {
@@ -56,8 +52,7 @@ export default {
   },
   mixins: [access, taskControls],
   components: {
-      BookBlockView, InfiniteLoading,
-      audTest
+      BookBlockView, InfiniteLoading
   },
   methods: {
     ...mapActions(['loadBlocks', 'watchBlocks', 'putBlock', 'getBlock']),

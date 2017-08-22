@@ -19,8 +19,8 @@
         <div class="table-body -content"
         @mouseleave="onBlur"
         @click="onBlur">
-            <div class="table-row controls-top"
-            data-toggle="tooltip" v-bind:title="JSON.stringify(block)">
+            <div class="table-row controls-top">
+            <!--data-toggle="tooltip" v-bind:title="JSON.stringify(block)">-->
 
               <div class="par-ctrl -hidden -left">
                   <span class="block-menu" style="position: relative;">
@@ -136,6 +136,9 @@
                 @click="assembleBlock()">
                     <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
                 </div>
+                <!--<div class="-left">
+                  Changed: {{isChanged}}
+                </div>-->
               <div class="par-ctrl -hidden -right">
                   <span><i class="fa fa-flag-o"></i></span>
                   <span><i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
@@ -154,9 +157,7 @@
 <script>
 import Vue from 'vue'
 import { mapGetters, mapActions } from 'vuex'
-require('medium-editor');
-require('medium-editor-css');
-require('medium-editor-theme');
+import { QuoteButton, QuotePreview } from '../generic/ExtMediumEditor';
 import ReadAlong from 'readalong'
 import BlockMenu from '../generic/BlockMenu';
 import BlockContextMenu from '../generic/BlockContextMenu';
@@ -194,13 +195,30 @@ export default {
       },
       ...mapGetters({
           book: 'currentBook',
-          meta: 'currentBookMeta'
+          meta: 'currentBookMeta',
+          authors: 'authors'
       })
+  },
+  beforeDestroy:  function() {
+    if (this.editor) this.editor.destroy();
   },
   mounted: function() {
       this.editor = new MediumEditor('.content-wrap', {
           toolbar: {
-              buttons: ['bold', 'italic', 'underline', 'anchor', 'quote'],
+            buttons: [
+              'bold', 'italic', 'underline',
+              'superscript', 'subscript',
+              'orderedlist', 'unorderedlist',
+//               'html', 'anchor',
+              'quoteButton'
+            ]
+          },
+          buttonLabels: 'fontawesome',
+          quotesList: this.authors,
+          onQuoteSave: this.onQuoteSave,
+          extensions: {
+            'quoteButton': new QuoteButton(),
+            'quotePreview': new QuotePreview()
           }
       });
 //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
@@ -229,8 +247,14 @@ export default {
       }
   },
   methods: {
+      ...mapActions(['putMetaAuthors']),
+      onQuoteSave: function() {
+        this.putMetaAuthors(this.authors).then(()=>{
+          this.update();
+        });
+      },
       onHover: function() {
-        this.$refs.blockContent.focus();
+        //this.$refs.blockContent.focus();
       },
       onBlur: function() {
         if (this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
@@ -250,6 +274,8 @@ export default {
       },
       update: function() {
         console.log('update');
+        //this.isChanged = true;
+        //Vue.set(this, 'isChanged', true);
       },
       onInput: function(el) {
         this.isChanged = true;
@@ -499,6 +525,10 @@ export default {
     font-size: 18px;
 }
 
+.medium-editor-toolbar .fa {
+    color: #FFFFFF;
+}
+
 .fa:hover {
     color: #505050;
 }
@@ -591,5 +621,44 @@ export default {
               transparent 70%
           );
       }
+  }
+
+  [data-author] {
+    color: teal;
+  }
+
+  .medium-editor-toolbar-form {
+
+    .quote-input {
+      position: relative;
+      height: 300px;
+    }
+
+    ul.quotes-list {
+      display: flex;
+      flex-direction: column;
+      margin-top: -12px;
+      border: 1px solid #dbdbdb;
+      border-radius: 0 0 3px 3px;
+      position: absolute;
+      width: 100%;
+      overflow: hidden;
+      z-index: 999999;
+
+      li {
+        width: 100%;
+        flex-wrap: wrap;
+        background: white;
+        margin: 0;
+        border-bottom: 1px solid #eee;
+        color: #363636;
+        padding: 7px;
+        cursor: pointer;
+
+        &.highlighted {
+          background: #f8f8f8
+        }
+      }
+    }
   }
 </style>
