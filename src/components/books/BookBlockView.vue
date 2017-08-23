@@ -75,7 +75,12 @@
                           @click="audResume(block._id, $event)"></i>
                         </template>
                   </template>
-                  <i class="fa fa-microphone"></i>
+                  <template v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
+                    <i class="fa fa-microphone" v-if="!isRecording" @click="startRecording($event)"></i>
+                    <template v-else>
+                      <i class="fa fa-stop-circle-o" @click="stopRecording(true, $event)"></i>
+                    </template>
+                  </template>
               </div>
               <!--<div class="-hidden">-->
 
@@ -90,7 +95,7 @@
                 ref="blockContent"
                 v-html="block.content"
                 :class="[ block.type, block.classes, { 'updated': isUpdated, 'playing': isAudStarted }]"
-                :data-audiosrc="block.audiosrc"
+                :data-audiosrc="blockAudio.src"
                 @click="onClick"
                 @input="onInput"
                 @mouseenter="onHover"
@@ -136,6 +141,11 @@
                 @click="assembleBlock()">
                     <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
                 </div>
+                <div class="save-block -hidden -left"
+                v-bind:class="{ '-disabled': !isAudioChanged }"
+                @click="assembleBlockAudio()">
+                    <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
+                </div>
               <div class="par-ctrl -hidden -right">
                   <span><i class="fa fa-flag-o"></i></span>
                   <span><i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
@@ -160,6 +170,8 @@ require('medium-editor-theme');
 import ReadAlong from 'readalong'
 import BlockMenu from '../generic/BlockMenu';
 import BlockContextMenu from '../generic/BlockContextMenu';
+import taskControls from '../../mixins/task_controls.js'
+import apiConfig from '../../mixins/api_config.js'
 
 export default {
   data () {
@@ -180,14 +192,21 @@ export default {
       isChanged: false,
       isUpdated: false,
       isAudStarted: false,
-      isAudPaused: false
+      isAudPaused: false,
+      isRecording: false,
+      isAudioChanged: false,
+      blockAudio: {
+        src: '',
+        map: ''
+      }
     }
   },
   components: {
       'block-menu': BlockMenu,
       'block-cntx-menu': BlockContextMenu,
   },
-  props: ['block', 'putBlock', 'getBlock'],
+  props: ['block', 'putBlock', 'getBlock', 'recorder'],
+  mixins: [taskControls, apiConfig],
   computed: {
       blockClasses : function () {
           return this.blockTypeClasses[this.block.type];
@@ -201,31 +220,15 @@ export default {
       this.editor = new MediumEditor('.content-wrap', {
           toolbar: {
               buttons: ['bold', 'italic', 'underline', 'anchor', 'quote'],
-          }
+          },
+          disableEditing: !this.tc_isShowEdit(this.block._id)
       });
 //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
 //       this.editor.subscribe('positionToolbar', ()=>{})
-
-      if (!this.player && this.block.audiosrc) {
-          this.player = new ReadAlong({
-              forceLineScroll: false
-          },{
-              on_start: ()=>{
-                  this.isAudStarted = true;
-                  this.isAudPaused = false;
-              },
-              on_pause: ()=>{
-                  this.isAudPaused = true;
-              },
-              on_resume: ()=>{
-                  this.isAudPaused = false;
-              },
-              on_complete: ()=>{
-                  this.isAudStarted = false;
-                  this.isAudPaused = false;
-                  this.audCleanClasses(this.block._id, {});
-              }
-          });
+      this.blockAudio = {'map': this.block.content, 'src': this.block.audiosrc ? this.block.audiosrc : ''};
+      if (!this.player && this.blockAudio.src) {
+          this.blockAudio.src = this.blockAudio.src + '?' + (new Date()).toJSON();
+          this.initPlayer();
       }
   },
   methods: {
@@ -268,6 +271,24 @@ export default {
         this.block.classes = [this.block.classes];
         this.putBlock(this.block);
         this.isChanged = false;
+      },
+      assembleBlockAudio: function(el) {
+        if (this.blockAudio.map) {
+          let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
+          let api = this.$store.state.auth.getHttp();
+          return api.post(api_url, {}, {})
+            .then(response => {
+              if (response.status == 200) {
+                this.block.content = this.blockAudio.map;
+                this.block.audiosrc = response.data.audiosrc;
+                this.blockAudio.map = '';
+                this.blockAudio.src = '';
+                this.putBlock(this.block);
+              }
+            })
+            .catch(err => {});
+        }
+        this.isAudioChanged = false;
       },
       audPlay: function(block_id, ev) {
         this.audCleanClasses(block_id, ev);
@@ -326,6 +347,35 @@ export default {
 
       test: function() {
           console.log('addFootnote'+this.block._id, this.block.footnotes);
+      },
+      startRecording() {
+        this.isRecording = true;
+        this.$emit('startRecording', this.block._id)
+      },
+      stopRecording(isSend) {
+        this.isRecording = false;
+        this.$emit('stopRecording', this.block._id, this.blockAudio)
+      },
+      initPlayer() {
+        this.player = new ReadAlong({
+            forceLineScroll: false
+        },{
+            on_start: ()=>{
+                this.isAudStarted = true;
+                this.isAudPaused = false;
+            },
+            on_pause: ()=>{
+                this.isAudPaused = true;
+            },
+            on_resume: ()=>{
+                this.isAudPaused = false;
+            },
+            on_complete: ()=>{
+                this.isAudStarted = false;
+                this.isAudPaused = false;
+                this.audCleanClasses(this.block._id, {});
+            }
+        });
       }
   },
   watch: {
@@ -335,9 +385,36 @@ export default {
           setTimeout(() => {
               this.isUpdated = false;
           }, 2000);
+          if (!this.blockAudio.src || !this.tc_showBlockNarrate(this.block._id)) {
+            this.blockAudio = {
+              'src': this.block.audiosrc ? this.block.audiosrc + '?' + (new Date()).toJSON() : '',
+              'map': this.block.content
+            };
+          }
       },
       'block.type' (newVal) {
         this.isChanged = true;
+      },
+      'blockAudio.src' (newVal) {
+        if (newVal) {
+          //console.log('Book audio', newVal, this.block._id);
+          if (!this.player) {
+            this.initPlayer();
+          }
+          if (newVal.indexOf('?') === -1) {
+            this.blockAudio.src+= '?' + (new Date()).toJSON();
+          }
+          if (this.tc_showBlockNarrate(this.block._id)) {
+            this.isAudioChanged = newVal && this.block.audiosrc != newVal.split('?').shift();
+          }
+        }
+      },
+      'blockAudio.map' (newVal) {
+        //console.log('Tmp audiomap', newVal);
+        if (this.tc_showBlockNarrate(this.block._id)) {
+          this.isAudioChanged = this.block.content != newVal;
+          this.$refs.blockContent.innerHTML = newVal;
+        }
       }
   }
 }
