@@ -109,7 +109,11 @@
                     dir="bottom"
                     :update="update"
                 >
-                  <li v-if="selection.collapsed" @click="addFootnote">Add footnote</li>
+                  <li v-if="range.collapsed" @click="addFootnote">Add footnote</li>
+                  <li class="separator"></li>
+                  <li v-if="!range.collapsed" @click="addFlagE">Flag for Editing</li>
+                  <li v-if="!range.collapsed" @click="addFlagN">Flag for Narration</li>
+                  <li class="separator"></li>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
 
@@ -179,7 +183,7 @@ export default {
     return {
       editor: false,
       player: false,
-      selection: false,
+      range: false,
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClasses: {
           title: [' ', 'subtitle', 'author', 'translator'],
@@ -271,8 +275,8 @@ export default {
         $('.medium-editor-toolbar').each(function(){
             $(this).css('display', 'none');
         });
-        this.selection = window.getSelection().getRangeAt(0).cloneRange();
-        //console.log(this.selection);
+        this.range = window.getSelection().getRangeAt(0).cloneRange();
+        //console.log(this.range);
         this.$refs.blockCntx.open(e);
       },
       update: function() {
@@ -347,7 +351,7 @@ export default {
         let el = document.createElement('SUP');
         el.className = 'js-footnote-el';
         el.setAttribute('data-idx', this.block.footnotes.length);
-        this.selection.insertNode(el);
+        this.range.insertNode(el);
         let pos = this.updFootnotes(this.block.footnotes.length);
         this.block.footnotes.splice(pos, 0, '');
         this.isChanged = true;
@@ -369,6 +373,31 @@ export default {
       commitFootnote: function(pos, ev) {
         this.block.footnotes[pos] = ev.target.innerText.trim();
         this.isChanged = true;
+      },
+
+      addFlagE: function() {
+        if (window.getSelection) {
+          let flag = document.createElement('w');
+          flag.dataset.flagE = 'flag'; // flagE translates into flag-e
+          flag.dataset.status = 'open';
+
+          flag.appendChild(this.range.extractContents());
+          this.range.insertNode(flag);
+
+          flag.addEventListener('click', (e)=>{
+//               if (e.offsetX < flag.offsetWidth) {
+//                   flag.className = 'c2';
+//               } else {
+//                   flag.className = 'c1';
+//               }
+              console.log('e.offsetX', e.offsetX);
+              console.log('flag.offsetWidth', flag.offsetWidth);
+              //this.$refs.blockFlag.open(e);
+          });
+        }
+      },
+
+      addFlagN: function() {
       },
 
       test: function() {
@@ -702,6 +731,33 @@ export default {
 
   [data-author] {
     color: teal;
+  }
+
+  [data-flag-e] {
+    position: relative;
+    border-bottom: 2px solid green;
+    pointer-events: none;
+    &:before {
+      pointer-events: all;
+      /*content: "\F024";*/
+      content: "\e034";
+      /*font-family: 'FontAwesome';*/
+      font-family: 'Glyphicons Halflings';
+      color: green;
+      cursor: pointer;
+      display: inline-block;
+      margin-right: 1px;
+      position: relative;
+      top: 2px;
+    }
+/*    &:after {
+      content: "";
+      position: relative;
+      bottom: 0px;
+      left: 2px;
+      width: 100%;
+      border-bottom: 2px solid green;
+    }*/
   }
 
   .medium-editor-toolbar-form {
