@@ -177,6 +177,7 @@ export const store = new Vuex.Store({
 
     TASK_LIST_LOADED (state) {
       state.tc_userTasks.total = 0;
+      state.tc_tasksByBlock = {};
       for (let jobid in state.tc_userTasks.list) {
         let job = Object.assign({}, state.tc_userTasks.list[jobid])
         state.tc_userTasks.total+= job.tasks.length
@@ -201,11 +202,22 @@ export const store = new Vuex.Store({
                   }
                 }
                 break;
+              case 'narrate-block':
+                if (assignments.indexOf('block_narrate') === -1) {
+                  assignments.push('block_narrate');
+                }
+                break;
               case '': // approve book
                 assignments.push('content');
                 assignments.push('content_approve');
                 break;
 
+            }
+            if (t.blockid) {
+              if (typeof state.tc_tasksByBlock[t.blockid] === 'undefined') {
+                state.tc_tasksByBlock[t.blockid] = [];
+              }
+              state.tc_tasksByBlock[t.blockid].push(t)
             }
           })
           state.tc_currentBookTasks = {job: job, tasks: job.tasks, assignments: assignments}
@@ -386,7 +398,8 @@ export const store = new Vuex.Store({
           'classes',
           'type',
           'bookid',
-          'index'
+          'index',
+          'audiosrc'
       ]
 
         let cleanBlock = _.pick(block, defBlock);

@@ -8,6 +8,9 @@
               :block="block"
               :putBlock ="putBlockProxy"
               :getBlock ="getBlockProxy"
+              :recorder ="recorder"
+              @startRecording="startRecording"
+              @stopRecording="stopRecording"
           />
         </div>
         <!--<div class='col'>-->
@@ -29,13 +32,17 @@ import InfiniteLoading from 'vue-infinite-loading'
 import Vue from 'vue'
 import access from "../../mixins/access.js"
 import taskControls from '../../mixins/task_controls.js'
+import mediaStreamRecorder from 'recordrtc'
+import api_config from '../../mixins/api_config.js'
+import axios from 'axios'
 
 export default {
   data () {
     return {
       page: 0,
       parlist: [],
-      autoload: true
+      autoload: true,
+      recorder: false
     }
   },
   computed: {
@@ -50,7 +57,7 @@ export default {
           newBlock: 'newBlock'
       })
   },
-  mixins: [access, taskControls],
+  mixins: [access, taskControls, api_config],
   components: {
       BookBlockView, InfiniteLoading
   },
@@ -112,6 +119,7 @@ export default {
                 }
             });
         });
+        this.initRecorder();
     },
 
 //       return new Promise((resolve, reject) => {
@@ -169,6 +177,49 @@ export default {
 
     eventKeyDown: function(key) {
         if (key.code==='Escape' || key.keyCode===27) this.$events.emit('currentEditingBlock_id', key);
+    },
+    onMediaSuccess_msr(stream) {
+      this.recorder = new mediaStreamRecorder(stream, {
+        recorderType: mediaStreamRecorder.MediaStreamRecorder,
+        mimeType: 'audio/ogg'
+      });
+    },
+    initRecorder() {
+      if (!this.recorder && this.tc_hasTask('block_narrate')) {
+        navigator.getUserMedia({
+          audio: true
+        }, this.onMediaSuccess_msr, function (e) {
+          console.error('media error', e);
+        });
+      }
+    },
+    startRecording(block_id) {
+      //this.recorder.start();
+      this.recorder.startRecording();
+    },
+    stopRecording(block_id, blockAudio) {
+      let api_url = this.API_URL + 'book/block/' + block_id + '/audio';
+      let api = this.$store.state.auth.getHttp();
+      this.recorder.stopRecording(function(audioUrl) {
+        //console.log("HERE: ", audioUrl);
+        //audio.src = audioURL;
+
+        //var recordedBlob = recordRTC.getBlob();
+        this.getDataURL(function(dataURL) {
+          
+          //console.log('Data URL: ', dataURL);
+          let formData = new FormData();
+          formData.append('audio', dataURL.split(',').pop());
+          api.post(api_url, formData, {})
+            .then(response => {
+              if (response.status == 200) {
+                blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
+                blockAudio.map = response.data.content;
+              }
+            })
+            .catch(err => {});
+        });
+      });
     }
   },
   events: {
@@ -189,6 +240,7 @@ export default {
               this.refreshBlock(change);
           })
       });
+      this.initRecorder();
   }
 }
 </script>

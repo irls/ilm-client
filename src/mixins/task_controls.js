@@ -29,10 +29,18 @@ export default {
         return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 6
       },
       tc_isShowEdit(blockid) {
-        return this.tc_hasTask('content_cleanup') || (this.$store.state.tc_tasksByBlock[blockid] && [6].indexOf(this.$store.state.tc_tasksByBlock[blockid].type) !== -1)
+        return this.tc_hasTask('content_cleanup') || (this.$store.state.isAdmin)
       },
       tc_isShowApproveContentFixAction(blockid) {
         return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 7;
+      },
+      tc_showBlockNarrate(block_id) {
+        if (!this.$store.state.tc_tasksByBlock[block_id]) {
+          return false;
+        }
+        return this.$store.state.tc_tasksByBlock[block_id].find(t => {
+          return t.type === 'narrate-block';
+        });
       }
     }
 }
