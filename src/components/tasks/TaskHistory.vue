@@ -32,7 +32,7 @@
     <accordion v-if="all_users && work_history_total" :one-at-atime="true">
       <div v-for="row in work_history_total" class="task-panel">
         <i class="fa fa-user"></i>
-        <panel :is-open="false" :header="row.user.name + ': ' + row.user.roles_combined" v-bind:key="row.user">
+        <panel :is-open="false" :header="row.user.name + ': ' + row.user.roles_combined" v-bind:key="row.user.name">
           <div v-for="book in row.books">
             <h4><i class="fa fa-book"></i>&nbsp;{{book.book.title}}</h4>
             <ol>
@@ -42,7 +42,7 @@
         </panel>
       </div>
     </accordion>
-    
+
   </div>
 </template>
 <script>
@@ -71,7 +71,7 @@ export default {
       task_types: []
     }
   },
-  
+
   name: 'taskHistory',
 
   props: [
@@ -80,17 +80,17 @@ export default {
     'user_id',
     'in_modal'
   ],
-  
+
   components: {
     datepicker,
     accordion,
     panel
   },
-  
+
   mixins: [
     api_config
   ],
-  
+
   computed: mapGetters([
     'isAdmin', 'allBooks'
   ]),
@@ -98,7 +98,7 @@ export default {
   mounted() {
     this.all_users = !this.current_user && !this.user_id && this.isAdmin
     this.url = !this.all_users ? (this.user_id ? this.API_URL + 'tasks/history/user/' + this.user_id : this.API_URL + 'tasks/history/my') : this.API_URL + 'tasks/history'
-    if (!this._task_types) {
+    if (!this._task_types.length) {
       this.getTaskTypes()
         .then(tt => {
           this.getWorkHistory()
@@ -108,7 +108,7 @@ export default {
       this.getWorkHistory()
     }
   },
-  
+
   watch: {
     'filter.from': function() {
       this.getWorkHistory()
@@ -233,7 +233,7 @@ export default {
 .td {
   display: table-cell;
   vertical-align: middle;
-  
+
   padding: 5px;
 }
 .task-history i.fa {
@@ -254,9 +254,9 @@ export default {
   font-size: 20px;
 }
 .task-panel i.fa-user {
-  position: absolute; 
-  top: 7px; 
-  left: 10px; 
+  position: absolute;
+  top: 7px;
+  left: 10px;
   font-size: 25px;
 }
 .task-panel .panel-heading h4 {
