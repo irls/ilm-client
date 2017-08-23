@@ -41,7 +41,7 @@
                     <li>Join with next block</li>
                     <li class="separator"></li>
                     <li @click="discardBlock">Discard un-saved changes</li>
-                    <li>Revert to original audio</li>
+                    <li @click="discardAudio">Revert to original audio</li>
                   </block-menu>
                   </span>
 
@@ -63,7 +63,7 @@
               <!--<div class="-hidden">-->
 
               <div class="par-ctrl -audio -hidden -right">
-                  <template v-if="player">
+                  <template v-if="player && blockAudio.src">
                       <i class="fa fa-play-circle-o" v-if="!isAudStarted"
                       @click="audPlay(block._id, $event)"></i>
                       <template v-else>
@@ -291,6 +291,10 @@ export default {
           this.isChanged = false;
           this.$refs.blockContent.focus();
         });
+      },
+      discardAudio: function() {
+        this.blockAudio.src = this.block.audiosrc;
+        this.blockAudio.map = this.block.content;
       },
       assembleBlock: function(el) {
         this.block.content = this.$refs.blockContent.innerHTML;
