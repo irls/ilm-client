@@ -20,13 +20,13 @@
 
       </task-add-modal>
       <!-- Import Books Modal Popup -->
-      <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose" 
+      <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose"
                   :importTaskId="import_book_task_id"
                   :bookId="import_book_id" />
-      <AudioImport v-if="show_import_audio_modal" @close="importAudioClose" 
+      <AudioImport v-if="show_import_audio_modal" @close="importAudioClose"
                   :book="import_book"
                   :importTask="import_audio_task"
-                  :audiobook="task_audiobook" 
+                  :audiobook="task_audiobook"
                   :multiple="audio_import_multiple"/>
       <div class="table tasks-box">
       <section v-for="job in tasks.list"><!-- tc_userTasks -->
@@ -81,7 +81,6 @@
 
 <script>
 import { VueTabs, VTab } from 'vue-nav-tabs'
-import 'vue-nav-tabs/dist/vue-tabs.min.css'
 import axios from 'axios'
 import TaskAddModal from './tasks/TaskAddModal'
 import TaskHistory from './tasks/TaskHistory'
@@ -133,7 +132,7 @@ export default {
     'isLibrarian',
     'tc_userTasks'
   ]),
-  
+
   watch: {
     'tc_userTasks': {
       handler(val) {
