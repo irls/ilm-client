@@ -3,9 +3,8 @@
     class="click-menu"
     tabindex="-1"
     v-bind:style="{ visibility: viewMenu?'visible':'hidden', top:top, left:left }"
-    @blur="close"
-
     @click="close">
+    <!--@blur="close"-->
     <slot></slot>
     <li>top: {{top}}</li>
     <li>left: {{left}}</li>
@@ -29,8 +28,6 @@ import Vue from 'vue'
      },
     methods: {
         setMenu: function(x, y, target) {
-            //console.log('x:', x, 'y:', y);
-            //console.log('window.pageYOffset', window.pageYOffset);
 
             let dir = this.$refs.menu.getAttribute('dir') || 'top';
 
@@ -74,6 +71,7 @@ import Vue from 'vue'
 
         open: function(ev) {
             ev.preventDefault();
+            this.$root.$emit('closeBlockContextMenu');
             let coords = this.getSelectionCoords();
             coords.x = coords.x + coords.width;
             this.viewMenu = true;
@@ -83,17 +81,18 @@ import Vue from 'vue'
                 this.setMenu(coords.x, coords.y, ev.target);
                 //this.$refs.menu.focus();
             }.bind(this));
-
-            //console.log('target', e.target);
-            //console.log('target.offsetParent', e.target.offsetParent);
-            //console.log('selection', window.getSelection());
         }
     },
-    watch: {
-
-    },
-    computed: {
-
+    mounted: function() {
+      this.$root.$on('closeBlockContextMenu', ()=>{
+        this.close();
+      });
+      this.$root.$on('closeBlockMenu', ()=>{
+        this.close();
+      });
+      this.$root.$on('closeFlagPopup', ()=>{
+        this.close();
+      });
     }
   }
 </script>

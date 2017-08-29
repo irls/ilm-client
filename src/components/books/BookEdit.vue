@@ -35,6 +35,7 @@ import taskControls from '../../mixins/task_controls.js'
 import mediaStreamRecorder from 'recordrtc'
 import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
+import { BookBlock }    from '../../store/bookBlock'
 
 export default {
   data () {
@@ -53,8 +54,7 @@ export default {
       ...mapGetters({
           book: 'currentBook',
           meta: 'currentBookMeta',
-          watchBlk: 'contentDBWatch',
-          newBlock: 'newBlock'
+          watchBlk: 'contentDBWatch'
       })
   },
   mixins: [access, taskControls, api_config],
@@ -81,8 +81,8 @@ export default {
     },
 
     onScrollBookDown() {
-        console.log('onScrollBookDown, page:', this.page);
-        console.log( this.meta._id );
+        //console.log('onScrollBookDown, page:', this.page);
+        //console.log( this.meta._id );
         this.loadBlocks({
             book_id: this.meta._id,
             page: this.page++,
@@ -91,8 +91,8 @@ export default {
             let tmp = [];
             if (result.length > 0) {
                 result.forEach((el, idx, arr)=>{
-                    //let newBlock = {...this.bookBlock, ...el.doc }
-                    let newBlock = Object.assign(new this.newBlock(), el.doc);
+                    //let newBlock = Object.assign(new this.newBlock(), el.doc);
+                    let newBlock = new BookBlock(el.doc);
                     tmp.push(newBlock);
                 });
                 if (tmp.length>0) this.parlist.push(tmp)//([...tmp]);
@@ -115,7 +115,7 @@ export default {
                     if (change.doc.audiosrc) {
                       change.doc.audiosrc = process.env.ILM_API + change.doc.audiosrc;
                     }
-                    Vue.set(this.parlist[idx0], idx1, { ...this.parlist[idx0][idx1], ...change.doc});
+                    Vue.set(this.parlist[idx0], idx1, new BookBlock(change.doc));
                 }
             });
         });
@@ -165,7 +165,7 @@ export default {
         this.parlist.forEach((el, idx0, arr)=>{
           el.forEach((block, idx1)=>{
             if (block._id === res._id) {
-              Vue.set(this.parlist[idx0], idx1, { ...this.parlist[idx0][idx1], ...res});
+              Vue.set(this.parlist[idx0], idx1, new BookBlock(res));
             }
           });
         });
@@ -206,7 +206,7 @@ export default {
 
         //var recordedBlob = recordRTC.getBlob();
         this.getDataURL(function(dataURL) {
-          
+
           //console.log('Data URL: ', dataURL);
           let formData = new FormData();
           formData.append('audio', dataURL.split(',').pop());
@@ -228,10 +228,6 @@ export default {
       }
   },
   mounted: function() {
-      console.log('Mounted?');
-      // --- Remove the old listener to avoid duplication --- //
-      // --- Otherwise after hot-update there will be several listeners for window --- //
-      window.removeEventListener('keydown', this.eventKeyDown);
       window.addEventListener('keydown', this.eventKeyDown);
 
       this.watchBlocks({book_id: this.meta._id})
@@ -241,6 +237,9 @@ export default {
           })
       });
       this.initRecorder();
+  },
+  beforeDestroy:  function() {
+    window.removeEventListener('keydown', this.eventKeyDown);
   }
 }
 </script>

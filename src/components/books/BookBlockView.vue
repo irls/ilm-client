@@ -19,13 +19,13 @@
         <div class="table-body -content"
         @mouseleave="onBlur"
         @click="onBlur">
-            <div class="table-row controls-top">
-            <!--data-toggle="tooltip" v-bind:title="JSON.stringify(block)">-->
+            <div class="table-row controls-top"
+            data-toggle="tooltip" v-bind:title="JSON.stringify(block)">
 
               <div class="par-ctrl -hidden -left">
                   <span class="block-menu" style="position: relative;">
                   <i class="glyphicon glyphicon-menu-hamburger"
-                  @click.prevent="$refs.blockMenu.open">
+                  @click.prevent="$refs.blockMenu.open($event, block._id)">
                   </i>
                   <block-menu
                       ref="blockMenu"
@@ -104,6 +104,39 @@
                 </div>
                 <!--<div class="content-wrap">-->
 
+                <block-flag-popup
+                    ref="blockFlagPopup"
+                    dir="top"
+                    :update="update"
+                >
+
+                  <template v-for="(flag, flagIdx) in flagsSel.parts">
+                    <li>
+
+                    <p>Editing {{moment(flag.created_at).format("D MMM")}}</p>
+                    <p>"{{flag.content}}"</p>
+
+                    <p v-for="comment in flag.comments">
+                      {{comment.creator}}: {{comment.comment}}
+                    </p>
+
+                    <textarea
+                      v-model="flag.newComment"
+                      placeholder="Enter description here ...">
+                    </textarea>
+
+                    </li>
+                    <!--<li class="separator"></li>-->
+
+                    <a href="#" class="-right"
+                      @click.prevent="$refs.blockFlagPopup.close">
+                      Close</a>
+
+                  </template>
+
+
+                </block-flag-popup>
+
                 <block-cntx-menu
                     ref="blockCntx"
                     dir="bottom"
@@ -111,8 +144,8 @@
                 >
                   <li v-if="range.collapsed" @click="addFootnote">Add footnote</li>
                   <li class="separator"></li>
-                  <li v-if="!range.collapsed" @click="addFlagE">Flag for Editing</li>
-                  <li v-if="!range.collapsed" @click="addFlagN">Flag for Narration</li>
+                  <li v-if="!range.collapsed" @click="addFlag($event, 'editor')">Flag for Editing</li>
+                  <li v-if="!range.collapsed" @click="addFlag($event, 'narrator')">Flag for Narration</li>
                   <li class="separator"></li>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
@@ -123,17 +156,17 @@
             <div class="table-row content-footnotes"
               v-if="block.footnotes.length > 0">
               <div class="table-body footnote"
-                v-for="(footnote, footnote_Idx) in block.footnotes">
+                v-for="(footnote, footnoteIdx) in block.footnotes">
                 <div class="table-row">
-                  <div class="table-cell -num">{{footnote_Idx+1}}.</div>
+                  <div class="table-cell -num">{{footnoteIdx+1}}.</div>
                   <div class="table-cell -text"
                     :class="['js-footnote-val']"
                     contenteditable="true"
-                    @input="commitFootnote(footnote_Idx, $event)"
+                    @input="commitFootnote(footnoteIdx, $event)"
                     v-html="footnote">
                   </div>
                   <div class="table-cell -control">
-                    <span @click="delFootnote(footnote_Idx)"><i class="fa fa-trash"></i></span>
+                    <span @click="delFootnote(footnoteIdx)"><i class="fa fa-trash"></i></span>
                   </div>
                 </div>
               </div>
@@ -170,13 +203,15 @@
 
 <script>
 import Vue from 'vue'
-import { mapGetters, mapActions } from 'vuex'
+import moment from 'moment'
+import { mapGetters, mapActions }    from 'vuex'
 import { QuoteButton, QuotePreview } from '../generic/ExtMediumEditor';
-import ReadAlong from 'readalong'
-import BlockMenu from '../generic/BlockMenu';
-import BlockContextMenu from '../generic/BlockContextMenu';
-import taskControls from '../../mixins/task_controls.js'
-import apiConfig from '../../mixins/api_config.js'
+import ReadAlong          from 'readalong'
+import BlockMenu          from '../generic/BlockMenu';
+import BlockContextMenu   from '../generic/BlockContextMenu';
+import BlockFlagPopup     from '../generic/BlockFlagPopup';
+import taskControls       from '../../mixins/task_controls.js'
+import apiConfig          from '../../mixins/api_config.js'
 
 export default {
   data () {
@@ -184,6 +219,8 @@ export default {
       editor: false,
       player: false,
       range: false,
+      flagsSel: [],
+      moment: moment,
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClasses: {
           title: [' ', 'subtitle', 'author', 'translator'],
@@ -209,6 +246,7 @@ export default {
   components: {
       'block-menu': BlockMenu,
       'block-cntx-menu': BlockContextMenu,
+      'block-flag-popup': BlockFlagPopup
   },
   props: ['block', 'putBlock', 'getBlock', 'recorder'],
   mixins: [taskControls, apiConfig],
@@ -217,6 +255,7 @@ export default {
           return this.blockTypeClasses[this.block.type];
       },
       ...mapGetters({
+          auth: 'auth',
           book: 'currentBook',
           meta: 'currentBookMeta',
           authors: 'authors'
@@ -252,6 +291,12 @@ export default {
           this.blockAudio.src = this.blockAudio.src + '?' + (new Date()).toJSON();
           this.initPlayer();
       }
+
+      Vue.nextTick(() => {
+        if (this.$refs.blockContent) this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+          flag.addEventListener('click', this.handleFlagClick);
+        });
+      });
   },
   methods: {
       ...mapActions(['putMetaAuthors']),
@@ -375,34 +420,35 @@ export default {
         this.isChanged = true;
       },
 
-      addFlagE: function() {
+      addFlag: function(ev, type = 'editor') {
         if (window.getSelection) {
           let flag = document.createElement('w');
-          flag.dataset.flagE = 'flag'; // flagE translates into flag-e
-          flag.dataset.status = 'open';
+          flag.dataset.flag = this.block.addFlag(this.range, type);
+          //flag.dataset.status = 'open';
 
           flag.appendChild(this.range.extractContents());
           this.range.insertNode(flag);
 
-          flag.addEventListener('click', (e)=>{
-//               if (e.offsetX < flag.offsetWidth) {
-//                   flag.className = 'c2';
-//               } else {
-//                   flag.className = 'c1';
-//               }
-              console.log('e.offsetX', e.offsetX);
-              console.log('flag.offsetWidth', flag.offsetWidth);
-              //this.$refs.blockFlag.open(e);
-          });
+          flag.addEventListener('click', this.handleFlagClick);
+          this.handleFlagClick({target: flag});
+
+          this.isChanged = true;
         }
       },
 
-      addFlagN: function() {
+      handleFlagClick: function(ev) {
+        let flagId = ev.target.dataset.flag;
+        this.flagsSel = this.block.flags.filter((flag)=>{
+          return flag._id === flagId;
+        })[0];
+        console.log('this.flagsSel', this.flagsSel.parts[0].type);
+        this.$refs.blockFlagPopup.open(ev, flagId);
       },
 
       test: function() {
           console.log('addFootnote'+this.block._id, this.block.footnotes);
       },
+
       startRecording() {
         this.isRecording = true;
         this.$emit('startRecording', this.block._id)
@@ -446,6 +492,11 @@ export default {
               'map': this.block.content
             };
           }
+          Vue.nextTick(() => {
+            if (this.$refs.blockContent) this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+              flag.addEventListener('click', this.handleFlagClick);
+            });
+          });
       },
       'block.type' (newVal) {
         this.isChanged = true;
@@ -733,9 +784,9 @@ export default {
     color: teal;
   }
 
-  [data-flag-e] {
+  [data-flag] {
     position: relative;
-    border-bottom: 2px solid green;
+    border-bottom: 2px solid red;
     pointer-events: none;
     &:before {
       pointer-events: all;
@@ -743,21 +794,13 @@ export default {
       content: "\e034";
       /*font-family: 'FontAwesome';*/
       font-family: 'Glyphicons Halflings';
-      color: green;
+      color: red;
       cursor: pointer;
       display: inline-block;
       margin-right: 1px;
       position: relative;
       top: 2px;
     }
-/*    &:after {
-      content: "";
-      position: relative;
-      bottom: 0px;
-      left: 2px;
-      width: 100%;
-      border-bottom: 2px solid green;
-    }*/
   }
 
   .medium-editor-toolbar-form {

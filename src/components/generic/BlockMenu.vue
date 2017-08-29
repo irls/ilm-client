@@ -3,9 +3,9 @@
     class="click-menu"
     tabindex="-1"
     v-bind:style="{ visibility: viewMenu?'visible':'hidden', top:top, left:left }"
-    @blur="closeMenu"
-    @mouseleave="closeMenu"
-    @click="closeMenu">
+    @click="close">
+    <!--@blur="close"
+    @mouseleave="close"-->
     <slot></slot>
 </ul>
 </template>
@@ -22,7 +22,8 @@ import Vue from 'vue'
       return {
             viewMenu: false,
             top: '0px',
-            left: '0px'
+            left: '0px',
+            block_Id: false,
         }
      },
     methods: {
@@ -57,33 +58,38 @@ import Vue from 'vue'
 
         },
 
-        closeMenu: function() {
+        close: function() {
             this.viewMenu = false;
             this.top = 0 + 'px';
             this.left = 0 + 'px';
         },
 
-        open: function(e) {
-            e.preventDefault();
-//             if (this.viewMenu == true) {
-//                 this.closeMenu();
-//             } else {
-                this.viewMenu = true;
-                this.setMenu(e.clientX, e.clientY, e.target);
-                this.$refs.menu.focus();
+        open: function(ev, block_Id) {
+            ev.preventDefault();
+            this.$root.$emit('closeBlockMenu', block_Id);
 
-                Vue.nextTick(function() {
-                    this.setMenu(e.clientX, e.clientY, e.target);
-                    this.$refs.menu.focus();
-                }.bind(this));
-//             }
+            if (this.viewMenu == true) return this.close();
+            this.block_Id = block_Id;
+            this.viewMenu = true;
+            this.setMenu(ev.clientX, ev.clientY, ev.target);
+            //this.$refs.menu.focus();
+
+            Vue.nextTick(function() {
+                this.setMenu(ev.clientX, ev.clientY, ev.target);
+                //this.$refs.menu.focus();
+            }.bind(this));
         }
     },
-    watch: {
-
-    },
-    computed: {
-
+    mounted: function() {
+      this.$root.$on('closeBlockMenu', (block_Id)=>{
+        if (block_Id !== this.block_Id) this.close();
+      });
+      this.$root.$on('closeFlagPopup', ()=>{
+        this.close();
+      });
+      this.$root.$on('closeBlockContextMenu', ()=>{
+        this.close();
+      });
     }
   }
 </script>
