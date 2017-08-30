@@ -94,7 +94,7 @@
                 :id="'content-'+block._id"
                 ref="blockContent"
                 v-html="block.content"
-                :class="[ block.type, block.classes, { 'updated': isUpdated, 'playing': isAudStarted }]"
+                :class="[ block.type, block.classes, { 'updated': isUpdated, 'playing': isAudStarted || tc_showBlockNarrate(block._id) }]"
                 :data-audiosrc="blockAudio.src"
                 @click="onClick"
                 @input="onInput"
@@ -110,6 +110,7 @@
                     :update="update"
                 >
                   <li v-if="selection.collapsed" @click="addFootnote">Add footnote</li>
+                  <li v-if="!selection.collapsed && tc_showBlockNarrate(block._id)" @click="reRecord">Re-record audio</li>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
 
@@ -161,6 +162,11 @@
     </div>
     <div class="table-cell controls-right">
     </div>
+    <alert v-model="hasMessage" placement="top" :duration="3000" type="info" width="400px">
+      <span class="icon-ok-circled alert-icon-float-left"></span>
+
+      <p>{{infoMessage}}.</p>
+    </alert>
 </div>
 </template>
 
@@ -173,6 +179,7 @@ import BlockMenu from '../generic/BlockMenu';
 import BlockContextMenu from '../generic/BlockContextMenu';
 import taskControls from '../../mixins/task_controls.js'
 import apiConfig from '../../mixins/api_config.js'
+import {alert} from 'vue-strap'
 
 export default {
   data () {
@@ -199,12 +206,16 @@ export default {
       blockAudio: {
         src: '',
         map: ''
-      }
+      },
+      reRecordPosition: false,
+      hasMessage: false,
+      infoMessage: ''
     }
   },
   components: {
       'block-menu': BlockMenu,
       'block-cntx-menu': BlockContextMenu,
+      'alert': alert
   },
   props: ['block', 'putBlock', 'getBlock', 'recorder'],
   mixins: [taskControls, apiConfig],
@@ -295,6 +306,7 @@ export default {
       discardAudio: function() {
         this.blockAudio.src = this.block.audiosrc;
         this.blockAudio.map = this.block.content;
+        this.$emit('discardRecording', this.block._id);
       },
       assembleBlock: function(el) {
         this.block.content = this.$refs.blockContent.innerHTML;
@@ -384,7 +396,8 @@ export default {
       },
       stopRecording(isSend) {
         this.isRecording = false;
-        this.$emit('stopRecording', this.block._id, this.blockAudio)
+        this.$emit('stopRecording', this.block._id, this.blockAudio, this.reRecordPosition, this.isAudioChanged);
+        this.reRecordPosition = false;
       },
       initPlayer() {
         this.player = new ReadAlong({
@@ -406,6 +419,65 @@ export default {
                 this.audCleanClasses(this.block._id, {});
             }
         });
+      },
+      reRecord() {
+        let startElement = this._getParent(this.selection.startContainer, 'w');
+        let endElement = this._getParent(this.selection.endContainer, 'w');
+        let startRange = this._getClosestAligned(startElement, 0);
+        if (!startRange) {
+          startRange = [0, 0];
+        }
+        let endRange = this._getClosestAligned(endElement, 1);
+        if (!endRange) {
+          endRange = this._getClosestAligned(endElement, 0);
+          if (!endRange) {
+            endRange = [0, 0];
+          }
+        }
+        this.reRecordPosition = [parseInt(startRange[0]), parseInt(endRange[0]) + parseInt(endRange[1])];
+        //console.log(this.reRecordPosition, this.blockAudio.map.replace(/"/g, '\\"'));
+        this.startRecording();
+      },
+      _getParent(node, tag) {
+        if (node.localName == tag) {
+          return node;
+        }
+        let parent = false;
+        do {
+          parent = parent === false ? node.parentElement : parent.parentElement;
+          if (parent.localName == tag) {
+            return parent;
+          }
+        } while(parent);
+        return null;
+      },
+      _getClosestAligned(node, direction) {
+        if (node.dataset && node.dataset.map) {
+          let splitted = node.dataset.map.split(',');
+          if (splitted.length == 2) {
+            return splitted;
+          }
+        }
+        let sibling = false;
+        if (direction > 0) {
+          sibling = node.nextSibling ? node.nextSibling : null;
+        } else {
+          sibling = node.previousSibling ? node.previousSibling : null;
+        }
+        while (sibling) {
+          if (sibling.dataset && sibling.dataset.map) {
+            let splitted = sibling.dataset.map.split(',');
+            if (splitted.length == 2) {
+              return splitted;
+            }
+          }
+          if (direction > 0) {
+            sibling = sibling.nextSibling ? sibling.nextSibling : null;
+          } else {
+            sibling = sibling.previousSibling ? sibling.previousSibling : null;
+          }
+        }
+        return null;
       }
   },
   watch: {
@@ -435,16 +507,38 @@ export default {
             this.blockAudio.src+= '?' + (new Date()).toJSON();
           }
           if (this.tc_showBlockNarrate(this.block._id)) {
-            this.isAudioChanged = newVal && this.block.audiosrc != newVal.split('?').shift();
+            let isChanged = newVal && this.block.audiosrc != newVal.split('?').shift();
+            this.isAudioChanged = isChanged;
+            if (isChanged) {
+              this.infoMessage = 'Audio updated';
+            }
           }
         }
       },
       'blockAudio.map' (newVal) {
         //console.log('Tmp audiomap', newVal);
         if (this.tc_showBlockNarrate(this.block._id)) {
-          this.isAudioChanged = this.block.content != newVal;
+          let isChanged = this.block.content != newVal;
+          this.isAudioChanged = isChanged;
           this.$refs.blockContent.innerHTML = newVal;
+          if (isChanged) {
+            this.infoMessage = 'Audio updated';
+          }
         }
+      },
+      infoMessage: {
+        handler(val) {
+          this.hasMessage = val.length > 0
+        },
+        deep: true
+      },
+      hasMessage: {
+        handler(val) {
+          if (val === false) {
+            this.infoMessage = ''
+          }
+        },
+        deep: true
       }
   }
 }

@@ -11,6 +11,7 @@
               :recorder ="recorder"
               @startRecording="startRecording"
               @stopRecording="stopRecording"
+              @discardRecording="discardRecording"
           />
         </div>
         <!--<div class='col'>-->
@@ -197,7 +198,7 @@ export default {
       //this.recorder.start();
       this.recorder.startRecording();
     },
-    stopRecording(block_id, blockAudio) {
+    stopRecording(block_id, blockAudio, reRecordPosition, isTemp) {
       let api_url = this.API_URL + 'book/block/' + block_id + '/audio';
       let api = this.$store.state.auth.getHttp();
       this.recorder.stopRecording(function(audioUrl) {
@@ -210,6 +211,8 @@ export default {
           //console.log('Data URL: ', dataURL);
           let formData = new FormData();
           formData.append('audio', dataURL.split(',').pop());
+          formData.append('position', reRecordPosition);
+          formData.append('isTemp', isTemp);
           api.post(api_url, formData, {})
             .then(response => {
               if (response.status == 200) {
@@ -217,9 +220,21 @@ export default {
                 blockAudio.map = response.data.content;
               }
             })
-            .catch(err => {});
+            .catch(err => {
+            });
         });
       });
+    },
+    discardRecording(block_id) {
+      let api_url = this.API_URL + 'book/block/' + block_id + '/audio';
+      let api = this.$store.state.auth.getHttp();
+      api.delete(api_url, {}, {})
+        .then(response => {
+          
+        })
+        .catch(err => {
+          
+        });
     }
   },
   events: {
