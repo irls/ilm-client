@@ -39,7 +39,7 @@ class BookBlock {
   }
 
   clean() {
-    if (this.flags.length) this.flags.forEach ((flag)=>{
+    if (this.flags.length) this.flags.forEach ((flag, flagIdx)=>{
       if (flag.parts.length) flag.parts.forEach ((part)=>{
         let user_Id = superlogin.getSession().user_id;
         if (part.newComment.length) part.comments.push ({
@@ -48,7 +48,8 @@ class BookBlock {
           comment: part.newComment
         });
         part.newComment = '';
-      });
+      })
+      else this.flags.splice(flagIdx, 1);
     });
     return _.pick(this, defBlock);
   }

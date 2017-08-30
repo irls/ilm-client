@@ -110,30 +110,41 @@
                     :update="update"
                 >
 
-                  <template v-for="(flag, flagIdx) in flagsSel.parts">
+                  <template v-for="(part, partIdx) in flagsSel.parts">
                     <li>
 
-                    <p>Editing {{moment(flag.created_at).format("D MMM")}}</p>
-                    <p>"{{flag.content}}"</p>
+                    <div class="flag-header -left">Editing {{moment(part.created_at).format("D MMM")}} <i v-if="part.status == 'resolved'" class="glyphicon glyphicon-flag -resolved"></i></div>
+                    <a href="#" class="flag-control -right"
+                      v-if="part.status == 'resolved'"
+                      @click.prevent="$refs.blockFlagPopup.close">
+                      Hide flag</a>
+                    <a href="#" class="flag-control -right"
+                      v-if="canDeleteFlagPart(part)"
+                      @click.prevent="delFlagPart($event, partIdx)">
+                      <i class="fa fa-trash"></i></a>
+                    <div class="clearfix"></div>
 
-                    <p v-for="comment in flag.comments">
-                      {{comment.creator}}: {{comment.comment}}
+                    <p class="flag-content">"{{part.content}}"</p>
+
+                    <p v-for="comment in part.comments" class="flag-comment">
+                      <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}
                     </p>
 
-                    <textarea
-                      v-model="flag.newComment"
+                    <textarea class="flag-comment"
+                      v-model="part.newComment"
                       placeholder="Enter description here ...">
                     </textarea>
 
                     </li>
                     <!--<li class="separator"></li>-->
-
-                    <a href="#" class="-right"
-                      @click.prevent="$refs.blockFlagPopup.close">
-                      Close</a>
-
+                    <a href="#" class="flag-control -left"
+                    @click.prevent="$refs.blockFlagPopup.close">
+                    Flag for narration also</a>
                   </template>
 
+                  <a href="#" class="flag-control -right"
+                    @click.prevent="$refs.blockFlagPopup.close">
+                    Close</a>
 
                 </block-flag-popup>
 
@@ -321,8 +332,7 @@ export default {
             $(this).css('display', 'none');
         });
         this.range = window.getSelection().getRangeAt(0).cloneRange();
-        //console.log(this.range);
-        this.$refs.blockCntx.open(e);
+        this.$refs.blockCntx.open(e, this.range);
       },
       update: function() {
         console.log('update');
@@ -337,6 +347,11 @@ export default {
         this.getBlock(this.block._id)
         .then((block)=>{
           this.$refs.blockContent.innerHTML = this.block.content;
+          Vue.nextTick(() => {
+            if (this.$refs.blockContent) this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+              flag.addEventListener('click', this.handleFlagClick);
+            });
+          });
           this.isChanged = false;
           this.$refs.blockContent.focus();
         });
@@ -441,8 +456,33 @@ export default {
         this.flagsSel = this.block.flags.filter((flag)=>{
           return flag._id === flagId;
         })[0];
-        console.log('this.flagsSel', this.flagsSel.parts[0].type);
         this.$refs.blockFlagPopup.open(ev, flagId);
+      },
+
+      canDeleteFlagPart: function (flagPart) {
+          let result = false;
+          if (flagPart.creator === this.auth.getSession().user_id) {
+            result = true;
+            if (flagPart.comments.length) flagPart.comments.forEach((comment)=>{
+              if (comment.creator !== flagPart.creator) result = false;
+            });
+          }
+          return result;
+      },
+
+      delFlagPart: function(ev, partIdx) {
+        if (this.canDeleteFlagPart(this.flagsSel.parts[partIdx])) {
+            this.flagsSel.parts.splice(partIdx, 1);
+            if (this.flagsSel.parts.length == 0) {
+
+                let node = this.$refs.blockContent.querySelector(`[data-flag="${this.flagsSel._id}"]`);
+                let parent = node.parentNode;
+                while (node.firstChild) parent.insertBefore(node.firstChild, node);
+                parent.removeChild(node);
+            }
+            this.$root.$emit('closeFlagPopup', true);
+            this.isChanged = true;
+        }
       },
 
       test: function() {

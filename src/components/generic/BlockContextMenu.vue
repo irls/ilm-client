@@ -69,11 +69,21 @@ import Vue from 'vue'
             this.left = 0 + 'px';
         },
 
-        open: function(ev) {
+        open: function(ev, range) {
             ev.preventDefault();
             this.$root.$emit('closeBlockContextMenu');
-            let coords = this.getSelectionCoords();
-            coords.x = coords.x + coords.width;
+
+            let coords = {};
+            if (range.collapsed == true) {
+              coords = this.getSelectionCoords();
+              coords.x = coords.x + coords.width;
+            } else {
+              coords = {
+                x: ev.clientX,
+                y: ev.clientY
+              }
+            }
+
             this.viewMenu = true;
             this.setMenu(coords.x, coords.y, ev.target);
             //this.$refs.menu.focus();

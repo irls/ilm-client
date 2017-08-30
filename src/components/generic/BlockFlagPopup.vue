@@ -17,7 +17,9 @@ import Vue from 'vue'
   export default {
     name: 'block-flag-popup',
     props: [
-        'update'
+        'update',
+        'canDeleteFlagPart',
+        'delFlagPart'
     ],
     data() {
       return {
@@ -104,13 +106,11 @@ import Vue from 'vue'
     background: #FAFAFA;
     border: 1px solid #BDBDBD;
     box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12);
-    /*box-sizing: border-box;*/
     display: block;
     list-style: none;
     margin: 0;
     padding: 0;
     position: absolute;
-    /*width: 250px;*/
     z-index: 999999;
     outline: none;
 
@@ -143,20 +143,61 @@ import Vue from 'vue'
     }
 }
 
-.flag-popup li {
+.flag-popup {
+  margin: 0;
+  padding: 5px 10px;
+  font-size: 16px;
+  width: 320px;
+  text-align: left;
 
+  textarea {
+    resize: none;
+  }
+
+  li {
     margin: 0;
-    padding: 5px 10px;
     cursor: default;
 
     &.separator {
-        border-bottom: 1px solid #E0E0E0;
-        padding: 0;
+      border-bottom: 1px solid #E0E0E0;
+      padding: 0;
     }
-}
 
-.flag-popup li:last-child {
-    border-bottom: none;
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .flag-header {
+      font-size: 22px;
+    }
+
+    .flag-content {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .flag-control {
+      font-size: 16px;
+      line-height: 32px;
+    }
+
+    .flag-comment {
+      margin-bottom: 3px;
+    }
+
+    .glyphicon {
+      &.-resolved {
+        color: green;
+      }
+    }
+  }
+  .flag-control {
+    font-size: 16px;
+    line-height: 26px;
+  }
+  .flag-comment {
+    width: 100%;
+  }
 }
 
 /*.flag-popup li:hover {
