@@ -63,33 +63,40 @@
               <!--<div class="-hidden">-->
 
               <div class="par-ctrl -audio -hidden -right">
-                  <template v-if="player && blockAudio.src">
-                      <i class="fa fa-play-circle-o" v-if="!isAudStarted"
-                      @click="audPlay(block._id, $event)"></i>
+                  <template v-if="player && blockAudio.src && !isRecording">
+                      <template v-if="!isAudStarted">
+                        <i class="fa fa-play-circle-o" 
+                          @click="audPlay(block._id, $event)"></i>
+                        <i class="fa fa-stop-circle-o disabled"></i>
+                      </template>
                       <template v-else>
-                        <i class="fa fa-stop-circle-o"
-                          @click="audStop(block._id, $event)"></i>
                         <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
                           @click="audPause(block._id, $event)"></i>
-                        <i class="fa fa-play-circle-o" v-else
+                        <i class="fa fa-play-circle-o paused" v-else
                           @click="audResume(block._id, $event)"></i>
+                        <i class="fa fa-stop-circle-o"
+                          @click="audStop(block._id, $event)"></i>
+                        <div class="empty-control"></div><!-- empty block to keep order -->
                         </template>
                   </template>
                   <template v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
+                    <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i>
+                    <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i>
                     <i class="fa fa-microphone" v-if="!isRecording" @click="startRecording($event)"></i>
-                    <template v-else>
-                      <i class="fa fa-stop-circle-o" @click="stopRecording(true, $event)"></i>
-                    </template>
+                    <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i>
+                    <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i>
                   </template>
               </div>
               <!--<div class="-hidden">-->
 
             </div>
             <!--<div class="table-row controls-top">-->
-
+            <div style="" class="preloader-container">
+              <div v-if="isUpdating" class="preloader-small"> </div>
+            </div>
             <div class="table-row ocean">
                 <hr v-if="block.type=='hr'" />
-
+                
                 <div v-else class="content-wrap"
                 :id="'content-'+block._id"
                 ref="blockContent"
@@ -162,11 +169,6 @@
     </div>
     <div class="table-cell controls-right">
     </div>
-    <alert v-model="hasMessage" placement="top" :duration="3000" type="info" width="400px">
-      <span class="icon-ok-circled alert-icon-float-left"></span>
-
-      <p>{{infoMessage}}.</p>
-    </alert>
 </div>
 </template>
 
@@ -179,7 +181,6 @@ import BlockMenu from '../generic/BlockMenu';
 import BlockContextMenu from '../generic/BlockContextMenu';
 import taskControls from '../../mixins/task_controls.js'
 import apiConfig from '../../mixins/api_config.js'
-import {alert} from 'vue-strap'
 
 export default {
   data () {
@@ -202,14 +203,14 @@ export default {
       isAudStarted: false,
       isAudPaused: false,
       isRecording: false,
+      isRecordingPaused: false,
       isAudioChanged: false,
       blockAudio: {
         src: '',
         map: ''
       },
       reRecordPosition: false,
-      hasMessage: false,
-      infoMessage: ''
+      isUpdating: false
     }
   },
   components: {
@@ -306,7 +307,15 @@ export default {
       discardAudio: function() {
         this.blockAudio.src = this.block.audiosrc;
         this.blockAudio.map = this.block.content;
-        this.$emit('discardRecording', this.block._id);
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio';
+        let api = this.$store.state.auth.getHttp();
+        api.delete(api_url, {}, {})
+          .then(response => {
+
+          })
+          .catch(err => {
+
+          });
       },
       assembleBlock: function(el) {
         this.block.content = this.$refs.blockContent.innerHTML;
@@ -392,12 +401,59 @@ export default {
       },
       startRecording() {
         this.isRecording = true;
-        this.$emit('startRecording', this.block._id)
+        this.recorder.startRecording();
       },
-      stopRecording(isSend) {
+      stopRecording(start_next) {
+        start_next = typeof start_next === 'undefined' ? false : start_next;
+        if (!this.isRecording) {
+          return false;
+        }
         this.isRecording = false;
-        this.$emit('stopRecording', this.block._id, this.blockAudio, this.reRecordPosition, this.isAudioChanged);
-        this.reRecordPosition = false;
+        this.isRecordingPaused = false;
+        
+        let self = this;
+        
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio';
+        let api = this.$store.state.auth.getHttp();
+        this.isUpdating = true;
+        this.recorder.stopRecording(function(audioUrl) {
+          this.getDataURL(function(dataURL) {
+            if (start_next) {
+              self.stopRecordingAndNext();
+            }
+            let formData = new FormData();
+            formData.append('audio', dataURL.split(',').pop());
+            formData.append('position', self.reRecordPosition);
+            formData.append('isTemp', self.isAudioChanged);
+            api.post(api_url, formData, {})
+              .then(response => {
+                self.isUpdating = false;
+                if (response.status == 200) {
+                  self.blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
+                  self.blockAudio.map = response.data.content;
+                }
+                self.reRecordPosition = false;
+              })
+              .catch(err => {
+                self.reRecordPosition = false;
+                self.isUpdating = false;
+              });
+          });
+        });
+      },
+      stopRecordingAndNext() {
+        //this.stopRecording();
+        let offset = document.getElementById(this.block._id).getBoundingClientRect()
+        window.scrollTo(0, window.pageYOffset + offset.bottom);
+        this.$emit('stopRecordingAndNext', this.block);
+      },
+      pauseRecording() {
+        this.isRecordingPaused = true;
+        this.recorder.pauseRecording();
+      },
+      resumeRecording() {
+        this.isRecordingPaused = false;
+        this.recorder.resumeRecording();
       },
       initPlayer() {
         this.player = new ReadAlong({
@@ -525,20 +581,6 @@ export default {
             this.infoMessage = 'Audio updated';
           }
         }
-      },
-      infoMessage: {
-        handler(val) {
-          this.hasMessage = val.length > 0
-        },
-        deep: true
-      },
-      hasMessage: {
-        handler(val) {
-          if (val === false) {
-            this.infoMessage = ''
-          }
-        },
-        deep: true
       }
   }
 }
@@ -724,6 +766,12 @@ export default {
             font-size: 22px;
         }
     }
+    .fa.disabled {
+      color: #dddddd;
+    }
+    .fa.paused {
+      color: red;
+    }
 }
 
   .content-wrap {
@@ -800,6 +848,21 @@ export default {
 
   [data-author] {
     color: teal;
+  }
+  
+  .preloader-small {
+      background: url(/static/preloader-snake-small.gif);
+      width: 34px;
+      height: 34px;
+      left: 50%;
+      top: 30px;
+      position: absolute;
+  }
+  .preloader-container {
+    position: relative;
+  }
+  .empty-control {
+    width: 22px; display: inline-block;
   }
 
   .medium-editor-toolbar-form {

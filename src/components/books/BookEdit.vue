@@ -9,9 +9,7 @@
               :putBlock ="putBlockProxy"
               :getBlock ="getBlockProxy"
               :recorder ="recorder"
-              @startRecording="startRecording"
-              @stopRecording="stopRecording"
-              @discardRecording="discardRecording"
+              @stopRecordingAndNext="stopRecordingAndNext"
           />
         </div>
         <!--<div class='col'>-->
@@ -194,47 +192,28 @@ export default {
         });
       }
     },
-    startRecording(block_id) {
-      //this.recorder.start();
-      this.recorder.startRecording();
-    },
-    stopRecording(block_id, blockAudio, reRecordPosition, isTemp) {
-      let api_url = this.API_URL + 'book/block/' + block_id + '/audio';
-      let api = this.$store.state.auth.getHttp();
-      this.recorder.stopRecording(function(audioUrl) {
-        //console.log("HERE: ", audioUrl);
-        //audio.src = audioURL;
-
-        //var recordedBlob = recordRTC.getBlob();
-        this.getDataURL(function(dataURL) {
-          
-          //console.log('Data URL: ', dataURL);
-          let formData = new FormData();
-          formData.append('audio', dataURL.split(',').pop());
-          formData.append('position', reRecordPosition);
-          formData.append('isTemp', isTemp);
-          api.post(api_url, formData, {})
-            .then(response => {
-              if (response.status == 200) {
-                blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
-                blockAudio.map = response.data.content;
-              }
-            })
-            .catch(err => {
-            });
+    stopRecordingAndNext(block) {
+      let next = this.findNextBlock(block);
+      if (next) {
+        let el = this.$children.find(c => {
+          return c.$el.id == next._id;
         });
-      });
+        if (el) {
+          el.startRecording();
+        }
+      }
     },
-    discardRecording(block_id) {
-      let api_url = this.API_URL + 'book/block/' + block_id + '/audio';
-      let api = this.$store.state.auth.getHttp();
-      api.delete(api_url, {}, {})
-        .then(response => {
-          
-        })
-        .catch(err => {
-          
+    findNextBlock(block) {
+      let next = false;
+      for (let i = 0; i < this.parlist.length; ++i) {
+        next = this.parlist[i].find(p => { 
+          return p.index > block.index;
         });
+        if (next) {
+          return next;
+        }
+      }
+      return next;
     }
   },
   events: {
