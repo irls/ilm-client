@@ -117,6 +117,12 @@
                     :update="update"
                 >
                   <li v-if="selection.collapsed" @click="addFootnote">Add footnote</li>
+                  <template v-if="!selection.collapsed && blockAudio.src">
+                    <li class="menu-separator"></li>
+                    <li @click="audPlayFromSelection()">Play from here</li>
+                    <li @click="audPlaySelection()">Play selection</li>
+                    <li class="menu-separator"></li>
+                  </template>
                   <li v-if="!selection.collapsed && tc_showBlockNarrate(block._id)" @click="reRecord">Re-record audio</li>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
@@ -181,6 +187,7 @@ import BlockMenu from '../generic/BlockMenu';
 import BlockContextMenu from '../generic/BlockContextMenu';
 import taskControls from '../../mixins/task_controls.js'
 import apiConfig from '../../mixins/api_config.js'
+var BPromise = require('bluebird');
 
 export default {
   data () {
@@ -210,13 +217,13 @@ export default {
         map: ''
       },
       reRecordPosition: false,
-      isUpdating: false
+      isUpdating: false,
+      recordStartCounter: 0
     }
   },
   components: {
       'block-menu': BlockMenu,
-      'block-cntx-menu': BlockContextMenu,
-      'alert': alert
+      'block-cntx-menu': BlockContextMenu
   },
   props: ['block', 'putBlock', 'getBlock', 'recorder'],
   mixins: [taskControls, apiConfig],
@@ -345,6 +352,27 @@ export default {
         this.audCleanClasses(block_id, ev);
         this.player.playBlock('content-'+block_id);
       },
+      audPlayFromSelection() {
+        let startElement = this._getParent(this.selection.startContainer, 'w');
+        if (startElement) {
+          this.isAudStarted = true;
+          this.player.playFromWordElement(startElement, 'content-'+this.block._id);
+        }
+      },
+      audPlaySelection() {
+        let startElement = this._getParent(this.selection.startContainer, 'w');
+        let endElement = this._getParent(this.selection.endContainer, 'w');
+        let startRange = this._getClosestAligned(startElement, 1);
+        if (!startRange) {
+          startRange = [0, 0];
+        }
+        let endRange = this._getClosestAligned(endElement, 0);
+        if (!endRange) {
+          endRange = this._getClosestAligned(endElement, 1)
+        }
+        this.isAudStarted = true;
+        this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]); 
+      },
       audPause: function(block_id, ev) {
         this.player.pause();
       },
@@ -400,14 +428,49 @@ export default {
           console.log('addFootnote'+this.block._id, this.block.footnotes);
       },
       startRecording() {
-        this.isRecording = true;
-        this.recorder.startRecording();
+        this.recordTimer()
+        .then(() => {
+          this.recordStartCounter = 0;
+          this.isRecording = true;
+          this.selectCurrentBlock();
+          this.recorder.startRecording();
+        })
+      },
+      recordTimer() {
+        let self = this;
+        return new BPromise(function(resolve, reject) {
+          self.recordStartCounter = 3;
+          $('#narrateStartCountdown strong').html(self.recordStartCounter);
+          $('body').addClass('modal-open');
+          $('#narrateStartCountdown').show();
+          let timer = setInterval(function() {
+            --self.recordStartCounter;
+            if (self.recordStartCounter <= 0) {
+              clearTimeout(timer)
+              $('body').removeClass('modal-open');
+              $('#narrateStartCountdown').hide();
+              resolve()
+            } else {
+              //console.log(self.recordStartCounter);
+              $('#narrateStartCountdown strong').html(self.recordStartCounter);
+            }
+          }, 1000);
+        });
+      },
+      selectCurrentBlock() {
+        $('#booksarea').addClass('recording-background');
+        $('#' + this.block._id + ' div.table-body.-content').addClass('recording-block');
+      },
+      unselectCurrentBlock() {
+        $('#booksarea').removeClass('recording-background')
+        $('#' + this.block._id + ' div.table-body.-content').removeClass('recording-block');
       },
       stopRecording(start_next) {
         start_next = typeof start_next === 'undefined' ? false : start_next;
         if (!this.isRecording) {
           return false;
         }
+        this.unselectCurrentBlock();
         this.isRecording = false;
         this.isRecordingPaused = false;
         
@@ -444,7 +507,7 @@ export default {
       stopRecordingAndNext() {
         //this.stopRecording();
         let offset = document.getElementById(this.block._id).getBoundingClientRect()
-        window.scrollTo(0, window.pageYOffset + offset.bottom);
+        window.scrollTo(0, window.pageYOffset + offset.bottom - 100);
         this.$emit('stopRecordingAndNext', this.block);
       },
       pauseRecording() {
@@ -511,6 +574,8 @@ export default {
         if (node.dataset && node.dataset.map) {
           let splitted = node.dataset.map.split(',');
           if (splitted.length == 2) {
+            splitted[0] = parseInt(splitted[0]);
+            splitted[1] = parseInt(splitted[1]);
             return splitted;
           }
         }
@@ -524,6 +589,8 @@ export default {
           if (sibling.dataset && sibling.dataset.map) {
             let splitted = sibling.dataset.map.split(',');
             if (splitted.length == 2) {
+              splitted[0] = parseInt(splitted[0]);
+              splitted[1] = parseInt(splitted[1]);
               return splitted;
             }
           }
@@ -863,6 +930,11 @@ export default {
   }
   .empty-control {
     width: 22px; display: inline-block;
+  }
+  .menu-separator {
+    width: 100%;
+    border-bottom: 1px solid black;
+    height: 10px;
   }
 
   .medium-editor-toolbar-form {
