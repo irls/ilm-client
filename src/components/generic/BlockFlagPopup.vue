@@ -19,7 +19,9 @@ import Vue from 'vue'
     props: [
         'update',
         'canDeleteFlagPart',
-        'delFlagPart'
+        'delFlagPart',
+        'resolveFlagPart',
+        'reopenFlagPart'
     ],
     data() {
       return {
@@ -27,7 +29,8 @@ import Vue from 'vue'
           top: '0px',
           left: '0px',
           under: true,
-          flagId: false
+          flagId: false,
+          lastEvent: false
         }
      },
     methods: {
@@ -60,7 +63,6 @@ import Vue from 'vue'
               }
               break;
           };
-
         },
 
         close: function() {
@@ -75,14 +77,22 @@ import Vue from 'vue'
 
           if (this.viewMenu == true && flagId === this.flagId) return this.close();
 
+          this.lastEvent = ev;
           this.flagId = flagId;
           this.viewMenu = true;
           this.setMenu(ev.clientX, ev.clientY, ev.target);
-          //this.$refs.menu.focus();
 
           Vue.nextTick(function() {
               this.setMenu(ev.clientX, ev.clientY, ev.target);
-              //this.$refs.menu.focus();
+          }.bind(this));
+        },
+
+        reset: function() {
+          let ev = this.lastEvent;
+          this.setMenu(ev.clientX, ev.clientY, ev.target);
+
+          Vue.nextTick(function() {
+              this.setMenu(ev.clientX, ev.clientY, ev.target);
           }.bind(this));
         }
     },
@@ -113,6 +123,11 @@ import Vue from 'vue'
     position: absolute;
     z-index: 999999;
     outline: none;
+
+/*    max-height: 350px;
+    overflow:scroll;
+    overflow-x:hidden;
+    overflow: hidden;*/
 
     &.-over::before, &.-under::after {
       content: "";
@@ -147,7 +162,7 @@ import Vue from 'vue'
   margin: 0;
   padding: 5px 10px;
   font-size: 16px;
-  width: 320px;
+  width: 340px;
   text-align: left;
 
   textarea {
@@ -177,6 +192,7 @@ import Vue from 'vue'
     }
 
     .flag-control {
+      cursor: pointer;
       font-size: 16px;
       line-height: 32px;
     }
@@ -186,8 +202,17 @@ import Vue from 'vue'
     }
 
     .glyphicon {
-      &.-resolved {
+      &.flag-resolved {
         color: green;
+        margin-right: 5px;
+      }
+      &.flag-open {
+        color: red;
+        margin-right: 5px;
+      }
+      &.flag-hidden {
+        color: grey;
+        margin-right: 5px;
       }
     }
   }

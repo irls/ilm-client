@@ -58,20 +58,17 @@ class BookBlock {
     return _id(this._id + ':');
   }
 
-  addFlag(range, type) {
+  newFlag(range, type) {
     let _id = this.genFlagId();
     let _at = (new Date()).toJSON();
     let user_Id = superlogin.getSession().user_id;
-    let flagPart = {
+    let flagPart = new FlagPart({
       creator: user_Id,
       created_at: _at,
-      status: 'open',
       type: type,
       content: range.cloneContents().textContent,
-      comments: [],
-      updated_at: _at,
-      newComment: ''
-    }
+      updated_at: _at
+    })
 
     this.flags.push ({
       _id: _id,
@@ -82,6 +79,68 @@ class BookBlock {
 
     //console.log('addFlag', JSON.stringify(this.flags));
     return _id;
+  }
+
+  addFlag(_id, range, type) {
+    //console.log('addFlag', _id);
+    this.flags.forEach((flag, flagIdx)=>{
+      if (flag._id === _id) {
+        let _at = (new Date()).toJSON();
+        let user_Id = superlogin.getSession().user_id;
+        let flagPart = new FlagPart({
+          creator: user_Id,
+          created_at: _at,
+          type: type,
+          content: range.cloneContents().textContent,
+          updated_at: _at
+        })
+        flag.parts.push(flagPart);
+      }
+    });
+  }
+
+  addPart(_id, content, type) {
+    this.flags.forEach((flag, flagIdx)=>{
+      if (flag._id === _id) {
+        let _at = (new Date()).toJSON();
+        let user_Id = superlogin.getSession().user_id;
+        let flagPart = new FlagPart({
+          creator: user_Id,
+          created_at: _at,
+          type: type,
+          content: content,
+          updated_at: _at
+        })
+        flag.parts.push(flagPart);
+      }
+    });
+  }
+
+  isNeedAlso(_id) {
+    let checker = {};
+    this.flags.forEach((flag)=>{
+      if (flag._id === _id) flag.parts.forEach((part)=>{
+        checker[part.type] = true;
+      });
+    });
+    //console.log('isNeedAlso', _id, checker);
+    if (Object.keys(checker).length > 1) return false;
+    return true;
+  }
+
+}
+
+class FlagPart {
+  constructor(init) {
+    this.creator = init.creator;
+    this.created_at = init.created_at;
+    this.status = init.status || 'open';
+    this.type = init.type;
+    this.content = init.content;
+    this.comments = init.comments || [];
+    this.updated_at = init.updated_at;
+    this.newComment = '';
+    this.collapsed = false;
   }
 }
 

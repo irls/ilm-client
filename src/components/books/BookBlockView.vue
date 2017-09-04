@@ -113,16 +113,39 @@
                   <template v-for="(part, partIdx) in flagsSel.parts">
                     <li>
 
-                    <div class="flag-header -left">Editing {{moment(part.created_at).format("D MMM")}} <i v-if="part.status == 'resolved'" class="glyphicon glyphicon-flag -resolved"></i></div>
+                    <div class="flag-header -left">
+
+                      <i class="glyphicon glyphicon-triangle-bottom"
+                        v-if="!part.collapsed"
+                        @click.prevent="toggleFlagPart($event, partIdx)"></i>
+                      <i class="glyphicon glyphicon-triangle-right"
+                        v-if="part.collapsed"
+                        @click.prevent="toggleFlagPart($event, partIdx)"></i>
+
+                      <span v-if="part.type == 'editor'">Editing</span>
+                      <span v-if="part.type == 'narrator'">Narrating</span>
+                      {{moment(part.created_at).format("D MMM")}}
+                      <i v-if="part.status == 'resolved'" class="glyphicon glyphicon-flag flag-resolved"></i>
+                      <i v-if="part.status == 'open'" class="glyphicon glyphicon-flag flag-open"></i>
+                      <i v-if="part.status == 'hidden'" class="glyphicon glyphicon-flag flag-hidden"></i>
+                    </div>
+
+                    <a href="#" class="flag-control -left"
+                      v-if="canDeleteFlagPart(part) && part.status == 'open'"
+                      @click.prevent="resolveFlagPart($event, partIdx)">
+                      Resolve flag</a>
+
                     <a href="#" class="flag-control -right"
                       v-if="part.status == 'resolved'"
                       @click.prevent="$refs.blockFlagPopup.close">
                       Hide flag</a>
                     <a href="#" class="flag-control -right"
-                      v-if="canDeleteFlagPart(part)"
+                      v-if="canDeleteFlagPart(part) && part.status == 'open'"
                       @click.prevent="delFlagPart($event, partIdx)">
                       <i class="fa fa-trash"></i></a>
                     <div class="clearfix"></div>
+
+                    <template v-if="!part.collapsed">
 
                     <p class="flag-content">"{{part.content}}"</p>
 
@@ -135,11 +158,27 @@
                       placeholder="Enter description here ...">
                     </textarea>
 
+                    </template>
+
                     </li>
                     <!--<li class="separator"></li>-->
-                    <a href="#" class="flag-control -left"
-                    @click.prevent="$refs.blockFlagPopup.close">
-                    Flag for narration also</a>
+                    <template v-if="block.isNeedAlso(flagsSel._id)">
+                      <a v-if="part.type == 'editor'"
+                      href="#" class="flag-control -left"
+                      @click.prevent="addFlagPart(part.content, 'narrator')">
+                      Flag for narration also</a>
+                      <a v-if="part.type == 'narrator'"
+                      href="#" class="flag-control -left"
+                      @click.prevent="addFlagPart(part.content, 'editor')">
+                      Flag for editing also</a>
+                    </template>
+
+                    <a v-if="part.status == 'resolved'"
+                      href="#" class="flag-control"
+                      @click.prevent="reopenFlagPart($event, partIdx)">
+                      Re-open flag</a>
+
+                    <div class="clearfix"></div>
                   </template>
 
                   <a href="#" class="flag-control -right"
@@ -231,6 +270,9 @@ export default {
       player: false,
       range: false,
       flagsSel: [],
+      flagEl: 'f',
+      quoteEl: 'w',
+      footEl: 'sup',
       moment: moment,
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClasses: {
@@ -437,18 +479,62 @@ export default {
 
       addFlag: function(ev, type = 'editor') {
         if (window.getSelection) {
-          let flag = document.createElement('w');
-          flag.dataset.flag = this.block.addFlag(this.range, type);
-          //flag.dataset.status = 'open';
-
-          flag.appendChild(this.range.extractContents());
-          this.range.insertNode(flag);
-
-          flag.addEventListener('click', this.handleFlagClick);
-          this.handleFlagClick({target: flag});
-
+          let flag = document.createElement(this.flagEl);
+          let existsFlag = this.detectExistingFlag();
+          if (!existsFlag) {
+            flag.dataset.flag = this.block.newFlag(this.range, type);
+            flag.appendChild(this.range.extractContents());
+            this.range.insertNode(flag);
+            flag.addEventListener('click', this.handleFlagClick);
+            this.handleFlagClick({target: flag});
+          } else {
+            this.block.addFlag(existsFlag.dataset.flag, this.range, type);
+            this.handleFlagClick({target: existsFlag});
+          }
           this.isChanged = true;
         }
+      },
+
+      addFlagPart: function(content, type = 'editor') {
+        this.block.addPart(this.flagsSel._id, content, type);
+        let node = this.$refs.blockContent.querySelector(`[data-flag="${this.flagsSel._id}"]`);
+        this.$root.$emit('closeFlagPopup', true);
+        this.handleFlagClick({target: node});
+        this.isChanged = true;
+      },
+
+      detectExistingFlag: function(ev) {
+        let node = this.range.startContainer;
+        let endNode = this.range.endContainer;
+        let target = MediumEditor.util.traverseUp(node, (element)=>{
+          return element.dataset.flag;
+        })
+        while (target === false && node && node != endNode) {
+          target = MediumEditor.util.traverseUp(node = this.nextNode(node), (element)=>{
+            return element.dataset.flag;
+          })
+        }
+        /*let target = MediumEditor.util.traverseUp(this.range.startContainer, function (element) {
+          return element.dataset.flag;
+        })
+        if (!target) target = MediumEditor.util.traverseUp(this.range.endContainer, function (element) {
+          return element.dataset.flag;
+        })*/
+        return target;
+      },
+
+      nextNode: function (node) {
+          if (node.hasChildNodes()) {
+              return node.firstChild;
+          } else {
+              while (node && !node.nextSibling) {
+                  node = node.parentNode;
+              }
+              if (!node) {
+                  return null;
+              }
+              return node.nextSibling;
+          }
       },
 
       handleFlagClick: function(ev) {
@@ -473,20 +559,34 @@ export default {
       delFlagPart: function(ev, partIdx) {
         if (this.canDeleteFlagPart(this.flagsSel.parts[partIdx])) {
             this.flagsSel.parts.splice(partIdx, 1);
+            let node = this.$refs.blockContent.querySelector(`[data-flag="${this.flagsSel._id}"]`);
             if (this.flagsSel.parts.length == 0) {
-
-                let node = this.$refs.blockContent.querySelector(`[data-flag="${this.flagsSel._id}"]`);
                 let parent = node.parentNode;
                 while (node.firstChild) parent.insertBefore(node.firstChild, node);
                 parent.removeChild(node);
+                this.$root.$emit('closeFlagPopup', true);
             }
-            this.$root.$emit('closeFlagPopup', true);
+            else {
+              this.$refs.blockFlagPopup.reset();
+            }
             this.isChanged = true;
         }
       },
 
-      test: function() {
-          console.log('addFootnote'+this.block._id, this.block.footnotes);
+      toggleFlagPart: function(ev, partIdx) {
+        if (!this.flagsSel.parts[partIdx].collapsed) this.flagsSel.parts[partIdx].collapsed = true;
+        else this.flagsSel.parts[partIdx].collapsed = !this.flagsSel.parts[partIdx].collapsed;
+        this.$refs.blockFlagPopup.reset();
+      },
+
+      resolveFlagPart: function(ev, partIdx) {
+        this.flagsSel.parts[partIdx].status = 'resolved';
+        this.$refs.blockFlagPopup.reset();
+      },
+
+      reopenFlagPart: function(ev, partIdx) {
+        this.flagsSel.parts[partIdx].status = 'open';
+        this.$refs.blockFlagPopup.reset();
       },
 
       startRecording() {
