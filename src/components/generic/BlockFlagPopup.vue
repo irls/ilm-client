@@ -1,5 +1,5 @@
 <template>
-<ul ref="menu"
+  <div ref="menu"
     class="flag-popup"
     tabindex="-1"
     v-bind:class="{ '-under': under, '-over': !under }"
@@ -7,12 +7,20 @@
     <!--@blur="close"
     @mouseleave="close"
     @click="close">-->
-    <slot></slot>
-</ul>
+    <div class="flag-wrapper">
+      <ul>
+        <slot></slot>
+      </ul>
+    </div>
+
+    <a href="#" class="flag-control -close -right"
+      @click.prevent="close">
+      Close</a>
+  </div>
 </template>
 
 <script>
-import Vue from 'vue'
+import Vue from 'vue';
 
   export default {
     name: 'block-flag-popup',
@@ -63,6 +71,7 @@ import Vue from 'vue'
               }
               break;
           };
+
         },
 
         close: function() {
@@ -85,6 +94,7 @@ import Vue from 'vue'
           Vue.nextTick(function() {
               this.setMenu(ev.clientX, ev.clientY, ev.target);
           }.bind(this));
+
         },
 
         reset: function() {
@@ -94,6 +104,13 @@ import Vue from 'vue'
           Vue.nextTick(function() {
               this.setMenu(ev.clientX, ev.clientY, ev.target);
           }.bind(this));
+        },
+
+        scrollBottom: function() {
+          let scrollEl = this.$refs.menu.querySelector('.flag-wrapper');
+          Vue.nextTick(function() {
+            scrollEl.scrollTop = scrollEl.scrollHeight;
+          });
         }
     },
     mounted: function() {
@@ -116,13 +133,38 @@ import Vue from 'vue'
     background: #FAFAFA;
     border: 1px solid #BDBDBD;
     box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12);
-    display: block;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+
     position: absolute;
     z-index: 999999;
     outline: none;
+
+    margin: 0;
+    padding: 0;
+    /*padding: 5px 10px;*/
+    font-size: 16px;
+    width: 340px;
+    text-align: left;
+
+    .flag-wrapper {
+      max-height: 330px;
+      overflow:auto;
+      overflow-x:hidden;
+      padding: 5px 10px;
+    }
+
+    ::-webkit-scrollbar {
+      -webkit-appearance: none;
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-button {
+    }
+
+    ::-webkit-scrollbar-thumb {
+      border-radius: 5px;
+      background-color: rgba(0,0,0,.5);
+      -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+    }
 
 /*    max-height: 350px;
     overflow:scroll;
@@ -159,14 +201,16 @@ import Vue from 'vue'
 }
 
 .flag-popup {
-  margin: 0;
-  padding: 5px 10px;
-  font-size: 16px;
-  width: 340px;
-  text-align: left;
 
   textarea {
     resize: none;
+  }
+
+  ul {
+    display: block;
+    list-style: none;
+    padding: 0;
+    margin: 0;
   }
 
   li {
@@ -195,6 +239,10 @@ import Vue from 'vue'
       cursor: pointer;
       font-size: 16px;
       line-height: 32px;
+
+      &.-close {
+        margin: 5px 10px;
+      }
     }
 
     .flag-comment {
@@ -222,6 +270,20 @@ import Vue from 'vue'
   }
   .flag-comment {
     width: 100%;
+  }
+
+  .flag-control {
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 32px;
+
+    &.-close {
+      margin-right: 10px;
+      margin-bottom: 0;
+      /*position: absolute;
+      right: 10px;
+      bottom: 5px;*/
+    }
   }
 }
 

@@ -181,10 +181,6 @@
                     <div class="clearfix"></div>
                   </template>
 
-                  <a href="#" class="flag-control -right"
-                    @click.prevent="$refs.blockFlagPopup.close">
-                    Close</a>
-
                 </block-flag-popup>
 
                 <block-cntx-menu
@@ -491,6 +487,7 @@ export default {
             this.block.addFlag(existsFlag.dataset.flag, this.range, type);
             this.handleFlagClick({target: existsFlag});
           }
+          this.$refs.blockFlagPopup.scrollBottom();
           this.isChanged = true;
         }
       },
@@ -500,6 +497,7 @@ export default {
         let node = this.$refs.blockContent.querySelector(`[data-flag="${this.flagsSel._id}"]`);
         this.$root.$emit('closeFlagPopup', true);
         this.handleFlagClick({target: node});
+        this.$refs.blockFlagPopup.scrollBottom();
         this.isChanged = true;
       },
 
