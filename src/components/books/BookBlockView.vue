@@ -121,6 +121,7 @@
                     <li class="menu-separator"></li>
                     <li @click="audPlayFromSelection()">Play from here</li>
                     <li @click="audPlaySelection()">Play selection</li>
+                    <li @click="audDeleteSelection()">Delete audio in selection</li>
                     <li class="menu-separator"></li>
                   </template>
                   <li v-if="!selection.collapsed && tc_showBlockNarrate(block._id)" @click="reRecord">Re-record audio</li>
@@ -314,7 +315,7 @@ export default {
       discardAudio: function() {
         this.blockAudio.src = this.block.audiosrc;
         this.blockAudio.map = this.block.content;
-        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio';
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
         let api = this.$store.state.auth.getHttp();
         api.delete(api_url, {}, {})
           .then(response => {
@@ -385,6 +386,36 @@ export default {
         this.isAudStarted = false;
         this.isAudPaused = false;
         this.audCleanClasses(block_id, ev);
+      },
+      audDeleteSelection() {
+        let startElement = this._getParent(this.selection.startContainer, 'w');
+        let endElement = this._getParent(this.selection.endContainer, 'w');
+        let startRange = this._getClosestAligned(startElement, 1);
+        if (!startRange) {
+          startRange = [0, 0];
+        }
+        let endRange = this._getClosestAligned(endElement, 0);
+        if (!endRange) {
+          endRange = this._getClosestAligned(endElement, 1)
+        }
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_remove';
+        let api = this.$store.state.auth.getHttp();
+        this.isUpdating = true;
+        let formData = new FormData();
+        let position = [startRange[0], endRange[0] + endRange[1]];
+        formData.append('position', position);
+        formData.append('isTemp', this.isAudioChanged);
+        api.post(api_url, formData, {})
+          .then(response => {
+            this.isUpdating = false;
+            if (response.status == 200) {
+              this.blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
+              this.blockAudio.map = response.data.content;
+            }
+          })
+          .catch(err => {
+            this.isUpdating = false;
+          });
       },
       audCleanClasses: function(block_id, ev) {
         let reading_class = this.player.config.reading_class
@@ -540,6 +571,7 @@ export default {
         });
       },
       reRecord() {
+        this._markSelection();
         let startElement = this._getParent(this.selection.startContainer, 'w');
         let endElement = this._getParent(this.selection.endContainer, 'w');
         let startRange = this._getClosestAligned(startElement, 0);
@@ -601,6 +633,20 @@ export default {
           }
         }
         return null;
+      },
+      _markSelection() {
+        let startElement = this._getParent(this.selection.startContainer, 'w');
+        let endElement = this._getParent(this.selection.endContainer, 'w');
+        if (startElement && endElement) {
+          startElement.classList.add('audio-highlight');
+          let next = false;
+          do {
+            next = next ? next.nextSibling : startElement.nextSibling;
+            if (next) {
+              next.classList.add('audio-highlight');
+            }
+          } while (next && next !== endElement);
+        }
       }
   },
   watch: {
