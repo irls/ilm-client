@@ -117,6 +117,13 @@
                     :update="update"
                 >
                   <li v-if="selection.collapsed" @click="addFootnote">Add footnote</li>
+                  <template v-if="!selection.collapsed && blockAudio.src">
+                    <li class="menu-separator"></li>
+                    <li @click="audPlayFromSelection()">Play from here</li>
+                    <li @click="audPlaySelection()">Play selection</li>
+                    <li @click="audDeleteSelection()">Delete audio in selection</li>
+                    <li class="menu-separator"></li>
+                  </template>
                   <li v-if="!selection.collapsed && tc_showBlockNarrate(block._id)" @click="reRecord">Re-record audio</li>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
@@ -181,6 +188,7 @@ import BlockMenu from '../generic/BlockMenu';
 import BlockContextMenu from '../generic/BlockContextMenu';
 import taskControls from '../../mixins/task_controls.js'
 import apiConfig from '../../mixins/api_config.js'
+var BPromise = require('bluebird');
 
 export default {
   data () {
@@ -210,13 +218,13 @@ export default {
         map: ''
       },
       reRecordPosition: false,
-      isUpdating: false
+      isUpdating: false,
+      recordStartCounter: 0
     }
   },
   components: {
       'block-menu': BlockMenu,
-      'block-cntx-menu': BlockContextMenu,
-      'alert': alert
+      'block-cntx-menu': BlockContextMenu
   },
   props: ['block', 'putBlock', 'getBlock', 'recorder'],
   mixins: [taskControls, apiConfig],
@@ -307,7 +315,7 @@ export default {
       discardAudio: function() {
         this.blockAudio.src = this.block.audiosrc;
         this.blockAudio.map = this.block.content;
-        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio';
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
         let api = this.$store.state.auth.getHttp();
         api.delete(api_url, {}, {})
           .then(response => {
@@ -345,6 +353,27 @@ export default {
         this.audCleanClasses(block_id, ev);
         this.player.playBlock('content-'+block_id);
       },
+      audPlayFromSelection() {
+        let startElement = this._getParent(this.selection.startContainer, 'w');
+        if (startElement) {
+          this.isAudStarted = true;
+          this.player.playFromWordElement(startElement, 'content-'+this.block._id);
+        }
+      },
+      audPlaySelection() {
+        let startElement = this._getParent(this.selection.startContainer, 'w');
+        let endElement = this._getParent(this.selection.endContainer, 'w');
+        let startRange = this._getClosestAligned(startElement, 1);
+        if (!startRange) {
+          startRange = [0, 0];
+        }
+        let endRange = this._getClosestAligned(endElement, 0);
+        if (!endRange) {
+          endRange = this._getClosestAligned(endElement, 1)
+        }
+        this.isAudStarted = true;
+        this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]); 
+      },
       audPause: function(block_id, ev) {
         this.player.pause();
       },
@@ -357,6 +386,36 @@ export default {
         this.isAudStarted = false;
         this.isAudPaused = false;
         this.audCleanClasses(block_id, ev);
+      },
+      audDeleteSelection() {
+        let startElement = this._getParent(this.selection.startContainer, 'w');
+        let endElement = this._getParent(this.selection.endContainer, 'w');
+        let startRange = this._getClosestAligned(startElement, 1);
+        if (!startRange) {
+          startRange = [0, 0];
+        }
+        let endRange = this._getClosestAligned(endElement, 0);
+        if (!endRange) {
+          endRange = this._getClosestAligned(endElement, 1)
+        }
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_remove';
+        let api = this.$store.state.auth.getHttp();
+        this.isUpdating = true;
+        let formData = new FormData();
+        let position = [startRange[0], endRange[0] + endRange[1]];
+        formData.append('position', position);
+        formData.append('isTemp', this.isAudioChanged);
+        api.post(api_url, formData, {})
+          .then(response => {
+            this.isUpdating = false;
+            if (response.status == 200) {
+              this.blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
+              this.blockAudio.map = response.data.content;
+            }
+          })
+          .catch(err => {
+            this.isUpdating = false;
+          });
       },
       audCleanClasses: function(block_id, ev) {
         let reading_class = this.player.config.reading_class
@@ -400,14 +459,49 @@ export default {
           console.log('addFootnote'+this.block._id, this.block.footnotes);
       },
       startRecording() {
-        this.isRecording = true;
-        this.recorder.startRecording();
+        this.recordTimer()
+        .then(() => {
+          this.recordStartCounter = 0;
+          this.isRecording = true;
+          this.selectCurrentBlock();
+          this.recorder.startRecording();
+        })
+      },
+      recordTimer() {
+        let self = this;
+        return new BPromise(function(resolve, reject) {
+          self.recordStartCounter = 3;
+          $('#narrateStartCountdown strong').html(self.recordStartCounter);
+          $('body').addClass('modal-open');
+          $('#narrateStartCountdown').show();
+          let timer = setInterval(function() {
+            --self.recordStartCounter;
+            if (self.recordStartCounter <= 0) {
+              clearTimeout(timer)
+              $('body').removeClass('modal-open');
+              $('#narrateStartCountdown').hide();
+              resolve()
+            } else {
+              //console.log(self.recordStartCounter);
+              $('#narrateStartCountdown strong').html(self.recordStartCounter);
+            }
+          }, 1000);
+        });
+      },
+      selectCurrentBlock() {
+        $('#booksarea').addClass('recording-background');
+        $('#' + this.block._id + ' div.table-body.-content').addClass('recording-block');
+      },
+      unselectCurrentBlock() {
+        $('#booksarea').removeClass('recording-background')
+        $('#' + this.block._id + ' div.table-body.-content').removeClass('recording-block');
       },
       stopRecording(start_next) {
         start_next = typeof start_next === 'undefined' ? false : start_next;
         if (!this.isRecording) {
           return false;
         }
+        this.unselectCurrentBlock();
         this.isRecording = false;
         this.isRecordingPaused = false;
         
@@ -444,7 +538,7 @@ export default {
       stopRecordingAndNext() {
         //this.stopRecording();
         let offset = document.getElementById(this.block._id).getBoundingClientRect()
-        window.scrollTo(0, window.pageYOffset + offset.bottom);
+        window.scrollTo(0, window.pageYOffset + offset.bottom - 100);
         this.$emit('stopRecordingAndNext', this.block);
       },
       pauseRecording() {
@@ -477,6 +571,7 @@ export default {
         });
       },
       reRecord() {
+        this._markSelection();
         let startElement = this._getParent(this.selection.startContainer, 'w');
         let endElement = this._getParent(this.selection.endContainer, 'w');
         let startRange = this._getClosestAligned(startElement, 0);
@@ -511,6 +606,8 @@ export default {
         if (node.dataset && node.dataset.map) {
           let splitted = node.dataset.map.split(',');
           if (splitted.length == 2) {
+            splitted[0] = parseInt(splitted[0]);
+            splitted[1] = parseInt(splitted[1]);
             return splitted;
           }
         }
@@ -524,6 +621,8 @@ export default {
           if (sibling.dataset && sibling.dataset.map) {
             let splitted = sibling.dataset.map.split(',');
             if (splitted.length == 2) {
+              splitted[0] = parseInt(splitted[0]);
+              splitted[1] = parseInt(splitted[1]);
               return splitted;
             }
           }
@@ -534,6 +633,20 @@ export default {
           }
         }
         return null;
+      },
+      _markSelection() {
+        let startElement = this._getParent(this.selection.startContainer, 'w');
+        let endElement = this._getParent(this.selection.endContainer, 'w');
+        if (startElement && endElement) {
+          startElement.classList.add('audio-highlight');
+          let next = false;
+          do {
+            next = next ? next.nextSibling : startElement.nextSibling;
+            if (next) {
+              next.classList.add('audio-highlight');
+            }
+          } while (next && next !== endElement);
+        }
       }
   },
   watch: {
@@ -863,6 +976,11 @@ export default {
   }
   .empty-control {
     width: 22px; display: inline-block;
+  }
+  .menu-separator {
+    width: 100%;
+    border-bottom: 1px solid black;
+    height: 10px;
   }
 
   .medium-editor-toolbar-form {

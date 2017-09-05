@@ -18,7 +18,11 @@
     </template>
 
     <infinite-loading v-if="autoload" :on-infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>
-
+    <div id="narrateStartCountdown" class="modal fade in">
+      <div>
+        <strong>3</strong>
+      </div>
+    </div>
 </div>
 <!--<div class="container">-->
 </template>
@@ -235,11 +239,36 @@ export default {
           })
       });
       this.initRecorder();
+      window.onscroll = function() {
+        $('#narrateStartCountdown').css('top', document.body.scrollTop + 'px');
+        $('#narrateStartCountdown').css('height', '100%')
+      }
   }
 }
 </script>
 
 <style lang="less" src="./css/ocean.less"></style>
 <style lang="less">
-
+  #narrateStartCountdown {
+      display: none;
+      position: absolute;
+      width: 100%;
+      
+      strong {
+          margin: 0px 50%;
+          display: block;
+          width: 100%;
+          font-size: 100px;
+          top: 50%;
+          position: absolute;
+          color: #f2d3d3;
+      }
+  }
+  .recording-background {
+      background-color: rgba(0,0,0,0.5);
+  }
+  .recording-block {
+      background-color: white;
+      border-radius: 5px;
+  }
 </style>
