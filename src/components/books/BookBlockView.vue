@@ -23,27 +23,39 @@
             data-toggle="tooltip" v-bind:title="JSON.stringify(block)">
 
               <div class="par-ctrl -hidden -left">
-                  <span class="block-menu" style="position: relative;">
-                  <i class="glyphicon glyphicon-menu-hamburger"
-                  @click.prevent="$refs.blockMenu.open($event, block._id)">
-                  </i>
-                  <block-menu
-                      ref="blockMenu"
-                      dir="top"
-                      :update="update">
-                    <li @click="update">Show hidden flags</li>
-                    <li class="separator"></li>
-                    <li>Insert block before</li>
-                    <li>Insert block after</li>
-                    <li>Delete block</li>
-                    <li>Split block</li>
-                    <li>Join with previous block</li>
-                    <li>Join with next block</li>
-                    <li class="separator"></li>
-                    <li @click="discardBlock">Discard un-saved changes</li>
-                    <li>Revert to original audio</li>
-                  </block-menu>
-                  </span>
+                  <div class="block-menu" style="position: relative;">
+                    <i class="glyphicon glyphicon-menu-hamburger"
+                    @click.prevent="$refs.blockMenu.open($event, block._id)">
+                    </i>
+                    <block-menu
+                        ref="blockMenu"
+                        dir="top"
+                        :update="update">
+
+                      <li v-if="isHideArchFlags"
+                        @click.prevent="toggleArchFlags()">
+                        <i class="fa fa-eye" aria-hidden="true"></i>
+                        Show archived flags</li>
+                      <li v-else
+                        @click.prevent="toggleArchFlags()">
+                        <i class="fa fa-eye-slash" aria-hidden="true"></i>
+                        Hide archived flags</li>
+
+                      <li class="separator"></li>
+                      <li>Insert block before</li>
+                      <li>Insert block after</li>
+                      <li>Delete block</li>
+                      <li>Split block</li>
+                      <li>Join with previous block</li>
+                      <li>Join with next block</li>
+                      <li class="separator"></li>
+                      <li @click="discardBlock">
+                        <i class="fa fa-undo" aria-hidden="true"></i>
+                        Discard un-saved changes</li>
+                      <li><i class="fa fa-cloud-download" aria-hidden="true"></i>
+                        Revert to original audio</li>
+                    </block-menu>
+                  </div>
 
                   <!--<i class="fa fa-trash-o fa-lg"></i>-->
                   <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
@@ -94,7 +106,11 @@
                 :id="'content-'+block._id"
                 ref="blockContent"
                 v-html="block.content"
-                :class="[ block.type, block.classes, { 'updated': isUpdated, 'playing': isAudStarted }]"
+                :class="[ block.type, block.classes, {
+                  'updated': isUpdated,
+                  'playing': isAudStarted ,
+                  'hide-archive': isHideArchFlags
+                }]"
                 :data-audiosrc="blockAudio.src"
                 @click="onClick"
                 @input="onInput"
@@ -107,10 +123,14 @@
                 <block-flag-popup
                     ref="blockFlagPopup"
                     dir="top"
-                    :update="update"
+                    :isHideArchFlags="isHideArchFlags"
+                    :isHideArchParts="isHideArchParts"
+                    :toggleHideArchParts="toggleHideArchParts"
+                    :countArchParts="countArchParts"
                 >
 
                   <template v-for="(part, partIdx) in flagsSel.parts">
+                    <template v-if="part.status!=='hidden' || !isHideArchFlags || !isHideArchParts">
                     <li>
 
                     <div class="flag-header -left">
@@ -137,12 +157,19 @@
 
                     <a href="#" class="flag-control -right"
                       v-if="part.status == 'resolved'"
-                      @click.prevent="$refs.blockFlagPopup.close">
-                      Hide flag</a>
+                      @click.prevent="hideFlagPart($event, partIdx)">
+                      Archive flag</a>
+
+                    <a href="#" class="flag-control -right"
+                      v-if="part.status == 'hidden'"
+                      @click.prevent="unHideFlagPart($event, partIdx)">
+                      Unarchive flag</a>
+
                     <a href="#" class="flag-control -right"
                       v-if="canDeleteFlagPart(part) && part.status == 'open'"
                       @click.prevent="delFlagPart($event, partIdx)">
                       <i class="fa fa-trash"></i></a>
+
                     <div class="clearfix"></div>
 
                     <template v-if="!part.collapsed">
@@ -173,12 +200,14 @@
                       Flag for editing also</a>
                     </template>
 
-                    <a v-if="part.status == 'resolved'"
+                    <a v-if="part.status == 'resolved' && !part.collapsed"
                       href="#" class="flag-control"
                       @click.prevent="reopenFlagPart($event, partIdx)">
                       Re-open flag</a>
 
                     <div class="clearfix"></div>
+
+                    </template>
                   </template>
 
                 </block-flag-popup>
@@ -265,10 +294,12 @@ export default {
       editor: false,
       player: false,
       range: false,
-      flagsSel: [],
+      flagsSel: false,
       flagEl: 'f',
       quoteEl: 'w',
       footEl: 'sup',
+      isHideArchFlags: true,
+      isHideArchParts: true,
       moment: moment,
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClasses: {
@@ -302,6 +333,9 @@ export default {
   computed: {
       blockClasses : function () {
           return this.blockTypeClasses[this.block.type];
+      },
+      countArchParts: function () {
+          return this.flagsSel ? this.block.countArchParts(this.flagsSel._id) : 0;
       },
       ...mapGetters({
           auth: 'auth',
@@ -479,6 +513,7 @@ export default {
           let existsFlag = this.detectExistingFlag();
           if (!existsFlag) {
             flag.dataset.flag = this.block.newFlag(this.range, type);
+            flag.dataset.status = 'open';
             flag.appendChild(this.range.extractContents());
             this.range.insertNode(flag);
             flag.addEventListener('click', this.handleFlagClick);
@@ -540,7 +575,14 @@ export default {
         this.flagsSel = this.block.flags.filter((flag)=>{
           return flag._id === flagId;
         })[0];
+        this.isHideArchParts = true;
         this.$refs.blockFlagPopup.open(ev, flagId);
+        this.updateFlagStatus(flagId);
+      },
+
+      updateFlagStatus: function (flagId) {
+        let node = this.$refs.blockContent.querySelector(`[data-flag="${flagId}"]`);
+        node.dataset.status = this.block.calcFlagStatus(flagId);
       },
 
       canDeleteFlagPart: function (flagPart) {
@@ -566,6 +608,7 @@ export default {
             }
             else {
               this.$refs.blockFlagPopup.reset();
+              this.updateFlagStatus(this.flagsSel._id);
             }
             this.isChanged = true;
         }
@@ -580,10 +623,33 @@ export default {
       resolveFlagPart: function(ev, partIdx) {
         this.flagsSel.parts[partIdx].status = 'resolved';
         this.$refs.blockFlagPopup.reset();
+        this.updateFlagStatus(this.flagsSel._id);
       },
 
       reopenFlagPart: function(ev, partIdx) {
         this.flagsSel.parts[partIdx].status = 'open';
+        this.$refs.blockFlagPopup.reset();
+        this.updateFlagStatus(this.flagsSel._id);
+      },
+
+      hideFlagPart: function(ev, partIdx) {
+        this.flagsSel.parts[partIdx].status = 'hidden';
+        this.$refs.blockFlagPopup.reset();
+        this.updateFlagStatus(this.flagsSel._id);
+      },
+
+      unHideFlagPart: function(ev, partIdx) {
+        this.flagsSel.parts[partIdx].status = 'resolved';
+        this.$refs.blockFlagPopup.reset();
+        this.updateFlagStatus(this.flagsSel._id);
+      },
+
+      toggleArchFlags: function(ev, partIdx) {
+        this.isHideArchFlags = !this.isHideArchFlags;
+      },
+
+      toggleHideArchParts: function() {
+        this.isHideArchParts = !this.isHideArchParts;
         this.$refs.blockFlagPopup.reset();
       },
 
@@ -812,6 +878,12 @@ export default {
           transition: box-shadow 200ms;
       }
     }
+
+    .block-menu {
+      .fa, .glyphicon {
+        margin-right: 5px;
+      }
+    }
 }
 
 .fa, .glyphicon {
@@ -938,6 +1010,36 @@ export default {
       margin-right: 1px;
       position: relative;
       top: 2px;
+    }
+
+    &[data-status="open"] {
+      border-bottom: 2px solid red;
+      &:before {
+        color: red;
+      }
+    }
+    &[data-status="resolved"] {
+      border-bottom: 2px solid green;
+      &:before {
+        color: green;
+      }
+    }
+    &[data-status="hidden"] {
+      border-bottom: 2px solid gray;
+      &:before {
+        color: gray;
+      }
+    }
+  }
+
+  .hide-archive {
+    [data-flag] {
+      &[data-status="hidden"] {
+        border-bottom: none;
+        &:before {
+          content: '';
+        }
+      }
     }
   }
 

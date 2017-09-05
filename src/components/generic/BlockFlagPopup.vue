@@ -7,6 +7,13 @@
     <!--@blur="close"
     @mouseleave="close"
     @click="close">-->
+
+    <a v-if="isHideArchFlags && countArchParts > 0"
+      href="#" class="flag-control -show-hidden -left"
+      @click.prevent="toggleHideArchParts">
+      -- <span v-if="isHideArchParts">Show</span><span v-else>Hide</span> {{countArchParts}} archived flag<span v-if="countArchParts != 1">s</span> --</a>
+    <div class="clearfix"></div>
+
     <div class="flag-wrapper">
       <ul>
         <slot></slot>
@@ -17,6 +24,7 @@
       @click.prevent="close">
       Close</a>
   </div>
+  <!--<div ref="menu"-->
 </template>
 
 <script>
@@ -25,11 +33,14 @@ import Vue from 'vue';
   export default {
     name: 'block-flag-popup',
     props: [
-        'update',
         'canDeleteFlagPart',
         'delFlagPart',
         'resolveFlagPart',
-        'reopenFlagPart'
+        'reopenFlagPart',
+        'isHideArchFlags',
+        'isHideArchParts',
+        'toggleHideArchParts',
+        'countArchParts'
     ],
     data() {
       return {
@@ -102,7 +113,7 @@ import Vue from 'vue';
           this.setMenu(ev.clientX, ev.clientY, ev.target);
 
           Vue.nextTick(function() {
-              this.setMenu(ev.clientX, ev.clientY, ev.target);
+            this.setMenu(ev.clientX, ev.clientY, ev.target);
           }.bind(this));
         },
 
@@ -243,6 +254,10 @@ import Vue from 'vue';
       &.-close {
         margin: 5px 10px;
       }
+
+      &.-left {
+        margin-right: 5px;
+      }
     }
 
     .flag-comment {
@@ -264,25 +279,31 @@ import Vue from 'vue';
       }
     }
   }
-  .flag-control {
-    font-size: 16px;
-    line-height: 26px;
-  }
+
   .flag-comment {
     width: 100%;
   }
 
   .flag-control {
-  cursor: pointer;
-  font-size: 16px;
-  line-height: 32px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 32px;
 
     &.-close {
       margin-right: 10px;
-      margin-bottom: 0;
-      /*position: absolute;
-      right: 10px;
-      bottom: 5px;*/
+      margin-bottom: 4px;
+      line-height: 18px;
+    }
+
+    &.-left {
+      margin-right: 8px;
+    }
+
+    &.-show-hidden {
+      margin-left: 10px;
+      margin-top: 0px;
+      line-height: 24px;
+      color: gray;
     }
   }
 }

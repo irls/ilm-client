@@ -95,6 +95,7 @@ class BookBlock {
           updated_at: _at
         })
         flag.parts.push(flagPart);
+        //console.log('addFlag', flagPart);
       }
     });
   }
@@ -126,6 +127,29 @@ class BookBlock {
     //console.log('isNeedAlso', _id, checker);
     if (Object.keys(checker).length > 1) return false;
     return true;
+  }
+
+  calcFlagStatus(_id) {
+    let checker = {'open': 0, 'resolved': 0, 'hidden': 0};
+    this.flags.forEach((flag)=>{
+      if (flag._id === _id) flag.parts.forEach((part)=>{
+        checker[part.status] += 1;
+      });
+    });
+    //console.log('calcFlagStatus', checker);
+    if (checker.open > 0) return 'open';
+    if (checker.resolved > 0) return 'resolved';
+    return 'hidden';
+  }
+
+  countArchParts(_id) {
+    let count = 0;
+    this.flags.forEach((flag)=>{
+      if (flag._id === _id) flag.parts.forEach((part)=>{
+        if (part.status == 'hidden') count++;
+      });
+    });
+    return count;
   }
 
 }
