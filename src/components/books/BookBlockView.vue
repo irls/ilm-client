@@ -150,22 +150,19 @@
                       <i v-if="part.status == 'hidden'" class="glyphicon glyphicon-flag flag-hidden"></i>
                     </div>
 
-                    <a href="#" class="flag-control -right"
-                      v-if="canDeleteFlagPart(part) && part.status == 'open'"
-                      @click.prevent="resolveFlagPart($event, partIdx)">
-                      Resolve flag</a>
 
-                    <a href="#" class="flag-control -right"
+
+                    <a href="#" class="flag-control -right -top"
                       v-if="part.status == 'resolved'"
                       @click.prevent="hideFlagPart($event, partIdx)">
                       Archive flag</a>
 
-                    <a href="#" class="flag-control -right"
+                    <a href="#" class="flag-control -right -top"
                       v-if="part.status == 'hidden'"
                       @click.prevent="unHideFlagPart($event, partIdx)">
                       Unarchive flag</a>
 
-                    <a href="#" class="flag-control -left"
+                    <a href="#" class="flag-control -right -top"
                       v-if="canDeleteFlagPart(part) && part.status == 'open'"
                       @click.prevent="delFlagPart($event, partIdx)">
                       <i class="fa fa-trash"></i></a>
@@ -180,22 +177,21 @@
                       <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}
                     </p>
 
-                    <textarea class="flag-comment"
+                    <textarea v-if="part.status !== 'hidden'"
+                      class="flag-comment"
                       v-model="part.newComment"
                       placeholder="Enter description here ...">
                     </textarea>
 
                     </template>
 
-                    </li>
-                    <!--<li class="separator"></li>-->
                     <template v-if="block.isNeedAlso(flagsSel._id)">
                       <a v-if="part.type == 'editor'"
-                      href="#" class="flag-control -left"
+                      href="#" class="flag-control -right"
                       @click.prevent="addFlagPart(part.content, 'narrator')">
                       Flag for narration also</a>
                       <a v-if="part.type == 'narrator'"
-                      href="#" class="flag-control -left"
+                      href="#" class="flag-control -right"
                       @click.prevent="addFlagPart(part.content, 'editor')">
                       Flag for editing also</a>
                     </template>
@@ -205,7 +201,15 @@
                       @click.prevent="reopenFlagPart($event, partIdx)">
                       Re-open flag</a>
 
+                    <a v-if="canDeleteFlagPart(part) && part.status == 'open' && !part.collapsed"
+                      href="#" class="flag-control -left"
+                      @click.prevent="resolveFlagPart($event, partIdx)">
+                      Resolve flag</a>
+
                     <div class="clearfix"></div>
+
+                    </li>
+                    <!--<li class="separator"></li>-->
 
                     </template>
                   </template>
@@ -381,10 +385,15 @@ export default {
       }
 
       Vue.nextTick(() => {
-        if (this.$refs.blockContent) this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-          flag.addEventListener('click', this.handleFlagClick);
-        });
+        if (this.$refs.blockContent) {
+          this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+            flag.addEventListener('click', this.handleFlagClick);
+          });
+        }
       });
+      this.updateFlagStatus(this.block._id);
+      //this.detectMissedFlags();
+
   },
   methods: {
       ...mapActions(['putMetaAuthors']),
@@ -608,8 +617,13 @@ export default {
       },
 
       updateFlagStatus: function (flagId) {
-        let node = this.$refs.blockContent.querySelector(`[data-flag="${flagId}"]`);
-        if (!node) node = this.$refs.blockFlagControl;
+        let node;
+        if (flagId ===  this.block._id) {
+          node = this.$refs.blockFlagControl;
+          if (node) node.dataset.flag = flagId;
+        } else {
+          node = this.$refs.blockContent.querySelector(`[data-flag="${flagId}"]`);
+        }
         if (node) node.dataset.status = this.block.calcFlagStatus(flagId);
       },
 
@@ -679,6 +693,10 @@ export default {
       toggleHideArchParts: function() {
         this.isHideArchParts = !this.isHideArchParts;
         this.$refs.blockFlagPopup.reset();
+      },
+
+      detectMissedFlags: function() {
+
       },
 
       startRecording() {

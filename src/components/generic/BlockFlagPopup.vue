@@ -12,6 +12,11 @@
       href="#" class="flag-control -show-hidden -left"
       @click.prevent="toggleHideArchParts">
       -- <span v-if="isHideArchParts">Show</span><span v-else>Hide</span> {{countArchParts}} archived flag<span v-if="countArchParts != 1">s</span> --</a>
+
+    <a href="#" class="flag-control -close -right"
+      @click.prevent="close">
+      <i class="fa fa-window-close" aria-hidden="true"></i>
+    </a>
     <div class="clearfix"></div>
 
     <div class="flag-wrapper">
@@ -20,9 +25,7 @@
       </ul>
     </div>
 
-    <a href="#" class="flag-control -close -right"
-      @click.prevent="close">
-      Close</a>
+
   </div>
   <!--<div ref="menu"-->
 </template>
@@ -161,6 +164,7 @@ import Vue from 'vue';
       overflow:auto;
       overflow-x:hidden;
       padding: 5px 10px;
+      padding-top: 0;
     }
 
     ::-webkit-scrollbar {
@@ -226,6 +230,7 @@ import Vue from 'vue';
 
   li {
     margin: 0;
+    margin-bottom: 8px;
     cursor: default;
 
     &.separator {
@@ -253,7 +258,7 @@ import Vue from 'vue';
     .flag-control {
       cursor: pointer;
       font-size: 16px;
-      line-height: 32px;
+      /*line-height: 32px;*/
 
       &.-close {
         margin: 5px 10px;
@@ -262,10 +267,14 @@ import Vue from 'vue';
       &.-left {
         margin-right: 5px;
       }
+
+      &.-top {
+        margin-top: 7px;
+      }
     }
 
-    .flag-comment {
-      /*margin-bottom: 3px;*/
+    p.flag-comment {
+      margin-bottom: 5px;
     }
 
     .glyphicon {
@@ -294,8 +303,9 @@ import Vue from 'vue';
     /*line-height: 32px;*/
 
     &.-close {
-      margin-right: 10px;
-      margin-bottom: 4px;
+      margin-right: 8px;
+      margin-top: 5px;
+      margin-bottom: 3px;
       line-height: 18px;
     }
 
