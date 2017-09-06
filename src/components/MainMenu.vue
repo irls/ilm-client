@@ -20,6 +20,9 @@
 
         <router-link to="/assignments" class='presentation' tag='li'
         v-show='true'><a>Assignments</a><sup>{{tc_userTasks.total}}</sup></router-link>
+        
+        <router-link to="/align" class='presentation' tag='li'
+        v-show='isAdmin || isLibrarian'><a>Check alignment</a></router-link>
 
      </ul>
     </td>
