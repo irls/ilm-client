@@ -174,7 +174,7 @@
 
                     <template v-if="!part.collapsed">
 
-                    <p class="flag-content">"{{part.content}}"</p>
+                    <p v-if="part.content" class="flag-content">"{{part.content}}"</p>
 
                     <p v-for="comment in part.comments" class="flag-comment">
                       <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}
@@ -262,9 +262,11 @@
                     <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
                 </div>
               <div class="par-ctrl -hidden -right">
-                  <span
-                    @click="handleBlockFlagClick">
-                    <i class="glyphicon glyphicon-flag"></i>
+                  <span>
+                    <i class="glyphicon glyphicon-flag"
+                      ref="blockFlagControl"
+                      @click="handleBlockFlagClick"
+                    ></i>
                   </span>
                   <span><i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
                   <span><i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
@@ -532,9 +534,10 @@ export default {
 
       addFlagPart: function(content, type = 'editor') {
         this.block.addPart(this.flagsSel._id, content, type);
-        let node = this.$refs.blockContent.querySelector(`[data-flag="${this.flagsSel._id}"]`);
-        this.$root.$emit('closeFlagPopup', true);
-        this.handleFlagClick({target: node});
+
+        this.updateFlagStatus(this.flagsSel._id);
+        this.$refs.blockFlagPopup.reset();
+
         this.$refs.blockFlagPopup.scrollBottom();
         this.isChanged = true;
       },
@@ -583,13 +586,31 @@ export default {
         this.updateFlagStatus(flagId);
       },
 
-      handleBlockFlagClick: function(ev) {
+      handleBlockFlagClick: function(ev, type = 'editor') {
+        let flagId = this.block._id;
+        let foundBlockFlag = this.block.flags.filter((flag)=>{
+          return flag._id === flagId;
+        });
 
+        if (foundBlockFlag.length == 0) {
+          flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
+          this.$refs.blockFlagControl.dataset.status = 'open';
+        }
+
+        this.flagsSel = this.block.flags.filter((flag)=>{
+          return flag._id === flagId;
+        })[0];
+
+        this.$refs.blockFlagControl.dataset.flag = flagId;
+        this.isHideArchParts = true;
+        this.$refs.blockFlagPopup.open(ev, flagId);
+        this.updateFlagStatus(flagId);
       },
 
       updateFlagStatus: function (flagId) {
         let node = this.$refs.blockContent.querySelector(`[data-flag="${flagId}"]`);
-        node.dataset.status = this.block.calcFlagStatus(flagId);
+        if (!node) node = this.$refs.blockFlagControl;
+        if (node) node.dataset.status = this.block.calcFlagStatus(flagId);
       },
 
       canDeleteFlagPart: function (flagPart) {
@@ -1047,6 +1068,12 @@ export default {
           content: '';
         }
       }
+    }
+  }
+
+  i[data-flag] {
+    &[data-status] {
+      border-bottom: none;
     }
   }
 

@@ -54,19 +54,20 @@ class BookBlock {
     return _.pick(this, defBlock);
   }
 
-  genFlagId() {
-    return _id(this._id + ':');
+  genFlagId(isBlockFlag = false) {
+    if (isBlockFlag) return this._id;
+    else return _id(this._id + ':');
   }
 
-  newFlag(range, type) {
-    let _id = this.genFlagId();
+  newFlag(range, type, isBlockFlag = false) {
+    let _id = this.genFlagId(isBlockFlag);
     let _at = (new Date()).toJSON();
     let user_Id = superlogin.getSession().user_id;
     let flagPart = new FlagPart({
       creator: user_Id,
       created_at: _at,
       type: type,
-      content: range.cloneContents().textContent,
+      content: (isBlockFlag ? false : range.cloneContents().textContent),
       updated_at: _at
     })
 
