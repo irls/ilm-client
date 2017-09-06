@@ -144,13 +144,13 @@
 
                       <span v-if="part.type == 'editor'">Editing</span>
                       <span v-if="part.type == 'narrator'">Narrating</span>
-                      {{moment(part.created_at).format("D MMM")}}
+                      <span class="flag-date">{{moment(part.created_at).format("D MMM")}}</span>
                       <i v-if="part.status == 'resolved'" class="glyphicon glyphicon-flag flag-resolved"></i>
                       <i v-if="part.status == 'open'" class="glyphicon glyphicon-flag flag-open"></i>
                       <i v-if="part.status == 'hidden'" class="glyphicon glyphicon-flag flag-hidden"></i>
                     </div>
 
-                    <a href="#" class="flag-control -left"
+                    <a href="#" class="flag-control -right"
                       v-if="canDeleteFlagPart(part) && part.status == 'open'"
                       @click.prevent="resolveFlagPart($event, partIdx)">
                       Resolve flag</a>
@@ -165,7 +165,7 @@
                       @click.prevent="unHideFlagPart($event, partIdx)">
                       Unarchive flag</a>
 
-                    <a href="#" class="flag-control -right"
+                    <a href="#" class="flag-control -left"
                       v-if="canDeleteFlagPart(part) && part.status == 'open'"
                       @click.prevent="delFlagPart($event, partIdx)">
                       <i class="fa fa-trash"></i></a>
@@ -262,7 +262,10 @@
                     <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
                 </div>
               <div class="par-ctrl -hidden -right">
-                  <span><i class="fa fa-flag-o"></i></span>
+                  <span
+                    @click="handleBlockFlagClick">
+                    <i class="glyphicon glyphicon-flag"></i>
+                  </span>
                   <span><i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
                   <span><i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
               </div>
@@ -578,6 +581,10 @@ export default {
         this.isHideArchParts = true;
         this.$refs.blockFlagPopup.open(ev, flagId);
         this.updateFlagStatus(flagId);
+      },
+
+      handleBlockFlagClick: function(ev) {
+
       },
 
       updateFlagStatus: function (flagId) {

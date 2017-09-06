@@ -239,6 +239,10 @@ import Vue from 'vue';
 
     .flag-header {
       font-size: 22px;
+
+      .flag-date {
+        font-size: 16px;
+      }
     }
 
     .flag-content {
@@ -261,7 +265,7 @@ import Vue from 'vue';
     }
 
     .flag-comment {
-      margin-bottom: 3px;
+      /*margin-bottom: 3px;*/
     }
 
     .glyphicon {
@@ -287,7 +291,7 @@ import Vue from 'vue';
   .flag-control {
     cursor: pointer;
     font-size: 16px;
-    line-height: 32px;
+    /*line-height: 32px;*/
 
     &.-close {
       margin-right: 10px;

@@ -82,7 +82,6 @@ class BookBlock {
   }
 
   addFlag(_id, range, type) {
-    //console.log('addFlag', _id);
     this.flags.forEach((flag, flagIdx)=>{
       if (flag._id === _id) {
         let _at = (new Date()).toJSON();
@@ -95,7 +94,6 @@ class BookBlock {
           updated_at: _at
         })
         flag.parts.push(flagPart);
-        //console.log('addFlag', flagPart);
       }
     });
   }
@@ -124,7 +122,6 @@ class BookBlock {
         checker[part.type] = true;
       });
     });
-    //console.log('isNeedAlso', _id, checker);
     if (Object.keys(checker).length > 1) return false;
     return true;
   }
@@ -136,7 +133,6 @@ class BookBlock {
         checker[part.status] += 1;
       });
     });
-    //console.log('calcFlagStatus', checker);
     if (checker.open > 0) return 'open';
     if (checker.resolved > 0) return 'resolved';
     return 'hidden';
@@ -146,7 +142,7 @@ class BookBlock {
     let count = 0;
     this.flags.forEach((flag)=>{
       if (flag._id === _id) flag.parts.forEach((part)=>{
-        if (part.status == 'hidden') count++;
+        if (part.status === 'hidden') count++;
       });
     });
     return count;
