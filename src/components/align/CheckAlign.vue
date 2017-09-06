@@ -9,7 +9,11 @@
           Language
           <select v-model="lang">
             <option value="eng">English</option>
-            <option value="ukr">Ukrainian</option>
+            <option value="ara">Arabic</option>
+            <option value="cmn">Mandarin Chinese</option>
+            <option value="heb">Hebrew</option>
+            <option value="zho">Chinese</option>
+            <option value="fas">Persian</option>
           </select>
         </div>
         <div class="col-md-6 pull-right">
