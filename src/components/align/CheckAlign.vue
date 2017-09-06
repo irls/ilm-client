@@ -149,6 +149,7 @@
         },
         stop() {
           this.isPlaying = false;
+          this.isPaused = false;
           this.player.pause();
           this.cleanAudioClasses();
         },
