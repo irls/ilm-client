@@ -19,31 +19,44 @@
         <div class="table-body -content"
         @mouseleave="onBlur"
         @click="onBlur">
-            <div class="table-row controls-top">
-            <!--data-toggle="tooltip" v-bind:title="JSON.stringify(block)">-->
+            <div class="table-row controls-top"
+            data-toggle="tooltip" v-bind:title="JSON.stringify(block)">
 
               <div class="par-ctrl -hidden -left">
-                  <span class="block-menu" style="position: relative;">
-                  <i class="glyphicon glyphicon-menu-hamburger"
-                  @click.prevent="$refs.blockMenu.open">
-                  </i>
-                  <block-menu
-                      ref="blockMenu"
-                      dir="top"
-                      :update="update">
-                    <li @click="update">Show hidden flags</li>
-                    <li class="separator"></li>
-                    <li>Insert block before</li>
-                    <li>Insert block after</li>
-                    <li>Delete block</li>
-                    <li>Split block</li>
-                    <li>Join with previous block</li>
-                    <li>Join with next block</li>
-                    <li class="separator"></li>
-                    <li @click="discardBlock">Discard un-saved changes</li>
-                    <li @click="discardAudio">Revert to original audio</li>
-                  </block-menu>
-                  </span>
+                  <div class="block-menu" style="position: relative;">
+                    <i class="glyphicon glyphicon-menu-hamburger"
+                    @click.prevent="$refs.blockMenu.open($event, block._id)">
+                    </i>
+                    <block-menu
+                        ref="blockMenu"
+                        dir="top"
+                        :update="update">
+
+                      <li v-if="isHideArchFlags"
+                        @click.prevent="toggleArchFlags()">
+                        <i class="fa fa-eye" aria-hidden="true"></i>
+                        Show archived flags</li>
+                      <li v-else
+                        @click.prevent="toggleArchFlags()">
+                        <i class="fa fa-eye-slash" aria-hidden="true"></i>
+                        Hide archived flags</li>
+
+                      <li class="separator"></li>
+                      <li>Insert block before</li>
+                      <li>Insert block after</li>
+                      <li>Delete block</li>
+                      <li>Split block</li>
+                      <li>Join with previous block</li>
+                      <li>Join with next block</li>
+                      <li class="separator"></li>
+                      <li @click="discardBlock">
+                        <i class="fa fa-undo" aria-hidden="true"></i>
+                        Discard un-saved changes</li>
+                      <li @click="discardAudio">
+                        <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                        Revert to original audio</li>
+                    </block-menu>
+                  </div>
 
                   <!--<i class="fa fa-trash-o fa-lg"></i>-->
                   <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
@@ -65,7 +78,7 @@
               <div class="par-ctrl -audio -hidden -right">
                   <template v-if="player && blockAudio.src && !isRecording">
                       <template v-if="!isAudStarted">
-                        <i class="fa fa-play-circle-o" 
+                        <i class="fa fa-play-circle-o"
                           @click="audPlay(block._id, $event)"></i>
                         <i class="fa fa-stop-circle-o disabled"></i>
                       </template>
@@ -96,12 +109,16 @@
             </div>
             <div class="table-row ocean">
                 <hr v-if="block.type=='hr'" />
-                
+
                 <div v-else class="content-wrap"
                 :id="'content-'+block._id"
                 ref="blockContent"
                 v-html="block.content"
-                :class="[ block.type, block.classes, { 'updated': isUpdated, 'playing': isAudStarted || tc_showBlockNarrate(block._id) }]"
+                :class="[ block.type, block.classes, {
+                  'updated': isUpdated,
+                  'playing': isAudStarted || tc_showBlockNarrate(block._id),
+                  'hide-archive': isHideArchFlags
+                }]"
                 :data-audiosrc="blockAudio.src"
                 @click="onClick"
                 @input="onInput"
@@ -111,20 +128,120 @@
                 </div>
                 <!--<div class="content-wrap">-->
 
+                <block-flag-popup
+                    ref="blockFlagPopup"
+                    dir="top"
+                    :isHideArchFlags="isHideArchFlags"
+                    :isHideArchParts="isHideArchParts"
+                    :toggleHideArchParts="toggleHideArchParts"
+                    :countArchParts="countArchParts"
+                >
+
+                  <template v-for="(part, partIdx) in flagsSel.parts">
+                    <template v-if="part.status!=='hidden' || !isHideArchFlags || !isHideArchParts">
+                    <li>
+
+                    <div class="flag-header -left">
+
+                      <i class="glyphicon glyphicon-triangle-bottom"
+                        v-if="!part.collapsed"
+                        @click.prevent="toggleFlagPart($event, partIdx)"></i>
+                      <i class="glyphicon glyphicon-triangle-right"
+                        v-if="part.collapsed"
+                        @click.prevent="toggleFlagPart($event, partIdx)"></i>
+
+                      <span v-if="part.type == 'editor'">Editing</span>
+                      <span v-if="part.type == 'narrator'">Narrating</span>
+                      <span class="flag-date">{{moment(part.created_at).format("D MMM")}}</span>
+                      <i v-if="part.status == 'resolved'" class="glyphicon glyphicon-flag flag-resolved"></i>
+                      <i v-if="part.status == 'open'" class="glyphicon glyphicon-flag flag-open"></i>
+                      <i v-if="part.status == 'hidden'" class="glyphicon glyphicon-flag flag-hidden"></i>
+                    </div>
+
+
+
+                    <a href="#" class="flag-control -right -top"
+                      v-if="part.status == 'resolved'"
+                      @click.prevent="hideFlagPart($event, partIdx)">
+                      Archive flag</a>
+
+                    <a href="#" class="flag-control -right -top"
+                      v-if="part.status == 'hidden'"
+                      @click.prevent="unHideFlagPart($event, partIdx)">
+                      Unarchive flag</a>
+
+                    <a href="#" class="flag-control -right -top"
+                      v-if="canDeleteFlagPart(part) && part.status == 'open'"
+                      @click.prevent="delFlagPart($event, partIdx)">
+                      <i class="fa fa-trash"></i></a>
+
+                    <div class="clearfix"></div>
+
+                    <template v-if="!part.collapsed">
+
+                    <p v-if="part.content" class="flag-content">"{{part.content}}"</p>
+
+                    <p v-for="comment in part.comments" class="flag-comment">
+                      <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}
+                    </p>
+
+                    <textarea v-if="part.status !== 'hidden'"
+                      class="flag-comment"
+                      v-model="part.newComment"
+                      placeholder="Enter description here ...">
+                    </textarea>
+
+                    </template>
+
+                    <template v-if="block.isNeedAlso(flagsSel._id)">
+                      <a v-if="part.type == 'editor'"
+                      href="#" class="flag-control -right"
+                      @click.prevent="addFlagPart(part.content, 'narrator')">
+                      Flag for narration also</a>
+                      <a v-if="part.type == 'narrator'"
+                      href="#" class="flag-control -right"
+                      @click.prevent="addFlagPart(part.content, 'editor')">
+                      Flag for editing also</a>
+                    </template>
+
+                    <a v-if="part.status == 'resolved' && !part.collapsed"
+                      href="#" class="flag-control"
+                      @click.prevent="reopenFlagPart($event, partIdx)">
+                      Re-open flag</a>
+
+                    <a v-if="canDeleteFlagPart(part) && part.status == 'open' && !part.collapsed"
+                      href="#" class="flag-control -left"
+                      @click.prevent="resolveFlagPart($event, partIdx)">
+                      Resolve flag</a>
+
+                    <div class="clearfix"></div>
+
+                    </li>
+                    <!--<li class="separator"></li>-->
+
+                    </template>
+                  </template>
+
+                </block-flag-popup>
+
                 <block-cntx-menu
                     ref="blockCntx"
                     dir="bottom"
                     :update="update"
                 >
-                  <li v-if="selection.collapsed" @click="addFootnote">Add footnote</li>
-                  <template v-if="!selection.collapsed && blockAudio.src">
+                  <li v-if="range.collapsed" @click="addFootnote">Add footnote</li>
+                  <li class="separator"></li>
+                  <li v-if="!range.collapsed" @click="addFlag($event, 'editor')">Flag for Editing</li>
+                  <li v-if="!range.collapsed" @click="addFlag($event, 'narrator')">Flag for Narration</li>
+                  <li class="separator"></li>
+                  <template v-if="!range.collapsed && blockAudio.src">
                     <li class="menu-separator"></li>
                     <li @click="audPlayFromSelection()">Play from here</li>
                     <li @click="audPlaySelection()">Play selection</li>
                     <li @click="audDeleteSelection()">Delete audio in selection</li>
                     <li class="menu-separator"></li>
                   </template>
-                  <li v-if="!selection.collapsed && tc_showBlockNarrate(block._id)" @click="reRecord">Re-record audio</li>
+                  <li v-if="!range.collapsed && tc_showBlockNarrate(block._id)" @click="reRecord">Re-record audio</li>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
 
@@ -134,17 +251,17 @@
             <div class="table-row content-footnotes"
               v-if="block.footnotes.length > 0">
               <div class="table-body footnote"
-                v-for="(footnote, footnote_Idx) in block.footnotes">
+                v-for="(footnote, footnoteIdx) in block.footnotes">
                 <div class="table-row">
-                  <div class="table-cell -num">{{footnote_Idx+1}}.</div>
+                  <div class="table-cell -num">{{footnoteIdx+1}}.</div>
                   <div class="table-cell -text"
                     :class="['js-footnote-val']"
                     contenteditable="true"
-                    @input="commitFootnote(footnote_Idx, $event)"
+                    @input="commitFootnote(footnoteIdx, $event)"
                     v-html="footnote">
                   </div>
                   <div class="table-cell -control">
-                    <span @click="delFootnote(footnote_Idx)"><i class="fa fa-trash"></i></span>
+                    <span @click="delFootnote(footnoteIdx)"><i class="fa fa-trash"></i></span>
                   </div>
                 </div>
               </div>
@@ -152,7 +269,7 @@
 
             <div class="table-row controls-bottom">
                 <div class="save-block -hidden -left"
-                v-bind:class="{ '-disabled': !isChanged }"
+                v-bind:class="{ '-disabl#505050ed': !isChanged }"
                 @click="assembleBlock()">
                     <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
                 </div>
@@ -165,8 +282,13 @@
                     <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
                 </div>
               <div class="par-ctrl -hidden -right">
-                  <span><i class="fa fa-flag-o"></i></span>
-                  <span><i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
+                  <span>
+                    <i class="glyphicon glyphicon-flag"
+                      ref="blockFlagControl"
+                      @click="handleBlockFlagClick"
+                    ></i>
+                  </span>
+                  <span v-bind:class="{ '-disabled': countFlags == 0 }"><i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
                   <span><i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
               </div>
               <!--<div class="-hidden">-->
@@ -181,13 +303,15 @@
 
 <script>
 import Vue from 'vue'
-import { mapGetters, mapActions } from 'vuex'
+import moment from 'moment'
+import { mapGetters, mapActions }    from 'vuex'
 import { QuoteButton, QuotePreview } from '../generic/ExtMediumEditor';
-import ReadAlong from 'readalong'
-import BlockMenu from '../generic/BlockMenu';
-import BlockContextMenu from '../generic/BlockContextMenu';
-import taskControls from '../../mixins/task_controls.js'
-import apiConfig from '../../mixins/api_config.js'
+import ReadAlong          from 'readalong'
+import BlockMenu          from '../generic/BlockMenu';
+import BlockContextMenu   from '../generic/BlockContextMenu';
+import BlockFlagPopup     from '../generic/BlockFlagPopup';
+import taskControls       from '../../mixins/task_controls.js'
+import apiConfig          from '../../mixins/api_config.js'
 var BPromise = require('bluebird');
 
 export default {
@@ -195,7 +319,14 @@ export default {
     return {
       editor: false,
       player: false,
-      selection: false,
+      range: false,
+      flagsSel: false,
+      flagEl: 'f',
+      quoteEl: 'w',
+      footEl: 'sup',
+      isHideArchFlags: true,
+      isHideArchParts: true,
+      moment: moment,
       blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
       blockTypeClasses: {
           title: [' ', 'subtitle', 'author', 'translator'],
@@ -224,7 +355,8 @@ export default {
   },
   components: {
       'block-menu': BlockMenu,
-      'block-cntx-menu': BlockContextMenu
+      'block-cntx-menu': BlockContextMenu,
+      'block-flag-popup': BlockFlagPopup
   },
   props: ['block', 'putBlock', 'getBlock', 'recorder'],
   mixins: [taskControls, apiConfig],
@@ -232,7 +364,14 @@ export default {
       blockClasses : function () {
           return this.blockTypeClasses[this.block.type];
       },
+      countArchParts: function () {
+          return this.flagsSel ? this.block.countArchParts(this.flagsSel._id) : 0;
+      },
+      countFlags: function () {
+          return this.block.flags.length;
+      },
       ...mapGetters({
+          auth: 'auth',
           book: 'currentBook',
           meta: 'currentBookMeta',
           authors: 'authors'
@@ -268,6 +407,17 @@ export default {
           this.blockAudio.src = this.blockAudio.src + '?' + (new Date()).toJSON();
           this.initPlayer();
       }
+
+      Vue.nextTick(() => {
+        if (this.$refs.blockContent) {
+          this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+            flag.addEventListener('click', this.handleFlagClick);
+          });
+        }
+      });
+      this.updateFlagStatus(this.block._id);
+      //this.detectMissedFlags();
+
   },
   methods: {
       ...mapActions(['putMetaAuthors']),
@@ -291,9 +441,8 @@ export default {
         $('.medium-editor-toolbar').each(function(){
             $(this).css('display', 'none');
         });
-        this.selection = window.getSelection().getRangeAt(0).cloneRange();
-        //console.log(this.selection);
-        this.$refs.blockCntx.open(e);
+        this.range = window.getSelection().getRangeAt(0).cloneRange();
+        this.$refs.blockCntx.open(e, this.range);
       },
       update: function() {
         console.log('update');
@@ -308,7 +457,13 @@ export default {
         this.getBlock(this.block._id)
         .then((block)=>{
           this.$refs.blockContent.innerHTML = this.block.content;
+          Vue.nextTick(() => {
+            if (this.$refs.blockContent) this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+              flag.addEventListener('click', this.handleFlagClick);
+            });
+          });
           this.isChanged = false;
+          this.updateFlagStatus(this.block._id);
           this.$refs.blockContent.focus();
         });
       },
@@ -328,8 +483,20 @@ export default {
       assembleBlock: function(el) {
         this.block.content = this.$refs.blockContent.innerHTML;
         this.block.classes = [this.block.classes];
+
+        this.checkBlockContentFlags();
+        this.updateFlagStatus(this.block._id);
+
         this.putBlock(this.block);
         this.isChanged = false;
+      },
+      checkBlockContentFlags: function(el) {
+        if (this.block.flags) this.block.flags.forEach((flag, flagIdx)=>{
+          if (flag._id !== this.block._id) {
+            let node = this.$refs.blockContent.querySelector(`[data-flag="${flag._id}"]`);
+            if (!node) this.block.mergeFlags(flagIdx);
+          }
+        });
       },
       assembleBlockAudio: function(el) {
         if (this.blockAudio.map) {
@@ -354,15 +521,15 @@ export default {
         this.player.playBlock('content-'+block_id);
       },
       audPlayFromSelection() {
-        let startElement = this._getParent(this.selection.startContainer, 'w');
+        let startElement = this._getParent(this.range.startContainer, 'w');
         if (startElement) {
           this.isAudStarted = true;
           this.player.playFromWordElement(startElement, 'content-'+this.block._id);
         }
       },
       audPlaySelection() {
-        let startElement = this._getParent(this.selection.startContainer, 'w');
-        let endElement = this._getParent(this.selection.endContainer, 'w');
+        let startElement = this._getParent(this.range.startContainer, 'w');
+        let endElement = this._getParent(this.range.endContainer, 'w');
         let startRange = this._getClosestAligned(startElement, 1);
         if (!startRange) {
           startRange = [0, 0];
@@ -372,7 +539,7 @@ export default {
           endRange = this._getClosestAligned(endElement, 1)
         }
         this.isAudStarted = true;
-        this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]); 
+        this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]);
       },
       audPause: function(block_id, ev) {
         this.player.pause();
@@ -388,8 +555,8 @@ export default {
         this.audCleanClasses(block_id, ev);
       },
       audDeleteSelection() {
-        let startElement = this._getParent(this.selection.startContainer, 'w');
-        let endElement = this._getParent(this.selection.endContainer, 'w');
+        let startElement = this._getParent(this.range.startContainer, 'w');
+        let endElement = this._getParent(this.range.endContainer, 'w');
         let startRange = this._getClosestAligned(startElement, 1);
         if (!startRange) {
           startRange = [0, 0];
@@ -431,7 +598,7 @@ export default {
         let el = document.createElement('SUP');
         el.className = 'js-footnote-el';
         el.setAttribute('data-idx', this.block.footnotes.length);
-        this.selection.insertNode(el);
+        this.range.insertNode(el);
         let pos = this.updFootnotes(this.block.footnotes.length);
         this.block.footnotes.splice(pos, 0, '');
         this.isChanged = true;
@@ -455,9 +622,182 @@ export default {
         this.isChanged = true;
       },
 
-      test: function() {
-          console.log('addFootnote'+this.block._id, this.block.footnotes);
+      addFlag: function(ev, type = 'editor') {
+        if (window.getSelection) {
+          let flag = document.createElement(this.flagEl);
+          let existsFlag = this.detectExistingFlag();
+          if (!existsFlag) {
+            flag.dataset.flag = this.block.newFlag(this.range, type);
+            flag.dataset.status = 'open';
+            flag.appendChild(this.range.extractContents());
+            this.range.insertNode(flag);
+            flag.addEventListener('click', this.handleFlagClick);
+            this.handleFlagClick({target: flag});
+          } else {
+            this.block.addFlag(existsFlag.dataset.flag, this.range, type);
+            this.handleFlagClick({target: existsFlag});
+          }
+          this.$refs.blockFlagPopup.scrollBottom();
+          this.isChanged = true;
+        }
       },
+
+      addFlagPart: function(content, type = 'editor') {
+        this.block.addPart(this.flagsSel._id, content, type);
+
+        this.updateFlagStatus(this.flagsSel._id);
+        this.$refs.blockFlagPopup.reset();
+
+        this.$refs.blockFlagPopup.scrollBottom();
+        this.isChanged = true;
+      },
+
+      detectExistingFlag: function(ev) {
+        let node = this.range.startContainer;
+        let endNode = this.range.endContainer;
+        let target = MediumEditor.util.traverseUp(node, (element)=>{
+          return element.dataset.flag;
+        })
+        while (target === false && node && node != endNode) {
+          target = MediumEditor.util.traverseUp(node = this.nextNode(node), (element)=>{
+            return element.dataset.flag;
+          })
+        }
+        return target;
+      },
+
+      nextNode: function (node) {
+        if (node.hasChildNodes()) {
+          return node.firstChild;
+        } else {
+          while (node && !node.nextSibling) {
+            node = node.parentNode;
+          }
+          if (!node) {
+            return null;
+          }
+          return node.nextSibling;
+        }
+      },
+
+      handleFlagClick: function(ev) {
+        let flagId = ev.target.dataset.flag;
+        this.flagsSel = this.block.flags.filter((flag)=>{
+          return flag._id === flagId;
+        })[0];
+        this.isHideArchParts = true;
+        this.$refs.blockFlagPopup.open(ev, flagId);
+        this.updateFlagStatus(flagId);
+      },
+
+      handleBlockFlagClick: function(ev, type = 'editor') {
+        let flagId = this.block._id;
+        let foundBlockFlag = this.block.flags.filter((flag)=>{
+          return flag._id === flagId;
+        });
+
+        if (foundBlockFlag.length == 0) {
+          flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
+          this.$refs.blockFlagControl.dataset.status = 'open';
+        }
+
+        this.flagsSel = this.block.flags.filter((flag)=>{
+          return flag._id === flagId;
+        })[0];
+
+        this.$refs.blockFlagControl.dataset.flag = flagId;
+        this.isHideArchParts = true;
+        this.$refs.blockFlagPopup.open(ev, flagId);
+        this.updateFlagStatus(flagId);
+      },
+
+      updateFlagStatus: function (flagId) {
+        let node;
+        if (flagId ===  this.block._id) {
+          node = this.$refs.blockFlagControl;
+          if (node) node.dataset.flag = flagId;
+        } else {
+          node = this.$refs.blockContent.querySelector(`[data-flag="${flagId}"]`);
+        }
+        if (node) node.dataset.status = this.block.calcFlagStatus(flagId);
+      },
+
+      canDeleteFlagPart: function (flagPart) {
+          let result = false;
+          if (flagPart.creator === this.auth.getSession().user_id) {
+            result = true;
+            if (flagPart.comments.length) flagPart.comments.forEach((comment)=>{
+              if (comment.creator !== flagPart.creator) result = false;
+            });
+          }
+          return result;
+      },
+
+      delFlagPart: function(ev, partIdx) {
+        if (this.canDeleteFlagPart(this.flagsSel.parts[partIdx])) {
+
+            this.flagsSel.parts.splice(partIdx, 1);
+
+            if (this.flagsSel.parts.length == 0) {
+              if (this.flagsSel._id !== this.block._id) {
+                let node = this.$refs.blockContent.querySelector(`[data-flag="${this.flagsSel._id}"]`);
+                let parent = node.parentNode;
+                while (node.firstChild) parent.insertBefore(node.firstChild, node);
+                parent.removeChild(node);
+              } else {
+                this.$refs.blockFlagControl.removeAttribute('data-flag');
+                this.$refs.blockFlagControl.removeAttribute('data-status');
+                this.block.delFlag(this.flagsSel._id);
+              }
+              this.$root.$emit('closeFlagPopup', true);
+            }
+            else {
+              this.$refs.blockFlagPopup.reset();
+              this.updateFlagStatus(this.flagsSel._id);
+            }
+            this.isChanged = true;
+        }
+      },
+
+      toggleFlagPart: function(ev, partIdx) {
+        if (!this.flagsSel.parts[partIdx].collapsed) this.flagsSel.parts[partIdx].collapsed = true;
+        else this.flagsSel.parts[partIdx].collapsed = !this.flagsSel.parts[partIdx].collapsed;
+        this.$refs.blockFlagPopup.reset();
+      },
+
+      resolveFlagPart: function(ev, partIdx) {
+        this.flagsSel.parts[partIdx].status = 'resolved';
+        this.$refs.blockFlagPopup.reset();
+        this.updateFlagStatus(this.flagsSel._id);
+      },
+
+      reopenFlagPart: function(ev, partIdx) {
+        this.flagsSel.parts[partIdx].status = 'open';
+        this.$refs.blockFlagPopup.reset();
+        this.updateFlagStatus(this.flagsSel._id);
+      },
+
+      hideFlagPart: function(ev, partIdx) {
+        this.flagsSel.parts[partIdx].status = 'hidden';
+        this.$refs.blockFlagPopup.reset();
+        this.updateFlagStatus(this.flagsSel._id);
+      },
+
+      unHideFlagPart: function(ev, partIdx) {
+        this.flagsSel.parts[partIdx].status = 'resolved';
+        this.$refs.blockFlagPopup.reset();
+        this.updateFlagStatus(this.flagsSel._id);
+      },
+
+      toggleArchFlags: function(ev, partIdx) {
+        this.isHideArchFlags = !this.isHideArchFlags;
+      },
+
+      toggleHideArchParts: function() {
+        this.isHideArchParts = !this.isHideArchParts;
+        this.$refs.blockFlagPopup.reset();
+      },
+
       startRecording() {
         this.recordTimer()
         .then(() => {
@@ -504,9 +844,9 @@ export default {
         this.unselectCurrentBlock();
         this.isRecording = false;
         this.isRecordingPaused = false;
-        
+
         let self = this;
-        
+
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio';
         let api = this.$store.state.auth.getHttp();
         this.isUpdating = true;
@@ -572,8 +912,8 @@ export default {
       },
       reRecord() {
         this._markSelection();
-        let startElement = this._getParent(this.selection.startContainer, 'w');
-        let endElement = this._getParent(this.selection.endContainer, 'w');
+        let startElement = this._getParent(this.range.startContainer, 'w');
+        let endElement = this._getParent(this.range.endContainer, 'w');
         let startRange = this._getClosestAligned(startElement, 0);
         if (!startRange) {
           startRange = [0, 0];
@@ -635,8 +975,8 @@ export default {
         return null;
       },
       _markSelection() {
-        let startElement = this._getParent(this.selection.startContainer, 'w');
-        let endElement = this._getParent(this.selection.endContainer, 'w');
+        let startElement = this._getParent(this.range.startContainer, 'w');
+        let endElement = this._getParent(this.range.endContainer, 'w');
         if (startElement && endElement) {
           startElement.classList.add('audio-highlight');
           let next = false;
@@ -662,6 +1002,11 @@ export default {
               'map': this.block.content
             };
           }
+          Vue.nextTick(() => {
+            if (this.$refs.blockContent) this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+              flag.addEventListener('click', this.handleFlagClick);
+            });
+          });
       },
       'block.type' (newVal) {
         this.isChanged = true;
@@ -801,25 +1146,44 @@ export default {
     }
 
     &.controls-bottom {
-         span {
-            margin-right: 15px;
-            cursor: pointer;
+        span {
+          margin-right: 15px;
+          cursor: pointer;
+          color: gray;
+          &:hover {
+            color: #303030;
+            .fa, .glyphicon, {
+              color: #303030;
+            }
+          }
+        }
+        span.-disabled {
+          color: lightgray;
+          .fa, .glyphicon, {
+            color: lightgray;
+          }
+          &:hover {
+            color: lightgray;
+            .fa, .glyphicon, {
+              color: lightgray;
+            }
+          }
         }
         .save-block {
-            cursor: pointer;
-            border: 1px solid silver;
-            border-radius: 3px;
-            padding: 0 3px 1px 3px;
-            &:hover {
-                background: rgba(204, 255, 217, 0.2);
-            }
-            &.-disabled {
+          cursor: pointer;
+          border: 1px solid silver;
+          border-radius: 3px;
+          padding: 0 3px 1px 3px;
+          &:hover {
+              background: rgba(204, 255, 217, 0.2);
+          }
+          &.-disabled {
 /*                cursor: not-allowed;
-                &:hover {
-                    background: rgba(100, 100, 100, 0.2);
-                }*/
-                visibility: hidden;
-            }
+              &:hover {
+                  background: rgba(100, 100, 100, 0.2);
+              }*/
+              visibility: hidden;
+          }
         }
     }
 
@@ -847,6 +1211,12 @@ export default {
           transition: box-shadow 200ms;
       }
     }
+
+    .block-menu {
+      .fa, .glyphicon {
+        margin-right: 5px;
+      }
+    }
 }
 
 .fa, .glyphicon {
@@ -859,8 +1229,8 @@ export default {
     color: #FFFFFF;
 }
 
-.fa:hover {
-    color: #505050;
+.fa:hover, .glyphicon:hover {
+    color: #303030;
 }
 
 .par-ctrl {
@@ -962,7 +1332,62 @@ export default {
   [data-author] {
     color: teal;
   }
-  
+
+  [data-flag] {
+    position: relative;
+    border-bottom: 2px solid red;
+    pointer-events: none;
+    &:before {
+      pointer-events: all;
+      /*content: "\F024";*/
+      content: "\e034";
+      /*font-family: 'FontAwesome';*/
+      font-family: 'Glyphicons Halflings';
+      color: red;
+      cursor: pointer;
+      display: inline-block;
+      margin-right: 1px;
+      position: relative;
+      top: 2px;
+    }
+
+    &[data-status="open"] {
+      border-bottom: 2px solid red;
+      &:before {
+        color: red;
+      }
+    }
+    &[data-status="resolved"] {
+      border-bottom: 2px solid green;
+      &:before {
+        color: green;
+      }
+    }
+    &[data-status="hidden"] {
+      border-bottom: 2px solid gray;
+      &:before {
+        color: gray;
+      }
+    }
+  }
+
+  .hide-archive {
+    [data-flag] {
+      &[data-status="hidden"] {
+        border-bottom: none;
+        &:before {
+          content: '';
+        }
+      }
+    }
+  }
+
+  i[data-flag] {
+    &[data-status] {
+      border-bottom: none;
+    }
+  }
+
   .preloader-small {
       background: url(/static/preloader-snake-small.gif);
       width: 34px;

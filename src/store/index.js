@@ -18,12 +18,6 @@ const ILM_TASKS = 'ilm_tasks';
 
 // const API_ALLBOOKS = '/static/books.json'
 
-const BookBlock = function(){
-  this.parnum = false;
-  this.deleted = false;
-  this.footnotes = [];
-}
-
 export const store = new Vuex.Store({
   state: {
     auth: superlogin,
@@ -84,7 +78,6 @@ export const store = new Vuex.Store({
     tc_tasksByBlock: state => state.tc_tasksByBlock,
     tc_userTasks: state => state.tc_userTasks,
     contentDBWatch: state => state.contentDBWatch,
-    newBlock: state => BookBlock,
     authors: state => {
       let result = [];
       if (state.currentBookMeta.authors) {
@@ -379,7 +372,7 @@ export const store = new Vuex.Store({
         contentDBWatch.removeAllListeners('change');
         contentDBWatch
         .on('complete', function(info) {
-            console.log('contentDBWatch Cancelled');
+            //console.log('contentDBWatch Cancelled');
         }).on('error', function (err) {
             console.log(err);
         });
@@ -389,20 +382,8 @@ export const store = new Vuex.Store({
 
     putBlock ({commit, state, dispatch}, block) {
 
-      let defBlock = [
-          '_id',
-          '_rev',
-          'tag',
-          'content',
-          'footnotes',
-          'classes',
-          'type',
-          'bookid',
-          'index',
-          'audiosrc'
-      ]
-
-        let cleanBlock = _.pick(block, defBlock);
+        let cleanBlock = block.clean();
+        //console.log('putBlock', cleanBlock);
         state.contentDB.get(cleanBlock._id).then(function(doc) {
             return state.contentDB.put(cleanBlock);
         }).then((response)=>{
