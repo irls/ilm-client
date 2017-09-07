@@ -7,6 +7,7 @@ import Libraries from '../components/Libraries'
 import Tasks from '../components/Tasks'
 import Help from '../components/Help'
 import Contact from '../components/Contact'
+import Align from '../components/Align'
 
 Vue.use(Router)
 
@@ -48,6 +49,10 @@ export default new Router({
     {
       path: '/contact',
       component: Contact
+    },
+    {
+      path: '/align',
+      component: Align
     },
     { path: '*', redirect: '/books' }
   ]

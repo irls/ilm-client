@@ -52,7 +52,8 @@
                       <li @click="discardBlock">
                         <i class="fa fa-undo" aria-hidden="true"></i>
                         Discard un-saved changes</li>
-                      <li><i class="fa fa-cloud-download" aria-hidden="true"></i>
+                      <li @click="discardAudio">
+                        <i class="fa fa-cloud-download" aria-hidden="true"></i>
                         Revert to original audio</li>
                     </block-menu>
                   </div>
@@ -75,30 +76,37 @@
               <!--<div class="-hidden">-->
 
               <div class="par-ctrl -audio -hidden -right">
-                  <template v-if="player">
-                      <i class="fa fa-play-circle-o" v-if="!isAudStarted"
-                      @click="audPlay(block._id, $event)"></i>
+                  <template v-if="player && blockAudio.src && !isRecording">
+                      <template v-if="!isAudStarted">
+                        <i class="fa fa-play-circle-o"
+                          @click="audPlay(block._id, $event)"></i>
+                        <i class="fa fa-stop-circle-o disabled"></i>
+                      </template>
                       <template v-else>
-                        <i class="fa fa-stop-circle-o"
-                          @click="audStop(block._id, $event)"></i>
                         <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
                           @click="audPause(block._id, $event)"></i>
-                        <i class="fa fa-play-circle-o" v-else
+                        <i class="fa fa-play-circle-o paused" v-else
                           @click="audResume(block._id, $event)"></i>
+                        <i class="fa fa-stop-circle-o"
+                          @click="audStop(block._id, $event)"></i>
+                        <div class="empty-control"></div><!-- empty block to keep order -->
                         </template>
                   </template>
                   <template v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
+                    <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i>
+                    <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i>
                     <i class="fa fa-microphone" v-if="!isRecording" @click="startRecording($event)"></i>
-                    <template v-else>
-                      <i class="fa fa-stop-circle-o" @click="stopRecording(true, $event)"></i>
-                    </template>
+                    <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i>
+                    <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i>
                   </template>
               </div>
               <!--<div class="-hidden">-->
 
             </div>
             <!--<div class="table-row controls-top">-->
-
+            <div style="" class="preloader-container">
+              <div v-if="isUpdating" class="preloader-small"> </div>
+            </div>
             <div class="table-row ocean">
                 <hr v-if="block.type=='hr'" />
 
@@ -108,7 +116,7 @@
                 v-html="block.content"
                 :class="[ block.type, block.classes, {
                   'updated': isUpdated,
-                  'playing': isAudStarted ,
+                  'playing': isAudStarted || tc_showBlockNarrate(block._id),
                   'hide-archive': isHideArchFlags
                 }]"
                 :data-audiosrc="blockAudio.src"
@@ -226,6 +234,14 @@
                   <li v-if="!range.collapsed" @click="addFlag($event, 'editor')">Flag for Editing</li>
                   <li v-if="!range.collapsed" @click="addFlag($event, 'narrator')">Flag for Narration</li>
                   <li class="separator"></li>
+                  <template v-if="!range.collapsed && blockAudio.src">
+                    <li class="menu-separator"></li>
+                    <li @click="audPlayFromSelection()">Play from here</li>
+                    <li @click="audPlaySelection()">Play selection</li>
+                    <li @click="audDeleteSelection()">Delete audio in selection</li>
+                    <li class="menu-separator"></li>
+                  </template>
+                  <li v-if="!range.collapsed && tc_showBlockNarrate(block._id)" @click="reRecord">Re-record audio</li>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
 
@@ -296,6 +312,7 @@ import BlockContextMenu   from '../generic/BlockContextMenu';
 import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import taskControls       from '../../mixins/task_controls.js'
 import apiConfig          from '../../mixins/api_config.js'
+var BPromise = require('bluebird');
 
 export default {
   data () {
@@ -325,11 +342,15 @@ export default {
       isAudStarted: false,
       isAudPaused: false,
       isRecording: false,
+      isRecordingPaused: false,
       isAudioChanged: false,
       blockAudio: {
         src: '',
         map: ''
-      }
+      },
+      reRecordPosition: false,
+      isUpdating: false,
+      recordStartCounter: 0
     }
   },
   components: {
@@ -446,6 +467,19 @@ export default {
           this.$refs.blockContent.focus();
         });
       },
+      discardAudio: function() {
+        this.blockAudio.src = this.block.audiosrc;
+        this.blockAudio.map = this.block.content;
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
+        let api = this.$store.state.auth.getHttp();
+        api.delete(api_url, {}, {})
+          .then(response => {
+
+          })
+          .catch(err => {
+
+          });
+      },
       assembleBlock: function(el) {
         this.block.content = this.$refs.blockContent.innerHTML;
         this.block.classes = [this.block.classes];
@@ -486,6 +520,27 @@ export default {
         this.audCleanClasses(block_id, ev);
         this.player.playBlock('content-'+block_id);
       },
+      audPlayFromSelection() {
+        let startElement = this._getParent(this.range.startContainer, 'w');
+        if (startElement) {
+          this.isAudStarted = true;
+          this.player.playFromWordElement(startElement, 'content-'+this.block._id);
+        }
+      },
+      audPlaySelection() {
+        let startElement = this._getParent(this.range.startContainer, 'w');
+        let endElement = this._getParent(this.range.endContainer, 'w');
+        let startRange = this._getClosestAligned(startElement, 1);
+        if (!startRange) {
+          startRange = [0, 0];
+        }
+        let endRange = this._getClosestAligned(endElement, 0);
+        if (!endRange) {
+          endRange = this._getClosestAligned(endElement, 1)
+        }
+        this.isAudStarted = true;
+        this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]);
+      },
       audPause: function(block_id, ev) {
         this.player.pause();
       },
@@ -498,6 +553,36 @@ export default {
         this.isAudStarted = false;
         this.isAudPaused = false;
         this.audCleanClasses(block_id, ev);
+      },
+      audDeleteSelection() {
+        let startElement = this._getParent(this.range.startContainer, 'w');
+        let endElement = this._getParent(this.range.endContainer, 'w');
+        let startRange = this._getClosestAligned(startElement, 1);
+        if (!startRange) {
+          startRange = [0, 0];
+        }
+        let endRange = this._getClosestAligned(endElement, 0);
+        if (!endRange) {
+          endRange = this._getClosestAligned(endElement, 1)
+        }
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_remove';
+        let api = this.$store.state.auth.getHttp();
+        this.isUpdating = true;
+        let formData = new FormData();
+        let position = [startRange[0], endRange[0] + endRange[1]];
+        formData.append('position', position);
+        formData.append('isTemp', this.isAudioChanged);
+        api.post(api_url, formData, {})
+          .then(response => {
+            this.isUpdating = false;
+            if (response.status == 200) {
+              this.blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
+              this.blockAudio.map = response.data.content;
+            }
+          })
+          .catch(err => {
+            this.isUpdating = false;
+          });
       },
       audCleanClasses: function(block_id, ev) {
         let reading_class = this.player.config.reading_class
@@ -714,12 +799,95 @@ export default {
       },
 
       startRecording() {
-        this.isRecording = true;
-        this.$emit('startRecording', this.block._id)
+        this.recordTimer()
+        .then(() => {
+          this.recordStartCounter = 0;
+          this.isRecording = true;
+          this.selectCurrentBlock();
+          this.recorder.startRecording();
+        })
       },
-      stopRecording(isSend) {
+      recordTimer() {
+        let self = this;
+        return new BPromise(function(resolve, reject) {
+          self.recordStartCounter = 3;
+          $('#narrateStartCountdown strong').html(self.recordStartCounter);
+          $('body').addClass('modal-open');
+          $('#narrateStartCountdown').show();
+          let timer = setInterval(function() {
+            --self.recordStartCounter;
+            if (self.recordStartCounter <= 0) {
+              clearTimeout(timer)
+              $('body').removeClass('modal-open');
+              $('#narrateStartCountdown').hide();
+              resolve()
+            } else {
+              //console.log(self.recordStartCounter);
+              $('#narrateStartCountdown strong').html(self.recordStartCounter);
+            }
+          }, 1000);
+        });
+      },
+      selectCurrentBlock() {
+        $('#booksarea').addClass('recording-background');
+        $('#' + this.block._id + ' div.table-body.-content').addClass('recording-block');
+      },
+      unselectCurrentBlock() {
+        $('#booksarea').removeClass('recording-background')
+        $('#' + this.block._id + ' div.table-body.-content').removeClass('recording-block');
+      },
+      stopRecording(start_next) {
+        start_next = typeof start_next === 'undefined' ? false : start_next;
+        if (!this.isRecording) {
+          return false;
+        }
+        this.unselectCurrentBlock();
         this.isRecording = false;
-        this.$emit('stopRecording', this.block._id, this.blockAudio)
+        this.isRecordingPaused = false;
+
+        let self = this;
+
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio';
+        let api = this.$store.state.auth.getHttp();
+        this.isUpdating = true;
+        this.recorder.stopRecording(function(audioUrl) {
+          this.getDataURL(function(dataURL) {
+            if (start_next) {
+              self.stopRecordingAndNext();
+            }
+            let formData = new FormData();
+            formData.append('audio', dataURL.split(',').pop());
+            formData.append('position', self.reRecordPosition);
+            formData.append('isTemp', self.isAudioChanged);
+            api.post(api_url, formData, {})
+              .then(response => {
+                self.isUpdating = false;
+                if (response.status == 200) {
+                  self.blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
+                  self.blockAudio.map = response.data.content;
+                }
+                self.reRecordPosition = false;
+              })
+              .catch(err => {
+                self.reRecordPosition = false;
+                self.isUpdating = false;
+              });
+          });
+        });
+      },
+      stopRecordingAndNext() {
+        //this.stopRecording();
+        let offset = document.getElementById(this.block._id).getBoundingClientRect()
+        window.scrollTo(0, window.pageYOffset + offset.bottom - 100);
+        this.$emit('stopRecordingAndNext', this.block);
+      },
+      pauseRecording() {
+        this.isRecordingPaused = true;
+        this.recorder.pauseRecording();
+      },
+      resumeRecording() {
+        this.isRecordingPaused = false;
+        this.recorder.resumeRecording();
       },
       initPlayer() {
         this.player = new ReadAlong({
@@ -741,6 +909,84 @@ export default {
                 this.audCleanClasses(this.block._id, {});
             }
         });
+      },
+      reRecord() {
+        this._markSelection();
+        let startElement = this._getParent(this.range.startContainer, 'w');
+        let endElement = this._getParent(this.range.endContainer, 'w');
+        let startRange = this._getClosestAligned(startElement, 0);
+        if (!startRange) {
+          startRange = [0, 0];
+        }
+        let endRange = this._getClosestAligned(endElement, 1);
+        if (!endRange) {
+          endRange = this._getClosestAligned(endElement, 0);
+          if (!endRange) {
+            endRange = [0, 0];
+          }
+        }
+        this.reRecordPosition = [parseInt(startRange[0]), parseInt(endRange[0]) + parseInt(endRange[1])];
+        //console.log(this.reRecordPosition, this.blockAudio.map.replace(/"/g, '\\"'));
+        this.startRecording();
+      },
+      _getParent(node, tag) {
+        if (node.localName == tag) {
+          return node;
+        }
+        let parent = false;
+        do {
+          parent = parent === false ? node.parentElement : parent.parentElement;
+          if (parent.localName == tag) {
+            return parent;
+          }
+        } while(parent);
+        return null;
+      },
+      _getClosestAligned(node, direction) {
+        if (node.dataset && node.dataset.map) {
+          let splitted = node.dataset.map.split(',');
+          if (splitted.length == 2) {
+            splitted[0] = parseInt(splitted[0]);
+            splitted[1] = parseInt(splitted[1]);
+            return splitted;
+          }
+        }
+        let sibling = false;
+        if (direction > 0) {
+          sibling = node.nextSibling ? node.nextSibling : null;
+        } else {
+          sibling = node.previousSibling ? node.previousSibling : null;
+        }
+        while (sibling) {
+          if (sibling.dataset && sibling.dataset.map) {
+            let splitted = sibling.dataset.map.split(',');
+            if (splitted.length == 2) {
+              splitted[0] = parseInt(splitted[0]);
+              splitted[1] = parseInt(splitted[1]);
+              return splitted;
+            }
+          }
+          if (direction > 0) {
+            sibling = sibling.nextSibling ? sibling.nextSibling : null;
+          } else {
+            sibling = sibling.previousSibling ? sibling.previousSibling : null;
+          }
+        }
+        return null;
+      },
+      _markSelection() {
+        let startElement = this._getParent(this.range.startContainer, 'w');
+        let endElement = this._getParent(this.range.endContainer, 'w');
+        if (startElement && endElement) {
+          startElement.classList.add('audio-highlight');
+          let next = false;
+          do {
+            next = next ? next.nextSibling : startElement.nextSibling;
+            if (next) {
+              next.classList.add('audio-highlight');
+            }
+          } while (next && next !== endElement);
+        }
       }
   },
   watch: {
@@ -775,15 +1021,23 @@ export default {
             this.blockAudio.src+= '?' + (new Date()).toJSON();
           }
           if (this.tc_showBlockNarrate(this.block._id)) {
-            this.isAudioChanged = newVal && this.block.audiosrc != newVal.split('?').shift();
+            let isChanged = newVal && this.block.audiosrc != newVal.split('?').shift();
+            this.isAudioChanged = isChanged;
+            if (isChanged) {
+              this.infoMessage = 'Audio updated';
+            }
           }
         }
       },
       'blockAudio.map' (newVal) {
         //console.log('Tmp audiomap', newVal);
         if (this.tc_showBlockNarrate(this.block._id)) {
-          this.isAudioChanged = this.block.content != newVal;
+          let isChanged = this.block.content != newVal;
+          this.isAudioChanged = isChanged;
           this.$refs.blockContent.innerHTML = newVal;
+          if (isChanged) {
+            this.infoMessage = 'Audio updated';
+          }
         }
       }
   }
@@ -995,6 +1249,12 @@ export default {
             font-size: 22px;
         }
     }
+    .fa.disabled {
+      color: #dddddd;
+    }
+    .fa.paused {
+      color: red;
+    }
 }
 
   .content-wrap {
@@ -1126,6 +1386,26 @@ export default {
     &[data-status] {
       border-bottom: none;
     }
+  }
+
+  .preloader-small {
+      background: url(/static/preloader-snake-small.gif);
+      width: 34px;
+      height: 34px;
+      left: 50%;
+      top: 30px;
+      position: absolute;
+  }
+  .preloader-container {
+    position: relative;
+  }
+  .empty-control {
+    width: 22px; display: inline-block;
+  }
+  .menu-separator {
+    width: 100%;
+    border-bottom: 1px solid black;
+    height: 10px;
   }
 
   .medium-editor-toolbar-form {
