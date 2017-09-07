@@ -383,7 +383,7 @@ export const store = new Vuex.Store({
     putBlock ({commit, state, dispatch}, block) {
 
         let cleanBlock = block.clean();
-        console.log('putBlock', cleanBlock);
+        //console.log('putBlock', cleanBlock);
         state.contentDB.get(cleanBlock._id).then(function(doc) {
             return state.contentDB.put(cleanBlock);
         }).then((response)=>{

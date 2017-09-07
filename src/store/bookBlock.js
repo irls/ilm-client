@@ -62,9 +62,9 @@ class BookBlock {
   newFlag(range, type, isBlockFlag = false) {
     let _id = this.genFlagId(isBlockFlag);
     let _at = (new Date()).toJSON();
-    let user_Id = superlogin.getSession().user_id;
+    let userId = superlogin.getSession().user_id;
     let flagPart = new FlagPart({
-      creator: user_Id,
+      creator: userId,
       created_at: _at,
       type: type,
       content: (isBlockFlag ? false : range.cloneContents().textContent),
@@ -73,7 +73,7 @@ class BookBlock {
 
     this.flags.push ({
       _id: _id,
-      creator: user_Id,
+      creator: userId,
       created_at: _at,
       parts: [flagPart]
     });
@@ -86,9 +86,9 @@ class BookBlock {
     this.flags.forEach((flag, flagIdx)=>{
       if (flag._id === _id) {
         let _at = (new Date()).toJSON();
-        let user_Id = superlogin.getSession().user_id;
+        let userId = superlogin.getSession().user_id;
         let flagPart = new FlagPart({
-          creator: user_Id,
+          creator: userId,
           created_at: _at,
           type: type,
           content: range.cloneContents().textContent,
@@ -99,13 +99,21 @@ class BookBlock {
     });
   }
 
+  delFlag(_id) {
+    this.flags.forEach((flag, flagIdx)=>{
+      if (flag._id === _id) {
+        this.flags.splice(flagIdx,1);
+      }
+    });
+  }
+
   addPart(_id, content, type) {
     this.flags.forEach((flag, flagIdx)=>{
       if (flag._id === _id) {
         let _at = (new Date()).toJSON();
-        let user_Id = superlogin.getSession().user_id;
+        let userId = superlogin.getSession().user_id;
         let flagPart = new FlagPart({
-          creator: user_Id,
+          creator: userId,
           created_at: _at,
           type: type,
           content: content,
@@ -114,6 +122,28 @@ class BookBlock {
         flag.parts.push(flagPart);
       }
     });
+  }
+
+  mergeFlags(fromIdx) {
+
+    let fromBlock = this.flags[fromIdx];
+    let blockFlagIdx = this.flags.map(f => f._id).indexOf(this._id);
+
+    if (blockFlagIdx < 0) {
+      let _id = this.genFlagId(true);
+      let _at = (new Date()).toJSON();
+      let userId = superlogin.getSession().user_id;
+      this.flags.push ({
+        _id: _id,
+        creator: userId,
+        created_at: _at,
+        parts: fromBlock.parts
+      });
+    } else {
+      this.flags[blockFlagIdx].parts = this.flags[blockFlagIdx].parts.concat(fromBlock.parts);
+    }
+
+    this.flags.splice(fromIdx, 1);
   }
 
   isNeedAlso(_id) {

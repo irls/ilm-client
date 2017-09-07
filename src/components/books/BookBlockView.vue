@@ -253,7 +253,7 @@
 
             <div class="table-row controls-bottom">
                 <div class="save-block -hidden -left"
-                v-bind:class="{ '-disabled': !isChanged }"
+                v-bind:class="{ '-disabl#505050ed': !isChanged }"
                 @click="assembleBlock()">
                     <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
                 </div>
@@ -272,7 +272,7 @@
                       @click="handleBlockFlagClick"
                     ></i>
                   </span>
-                  <span><i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
+                  <span v-bind:class="{ '-disabled': countFlags == 0 }"><i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
                   <span><i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
               </div>
               <!--<div class="-hidden">-->
@@ -345,6 +345,9 @@ export default {
       },
       countArchParts: function () {
           return this.flagsSel ? this.block.countArchParts(this.flagsSel._id) : 0;
+      },
+      countFlags: function () {
+          return this.block.flags.length;
       },
       ...mapGetters({
           auth: 'auth',
@@ -439,14 +442,27 @@ export default {
             });
           });
           this.isChanged = false;
+          this.updateFlagStatus(this.block._id);
           this.$refs.blockContent.focus();
         });
       },
       assembleBlock: function(el) {
         this.block.content = this.$refs.blockContent.innerHTML;
         this.block.classes = [this.block.classes];
+
+        this.checkBlockContentFlags();
+        this.updateFlagStatus(this.block._id);
+
         this.putBlock(this.block);
         this.isChanged = false;
+      },
+      checkBlockContentFlags: function(el) {
+        if (this.block.flags) this.block.flags.forEach((flag, flagIdx)=>{
+          if (flag._id !== this.block._id) {
+            let node = this.$refs.blockContent.querySelector(`[data-flag="${flag._id}"]`);
+            if (!node) this.block.mergeFlags(flagIdx);
+          }
+        });
       },
       assembleBlockAudio: function(el) {
         if (this.blockAudio.map) {
@@ -562,27 +578,21 @@ export default {
             return element.dataset.flag;
           })
         }
-        /*let target = MediumEditor.util.traverseUp(this.range.startContainer, function (element) {
-          return element.dataset.flag;
-        })
-        if (!target) target = MediumEditor.util.traverseUp(this.range.endContainer, function (element) {
-          return element.dataset.flag;
-        })*/
         return target;
       },
 
       nextNode: function (node) {
-          if (node.hasChildNodes()) {
-              return node.firstChild;
-          } else {
-              while (node && !node.nextSibling) {
-                  node = node.parentNode;
-              }
-              if (!node) {
-                  return null;
-              }
-              return node.nextSibling;
+        if (node.hasChildNodes()) {
+          return node.firstChild;
+        } else {
+          while (node && !node.nextSibling) {
+            node = node.parentNode;
           }
+          if (!node) {
+            return null;
+          }
+          return node.nextSibling;
+        }
       },
 
       handleFlagClick: function(ev) {
@@ -640,13 +650,21 @@ export default {
 
       delFlagPart: function(ev, partIdx) {
         if (this.canDeleteFlagPart(this.flagsSel.parts[partIdx])) {
+
             this.flagsSel.parts.splice(partIdx, 1);
-            let node = this.$refs.blockContent.querySelector(`[data-flag="${this.flagsSel._id}"]`);
+
             if (this.flagsSel.parts.length == 0) {
+              if (this.flagsSel._id !== this.block._id) {
+                let node = this.$refs.blockContent.querySelector(`[data-flag="${this.flagsSel._id}"]`);
                 let parent = node.parentNode;
                 while (node.firstChild) parent.insertBefore(node.firstChild, node);
                 parent.removeChild(node);
-                this.$root.$emit('closeFlagPopup', true);
+              } else {
+                this.$refs.blockFlagControl.removeAttribute('data-flag');
+                this.$refs.blockFlagControl.removeAttribute('data-status');
+                this.block.delFlag(this.flagsSel._id);
+              }
+              this.$root.$emit('closeFlagPopup', true);
             }
             else {
               this.$refs.blockFlagPopup.reset();
@@ -693,10 +711,6 @@ export default {
       toggleHideArchParts: function() {
         this.isHideArchParts = !this.isHideArchParts;
         this.$refs.blockFlagPopup.reset();
-      },
-
-      detectMissedFlags: function() {
-
       },
 
       startRecording() {
@@ -878,25 +892,44 @@ export default {
     }
 
     &.controls-bottom {
-         span {
-            margin-right: 15px;
-            cursor: pointer;
+        span {
+          margin-right: 15px;
+          cursor: pointer;
+          color: gray;
+          &:hover {
+            color: #303030;
+            .fa, .glyphicon, {
+              color: #303030;
+            }
+          }
+        }
+        span.-disabled {
+          color: lightgray;
+          .fa, .glyphicon, {
+            color: lightgray;
+          }
+          &:hover {
+            color: lightgray;
+            .fa, .glyphicon, {
+              color: lightgray;
+            }
+          }
         }
         .save-block {
-            cursor: pointer;
-            border: 1px solid silver;
-            border-radius: 3px;
-            padding: 0 3px 1px 3px;
-            &:hover {
-                background: rgba(204, 255, 217, 0.2);
-            }
-            &.-disabled {
+          cursor: pointer;
+          border: 1px solid silver;
+          border-radius: 3px;
+          padding: 0 3px 1px 3px;
+          &:hover {
+              background: rgba(204, 255, 217, 0.2);
+          }
+          &.-disabled {
 /*                cursor: not-allowed;
-                &:hover {
-                    background: rgba(100, 100, 100, 0.2);
-                }*/
-                visibility: hidden;
-            }
+              &:hover {
+                  background: rgba(100, 100, 100, 0.2);
+              }*/
+              visibility: hidden;
+          }
         }
     }
 
@@ -942,8 +975,8 @@ export default {
     color: #FFFFFF;
 }
 
-.fa:hover {
-    color: #505050;
+.fa:hover, .glyphicon:hover {
+    color: #303030;
 }
 
 .par-ctrl {
