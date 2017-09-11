@@ -348,12 +348,16 @@ export const store = new Vuex.Store({
     },
 
     loadBlocks ({commit, state, dispatch}, params) {
+        let skip = params.page * params.onpage;
+        if (typeof params.skipOffset !== 'undefined') {
+          skip+= params.skipOffset;
+        }
         return state.contentDB
         .query('filters_byBook/byBook', {
             startkey: [params.book_id],
             endkey: [params.book_id, {}],
             include_docs: true,
-            skip: params.page * params.onpage,
+            skip: skip,
             limit: params.onpage
         }).then(function (res) {
             res.rows.forEach(b => {
