@@ -9,7 +9,11 @@
               :putBlock ="putBlockProxy"
               :getBlock ="getBlockProxy"
               :recorder ="recorder"
+              :blockOrderChanged ="blockOrderChanged"
               @stopRecordingAndNext="stopRecordingAndNext"
+              @insertBefore="insertBlockBefore"
+              @insertAfter="insertBlockAfter"
+              @deleteBlock="deleteBlock"
           />
         </div>
         <!--<div class='col'>-->
@@ -45,7 +49,10 @@ export default {
       page: 0,
       parlist: [],
       autoload: true,
-      recorder: false
+      recorder: false,
+      parlistSkip: 0,
+      blockOrderChanged: false,
+      isAllLoaded: false
     }
   },
   computed: {
@@ -89,7 +96,8 @@ export default {
         this.loadBlocks({
             book_id: this.meta._id,
             page: this.page++,
-            onpage: 20
+            onpage: 20,
+            skipOffset: this.parlistSkip
         }).then((result)=>{
             let tmp = [];
             if (result.length > 0) {
@@ -104,6 +112,7 @@ export default {
             } else {
                 this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
             }
+            this.isAllLoaded = this.$refs.scrollBookDown.isComplete;
             //console.log('loaded', result);
         }).catch((err)=>{
             if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
@@ -112,16 +121,54 @@ export default {
     },
 
     refreshBlock (change) {
+        let prev_block = null;
         this.parlist.forEach((el, idx0, arr)=>{
             el.forEach((block, idx1)=>{
                 if (block._id === change.id) {
                     if (change.doc.audiosrc) {
                       change.doc.audiosrc = process.env.ILM_API + change.doc.audiosrc;
                     }
-                    Vue.set(this.parlist[idx0], idx1, { ...this.parlist[idx0][idx1], ...change.doc});
+                    if (change.deleted === true) {
+                      let par = el.slice(0, idx1);
+                      let next = el.slice(idx1);
+                      
+                      next.forEach(_b => {
+                        if (_b._id != change.id) {
+                          par.push(_b);
+                        }
+                      });
+                      this.setBlockOrderChanged(true);
+                      Vue.set(this.parlist, idx0, par);
+                      this.initEditors(change.doc);
+                    } else {
+                      Vue.set(this.parlist[idx0], idx1, { ...this.parlist[idx0][idx1], ...change.doc});
+                    }
+                } else if (prev_block && block.index > change.doc.index && prev_block.index < change.doc.index) {// new block
+                  let par = el.slice(0, idx1);
+                  let next = el.slice(idx1);
+                  par.push(change.doc);
+                  next.forEach(_b => {
+                    par.push(_b);
+                  });
+                  this.setBlockOrderChanged(true);
+                  Vue.set(this.parlist, idx0, par);
+                  this.initEditors(change.doc, true);
+                } else if (!prev_block && idx0 == 0 && idx1 == 0 && change.doc.index < block.index) {// new block before list
+                  let par = this.parlist[idx0];
+                  par.unshift(change.doc);
+                  this.setBlockOrderChanged(true);
+                  Vue.set(this.parlist, idx0, par);
+                  this.initEditors(change.doc, true);
                 }
+                prev_block = block;
             });
         });
+        if (prev_block && this.isAllLoaded && change.doc.index > prev_block.index) {// new block in the bottom
+          let par = this.parlist[this.parlist.length - 1];
+          par.push(change.doc);
+          Vue.set(this.parlist, this.parlist.length - 1, par);
+          this.initEditors(change.doc, true);
+        }
         this.initRecorder();
     },
 
@@ -207,6 +254,20 @@ export default {
         }
       }
     },
+    initEditors(block, on_added) {
+      let self = this;
+      let t = setInterval(function() {
+        let check = on_added === true ? $('[id="' + block._id + '"]').length > 0 : $('[id="' + block._id + '"]').length == 0;
+        if (check) {
+          clearInterval(t);
+          self.$children.forEach(c => {
+            if (c.block && c.block.index >= block.index) {
+              c.initEditor(true);
+            }
+          });
+        }
+      }, 100);
+    },
     findNextBlock(block) {
       let next = false;
       for (let i = 0; i < this.parlist.length; ++i) {
@@ -218,6 +279,54 @@ export default {
         }
       }
       return next;
+    },
+    insertBlockBefore(block_id) {
+      this.insertBlock(block_id, 'before');
+    },
+    insertBlockAfter(block_id) {
+      this.insertBlock(block_id, 'after');
+    },
+    insertBlock(block_id, direction) {
+      let par = false;
+      let index = false;
+      let block;
+      for (let i = 0; i < this.parlist.length; ++i) {
+        block = this.parlist[i].find(p => { 
+          return p._id == block_id;
+        });
+        if (block) {
+          par = this.parlist[i];
+          index = i;
+          i = this.parlist.length;
+        }
+      }
+      //console.log(index, par, block._id);
+      if (index !== false && par && block) {
+        let api_url = this.API_URL + 'book/block';
+        let api = this.$store.state.auth.getHttp();
+        api.post(api_url, {
+          block_id: block_id,
+          direction: direction
+        })
+          .then(response => {
+            ++this.parlistSkip;
+          })
+      }
+    },
+    deleteBlock(block_id) {
+      let api_url = this.API_URL + 'book/block/' + block_id;
+        let api = this.$store.state.auth.getHttp();
+        api.delete(api_url, {})
+          .then(response => {
+            --this.parlistSkip;
+          })
+    },
+    setBlockOrderChanged(val) {
+      this.blockOrderChanged = val;
+      let self = this;
+      setTimeout(function() {
+        self.blockOrderChanged = !val;
+      }, 1000);
     }
   },
   events: {
@@ -236,7 +345,7 @@ export default {
       .then(()=>{
           this.watchBlk.on('change', (change) => {
               this.refreshBlock(change);
-          })
+          });
       });
       this.initRecorder();
       window.onscroll = function() {

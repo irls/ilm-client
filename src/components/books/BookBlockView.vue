@@ -33,12 +33,14 @@
                       :update="update">
                     <li @click="update">Show hidden flags</li>
                     <li class="separator"></li>
-                    <li>Insert block before</li>
-                    <li>Insert block after</li>
-                    <li>Delete block</li>
-                    <li>Split block</li>
-                    <li>Join with previous block</li>
-                    <li>Join with next block</li>
+                    <template v-if="tc_hasTask('content_cleanup')">
+                      <li @click="insertBlockBefore()">Insert block before</li>
+                      <li @click="insertBlockAfter()">Insert block after</li>
+                      <li @click="deleteBlockMessage = true">Delete block</li>
+                      <li>Split block</li>
+                      <li>Join with previous block</li>
+                      <li>Join with next block</li>
+                    </template>
                     <li class="separator"></li>
                     <li @click="discardBlock">Discard un-saved changes</li>
                     <li @click="discardAudio">Revert to original audio</li>
@@ -176,6 +178,9 @@
     </div>
     <div class="table-cell controls-right">
     </div>
+    <modal v-model="deleteBlockMessage" effect="fade" ok-text="Delete" cancel-text="Cancel" title="Delete block" @ok="deleteBlock()">
+      <div>Delete block? </div>
+    </modal>
 </div>
 </template>
 
@@ -188,6 +193,7 @@ import BlockMenu from '../generic/BlockMenu';
 import BlockContextMenu from '../generic/BlockContextMenu';
 import taskControls from '../../mixins/task_controls.js'
 import apiConfig from '../../mixins/api_config.js'
+import { modal } from 'vue-strap'
 var BPromise = require('bluebird');
 
 export default {
@@ -219,14 +225,16 @@ export default {
       },
       reRecordPosition: false,
       isUpdating: false,
-      recordStartCounter: 0
+      recordStartCounter: 0,
+      deleteBlockMessage: false
     }
   },
   components: {
       'block-menu': BlockMenu,
-      'block-cntx-menu': BlockContextMenu
+      'block-cntx-menu': BlockContextMenu,
+      'modal': modal
   },
-  props: ['block', 'putBlock', 'getBlock', 'recorder'],
+  props: ['block', 'putBlock', 'getBlock', 'recorder', 'blockOrderChanged'],
   mixins: [taskControls, apiConfig],
   computed: {
       blockClasses : function () {
@@ -242,27 +250,7 @@ export default {
     if (this.editor) this.editor.destroy();
   },
   mounted: function() {
-      this.editor = new MediumEditor('.content-wrap', {
-          toolbar: {
-            buttons: [
-              'bold', 'italic', 'underline',
-              'superscript', 'subscript',
-              'orderedlist', 'unorderedlist',
-//               'html', 'anchor',
-              'quoteButton'
-            ]
-          },
-          buttonLabels: 'fontawesome',
-          quotesList: this.authors,
-          onQuoteSave: this.onQuoteSave,
-          extensions: {
-            'quoteButton': new QuoteButton(),
-            'quotePreview': new QuotePreview()
-          },
-          disableEditing: !this.tc_isShowEdit(this.block._id)
-      });
-//       this.editor.subscribe('hideToolbar', (data, editable)=>{});
-//       this.editor.subscribe('positionToolbar', ()=>{})
+      this.initEditor();
       this.blockAudio = {'map': this.block.content, 'src': this.block.audiosrc ? this.block.audiosrc : ''};
       if (!this.player && this.blockAudio.src) {
           this.blockAudio.src = this.blockAudio.src + '?' + (new Date()).toJSON();
@@ -271,6 +259,31 @@ export default {
   },
   methods: {
       ...mapActions(['putMetaAuthors']),
+      initEditor(force) {
+        if (!this.editor || force === true) {
+          this.editor = new MediumEditor('.content-wrap', {
+              toolbar: {
+                buttons: [
+                  'bold', 'italic', 'underline',
+                  'superscript', 'subscript',
+                  'orderedlist', 'unorderedlist',
+    //               'html', 'anchor',
+                  'quoteButton'
+                ]
+              },
+              buttonLabels: 'fontawesome',
+              quotesList: this.authors,
+              onQuoteSave: this.onQuoteSave,
+              extensions: {
+                'quoteButton': new QuoteButton(),
+                'quotePreview': new QuotePreview()
+              },
+              disableEditing: !this.tc_isShowEdit(this.block._id)
+          });
+    //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
+    //       this.editor.subscribe('positionToolbar', ()=>{})
+        }
+      },
       onQuoteSave: function() {
         this.putMetaAuthors(this.authors).then(()=>{
           this.update();
@@ -589,6 +602,26 @@ export default {
         //console.log(this.reRecordPosition, this.blockAudio.map.replace(/"/g, '\\"'));
         this.startRecording();
       },
+      insertBlockBefore() {
+        this.$emit('insertBefore', this.block._id);
+      },
+      insertBlockAfter() {
+        this.$emit('insertAfter', this.block._id);
+      },
+      deleteBlock() {
+        this.deleteBlockMessage = false;
+        this.$emit('deleteBlock', this.block._id);
+      },
+      setChanged(val) {
+        if (!this.blockOrderChanged || !val) {
+          this.isChanged = val;
+        }
+      },
+      setUpdated(val) {
+        if (!this.blockOrderChanged || !val) {
+          this.isUpdated = val;
+        }
+      },
       _getParent(node, tag) {
         if (node.localName == tag) {
           return node;
@@ -650,12 +683,15 @@ export default {
       }
   },
   watch: {
+      'block._id' (newVal) {
+        this.isUpdated = false;
+      },
       'block._rev' (newVal) {
-          console.log('block._rev', newVal);
-          this.isUpdated = true;
+          //console.log('block._rev', newVal);
+          this.setUpdated(true);
           setTimeout(() => {
-              this.isUpdated = false;
-          }, 2000);
+              this.setUpdated(false);
+          }, 30000);
           if (!this.blockAudio.src || !this.tc_showBlockNarrate(this.block._id)) {
             this.blockAudio = {
               'src': this.block.audiosrc ? this.block.audiosrc + '?' + (new Date()).toJSON() : '',
@@ -664,7 +700,7 @@ export default {
           }
       },
       'block.type' (newVal) {
-        this.isChanged = true;
+        this.setChanged(true);
       },
       'blockAudio.src' (newVal) {
         if (newVal) {
