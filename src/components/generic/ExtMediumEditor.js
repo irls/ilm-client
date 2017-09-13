@@ -91,6 +91,16 @@ let QuoteButton = MediumEditor.Extension.extend({
           let range = sel.getRangeAt(0);
           quote.appendChild(range.extractContents());
           range.insertNode(quote);
+          let prev = node.previousSibling;
+          if (prev.textContent.length == 0) {
+            let prevParent = prev.parentNode;
+            prevParent.removeChild(prev);
+          }
+          let next = node.nextSibling;
+          if (next.textContent.length == 0) {
+            let prevParent = next.parentNode;
+            prevParent.removeChild(next);
+          }
         }
       }
 
@@ -530,16 +540,26 @@ let SuggestButton = MediumEditor.Extension.extend({
 
     let value = this.suggestFormInput.value.trim();
     if (value.length) {
-      let quote = document.createElement(this.wrapNode);
-      quote.dataset.suggestion = value;
+      let node = document.createElement(this.wrapNode);
+      node.dataset.suggestion = value;
       if (this.isActive()) this.doSuggestRemove();
 
       if (window.getSelection) {
         let sel = window.getSelection();
         if (sel.rangeCount) {
           let range = sel.getRangeAt(0);
-          quote.appendChild(range.extractContents());
-          range.insertNode(quote);
+          node.appendChild(range.extractContents());
+          range.insertNode(node);
+          let prev = node.previousSibling;
+          if (prev.textContent.length == 0) {
+            let prevParent = prev.parentNode;
+            prevParent.removeChild(prev);
+          }
+          let next = node.nextSibling;
+          if (next.textContent.length == 0) {
+            let prevParent = next.parentNode;
+            prevParent.removeChild(next);
+          }
         }
       }
 
