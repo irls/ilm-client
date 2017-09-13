@@ -310,7 +310,9 @@
 import Vue from 'vue'
 import moment from 'moment'
 import { mapGetters, mapActions }    from 'vuex'
-import { QuoteButton, QuotePreview } from '../generic/ExtMediumEditor';
+import {  QuoteButton, QuotePreview,
+          SuggestButton, SuggestPreview
+        } from '../generic/ExtMediumEditor';
 import ReadAlong          from 'readalong'
 import BlockMenu          from '../generic/BlockMenu';
 import BlockContextMenu   from '../generic/BlockContextMenu';
@@ -329,6 +331,7 @@ export default {
       flagsSel: false,
       flagEl: 'f',
       quoteEl: 'w',
+      suggestEl: 'sg',
       footEl: 'sup',
       isHideArchFlags: true,
       isHideArchParts: true,
@@ -418,15 +421,18 @@ export default {
                   'superscript', 'subscript',
                   'orderedlist', 'unorderedlist',
     //               'html', 'anchor',
-                  'quoteButton'
+                  'quoteButton', 'suggestButton'
                 ]
               },
               buttonLabels: 'fontawesome',
               quotesList: this.authors,
               onQuoteSave: this.onQuoteSave,
+              suggestEl: this.suggestEl,
               extensions: {
                 'quoteButton': new QuoteButton(),
-                'quotePreview': new QuotePreview()
+                'quotePreview': new QuotePreview(),
+                'suggestButton': new SuggestButton(),
+                'suggestPreview': new SuggestPreview()
               },
               disableEditing: !this.tc_isShowEdit(this.block._id)
           });
@@ -1369,6 +1375,10 @@ export default {
     color: teal;
   }
 
+  [data-suggestion] {
+    background: yellow;
+  }
+
   [data-flag] {
     position: relative;
     border-bottom: 2px solid red;
@@ -1446,15 +1456,26 @@ export default {
 
   .medium-editor-toolbar-form {
 
-    .quote-input {
-      position: relative;
-      height: 300px;
+    .medium-editor-toolbar-input {
+
+      &.quote-input {
+        position: relative;
+        font-size: 16px;
+        padding-left: 8px;
+        /*line-height: 20px;*/
+      }
+
+      &.suggest-input {
+        position: relative;
+        font-size: 16px;
+        padding-left: 8px;
+      }
     }
 
     ul.quotes-list {
       display: flex;
       flex-direction: column;
-      margin-top: -12px;
+      margin-top: -4px;
       border: 1px solid #dbdbdb;
       border-radius: 0 0 3px 3px;
       position: absolute;
