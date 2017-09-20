@@ -14,6 +14,7 @@
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
+              @joinBlocks="joinBlocks"
           />
         </div>
         <!--<div class='col'>-->
@@ -129,45 +130,24 @@ export default {
                       change.doc.audiosrc = process.env.ILM_API + change.doc.audiosrc;
                     }
                     if (change.deleted === true) {
-                      let par = el.slice(0, idx1);
-                      let next = el.slice(idx1);
-                      
-                      next.forEach(_b => {
-                        if (_b._id != change.id) {
-                          par.push(_b);
-                        }
-                      });
-                      this.setBlockOrderChanged(true);
-                      Vue.set(this.parlist, idx0, par);
-                      this.initEditors(change.doc);
+                      el.splice(idx1, 1);
+                      this.onBlockNumberChange(change.doc, idx0)
                     } else {
                       Vue.set(this.parlist[idx0], idx1, new BookBlock(change.doc));
                     }
                 } else if (prev_block && block.index > change.doc.index && prev_block.index < change.doc.index) {// new block
-                  let par = el.slice(0, idx1);
-                  let next = el.slice(idx1);
-                  par.push(change.doc);
-                  next.forEach(_b => {
-                    par.push(_b);
-                  });
-                  this.setBlockOrderChanged(true);
-                  Vue.set(this.parlist, idx0, par);
-                  this.initEditors(change.doc, true);
+                  el.splice(idx1, 0, new BookBlock(change.doc))
+                  this.onBlockNumberChange(change.doc, idx0)
                 } else if (!prev_block && idx0 == 0 && idx1 == 0 && change.doc.index < block.index) {// new block before list
-                  let par = this.parlist[idx0];
-                  par.unshift(change.doc);
-                  this.setBlockOrderChanged(true);
-                  Vue.set(this.parlist, idx0, par);
-                  this.initEditors(change.doc, true);
+                  this.parlist[idx0].unshift(new BookBlock(change.doc));
+                  this.onBlockNumberChange(change.doc, idx0);
                 }
                 prev_block = block;
             });
         });
         if (prev_block && this.isAllLoaded && change.doc.index > prev_block.index) {// new block in the bottom
-          let par = this.parlist[this.parlist.length - 1];
-          par.push(change.doc);
-          Vue.set(this.parlist, this.parlist.length - 1, par);
-          this.initEditors(change.doc, true);
+          this.parlist[this.parlist.length - 1].push(new BookBlock(change.doc));
+          this.onBlockNumberChange(change.doc, this.parlist.length - 1);
         }
         this.initRecorder();
     },
@@ -254,19 +234,16 @@ export default {
         }
       }
     },
-    initEditors(block, on_added) {
-      let self = this;
-      let t = setInterval(function() {
-        let check = on_added === true ? $('[id="' + block._id + '"]').length > 0 : $('[id="' + block._id + '"]').length == 0;
-        if (check) {
-          clearInterval(t);
-          self.$children.forEach(c => {
-            if (c.block && c.block.index >= block.index) {
-              c.initEditor(true);
-            }
-          });
+    initEditors(block, par_index) {
+      let ids = [];
+      this.parlist[par_index].forEach(b => {
+        ids.push(b._id);
+      });
+      this.$children.forEach(c => {
+        if (c.block && c.block.index >= block.index && ids.indexOf(c.block._id) !== -1) {
+          c.initEditor(true);
         }
-      }, 100);
+      });
     },
     findNextBlock(block) {
       let next = false;
@@ -321,12 +298,42 @@ export default {
             --this.parlistSkip;
           })
     },
+    joinBlocks(block, direction) {
+      let api_url = this.API_URL + 'book/block_join/';
+      let api = this.$store.state.auth.getHttp();
+      api.post(api_url, {
+        block_id: block._id,
+        direction: direction
+      });
+    },
     setBlockOrderChanged(val) {
       this.blockOrderChanged = val;
       let self = this;
       setTimeout(function() {
         self.blockOrderChanged = !val;
       }, 1000);
+    },
+    refreshBlocksProperties(par_index) {
+      let ids = [];
+      this.parlist[par_index].forEach(b => {
+        ids.push(b._id);
+      });
+      this.$children.forEach(c => {
+        if (c.block && ids.indexOf(c.block._id) !== -1) {
+          this.refreshBlockProperties(c);
+        }
+      });
+    },
+    refreshBlockProperties(el) {
+      el.updateFlagStatus(el.block._id);
+    },
+    onBlockNumberChange(block, par_index) {
+      let self = this;
+      Vue.nextTick(function() {
+        self.refreshBlocksProperties(par_index);
+        self.initEditors(block, par_index);
+      });
+      this.setBlockOrderChanged(true);
     }
   },
   events: {
