@@ -10,7 +10,7 @@ let QuoteButton = MediumEditor.Extension.extend({
   value: '',
   isListOpen: false,
 
-  wrapNode: 'w',
+  wrapNode: 'qq',
 
   formSaveLabel: '&#10003;',
   formCloseLabel: '&times;',

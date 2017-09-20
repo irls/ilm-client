@@ -42,13 +42,13 @@
                         Hide archived flags</li>
 
                       <li class="separator"></li>
-                      <template v-if="tc_hasTask('content_cleanup')">
+                      <template v-if="tc_hasTask('content_cleanup') || isEditor">
                         <li @click="insertBlockBefore()">Insert block before</li>
                         <li @click="insertBlockAfter()">Insert block after</li>
                         <li @click="deleteBlockMessage = true">Delete block</li>
                         <li>Split block</li>
-                        <li>Join with previous block</li>
-                        <li>Join with next block</li>
+                        <li @click="joinWithPrevious()">Join with previous block</li>
+                        <li @click="joinWithNext()">Join with next block</li>
                       </template>
                       <li class="separator"></li>
                       <li @click="discardBlock">
@@ -118,7 +118,7 @@
                 v-html="block.content"
                 :class="[ block.type, block.classes, {
                   'updated': isUpdated,
-                  'playing': isAudStarted || tc_showBlockNarrate(block._id),
+                  'playing': blockAudio.src,
                   'hide-archive': isHideArchFlags
                 }]"
                 :data-audiosrc="blockAudio.src"
@@ -138,7 +138,7 @@
                     :toggleHideArchParts="toggleHideArchParts"
                     :countArchParts="countArchParts"
                 >
-
+                  
                   <template v-for="(part, partIdx) in flagsSel.parts">
                     <template v-if="part.status!=='hidden' || !isHideArchFlags || !isHideArchParts">
                     <li>
@@ -328,7 +328,7 @@ export default {
       range: false,
       flagsSel: false,
       flagEl: 'f',
-      quoteEl: 'w',
+      quoteEl: 'qq',
       footEl: 'sup',
       isHideArchFlags: true,
       isHideArchParts: true,
@@ -382,7 +382,8 @@ export default {
           auth: 'auth',
           book: 'currentBook',
           meta: 'currentBookMeta',
-          authors: 'authors'
+          authors: 'authors',
+          isEditor: 'isEditor'
       })
   },
   beforeDestroy:  function() {
@@ -712,6 +713,7 @@ export default {
         if (foundBlockFlag.length == 0) {
           flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
           this.$refs.blockFlagControl.dataset.status = 'open';
+          this.isChanged = true;
         }
 
         this.flagsSel = this.block.flags.filter((flag)=>{
@@ -843,11 +845,11 @@ export default {
       },
       selectCurrentBlock() {
         $('#booksarea').addClass('recording-background');
-        $('#' + this.block._id + ' div.table-body.-content').addClass('recording-block');
+        $('[id="' + this.block._id + '"]' + ' div.table-body.-content').addClass('recording-block');
       },
       unselectCurrentBlock() {
         $('#booksarea').removeClass('recording-background')
-        $('#' + this.block._id + ' div.table-body.-content').removeClass('recording-block');
+        $('[id="' + this.block._id + '"]' + ' div.table-body.-content').removeClass('recording-block');
       },
       stopRecording(start_next) {
         start_next = typeof start_next === 'undefined' ? false : start_next;
@@ -951,6 +953,8 @@ export default {
       deleteBlock() {
         this.deleteBlockMessage = false;
         this.$emit('deleteBlock', this.block._id);
+        //this.block._deleted = true;
+        //this.assembleBlock();
       },
       setChanged(val) {
         if (!this.blockOrderChanged || !val) {
@@ -961,6 +965,12 @@ export default {
         if (!this.blockOrderChanged || !val) {
           this.isUpdated = val;
         }
+      },
+      joinWithPrevious() {
+        this.$emit('joinBlocks', this.block, 'previous');
+      },
+      joinWithNext() {
+        this.$emit('joinBlocks', this.block, 'next');
       },
       _getParent(node, tag) {
         if (node.localName == tag) {
@@ -1070,7 +1080,9 @@ export default {
         if (this.tc_showBlockNarrate(this.block._id)) {
           let isChanged = this.block.content != newVal;
           this.isAudioChanged = isChanged;
-          this.$refs.blockContent.innerHTML = newVal;
+          if (this.$refs.blockContent) {
+            this.$refs.blockContent.innerHTML = newVal;
+          }
           if (isChanged) {
             this.infoMessage = 'Audio updated';
           }
