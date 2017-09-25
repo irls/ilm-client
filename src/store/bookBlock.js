@@ -40,7 +40,7 @@ class BookBlock {
 
     this.deleted = init.deleted || false;
     this.section = typeof init.section !== 'undefined' ? init.section : false;
-    this.illustration = init.illustration
+    this.illustration = init.illustration;
   }
 
   clean() {
@@ -193,8 +193,12 @@ class BookBlock {
   
   getIllustration() {
     if (this.illustration) {
-      return process.env.ILM_API + this.illustration
+      return process.env.ILM_API + this.illustration;
     }
+  }
+  
+  needsText() {
+    return ['hr', 'illustration'].indexOf(this.type) === -1;
   }
 
 }

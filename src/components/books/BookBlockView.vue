@@ -112,8 +112,8 @@
             <div class="table-row ocean">
                 <hr v-if="block.type=='hr'" />
                 <div v-else-if="block.type == 'illustration'" class="illustration-block">
-                  <img :src="block.getIllustration()"/>
-                  <div v-if="tc_hasTask('content-cleanup') || isEditor">
+                  <img v-if="block.illustration" :src="block.getIllustration()"/>
+                  <div v-if="(tc_hasTask('content-cleanup') || isEditor) && !this.isChanged">
                     <form id="illustration-upload" enctype="multipart/form-data">
                       <label class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i>Browse...
@@ -424,7 +424,7 @@ export default {
   methods: {
       ...mapActions(['putMetaAuthors']),
       initEditor(force) {
-        if (!this.editor || force === true) {
+        if ((!this.editor || force === true) && this.block.needsText()) {
           this.editor = new MediumEditor('.content-wrap', {
               toolbar: {
                 buttons: [
