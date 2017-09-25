@@ -16,7 +16,8 @@ let defBlock = [
   'footnotes',
   'flags',
   '_deleted',
-  'section'
+  'section',
+  'illustration'
 ]
 
 class BookBlock {
@@ -39,6 +40,7 @@ class BookBlock {
 
     this.deleted = init.deleted || false;
     this.section = typeof init.section !== 'undefined' ? init.section : false;
+    this.illustration = init.illustration;
   }
 
   clean() {
@@ -56,6 +58,10 @@ class BookBlock {
     });
     if (this.audiosrc) {
       this.audiosrc = this.audiosrc.replace(process.env.ILM_API, '');
+    }
+    if (this.illustration) {
+      this.illustration = this.illustration.replace(process.env.ILM_API, '');
+      this.illustration = this.illustration.split('?').shift();
     }
     return _.pick(this, defBlock);
   }
@@ -183,6 +189,16 @@ class BookBlock {
       });
     });
     return count;
+  }
+  
+  getIllustration() {
+    if (this.illustration) {
+      return process.env.ILM_API + this.illustration;
+    }
+  }
+  
+  needsText() {
+    return ['hr', 'illustration'].indexOf(this.type) === -1;
   }
 
 }
