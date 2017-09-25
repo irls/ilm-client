@@ -111,7 +111,17 @@
             </div>
             <div class="table-row ocean">
                 <hr v-if="block.type=='hr'" />
-
+                <div v-else-if="block.type == 'illustration'" class="illustration-block">
+                  <img :src="block.getIllustration()"/>
+                  <div v-if="tc_hasTask('content-cleanup') || isEditor">
+                    <form id="illustration-upload" enctype="multipart/form-data">
+                      <label class='btn btn-default' type="file">
+                      <i class="fa fa-folder-open-o" aria-hidden="true"></i>Browse...
+                        <input type="file" v-show="false" name="illustration" accept="image/*" v-on:change="uploadIllustration($event)" />
+                      </label>
+                    </form>
+                  </div>
+                </div>
                 <div v-else class="content-wrap"
                 :id="'content-'+block._id"
                 ref="blockContent"
@@ -501,7 +511,14 @@ export default {
           });
       },
       assembleBlock: function(el) {
-        this.block.content = this.$refs.blockContent.innerHTML;
+        switch (this.block.type) {
+          case 'illustration':
+            this.block.content = '';
+            break;
+          default:
+            this.block.content = this.$refs.blockContent.innerHTML;
+            break;
+        }
         this.block.classes = [this.block.classes];
 
         this.checkBlockContentFlags();
@@ -1036,6 +1053,26 @@ export default {
             }
           } while (next && next !== endElement);
         }
+      },
+      uploadIllustration(event) {
+        
+        let fieldName = event.target.name;
+        let fileList = event.target.files || event.dataTransfer.files
+        let file = fileList[0];
+        let formData = new FormData();
+        formData.append(fieldName, file, file.name);
+        let vu_this = this
+        let api = this.$store.state.auth.getHttp()
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/image';
+        api.post(api_url, formData, {}).then(function(response){
+          if (response.status===200) {
+            // hide modal after one second
+          } else {
+            
+          }
+        }).catch((err) => {
+          console.log(err)
+        });
       }
   },
   watch: {
@@ -1044,6 +1081,9 @@ export default {
       },
       'block._rev' (newVal) {
           //console.log('block._rev', newVal);
+          if (this.block.illustration) {
+            this.block.illustration = this.block.illustration.split('?').shift() + '?' + Date.now()
+          }
           this.setUpdated(true);
           setTimeout(() => {
               this.setUpdated(false);
@@ -1269,6 +1309,13 @@ export default {
     .block-menu {
       .fa, .glyphicon {
         margin-right: 5px;
+      }
+    }
+    .illustration-block {
+      img {
+        border: double black 10px;
+        max-height: 85vh;
+        padding: 4px;
       }
     }
 }
