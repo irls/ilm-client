@@ -2,7 +2,7 @@
 <div class="container-fluid">
 
     <template v-for="(sublist, page_Idx) in parlist">
-    <div class="row" v-for="(block, block_Idx) in sublist">
+    <div class="row" v-for="(block, block_Idx) in sublist" v-bind:key="block_Idx">
         <div class='col'>
           <BookBlockView
               :block="block"
@@ -248,7 +248,7 @@ export default {
     findNextBlock(block) {
       let next = false;
       for (let i = 0; i < this.parlist.length; ++i) {
-        next = this.parlist[i].find(p => { 
+        next = this.parlist[i].find(p => {
           return p.index > block.index;
         });
         if (next) {
@@ -268,7 +268,7 @@ export default {
       let index = false;
       let block;
       for (let i = 0; i < this.parlist.length; ++i) {
-        block = this.parlist[i].find(p => { 
+        block = this.parlist[i].find(p => {
           return p._id == block_id;
         });
         if (block) {
@@ -356,7 +356,7 @@ export default {
         $('#narrateStartCountdown').css('height', '100%')
       }
   },
-  
+
   beforeDestroy:  function() {
     window.removeEventListener('keydown', this.eventKeyDown);
   }
@@ -369,7 +369,7 @@ export default {
       display: none;
       position: absolute;
       width: 100%;
-      
+
       strong {
           margin: 0px 50%;
           display: block;

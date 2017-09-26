@@ -8,11 +8,11 @@ export default {
       }
     },
     mounted() {
-      
+
     },
     mixins: [api_config],
     methods: {
-      
+
       tc_hasTask(type) {
         return this.$store.state.tc_currentBookTasks.assignments && this.$store.state.tc_currentBookTasks.assignments.indexOf(type) !== -1;
       },
@@ -21,6 +21,13 @@ export default {
           return t.type == type
         })
         return task ? task : {}
+      },
+      tc_getBlockTask(blockid) {
+        let tasks = this.$store.state.tc_currentBookTasks.tasks.find((t) => {
+          return t.blockid == blockid;
+        })
+        if (tasks && tasks.isArray) return tasks[0];
+        return tasks;
       },
       tc_isShowRejectBlockAction(blockid) {
         return this.tc_hasTask('content_approve') && this.$store.state.tc_currentBookTasks.rejected_blocks.content.indexOf(blockid) === -1;

@@ -62,6 +62,8 @@ export const store = new Vuex.Store({
     isLoggedIn: state => state.isLoggedIn,
     isAdmin: state => state.isAdmin,
     isEditor: state => state.isEditor,
+    isNarrator: state => state.isNarrator,
+    isProofer: state => state.isProofer,
     isLibrarian: state => state.isLibrarian,
     isBookkeeper: state => state.isBookkeeper,
     isEngineer: state => state.isEngineer,
@@ -74,6 +76,7 @@ export const store = new Vuex.Store({
     currentBookMeta: state => state.currentBookMeta,
     bookEditMode: state => state.editMode,
     allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode),
+    allowArchiving: state => state.isAdmin || state.isProofer,
     tc_currentBookTasks: state => state.tc_currentBookTasks,
     tc_tasksByBlock: state => state.tc_tasksByBlock,
     tc_userTasks: state => state.tc_userTasks,
@@ -153,6 +156,8 @@ export const store = new Vuex.Store({
       state.isLoggedIn = superlogin.authenticated()
       state.isAdmin = superlogin.confirmRole('admin')
       state.isEditor = superlogin.confirmRole('editor')
+      state.isNarrator = superlogin.confirmRole('narrator')
+      state.isProofer = superlogin.confirmRole('proofer')
       state.isLibrarian = superlogin.confirmRole('librarian')
       state.isBookkeeper = superlogin.confirmRole('bookkeeper')
       state.isEngineer = superlogin.confirmRole('engineer')
@@ -169,11 +174,11 @@ export const store = new Vuex.Store({
     },
 
     TASK_LIST_LOADED (state) {
-      state.tc_userTasks.total = 0;
+      let tc_userTasks = 0;
       state.tc_tasksByBlock = {};
       for (let jobid in state.tc_userTasks.list) {
         let job = Object.assign({}, state.tc_userTasks.list[jobid])
-        state.tc_userTasks.total+= job.tasks.length
+        tc_userTasks+= job.tasks.length
         if (job.bookid == state.currentBookid) {
           /*if (t.comment) {
             t.comment = t.comment.replace('\n', '<br>');
@@ -216,6 +221,7 @@ export const store = new Vuex.Store({
           state.tc_currentBookTasks = {job: job, tasks: job.tasks, assignments: assignments}
         }
       }
+      state.tc_userTasks.total = tc_userTasks;
       state.allowBookEditMode = state.tc_currentBookTasks.tasks.length > 0;
     }
 
@@ -385,14 +391,16 @@ export const store = new Vuex.Store({
     },
 
     putBlock ({commit, state, dispatch}, block) {
-
         let cleanBlock = block.clean();
         //console.log('putBlock', cleanBlock);
-        state.contentDB.get(cleanBlock._id).then(function(doc) {
-            return state.contentDB.put(cleanBlock);
-        }).then((response)=>{
-          // handle response
-        }).catch((err) =>{
+        return state.contentDB.get(cleanBlock._id)
+        .then(function(doc) {
+          return state.contentDB.put(cleanBlock)
+          .then((response) => {
+            // handle response
+          });
+        })
+        .catch((err) => {
             console.log('Block save error:', err);
         });
 
@@ -449,7 +457,24 @@ export const store = new Vuex.Store({
         }
       }
       commit('ALLOW_BOOK_EDIT_MODE', state.tc_currentBookTasks.tasks.length > 0);
+    },
+
+    tc_approveBookTask({state, commit}, task) {
+      axios.post(state.API_URL + 'task/' + task.blockid + '/approve_block',
+      {
+        'bookId': task.bookid || false,
+        'taskId': task._id || false,
+        'taskStep': task.nextStep || 'narrate-block',
+        'taskType': task.type || false
+      })
+      .then((list) => {
+        state.tc_tasksByBlock = {}
+        state.tc_userTasks = {list: list.data.rows, total: 0}
+        commit('TASK_LIST_LOADED')
+      })
+      .catch((err) => {})
     }
+
 
   }
 })

@@ -181,11 +181,6 @@ import Vue from 'vue';
       -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
     }
 
-/*    max-height: 350px;
-    overflow:scroll;
-    overflow-x:hidden;
-    overflow: hidden;*/
-
     &.-over::before, &.-under::after {
       content: "";
       position: absolute;

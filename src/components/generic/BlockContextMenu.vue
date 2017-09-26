@@ -6,8 +6,8 @@
     @click="close">
     <!--@blur="close"-->
     <slot></slot>
-    <li>top: {{top}}</li>
-    <li>left: {{left}}</li>
+    <!--<li>top: {{top}}</li>
+    <li>left: {{left}}</li>-->
 </ul>
 </template>
 

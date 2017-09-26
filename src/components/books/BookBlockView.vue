@@ -15,15 +15,14 @@
             </div>
         </div>
     </div>
-    <div class="table-cell">
+    <div class="table-cell" :class="{'completed': isCompleted}" >
         <div class="table-body -content"
         @mouseleave="onBlur"
         @click="onBlur">
-            <div class="table-row controls-top"
-            data-toggle="tooltip" v-bind:title="JSON.stringify(block)">
+            <div class="table-row controls-top" :data-json="JSON.stringify(block)">
 
               <div class="par-ctrl -hidden -left">
-                  <div class="block-menu" style="position: relative;">
+                  <div class="block-menu">
                     <i class="glyphicon glyphicon-menu-hamburger"
                     @click.prevent="$refs.blockMenu.open($event, block._id)">
                     </i>
@@ -49,8 +48,8 @@
                         <li>Split block</li>
                         <li @click="joinWithPrevious()">Join with previous block</li>
                         <li @click="joinWithNext()">Join with next block</li>
+                        <li class="separator"></li>
                       </template>
-                      <li class="separator"></li>
                       <li @click="discardBlock">
                         <i class="fa fa-undo" aria-hidden="true"></i>
                         Discard un-saved changes</li>
@@ -92,7 +91,7 @@
                         <i class="fa fa-stop-circle-o"
                           @click="audStop(block._id, $event)"></i>
                         <div class="empty-control"></div><!-- empty block to keep order -->
-                        </template>
+                      </template>
                   </template>
                   <template v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
                     <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i>
@@ -148,7 +147,7 @@
                     :toggleHideArchParts="toggleHideArchParts"
                     :countArchParts="countArchParts"
                 >
-                  
+
                   <template v-for="(part, partIdx) in flagsSel.parts">
                     <template v-if="part.status!=='hidden' || !isHideArchFlags || !isHideArchParts">
                     <li>
@@ -173,12 +172,12 @@
 
 
                     <a href="#" class="flag-control -right -top"
-                      v-if="part.status == 'resolved'"
+                      v-if="allowArchiving && part.status == 'resolved'"
                       @click.prevent="hideFlagPart($event, partIdx)">
                       Archive flag</a>
 
                     <a href="#" class="flag-control -right -top"
-                      v-if="part.status == 'hidden'"
+                      v-if="allowArchiving && part.status == 'hidden'"
                       @click.prevent="unHideFlagPart($event, partIdx)">
                       Unarchive flag</a>
 
@@ -221,7 +220,7 @@
                       @click.prevent="reopenFlagPart($event, partIdx)">
                       Re-open flag</a>
 
-                    <a v-if="canDeleteFlagPart(part) && part.status == 'open' && !part.collapsed"
+                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed"
                       href="#" class="flag-control -left"
                       @click.prevent="resolveFlagPart($event, partIdx)">
                       Resolve flag</a>
@@ -245,15 +244,16 @@
                   <li class="separator"></li>
                   <li v-if="!range.collapsed" @click="addFlag($event, 'editor')">Flag for Editing</li>
                   <li v-if="!range.collapsed" @click="addFlag($event, 'narrator')">Flag for Narration</li>
-                  <li class="separator"></li>
                   <template v-if="!range.collapsed && blockAudio.src">
-                    <li class="menu-separator"></li>
+                    <li class="separator"></li>
                     <li @click="audPlayFromSelection()">Play from here</li>
                     <li @click="audPlaySelection()">Play selection</li>
                     <li @click="audDeleteSelection()">Delete audio in selection</li>
-                    <li class="menu-separator"></li>
                   </template>
-                  <li v-if="!range.collapsed && tc_showBlockNarrate(block._id)" @click="reRecord">Re-record audio</li>
+                  <template v-if="!range.collapsed && tc_showBlockNarrate(block._id)">
+                    <li class="separator"></li>
+                    <li @click="reRecord">Re-record audio</li>
+                  </template>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
 
@@ -280,28 +280,27 @@
             </div>
 
             <div class="table-row controls-bottom">
-                <div class="save-block -hidden -left"
-                v-bind:class="{ '-disabled': !isChanged }"
-                @click="assembleBlock()">
-                    <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
-                </div>
-                <!--<div class="-left">
-                  Changed: {{isChanged}}
-                </div>-->
-                <div class="save-block -hidden -left"
-                v-bind:class="{ '-disabled': !isAudioChanged }"
-                @click="assembleBlockAudio()">
-                    <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
-                </div>
+              <div class="save-block -hidden -left"
+              v-bind:class="{ '-disabled': (!isChanged && !isAudioChanged) }"
+              @click="assembleBlockProxy">
+                  <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
+              </div>
               <div class="par-ctrl -hidden -right">
+                  <!--<span>isCompleted: {{isCompleted}}</span>-->
+                  <template v-if="!isCompleted">
                   <span>
                     <i class="glyphicon glyphicon-flag"
                       ref="blockFlagControl"
                       @click="handleBlockFlagClick"
                     ></i>
                   </span>
-                  <span v-bind:class="{ '-disabled': countFlags == 0 }"><i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
-                  <span><i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
+                  <span v-bind:class="{ '-disabled': isNeedWorkDisabled }"
+                    @click.prevent="reworkBlock">
+                    <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
+                  <span v-bind:class="{ '-disabled': isApproveDisabled }"
+                    @click.prevent="approveBlock">
+                    <i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
+                  </template>
               </div>
               <!--<div class="-hidden">-->
             </div>
@@ -391,12 +390,30 @@ export default {
       countFlags: function () {
           return this.block.flags && this.block.flags.length;
       },
+      isNeedWorkDisabled: function () {
+          let flagsSummary = this.block.calcFlagsSummary();
+          let executors = this.tc_currentBookTasks.job.executors;
+          if (executors[flagsSummary.dir] ==  this.auth.getSession().user_id) return true;
+
+          return flagsSummary.stat !== 'open';
+      },
+      isApproveDisabled: function () {
+          if (!(this.blockAudio && this.blockAudio.src)) return true;
+          if (!(this.block.calcFlagsSummary().stat !== 'open')) return true;
+          return false;
+      },
+      isCompleted: function () {
+          return this.tc_getBlockTask(this.block._id) ? false : true;
+      },
       ...mapGetters({
           auth: 'auth',
           book: 'currentBook',
           meta: 'currentBookMeta',
+          watchBlk: 'contentDBWatch',
+          tc_currentBookTasks: 'tc_currentBookTasks',
           authors: 'authors',
-          isEditor: 'isEditor'
+          isEditor: 'isEditor',
+          allowArchiving: 'allowArchiving',
       })
   },
   beforeDestroy:  function() {
@@ -422,7 +439,10 @@ export default {
 
   },
   methods: {
-      ...mapActions(['putMetaAuthors']),
+      ...mapActions([
+        'putMetaAuthors',
+        'tc_approveBookTask'
+      ]),
       initEditor(force) {
         if ((!this.editor || force === true) && this.block.needsText()) {
           this.editor = new MediumEditor('.content-wrap', {
@@ -458,6 +478,8 @@ export default {
       },
       onHover: function() {
         //this.$refs.blockContent.focus();
+        //console.log(this.block.calcFlagsSummary());
+        //console.log(this.tc_currentBookTasks.job.executors);
       },
       onBlur: function() {
         if (this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
@@ -510,6 +532,13 @@ export default {
 
           });
       },
+
+      assembleBlockProxy: function (ev) {
+        if (this.isAudioChanged) return this.assembleBlockAudio(ev);
+        else if (this.isChanged) return this.assembleBlock(ev);
+        return BPromise.resolve();
+      },
+
       assembleBlock: function(el) {
         switch (this.block.type) {
           case 'illustration':
@@ -523,11 +552,10 @@ export default {
 
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
-
-        this.putBlock(this.block);
-        this.isChanged = false;
+        return this.putBlock(this.block).then(()=>{ this.isChanged = false });
       },
-      checkBlockContentFlags: function(el) {
+
+      checkBlockContentFlags: function(ev) {
         if (this.block.flags) this.block.flags.forEach((flag, flagIdx)=>{
           if (flag._id !== this.block._id) {
             let node = this.$refs.blockContent.querySelector(`[data-flag="${flag._id}"]`);
@@ -535,7 +563,8 @@ export default {
           }
         });
       },
-      assembleBlockAudio: function(el) {
+
+      assembleBlockAudio: function(ev) {
         if (this.blockAudio.map) {
           let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
           let api = this.$store.state.auth.getHttp();
@@ -546,13 +575,53 @@ export default {
                 this.block.audiosrc = response.data.audiosrc;
                 this.blockAudio.map = '';
                 this.blockAudio.src = '';
-                this.putBlock(this.block);
+                return this.putBlock(this.block);
               }
             })
             .catch(err => {});
         }
         this.isAudioChanged = false;
       },
+
+      reworkBlock: function(ev) {
+        if (!this.isNeedWorkDisabled) {
+          this.actionWithBlock(ev)
+        }
+      },
+
+      approveBlock: function(ev) {
+        if (!this.isApproveDisabled) {
+          this.actionWithBlock(ev);
+        }
+      },
+
+      actionWithBlock: function(ev) {
+        this.assembleBlockProxy(ev)
+        .then(()=>{
+          //console.log('audio', this.block.audiosrc);
+          let task = this.tc_getBlockTask(this.block._id);
+
+          if (!task) {
+             task = {
+              blockid: this.block._id,
+              bookid: this.block.bookid
+            }
+          }
+
+          let blockSummary = this.block.calcFlagsSummary();
+          task.nextStep = blockSummary.dir;
+
+          this.tc_approveBookTask(task)
+          .then(response => {
+            if (response.status == 200) {}
+          })
+          .catch(err => {});
+        });
+        this.$root.$emit('closeFlagPopup', true);
+//      this.assembleBlockProxy(ev).then(()=>{
+//      this.watchBlk.once('change', (change) => {
+      },
+
       audPlay: function(block_id, ev) {
         this.audCleanClasses(block_id, ev);
         this.player.playBlock('content-'+block_id);
@@ -760,6 +829,19 @@ export default {
         if (node) node.dataset.status = this.block.calcFlagStatus(flagId);
       },
 
+      canResolveFlagPart: function (flagPart) {
+          let result = false;
+          if (flagPart.creator === this.auth.getSession().user_id) {
+            result = true;
+            if (flagPart.comments.length) flagPart.comments.forEach((comment)=>{
+              if (comment.creator !== flagPart.creator) result = false;
+            });
+          } else {
+            if (this.$store.state.auth.confirmRole(flagPart.type)) result = true;
+          }
+          return result;
+      },
+
       canDeleteFlagPart: function (flagPart) {
           let result = false;
           if (flagPart.creator === this.auth.getSession().user_id) {
@@ -807,24 +889,28 @@ export default {
         this.flagsSel.parts[partIdx].status = 'resolved';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
+        this.isChanged = true;
       },
 
       reopenFlagPart: function(ev, partIdx) {
         this.flagsSel.parts[partIdx].status = 'open';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
+        this.isChanged = true;
       },
 
       hideFlagPart: function(ev, partIdx) {
         this.flagsSel.parts[partIdx].status = 'hidden';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
+        this.isChanged = true;
       },
 
       unHideFlagPart: function(ev, partIdx) {
         this.flagsSel.parts[partIdx].status = 'resolved';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
+        this.isChanged = true;
       },
 
       toggleArchFlags: function(ev, partIdx) {
@@ -1055,7 +1141,7 @@ export default {
         }
       },
       uploadIllustration(event) {
-        
+
         let fieldName = event.target.name;
         let fileList = event.target.files || event.dataTransfer.files
         let file = fileList[0];
@@ -1068,7 +1154,7 @@ export default {
           if (response.status===200) {
             // hide modal after one second
           } else {
-            
+
           }
         }).catch((err) => {
           console.log(err)
@@ -1219,6 +1305,12 @@ export default {
         width: 100px;
     }
 
+    &.completed {
+      background: #EFEFEF;
+      border-radius: 7px;
+      padding: 7px;
+    }
+
 }
 
 .table-row {
@@ -1304,9 +1396,21 @@ export default {
           box-shadow: 0 0 10px rgba(56, 171, 53, 0.7);
           transition: box-shadow 200ms;
       }
+
+    }
+
+    &.ocean {
+      .content-wrap {
+        &.header, &.subhead {
+          margin: 4px;
+        }
+      }
     }
 
     .block-menu {
+      display: inline-block;
+      position: relative;
+      width: 40px;
       .fa, .glyphicon {
         margin-right: 5px;
       }
@@ -1316,6 +1420,13 @@ export default {
         border: double black 10px;
         max-height: 85vh;
         padding: 4px;
+      }
+      .fa.fa-eye {
+        margin-right: 6px;
+      }
+      .fa.fa-undo {
+        margin-right: 7px;
+        margin-left: 2px;
       }
     }
 }
@@ -1335,6 +1446,7 @@ export default {
 }
 
 .par-ctrl {
+    width: auto;
     .fa-paragraph {
         margin-left: 4px;
     }
