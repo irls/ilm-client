@@ -158,15 +158,39 @@ class BookBlock {
   }
 
   calcFlagStatus(_id) {
-    let checker = {'open': 0, 'resolved': 0, 'hidden': 0};
+    let status = {'open': 0, 'resolved': 0, 'hidden': 0};
     this.flags.forEach((flag)=>{
       if (flag._id === _id) flag.parts.forEach((part)=>{
-        checker[part.status] += 1;
+        status[part.status] += 1;
       });
     });
-    if (checker.open > 0) return 'open';
-    if (checker.resolved > 0) return 'resolved';
+    if (status.open > 0) return 'open';
+    if (status.resolved > 0) return 'resolved';
     return 'hidden';
+  }
+
+  calcFlagsSummary() {
+    let status = {'open': 0, 'resolved': 0, 'hidden': 0};
+    let direction = {'editor': 0, 'narrator': 0};
+    if (this.flags && this.flags.length) {
+      this.flags.forEach((flag)=>{
+        if (flag.parts && flag.parts.length) {
+          flag.parts.forEach((part)=>{
+            status[part.status] += 1;
+            if (part.status == 'open') direction[part.type] += 1;
+          });
+        }
+      });
+    }
+    let flagsStatus = 'hidden';
+    if (status.resolved > 0) flagsStatus = 'resolved';
+    if (status.open > 0) flagsStatus = 'open';
+
+    let flagsDirection = 'proofer';
+    if (direction.narrator > 0) flagsDirection = 'narrator';
+    if (direction.editor > 0) flagsDirection = 'editor';
+
+    return {stat: flagsStatus, dir: flagsDirection}
   }
 
   countArchParts(_id) {

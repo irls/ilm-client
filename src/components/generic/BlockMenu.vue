@@ -37,9 +37,9 @@ import Vue from 'vue'
               case 'top' :
               {   /*(window.pageYOffset<110?110:0) - hack because of layout*/
                   if (y < this.$refs.menu.offsetHeight + (window.pageYOffset<120?120:0)) {
-                      this.top = target.offsetHeight + 'px';
+                      this.top = target.offsetHeight + 7 + 'px';
                   } else {
-                      this.top = - this.$refs.menu.offsetHeight - 5 + 'px';
+                      this.top = - this.$refs.menu.offsetHeight - 2 + 'px';
                   }
                   this.left = 0 + 'px';
               }
