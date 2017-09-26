@@ -113,7 +113,7 @@
                 <hr v-if="block.type=='hr'" />
                 <div v-else-if="block.type == 'illustration'" class="illustration-block">
                   <img v-if="block.illustration" :src="block.getIllustration()"/>
-                  <div v-if="(tc_hasTask('content-cleanup') || isEditor) && !this.isChanged">
+                  <div v-if="(tc_hasTask('content_cleanup') || isEditor) && !this.isChanged">
                     <form id="illustration-upload" enctype="multipart/form-data">
                       <label class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i>Browse...

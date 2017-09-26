@@ -12,6 +12,11 @@
         <button @click="goBack" class='booksbtn btn btn-default'>
           <i class="fa fa-chevron-left fa-lg"></i> Back <i class="fa fa-book "></i>
         </button>
+        <template v-if="tc_hasTask('content_cleanup')">
+          <a :href="getCurrentBookUrl()" 
+            target="_blank" class="btn btn-default" >Download</a>
+          <button class="btn btn-default">Re-Import</button>
+        </template>
 
         <ButtonRadioGroup id='viewmode' :values="editModes" @changeEditMode='viewSelect' :selected="editMode" :default="editMode"></ButtonRadioGroup>
 
@@ -23,22 +28,24 @@
 <script>
 import ButtonRadioGroup from '../generic/ButtonRadioGroup'
 import access from "../../mixins/access.js"
+import taskControls from '../../mixins/task_controls.js';
+import apiConfig from '../../mixins/api_config.js'
 
 export default {
   data () {
     return {
       editMode: 'Editor',
       editModes: {
-        'Editor': 'Editor',
+        'Editor': 'Editor'/*,
         'HTML': 'HTML',
         'JSON': 'JSON',
-        'Display': 'Display'
+        'Display': 'Display'*/
       },
       //currentBook: this.$store.state.currentBook,
 
     }
   },
-  mixins: [access],
+  mixins: [access, taskControls, apiConfig],
   methods: {
     currentBook: function() {
       return this.$store.state.currentBook
@@ -55,6 +62,9 @@ export default {
       let currentBookid = this.$store.state.currentBookid
       let path = '/books' + (currentBookid?'/'+currentBookid:'')
       this.$router.push(path)
+    },
+    getCurrentBookUrl() {
+      return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/html";
     }
   },
   components: {
