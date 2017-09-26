@@ -467,8 +467,8 @@ export default {
       },
       onHover: function() {
         //this.$refs.blockContent.focus();
-        console.log(this.block.calcFlagsSummary());
-        console.log(this.tc_currentBookTasks.job.executors);
+        //console.log(this.block.calcFlagsSummary());
+        //console.log(this.tc_currentBookTasks.job.executors);
       },
       onBlur: function() {
         if (this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
@@ -547,10 +547,8 @@ export default {
       },
 
       assembleBlockAudio: function(ev) {
-        console.log('assembleBlockAudio');
         if (this.blockAudio.map) {
           let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
-          console.log('assembleBlockAudio', api_url);
           let api = this.$store.state.auth.getHttp();
           return api.post(api_url, {}, {})
             .then(response => {
@@ -582,8 +580,7 @@ export default {
       actionWithBlock: function(ev) {
         this.assembleBlockProxy(ev)
         .then(()=>{
-          console.log(this.block._id, this.block.calcFlagsSummary());
-          console.log('audio', this.block.audiosrc);
+          //console.log('audio', this.block.audiosrc);
           let task = this.tc_getBlockTask(this.block._id);
 
           if (!task) {
