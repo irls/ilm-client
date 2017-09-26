@@ -41,13 +41,13 @@
                         Hide archived flags</li>
 
                       <li class="separator"></li>
-                      <template v-if="tc_hasTask('content_cleanup')">
+                      <template v-if="tc_hasTask('content_cleanup') || isEditor">
                         <li @click="insertBlockBefore()">Insert block before</li>
                         <li @click="insertBlockAfter()">Insert block after</li>
                         <li @click="deleteBlockMessage = true">Delete block</li>
                         <li>Split block</li>
-                        <li>Join with previous block</li>
-                        <li>Join with next block</li>
+                        <li @click="joinWithPrevious()">Join with previous block</li>
+                        <li @click="joinWithNext()">Join with next block</li>
                         <li class="separator"></li>
                       </template>
                       <li @click="discardBlock">
@@ -110,14 +110,24 @@
             </div>
             <div class="table-row ocean">
                 <hr v-if="block.type=='hr'" />
-
+                <div v-else-if="block.type == 'illustration'" class="illustration-block">
+                  <img v-if="block.illustration" :src="block.getIllustration()"/>
+                  <div v-if="(tc_hasTask('content-cleanup') || isEditor) && !this.isChanged">
+                    <form id="illustration-upload" enctype="multipart/form-data">
+                      <label class='btn btn-default' type="file">
+                      <i class="fa fa-folder-open-o" aria-hidden="true"></i>Browse...
+                        <input type="file" v-show="false" name="illustration" accept="image/*" v-on:change="uploadIllustration($event)" />
+                      </label>
+                    </form>
+                  </div>
+                </div>
                 <div v-else class="content-wrap"
                 :id="'content-'+block._id"
                 ref="blockContent"
                 v-html="block.content"
                 :class="[ block.type, block.classes, {
                   'updated': isUpdated,
-                  'playing': isAudStarted || tc_showBlockNarrate(block._id),
+                  'playing': blockAudio.src,
                   'hide-archive': isHideArchFlags
                 }]"
                 :data-audiosrc="blockAudio.src"
@@ -329,7 +339,7 @@ export default {
       range: false,
       flagsSel: false,
       flagEl: 'f',
-      quoteEl: 'w',
+      quoteEl: 'qq',
       suggestEl: 'sg',
       footEl: 'sup',
       isHideArchFlags: true,
@@ -401,8 +411,9 @@ export default {
           meta: 'currentBookMeta',
           watchBlk: 'contentDBWatch',
           tc_currentBookTasks: 'tc_currentBookTasks',
+          authors: 'authors',
+          isEditor: 'isEditor',
           allowArchiving: 'allowArchiving',
-          authors: 'authors'
       })
   },
   beforeDestroy:  function() {
@@ -433,7 +444,7 @@ export default {
         'tc_approveBookTask'
       ]),
       initEditor(force) {
-        if (!this.editor || force === true) {
+        if ((!this.editor || force === true) && this.block.needsText()) {
           this.editor = new MediumEditor('.content-wrap', {
               toolbar: {
                 buttons: [
@@ -528,8 +539,15 @@ export default {
         return BPromise.resolve();
       },
 
-      assembleBlock: function(ev) {
-        this.block.content = this.$refs.blockContent.innerHTML;
+      assembleBlock: function(el) {
+        switch (this.block.type) {
+          case 'illustration':
+            this.block.content = '';
+            break;
+          default:
+            this.block.content = this.$refs.blockContent.innerHTML;
+            break;
+        }
         this.block.classes = [this.block.classes];
 
         this.checkBlockContentFlags();
@@ -787,6 +805,7 @@ export default {
         if (foundBlockFlag.length == 0) {
           flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
           this.$refs.blockFlagControl.dataset.status = 'open';
+          this.isChanged = true;
         }
 
         this.flagsSel = this.block.flags.filter((flag)=>{
@@ -935,11 +954,11 @@ export default {
       },
       selectCurrentBlock() {
         $('#booksarea').addClass('recording-background');
-        $('#' + this.block._id + ' div.table-body.-content').addClass('recording-block');
+        $('[id="' + this.block._id + '"]' + ' div.table-body.-content').addClass('recording-block');
       },
       unselectCurrentBlock() {
         $('#booksarea').removeClass('recording-background')
-        $('#' + this.block._id + ' div.table-body.-content').removeClass('recording-block');
+        $('[id="' + this.block._id + '"]' + ' div.table-body.-content').removeClass('recording-block');
       },
       stopRecording(start_next) {
         start_next = typeof start_next === 'undefined' ? false : start_next;
@@ -1043,6 +1062,8 @@ export default {
       deleteBlock() {
         this.deleteBlockMessage = false;
         this.$emit('deleteBlock', this.block._id);
+        //this.block._deleted = true;
+        //this.assembleBlock();
       },
       setChanged(val) {
         if (!this.blockOrderChanged || !val) {
@@ -1053,6 +1074,12 @@ export default {
         if (!this.blockOrderChanged || !val) {
           this.isUpdated = val;
         }
+      },
+      joinWithPrevious() {
+        this.$emit('joinBlocks', this.block, 'previous');
+      },
+      joinWithNext() {
+        this.$emit('joinBlocks', this.block, 'next');
       },
       _getParent(node, tag) {
         if (node.localName == tag) {
@@ -1112,6 +1139,26 @@ export default {
             }
           } while (next && next !== endElement);
         }
+      },
+      uploadIllustration(event) {
+
+        let fieldName = event.target.name;
+        let fileList = event.target.files || event.dataTransfer.files
+        let file = fileList[0];
+        let formData = new FormData();
+        formData.append(fieldName, file, file.name);
+        let vu_this = this
+        let api = this.$store.state.auth.getHttp()
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/image';
+        api.post(api_url, formData, {}).then(function(response){
+          if (response.status===200) {
+            // hide modal after one second
+          } else {
+
+          }
+        }).catch((err) => {
+          console.log(err)
+        });
       }
   },
   watch: {
@@ -1120,6 +1167,9 @@ export default {
       },
       'block._rev' (newVal) {
           //console.log('block._rev', newVal);
+          if (this.block.illustration) {
+            this.block.illustration = this.block.illustration.split('?').shift() + '?' + Date.now()
+          }
           this.setUpdated(true);
           setTimeout(() => {
               this.setUpdated(false);
@@ -1162,7 +1212,9 @@ export default {
         if (this.tc_showBlockNarrate(this.block._id)) {
           let isChanged = this.block.content != newVal;
           this.isAudioChanged = isChanged;
-          this.$refs.blockContent.innerHTML = newVal;
+          if (this.$refs.blockContent) {
+            this.$refs.blockContent.innerHTML = newVal;
+          }
           if (isChanged) {
             this.infoMessage = 'Audio updated';
           }
@@ -1361,6 +1413,13 @@ export default {
       width: 40px;
       .fa, .glyphicon {
         margin-right: 5px;
+      }
+    }
+    .illustration-block {
+      img {
+        border: double black 10px;
+        max-height: 85vh;
+        padding: 4px;
       }
       .fa.fa-eye {
         margin-right: 6px;

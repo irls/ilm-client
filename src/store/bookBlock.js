@@ -14,7 +14,10 @@ let defBlock = [
   'parnum',
   'audiosrc',
   'footnotes',
-  'flags'
+  'flags',
+  '_deleted',
+  'section',
+  'illustration'
 ]
 
 class BookBlock {
@@ -23,7 +26,7 @@ class BookBlock {
     this._id = init._id || '';
     this._rev = init._rev || '';
     this.bookid = init.bookid || '';
-    this.index = init.index || '';
+    this.index = typeof init.index !== 'undefined' ? init.index : '';
 
     this.tag = init.tag || '';
     this.content = init.content || '';
@@ -36,6 +39,8 @@ class BookBlock {
     this.flags = init.flags || [];
 
     this.deleted = init.deleted || false;
+    this.section = typeof init.section !== 'undefined' ? init.section : false;
+    this.illustration = init.illustration;
   }
 
   clean() {
@@ -51,6 +56,13 @@ class BookBlock {
       })
       else this.flags.splice(flagIdx, 1);
     });
+    if (this.audiosrc) {
+      this.audiosrc = this.audiosrc.replace(process.env.ILM_API, '');
+    }
+    if (this.illustration) {
+      this.illustration = this.illustration.replace(process.env.ILM_API, '');
+      this.illustration = this.illustration.split('?').shift();
+    }
     return _.pick(this, defBlock);
   }
 
@@ -201,6 +213,16 @@ class BookBlock {
       });
     });
     return count;
+  }
+  
+  getIllustration() {
+    if (this.illustration) {
+      return process.env.ILM_API + this.illustration;
+    }
+  }
+  
+  needsText() {
+    return ['hr', 'illustration'].indexOf(this.type) === -1;
   }
 
 }
