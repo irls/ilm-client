@@ -38,6 +38,7 @@
     "uniqid": "^4.1.1",
     "vue": "^2.1.10",
     "vue-carousel-3d": "^0.1.8",
+    "vue-clip": "1.0.0",
     "vue-events": "^3.0.1",
     "vue-infinite-loading": "^2.0.4",
     "vue-my-dropdown": "^2.0.2",
@@ -46,7 +47,10 @@
     "vue-round-filter": "^1.1.2",
     "vue-router": "^2.2.0",
     "vue-strap": "github:wffranco/vue-strap",
+    "vue-transmit": "^5.2.0",
+    "vue2-dropzone": "^2.0.0",
     "vue2-filters": "^0.1.9",
+    "vue2-multi-uploader": "^1.4.1",
     "vuex": "^2.2.1",
     "vuex-router-sync": "^4.1.2"
   },

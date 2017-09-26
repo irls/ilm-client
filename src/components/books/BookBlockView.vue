@@ -114,12 +114,21 @@
                 <div v-else-if="block.type == 'illustration'" class="illustration-block">
                   <img v-if="block.illustration" :src="block.getIllustration()"/>
                   <div v-if="(tc_hasTask('content-cleanup') || isEditor) && !this.isChanged">
-                    <form id="illustration-upload" enctype="multipart/form-data">
-                      <label class='btn btn-default' type="file">
-                      <i class="fa fa-folder-open-o" aria-hidden="true"></i>Browse...
-                        <input type="file" v-show="false" name="illustration" accept="image/*" v-on:change="uploadIllustration($event)" />
-                      </label>
-                    </form>
+                    <!-- <dropzone id="illustrationUpload" url="111"></dropzone> -->
+                    <VueTransmit tag="div"
+                      class="col-12"
+                      v-bind="transmitOptions"
+                      drop-zone-classes="bg-faded"
+                      ref="illustrationUploader">
+                      <div>
+                        <label class='btn btn-default' type="file">
+                        <i class="fa fa-folder-open-o" aria-hidden="true"></i>Browse...
+                          <input type="file" v-show="false" name="illustration" accept="image/*" v-on:click="triggerIllustrationBrowse" />
+                        </label>
+                      </div>
+                      
+                    </VueTransmit>
+                    <multi-uploader postURL="http://123" successMessagePath="" errorMessagePath="" :maxItems="1"></multi-uploader>
                   </div>
                 </div>
                 <div v-else class="content-wrap"
@@ -330,7 +339,12 @@ import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import taskControls       from '../../mixins/task_controls.js'
 import apiConfig          from '../../mixins/api_config.js'
 import { modal }          from 'vue-strap'
+import VueTransmit        from 'vue-transmit/src/components/VueTransmit.vue'
+//import Dropzone           from 'vue2-dropzone';
+import MultiUploader      from 'vue2-multi-uploader';
 var BPromise = require('bluebird');
+//Vue.use(VueTransmit);
+//Vue.use(Dropzone)
 
 export default {
   data () {
@@ -370,14 +384,22 @@ export default {
       reRecordPosition: false,
       isUpdating: false,
       recordStartCounter: 0,
-      deleteBlockMessage: false
+      deleteBlockMessage: false,
+      transmitOptions: {
+        acceptedFileTypes: ['image/*'],
+        url: '123',
+        clickable: false
+      }
     }
   },
   components: {
       'block-menu': BlockMenu,
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
-      'modal': modal
+      'modal': modal,
+      'VueTransmit': VueTransmit,
+      //'dropzone': Dropzone
+      'multi-uploader': MultiUploader
   },
   props: ['block', 'putBlock', 'getBlock', 'recorder', 'blockOrderChanged'],
   mixins: [taskControls, apiConfig],
@@ -994,6 +1016,9 @@ export default {
       },
       joinWithNext() {
         this.$emit('joinBlocks', this.block, 'next');
+      },
+      triggerIllustrationBrowse() {
+        this.$refs.illustrationUploader.triggerBrowseFiles();
       },
       _getParent(node, tag) {
         if (node.localName == tag) {
