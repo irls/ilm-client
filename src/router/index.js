@@ -8,6 +8,7 @@ import Tasks from '../components/Tasks'
 import Help from '../components/Help'
 import Contact from '../components/Contact'
 import Align from '../components/Align'
+import AudioEditor from '../components/AudioEditor'
 
 Vue.use(Router)
 
@@ -53,6 +54,10 @@ export default new Router({
     {
       path: '/align',
       component: Align
+    },
+    {
+      path: '/audio_editor',
+      component: AudioEditor
     },
     { path: '*', redirect: '/books' }
   ]
