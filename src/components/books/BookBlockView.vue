@@ -41,7 +41,7 @@
                         Hide archived flags</li>
 
                       <li class="separator"></li>
-                      <template v-if="tc_hasTask('content_cleanup') || isEditor">
+                      <template v-if="tc_hasTask('content_cleanup') || _is('editor')">
                         <li @click="insertBlockBefore()">Insert block before</li>
                         <li @click="insertBlockAfter()">Insert block after</li>
                         <li @click="deleteBlockMessage = true">Delete block</li>
@@ -112,7 +112,7 @@
                 <hr v-if="block.type=='hr'" />
                 <div v-else-if="block.type == 'illustration'" class="illustration-block">
                   <img v-if="block.illustration" :src="block.getIllustration()"/>
-                  <div v-if="(tc_hasTask('content-cleanup') || isEditor) && !this.isChanged">
+                  <div v-if="(tc_hasTask('content-cleanup') || _is('editor')) && !this.isChanged">
                     <form id="illustration-upload" enctype="multipart/form-data">
                       <label class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i>Browse...
@@ -205,11 +205,11 @@
                     </template>
 
                     <template v-if="block.isNeedAlso(flagsSel._id)">
-                      <a v-if="part.type == 'editor'"
+                      <a v-if="isCanFlag('narrator') && part.type == 'editor'"
                       href="#" class="flag-control -right"
                       @click.prevent="addFlagPart(part.content, 'narrator')">
                       Flag for narration also</a>
-                      <a v-if="part.type == 'narrator'"
+                      <a v-if="isCanFlag('editor') && part.type == 'narrator'"
                       href="#" class="flag-control -right"
                       @click.prevent="addFlagPart(part.content, 'editor')">
                       Flag for editing also</a>
@@ -240,10 +240,12 @@
                     dir="bottom"
                     :update="update"
                 >
-                  <li v-if="range.collapsed" @click="addFootnote">Add footnote</li>
-                  <li class="separator"></li>
-                  <li v-if="!range.collapsed" @click="addFlag($event, 'editor')">Flag for Editing</li>
-                  <li v-if="!range.collapsed" @click="addFlag($event, 'narrator')">Flag for Narration</li>
+                  <template v-if="range.collapsed">
+                    <li @click="addFootnote">Add footnote</li>
+                    <li class="separator"></li>
+                  </template>
+                  <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')">Flag for Editing</li>
+                  <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')">Flag for Narration</li>
                   <template v-if="!range.collapsed && blockAudio.src">
                     <li class="separator"></li>
                     <li @click="audPlayFromSelection()">Play from here</li>
@@ -287,7 +289,7 @@
               </div>
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
-                  <template v-if="!isCompleted">
+                  <template v-if="!isCompleted && !tc_hasTask('content_cleanup')">
                   <span>
                     <i class="glyphicon glyphicon-flag"
                       ref="blockFlagControl"
@@ -326,9 +328,10 @@ import ReadAlong          from 'readalong'
 import BlockMenu          from '../generic/BlockMenu';
 import BlockContextMenu   from '../generic/BlockContextMenu';
 import BlockFlagPopup     from '../generic/BlockFlagPopup';
-import taskControls       from '../../mixins/task_controls.js'
-import apiConfig          from '../../mixins/api_config.js'
-import { modal }          from 'vue-strap'
+import taskControls       from '../../mixins/task_controls.js';
+import apiConfig          from '../../mixins/api_config.js';
+import access             from '../../mixins/access.js';
+import { modal }          from 'vue-strap';
 var BPromise = require('bluebird');
 
 export default {
@@ -379,7 +382,7 @@ export default {
       'modal': modal
   },
   props: ['block', 'putBlock', 'getBlock', 'recorder', 'blockOrderChanged'],
-  mixins: [taskControls, apiConfig],
+  mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses : function () {
           return this.blockTypeClasses[this.block.type];
@@ -398,11 +401,12 @@ export default {
           return flagsSummary.stat !== 'open';
       },
       isApproveDisabled: function () {
-          if (!(this.blockAudio && this.blockAudio.src)) return true;
+          if (this._is('narrator') && !(this.blockAudio && this.blockAudio.src)) return true;
           if (!(this.block.calcFlagsSummary().stat !== 'open')) return true;
           return false;
       },
       isCompleted: function () {
+          if (this._is('editor') && this.tc_hasTask('content_cleanup')) return false;
           return this.tc_getBlockTask(this.block._id) ? false : true;
       },
       ...mapGetters({
@@ -412,7 +416,6 @@ export default {
           watchBlk: 'contentDBWatch',
           tc_currentBookTasks: 'tc_currentBookTasks',
           authors: 'authors',
-          isEditor: 'isEditor',
           allowArchiving: 'allowArchiving',
       })
   },
@@ -443,6 +446,21 @@ export default {
         'putMetaAuthors',
         'tc_approveBookTask'
       ]),
+      //-- Checkers -- { --//
+      isCanFlag: function (flagType = false) {
+        let canFlag = true;
+        if (flagType) switch(flagType) {
+          case 'editor' : {
+            if (!this._is('admin') && this._is('editor')) canFlag = false;
+          } break;
+          case 'narrator' : {
+            if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
+            else if (!this._is('admin') && this._is('narrator')) canFlag = false;
+          } break;
+        };
+        return canFlag && !this.tc_hasTask('content_cleanup') && !this.range.collapsed;
+      },
+      //-- } -- end -- Checkers --//
       initEditor(force) {
         if ((!this.editor || force === true) && this.block.needsText()) {
           this.editor = new MediumEditor('.content-wrap', {
@@ -598,7 +616,8 @@ export default {
       actionWithBlock: function(ev) {
         this.assembleBlockProxy(ev)
         .then(()=>{
-          //console.log('audio', this.block.audiosrc);
+          //console.log('audiosrc', this.block.audiosrc);
+          //console.log('blockAudio', this.blockAudio);
           let task = this.tc_getBlockTask(this.block._id);
 
           if (!task) {
@@ -611,12 +630,17 @@ export default {
           let blockSummary = this.block.calcFlagsSummary();
           task.nextStep = blockSummary.dir;
 
+          if (task.nextStep == 'proofer' && !this.block.hasAudio()) task.nextStep = 'narrator';
+
+          //console.log('task', task);
+
           this.tc_approveBookTask(task)
           .then(response => {
             if (response.status == 200) {}
           })
           .catch(err => {});
         });
+
         this.$root.$emit('closeFlagPopup', true);
 //      this.assembleBlockProxy(ev).then(()=>{
 //      this.watchBlk.once('change', (change) => {

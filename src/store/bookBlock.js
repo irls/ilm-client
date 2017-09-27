@@ -214,15 +214,19 @@ class BookBlock {
     });
     return count;
   }
-  
+
   getIllustration() {
     if (this.illustration) {
       return process.env.ILM_API + this.illustration;
     }
   }
-  
+
   needsText() {
     return ['hr', 'illustration'].indexOf(this.type) === -1;
+  }
+
+  hasAudio() {
+    return (this.audiosrc && this.audiosrc.length);
   }
 
 }
