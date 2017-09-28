@@ -380,12 +380,7 @@ export default {
       reRecordPosition: false,
       isUpdating: false,
       recordStartCounter: 0,
-      deleteBlockMessage: false,
-      transmitOptions: {
-        acceptedFileTypes: ['image/*'],
-        url: '123',
-        clickable: false
-      }
+      deleteBlockMessage: false
     }
   },
   components: {
