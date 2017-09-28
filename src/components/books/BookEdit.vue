@@ -136,11 +136,21 @@ export default {
                       Vue.set(this.parlist[idx0], idx1, new BookBlock(change.doc));
                     }
                 } else if (prev_block && block.index > change.doc.index && prev_block.index < change.doc.index) {// new block
-                  el.splice(idx1, 0, new BookBlock(change.doc))
-                  this.onBlockNumberChange(change.doc, idx0)
+                  let existing = el.find(_b => {
+                    return _b._id == change.doc._id;
+                  })
+                  if (!existing) {
+                    el.splice(idx1, 0, new BookBlock(change.doc))
+                    this.onBlockNumberChange(change.doc, idx0)
+                  }
                 } else if (!prev_block && idx0 == 0 && idx1 == 0 && change.doc.index < block.index) {// new block before list
-                  this.parlist[idx0].unshift(new BookBlock(change.doc));
-                  this.onBlockNumberChange(change.doc, idx0);
+                  let existing = el.find(_b => {
+                    return _b._id == change.doc._id;
+                  })
+                  if (!existing) {
+                    this.parlist[idx0].unshift(new BookBlock(change.doc));
+                    this.onBlockNumberChange(change.doc, idx0);
+                  }
                 }
                 prev_block = block;
             });
@@ -224,12 +234,14 @@ export default {
       }
     },
     stopRecordingAndNext(block) {
-      let next = this.findNextBlock(block);
+      let next = this.findNextBlock(block, 'narrate');
       if (next) {
         let el = this.$children.find(c => {
           return c.$el.id == next._id;
         });
         if (el) {
+          let offset = document.getElementById(next._id).getBoundingClientRect()
+          window.scrollTo(0, window.pageYOffset + offset.top);
           el.startRecording();
         }
       }
@@ -245,11 +257,19 @@ export default {
         }
       });
     },
-    findNextBlock(block) {
+    findNextBlock(block, task) {
       let next = false;
       for (let i = 0; i < this.parlist.length; ++i) {
         next = this.parlist[i].find(p => { 
-          return p.index > block.index;
+          let isNext = p.index > block.index;
+          if (task) {
+            switch (task) {
+              case 'narrate':
+                isNext = isNext && this.tc_showBlockNarrate(p._id);
+                break;
+            }
+          }
+          return isNext;
         });
         if (next) {
           return next;
@@ -352,7 +372,7 @@ export default {
       });
       this.initRecorder();
       window.onscroll = function() {
-        $('#narrateStartCountdown').css('top', document.body.scrollTop + 'px');
+        $('#narrateStartCountdown').css('top', document.scrollingElement.scrollTop + 'px');
         $('#narrateStartCountdown').css('height', '100%')
       }
   },
