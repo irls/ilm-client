@@ -13,12 +13,20 @@
           <i class="fa fa-chevron-left fa-lg"></i> Back <i class="fa fa-book "></i>
         </button>
         <template v-if="tc_hasTask('content_cleanup')">
-          <a :href="getCurrentBookUrl()" 
-            target="_blank" class="btn btn-default" >Download</a>
+          <dropdown text="Download" type="default">
+              <li>
+                <a :href="getCurrentBookUrl('html')" 
+                  target="_blank" class="" >As HTML</a>
+              </li>
+              <li>
+                <a :href="getCurrentBookUrl('zip')" 
+                  target="_blank" class="">As ZIP</a>
+              </li>
+          </dropdown>
           <button class="btn btn-default">Re-Import</button>
         </template>
 
-        <ButtonRadioGroup id='viewmode' :values="editModes" @changeEditMode='viewSelect' :selected="editMode" :default="editMode"></ButtonRadioGroup>
+        <!-- <ButtonRadioGroup id='viewmode' :values="editModes" @changeEditMode='viewSelect' :selected="editMode" :default="editMode"></ButtonRadioGroup> -->
 
       </div>
     </td>
@@ -30,16 +38,17 @@ import ButtonRadioGroup from '../generic/ButtonRadioGroup'
 import access from "../../mixins/access.js"
 import taskControls from '../../mixins/task_controls.js';
 import apiConfig from '../../mixins/api_config.js'
+import { dropdown } from 'vue-strap';
 
 export default {
   data () {
     return {
       editMode: 'Editor',
       editModes: {
-        'Editor': 'Editor'/*,
+        'Editor': 'Editor',
         'HTML': 'HTML',
         'JSON': 'JSON',
-        'Display': 'Display'*/
+        'Display': 'Display'
       },
       //currentBook: this.$store.state.currentBook,
 
@@ -63,12 +72,13 @@ export default {
       let path = '/books' + (currentBookid?'/'+currentBookid:'')
       this.$router.push(path)
     },
-    getCurrentBookUrl() {
-      return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/html";
+    getCurrentBookUrl(format) {
+      return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/" + format;
     }
   },
   components: {
-    ButtonRadioGroup
+    ButtonRadioGroup,
+    dropdown
   },
   // watch: {
   //   'this.editMode' () {
