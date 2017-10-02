@@ -9,8 +9,8 @@ let defBlock = [
   'index',
   'tag',
   'content',
-  'classes',
   'type',
+  'classes',
   'parnum',
   'audiosrc',
   'footnotes',
@@ -19,6 +19,43 @@ let defBlock = [
   'section',
   'illustration'
 ]
+
+let BlockTypes = {
+  title: {
+    '': [],
+    subtitle: [],
+    author: [],
+    translator: []
+  },
+  header: {
+    align: ['', 'left', 'center', 'right']
+  },
+  subhead: {
+    'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4'],
+    align: ['', 'left', 'center', 'right'],
+    descriptor: ['', 'date', 'venue', 'subtitle']
+  },
+  par: {
+    font: ['', 'typewriter', 'monospace', 'oldbook', 'modern'],
+    size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
+    style: [' ', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline', 'rulebelow', 'bookgraphic'],
+    whitespace: ['', 'verse', 'pre'],
+    padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
+    author: ['', 'bab', 'baha', 'shoghi', 'sacred', 'bible', 'muhammad', 'quran', 'jesus', 'ali', 'tradition', 'husayn'],
+    custom: ['', 'dropcap', 'blockquote', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer']
+  },
+  illustration: {
+    size: ['', 'x-small', 'small', 'large', 'x-large'],
+    align: ['', 'left', 'center', 'right']
+  },
+  footnote: {
+    '': [],
+    fn: []
+  },
+  hr: {
+    size: ['', 'small', 'large']
+  }
+}
 
 class BookBlock {
   constructor(init) {
@@ -30,8 +67,9 @@ class BookBlock {
 
     this.tag = init.tag || '';
     this.content = init.content || '';
-    this.classes = init.classes || [];
     this.type = init.type || '';
+    this.classes = init.classes || {};
+    if (Array.isArray(this.classes)) this.classes = {};
     this.parnum = init.parnum || false;
 
     this.audiosrc = init.audiosrc || '';
@@ -63,6 +101,7 @@ class BookBlock {
       this.illustration = this.illustration.replace(process.env.ILM_API, '');
       this.illustration = this.illustration.split('?').shift();
     }
+    if (Array.isArray(this.classes) && this.classes.length) this.classes = this.classes[0];
     return _.pick(this, defBlock);
   }
 
@@ -229,6 +268,42 @@ class BookBlock {
     return (this.audiosrc && this.audiosrc.length);
   }
 
+  getClass() {
+    let result = this.type;
+    if (this.classes && typeof this.classes === 'object') {
+      for (let key in this.classes) {
+        if (key) {
+          if (this.classes[key] && this.classes[key] !== '') result += ' ' + /*key.replace(/\s/g, '-') + '-' +*/ this.classes[key];
+          else if (Object.keys(BlockTypes[this.type])[0] === '') result += ' ' + key.replace(/\s/g, '-');
+        }
+      }
+    }
+
+    return result;
+  }
+
+  setClass(val) {
+    let styleCurr = false;
+    if (val) {
+
+      if (Object.keys(BlockTypes[this.type])[0] === '') this.classes = {};
+
+      if (!this.classes[val]) {
+        this.classes[val] = ''
+      } else {
+        styleCurr = this.classes[val];
+      }
+    } else {
+      if (val === '') this.classes = {};
+    }
+    return styleCurr;
+  }
+
+  setClassStyle(classVal, val) {
+    if (typeof val !== 'undefined') this.classes[classVal] = val;
+    if (val === '') delete this.classes[classVal];
+  }
+
 }
 
 class FlagPart {
@@ -246,5 +321,6 @@ class FlagPart {
 }
 
 export {
-  BookBlock
+  BookBlock,
+  BlockTypes
 }

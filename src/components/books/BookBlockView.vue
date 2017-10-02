@@ -62,17 +62,25 @@
                   <!--<i class="fa fa-trash-o fa-lg"></i>-->
                   <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
                   <!-- Block Type selector -->
-                  <label>type
-                  <select v-model='block.type'>
-                      <option v-for="(type, index) in blockTypes" :value="type">{{ type }}</option>
+                  <label>type:&nbsp;
+                  <select v-model='block.type' style="min-width: 80px;"><!--v-model='block.type'--><!--:value="type"-->
+                    <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                   </select>
                   </label>
                   <!-- Block Class selector -->
-                  <label>class
-                  <select v-model='block.classes'>
-                    <option v-for="(style, index) in blockClasses" :value="style">{{ style }}</option>
+                  <label>classes:&nbsp;
+                  <select v-model='classSel' style="min-width: 100px;"><!--v-model='block.classes'--><!--:value="style"-->
+                    <option v-for="(val, key) in blockClasses" :value="key">{{ key }}</option>
                   </select>
                   </label>
+                  <!-- Block Class selector -->
+                  <label v-if="blockStyles">style:&nbsp;
+                  <select v-model='styleSel' style="min-width: 110px;"><!--v-model='block.classes'--><!--:value="style"-->
+                    <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
+                  </select>
+                  </label>
+
+                  &nbsp;&nbsp;{{block.getClass()}}
               </div>
               <!--<div class="-hidden">-->
 
@@ -120,12 +128,12 @@
                       </label>
                     </form>
                   </div>
-                </div>
+                </div><!--block.type, block.classes,-->
                 <div v-else class="content-wrap"
                 :id="'content-'+block._id"
                 ref="blockContent"
                 v-html="block.content"
-                :class="[ block.type, block.classes, {
+                :class="[ block.getClass(), {
                   'updated': isUpdated,
                   'playing': blockAudio.src,
                   'hide-archive': isHideArchFlags
@@ -332,6 +340,7 @@ import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import access             from '../../mixins/access.js';
 import { modal }          from 'vue-strap';
+import { BlockTypes }     from '../../store/bookBlock'
 var BPromise = require('bluebird');
 
 export default {
@@ -348,16 +357,11 @@ export default {
       isHideArchFlags: true,
       isHideArchParts: true,
       moment: moment,
-      blockTypes: ['title', 'header', 'subhead', 'par', 'illustration', 'aside', 'hr'],
-      blockTypeClasses: {
-          title: [' ', 'subtitle', 'author', 'translator'],
-          header: [' ', 'chapter', 'selection', 'letter', 'talk', 'date', 'venue'],
-          subhead: [' ', 'toc1', 'toc2', 'toc3', 'toc4'],
-          par: [' ', 'dropcap', 'blockquote'],
-          illustration: ['small', 'med', 'full'],
-          aside: ['fn', 'inline'],
-          hr: [' ', 'section', 'large', 'small']
-      },
+
+      classSel: false,
+      styleSel: false,
+      blockTypes: BlockTypes,
+
       isChanged: false,
       isUpdated: false,
       isAudStarted: false,
@@ -384,9 +388,15 @@ export default {
   props: ['block', 'putBlock', 'getBlock', 'recorder', 'blockOrderChanged'],
   mixins: [taskControls, apiConfig, access],
   computed: {
-      blockClasses : function () {
-          return this.blockTypeClasses[this.block.type];
+      blockClasses: function () {
+          return this.blockTypes[this.block.type];
       },
+      blockStyles: function () {
+          if (this.classSel && this.blockTypes[this.block.type][this.classSel] && this.blockTypes[this.block.type][this.classSel].length) {
+            return this.blockTypes[this.block.type][this.classSel];
+          }
+          return false;
+       },
       countArchParts: function () {
           return this.flagsSel ? this.block.countArchParts(this.flagsSel._id) : 0;
       },
@@ -438,6 +448,9 @@ export default {
         }
       });
       this.updateFlagStatus(this.block._id);
+      if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
+        this.classSel = Object.keys(this.blockTypes[this.block.type])[0];
+      }
       //this.detectMissedFlags();
 
   },
@@ -1211,6 +1224,19 @@ export default {
           });
       },
       'block.type' (newVal) {
+        this.setChanged(true);
+        if (Object.keys(this.blockTypes[newVal])[0] !== '') {
+          this.classSel = Object.keys(this.blockTypes[newVal])[0];
+        }
+        this.block.classes = {};
+      },
+      'classSel' (newVal) {
+        let styleCurr = this.block.setClass(newVal);
+        if (styleCurr) this.styleSel = styleCurr;
+        this.setChanged(true);
+      },
+      'styleSel' (newVal) {
+        this.block.setClassStyle(this.classSel, newVal);
         this.setChanged(true);
       },
       'blockAudio.src' (newVal) {
