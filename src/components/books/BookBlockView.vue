@@ -120,13 +120,19 @@
                 <hr v-if="block.type=='hr'" />
                 <div v-else-if="block.type == 'illustration'" class="illustration-block">
                   <img v-if="block.illustration" :src="block.getIllustration()"/>
-                  <div v-if="(tc_hasTask('content-cleanup') || _is('editor')) && !this.isChanged">
-                    <form id="illustration-upload" enctype="multipart/form-data">
-                      <label class='btn btn-default' type="file">
-                      <i class="fa fa-folder-open-o" aria-hidden="true"></i>Browse...
-                        <input type="file" v-show="false" name="illustration" accept="image/*" v-on:change="uploadIllustration($event)" />
-                      </label>
-                    </form>
+                  <div v-if="(tc_hasTask('content-cleanup') || isEditor) && !this.isChanged" class="drag-uploader no-picture" style="">
+                    <vue-picture-input @change="onIllustrationChange"
+                      ref="illustrationInput"
+                      :customStrings="{
+                        drag: 'Click here or drag image here'
+                      }"
+                      :removable="true"
+                      @remove="onIllustrationChange"
+                      accept="image/*"
+                      :crop="false"></vue-picture-input>
+                    <div class="save-illustration" v-if="isIllustrationChanged">
+                      <button class="btn btn-default" @click="uploadIllustration">Save picture</button>
+                    </div>
                   </div>
                 </div><!--block.type, block.classes,-->
                 <div v-else class="content-wrap"
@@ -341,6 +347,7 @@ import apiConfig          from '../../mixins/api_config.js';
 import access             from '../../mixins/access.js';
 import { modal }          from 'vue-strap';
 import { BlockTypes }     from '../../store/bookBlock'
+import VuePictureInput from 'vue-picture-input'
 var BPromise = require('bluebird');
 
 export default {
@@ -369,6 +376,7 @@ export default {
       isRecording: false,
       isRecordingPaused: false,
       isAudioChanged: false,
+      isIllustrationChanged: false,
       blockAudio: {
         src: '',
         map: ''
@@ -383,7 +391,8 @@ export default {
       'block-menu': BlockMenu,
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
-      'modal': modal
+      'modal': modal,
+      'vue-picture-input': VuePictureInput
   },
   props: ['block', 'putBlock', 'getBlock', 'recorder', 'blockOrderChanged'],
   mixins: [taskControls, apiConfig, access],
@@ -427,7 +436,11 @@ export default {
           tc_currentBookTasks: 'tc_currentBookTasks',
           authors: 'authors',
           allowArchiving: 'allowArchiving',
-      })
+          isEditor: 'isEditor'
+      }),
+      illustrationChaged() {
+        return this.$refs.illustrationInput.image
+      }
   },
   beforeDestroy:  function() {
     if (this.editor) this.editor.destroy();
@@ -1038,8 +1051,8 @@ export default {
       },
       stopRecordingAndNext() {
         //this.stopRecording();
-        let offset = document.getElementById(this.block._id).getBoundingClientRect()
-        window.scrollTo(0, window.pageYOffset + offset.bottom - 100);
+        //let offset = document.getElementById(this.block._id).getBoundingClientRect()
+        //window.scrollTo(0, window.pageYOffset + offset.bottom - 100);
         this.$emit('stopRecordingAndNext', this.block);
       },
       pauseRecording() {
@@ -1178,24 +1191,33 @@ export default {
         }
       },
       uploadIllustration(event) {
-
-        let fieldName = event.target.name;
-        let fileList = event.target.files || event.dataTransfer.files
-        let file = fileList[0];
         let formData = new FormData();
-        formData.append(fieldName, file, file.name);
-        let vu_this = this
+        formData.append('illustration', this.$refs.illustrationInput.file, this.$refs.illustrationInput.file.name);
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/image';
+        let self = this;
         api.post(api_url, formData, {}).then(function(response){
           if (response.status===200) {
             // hide modal after one second
+            self.$refs.illustrationInput.removeImage();
+            let offset = document.getElementById(self.block._id).getBoundingClientRect()
+            window.scrollTo(0, window.pageYOffset + offset.top);
           } else {
 
           }
         }).catch((err) => {
           console.log(err)
         });
+      },
+      onIllustrationChange() {
+        //console.log(arguments, this.$refs.illustrationInput.image);
+        if (this.$refs.illustrationInput.image) {
+          $('[id="' + this.block._id + '"] .drag-uploader').removeClass('no-picture');
+          this.isIllustrationChanged = true;
+        } else {
+          $('[id="' + this.block._id + '"] .drag-uploader').addClass('no-picture');
+          this.isIllustrationChanged = false;
+        }
       }
   },
   watch: {
@@ -1238,6 +1260,20 @@ export default {
       'styleSel' (newVal) {
         this.block.setClassStyle(this.classSel, newVal);
         this.setChanged(true);
+        if (newVal === 'illustration') {
+          if (this.editor) {
+            this.editor.removeElements();
+            this.editor.destroy();
+            Vue.nextTick(() => {
+              $('[id="' + this.block._id + '"] .illustration-block').removeAttr('contenteditable');
+              $('[id="' + this.block._id + '"] .illustration-block').removeAttr('data-placeholder');
+            });
+          }
+        } else {
+          if (!this.editor) {
+            this.initEditor();
+          }
+        }
       },
       'blockAudio.src' (newVal) {
         if (newVal) {
@@ -1717,6 +1753,72 @@ export default {
         &.highlighted {
           background: #f8f8f8
         }
+      }
+    }
+  }
+  /*.drag-uploader {
+    width: 20%; 
+    max-height: 100px;
+    display: table-row;
+    .uploadBox {
+      .uploadBoxMain {
+        max-height: 100px;
+        margin: 0px;
+      }
+      .uploadBoxMain.uploading {        
+        p, ol {
+          display: none;
+        }
+      }
+      .dropArea {
+        max-height: 100px;
+        padding-top: 30px;
+        font-size: 20px;
+        content: '';
+        .help-block {
+          display: none;
+        }
+      }
+      form {
+        max-height: 100px;
+        button {
+          display: none;
+        }
+      }
+      h3 {
+        display: none;
+      }
+    }
+  }*/
+  .drag-uploader {
+    /*display: table-row;*/
+    .picture-input {
+      .preview-container, .picture-preview {
+        max-height: 80vh;
+        width: auto;
+      }
+    }
+    .save-illustration {
+      float: left !important;
+      width: 100% !important;
+      text-align: center !important;
+    }
+  }
+  .drag-uploader.no-picture {
+    /*display: table-row;*/
+    .picture-input {
+      .preview-container, .picture-preview {
+        max-height: 100px;
+        width: auto;
+        float: left;
+        background-color: transparent !important;
+        width: 100%;
+      }
+      .picture-inner {
+        top: -90px !important;
+        z-index: 0 !important;
+        margin-bottom: 0px !important;
+        font-size: 15px !important;
       }
     }
   }
