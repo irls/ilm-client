@@ -23,10 +23,12 @@
                   target="_blank" class="">As ZIP</a>
               </li>
           </dropdown>
-          <button class="btn btn-default">Re-Import</button>
+          <button class="btn btn-default" @click="showBookReimport = true">Re-Import</button>
+          <BookReimport v-if="showBookReimport" :multiple="false" @close_modal="reimportBookClose"
+                  :bookId="getBookid()" />
         </template>
 
-        <!-- <ButtonRadioGroup id='viewmode' :values="editModes" @changeEditMode='viewSelect' :selected="editMode" :default="editMode"></ButtonRadioGroup> -->
+        <ButtonRadioGroup id='viewmode' :values="editModes" @changeEditMode='viewSelect' :selected="editMode" :default="editMode"></ButtonRadioGroup>
 
       </div>
     </td>
@@ -39,6 +41,7 @@ import access from "../../mixins/access.js"
 import taskControls from '../../mixins/task_controls.js';
 import apiConfig from '../../mixins/api_config.js'
 import { dropdown } from 'vue-strap';
+import BookReimport from './BookReimport'
 
 export default {
   data () {
@@ -46,12 +49,12 @@ export default {
       editMode: 'Editor',
       editModes: {
         'Editor': 'Editor',
-        'HTML': 'HTML',
-        'JSON': 'JSON',
+        //'HTML': 'HTML',
+        //'JSON': 'JSON',
         'Display': 'Display'
       },
       //currentBook: this.$store.state.currentBook,
-
+      showBookReimport: false
     }
   },
   mixins: [access, taskControls, apiConfig],
@@ -74,11 +77,18 @@ export default {
     },
     getCurrentBookUrl(format) {
       return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/" + format;
+    },
+    getBookid() {
+      return this.$store.state.currentBookid
+    },
+    reimportBookClose() {
+      this.showBookReimport = false;
     }
   },
   components: {
     ButtonRadioGroup,
-    dropdown
+    dropdown,
+    BookReimport
   },
   // watch: {
   //   'this.editMode' () {

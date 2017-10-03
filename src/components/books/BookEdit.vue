@@ -94,7 +94,11 @@ export default {
     onScrollBookDown() {
         //console.log('onScrollBookDown, page:', this.page);
         //console.log( this.meta._id );
-        this.loadBlocks({
+        this.getBlocks();
+    },
+    
+    getBlocks() {
+      this.loadBlocks({
             book_id: this.meta._id,
             page: this.page++,
             onpage: 20,
@@ -355,6 +359,15 @@ export default {
         $('#narrateStartCountdown').css('top', document.body.scrollTop + 'px');
         $('#narrateStartCountdown').css('height', '100%')
       }
+      let self = this;
+      this.$root.$on('book-reimported', function() {
+        self.page = 0;
+        Vue.set(self, 'parlist', []);
+        self.parlistSkip = 0;
+        Vue.nextTick(function() {
+          self.getBlocks();
+        });
+      });
   },
   
   beforeDestroy:  function() {
