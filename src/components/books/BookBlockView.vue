@@ -586,6 +586,7 @@ export default {
       assembleBlock: function(el) {
         switch (this.block.type) {
           case 'illustration':
+          case 'hr':
             this.block.content = '';
             break;
           default:
