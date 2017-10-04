@@ -23,11 +23,16 @@
     </template>
 
     <infinite-loading v-if="autoload" :on-infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>
+
     <div id="narrateStartCountdown" class="modal fade in">
       <div>
         <strong>3</strong>
       </div>
     </div>
+
+    <nav class="navbar fixed-bottom navbar-light bg-faded">
+      <a class="navbar-brand" href="#">Fixed bottom</a>
+    </nav>
 </div>
 <!--<div class="container">-->
 </template>
@@ -260,7 +265,7 @@ export default {
     findNextBlock(block, task) {
       let next = false;
       for (let i = 0; i < this.parlist.length; ++i) {
-        next = this.parlist[i].find(p => { 
+        next = this.parlist[i].find(p => {
           let isNext = p.index > block.index;
           if (task) {
             switch (task) {
@@ -407,4 +412,17 @@ export default {
       background-color: white;
       border-radius: 5px;
   }
+  .infinite-status-prompt {
+    margin-bottom: 175px;
+  }
+  .fixed-bottom {
+    position: fixed;
+    margin-left: -10px;
+    width: 99%;
+    bottom: 0px;
+    border: 1px solid black;
+    border-radius: 0px;
+    height: 150px;
+  }
+
 </style>

@@ -20,7 +20,7 @@
 
         <router-link to="/assignments" class='presentation' tag='li'
         v-show='true'><a>Assignments</a><sup>{{tc_userTasks.total}}</sup></router-link>
-        
+
         <router-link to="/align" class='presentation' tag='li'
         v-show='isAdmin || isLibrarian'><a>Check alignment</a></router-link>
 
@@ -53,9 +53,9 @@ export default {
     }
   },
   mixins: [access],
-  computed: 
+  computed:
     mapGetters (['tc_userTasks'])
-  
+
 }
 </script>
 
@@ -66,7 +66,7 @@ export default {
   /* Navigation Menu Table (Oh yes I did!) */
   table.navtable {
    width: 100%; margin:0;
-   margin-left:10px; margin-right:10px; margin-bottom: 1em; height: 5em;
+   margin-left:10px; margin-right:10px; margin-bottom: 1em; height: 3em;
    min-width: 768px; display: table;
    /*background: silver;
    border: .25 px solid gray;*/
@@ -81,13 +81,13 @@ export default {
 
   /* non-adaptive navigation list */
   .navlist { list-style-type: none; margin:0; padding:0; }
-  .navlist li {display: block; overflow: hidden; text-align: center; float:left; padding: 15px;}
+  .navlist li {display: block; overflow: hidden; text-align: center; float:left; padding: 8px;}
   /*.navlist li:hover {background: yellow}*/
   .navlist li.active {background: #eaf1fc}
   .navlist a {color: gray;}
   li.active a {color: black; text-decoration: none;}
   .navlist a:hover { text-decoration: none; }
 
-  li.presentation.roles {font-size: .75em; padding: 10px; margin: 10px; color: gray; font-style: italic; }
+  li.presentation.roles {font-size: .75em; padding: 1px; margin: 10px; color: gray; font-style: italic; }
 
 </style>

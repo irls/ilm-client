@@ -1,13 +1,25 @@
 <template>
   <div id='booksarea' v-cloak>
 
-    <div class='toolbar clearfix'>
-      <BookEditToolbar v-if="isEditMode()" />
-      <BooksToolbar v-else @import_finished="bookImportFinished" />
-    </div>
-
     <table id='bodytable'>
-      <tr :colspan="colCount">
+      <tr>
+        <td :colspan="metaVisible ? 1 : 2">
+          <BookEditToolbar v-if="isEditMode()" />
+          <BooksToolbar v-else @import_finished="bookImportFinished" />
+        </td>
+        <td v-if='hasBookSelected() && metaVisible'
+            class='collapseEditBar visible'
+            @click='toggleMetaVisible' rowspan="2">
+
+          <div class="bar">
+            <i :class="['fa-chevron-right' , 'fa collapsebtn']" aria-hidden="true"></i>
+          </div>
+        </td>
+        <td class='metaedit' v-if='metaVisible' rowspan="2">
+          <book-meta-edit v-if='metaVisible'></book-meta-edit>
+        </td>
+      </tr>
+      <tr>
         <td class='maincontent scrollable'>
           <template v-if="isEditMode()">
             <BookEdit v-if="bookEditMode == 'Editor'" />
@@ -17,13 +29,13 @@
           </template>
           <BooksGrid v-else />
         </td>
-        <td class='collapseEditBar' @click='toggleMetaVisible' v-if='hasBookSelected()'>
+        <td v-if='hasBookSelected() && !metaVisible'
+            class='collapseEditBar'
+            @click='toggleMetaVisible'>
+
           <div class="bar">
-            <i :class="[metaVisible ? 'fa-chevron-right' : 'fa-chevron-left' , 'fa collapsebtn']" aria-hidden="true"></i>
+            <i :class="['fa-chevron-left' , 'fa collapsebtn']" aria-hidden="true"></i>
           </div>
-        </td>
-        <td class='metaedit' v-if='metaVisible'>
-          <book-meta-edit v-if='metaVisible'></book-meta-edit>
         </td>
       </tr>
     </table>
@@ -53,7 +65,7 @@ export default {
     return {
       metaVisible: false,
       metaAvailable: false,
-      colCount: 1,
+      //colCount: 1,
       currentBookid: this.$store.state.currentBookid
     }
   },
@@ -102,12 +114,12 @@ export default {
     isEditMode () {
       return this.$store.state.route.path.indexOf('/books/edit') > -1
     },
-    recountRows () {
-      let count = 1
-      if (this.hasBookSelected()) count++
-      if (this.metaVisible) count++
-      this.colCount = count
-    },
+//     recountRows () {
+//       let count = 1
+//       if (this.hasBookSelected()) count++
+//       if (this.metaVisible) count++
+//       this.colCount = count
+//     },
     bookImportFinished(result) {
 
     },
@@ -117,65 +129,82 @@ export default {
 }
 </script>
 
-<style lang="stylus" scoped>
-#booksarea
-  margin: 0
-  padding:0
-  margin-top: -10px
+<style lang="less">
+#booksarea {
+  margin: 0;
+  padding:0;
+  margin-top: -10px;
 
-.contentarea
-  margin-top:10px
+  .contentarea {
+    margin-top:10px;
+  }
 
-#bodytable
-  width: 100%
-  display: block
-  margin-top: 15px
-  display: table
-  tr
-    width: 100%
-    td
-      vertical-align: top
-      &.maincontent
-        overflow: hidden
-        max-width: 500px
-      &.metaedit
-        width: 30%
-        min-width: 300px!important
-      &.collapseEditBar
-        width: 40px
-        min-width: 40px
-        padding: 13px
-        cursor: pointer
-        position: relative
-        .bar
-          width: 100%
-          background-color: rgba(204, 212, 226, .25)
-          height: 100%
-          min-width: 2px
-          align-items: stretch
-          display: inline-block
-          border: .5px solid silver
-          border-radius: 8px
-          position: relative
-          .collapsebtn
-            left: -8px
-            top: -18px
-            position: absolute
-            background: white
-            padding: 3px
-            border: .5px solid rgb(204, 212, 226)
-            border-radius: 25px
-            padding-left: 8px
-            padding-right: 5px
-            padding-top: 5px
-            box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.2)
-            color: rgba(204, 212, 226, 1)
-            cursor: pointer
-            font-size: 1.25em
-            .fa-chevron-left
-              padding-left: 5px
-              padding-right: 8px
-            &:hover
-              color: green
+  #bodytable {
+    width: 100%;
+    display: block;
+    margin-top: 15px;
+    display: table;
+    tr {
+      width: 100%;
+      td {
+        /*vertical-align: top;*/
+        &.maincontent {
+          overflow: hidden;
+          max-width: 500px;
+          padding-top: 3em;
+        }
+        &.metaedit {
+          width: 30%;
+          min-width: 300px!important;
+          vertical-align: top
+        }
+        &.collapseEditBar {
+          vertical-align: top;
+          width: 40px;
+          min-width: 40px;
+          height: 100%;
+          /*padding: 13px*/
+          padding-top: 23px;
+          padding-left: 8px;
+          cursor: pointer;
+          position: relative;
 
-  </style>
+          .bar {
+            width: 100%;
+            min-width: 2px;
+            height: 100%;
+            background-color: rgba(204, 212, 226, .25);
+            position: relative;
+
+            .collapsebtn {
+              position: fixed;
+              background: white;
+              padding: 5px 5px 3px 8px;
+              border: .5px solid rgb(204, 212, 226);
+              border-radius: 25px;
+              box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.2);
+              color: rgba(204, 212, 226, 1);
+              cursor: pointer;
+              font-size: 1.25em;
+
+              &.fa-chevron-left {
+                padding-left: 5px;
+                padding-right: 8px;
+              }
+              &:hover {
+                color: green;
+              }
+            }
+          }
+          &.visible {
+            .fa-chevron-right {
+              margin-top: 50px;
+              margin-left: -3px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+</style>

@@ -76,7 +76,7 @@ export default {
   /* Navigation Menu Table (Oh yes I did!) */
   table.navtable {
    width: 100%; margin:0;
-   margin-left:10px; margin-right:10px; margin-bottom: 1em; height: 5em;
+   margin-left:10px; margin-right:10px; margin-bottom: 1em; height: 4em;
    min-width: 768px; display: table;
    /*background: silver;
    border: .25 px solid gray;*/

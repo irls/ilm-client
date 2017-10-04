@@ -1388,7 +1388,7 @@ export default {
     }
 
     &.controls-right {
-        width: 100px;
+        width: 20px;
     }
 
     &.completed {
@@ -1757,7 +1757,7 @@ export default {
     }
   }
   /*.drag-uploader {
-    width: 20%; 
+    width: 20%;
     max-height: 100px;
     display: table-row;
     .uploadBox {
@@ -1765,7 +1765,7 @@ export default {
         max-height: 100px;
         margin: 0px;
       }
-      .uploadBoxMain.uploading {        
+      .uploadBoxMain.uploading {
         p, ol {
           display: none;
         }

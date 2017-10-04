@@ -27,7 +27,7 @@
       <AudioImport v-if="showModal_audio" @close="showModal_audio = false"
        :book="currentBook"
        :importTask="importTask"
-       :audiobook="audiobook" 
+       :audiobook="audiobook"
        :allowDownload="false" />
 
       <div class="book-listing">
@@ -55,9 +55,15 @@
               <td>Title</td>
               <td><input v-model='currentBook.title' @input="update('title', $event)" :disabled="!allowMetadataEdit"></td>
             </tr>
+
             <tr class='subtitle'>
               <td>Subtitle</td>
               <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)" :disabled="!allowMetadataEdit"></td>
+            </tr>
+
+            <tr class='title'>
+              <td>Author</td>
+              <td><input v-model='currentBook.author' @input="update('author', $event)" :disabled="!allowMetadataEdit"></td>
             </tr>
 
             <tr class='category'>
@@ -171,7 +177,7 @@
 
       <p>{{errorMessage}}.</p>
     </alert>
-    
+
     <alert v-model="hasMessage" placement="top" :duration="3000" type="info" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
 
@@ -256,7 +262,7 @@ export default {
   },
 
   props: {
-    
+
   },
 
   computed: {
@@ -467,7 +473,14 @@ export default {
     float: left;  margin: 10px; margin-left: -15px;
   }
   /* Wrapper around entire side editor */
-  .sidebar { margin-top:0px; position: relative; margin-left:0; padding-left:0;}
+  .sidebar {
+    position: fixed;
+    width: 29%;
+
+    margin-top:0px;
+    margin-left:0;
+    padding-left:0;
+  }
 
   /* Main book cover image */
   div.coverimg {
