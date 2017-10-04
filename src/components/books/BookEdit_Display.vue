@@ -2,13 +2,21 @@
   <div class='ocean showparnum'>
     <BookDisplayHeader />
     <BookTOC />
-    <div v-for="(block, blid) in parlist"
+    <div v-for="(block, blid) in parlist">
+      <div v-if="block.type == 'illustration'">
+        <img :class="block.classes.join(' ')" :src="block.getIllustration()"/>
+      </div>
+      <div v-else-if="block.type == 'hr'">
+        <hr/>
+      </div>
+      <div v-else
         :class="block.classes.join(' ')"
         :id="block.id"
         :data-parnum="block.parnum"
         :lang="block.language || meta.language"
         :data-type="block.type"
         v-html="block.content"></div>
+    </div>
     <infinite-loading :on-infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
   </div>
 </template>
@@ -17,6 +25,8 @@
 import BookDisplayHeader from './BookDisplayHeader'
 import BookTOC from './BookTOC'
 import InfiniteLoading from 'vue-infinite-loading'
+import { mapGetters, mapState, mapActions } from 'vuex'
+import { BookBlock }    from '../../store/bookBlock'
 
 export default {
   name: 'BookEditDisplay',
@@ -25,26 +35,39 @@ export default {
       book: this.$store.state.currentBook,
       meta: this.$store.state.currentBookMeta,
       parlist: [],
+      page: 0
     }
   },
   components: {
     BookDisplayHeader, BookTOC, InfiniteLoading
   },
   methods: {
+    ...mapActions(['loadBlocks']),
     onInfiniteScroll() {
-      let index = this.parlist.length
-      let step = 3 // number of paragaphs to grab at a time
-      //this.parlist = this.parlist.concat(this.book.content.slice(index, index+step));
-      //this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
+      console.log('Loading blocks')
+      this.loadBlocks({
+            book_id: this.meta._id,
+            page: this.page++,
+            onpage: 20
+        }).then((result)=>{
+            console.log('Loading blocks finished')
+            if (result.length > 0) {
+                result.forEach((el, idx, arr)=>{
+                    //let newBlock = Object.assign(new this.newBlock(), el.doc);
+                    let newBlock = new BookBlock(el.doc);
+                    this.parlist.push(newBlock);
+                });
 
-      let tmp = []
-      for (let i = index; i < index + step; i++) if (i<this.book.content.length) {
-        tmp.push(Object.assign(this.book.content[i]))
-      }
-      if (tmp.length>0) {
-        this.parlist = this.parlist.concat(tmp);
-        this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
-      } else this.$refs.infiniteLoading.$emit('$InfiniteLoading:complete');
+                this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
+            } else {
+                this.$refs.infiniteLoading.$emit('$InfiniteLoading:complete');
+            }
+            this.isAllLoaded = this.$refs.infiniteLoading.isComplete;
+            //console.log('loaded', result);
+        }).catch((err)=>{
+            if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.$emit('$InfiniteLoading:complete');
+            console.log('Error: ', err.message);
+        });
 
     },
   },
@@ -69,6 +92,12 @@ export default {
 }
 .ocean div[data-type] {
   margin-bottom: 1em;
+}
+img.illustration {
+  max-height: 80vh;
+  margin: 10px auto !important;
+  text-align: center;
+  display: block;
 }
 </style>
 <style lang='less' src='./css/ocean.less' scope></style>
