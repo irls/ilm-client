@@ -4,7 +4,7 @@
     <div id='bookmeta' v-if="currentBook">
       <div class='booktopinfo'>
         <div class='coverimg' @click="bookEditCoverModalActive = true">
-          <img v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+          <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
         </div>
         <h4 class='title'>{{ currentBook.title }}</h4>
         <h5 class='subtitle' v-if='currentBook.subtitle'>{{ currentBook.subtitle }}</h5>
@@ -267,7 +267,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'isLibrarian', 'isEditor', 'isAdmin']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin']),
 
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
@@ -296,6 +296,12 @@ export default {
     currentBookMeta: {
       handler (val) {
         this.init()
+      },
+      deep: true
+    },
+    currentBookFiles: {
+      handler (val) {
+        this.currentBook.coverimg = this.currentBookFiles.coverimg
       },
       deep: true
     },
@@ -337,7 +343,8 @@ export default {
   methods: {
 
     init () {
-      this.currentBook = Object.assign({}, this.currentBookMeta)
+      this.currentBook = Object.assign({}, this.currentBookMeta);
+      this.currentBook.coverimg = this.currentBookFiles.coverimg;
       this.isOwner = this.currentBook.owner == superlogin.getSession().user_id
     },
 
@@ -484,9 +491,6 @@ export default {
 
   /* Main book cover image */
   div.coverimg {
-    min-width: 60px;
-    min-height: 80px;
-    width: 80px;
     padding:0; margin: 5px; margin-right: 8px;
     float: left;
     margin-left: 3px; margin-top: 0;
@@ -495,10 +499,7 @@ export default {
     cursor: pointer;
     position: relative;
   }
-  .coverimg img {
-    width: 100%;
-  }
-  .author,  h4.title {margin: 0; padding-bottom: 0; }
+  .author,  h4.title {margin: 0; margin-top:2px; padding-bottom: 0; }
   .subtitle {margin-top:0;}
 
   /*  Top edit icon for opening the book in an edit mode */

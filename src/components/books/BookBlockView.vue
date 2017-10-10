@@ -119,22 +119,22 @@
             <div class="table-row ocean">
                 <hr v-if="block.type=='hr'" />
                 <div v-else-if="block.type == 'illustration'" class="illustration-block">
-                  <img v-if="block.illustration" :src="block.getIllustration()"/>
-                  <div v-if="(tc_hasTask('content-cleanup') || isEditor) && !this.isChanged" class="drag-uploader no-picture" style="">
-                    <vue-picture-input @change="onIllustrationChange"
-                      ref="illustrationInput"
-                      :customStrings="{
-                        drag: 'Click here or drag image here'
-                      }"
-                      :removable="true"
+                  <img v-if="block.illustration" :src="block.getIllustration()" :class="[block.getClass()]"/>
+                  <div :class="['drag-uploader', 'no-picture', {'hidden': this.isChanged}]">
+                    <vue-picture-input
+                      @change="onIllustrationChange"
                       @remove="onIllustrationChange"
+                      ref="illustrationInput"
                       accept="image/*"
-                      :crop="false"></vue-picture-input>
+                      :customStrings="{ drag: 'Click here or drag image here' }"
+                      :removable="true"
+                      :crop="false">
+                    </vue-picture-input>
                     <div class="save-illustration" v-if="isIllustrationChanged">
                       <button class="btn btn-default" @click="uploadIllustration">Save picture</button>
                     </div>
                   </div>
-                </div><!--block.type, block.classes,-->
+                </div>
                 <div v-else class="content-wrap"
                 :id="'content-'+block._id"
                 ref="blockContent"
@@ -347,7 +347,7 @@ import apiConfig          from '../../mixins/api_config.js';
 import access             from '../../mixins/access.js';
 import { modal }          from 'vue-strap';
 import { BlockTypes }     from '../../store/bookBlock'
-import VuePictureInput from 'vue-picture-input'
+import VuePictureInput    from 'vue-picture-input'
 var BPromise = require('bluebird');
 
 export default {
@@ -1212,7 +1212,7 @@ export default {
       },
       onIllustrationChange() {
         //console.log(arguments, this.$refs.illustrationInput.image);
-        if (this.$refs.illustrationInput.image) {
+        if (this.$refs.illustrationInput && this.$refs.illustrationInput.image) {
           $('[id="' + this.block._id + '"] .drag-uploader').removeClass('no-picture');
           this.isIllustrationChanged = true;
         } else {
@@ -1247,32 +1247,41 @@ export default {
           });
       },
       'block.type' (newVal) {
+        console.log('block.type');
         this.setChanged(true);
         if (Object.keys(this.blockTypes[newVal])[0] !== '') {
           this.classSel = Object.keys(this.blockTypes[newVal])[0];
         }
         this.block.classes = {};
       },
-      'classSel' (newVal) {
-        let styleCurr = this.block.setClass(newVal);
-        if (styleCurr) this.styleSel = styleCurr;
-        this.setChanged(true);
+      'classSel' (newVal, oldVal) {
+        console.log('classSel');
+        if (oldVal !== false) {
+          let styleCurr = this.block.setClass(newVal);
+          if (styleCurr) this.styleSel = styleCurr;
+          this.setChanged(true);
+        }
       },
-      'styleSel' (newVal) {
-        this.block.setClassStyle(this.classSel, newVal);
-        this.setChanged(true);
-        if (newVal === 'illustration') {
-          if (this.editor) {
-            this.editor.removeElements();
-            this.editor.destroy();
-            Vue.nextTick(() => {
-              $('[id="' + this.block._id + '"] .illustration-block').removeAttr('contenteditable');
-              $('[id="' + this.block._id + '"] .illustration-block').removeAttr('data-placeholder');
-            });
-          }
-        } else {
-          if (!this.editor) {
-            this.initEditor();
+      'styleSel' (newVal, oldVal) {
+        console.log('styleSel');
+        if (oldVal !== false) {
+          this.block.setClassStyle(this.classSel, newVal);
+          this.setChanged(true);
+          if (this.block.type === 'illustration') {
+            this.setChanged(false);
+            if (this.editor) {
+              this.editor.removeElements();
+              this.editor.destroy();
+              Vue.nextTick(() => {
+                $('[id="' + this.block._id + '"] .illustration-block')
+                .removeAttr('contenteditable')
+                .removeAttr('data-placeholder');
+              });
+            }
+          } else {
+            if (!this.editor) {
+              this.initEditor();
+            }
           }
         }
       },
@@ -1315,6 +1324,9 @@ export default {
 @variable: 90px;
 .ocean {
     padding: 0;
+    .content-wrap.par {
+      position: static;
+    }
 }
 
 .table-body {
@@ -1522,6 +1534,7 @@ export default {
     cursor: pointer;
     color: gray;
     font-size: 18px;
+    position: static;
 }
 
 .medium-editor-toolbar .fa {
@@ -1557,9 +1570,6 @@ export default {
     }
 }
 
-  .content-wrap {
-      w {position: relative;}
-  }
   /* A tricky way to create a lightweight highlight effect */
   .content-wrap[data-audiosrc].playing {
       w[data-map] {
@@ -1638,7 +1648,6 @@ export default {
   }
 
   [data-flag] {
-    position: relative;
     border-bottom: 2px solid red;
     pointer-events: none;
     &:before {
@@ -1651,8 +1660,10 @@ export default {
       cursor: pointer;
       display: inline-block;
       margin-right: 1px;
-      position: relative;
-      top: 2px;
+      vertical-align: middle;
+/*      position: relative;
+      z-index: 1;
+      top: 5px;*/
     }
 
     &[data-status="open"] {

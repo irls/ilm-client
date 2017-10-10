@@ -1,38 +1,37 @@
 <template>
-<div>
-<table class="toolbar"><tr>
+<div class="toolbar">
 
-  <td>
-    <h3><img src='/static/bookstack.svg' class='bookstack'/>
-     {{ bookCount() }} Book{{ (bookCount()===1 ? '':'s')}}
-    </h3>
-  </td>
+  <h3><img src='/static/bookstack_crop.svg' class='bookstack'/>
+    {{ bookCount() }} Book{{ (bookCount()===1 ? '':'s')}}
+  </h3>
 
-  <td class="right">
-    <!-- Edit Button -->
-    <button v-if="allowBookEditMode"
-      @click='editBook' class='btn btn-default'>
-      <i class="fa fa-pencil fa-lg"></i>  Edit
-    </button>  &nbsp;
+  <div class="pull-right">
+  <!-- Edit Button -->
+  <button v-if="allowBookEditMode"
+    @click='editBook' class='btn btn-default'>
+    <i class="fa fa-pencil fa-lg"></i>  Edit
+  </button>  &nbsp;
 
-    <!-- Meta Filter -->
-    <input type="text" @keyup="booksFilterChange" class="form-control" placeholder="Filter"></input> &nbsp;
+  <!-- Meta Filter -->
+  <input type="text" @keyup="booksFilterChange" class="form-control" placeholder="Filter"></input> &nbsp;
 
-    <select @change="booksTypeChange">
-      <option value="staging">Staging</option>
-      <option value="shared">Shared</option>
-    </select> &nbsp;
+  <select @change="booksTypeChange">
+    <option value="staging">Staging</option>
+    <option value="shared">Shared</option>
+  </select> &nbsp;
 
-    <!-- Language Dropdown -->
-    <select @change="booksLanguageChange">
-      <option v-for="(name, code) in languages" :value="code">{{name}}</option>
-    </select>
-  </td>
+  <!-- Language Dropdown -->
+  <select @change="booksLanguageChange">
+    <option v-for="(name, code) in languages" :value="code">{{name}}</option>
+  </select>
 
-</tr></table>
+  <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Meta</button>
+
+  </div>
 
   <!-- Import Books Modal Popup -->
-  <BookImport v-if="showImportBooksModal" @close_modal="importBooksModalClose" />
+  <BookImport v-if="showImportBooksModal"
+  @close_modal="importBooksModalClose" />
 
 </div>
 </template>
@@ -66,9 +65,11 @@ export default {
     }
   },
 
-  props: {
-
-  },
+  props: [
+    'hasBookSelected',
+    'toggleMetaVisible',
+    'metaVisible'
+  ],
 
   computed: mapGetters([
     'isLoggedIn',
@@ -109,42 +110,49 @@ export default {
 </script>
 
 
-<style scoped>
+<style lang="less" scoped>
+
 .toolbar {
-   width: 100%;
-   height: 4em;
-   position: relative;
-   padding-left: .25em;
-   padding-right: .25em;
-   box-shadow: 0px 0px 3px 2px rgba(178, 191, 224, 0.53);
- }
-.toolbar td {
-   text-align: left;
-   padding-top:0; margin-top:0;
- }
-.toolbar td.right {
-  text-align: right;
-  position: inline;
-  padding-top: 11px;
-  float: right;
-  padding-right: 10px;
+  width:inherit;
+  position: fixed;
+  z-index: 9999;
+  margin-top: -20px;
+  background: #FFFFFF;
 }
 
-
-h3 {margin: 0; padding-top: 0; padding-left: 2.5em; }
+h3 {
+  margin: 0;
+  padding-top: 0;
+  display: inline-block;
+}
 
 select {
   padding: 3px; height: 2.5em;
 }
+
 .btn {
   margin-right: .5em;
+
+  &.btn-meta {
+     margin-left: 40px;
+    &:focus {
+      background: rgb(255, 255, 255);
+      border-color: rgb(204, 204, 204);
+    }
+    .collapsebtn {
+      margin-right: 5px;
+    }
+  }
 }
+
+
 button:hover {
   color: darkgreen;
   background: #F0FFF0
 }
+
 img.bookstack {
-  width: 60px; position: absolute; left: 10px; top: 5px;
+  width: 30px;
   opacity: .75
 }
 

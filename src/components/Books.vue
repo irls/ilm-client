@@ -3,18 +3,19 @@
 
     <table id='bodytable'>
       <tr>
-        <td :colspan="metaVisible ? 1 : 2">
-          <BookEditToolbar v-if="isEditMode()" />
-          <BooksToolbar v-else @import_finished="bookImportFinished" />
-        </td>
-        <td v-if='hasBookSelected() && metaVisible'
-            class='collapseEditBar visible'
-            @click='toggleMetaVisible' rowspan="2">
+        <td :class="['toolbar-wrapper', metaVisible ? 'meta-visible' : '']">
 
-          <div class="bar">
-            <i :class="['fa-chevron-right' , 'fa collapsebtn']" aria-hidden="true"></i>
-          </div>
-        </td>
+            <BookEditToolbar v-if="isEditMode()"
+            :toggleMetaVisible="toggleMetaVisible"
+            :hasBookSelected="hasBookSelected"
+            :metaVisible="metaVisible"/>
+            <BooksToolbar v-else
+            @import_finished="bookImportFinished"
+            :toggleMetaVisible="toggleMetaVisible"
+            :hasBookSelected="hasBookSelected"
+            :metaVisible="metaVisible"/>
+
+        </td> <!--collapseEditBar visible-->
         <td class='metaedit' v-if='metaVisible' rowspan="2">
           <book-meta-edit v-if='metaVisible'></book-meta-edit>
         </td>
@@ -29,14 +30,14 @@
           </template>
           <BooksGrid v-else />
         </td>
-        <td v-if='hasBookSelected() && !metaVisible'
+<!--        <td v-if='hasBookSelected() && !metaVisible'
             class='collapseEditBar'
             @click='toggleMetaVisible'>
 
           <div class="bar">
             <i :class="['fa-chevron-left' , 'fa collapsebtn']" aria-hidden="true"></i>
           </div>
-        </td>
+        </td>-->
       </tr>
     </table>
   </div>
@@ -86,10 +87,10 @@ export default {
   computed: mapGetters(['bookEditMode', 'currentBook']),
 
   watch: {
-    '$store.state.route.params' (to, from) {
-      // react to route changes...
-      this.recountRows()
-    }
+//     '$store.state.route.params' (to, from) {
+//       // react to route changes...
+//       // this.recountRows()
+//     }
   },
   mixins: [api_config],
 
@@ -141,22 +142,29 @@ export default {
 
   #bodytable {
     width: 100%;
-    display: block;
-    margin-top: 15px;
+    margin-top: -23px;
     display: table;
     tr {
-      width: 100%;
       td {
         /*vertical-align: top;*/
+        &.toolbar-wrapper {
+          /*box-shadow: 0px 0px 3px 2px rgba(178, 191, 224, 0.53);*/
+          height: 3em;
+          width: 99.4%;
+          &.meta-visible {
+            width: 69.4%;
+          }
+        }
         &.maincontent {
           overflow: hidden;
           max-width: 500px;
-          padding-top: 3em;
+          padding-top: 2em;
         }
         &.metaedit {
           width: 30%;
           min-width: 300px!important;
-          vertical-align: top
+          vertical-align: top;
+          padding-left: 6px;
         }
         &.collapseEditBar {
           vertical-align: top;
@@ -167,17 +175,17 @@ export default {
           padding-top: 23px;
           padding-left: 8px;
           cursor: pointer;
-          position: relative;
+          /*position: relative;*/
 
           .bar {
             width: 100%;
             min-width: 2px;
             height: 100%;
             background-color: rgba(204, 212, 226, .25);
-            position: relative;
+            /*position: relative;*/
 
             .collapsebtn {
-              position: fixed;
+              /*position: fixed;*/
               background: white;
               padding: 5px 5px 3px 8px;
               border: .5px solid rgb(204, 212, 226);

@@ -101,7 +101,7 @@ export default {
         //console.log( this.meta._id );
         this.getBlocks();
     },
-    
+
     getBlocks() {
       this.loadBlocks({
             book_id: this.meta._id,
@@ -118,11 +118,11 @@ export default {
                 });
                 if (tmp.length>0) this.parlist.push(tmp)//([...tmp]);
 
-                this.$refs.scrollBookDown.$emit('$InfiniteLoading:loaded');
+                if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.$emit('$InfiniteLoading:loaded');
             } else {
-                this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
+                if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
             }
-            this.isAllLoaded = this.$refs.scrollBookDown.isComplete;
+            this.isAllLoaded = this.$refs.scrollBookDown ? this.$refs.scrollBookDown.isComplete : false;
             //console.log('loaded', result);
         }).catch((err)=>{
             if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
@@ -429,6 +429,7 @@ export default {
     margin-bottom: 175px;
   }
   .fixed-bottom {
+    /*display: none;*/
     position: fixed;
     margin-left: -10px;
     width: 99%;

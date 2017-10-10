@@ -1,4 +1,5 @@
 <template>
+  <div class="fixed-wrapper">
   <table class="navtable">
     <tr><td class='logo'>
       <router-link to="/"><img src="../assets/ilm-logo.svg"/></router-link>
@@ -37,6 +38,7 @@
       </ul>
     </td></tr>
   </table>
+  </div>
 </template>
 
 
@@ -62,20 +64,31 @@ export default {
 
 
 <style scoped>
+  .fixed-wrapper {
+    width: 100%;
+    height: 70px;
+  }
 
   /* Navigation Menu Table (Oh yes I did!) */
   table.navtable {
-   width: 100%; margin:0;
-   margin-left:10px; margin-right:10px; margin-bottom: 1em; height: 3em;
-   min-width: 768px; display: table;
+   position: fixed;
+   background: #FFFFFF;
+   z-index: 9999;
+   width: 100%;
+   margin:0;
+   margin-top: -5px;
+   height: 4em;
+   /*min-width: 768px; display: table;*/
    /*background: silver;
    border: .25 px solid gray;*/
 
   }
   .navtable tr {vertical-align: top; font-size: 1.2em; }
-  .navtable td {vertical-align: top; text-align: left;}
+  .navtable td {vertical-align: top; text-align: left; padding-top: 5px;}
   .navtable td.logo {min-width: 20px; width: 20px;}
-    .logo img{max-width: 30px; margin:0; margin-left: -10px; margin-top: 2px; position: absolute;}
+
+  .logo img{max-width: 20px; margin:0; margin-top: 2px; position: absolute;}
+
   .navtable td.menu {padding-left: 10px;}
   .navtable td.right {float: right; padding-right: 5px;}
 

@@ -14,6 +14,7 @@ Vue.use(Vuex)
 
 const ILM_CONTENT = 'ilm_content';
 const ILM_CONTENT_META = 'ilm_content_meta';
+const ILM_CONTENT_FILES = 'ilm_library_files';
 const ILM_TASKS = 'ilm_tasks';
 
 // const API_ALLBOOKS = '/static/books.json'
@@ -47,6 +48,7 @@ export const store = new Vuex.Store({
     currentBook_dirty: false,
     currentBookMeta_dirty: false,
     currentEditingBlockId: '',
+    currentBookFiles: {},
 
     bookFilters: {filter: '', language: 'en', importStatus: 'staging'},
     editMode: 'Editor',
@@ -74,6 +76,7 @@ export const store = new Vuex.Store({
     currentBookid: state => state.currentBookid,
     currentBook: state => state.currentBook,
     currentBookMeta: state => state.currentBookMeta,
+    currentBookFiles: state => state.currentBookFiles,
     bookEditMode: state => state.editMode,
     allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode),
     allowArchiving: state => state.isAdmin || state.isProofer,
@@ -141,7 +144,16 @@ export const store = new Vuex.Store({
       state.currentBook_dirty = false
       state.currentBookMeta_dirty = false
       state.currentBookid = meta._id
+    },
 
+    SET_CURRENTBOOK_FILES (state, files) {
+      state.currentBookFiles = {};
+      state.currentBookFiles.coverimg = 'http://' + [
+        process.env.ILM_DB,
+        ILM_CONTENT_FILES,
+        files._id,
+        'coverimg'
+      ].join('/') + '?' + new Date().getTime();
     },
 
     setEditMode (state, editMode) {
@@ -242,6 +254,7 @@ export const store = new Vuex.Store({
         commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
+        commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
         commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
 
         state.metaDB.replicate.from(state.metaRemoteDB)
@@ -306,7 +319,7 @@ export const store = new Vuex.Store({
     },
 
     loadBook ({commit, state, dispatch}, book_id) {
-       console.log('loading currentBook: ', book_id)
+      //console.log('loading currentBook: ', book_id)
       // if (!book_id) return  // if no currentbookid, exit
       // if (book_id === context.state.currentBookid) return // skip if already loaded
 
@@ -320,17 +333,22 @@ export const store = new Vuex.Store({
       state.metaDB.get(book_id).then(meta => {
         commit('SET_CURRENTBOOK_META', meta)
         commit('TASK_LIST_LOADED')
-//         state.contentDB.get(book_id).then(book => {
-//           commit('SET_CURRENTBOOK', book)
-//
-//         })
+
+        state.filesRemoteDB.get(book_id).then(files => {
+          commit('SET_CURRENTBOOK_FILES', files);
+        }).catch((err)=>{})
       }).catch((err)=>{})
+
+
     },
 
     reloadBookMeta ({commit, state, dispatch}) {
         if (state.currentBookMeta._id) {
             state.metaDB.get(state.currentBookMeta._id).then((meta) => {
                 commit('SET_CURRENTBOOK_META', meta)
+                state.filesRemoteDB.get(state.currentBookMeta._id).then(files => {
+                  commit('SET_CURRENTBOOK_FILES', files);
+                });
             })
         }
     },

@@ -118,6 +118,8 @@ import html2canvas from 'html2canvas'
 import PouchDB from 'pouchdb'
 import superlogin from 'superlogin-client'
 
+import { mapGetters, mapActions }    from 'vuex'
+
 // const quillOptions = {
 //   modules: {
 //     toolbar: [
@@ -153,6 +155,7 @@ export default {
 
   data () {
     return {
+      ilm_library_files: this.$store.state.filesRemoteDB,
       bookcovers: BOOKCOVERS,
       uploadMode: true,
       uploadImage: '',
@@ -229,7 +232,9 @@ export default {
   },
 
   methods: {
-
+    ...mapActions([
+      'reloadBookMeta'
+    ]),
     addBookCover (e) {
       console.log('addedBookCover', e.target.files[0])
     },
@@ -271,41 +276,29 @@ export default {
 
     uploadNewImageData (urlData) {
       if (urlData.length < 1) return
-      var vm = this
-      // cut out mime type part
-      var mime = urlData.substring(urlData.indexOf(':') + 1, urlData.indexOf(';'))
-      // cut out data part
-      var urlData = urlData.substring(urlData.indexOf(',') + 1)
+      //console.log('bookid:', bookid)
       // the book id is critical for the path
-      var bookid = this.img.bookid
+      let bookid = this.img.bookid
 
-      console.log('bookid:', bookid)
+      return this.ilm_library_files.get(bookid)
+      .then(doc => {
+        // cut out mime type part
+        let mime = urlData.substring(urlData.indexOf(':') + 1, urlData.indexOf(';'))
+        // cut out data part
+        urlData = urlData.substring(urlData.indexOf(',') + 1)
 
-      var dburl = superlogin.getDbUrl('ilm_library_files')
-      if (process.env.DOCKER) dburl = dburl.replace('couchdb', 'localhost')
-      // var dburl = this.$store.state.auth.getDbUrl('ilm_library_files')
-
-      var coverimg = dburl.replace(/^(http[s]?:\/\/)(.*?\:.*?@)(.*?)$/m, '$1$3')+'/' + bookid + '/coverimg'
-      var ilm_library_files = new PouchDB(dburl)
-
-      return ilm_library_files.get(bookid).catch(function (err) {
-        if (err.name === 'not_found') return ilm_library_files.put({_id: bookid, type: 'book'}).then(doc => doc)
-        else console.log('Oops, we should not ever be here... ', err)
-      }).then(doc => {
         doc._attachments = (doc._attachments || {})
         doc._attachments.coverimg = {content_type: mime, data: urlData}
-        return ilm_library_files.put(doc).then(function(doc) {
-          var ilm_content_meta = new PouchDB('ilm_content_meta')
-          return ilm_content_meta.get(bookid).then(doc => {
-            console.log('finally got here!')
-            console.log('coverimg: ', coverimg)
-            doc.coverimg = coverimg
-            vm.img.coverimg = coverimg
-            return ilm_content_meta.put(doc)
-          })
+
+        return this.ilm_library_files.put(doc).then((doc)=>{
+          return this.reloadBookMeta();
         }).catch(err => console.log(err))
       }).catch(err => {
-        // handle any errors
+        if (err.name === 'not_found') return this.ilm_library_files.put({_id: bookid, type: 'book'})
+        .then(doc => {
+          return this.uploadNewImageData(urlData);
+        })
+        else console.log('Oops, we should not ever be here... ', err)
       })
     },
 

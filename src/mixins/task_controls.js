@@ -36,7 +36,9 @@ export default {
         return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 6
       },
       tc_isShowEdit(blockid) {
-        return this.tc_hasTask('content_cleanup') || (this.$store.state.isAdmin)
+        return this.tc_hasTask('content_cleanup')
+              || this.$store.state.isAdmin
+              || this.$store.state.isEditor
       },
       tc_isShowApproveContentFixAction(blockid) {
         return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 7;
