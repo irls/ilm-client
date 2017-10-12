@@ -597,7 +597,8 @@ export default {
         this.updateFlagStatus(this.block._id);
         return this.putBlock(this.block).then(()=>{
           this.isChanged = false;
-          if (this.$refs.blockContent.dataset.has_suggestion) {
+          if (this.$refs.blockContent.dataset.has_suggestion && this.$refs.blockContent.dataset.has_suggestion === 'true') {
+            console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
             this.doReAlign();
           }
           this.$refs.blockContent.dataset.has_suggestion = false;
