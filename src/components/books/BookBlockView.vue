@@ -78,9 +78,7 @@
                   <select v-model='styleSel' style="min-width: 110px;"><!--v-model='block.classes'--><!--:value="style"-->
                     <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
                   </select>
-                  </label>
-
-                  &nbsp;&nbsp;{{block.getClass()}}
+                  </label>&nbsp;&nbsp;{{block.getClass()}}
               </div>
               <!--<div class="-hidden">-->
 
@@ -120,7 +118,7 @@
                 <hr v-if="block.type=='hr'" />
                 <div v-else-if="block.type == 'illustration'" class="illustration-block">
                   <img v-if="block.illustration" :src="block.getIllustration()" :class="[block.getClass()]"/>
-                  <div :class="['drag-uploader', 'no-picture', {'hidden': this.isChanged}]">
+                  <div :class="['drag-uploader', 'no-picture', {'__hidden': this.isChanged}]">
                     <vue-picture-input
                       @change="onIllustrationChange"
                       @remove="onIllustrationChange"
@@ -597,7 +595,13 @@ export default {
 
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
-        return this.putBlock(this.block).then(()=>{ this.isChanged = false });
+        return this.putBlock(this.block).then(()=>{
+          this.isChanged = false;
+          if (this.$refs.blockContent.dataset.has_suggestion) {
+            this.doReAlign();
+          }
+          this.$refs.blockContent.dataset.has_suggestion = false;
+        });
       },
 
       checkBlockContentFlags: function(ev) {
@@ -643,8 +647,6 @@ export default {
       actionWithBlock: function(ev) {
         this.assembleBlockProxy(ev)
         .then(()=>{
-          //console.log('audiosrc', this.block.audiosrc);
-          //console.log('blockAudio', this.blockAudio);
           let task = this.tc_getBlockTask(this.block._id);
 
           if (!task) {
@@ -659,8 +661,6 @@ export default {
 
           if (task.nextStep == 'proofer' && !this.block.hasAudio()) task.nextStep = 'narrator';
 
-          //console.log('task', task);
-
           this.tc_approveBookTask(task)
           .then(response => {
             if (response.status == 200) {}
@@ -669,8 +669,6 @@ export default {
         });
 
         this.$root.$emit('closeFlagPopup', true);
-//      this.assembleBlockProxy(ev).then(()=>{
-//      this.watchBlk.once('change', (change) => {
       },
 
       audPlay: function(block_id, ev) {
@@ -1050,6 +1048,28 @@ export default {
           });
         });
       },
+      doReAlign() {
+        if (this.block.audiosrc) {
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/realign';
+        let api = this.$store.state.auth.getHttp();
+        let formData = new FormData();
+        formData.append('audio', [this.block.audiosrc]);
+        this.isUpdating = true;
+        api.post(api_url, formData, {})
+        .then(response => {
+          this.isUpdating = false;
+          if (response.status == 200) {
+            this.blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
+            this.blockAudio.map = response.data.content;
+          }
+          this.reRecordPosition = false;
+        })
+        .catch(err => {
+          this.reRecordPosition = false;
+          this.isUpdating = false;
+        });
+        }
+      },
       stopRecordingAndNext() {
         //this.stopRecording();
         //let offset = document.getElementById(this.block._id).getBoundingClientRect()
@@ -1324,8 +1344,20 @@ export default {
 @variable: 90px;
 .ocean {
     padding: 0;
-    .content-wrap.par {
+    .content-wrap {
       position: static;
+      &.par {
+        min-height: 47px;
+      }
+      &.title {
+        min-height: 77.5px;
+      }
+      &.header {
+        min-height: 62.5px;
+      }
+      &.subhead {
+        min-height: 54.5px;
+      }
     }
 }
 
@@ -1508,8 +1540,10 @@ export default {
 
     .block-menu {
       display: inline-block;
+      vertical-align: bottom;
       position: relative;
       width: 40px;
+      height: 20px;
       .fa, .glyphicon {
         margin-right: 5px;
       }
@@ -1661,9 +1695,6 @@ export default {
       display: inline-block;
       margin-right: 1px;
       vertical-align: middle;
-/*      position: relative;
-      z-index: 1;
-      top: 5px;*/
     }
 
     &[data-status="open"] {
@@ -1768,6 +1799,7 @@ export default {
       }
     }
   }
+
   /*.drag-uploader {
     width: 20%;
     max-height: 100px;

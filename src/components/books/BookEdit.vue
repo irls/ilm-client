@@ -314,9 +314,9 @@ export default {
           block_id: block_id,
           direction: direction
         })
-          .then(response => {
-            ++this.parlistSkip;
-          })
+        .then(response => {
+          ++this.parlistSkip;
+        })
       }
     },
     deleteBlock(block_id) {

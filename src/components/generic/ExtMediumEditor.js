@@ -565,6 +565,7 @@ let SuggestButton = MediumEditor.Extension.extend({
 
       this.triggerEvent(this.base.getFocusedElement(), 'input');
       this.base.restoreSelection();
+      MediumEditor.util.getContainerEditorElement(this.base.getFocusedElement()).dataset.has_suggestion = true;
     }
     this.base.checkSelection();
   },
@@ -586,6 +587,7 @@ let SuggestButton = MediumEditor.Extension.extend({
           this.setInactive();
           this.triggerEvent(this.base.getFocusedElement(), 'input');
           this.base.restoreSelection();
+          MediumEditor.util.getContainerEditorElement(this.base.getFocusedElement()).dataset.has_suggestion = true;
         }
       }
       this.base.checkSelection();
