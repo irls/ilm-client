@@ -85,6 +85,9 @@
               <!--<div class="-hidden">-->
 
               <div class="par-ctrl -audio -hidden -right">
+                  <template v-if="blockAudio.src && (tc_showBlockNarrate(block._id) || isEditor)">
+                    <i class="fa fa-pencil" v-on:click="showAudioEditor"></i>
+                  </template>
                   <template v-if="player && blockAudio.src && !isRecording">
                       <template v-if="!isAudStarted">
                         <i class="fa fa-play-circle-o"
@@ -394,7 +397,7 @@ export default {
       'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'getBlock', 'recorder', 'blockOrderChanged'],
+  props: ['block', 'putBlock', 'getBlock', 'recorder', 'blockOrderChanged', 'audioEditor'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -722,19 +725,54 @@ export default {
         if (!endRange) {
           endRange = this._getClosestAligned(endElement, 1)
         }
+        this._audDeletePart(startRange[0], endRange[0] + endRange[1]);
+      },
+      _audDeletePart(start, end) {
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_remove';
         let api = this.$store.state.auth.getHttp();
         this.isUpdating = true;
         let formData = new FormData();
-        let position = [startRange[0], endRange[0] + endRange[1]];
+        let position = [start, end];
         formData.append('position', position);
-        formData.append('isTemp', this.isAudioChanged);
+        formData.append('modified', this.isAudioChanged);
+        formData.append('content', this.block.content);
+        formData.append('audio', this.blockAudio.src.replace(process.env.ILM_API, '').split('?').shift());
         api.post(api_url, formData, {})
           .then(response => {
             this.isUpdating = false;
             if (response.status == 200) {
               this.blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
               this.blockAudio.map = response.data.content;
+              this.block.content = response.data.content;
+              if (this.audioEditor) {
+                this.audioEditor.setAudio(this.blockAudio.src, this.blockAudio.map);
+              }
+            }
+          })
+          .catch(err => {
+            this.isUpdating = false;
+          });
+      },
+      insertSilence(position, length) {
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio/insert_silence';
+        let api = this.$store.state.auth.getHttp();
+        this.isUpdating = true;
+        let formData = new FormData();
+        formData.append('position', position);
+        formData.append('modified', this.isAudioChanged);
+        formData.append('length', length);
+        formData.append('content', this.block.content);
+        formData.append('audio', this.blockAudio.src.replace(process.env.ILM_API, '').split('?').shift());
+        api.post(api_url, formData, {})
+          .then(response => {
+            this.isUpdating = false;
+            if (response.status == 200) {
+              this.blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
+              this.blockAudio.map = response.data.content;
+              this.block.content = response.data.content;
+              if (this.audioEditor) {
+                this.audioEditor.setAudio(this.blockAudio.src, this.blockAudio.map);
+              }
             }
           })
           .catch(err => {
@@ -1132,6 +1170,44 @@ export default {
       joinWithNext() {
         this.$emit('joinBlocks', this.block, 'next');
       },
+      showAudioEditor() {
+        $('.table-body.-content').removeClass('editing');
+        $('#' + this.block._id + ' .table-body.-content').addClass('editing');
+        this.audioEditor.close();
+        this.audioEditor.load(this.blockAudio.src, this.blockAudio.map, this.block._id);
+        let self = this;
+        this.audioEditor.$on('word_realign', function(map, blockId) {
+          if (blockId == self.block._id && self.$refs.blockContent.querySelectorAll) {
+            console.log(self.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
+            self.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
+              let _m = map.shift();
+              let w_map = _m.join()
+              $(_w).attr('data-map', w_map)
+            });
+            self.isChanged = true;
+          }
+        });
+        this.audioEditor.$on('save', function(blockId) {
+          if (blockId == self.block._id) {
+            self.assembleBlock();
+          }
+        });
+        this.audioEditor.$on('cut', function(blockId, start, end) {
+          if (blockId == self.block._id) {
+            self._audDeletePart(start, end);
+          }
+        });
+        this.audioEditor.$on('closed', function(blockId) {
+          if (blockId == self.block._id) {
+            $('#' + self.block._id + ' .table-body.-content').removeClass('editing');
+          }
+        });
+        this.audioEditor.$on('insertSilence', function(blockId, position, length) {
+          if (blockId == self.block._id) {
+            self.insertSilence(position, length);
+          }
+        });
+      },
       _getParent(node, tag) {
         if (node.localName == tag) {
           return node;
@@ -1294,7 +1370,7 @@ export default {
           if (newVal.indexOf('?') === -1) {
             this.blockAudio.src+= '?' + (new Date()).toJSON();
           }
-          if (this.tc_showBlockNarrate(this.block._id)) {
+          if (this.tc_showBlockNarrate(this.block._id) || this.isEditor) {
             let isChanged = newVal && this.block.audiosrc != newVal.split('?').shift();
             this.isAudioChanged = isChanged;
             if (isChanged) {
@@ -1342,7 +1418,7 @@ export default {
             visibility: hidden;
         }
 
-        &:hover {
+        &:hover, &.editing {
             .-hidden {
                 visibility: visible;
             }
@@ -1623,7 +1699,7 @@ export default {
           content: '\f1c7\00A0\f061';
           left: -50px;
       }
-      w.audio-highlight {
+      w.audio-highlight, w.selected {
           background: linear-gradient(
               transparent 20%,
               rgba(255,255,0,.8) 55%,

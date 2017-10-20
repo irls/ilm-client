@@ -1,9 +1,12 @@
 <template>
   <div>
-    <div v-html="content" :data-audiosrc="audiofile" class="block-content">
+    <!-- <div v-html="content" :data-audiosrc="audiofile" class="block-content">
       
-    </div>
+    </div> -->
     <div class="waveform-playlist">
+      <div class="pull-right">
+        <span class="close-player" v-on:click="close()">&times;</span>
+      </div>
       <div class="waveform-wrapper">
         <div id="playlist" class="wf-playlist"></div>
       </div>
@@ -30,21 +33,21 @@
           <div v-if="selection.end >= 0">
             <div>Selection End</div>
             <div>
-              <input type="text" v-model="selectionEndH" disabled />:<input type="text" v-model="selectionEndM" disabled />:<input type="number" v-model="selectionEndS" class="sec" step="0.1" ref="selectionEndNum"/>
+              <input type="text" v-model="selectionEndH" disabled />:<input type="text" v-model="selectionEndM" disabled />:<input type="number" v-model="selectionEndS" class="sec" step="0.1" ref="selectionEndNum" :disabled="isSinglePointSelection"/>
             </div>
           </div>
           <div v-if="hasSelection && !isSinglePointSelection">
-            <button class="btn btn-primary">Cut</button>
+            <button class="btn btn-primary" v-on:click="cut()">Cut</button>
           </div>
           <div v-if="hasSelection && isSinglePointSelection">
             <input type="number" step="0.1" v-model="silenceLength" />
-            <button class="btn btn-primary">Add Silence</button>
+            <button class="btn btn-primary" v-on:click="addSilence()">Add Silence</button>
           </div>
         </div>
-        <div class="audio-controls">
-          <button class="btn btn-default">Undo</button>
+        <div class="audio-controls" v-if="isModified">
+          <button class="btn btn-default" v-if="history.length" v-on:click="undo()">Undo</button>
           <button class="btn btn-default">Discard</button>
-          <button class="btn btn-primary">Save</button>
+          <button class="btn btn-primary" v-on:click="save()">Save</button>
           <button class="btn btn-primary">Save & Re-align</button>
         </div>
       </div>
@@ -77,8 +80,9 @@
         return {
           audiosourceEditor: false,
           peaksPlayer: false,
-          content: '<w data-map="0,335">Either </w><w data-map="335,250">the </w><w data-map="585,60">well </w><w data-map="645,200">was </w><w data-map="845,255">very </w><w data-map="1100,360">deep, </w><w data-map="1460,165">or </w><w data-map="1625,165">she </w><w data-map="1790,310">fell </w><w data-map="2100,280">very </w><w data-map="2380,680">slowly, </w><w data-map="3060,20">for </w><w data-map="3080,270">she </w><w data-map="3350,500">had </w><w data-map="3850,395">plenty  </w><w data-map="4245,25">of </w><w data-map="4270,190">time </w><w data-map="4460,355">as </w><w data-map="4815,115">she </w><w data-map="4930,265">went </w><w data-map="5195,220">down </w><w data-map="5415,115">to </w><w data-map="5530,150">look </w><w data-map="5680,750">about </w><w data-map="6430,450">her. </w><w data-map="6880,435">First, </w><w data-map="7315,100">she </w><w data-map="7415,265">tried </w><w data-map="7680,10">to </w><w>look </w><w data-map="7690,10">down </w><w data-map="7700,50">and </w><w data-map="7750,230">make </w><w data-map="7980,190">out </w><w data-map="8170,160">what </w><w data-map="8330,110">she </w><w data-map="8440,225">was  </w><w data-map="8665,315">coming </w><w data-map="8980,260">to, </w><w data-map="9240,555">but </w><w data-map="9795,80">it </w><w data-map="9875,175">was </w><w data-map="10050,150">too </w><w data-map="10200,115">dark </w><w data-map="10315,145">to </w><w data-map="10460,380">see </w><w data-map="10840,600">anything; </w><w data-map="11440,585">then </w><w data-map="12025,125">she </w><w data-map="12150,550">looked </w><w data-map="12700,250">at </w><w data-map="12950,165">the  </w><w data-map="13115,185">sides </w><w data-map="13300,170">of </w><w data-map="13470,130">the </w><w>well, </w><w data-map="13600,70">and </w><w data-map="13670,315">noticed </w><w data-map="13985,95">that </w><w>they </w><w data-map="14080,120">were </w><w data-map="14200,475">filled </w><w data-map="14675,185">with </w><w data-map="14860,245">cupboards </w><w data-map="15105,370">and  </w><w data-map="15475,1045">book-shelves; </w><w data-map="16520,305">here </w><w data-map="16825,20">and </w><w data-map="16845,160">there </w><w data-map="17005,160">she </w><w data-map="17165,180">saw </w><w data-map="17345,300">maps </w><w data-map="17645,330">and </w><w data-map="17975,400">pictures </w><w data-map="18375,180">hung </w><w data-map="18555,305">upon </w><w data-map="18860,820">pegs. </w><w data-map="19680,325">She  </w><w data-map="20005,240">took </w><w data-map="20245,215">down </w><w data-map="20460,80">a </w><w data-map="20540,295">jar </w><w data-map="20835,195">from </w><w data-map="21030,50">one </w><w data-map="21080,75">of </w><w data-map="21155,5">the </w><w data-map="21160,380">shelves </w><w data-map="21540,225">as </w><w data-map="21765,190">she </w><w data-map="21955,1005">passed; </w><w>it </w><w data-map="22960,265">was </w><w data-map="23225,395">labelled  </w><w data-map="23620,530">‘ORANGE </w><w data-map="24150,1010">MARMALADE’, </w><w data-map="25160,160">but </w><w data-map="25320,245">to </w><w data-map="25565,60">her </w><w data-map="25625,155">great </w><w data-map="25780,1030">disappointment </w><w data-map="26810,105">it </w><w data-map="26915,240">was </w><w data-map="27155,765">empty: </w><w data-map="27920,150">she </w><w data-map="28070,145">did  </w><w data-map="28215,170">not </w><w data-map="28385,110">like </w><w data-map="28495,115">to </w><w data-map="28610,485">drop </w><w data-map="29095,120">the </w><w data-map="29215,405">jar, </w><w data-map="29620,405">so </w><w data-map="30025,135">she </w><w data-map="30160,410">managed </w><w data-map="30570,140">to </w><w data-map="30710,165">put  </w><w data-map="30875,115">it </w><w data-map="30990,235">into </w><w data-map="31225,10">one </w><w data-map="31235,10">of </w><w data-map="31245,225">the </w><w data-map="31470,380">cupboards </w><w data-map="31850,205">as </w><w data-map="32055,165">she </w><w data-map="32220,195">fell </w><w data-map="32415,405">past </w><w data-map="32820,1060">it.</w>',
-          audiofile: 'http://localhost:3000/audiofiles/aaiw1_en/aaiw1_en_31/aaiw1_en_31.flac',
+          content: "",//'<w data-map="0,335">Either </w><w data-map="335,250">the </w><w data-map="585,60">well </w><w data-map="645,200">was </w><w data-map="845,255">very </w><w data-map="1100,360">deep, </w><w data-map="1460,165">or </w><w data-map="1625,165">she </w><w data-map="1790,310">fell </w><w data-map="2100,280">very </w><w data-map="2380,680">slowly, </w><w data-map="3060,20">for </w><w data-map="3080,270">she </w><w data-map="3350,500">had </w><w data-map="3850,395">plenty  </w><w data-map="4245,25">of </w><w data-map="4270,190">time </w><w data-map="4460,355">as </w><w data-map="4815,115">she </w><w data-map="4930,265">went </w><w data-map="5195,220">down </w><w data-map="5415,115">to </w><w data-map="5530,150">look </w><w data-map="5680,750">about </w><w data-map="6430,450">her. </w><w data-map="6880,435">First, </w><w data-map="7315,100">she </w><w data-map="7415,265">tried </w><w data-map="7680,10">to </w><w>look </w><w data-map="7690,10">down </w><w data-map="7700,50">and </w><w data-map="7750,230">make </w><w data-map="7980,190">out </w><w data-map="8170,160">what </w><w data-map="8330,110">she </w><w data-map="8440,225">was  </w><w data-map="8665,315">coming </w><w data-map="8980,260">to, </w><w data-map="9240,555">but </w><w data-map="9795,80">it </w><w data-map="9875,175">was </w><w data-map="10050,150">too </w><w data-map="10200,115">dark </w><w data-map="10315,145">to </w><w data-map="10460,380">see </w><w data-map="10840,600">anything; </w><w data-map="11440,585">then </w><w data-map="12025,125">she </w><w data-map="12150,550">looked </w><w data-map="12700,250">at </w><w data-map="12950,165">the  </w><w data-map="13115,185">sides </w><w data-map="13300,170">of </w><w data-map="13470,130">the </w><w>well, </w><w data-map="13600,70">and </w><w data-map="13670,315">noticed </w><w data-map="13985,95">that </w><w>they </w><w data-map="14080,120">were </w><w data-map="14200,475">filled </w><w data-map="14675,185">with </w><w data-map="14860,245">cupboards </w><w data-map="15105,370">and  </w><w data-map="15475,1045">book-shelves; </w><w data-map="16520,305">here </w><w data-map="16825,20">and </w><w data-map="16845,160">there </w><w data-map="17005,160">she </w><w data-map="17165,180">saw </w><w data-map="17345,300">maps </w><w data-map="17645,330">and </w><w data-map="17975,400">pictures </w><w data-map="18375,180">hung </w><w data-map="18555,305">upon </w><w data-map="18860,820">pegs. </w><w data-map="19680,325">She  </w><w data-map="20005,240">took </w><w data-map="20245,215">down </w><w data-map="20460,80">a </w><w data-map="20540,295">jar </w><w data-map="20835,195">from </w><w data-map="21030,50">one </w><w data-map="21080,75">of </w><w data-map="21155,5">the </w><w data-map="21160,380">shelves </w><w data-map="21540,225">as </w><w data-map="21765,190">she </w><w data-map="21955,1005">passed; </w><w>it </w><w data-map="22960,265">was </w><w data-map="23225,395">labelled  </w><w data-map="23620,530">‘ORANGE </w><w data-map="24150,1010">MARMALADE’, </w><w data-map="25160,160">but </w><w data-map="25320,245">to </w><w data-map="25565,60">her </w><w data-map="25625,155">great </w><w data-map="25780,1030">disappointment </w><w data-map="26810,105">it </w><w data-map="26915,240">was </w><w data-map="27155,765">empty: </w><w data-map="27920,150">she </w><w data-map="28070,145">did  </w><w data-map="28215,170">not </w><w data-map="28385,110">like </w><w data-map="28495,115">to </w><w data-map="28610,485">drop </w><w data-map="29095,120">the </w><w data-map="29215,405">jar, </w><w data-map="29620,405">so </w><w data-map="30025,135">she </w><w data-map="30160,410">managed </w><w data-map="30570,140">to </w><w data-map="30710,165">put  </w><w data-map="30875,115">it </w><w data-map="30990,235">into </w><w data-map="31225,10">one </w><w data-map="31235,10">of </w><w data-map="31245,225">the </w><w data-map="31470,380">cupboards </w><w data-map="31850,205">as </w><w data-map="32055,165">she </w><w data-map="32220,195">fell </w><w data-map="32415,405">past </w><w data-map="32820,1060">it.</w>',
+          audiofile: "",//'http://localhost:3000/audiofiles/aaiw1_en/aaiw1_en_31/aaiw1_en_31.flac',
+          blockId: null,
           //content: '<w data-map="0,975">The </w><w data-map="975,285">odd </w><w data-map="1260,950">superstitions </w><w data-map="2210,385">touched </w><w data-map="2595,520">upon </w><w data-map="3115,430">were </w><w data-map="3545,530">all </w><w data-map="4075,395">prevalent </w><w data-map="4470,660">among </w><w data-map="5130,555">children </w><w data-map="5685,185">and </w><w data-map="5870,610">slaves </w><w data-map="6480,45">in </w><w data-map="6525,265">the </w><w data-map="6790,425">West </w><w data-map="7215,140">at </w><w data-map="7355,220">the </w><w data-map="7575,420">period </w><w data-map="7995,245">of </w><w data-map="8240,155">this </w><w data-map="8395,715">story — </w><w data-map="9110,685">that </w><w data-map="9795,235">is </w><w data-map="10030,115">to </w><w data-map="10145,635">say, </w><w data-map="10780,310">thirty </w><w data-map="11090,145">or </w><w data-map="11235,365">forty </w><w data-map="11600,610">years </w><w data-map="12210,1030">ago.</w>',
           //audiofile: 'http://localhost:3000/audiofiles/1_en/1_en_33/1_en_33.flac',
           plEventEmitter: false,
@@ -90,199 +94,274 @@
           isPlaying: false,
           isPaused: false,
           isSingleWordPlaying: false,
-          silenceLength: 0.1
+          silenceLength: 0.1,
+          audioContext: null,
+          contentContainer: null,
+          isModified: false,
+          isAudioModified: false,
+          history: []
         }
       },
       mounted() {
-        let annotations = [];
-        let self = this;
-        let alignedWords = 0;
-        $(this.content).each(function() {
-          let map = $(this).attr('data-map');
-          if (map) {
-            let position = map.split(',');
-            if (position.length == 2) {
-              position[0] = parseInt(position[0]) / 1000;
-              position[1] = parseInt(position[1]) / 1000;
-              annotations.push({
-                "begin": position[0], 
-                "children": [], 
-                "end": self._round(position[1] + position[0], 3), 
-                "id": $(this).html(), 
-                "language": "eng", 
-                "lines": []
-              });
-              self.words.push({start: position[0], end: self._round(position[0] + position[1], 3), index: self.words.length, alignedIndex: alignedWords++});
-            }
-          } else {
-            self.words.push({start: null, end: null, index: self.words.length});
-          }
-        });
-        this.audiosourceEditor= WaveformPlaylist.init({
-          ac: new (window.AudioContext || window.webkitAudioContext),
-          samplesPerPixel: this.zoomLevel,
-          //mono: true,
-          //waveHeight: 150,
-          container: document.getElementById('playlist'),
-          state: 'select',
-          //isAutomaticScroll: true,
-          //seekStyle: 'line',
-          colors: {
-            waveOutlineColor: '#E0EFF1',
-            timeColor: 'grey',
-            fadeColor: 'black'
-          },
-          /*controls: {
-            show: true,
-            width: 200
-          },*/
-          zoomLevels: this.zoomLevels,
-          timescale: true,
-          linkEndpoints: true,
-          annotationList: {
-            annotations: annotations,
-            //controls: actions,
-            editable: true,
-            isContinuousPlay: false,
-            linkEndpoints: true
-          }
-        });
-        this.audiosourceEditor.load([
-          {
-            src: this.audiofile,
-            name: 'block-audio',
-            gain: 0.5,
-            waveOutlineColor: '#f3f3f3',
-            customClass: 'block-audio',
-            states: {
-              cursor: true,
-              fadein: true,
-              fadeout: true,
-              select: true,
-              shift: true,
-            }
-          }
-        ])
-        .then(() => {
-          console.log('Loaded')
-          this.plEventEmitter = this.audiosourceEditor.getEventEmitter();
-          //self.plEventEmitter.emit('select', 1.1, 2.2);
-          this.plEventEmitter.on('timeupdate', function(position) {
-            //console.log('Current time', position);
-            if ((!self.isSingleWordPlaying && !self.isPlaying) || self.currentWord && self.currentWord.start <= position && self.currentWord.end > position) {
-              return;
-            }
-            //console.log(arguments)
-            let word = self.words.find(_w => {
-              return _w.start <= position && _w.end >position;
-            })
-            if (word) {
-              //console.log('Word', position, word);
-              self.currentWord = word;
-              //console.log('Set word selection from time update');
-              self._setWordSelection(word.alignedIndex);
-              if (!self.isAnnotationVisible(word.alignedIndex)) {
-                self.scrollPlayerToAnnotation(word.alignedIndex);
-              }
-              if (self.isSingleWordPlaying) {
-                self.isSingleWordPlaying = false;
-              }
-            }
-          });
-          this.plEventEmitter.on('finished', function() {
-            self._clearWordSelection();
-            self.isPlaying = false;
-            self.isPaused = false;
-          });
-          this.plEventEmitter.on('select', function(start, end) {
-            //console.log('ON SELECT ', start, end);
-            let is_single_cursor = end - start == 0;
-            let is_second_click_ltr = self.selection && (self.selection.end == end && self.selection.end - self.selection.start > 0);
-            let is_second_click_rtl = self.selection && (self.selection.start == start && self.selection.end - self.selection.start > 0);
-            if (is_single_cursor && self.selection && ((
-                    self.selection.end - self.selection.start == 0 && 
-                    end != self.selection.end && 
-                    start != self.selection.start) || 
-                    is_second_click_ltr || is_second_click_rtl)) {
-              //console.log('SELECT RANGE', self.selection.start, end)
-              let from = 0;
-              let to = 0;
-              if (is_second_click_ltr){ 
-                from = self.selection.start;
-                to = end;
-              } else if (is_second_click_rtl) {
-                from = self.selection.start;
-                to = self.selection.end;
-              } else {
-                from = self.selection.start < end ? self.selection.start : end;
-                to = self.selection.start > end ? self.selection.start : end;
-              }
-              //console.log('SELECTING ', self.selection.start, ', ', end, ', ', self.selection.start < end, ', ', self.selection.start > end)
-              //console.log('SELECT RANGE', from, to)
-              self.plEventEmitter.emit('select', from, to);
-              /*setTimeout(function() {
-                self.plEventEmitter.emit('select', undefined, undefined)
-              }, 5000);*/
-            } else {
-              //console.log('SAVE SELECTION', {start: start, end: end})
-              self.selection = {start: start, end: end}
-            }
-          });
-          //this.plEventEmitter.emit('automaticscroll', true);
-          //console.log(this.player)
-          $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>');
-          new Draggable (document.getElementById('resize-selection-right'), {
-            limit: {x:[0, 10000], y: [0, 0]},
-            onDrag: function(element, x, y, event) {
-              $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
-              self.audiosourceEditor.activeTrack.stateObj.startX = $('[id="resize-selection-left"]').position().left;
-              self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
-              //console.log(self.audiosourceEditor.activeTrack)
-            }
-          })
-          new Draggable (document.getElementById('resize-selection-left'), {
-            limit: {x: [0, 10000], y: [0, 0]},
-            onDrag: function(element, x, y, event) {
-              $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
-              $('.selection.segment').css('left', x - 5)
-              self.audiosourceEditor.activeTrack.stateObj.startX = $('[id="resize-selection-right"]').position().left
-              self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
-            }
-          })
-        });
-        $('.block-content w').on('click', function() {
-          let index = $('.block-content w[data-map]').index($(this));
-          let show_selection = true;
-          if (!index || index < 0) {
-            let index_no_data = $('.block-content w:not([data-map])').index($(this));
-            let total_index = $('.block-content w').index($(this));
-            index = total_index - index_no_data;
-            show_selection = false;
-          }
-          if (!self.isAnnotationVisible(index)) {
-            self.scrollPlayerToAnnotation(index, 'middle');
-          }
-          if (show_selection) {
-            //console.log('Set word selection from click');
-            self._setWordSelection(index, true);
-          } else {
-            self._clearWordSelection();
-          }
-        });
-        $('.annotations-boxes .annotation-box').on('click', function(e) {
-          let index = $('.annotations-boxes .annotation-box').index($(this));
-          //self.isSingleWordPlaying = true;
-          self._setWordSelection(index, true);
-          ;
-        });
-        $('body').on('mouseup', '.playlist-overlay.state-select', function() {
-          self._showSelectionBorders();
-        });
-        $('.player-controls').keydown('input[type="number"]', function(e) {
-          e.preventDefault();
-        });
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext);
+      },
+      beforeDestroy() {
+        if (this.audioContext) {
+          this.audioContext.close();
+        }
       },
       methods: {
+        load(audio, text, blockId) {
+          
+          if (this.blockId && this.blockId != blockId) {
+            this.isModified = false;
+            this.isAudioModified = false;
+            this.contentHistory = [];
+            this.audioHistory = [];
+          }
+          
+          this.words = [];
+          this.currentWord = null;
+          this.selection = {};
+          let annotations = [];
+          
+          let self = this;
+          let alignedWords = 0;
+          this.content = text;
+          this.audiofile = audio;
+          this.blockId = blockId;
+          this.contentContainer = $('#content-' + this.blockId);
+          $('<div>' + this.content + '</div>').find('w').each(function() {
+            let map = $(this).attr('data-map');
+            if (map) {
+              let position = map.split(',');
+              if (position.length == 2) {
+                position[0] = parseInt(position[0]) / 1000;
+                position[1] = parseInt(position[1]) / 1000;
+                annotations.push({
+                  "begin": position[0], 
+                  "children": [], 
+                  "end": self._round(position[1] + position[0], 3), 
+                  "id": $(this).html().replace(/<\/?[^>]+(>|$)/g, ""), 
+                  "language": "eng", 
+                  "lines": []
+                });
+                self.words.push({start: position[0], end: self._round(position[0] + position[1], 3), index: self.words.length, alignedIndex: alignedWords++});
+              }
+            } else {
+              self.words.push({start: null, end: null, index: self.words.length});
+            }
+          })
+          if (!this.audiosourceEditor) {
+            this.audiosourceEditor= WaveformPlaylist.init({
+              ac: this.audioContext,
+              samplesPerPixel: this.zoomLevel,
+              //mono: true,
+              waveHeight: 80,
+              container: document.getElementById('playlist'),
+              state: 'select',
+              //isAutomaticScroll: true,
+              //seekStyle: 'line',
+              colors: {
+                waveOutlineColor: '#E0EFF1',
+                timeColor: 'grey',
+                fadeColor: 'black'
+              },
+              /*controls: {
+                show: true,
+                width: 200
+              },*/
+              zoomLevels: this.zoomLevels,
+              timescale: true,
+              linkEndpoints: true/*,
+              annotationList: {
+                annotations: annotations,
+                //controls: actions,
+                editable: true,
+                isContinuousPlay: false,
+                linkEndpoints: true
+              }*/
+            });
+          }
+          //delete this.audiosourceEditor.annotationList;
+          //console.log(this.audiosourceEditor.annotationList.setupEE)
+          //allOff(this.audiosourceEditor.getEventEmitter());
+          if (this.audiosourceEditor.getEventEmitter().__ee__ && this.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
+            this.audiosourceEditor.getEventEmitter().off('dragged', this.audiosourceEditor.getEventEmitter().__ee__['dragged']);
+          }
+          //console.log(this.audiosourceEditor)
+          //return;
+          //console.log(this.audiosourceEditor.getEventEmitter().__ee__, this.audiosourceEditor.getEventEmitter().__ee__['dragged']/*, this.audiosourceEditor.annotationList.setupEE*/)
+          this.audiosourceEditor.setAnnotations({
+              annotations: annotations,
+              //controls: actions,
+              editable: true,
+              isContinuousPlay: false,
+              linkEndpoints: true
+            });
+          this.audiosourceEditor.load([
+            {
+              src: this.audiofile,
+              name: 'block-audio',
+              gain: 0.5,
+              waveOutlineColor: '#f3f3f3',
+              customClass: 'block-audio',
+              states: {
+                cursor: true,
+                fadein: true,
+                fadeout: true,
+                select: true,
+                shift: true,
+              }
+            }
+          ])
+          .then(() => {
+            console.log('Loaded')
+            this.plEventEmitter = this.audiosourceEditor.getEventEmitter();
+            //self.plEventEmitter.emit('select', 1.1, 2.2);
+            this.plEventEmitter.on('timeupdate', function(position) {
+              //console.log('Current time', position);
+              if ((!self.isSingleWordPlaying && !self.isPlaying) || self.currentWord && self.currentWord.start <= position && self.currentWord.end > position) {
+                return;
+              }
+              //console.log(arguments)
+              let word = self.words.find(_w => {
+                return _w.start <= position && _w.end >position;
+              })
+              if (word) {
+                //console.log('Word', position, word);
+                self.currentWord = word;
+                //console.log('Set word selection from time update');
+                self._setWordSelection(word.alignedIndex);
+                if (!self.isAnnotationVisible(word.alignedIndex)) {
+                  self.scrollPlayerToAnnotation(word.alignedIndex);
+                }
+                if (self.isSingleWordPlaying) {
+                  self.isSingleWordPlaying = false;
+                }
+              }
+            });
+            this.plEventEmitter.on('finished', function() {
+              self._clearWordSelection();
+              self.isPlaying = false;
+              self.isPaused = false;
+            });
+            this.plEventEmitter.on('select', function(start, end) {
+              //console.log('ON SELECT ', start, end);
+              let is_single_cursor = end - start == 0;
+              let is_second_click_ltr = self.selection && (self.selection.end == end && self.selection.end - self.selection.start > 0);
+              let is_second_click_rtl = self.selection && (self.selection.start == start && self.selection.end - self.selection.start > 0);
+              if (is_single_cursor && self.selection && ((
+                      self.selection.end - self.selection.start == 0 && 
+                      end != self.selection.end && 
+                      start != self.selection.start) || 
+                      is_second_click_ltr || is_second_click_rtl)) {
+                //console.log('SELECT RANGE', self.selection.start, end)
+                let from = 0;
+                let to = 0;
+                if (is_second_click_ltr){ 
+                  from = self.selection.start;
+                  to = end;
+                } else if (is_second_click_rtl) {
+                  from = self.selection.start;
+                  to = self.selection.end;
+                } else {
+                  from = self.selection.start < end ? self.selection.start : end;
+                  to = self.selection.start > end ? self.selection.start : end;
+                }
+                //console.log('SELECTING ', self.selection.start, ', ', end, ', ', self.selection.start < end, ', ', self.selection.start > end)
+                //console.log('SELECT RANGE', from, to)
+                self.plEventEmitter.emit('select', from, to);
+                /*setTimeout(function() {
+                  self.plEventEmitter.emit('select', undefined, undefined)
+                }, 5000);*/
+              } else {
+                //console.log('SAVE SELECTION', {start: start, end: end})
+                self.selection = {start: start, end: end}
+              }
+            });
+            //this.plEventEmitter.emit('automaticscroll', true);
+            //console.log(this.player)
+            $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>');
+            new Draggable (document.getElementById('resize-selection-right'), {
+              limit: {x:[0, 10000], y: [0, 0]},
+              onDrag: function(element, x, y, event) {
+                $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
+                self.audiosourceEditor.activeTrack.stateObj.startX = $('[id="resize-selection-left"]').position().left;
+                self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
+                //console.log(self.audiosourceEditor.activeTrack)
+              }
+            })
+            new Draggable (document.getElementById('resize-selection-left'), {
+              limit: {x: [0, 10000], y: [0, 0]},
+              onDrag: function(element, x, y, event) {
+                $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
+                $('.selection.segment').css('left', x - 5)
+                self.audiosourceEditor.activeTrack.stateObj.startX = $('[id="resize-selection-right"]').position().left
+                self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
+              }
+            })
+          });
+          $(this.contentContainer).find('w').on('click', function() {
+            let index = $(self.contentContainer).find('w[data-map]').index($(this));
+            let show_selection = true;
+            if (typeof index =='undefined' || index === false || index < 0) {
+              let index_no_data = $(self.contentContainer).find('w:not([data-map])').index($(this));
+              let total_index = $(self.contentContainer).find('w').index($(this));
+              index = total_index - index_no_data;
+              show_selection = false;
+            }
+            if (!self.isAnnotationVisible(index)) {
+              self.scrollPlayerToAnnotation(index, 'middle');
+            }
+            if (show_selection) {
+              //console.log('Set word selection from click');
+              self._setWordSelection(index, true);
+            } else {
+              self._clearWordSelection();
+            }
+          });
+          //console.log('SEARCH ANNOTATIONS', $('.annotations-boxes .annotation-box'));
+          $('.wf-playlist').on('click', '.annotations-boxes .annotation-box', function(e) {
+            let index = $('.annotations-boxes .annotation-box').index($(this));
+            //self.isSingleWordPlaying = true;
+            self._setWordSelection(index, true);
+            ;
+          });
+          $('.wf-playlist').on('dragend', '.annotations-boxes .annotation-box .resize-handle', function(e) {
+            //console.log(self.audiosourceEditor.annotationList)
+            let map = [];
+            self.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+              map.push([Math.round(al.start * 1000), Math.round((al.end - al.start) * 1000)]);
+              let w = self.words.find(_w => {
+                return _w.alignedIndex == i;
+              });
+              if (w) {
+                w.start = al.start;
+                w.end = al.end;
+              }
+            });
+            self.$emit('word_realign', map, self.blockId);
+          });
+          $('body').on('mouseup', '.playlist-overlay.state-select', function() {
+            self._showSelectionBorders();
+          });
+          $('.player-controls').keydown('input[type="number"]', function(e) {
+            e.preventDefault();
+          });
+        },
+        setAudio(audio, text, saveToHistory) {
+          if (this.plEventEmitter) {
+            this.plEventEmitter.emit('clear');
+          }
+          if (typeof saveToHistory === 'undefined') {
+            saveToHistory = true;
+          }
+          if (saveToHistory && this.content && this.audiofile) {
+            this._addHistory(this.content, this.audiofile);
+          }
+          this.load(audio, text, this.blockId);
+        },
         play() {
           this.audiosourceEditor.play();
           this.isPlaying = true;
@@ -359,6 +438,48 @@
           $('[id="resize-selection-right"]').hide().css('left', 0);
           $('[id="resize-selection-left"]').hide().css('left', 0);
         },
+        isEmpty() {
+          return !this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0;
+        },
+        close() {
+          if (this.plEventEmitter) {
+            this.plEventEmitter.emit('clear');
+            this._clearWordSelection();
+          }
+          this.$emit('closed', this.blockId);
+        },
+        addSilence() {
+          if (this.silenceLength > 0 && this.isSinglePointSelection) {
+            this.$emit('insertSilence', this.blockId, this._round(this.selection.start, 2), this.silenceLength);
+            this.isModified = true;
+          }
+        },
+        save() {
+          if (this.isModified) {
+            this.$emit('save', this.blockId);
+            this.isModified = false;
+          }
+        },
+        cut() {
+          this.$emit('cut', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
+          this.isModified = true;
+        },
+        undo() {
+          let record = this._popHistory();
+          if (record) {
+            this.setAudio(record.audio, record.text, false);
+          }
+          if (this.history.length === 0) {
+            this.isModified = false;
+          }
+        },
+        _setDefaults() {
+          this.words = [];
+          this.currentWord = null;
+          this.selection = {};
+          this.isModified = false;
+          this.isAudioModified = false;
+        },
         _numToTime(val) {
           let val_check = parseInt(val);
           if (('' + val_check).length > 1) {
@@ -384,7 +505,7 @@
           }, 50);
         },
         _clearWordSelection() {
-          $('.block-content w').removeClass('selected');
+          $(this.contentContainer).find('w').removeClass('selected');
           $('.annotations-boxes .annotation-box').removeClass('selected');
         },
         _setWordSelection(index, select_range) {
@@ -394,21 +515,19 @@
           if (annotations[index]) {
             $(annotations[index]).addClass('selected');
           }
-          let words = $('.block-content w[data-map]');
+          let words = this.contentContainer.find('w[data-map]');
           if (words[index]) {
             //console.log('Selecting', $(words[index]).html());
             $(words[index]).addClass('selected');
-            if (select_range) {
-              let map = $(words[index]).attr('data-map');
-              if (map) {
-                let positions = map.split(',');
-                if (positions && positions.length == 2) {
-                  let start = parseInt(positions[0]) / 1000;
-                  let end = (parseInt(positions[1]) + parseInt(positions[0])) / 1000;
-                  this.plEventEmitter.emit('select', start, end);
-                  this._showSelectionBorders();
-                }
-              }
+          }
+          if (select_range) {
+            let word = this.words.find(_w => {
+              return _w.alignedIndex == index;
+            });
+            if (word) {
+              console.log('Emit selection', word.start, word.end);
+              this.plEventEmitter.emit('select', word.start, word.end);
+              this._showSelectionBorders();
             }
           }
         },
@@ -448,11 +567,24 @@
             default:
               return;
           }
+          if (this.isSinglePointSelection) {
+            new_selection.end = new_selection.start;
+          }
           if (new_selection.start >= 0 && new_selection.end <= this.audiosourceEditor.activeTrack.duration && new_selection.start <= new_selection.end) {
             this.selection = new_selection;
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
             this._showSelectionBorders();
           }
+        },
+        _addHistory(text, audio) {
+          this.history.push({text: text, audio: audio});
+          if (this.history.length >= 6) {
+            this.history.shift();
+          }
+        },
+        _popHistory() {
+          //this.history.pop();
+          return this.history.pop();
         }
       },
       computed: {
@@ -546,6 +678,10 @@
   }
 </script>
 <style lang="less">
+  @waveform-height: 80px;
+  .waveform {
+      max-height: @waveform-height;
+  }
   .waveform-playlist {
     background-color: #d9d9d9;
   }
@@ -558,6 +694,9 @@
     .selection.point {
       width: 2px;
       background-color: green;
+    }
+    .channel-wrapper {
+        max-height: @waveform-height;
     }
     .playlist {
         .annotations {
@@ -582,10 +721,10 @@
             }
             &:after {
               content: ' ';
-              width: 100%;
+              width: 98%;
               position: absolute;
               height: 100%;
-              left: 0px;
+              left: 1px;
               z-index: 1000;
             }
           }
@@ -630,6 +769,13 @@
         }
         .channel {
             background: gray;
+            max-height: @waveform-height;
+            canvas {
+                /*max-height: @waveform-height;*/
+            }
+        }
+        .playlist-overlay {
+            max-height: @waveform-height;
         }
         .selection.segment {
             background: rgba(0, 128, 0, 0.1);
@@ -652,6 +798,7 @@
     .play-controls {
       display: inline-block;
       padding: 25px;
+      width: 200px;
       i {
         font-size: 29px;
         color: #0089ff;
@@ -661,20 +808,19 @@
     }
     .zoom-controls {
       display: inline-block;
-      background-color: white;
       padding: 14px;
+      width: 120px;
       i {
-        font-size: 20px;
-        color: gray;
-        border: 1px solid gray;
-        padding: 7px;
+        font-size: 29px;
+        color: #0089ff;
         display: inline-block;
-        margin: 0px -4px -4px 0px;
+        margin: 0px 5px;
       }
     }
     .selection-controls {
       display: inline-block;
       padding: 0px 20px;
+      width: 500px;
       &>div {
         display: inline-block;
         padding: 5px 10px;
@@ -721,5 +867,11 @@
   }
   .waveform-wrapper {
     width: 90%;
+  }
+  .close-player {
+    font-size: 25px;
+    display: inline-block;
+    padding: 0px 5px;
+    cursor: pointer;
   }
 </style>
