@@ -256,7 +256,7 @@ export default {
         window.dispatchEvent(new Event('resize'))
       })
 
-      this.uploadImage = this.img.coverimg
+      this.uploadImage = this.img.coverimg || '';
     },
 
     onFilesChange (e) {

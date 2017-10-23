@@ -149,9 +149,8 @@ export const store = new Vuex.Store({
     SET_CURRENTBOOK_FILES (state, files) {
       state.currentBookFiles = {};
       if (files) {
-        state.currentBookFiles.coverimg = 'http://' + [
-          process.env.ILM_DB,
-          ILM_CONTENT_FILES,
+        state.currentBookFiles.coverimg = [
+          superlogin.getDbUrl(ILM_CONTENT_FILES),
           files._id,
           'coverimg'
         ].join('/') + '?' + new Date().getTime();
