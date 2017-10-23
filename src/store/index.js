@@ -349,7 +349,7 @@ export const store = new Vuex.Store({
         if (state.currentBookMeta._id) {
             state.metaDB.get(state.currentBookMeta._id).then((meta) => {
                 commit('SET_CURRENTBOOK_META', meta)
-                state.filesRemoteDB.getAttachment(book_id, 'coverimg')
+                state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
                 .then(fileBlob => {
                   commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
                 }).catch((err)=>{
