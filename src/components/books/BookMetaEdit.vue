@@ -5,6 +5,7 @@
       <div class='booktopinfo'>
         <div class='coverimg' @click="bookEditCoverModalActive = true">
           <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+          <div v-else class='coverimg-wrap'></div>
         </div>
         <h4 class='title'>{{ currentBook.title }}</h4>
         <h5 class='subtitle' v-if='currentBook.subtitle'>{{ currentBook.subtitle }}</h5>
@@ -498,6 +499,10 @@ export default {
     box-shadow: inset 0px 0px 3px 3px rgba(0,0,0,0.06);
     cursor: pointer;
     position: relative;
+  }
+  div.coverimg-wrap {
+    height: 80px;
+    width: 60px;
   }
   .author,  h4.title {margin: 0; margin-top:2px; padding-bottom: 0; }
   .subtitle {margin-top:0;}

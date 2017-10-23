@@ -148,12 +148,14 @@ export const store = new Vuex.Store({
 
     SET_CURRENTBOOK_FILES (state, files) {
       state.currentBookFiles = {};
-      state.currentBookFiles.coverimg = 'http://' + [
-        process.env.ILM_DB,
-        ILM_CONTENT_FILES,
-        files._id,
-        'coverimg'
-      ].join('/') + '?' + new Date().getTime();
+      if (files) {
+        state.currentBookFiles.coverimg = 'http://' + [
+          process.env.ILM_DB,
+          ILM_CONTENT_FILES,
+          files._id,
+          'coverimg'
+        ].join('/') + '?' + new Date().getTime();
+      }
     },
 
     setEditMode (state, editMode) {
@@ -336,7 +338,9 @@ export const store = new Vuex.Store({
 
         state.filesRemoteDB.get(book_id).then(files => {
           commit('SET_CURRENTBOOK_FILES', files);
-        }).catch((err)=>{})
+        }).catch(err=>{
+          commit('SET_CURRENTBOOK_FILES', false);
+        })
       }).catch((err)=>{})
 
 
@@ -346,9 +350,13 @@ export const store = new Vuex.Store({
         if (state.currentBookMeta._id) {
             state.metaDB.get(state.currentBookMeta._id).then((meta) => {
                 commit('SET_CURRENTBOOK_META', meta)
-                state.filesRemoteDB.get(state.currentBookMeta._id).then(files => {
+                state.filesRemoteDB.get(state.currentBookMeta._id)
+                .then(files => {
                   commit('SET_CURRENTBOOK_FILES', files);
-                });
+                })
+                .catch(err=>{
+                  commit('SET_CURRENTBOOK_FILES', false);
+                })
             })
         }
     },
