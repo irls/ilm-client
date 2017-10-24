@@ -46,9 +46,9 @@
         </div>
         <div class="audio-controls" v-if="isModified">
           <button class="btn btn-default" v-if="history.length" v-on:click="undo()">Undo</button>
-          <button class="btn btn-default">Discard</button>
+          <button class="btn btn-default" v-on:click="discard()">Discard</button>
           <button class="btn btn-primary" v-on:click="save()">Save</button>
-          <button class="btn btn-primary">Save & Re-align</button>
+          <button class="btn btn-primary" v-on:click="saveAndRealign()">Save & Re-align</button>
         </div>
       </div>
       <!-- <div v-if="selection.start >= 0">
@@ -460,18 +460,26 @@
             this.isModified = false;
           }
         },
+        saveAndRealign() {
+          
+        },
         cut() {
           this.$emit('cut', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
           this.isModified = true;
         },
         undo() {
           let record = this._popHistory();
-          if (record) {
-            this.setAudio(record.audio, record.text, false);
-          }
           if (this.history.length === 0) {
             this.isModified = false;
           }
+          if (record) {
+            this.setAudio(record.audio, record.text, false);
+            this.$emit('undo', this.blockId, record.audio, record.text, this.isModified);
+          }
+        },
+        discard() {
+          this.$emit('discard', this.blockId);
+          this.history = [];
         },
         _setDefaults() {
           this.words = [];

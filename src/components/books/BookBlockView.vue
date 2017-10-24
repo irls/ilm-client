@@ -579,6 +579,24 @@ export default {
 
           });
       },
+      
+      discardAudioEdit: function() {
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/discard_audio_changes';
+        let api = this.$store.state.auth.getHttp();
+        api.post(api_url, {}, {})
+          .then(response => {
+            if (response.status == 200 && response.data) {
+              this.block.content = response.data.content;
+              this.blockAudio.src = process.env.ILM_API + response.data.audiosrc;
+              this.blockAudio.map = response.data.content;
+              this.isAudioChanged = false;
+              this.audioEditor.setAudio(this.blockAudio.src, this.blockAudio.map);
+            }
+          })
+          .catch(err => {
+
+          });
+      },
 
       assembleBlockProxy: function (ev) {
         if (this.isAudioChanged) return this.assembleBlockAudio(ev);
@@ -1205,6 +1223,19 @@ export default {
         this.audioEditor.$on('insertSilence', function(blockId, position, length) {
           if (blockId == self.block._id) {
             self.insertSilence(position, length);
+          }
+        });
+        this.audioEditor.$on('undo', function(blockId, audio, text, isModified) {
+          if (self.block._id == blockId) {
+            self.blockAudio.map = text;
+            self.blockAudio.src = audio;
+            self.block.content = text;
+            self.isAudioChanged = isModified;
+          }
+        });
+        this.audioEditor.$on('discard', function(blockId) {
+          if (self.block._id == blockId) {
+            self.discardAudioEdit();
           }
         });
       },
