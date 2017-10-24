@@ -131,6 +131,11 @@ export default {
 </script>
 
 <style lang="less">
+
+.modal-dialog {
+  margin: 105px auto;
+}
+
 #booksarea {
   margin: 0;
   padding:0;

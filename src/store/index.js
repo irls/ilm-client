@@ -48,7 +48,7 @@ export const store = new Vuex.Store({
     currentBook_dirty: false,
     currentBookMeta_dirty: false,
     currentEditingBlockId: '',
-    currentBookFiles: {},
+    currentBookFiles: { coverimg: false },
 
     bookFilters: {filter: '', language: 'en', importStatus: 'staging'},
     editMode: 'Editor',
@@ -146,14 +146,15 @@ export const store = new Vuex.Store({
       state.currentBookid = meta._id
     },
 
-    SET_CURRENTBOOK_FILES (state, files) {
-      state.currentBookFiles = {};
-      state.currentBookFiles.coverimg = 'http://' + [
-        process.env.ILM_DB,
-        ILM_CONTENT_FILES,
-        files._id,
-        'coverimg'
-      ].join('/') + '?' + new Date().getTime();
+//     CLEAN_CURRENTBOOK_FILES (state) {
+//       state.currentBookFiles = {coverimg: false};
+//     },
+
+    SET_CURRENTBOOK_FILES (state, fileObj) {
+      if (fileObj && fileObj.fileBlob) {
+        let url = URL.createObjectURL(fileObj.fileBlob);
+        state.currentBookFiles[fileObj.fileName] = url;
+      } else state.currentBookFiles[fileObj.fileName] = false;
     },
 
     setEditMode (state, editMode) {
@@ -329,14 +330,16 @@ export const store = new Vuex.Store({
       if (oldBook && state.currentBook_dirty || state.currentBookMeta_dirty) {
         // save old state
       }
-
       state.metaDB.get(book_id).then(meta => {
         commit('SET_CURRENTBOOK_META', meta)
         commit('TASK_LIST_LOADED')
-
-        state.filesRemoteDB.get(book_id).then(files => {
-          commit('SET_CURRENTBOOK_FILES', files);
-        }).catch((err)=>{})
+        state.filesRemoteDB.getAttachment(book_id, 'coverimg')
+        .then(fileBlob => {
+          commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
+        })
+        .catch((err)=>{
+          commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
+        })
       }).catch((err)=>{})
 
 
@@ -346,9 +349,12 @@ export const store = new Vuex.Store({
         if (state.currentBookMeta._id) {
             state.metaDB.get(state.currentBookMeta._id).then((meta) => {
                 commit('SET_CURRENTBOOK_META', meta)
-                state.filesRemoteDB.get(state.currentBookMeta._id).then(files => {
-                  commit('SET_CURRENTBOOK_FILES', files);
-                });
+                state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
+                .then(fileBlob => {
+                  commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
+                }).catch((err)=>{
+                  commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
+                })
             })
         }
     },
