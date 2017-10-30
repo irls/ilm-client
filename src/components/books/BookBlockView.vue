@@ -83,7 +83,7 @@
               <!--<div class="-hidden">-->
 
               <div class="par-ctrl -audio -hidden -right">
-                  <template v-if="blockAudio.src && (tc_showBlockNarrate(block._id) || isEditor)">
+                  <template v-if="blockAudio.src && (tc_showBlockNarrate(block._id) || isEditor) && !isAudioChanged">
                     <i class="fa fa-pencil" v-on:click="showAudioEditor"></i>
                   </template>
                   <template v-if="player && blockAudio.src && !isRecording">
@@ -579,16 +579,19 @@ export default {
       },
       
       discardAudioEdit: function() {
-        let api_url = this.API_URL + 'book/block/' + this.block._id + '/discard_audio_changes';
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
         let api = this.$store.state.auth.getHttp();
-        api.post(api_url, {}, {})
+        api.delete(api_url, {}, {})
           .then(response => {
             if (response.status == 200 && response.data) {
               this.block.content = response.data.content;
               this.blockAudio.src = process.env.ILM_API + response.data.audiosrc;
               this.blockAudio.map = response.data.content;
+              this.block.audiosrc = this.blockAudio.src;
               this.isAudioChanged = false;
-              this.audioEditor.setAudio(this.blockAudio.src, this.blockAudio.map);
+              if (this.audioEditor) {
+                this.audioEditor.setAudio(this.blockAudio.src, this.blockAudio.map);
+              }
             }
           })
           .catch(err => {
@@ -652,6 +655,36 @@ export default {
             .catch(err => {});
         }
         this.isAudioChanged = false;
+      },
+      
+      assembleBlockAudioEdit: function() {// to save changes from audio editor
+        if (this.blockAudio.map && this.blockAudio.src) {
+          let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
+          let api = this.$store.state.auth.getHttp();
+          return api.post(api_url, {
+            audiosrc: this.blockAudio.src.replace(process.env.ILM_API, '').split('?').shift(),
+            content: this.blockAudio.map
+          }, {})
+            .then(response => {
+              if (response.status == 200) {
+                //this.block.content = this.blockAudio.map;
+                //this.block.audiosrc = response.data.audiosrc;
+                //this.blockAudio.map = '';
+                //this.blockAudio.src = '';
+                //return this.putBlock(this.block);
+                if (this.audioEditor) {
+                  this.audioEditor.setAudio(this.blockAudio.src, this.blockAudio.map);
+                }
+                this.isAudioChanged = false;
+                this.isChanged = false;
+                return BPromise.resolve();
+              }
+            })
+            .catch(err => BPromise.reject(err));
+        } else {
+          return BPromise.reject();
+        }
+        //this.isAudioChanged = false;
       },
 
       reworkBlock: function(ev) {
@@ -761,6 +794,7 @@ export default {
               this.blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
               this.blockAudio.map = response.data.content;
               this.block.content = response.data.content;
+              this.block.audiosrc = this.blockAudio.src;
               if (this.audioEditor) {
                 this.audioEditor.setAudio(this.blockAudio.src, this.blockAudio.map);
               }
@@ -787,9 +821,11 @@ export default {
               this.blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
               this.blockAudio.map = response.data.content;
               this.block.content = response.data.content;
+              this.block.audiosrc = this.blockAudio.src;
               if (this.audioEditor) {
                 this.audioEditor.setAudio(this.blockAudio.src, this.blockAudio.map);
               }
+              this.isAudioChanged = true;
             }
           })
           .catch(err => {
@@ -1110,9 +1146,9 @@ export default {
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/realign';
         let api = this.$store.state.auth.getHttp();
         let formData = new FormData();
-        formData.append('audio', [this.block.audiosrc]);
+        formData.append('audio', [this.block.audiosrc.replace(process.env.ILM_API, '').split('?').shift()]);
         this.isUpdating = true;
-        api.post(api_url, formData, {})
+        return api.post(api_url, formData, {})
         .then(response => {
           this.isUpdating = false;
           if (response.status == 200) {
@@ -1120,11 +1156,15 @@ export default {
             this.blockAudio.map = response.data.content;
           }
           this.reRecordPosition = false;
+          return BPromise.resolve();
         })
         .catch(err => {
           this.reRecordPosition = false;
           this.isUpdating = false;
+          return BPromise.reject();
         });
+        } else {
+          return BPromise.reject();
         }
       },
       stopRecordingAndNext() {
@@ -1213,7 +1253,9 @@ export default {
         $('.table-body.-content').removeClass('editing');
         $('#' + this.block._id + ' .table-body.-content').addClass('editing');
         this.audioEditor.close();
-        this.audioEditor.load(this.blockAudio.src, this.blockAudio.map, this.block._id);
+        Vue.nextTick(() => {
+          this.audioEditor.load(this.blockAudio.src, this.blockAudio.map, this.block._id);
+        
         let self = this;
         this.audioEditor.$on('word_realign', function(map, blockId) {
           if (blockId == self.block._id && self.$refs.blockContent.querySelectorAll) {
@@ -1223,14 +1265,24 @@ export default {
               let w_map = _m.join()
               $(_w).attr('data-map', w_map)
             });
+            self.block.content = self.$refs.blockContent.innerHTML;
+            self.blockAudio.map = self.block.content;
             self.isChanged = true;
           }
         });
         this.audioEditor.$on('save', function(blockId) {
           if (blockId == self.block._id) {
-            self.assembleBlock();
+            self.assembleBlockAudioEdit();
           }
         });
+        this.audioEditor.$on('saveAndRealign', function(blockId) {
+          if (blockId == self.block._id) {
+            self.doReAlign()
+              .then(() => {
+                self.assembleBlockAudioEdit();
+              });
+          }
+        })
         this.audioEditor.$on('cut', function(blockId, start, end) {
           if (blockId == self.block._id) {
             self._audDeletePart(start, end);
@@ -1238,6 +1290,14 @@ export default {
         });
         this.audioEditor.$on('closed', function(blockId) {
           if (blockId == self.block._id) {
+            self.audioEditor.$off('insertSilence');
+            self.audioEditor.$off('word_realign');
+            self.audioEditor.$off('save');
+            self.audioEditor.$off('saveAndRealign');
+            self.audioEditor.$off('cut');
+            self.audioEditor.$off('undo');
+            self.audioEditor.$off('discard');
+            self.audioEditor.$off('closed');
             $('#' + self.block._id + ' .table-body.-content').removeClass('editing');
           }
         });
@@ -1251,6 +1311,7 @@ export default {
             self.blockAudio.map = text;
             self.blockAudio.src = audio;
             self.block.content = text;
+            self.block.audiosrc = self.blockAudio.src;
             self.isAudioChanged = isModified;
           }
         });
@@ -1258,6 +1319,7 @@ export default {
           if (self.block._id == blockId) {
             self.discardAudioEdit();
           }
+        });
         });
       },
       _getParent(node, tag) {
@@ -1435,7 +1497,9 @@ export default {
         //console.log('Tmp audiomap', newVal);
         if (this.tc_showBlockNarrate(this.block._id)) {
           let isChanged = this.block.content != newVal;
-          this.isAudioChanged = isChanged;
+          if (!this.isAudioChanged) {
+            this.isAudioChanged = isChanged;
+          }
           if (this.$refs.blockContent) {
             this.$refs.blockContent.innerHTML = newVal;
           }

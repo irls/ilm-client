@@ -1,10 +1,7 @@
 <template>
   <div>
-    <!-- <div v-html="content" :data-audiosrc="audiofile" class="block-content">
-      
-    </div> -->
     <div class="waveform-playlist">
-      <div class="pull-right">
+      <div class="close-player-container pull-right">
         <span class="close-player" v-on:click="close()">&times;</span>
       </div>
       <div class="waveform-wrapper">
@@ -46,26 +43,24 @@
         </div>
         <div class="audio-controls" v-if="isModified">
           <button class="btn btn-default" v-if="history.length" v-on:click="undo()">Undo</button>
-          <button class="btn btn-default" v-on:click="discard()">Discard</button>
+          <button class="btn btn-default" v-on:click="onDiscardMessage = true">Discard</button>
           <button class="btn btn-primary" v-on:click="save()">Save</button>
           <button class="btn btn-primary" v-on:click="saveAndRealign()">Save & Re-align</button>
         </div>
       </div>
-      <!-- <div v-if="selection.start >= 0">
-        <button class="btn btn default" v-on:click="clearSelection()">Clear</button>
-      </div> -->
     </div>
-    <!-- <div class="peaks-player">
-      <div id="peaks-player"></div>
-      <audio>
-        <source src="http://localhost:3000/audiofiles/aaiw1_en/aaiw1_en_2s/23716-02.mp3.flac" type="audio/ogg">
-      </audio>
-    </div> -->
+    <modal v-model="onDiscardMessage" effect="fade" title="" ok-text="Discard" cancel-text="Cancel" @ok="discard()">
+      <p>Discard unsaved audio changes?</p>
+    </modal>
+    <modal v-model="onExitMessage" effect="fade" title="" ok-text="Confirm" cancel-text="Cancel" @ok="discardAndExit()" @closed="checkExitState()">
+      <p>Discard unsaved audio changes?</p>
+    </modal>
   </div>
 </template>
 <script>
   import Vue from 'vue'
   import api_config from '../mixins/api_config.js'
+  import { modal } from 'vue-strap'
   //import Peaks from 'peaks.js';
   var WaveformPlaylist = require('waveform-playlist');
   var WaveformData = require('waveform-data')
@@ -73,7 +68,7 @@
   export default {
       name: 'AudioEditor',
       components: {
-        
+        'modal': modal
       },
       mixins: [api_config],
       data() {
@@ -83,8 +78,6 @@
           content: "",//'<w data-map="0,335">Either </w><w data-map="335,250">the </w><w data-map="585,60">well </w><w data-map="645,200">was </w><w data-map="845,255">very </w><w data-map="1100,360">deep, </w><w data-map="1460,165">or </w><w data-map="1625,165">she </w><w data-map="1790,310">fell </w><w data-map="2100,280">very </w><w data-map="2380,680">slowly, </w><w data-map="3060,20">for </w><w data-map="3080,270">she </w><w data-map="3350,500">had </w><w data-map="3850,395">plenty  </w><w data-map="4245,25">of </w><w data-map="4270,190">time </w><w data-map="4460,355">as </w><w data-map="4815,115">she </w><w data-map="4930,265">went </w><w data-map="5195,220">down </w><w data-map="5415,115">to </w><w data-map="5530,150">look </w><w data-map="5680,750">about </w><w data-map="6430,450">her. </w><w data-map="6880,435">First, </w><w data-map="7315,100">she </w><w data-map="7415,265">tried </w><w data-map="7680,10">to </w><w>look </w><w data-map="7690,10">down </w><w data-map="7700,50">and </w><w data-map="7750,230">make </w><w data-map="7980,190">out </w><w data-map="8170,160">what </w><w data-map="8330,110">she </w><w data-map="8440,225">was  </w><w data-map="8665,315">coming </w><w data-map="8980,260">to, </w><w data-map="9240,555">but </w><w data-map="9795,80">it </w><w data-map="9875,175">was </w><w data-map="10050,150">too </w><w data-map="10200,115">dark </w><w data-map="10315,145">to </w><w data-map="10460,380">see </w><w data-map="10840,600">anything; </w><w data-map="11440,585">then </w><w data-map="12025,125">she </w><w data-map="12150,550">looked </w><w data-map="12700,250">at </w><w data-map="12950,165">the  </w><w data-map="13115,185">sides </w><w data-map="13300,170">of </w><w data-map="13470,130">the </w><w>well, </w><w data-map="13600,70">and </w><w data-map="13670,315">noticed </w><w data-map="13985,95">that </w><w>they </w><w data-map="14080,120">were </w><w data-map="14200,475">filled </w><w data-map="14675,185">with </w><w data-map="14860,245">cupboards </w><w data-map="15105,370">and  </w><w data-map="15475,1045">book-shelves; </w><w data-map="16520,305">here </w><w data-map="16825,20">and </w><w data-map="16845,160">there </w><w data-map="17005,160">she </w><w data-map="17165,180">saw </w><w data-map="17345,300">maps </w><w data-map="17645,330">and </w><w data-map="17975,400">pictures </w><w data-map="18375,180">hung </w><w data-map="18555,305">upon </w><w data-map="18860,820">pegs. </w><w data-map="19680,325">She  </w><w data-map="20005,240">took </w><w data-map="20245,215">down </w><w data-map="20460,80">a </w><w data-map="20540,295">jar </w><w data-map="20835,195">from </w><w data-map="21030,50">one </w><w data-map="21080,75">of </w><w data-map="21155,5">the </w><w data-map="21160,380">shelves </w><w data-map="21540,225">as </w><w data-map="21765,190">she </w><w data-map="21955,1005">passed; </w><w>it </w><w data-map="22960,265">was </w><w data-map="23225,395">labelled  </w><w data-map="23620,530">‘ORANGE </w><w data-map="24150,1010">MARMALADE’, </w><w data-map="25160,160">but </w><w data-map="25320,245">to </w><w data-map="25565,60">her </w><w data-map="25625,155">great </w><w data-map="25780,1030">disappointment </w><w data-map="26810,105">it </w><w data-map="26915,240">was </w><w data-map="27155,765">empty: </w><w data-map="27920,150">she </w><w data-map="28070,145">did  </w><w data-map="28215,170">not </w><w data-map="28385,110">like </w><w data-map="28495,115">to </w><w data-map="28610,485">drop </w><w data-map="29095,120">the </w><w data-map="29215,405">jar, </w><w data-map="29620,405">so </w><w data-map="30025,135">she </w><w data-map="30160,410">managed </w><w data-map="30570,140">to </w><w data-map="30710,165">put  </w><w data-map="30875,115">it </w><w data-map="30990,235">into </w><w data-map="31225,10">one </w><w data-map="31235,10">of </w><w data-map="31245,225">the </w><w data-map="31470,380">cupboards </w><w data-map="31850,205">as </w><w data-map="32055,165">she </w><w data-map="32220,195">fell </w><w data-map="32415,405">past </w><w data-map="32820,1060">it.</w>',
           audiofile: "",//'http://localhost:3000/audiofiles/aaiw1_en/aaiw1_en_31/aaiw1_en_31.flac',
           blockId: null,
-          //content: '<w data-map="0,975">The </w><w data-map="975,285">odd </w><w data-map="1260,950">superstitions </w><w data-map="2210,385">touched </w><w data-map="2595,520">upon </w><w data-map="3115,430">were </w><w data-map="3545,530">all </w><w data-map="4075,395">prevalent </w><w data-map="4470,660">among </w><w data-map="5130,555">children </w><w data-map="5685,185">and </w><w data-map="5870,610">slaves </w><w data-map="6480,45">in </w><w data-map="6525,265">the </w><w data-map="6790,425">West </w><w data-map="7215,140">at </w><w data-map="7355,220">the </w><w data-map="7575,420">period </w><w data-map="7995,245">of </w><w data-map="8240,155">this </w><w data-map="8395,715">story — </w><w data-map="9110,685">that </w><w data-map="9795,235">is </w><w data-map="10030,115">to </w><w data-map="10145,635">say, </w><w data-map="10780,310">thirty </w><w data-map="11090,145">or </w><w data-map="11235,365">forty </w><w data-map="11600,610">years </w><w data-map="12210,1030">ago.</w>',
-          //audiofile: 'http://localhost:3000/audiofiles/1_en/1_en_33/1_en_33.flac',
           plEventEmitter: false,
           words: [],
           currentWord: null,
@@ -99,7 +92,11 @@
           contentContainer: null,
           isModified: false,
           isAudioModified: false,
-          history: []
+          history: [],
+          isHistoryFull: true,
+          onDiscardMessage: false,
+          onExitMessage: false,
+          discardOnExit: false
         }
       },
       mounted() {
@@ -108,21 +105,22 @@
       beforeDestroy() {
         if (this.audioContext) {
           this.audioContext.close();
+          this.audioContext = null;
+          this.audiosourceEditor = null;
         }
       },
       methods: {
         load(audio, text, blockId) {
-          
           if (this.blockId && this.blockId != blockId) {
             this.isModified = false;
             this.isAudioModified = false;
             this.contentHistory = [];
             this.audioHistory = [];
+            this.selection = {};
           }
           
           this.words = [];
           this.currentWord = null;
-          this.selection = {};
           let annotations = [];
           
           let self = this;
@@ -153,48 +151,30 @@
             }
           })
           if (!this.audiosourceEditor) {
+            if (!this.audioContext) {
+              this.audioContext = new (window.AudioContext || window.webkitAudioContext);
+            }
             this.audiosourceEditor= WaveformPlaylist.init({
               ac: this.audioContext,
               samplesPerPixel: this.zoomLevel,
-              //mono: true,
               waveHeight: 80,
               container: document.getElementById('playlist'),
               state: 'select',
-              //isAutomaticScroll: true,
-              //seekStyle: 'line',
               colors: {
                 waveOutlineColor: '#E0EFF1',
                 timeColor: 'grey',
                 fadeColor: 'black'
               },
-              /*controls: {
-                show: true,
-                width: 200
-              },*/
               zoomLevels: this.zoomLevels,
               timescale: true,
-              linkEndpoints: true/*,
-              annotationList: {
-                annotations: annotations,
-                //controls: actions,
-                editable: true,
-                isContinuousPlay: false,
-                linkEndpoints: true
-              }*/
+              linkEndpoints: true
             });
           }
-          //delete this.audiosourceEditor.annotationList;
-          //console.log(this.audiosourceEditor.annotationList.setupEE)
-          //allOff(this.audiosourceEditor.getEventEmitter());
           if (this.audiosourceEditor.getEventEmitter().__ee__ && this.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
             this.audiosourceEditor.getEventEmitter().off('dragged', this.audiosourceEditor.getEventEmitter().__ee__['dragged']);
           }
-          //console.log(this.audiosourceEditor)
-          //return;
-          //console.log(this.audiosourceEditor.getEventEmitter().__ee__, this.audiosourceEditor.getEventEmitter().__ee__['dragged']/*, this.audiosourceEditor.annotationList.setupEE*/)
           this.audiosourceEditor.setAnnotations({
               annotations: annotations,
-              //controls: actions,
               editable: true,
               isContinuousPlay: false,
               linkEndpoints: true
@@ -216,22 +196,17 @@
             }
           ])
           .then(() => {
-            console.log('Loaded')
+            this._setSelectionOnWaveform();
             this.plEventEmitter = this.audiosourceEditor.getEventEmitter();
-            //self.plEventEmitter.emit('select', 1.1, 2.2);
             this.plEventEmitter.on('timeupdate', function(position) {
-              //console.log('Current time', position);
               if ((!self.isSingleWordPlaying && !self.isPlaying) || self.currentWord && self.currentWord.start <= position && self.currentWord.end > position) {
                 return;
               }
-              //console.log(arguments)
               let word = self.words.find(_w => {
                 return _w.start <= position && _w.end >position;
               })
               if (word) {
-                //console.log('Word', position, word);
                 self.currentWord = word;
-                //console.log('Set word selection from time update');
                 self._setWordSelection(word.alignedIndex);
                 if (!self.isAnnotationVisible(word.alignedIndex)) {
                   self.scrollPlayerToAnnotation(word.alignedIndex);
@@ -247,7 +222,6 @@
               self.isPaused = false;
             });
             this.plEventEmitter.on('select', function(start, end) {
-              //console.log('ON SELECT ', start, end);
               let is_single_cursor = end - start == 0;
               let is_second_click_ltr = self.selection && (self.selection.end == end && self.selection.end - self.selection.start > 0);
               let is_second_click_rtl = self.selection && (self.selection.start == start && self.selection.end - self.selection.start > 0);
@@ -256,7 +230,6 @@
                       end != self.selection.end && 
                       start != self.selection.start) || 
                       is_second_click_ltr || is_second_click_rtl)) {
-                //console.log('SELECT RANGE', self.selection.start, end)
                 let from = 0;
                 let to = 0;
                 if (is_second_click_ltr){ 
@@ -269,31 +242,27 @@
                   from = self.selection.start < end ? self.selection.start : end;
                   to = self.selection.start > end ? self.selection.start : end;
                 }
-                //console.log('SELECTING ', self.selection.start, ', ', end, ', ', self.selection.start < end, ', ', self.selection.start > end)
-                //console.log('SELECT RANGE', from, to)
                 self.plEventEmitter.emit('select', from, to);
-                /*setTimeout(function() {
-                  self.plEventEmitter.emit('select', undefined, undefined)
-                }, 5000);*/
+              } else if (start < 0) {
+                self.plEventEmitter.emit('select', 0, end);
+              } else if(end > self.audiosourceEditor.activeTrack.duration) {
+                self.plEventEmitter.emit('select', start, self.audiosourceEditor.activeTrack.duration);
               } else {
-                //console.log('SAVE SELECTION', {start: start, end: end})
                 self.selection = {start: start, end: end}
               }
             });
-            //this.plEventEmitter.emit('automaticscroll', true);
-            //console.log(this.player)
             $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>');
             new Draggable (document.getElementById('resize-selection-right'), {
-              limit: {x:[0, 10000], y: [0, 0]},
+            
+              limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
               onDrag: function(element, x, y, event) {
                 $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
                 self.audiosourceEditor.activeTrack.stateObj.startX = $('[id="resize-selection-left"]').position().left;
                 self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
-                //console.log(self.audiosourceEditor.activeTrack)
               }
             })
             new Draggable (document.getElementById('resize-selection-left'), {
-              limit: {x: [0, 10000], y: [0, 0]},
+              limit: {x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
               onDrag: function(element, x, y, event) {
                 $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
                 $('.selection.segment').css('left', x - 5)
@@ -301,13 +270,19 @@
                 self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
               }
             })
+            this.onDiscardMessage = false;
+            if (this.discardOnExit) {
+              this.discardOnExit = false;
+              this._setDefaults();
+              this.close();
+            }
           });
-          $(this.contentContainer).find('w').on('click', function() {
-            let index = $(self.contentContainer).find('w[data-map]').index($(this));
+          $('#' + this.blockId).on('click', '#content-' + this.blockId + ' w', function() {
+            let index = $('#content-' + self.blockId).find('w[data-map]').index($(this));
             let show_selection = true;
             if (typeof index =='undefined' || index === false || index < 0) {
-              let index_no_data = $(self.contentContainer).find('w:not([data-map])').index($(this));
-              let total_index = $(self.contentContainer).find('w').index($(this));
+              let index_no_data = $('#content-' + self.blockId).find('w:not([data-map])').index($(this));
+              let total_index = $('#content-' + self.blockId).find('w').index($(this));
               index = total_index - index_no_data;
               show_selection = false;
             }
@@ -315,21 +290,17 @@
               self.scrollPlayerToAnnotation(index, 'middle');
             }
             if (show_selection) {
-              //console.log('Set word selection from click');
               self._setWordSelection(index, true);
             } else {
               self._clearWordSelection();
             }
           });
-          //console.log('SEARCH ANNOTATIONS', $('.annotations-boxes .annotation-box'));
           $('.wf-playlist').on('click', '.annotations-boxes .annotation-box', function(e) {
             let index = $('.annotations-boxes .annotation-box').index($(this));
-            //self.isSingleWordPlaying = true;
             self._setWordSelection(index, true);
             ;
           });
           $('.wf-playlist').on('dragend', '.annotations-boxes .annotation-box .resize-handle', function(e) {
-            //console.log(self.audiosourceEditor.annotationList)
             let map = [];
             self.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
               map.push([Math.round(al.start * 1000), Math.round((al.end - al.start) * 1000)]);
@@ -342,6 +313,7 @@
               }
             });
             self.$emit('word_realign', map, self.blockId);
+            self.isModified = true;
           });
           $('body').on('mouseup', '.playlist-overlay.state-select', function() {
             self._showSelectionBorders();
@@ -412,7 +384,6 @@
           position = position || 'start'
           let annotations = $('.annotations-boxes .annotation-box');
           if (annotations[index]) {
-            //console.log($(annotations[index]), $('.playlist-tracks').position().left, $('.playlist-tracks')[0].scrollLeft);//getBoundingClientRect
             let scrollPosition = $(annotations[index]).position().left + $('.playlist-tracks')[0].scrollLeft;
             if (position == 'middle') {
               scrollPosition-= $('.playlist-tracks').width()/ 2;
@@ -421,11 +392,9 @@
             $('.playlist-tracks').animate({
               scrollLeft: scrollPosition
             }, 200);
-            //console.log($(annotations[index]).position().left);
           }
         },
         isAnnotationVisible(index) {
-          //console.log($(element).position().left, $('.playlist-tracks')[0].offsetWidth, $(element).position().left > $('.playlist-tracks')[0].offsetWidth)
           let annotations = $('.annotations-boxes .annotation-box');
           if (annotations[index]) {
             return $(annotations[index]).position().left > 0 && $(annotations[index]).position().left < $('.playlist-tracks')[0].offsetWidth;
@@ -442,11 +411,16 @@
           return !this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0;
         },
         close() {
-          if (this.plEventEmitter) {
-            this.plEventEmitter.emit('clear');
-            this._clearWordSelection();
+          if (this.isModified) {
+            this.onExitMessage = true;
+          } else {
+            if (this.plEventEmitter) {
+              this.plEventEmitter.emit('clear');
+              this._clearWordSelection();
+            }
+            this._setDefaults();
+            this.$emit('closed', this.blockId);
           }
-          this.$emit('closed', this.blockId);
         },
         addSilence() {
           if (this.silenceLength > 0 && this.isSinglePointSelection) {
@@ -461,7 +435,10 @@
           }
         },
         saveAndRealign() {
-          
+          if (this.isModified) {
+            this.$emit('saveAndRealign', this.blockId);
+            this.isModified = false;
+          }
         },
         cut() {
           this.$emit('cut', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
@@ -469,7 +446,7 @@
         },
         undo() {
           let record = this._popHistory();
-          if (this.history.length === 0) {
+          if (this.history.length === 0 && this.isHistoryFull) {
             this.isModified = false;
           }
           if (record) {
@@ -479,7 +456,16 @@
         },
         discard() {
           this.$emit('discard', this.blockId);
-          this.history = [];
+          this._setDefaults();
+        },
+        discardAndExit() {
+          this.discardOnExit = true;
+          this.onExitMessage = false;
+        },
+        checkExitState() {
+          if (this.discardOnExit) {
+            this.discard();
+          }
         },
         _setDefaults() {
           this.words = [];
@@ -487,6 +473,7 @@
           this.selection = {};
           this.isModified = false;
           this.isAudioModified = false;
+          this.history = [];
         },
         _numToTime(val) {
           let val_check = parseInt(val);
@@ -525,7 +512,6 @@
           }
           let words = this.contentContainer.find('w[data-map]');
           if (words[index]) {
-            //console.log('Selecting', $(words[index]).html());
             $(words[index]).addClass('selected');
           }
           if (select_range) {
@@ -533,7 +519,6 @@
               return _w.alignedIndex == index;
             });
             if (word) {
-              console.log('Emit selection', word.start, word.end);
               this.plEventEmitter.emit('select', word.start, word.end);
               this._showSelectionBorders();
             }
@@ -580,19 +565,24 @@
           }
           if (new_selection.start >= 0 && new_selection.end <= this.audiosourceEditor.activeTrack.duration && new_selection.start <= new_selection.end) {
             this.selection = new_selection;
-            this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-            this._showSelectionBorders();
+            this._setSelectionOnWaveform();
           }
         },
         _addHistory(text, audio) {
           this.history.push({text: text, audio: audio});
           if (this.history.length >= 6) {
             this.history.shift();
+            this.isHistoryFull = false;
           }
         },
         _popHistory() {
-          //this.history.pop();
           return this.history.pop();
+        },
+        _setSelectionOnWaveform() {
+          if (this.selection && typeof this.selection.start != 'undefined' && typeof this.selection.end != 'undefined' && this.plEventEmitter) {
+            this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            this._showSelectionBorders();
+          }
         }
       },
       computed: {
@@ -874,12 +864,24 @@
     background-color: #555;
   }
   .waveform-wrapper {
-    width: 90%;
+    width: 100%;
   }
-  .close-player {
-    font-size: 25px;
-    display: inline-block;
-    padding: 0px 5px;
-    cursor: pointer;
+  .close-player-container {
+    position: absolute;
+    z-index: 1000;
+    right: 0px;
+    top: -22px;
+    padding: 2px;
+    height: 20px;
+    .close-player {
+      font-size: 25px;
+      display: inline-block;
+      padding: 0px 5px;
+      cursor: pointer;
+      color: black;
+      background-color: #d9d9d9;
+      height: 20px;
+      line-height: 0.9;
+    }
   }
 </style>
