@@ -10,6 +10,7 @@
               :getBlock ="getBlockProxy"
               :recorder ="recorder"
               :blockOrderChanged ="blockOrderChanged"
+              :audioEditor="$refs.audioEditor"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
@@ -30,8 +31,9 @@
       </div>
     </div>
 
-    <nav class="navbar fixed-bottom navbar-light bg-faded">
-      <a class="navbar-brand" href="#">Fixed bottom</a>
+    <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}]" >
+      <!-- <a class="navbar-brand" href="#">Fixed bottom</a> -->
+      <AudioEditor ref="audioEditor"></AudioEditor>
     </nav>
 </div>
 <!--<div class="container">-->
@@ -49,6 +51,7 @@ import mediaStreamRecorder from 'recordrtc'
 import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
 import { BookBlock }    from '../../store/bookBlock'
+import AudioEditor from '../AudioEditor';
 
 export default {
   data () {
@@ -75,7 +78,7 @@ export default {
   },
   mixins: [access, taskControls, api_config],
   components: {
-      BookBlockView, InfiniteLoading
+      BookBlockView, InfiniteLoading, AudioEditor
   },
   methods: {
     ...mapActions(['loadBlocks', 'watchBlocks', 'putBlock', 'getBlock']),
@@ -363,6 +366,9 @@ export default {
         self.initEditors(block, par_index);
       });
       this.setBlockOrderChanged(true);
+    },
+    showAudioeditor() {
+      return this.$refs.audioEditor && !this.$refs.audioEditor.isEmpty();
     }
   },
   events: {
@@ -436,7 +442,7 @@ export default {
     bottom: 0px;
     border: 1px solid black;
     border-radius: 0px;
-    height: 150px;
+    height: 222px;
   }
 
 </style>

@@ -24,6 +24,9 @@
 
         <router-link to="/align" class='presentation' tag='li'
         v-show='isAdmin || isLibrarian'><a>Check alignment</a></router-link>
+        
+        <router-link to="/audio_editor" class='presentation' tag='li'
+        v-show='isAdmin || isLibrarian'><a>AudioEditor</a></router-link>
 
      </ul>
     </td>
