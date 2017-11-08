@@ -98,7 +98,7 @@
                   <select v-model='styleSel' style="min-width: 110px;"><!--v-model='block.classes'--><!--:value="style"-->
                     <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
                   </select>
-                  </label>&nbsp;&nbsp;{{block.getClass()}}
+                  </label><!--&nbsp;&nbsp;{{block.getClass()}}-->
               </div>
               <!--<div class="-hidden">-->
 
@@ -1323,6 +1323,7 @@ export default {
           this.classSel = Object.keys(this.blockTypes[newVal])[0];
         }
         this.block.classes = {};
+        this.reCount();
       },
       'classSel' (newVal, oldVal) {
         //console.log('classSel');
@@ -1333,7 +1334,7 @@ export default {
         }
       },
       'styleSel' (newVal, oldVal) {
-        console.log('styleSel');
+        //console.log('styleSel');
         if (oldVal !== false) {
           this.block.setClassStyle(this.classSel, newVal);
           this.setChanged(true);
