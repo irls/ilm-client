@@ -1267,8 +1267,7 @@ export default {
       setSecnumVal: _.debounce(function(){
         this.reCount();
         this.block.section = this.block.secnum;
-        this.putBlockPart({block: this.block, field: 'section'}).then(()=>{
-        });
+        this.putBlockPart({block: this.block, field: 'section'}).then(()=>{});
       }, 800),
 
       setSecnum() {
@@ -1280,8 +1279,7 @@ export default {
           this.block.secnum = false;
         }
         this.reCount();
-        this.putBlockPart({block: this.block, field: 'section'}).then(()=>{
-        });
+        this.putBlockPart({block: this.block, field: 'section'}).then(()=>{});
       },
       setParnum() {
         if (this.block.parnum === false) this.block.parnum = ''

@@ -182,7 +182,11 @@ export default {
                       el.splice(idx1, 1);
                       this.onBlockNumberChange(change.doc, idx0)
                     } else {
-                      Vue.set(this.parlist[idx0], idx1, new BookBlock(change.doc));
+                      if (this.parlist[idx0][idx1].partUpdate) {
+                        this.parlist[idx0][idx1]._rev = change.doc._rev;
+                      } else {
+                        Vue.set(this.parlist[idx0], idx1, new BookBlock(change.doc));
+                      }
                     }
                 } else if (prev_block && block.index > change.doc.index && prev_block.index < change.doc.index) {// new block
                   let existing = el.find(_b => {

@@ -82,6 +82,8 @@ class BookBlock {
 
     this.deleted = init.deleted || false;
     this.illustration = init.illustration;
+
+    this.partUpdate = false;
   }
 
   clean() {
@@ -125,14 +127,6 @@ class BookBlock {
         return _.pick(this, ['_id'/*, '_rev'*/, fieldName]);
       } break;
     };
-  }
-
-  blockByField() {
-
-  }
-
-  unBlockByField() {
-
   }
 
   genFlagId(isBlockFlag = false) {

@@ -432,6 +432,7 @@ export const store = new Vuex.Store({
 
     putBlockPart ({commit, state, dispatch}, blockData) {
       let cleanBlock = blockData.block.cleanField(blockData.field);
+      blockData.block.partUpdate = true;
       //console.log('putBlockPart', cleanBlock);
       if (cleanBlock) {
         return state.contentDB.get(cleanBlock._id)
