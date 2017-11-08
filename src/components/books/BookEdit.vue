@@ -8,6 +8,8 @@
               :block="block"
               :putBlock ="putBlockProxy"
               :getBlock ="getBlockProxy"
+              :putBlockPart ="putBlockPartProxy"
+              :reCount  ="reCountProxy"
               :recorder ="recorder"
               :blockOrderChanged ="blockOrderChanged"
               @stopRecordingAndNext="stopRecordingAndNext"
@@ -22,7 +24,7 @@
     <!--<div class="row"-->
     </template>
 
-    <infinite-loading v-if="autoload" :on-infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>
+    <infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>
 
     <div id="narrateStartCountdown" class="modal fade in">
       <div>
@@ -30,7 +32,7 @@
       </div>
     </div>
 
-    <nav class="navbar fixed-bottom navbar-light bg-faded">
+    <nav v-if="false" class="navbar fixed-bottom navbar-light bg-faded">
       <a class="navbar-brand" href="#">Fixed bottom</a>
     </nav>
 </div>
@@ -59,7 +61,8 @@ export default {
       recorder: false,
       parlistSkip: 0,
       blockOrderChanged: false,
-      isAllLoaded: false
+      isAllLoaded: false,
+      parCounter: { pref: 0, prefCnt: 0, curr: 1 }
     }
   },
   computed: {
@@ -78,7 +81,7 @@ export default {
       BookBlockView, InfiniteLoading
   },
   methods: {
-    ...mapActions(['loadBlocks', 'watchBlocks', 'putBlock', 'getBlock']),
+    ...mapActions(['loadBlocks', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart']),
 
     test() {
         //this.parlist.splice(0,1);
@@ -91,7 +94,7 @@ export default {
       if (this.page>1) {
           this.page--;
       } else {
-          this.$refs.scrollBookUp.$emit('$InfiniteLoading:loaded');
+          this.$refs.scrollBookUp.stateChanger.loaded()
       }
       console.log('onScrollBookUp');
     },
@@ -100,6 +103,43 @@ export default {
         //console.log('onScrollBookDown, page:', this.page);
         //console.log( this.meta._id );
         this.getBlocks();
+    },
+
+    setBlockParnum(block) {
+      let result = false;
+      switch(block.type) {
+        case 'header' : {
+          this.parCounter.curr = 1;
+
+          if (block.secnum === false) {
+            this.parCounter.pref = false;
+            break;
+          }
+          if (block.secnum.length === 0) {
+            this.parCounter.prefCnt++;
+            this.parCounter.pref = this.parCounter.prefCnt;
+            break;
+          }
+          if (!isNaN(block.secnum)) { // Number
+            this.parCounter.prefCnt = parseInt(block.secnum);
+            this.parCounter.pref = this.parCounter.prefCnt;
+          } else { // String
+            this.parCounter.pref = block.secnum;
+          }
+        } break;
+        case 'par' : {
+          if (block.parnum===false) {
+            break;
+          }
+          if (this.parCounter.pref === false) {
+            result = '';
+            break;
+          }
+          result = this.parCounter.pref+'.'+this.parCounter.curr;
+          this.parCounter.curr++;
+        } break;
+      };
+      return result;
     },
 
     getBlocks() {
@@ -112,25 +152,25 @@ export default {
             let tmp = [];
             if (result.length > 0) {
                 result.forEach((el, idx, arr)=>{
-                    //let newBlock = Object.assign(new this.newBlock(), el.doc);
                     let newBlock = new BookBlock(el.doc);
+                    newBlock.parnum = this.setBlockParnum(newBlock);
                     tmp.push(newBlock);
                 });
-                if (tmp.length>0) this.parlist.push(tmp)//([...tmp]);
+                if (tmp.length>0) this.parlist.push(tmp)
 
-                if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.$emit('$InfiniteLoading:loaded');
+                if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.loaded();
             } else {
-                if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
+                if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
             }
             this.isAllLoaded = this.$refs.scrollBookDown ? this.$refs.scrollBookDown.isComplete : false;
-            //console.log('loaded', result);
         }).catch((err)=>{
-            if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.$emit('$InfiniteLoading:complete');
+            if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
             console.log('Error: ', err.message);
         });
     },
 
     refreshBlock (change) {
+        //console.log('refreshBlock', change.doc);
         let prev_block = null;
         this.parlist.forEach((el, idx0, arr)=>{
             el.forEach((block, idx1)=>{
@@ -208,6 +248,12 @@ export default {
       .catch((err)=>{})
     },
 
+    putBlockPartProxy: function (blockData) {
+      return this.putBlockPart(blockData)
+      .then(()=>{})
+      .catch((err)=>{})
+    },
+
     getBlockProxy: function (block_id) {
       return this.getBlock(block_id)
       .then((res)=>{
@@ -221,6 +267,16 @@ export default {
       })
       .catch((err)=>{
         console.log(err);
+      })
+    },
+
+    reCountProxy: function () {
+      this.parCounter = { pref: 0, prefCnt: 0, curr: 1 };
+      this.parlist.forEach((el, idx0, arr)=>{
+        el.forEach((block, idx1)=>{
+          block.parnum = this.setBlockParnum(block);
+          //console.log(block._id, block.type, block.secnum, block.parnum);
+        })
       })
     },
 

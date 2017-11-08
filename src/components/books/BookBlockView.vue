@@ -1,15 +1,32 @@
 <template>
 <div class="table-body -block" :id="block._id">
     <div class="table-cell controls-left">
-        <div class="table-row">
-            <span>{{block.parnum?block.parnum:'&nbsp;'}}</span>
+        <div class="table-row parnum-row">
+          <span v-if="block.type=='par' && block.parnum!==false" :class="['parnum']">{{block.parnum}}</span>
+
+          <span v-if="block.type=='header' && block.secnum!==false" :class="['parnum', '-hidden-hover']">{{block.secnum}}</span>
+
+          <span v-if="block.type=='header' && block.secnum===''" :class="['parnum', '-hidden-hover', '-auto']">Auto</span>
+
+          <input v-if="block.type=='header' && block.secnum!==false"
+            :class="['secnum', '-hidden']"
+            v-model="block.secnum" @input="setSecnumVal"
+            type="text" maxlength="3" size="3"/>
+
         </div>
         <div class="table-row">
-            <!-- Show parnum only on paragraphs -->
             <div class='par-ctrl -hidden'>
-                <i class="fa fa-paragraph"></i>
+                <i v-if="block.type=='header'"
+                  class="fa fa-header"
+                  :class="{'-active': block.secnum!==false}"
+                  @click="setSecnum"></i>
+
+                <i v-if="block.type=='par'"
+                  class="fa fa-paragraph"
+                  :class="{'-active': block.parnum!==false}"
+                  @click="setParnum"></i>
             </div>
-            <div class='par-ctrl -hidden'>
+            <div v-if="false" class='par-ctrl -hidden'>
                 <i class="glyphicon glyphicon-volume-up"></i>
                 <i class="glyphicon glyphicon-volume-off"></i>
             </div>
@@ -61,6 +78,9 @@
 
                   <!--<i class="fa fa-trash-o fa-lg"></i>-->
                   <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
+
+                  <!--<label v-if="block.type=='header'">start:&nbsp;<input type="checkbox"/></label>&nbsp;-->
+
                   <!-- Block Type selector -->
                   <label>type:&nbsp;
                   <select v-model='block.type' style="min-width: 80px;"><!--v-model='block.type'--><!--:value="type"-->
@@ -336,6 +356,7 @@ import { mapGetters, mapActions }    from 'vuex'
 import {  QuoteButton, QuotePreview,
           SuggestButton, SuggestPreview
         } from '../generic/ExtMediumEditor';
+import _                  from 'lodash'
 import ReadAlong          from 'readalong'
 import BlockMenu          from '../generic/BlockMenu';
 import BlockContextMenu   from '../generic/BlockContextMenu';
@@ -392,7 +413,7 @@ export default {
       'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'getBlock', 'recorder', 'blockOrderChanged'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockOrderChanged'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -602,6 +623,7 @@ export default {
             this.doReAlign();
           }
           this.$refs.blockContent.dataset.has_suggestion = false;
+          this.reCount();
         });
       },
 
@@ -1240,6 +1262,33 @@ export default {
           $('[id="' + this.block._id + '"] .drag-uploader').addClass('no-picture');
           this.isIllustrationChanged = false;
         }
+      },
+
+      setSecnumVal: _.debounce(function(){
+        this.reCount();
+        this.block.section = this.block.secnum;
+        this.putBlockPart({block: this.block, field: 'section'}).then(()=>{
+        });
+      }, 800),
+
+      setSecnum() {
+        if (this.block.secnum === false) {
+          this.block.secnum = this.block.section ? this.block.section : '';
+        }
+        else {
+          this.block.section = this.block.secnum;
+          this.block.secnum = false;
+        }
+        this.reCount();
+        this.putBlockPart({block: this.block, field: 'section'}).then(()=>{
+        });
+      },
+      setParnum() {
+        if (this.block.parnum === false) this.block.parnum = ''
+        else this.block.parnum = false;
+        this.reCount();
+        this.putBlockPart({block: this.block, field: 'parnum'}).then(()=>{
+        });
       }
   },
   watch: {
@@ -1268,7 +1317,7 @@ export default {
           });
       },
       'block.type' (newVal) {
-        console.log('block.type');
+        //console.log('block.type');
         this.setChanged(true);
         if (Object.keys(this.blockTypes[newVal])[0] !== '') {
           this.classSel = Object.keys(this.blockTypes[newVal])[0];
@@ -1276,7 +1325,7 @@ export default {
         this.block.classes = {};
       },
       'classSel' (newVal, oldVal) {
-        console.log('classSel');
+        //console.log('classSel');
         if (oldVal !== false) {
           let styleCurr = this.block.setClass(newVal);
           if (styleCurr) this.styleSel = styleCurr;
@@ -1422,6 +1471,10 @@ export default {
         width: 50px;
         padding-left: 15px;
 
+        .table-row.parnum-row {
+          height: 5px;
+        }
+
         .-hidden {
             visibility: hidden;
         }
@@ -1431,6 +1484,34 @@ export default {
                 visibility: visible;
             }
         }
+        .-hidden-hover {
+            display: block;
+        }
+
+        &:hover {
+            .-hidden-hover {
+                display: none;
+            }
+        }
+        .parnum {
+            font-size: 1.1em;
+            font-family: serif;
+            &.-bold {
+              font-weight: bold;
+            }
+            &.-auto {
+              letter-spacing: -1px;
+              margin-left: -6px;
+            }
+        }
+        .secnum {
+            font-size: 15px;
+            font-family: serif;
+            padding: 0;
+            width: 38px;
+            height: 25px;
+            margin-left: -1px;
+          }
     }
 
     &.controls-right {
@@ -1582,8 +1663,11 @@ export default {
 
 .par-ctrl {
     width: auto;
-    .fa-paragraph {
+    .fa-paragraph, .fa-header {
         margin-left: 4px;
+        &.-active {
+          color: #303030;
+        }
     }
     .glyphicon-volume-up, .glyphicon-volume-off {
         margin-left: 3px;

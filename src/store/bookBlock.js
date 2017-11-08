@@ -11,12 +11,13 @@ let defBlock = [
   'content',
   'type',
   'classes',
-  'parnum',
   'audiosrc',
   'footnotes',
   'flags',
   '_deleted',
+  'parnum',
   'section',
+  'secnum',
   'illustration'
 ]
 
@@ -70,14 +71,16 @@ class BookBlock {
     this.type = init.type || '';
     this.classes = init.classes || {};
     if (Array.isArray(this.classes)) this.classes = {};
-    this.parnum = init.parnum || false;
+
+    this.parnum = typeof init.parnum !== 'undefined' ? init.parnum : false;
+    this.section = typeof init.section !== 'undefined' ? init.section : false;
+    this.secnum = typeof init.secnum !== 'undefined' ? init.secnum : this.section;
 
     this.audiosrc = init.audiosrc || '';
     this.footnotes = init.footnotes || [];
     this.flags = init.flags || [];
 
     this.deleted = init.deleted || false;
-    this.section = typeof init.section !== 'undefined' ? init.section : false;
     this.illustration = init.illustration;
   }
 
@@ -102,7 +105,34 @@ class BookBlock {
       this.illustration = this.illustration.split('?').shift();
     }
     if (Array.isArray(this.classes) && this.classes.length) this.classes = this.classes[0];
+    //if (this.parnum!==false) this.parnum = '';
     return _.pick(this, defBlock);
+  }
+
+  cleanField(fieldName) {
+    if (defBlock.indexOf(fieldName)<0) return false;
+    switch(fieldName) {
+      case 'illustration' : {
+      } break;
+      case 'section' : {
+        let result = _.pick(this, ['_id', 'section', 'secnum']);
+        if (!isNaN(parseInt(result.section))) result.section = parseInt(result.section);
+        if (result.section+'' === 'NaN') result.section = '';
+        if (!isNaN(parseInt(result.secnum))) result.secnum = parseInt(result.secnum);
+        return result;
+      } break;
+      default : {
+        return _.pick(this, ['_id'/*, '_rev'*/, fieldName]);
+      } break;
+    };
+  }
+
+  blockByField() {
+
+  }
+
+  unBlockByField() {
+
   }
 
   genFlagId(isBlockFlag = false) {
