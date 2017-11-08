@@ -27,6 +27,7 @@ This is a Chrome-only Vue.js 2.0 application which uses the Ilm-Server as a back
     * Add ```localhost:5984``` (or your local CouchDB location) to the end of the line ```export DB_HOST=```
     * Add ```localhost:3000``` to the end of the line ```export ILM_SERVER=```
     * If necessary change the port number in the line ```export CLIENT_PORT=```
+    * For custom build path change the line ```export CLIENT_BUILD_PATH=```
 
 6. Launch the ILM-Client app with
     * ```npm run dev```
