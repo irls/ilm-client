@@ -275,7 +275,7 @@
                     dir="bottom"
                     :update="update"
                 >
-                  <template v-if="range.collapsed">
+                  <template v-if="isFootnoteAllowed()">
                     <li @click="addFootnote">Add footnote</li>
                     <li class="separator"></li>
                   </template>
@@ -598,7 +598,7 @@ export default {
 
           });
       },
-      
+
       discardAudioEdit: function() {
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
         let api = this.$store.state.auth.getHttp();
@@ -678,7 +678,7 @@ export default {
         }
         this.isAudioChanged = false;
       },
-      
+
       assembleBlockAudioEdit: function() {// to save changes from audio editor
         if (this.blockAudio.map && this.blockAudio.src) {
           let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
@@ -863,6 +863,19 @@ export default {
         $('#'+block_id).find('.'+trail_class).each(function(){
           $(this).removeClass(trail_class);
         });
+      },
+
+      isFootnoteAllowed: function() {
+        if (!this.range) return false;
+        let container = this.range.commonAncestorContainer;
+        if (typeof container.length == 'undefined') return false;
+        if (this.range.endOffset >= container.length) return true;
+        let checkRange = document.createRange();
+        //console.log(container, container.length, this.range.endOffset);
+        checkRange.setStart( container, this.range.startOffset );
+        checkRange.setEnd( container, this.range.endOffset+1 );
+        let regexp = /^[\.\s]+$/i;
+        return regexp.test(checkRange.toString());
       },
       addFootnote: function() {
         let el = document.createElement('SUP');
@@ -1277,7 +1290,7 @@ export default {
         this.audioEditor.close();
         Vue.nextTick(() => {
           this.audioEditor.load(this.blockAudio.src, this.blockAudio.map, this.block._id);
-        
+
         let self = this;
         this.audioEditor.$on('word_realign', function(map, blockId) {
           if (blockId == self.block._id && self.$refs.blockContent.querySelectorAll) {
