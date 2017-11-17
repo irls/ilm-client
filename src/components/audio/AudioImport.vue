@@ -39,7 +39,7 @@
                     <h4>Uploaded by {{audiobook.creator}} at {{dateFormated(audiobook.createdAt, 'd F')}}</h4>
                   </div>
                   <div class="col-sm-8">
-                    <h5>{{audiobook.importFiles[0]}}</h5>
+                    <h5>{{audiobook.importFiles.length}} files total</h5>
                   </div>
                   <div class="col-sm-4">
                     <!-- <a class="download-audio-link" :href="SERVER_URL + audiobook.url"><i class="fa fa-download"></i>Download</a> -->
@@ -97,6 +97,18 @@
 
         </div>
       </div>
+      <modal v-model="showDuplicateFilesWarning" effect="fade">
+        <div class="modal-body">
+          <div v-if="uploadFilesDuplicates[0]">
+            {{uploadFilesDuplicates[0].name}} already exists. Do you want to replace it?
+          </div>
+        </div>
+        <!-- custom buttons -->
+        <div slot="modal-footer" class="modal-footer">
+          <button type="button" class="btn btn-default" @click="cancelDuplicateAudio()">Cancel</button>
+          <button type="button" class="btn btn-confirm" @click="replaceDuplicateAudio()">Replace</button>
+        </div>
+      </modal>
     </div>
   </transition>
 
@@ -107,6 +119,7 @@
 import Vue from 'vue'
 import api_config from '../../mixins/api_config.js'
 import {dateFormat} from '../../filters';
+import {modal} from 'vue-strap';
 
 export default {
   data() {
@@ -124,11 +137,13 @@ export default {
       type_book : '',
       auth: this.$store.state.auth,
       uploadFinished: false,
-      formData: new FormData()
+      formData: new FormData(),
+      uploadFilesDuplicates: [],
+      confirmedDuplicates: []
     }
   },
   components: {
-    Vue
+    Vue, modal
   },
   mixins: [api_config],
   props: {
@@ -159,6 +174,9 @@ export default {
     },
     saveDisabled: function() {
       return (this.uploadFiles === 0)
+    },
+    showDuplicateFilesWarning: function () {
+      return this.uploadFilesDuplicates.length > 0;
     }
   },
   methods: {
@@ -172,22 +190,43 @@ export default {
     },
 
     onAudioFileChange (e) {
-      let fieldName = e.target.name
+      //let fieldName = e.target.name
       let fileList = e.target.files || e.dataTransfer.files
       if (!this.multiple) {
         this.audioFiles = [];
         this.formData = new FormData();
       }
       for(let file of fileList) {
-          this.audioFiles.push({name: file.name, size: file.size});
+          let exist = false;
+          if (this.audiobook._id) {
+            exist = this.audiobook.importFiles.find(_f => {
+              return _f.origName == file.name;
+            });
+          }
+          if (exist) {
+            this.uploadFilesDuplicates.push(file);
+          } else {
+            let existInCurrent = this.audioFiles.find(_f => {
+              return _f.name == file.name;
+            })
+            if (!existInCurrent) {
+              this.addFileToUpload(file);
+            }
+          }
       }
-      Array
+      
+      /*Array
         .from(Array(fileList.length).keys())
         .map(x => {
           this.formData.append(fieldName, fileList[x], fileList[x].name);
-          console.log('Field name: ', fieldName)
+          //console.log('Field name: ', fieldName)
           this.uploadFiles++
-        });
+        });*/
+    },
+    addFileToUpload(file) {
+      this.audioFiles.push({name: file.name, size: file.size});
+      this.formData.append('audio_import', file, file.name);
+      this.uploadFiles++
     },
 
     onFormSubmit () {
@@ -213,6 +252,7 @@ export default {
             // hide modal after one second
             vm.uploadProgress = "Upload Successful"
             vm.uploadFinished = true
+            vm.$emit('audiofilesUploaded', response.data);
             if (vm.importTask._id && response.data && typeof response.data._id !== 'undefined') {
               api.put(vm.API_URL + 'task/' + vm.importTask._id + '/audio_imported', {})
                 .then((link_response) => {
@@ -235,13 +275,14 @@ export default {
         });
       } else {
         // upload updated file by engineer or another file by editor
-        vm.audiobook.importFiles = [];
+        //vm.audiobook.importFiles = [];
         this.formData.append('audiobook', JSON.stringify(vm.audiobook));
         api.post(api_url + '/' + vm.audiobook._id, this.formData, config).then(function(response){
           if (response.status===200) {
             // hide modal after one second
-            vm.uploadProgress = "Audiofile " + vm.audioFiles[0].name + " uploaded"
+            vm.uploadProgress = vm.audioFiles.length + " Audiofiles  uploaded"
             vm.uploadFinished = true
+            vm.$emit('audiofilesUploaded', response.data);
             if (vm.importTask._id && response.data && typeof response.data._id !== 'undefined') {
               api.put(vm.API_URL + 'task/' + vm.importTask._id + '/audio_imported', {})
                 .then((link_response) => {
@@ -316,6 +357,12 @@ export default {
     },
     dateFormated(date, format) {
       return dateFormat(date, format)
+    },
+    cancelDuplicateAudio() {
+      this.uploadFilesDuplicates.shift();
+    },
+    replaceDuplicateAudio() {
+      this.addFileToUpload(this.uploadFilesDuplicates.shift());
     }
 
   },

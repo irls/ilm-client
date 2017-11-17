@@ -17,7 +17,8 @@ let defBlock = [
   'flags',
   '_deleted',
   'section',
-  'illustration'
+  'illustration',
+  'voicework'
 ]
 
 let BlockTypes = {
@@ -79,6 +80,7 @@ class BookBlock {
     this.deleted = init.deleted || false;
     this.section = typeof init.section !== 'undefined' ? init.section : false;
     this.illustration = init.illustration;
+    this.voicework = init.voicework;
   }
 
   clean() {

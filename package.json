@@ -16,6 +16,7 @@
     "axios": "^0.15.3",
     "diff-match-patch": "^1.0.0",
     "draggable": "4.1.2",
+    "draggable-list": "1.4.0",
     "expose-loader": "^0.7.3",
     "html2canvas": "^0.5.0-beta4",
     "install": "^0.8.7",

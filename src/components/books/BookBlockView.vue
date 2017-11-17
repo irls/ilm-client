@@ -78,7 +78,14 @@
                   <select v-model='styleSel' style="min-width: 110px;"><!--v-model='block.classes'--><!--:value="style"-->
                     <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
                   </select>
-                  </label>&nbsp;&nbsp;{{block.getClass()}}
+                  </label><!-- &nbsp;&nbsp;{{block.getClass()}} -->
+                  <template v-if="tc_hasTask('content_cleanup')">
+                    <label>Voicework:&nbsp;
+                    <select v-model='voiceworkSel' style="min-width: 100px;" ref="voiceworkSel">
+                      <option v-for="(val, key) in blockVoiceworks" :value="key">{{ val }}</option>
+                    </select>
+                    </label>
+                  </template>
               </div>
               <!--<div class="-hidden">-->
 
@@ -302,9 +309,18 @@
               @click="assembleBlockProxy">
                   <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
               </div>
+              <div class="align-range -hidden -left">
+                Set block range: <label><input type="checkbox" v-on:change="setRangeSelection('start', $event)" class="set-range-start" :disabled="!allowSetStart"/>&nbsp;Start</label><label>&nbsp;&nbsp;<input type="checkbox" v-on:change="setRangeSelection('end', $event)" class="set-range-end" :disabled="!allowSetEnd"/>&nbsp;End</label>
+                <template v-if="displaySelectionStart">
+                  <a class="go-to-block" v-on:click="scrollToBlock(displaySelectionStart)">View start({{displaySelectionStart}})</a>
+                </template>
+                <template v-if="displaySelectionEnd">
+                  <a class="go-to-block" v-on:click="scrollToBlock(displaySelectionEnd)">View end({{displaySelectionEnd}})</a>
+                </template>
+              </div>
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
-                  <template v-if="!isCompleted && !tc_hasTask('content_cleanup')">
+                  <template v-if="!isCompleted">
                   <span>
                     <i class="glyphicon glyphicon-flag"
                       ref="blockFlagControl"
@@ -328,6 +344,25 @@
     </div>
     <modal v-model="deleteBlockMessage" effect="fade" ok-text="Delete" cancel-text="Cancel" title="Delete block" @ok="deleteBlock()">
       <div>Delete block? </div>
+    </modal>
+    <modal v-model="onVoiceworkChange" effect="fade">
+      <!-- custom header -->
+      <div slot="modal-header" class="modal-header">
+        <h4 class="modal-title">
+          Voicework update
+        </h4>
+      </div>
+      <div class="modal-body">
+        <div>Apply "{{blockVoiceworks[voiceworkChange]}}" voicework type to</div>
+        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single"/>this {{block.type}}</label></div>
+        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all"/>all incomplete {{block.type}}s</label></div>
+        <div>This will also delete current audio from the {{block.type}}(s)</div>
+      </div>
+      <!-- custom buttons -->
+      <div slot="modal-footer" class="modal-footer">
+        <button type="button" class="btn btn-default" @click="voiceworkChange = false">Cancel</button>
+        <button type="button" class="btn btn-confirm" @click="updateVoicework()">Apply</button>
+      </div>
     </modal>
 </div>
 </template>
@@ -385,7 +420,9 @@ export default {
       reRecordPosition: false,
       isUpdating: false,
       recordStartCounter: 0,
-      deleteBlockMessage: false
+      deleteBlockMessage: false,
+      voiceworkChange: false,
+      voiceworkUpdateType: 'single'
     }
   },
   components: {
@@ -395,7 +432,7 @@ export default {
       'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'getBlock', 'recorder', 'blockOrderChanged', 'audioEditor'],
+  props: ['block', 'putBlock', 'getBlock', 'recorder', 'blockOrderChanged'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -407,6 +444,29 @@ export default {
           }
           return false;
        },
+      blockVoiceworks: function () {
+        return {
+          'audio_file': 'Audio file',
+          'tts': 'Text to Speach',
+          'narration': 'Narration',
+          'no_audio': 'No audio'
+        }
+      },
+      voiceworkSel: {
+        get() {
+          return this.block.voicework;
+        },
+        set(val) {
+          if (val !== this.block.voicework) {
+            this.voiceworkChange = val;
+          }
+        }
+      },
+      onVoiceworkChange: {
+        get() {
+          return this.voiceworkChange !== false;
+        }
+      },
       countArchParts: function () {
           return this.flagsSel ? this.block.countArchParts(this.flagsSel._id) : 0;
       },
@@ -421,6 +481,7 @@ export default {
           return flagsSummary.stat !== 'open';
       },
       isApproveDisabled: function () {
+          if (this._is('editor') && !this.tc_getBlockTask(this.block._id)) return true;
           if (this._is('narrator') && !(this.blockAudio && this.blockAudio.src)) return true;
           if (!(this.block.calcFlagsSummary().stat !== 'open')) return true;
           return false;
@@ -428,6 +489,18 @@ export default {
       isCompleted: function () {
           if (this._is('editor') && this.tc_hasTask('content_cleanup')) return false;
           return this.tc_getBlockTask(this.block._id) ? false : true;
+      },
+      allowSetStart: function () {
+        return !this.$parent.selectionEnd._id || this.$parent.selectionEnd.index >= this.block.index;
+      },
+      allowSetEnd: function () {
+        return !this.$parent.selectionStart._id || this.$parent.selectionStart.index <= this.block.index;
+      },
+      displaySelectionStart() {
+        return this.$parent.selectionEnd._id == this.block._id ? this.$parent.selectionStart._id : false;
+      },
+      displaySelectionEnd() {
+        return this.$parent.selectionStart._id == this.block._id ? this.$parent.selectionEnd._id : false;
       },
       ...mapGetters({
           auth: 'auth',
@@ -465,6 +538,7 @@ export default {
       if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
         this.classSel = Object.keys(this.blockTypes[this.block.type])[0];
       }
+      this.voiceworkSel = this.block.voicework;
       //this.detectMissedFlags();
 
   },
@@ -589,9 +663,7 @@ export default {
               this.blockAudio.map = response.data.content;
               this.block.audiosrc = this.blockAudio.src;
               this.isAudioChanged = false;
-              if (this.audioEditor) {
-                this.audioEditor.setAudio(this.blockAudio.src, this.blockAudio.map);
-              }
+              this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
             }
           })
           .catch(err => {
@@ -672,9 +744,7 @@ export default {
                 //this.blockAudio.map = '';
                 //this.blockAudio.src = '';
                 //return this.putBlock(this.block);
-                if (this.audioEditor) {
-                  this.audioEditor.setAudio(this.blockAudio.src, this.blockAudio.map);
-                }
+                this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
                 this.isAudioChanged = false;
                 this.isChanged = false;
                 return BPromise.resolve();
@@ -795,9 +865,7 @@ export default {
               this.blockAudio.map = response.data.content;
               this.block.content = response.data.content;
               this.block.audiosrc = this.blockAudio.src;
-              if (this.audioEditor) {
-                this.audioEditor.setAudio(this.blockAudio.src, this.blockAudio.map);
-              }
+              this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
             }
           })
           .catch(err => {
@@ -822,9 +890,7 @@ export default {
               this.blockAudio.map = response.data.content;
               this.block.content = response.data.content;
               this.block.audiosrc = this.blockAudio.src;
-              if (this.audioEditor) {
-                this.audioEditor.setAudio(this.blockAudio.src, this.blockAudio.map);
-              }
+              this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
               this.isAudioChanged = true;
             }
           })
@@ -1252,74 +1318,74 @@ export default {
       showAudioEditor() {
         $('.table-body.-content').removeClass('editing');
         $('#' + this.block._id + ' .table-body.-content').addClass('editing');
-        this.audioEditor.close();
         Vue.nextTick(() => {
-          this.audioEditor.load(this.blockAudio.src, this.blockAudio.map, this.block._id);
-        
-        let self = this;
-        this.audioEditor.$on('word_realign', function(map, blockId) {
-          if (blockId == self.block._id && self.$refs.blockContent.querySelectorAll) {
-            console.log(self.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
-            self.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
-              let _m = map.shift();
-              let w_map = _m.join()
-              $(_w).attr('data-map', w_map)
-            });
-            self.block.content = self.$refs.blockContent.innerHTML;
-            self.blockAudio.map = self.block.content;
-            self.isChanged = true;
-          }
-        });
-        this.audioEditor.$on('save', function(blockId) {
-          if (blockId == self.block._id) {
-            self.assembleBlockAudioEdit();
-          }
-        });
-        this.audioEditor.$on('saveAndRealign', function(blockId) {
-          if (blockId == self.block._id) {
-            self.doReAlign()
-              .then(() => {
-                self.assembleBlockAudioEdit();
+          
+          this.$root.$emit('for-audioeditor:load-and-play', this.blockAudio.src, this.blockAudio.map, this.block._id);
+          
+          let self = this;
+          this.$root.$on('from-audioeditor:word-realign', function(map, blockId) {
+            if (blockId == self.block._id && self.$refs.blockContent.querySelectorAll) {
+              //console.log(self.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
+              self.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
+                let _m = map.shift();
+                let w_map = _m.join()
+                $(_w).attr('data-map', w_map)
               });
-          }
-        })
-        this.audioEditor.$on('cut', function(blockId, start, end) {
-          if (blockId == self.block._id) {
-            self._audDeletePart(start, end);
-          }
-        });
-        this.audioEditor.$on('closed', function(blockId) {
-          if (blockId == self.block._id) {
-            self.audioEditor.$off('insertSilence');
-            self.audioEditor.$off('word_realign');
-            self.audioEditor.$off('save');
-            self.audioEditor.$off('saveAndRealign');
-            self.audioEditor.$off('cut');
-            self.audioEditor.$off('undo');
-            self.audioEditor.$off('discard');
-            self.audioEditor.$off('closed');
-            $('#' + self.block._id + ' .table-body.-content').removeClass('editing');
-          }
-        });
-        this.audioEditor.$on('insertSilence', function(blockId, position, length) {
-          if (blockId == self.block._id) {
-            self.insertSilence(position, length);
-          }
-        });
-        this.audioEditor.$on('undo', function(blockId, audio, text, isModified) {
-          if (self.block._id == blockId) {
-            self.blockAudio.map = text;
-            self.blockAudio.src = audio;
-            self.block.content = text;
-            self.block.audiosrc = self.blockAudio.src;
-            self.isAudioChanged = isModified;
-          }
-        });
-        this.audioEditor.$on('discard', function(blockId) {
-          if (self.block._id == blockId) {
-            self.discardAudioEdit();
-          }
-        });
+              self.block.content = self.$refs.blockContent.innerHTML;
+              self.blockAudio.map = self.block.content;
+              self.isChanged = true;
+            }
+          });
+          this.$root.$on('from-audioeditor:save', function(blockId) {
+            if (blockId == self.block._id) {
+              self.assembleBlockAudioEdit();
+            }
+          });
+          this.$root.$on('from-audioeditor:save-and-realign', function(blockId) {
+            if (blockId == self.block._id) {
+              self.doReAlign()
+                .then(() => {
+                  self.assembleBlockAudioEdit();
+                });
+            }
+          })
+          this.$root.$on('from-audioeditor:cut', function(blockId, start, end) {
+            if (blockId == self.block._id) {
+              self._audDeletePart(start, end);
+            }
+          });
+          this.$root.$on('from-audioeditor:closed', function(blockId) {
+            if (blockId == self.block._id) {
+              self.$root.$off('from-audioeditor:insert-silence');
+              self.$root.$off('from-audioeditor:word-realign');
+              self.$root.$off('from-audioeditor:save');
+              self.$root.$off('from-audioeditor:save-and-realign');
+              self.$root.$off('from-audioeditor:cut');
+              self.$root.$off('from-audioeditor:undo');
+              self.$root.$off('from-audioeditor:discard');
+              self.$root.$off('from-audioeditor:closed');
+              $('#' + self.block._id + ' .table-body.-content').removeClass('editing');
+            }
+          });
+          this.$root.$on('from-audioeditor:insert-silence', function(blockId, position, length) {
+            if (blockId == self.block._id) {
+              self.insertSilence(position, length);
+            }
+          });
+          this.$root.$on('from-audioeditor:undo', function(blockId, audio, text, isModified) {
+            if (self.block._id == blockId) {
+              self.blockAudio.map = text;
+              self.blockAudio.src = audio;
+              self.block.content = text;
+              self.block.audiosrc = self.blockAudio.src;
+              self.isAudioChanged = isModified;
+            }
+          });
+          this.$root.$on('from-audioeditor:discard', function(blockId) {
+            if (self.block._id == blockId) {
+              self.discardAudioEdit();
+            }
+          });
         });
       },
       _getParent(node, tag) {
@@ -1409,6 +1475,31 @@ export default {
           $('[id="' + this.block._id + '"] .drag-uploader').addClass('no-picture');
           this.isIllustrationChanged = false;
         }
+      },
+      setRangeSelection(type, event) {
+        let checked = event.target && event.target.checked;
+        this.$emit('setRangeSelection', this.block, type, checked);
+      },
+      updateVoicework() {
+        
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/set_voicework';
+        let api = this.$store.state.auth.getHttp();
+        return api.post(api_url, {
+          voicework: this.voiceworkChange,
+          updateType: this.voiceworkUpdateType
+        }, {})
+          .then(response => {
+            if (response.status == 200) {
+              this.$root.$emit('from-bookblockview:voicework-type-changed');
+            }
+            this.voiceworkChange = false;
+          })
+          .catch(err => {
+            this.voiceworkChange = false;
+          });
+      },
+      scrollToBlock(id) {
+        this.$root.$emit('for-bookedit:scroll-to-block', id);
       }
   },
   watch: {
@@ -1520,6 +1611,7 @@ export default {
       position: static;
       &.par {
         min-height: 47px;
+        position: static;
       }
       &.title {
         min-height: 77.5px;
@@ -1530,6 +1622,9 @@ export default {
       &.subhead {
         min-height: 54.5px;
       }
+    }
+    hr {
+      position: static;
     }
 }
 
