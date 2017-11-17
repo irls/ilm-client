@@ -18,7 +18,8 @@ let defBlock = [
   'parnum',
   'section',
   'secnum',
-  'illustration'
+  'illustration',
+  'voicework'
 ]
 
 let BlockTypes = {
@@ -82,7 +83,7 @@ class BookBlock {
 
     this.deleted = init.deleted || false;
     this.illustration = init.illustration;
-
+    this.voicework = init.voicework;
     this.partUpdate = false;
   }
 

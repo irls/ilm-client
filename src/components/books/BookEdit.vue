@@ -12,12 +12,12 @@
               :reCount  ="reCountProxy"
               :recorder ="recorder"
               :blockOrderChanged ="blockOrderChanged"
-              :audioEditor="$refs.audioEditor"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
               @joinBlocks="joinBlocks"
+              @setRangeSelection="setRangeSelection"
           />
         </div>
         <!--<div class='col'>-->
@@ -32,11 +32,6 @@
         <strong>3</strong>
       </div>
     </div>
-
-    <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}]" >
-      <!-- <a class="navbar-brand" href="#">Fixed bottom</a> -->
-      <AudioEditor ref="audioEditor"></AudioEditor>
-    </nav>
 </div>
 <!--<div class="container">-->
 </template>
@@ -52,8 +47,7 @@ import taskControls from '../../mixins/task_controls.js'
 import mediaStreamRecorder from 'recordrtc'
 import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
-import { BookBlock }    from '../../store/bookBlock'
-import AudioEditor from '../AudioEditor';
+import { BookBlock }    from '../../store/bookBlock';
 
 export default {
   data () {
@@ -65,6 +59,8 @@ export default {
       parlistSkip: 0,
       blockOrderChanged: false,
       isAllLoaded: false,
+      selectionStart: {},
+      selectionEnd: {},
       parCounter: { pref: 0, prefCnt: 0, curr: 1 }
     }
   },
@@ -81,7 +77,7 @@ export default {
   },
   mixins: [access, taskControls, api_config],
   components: {
-      BookBlockView, InfiniteLoading, AudioEditor
+      BookBlockView, InfiniteLoading
   },
   methods: {
     ...mapActions(['loadBlocks', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart']),
@@ -312,11 +308,14 @@ export default {
           return c.$el.id == next._id;
         });
         if (el) {
-          let offset = document.getElementById(next._id).getBoundingClientRect()
-          window.scrollTo(0, window.pageYOffset + offset.top);
+          this.scrollToBlock(next._id);
           el.startRecording();
         }
       }
+    },
+    scrollToBlock(id) {
+      let offset = document.getElementById(id).getBoundingClientRect()
+      window.scrollTo(0, window.pageYOffset + offset.top - 110);
     },
     initEditors(block, par_index) {
       let ids = [];
@@ -427,8 +426,38 @@ export default {
       });
       this.setBlockOrderChanged(true);
     },
-    showAudioeditor() {
-      return this.$refs.audioEditor && !this.$refs.audioEditor.isEmpty();
+    setRangeSelection(block, type, status) {
+      switch (type) {
+        case 'start':
+          if (status) {
+            if (!this.selectionEnd || !this.selectionEnd._id || this.selectionEnd.index >= block.index) {
+              this.selectionStart = block;
+              this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
+            }
+            $('.set-range-start').prop('checked', false);
+            $('#' + this.selectionStart._id + ' .set-range-start').prop('checked', true);
+          } else {
+            this.selectionStart = {};
+            this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
+          }
+          break;
+        case 'end':
+          if (status) {
+            if (!this.selectionStart || !this.selectionStart._id || this.selectionStart.index <= block.index) {
+                this.selectionEnd = block;
+                this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
+              }
+              $('.set-range-end').prop('checked', false);
+              $('#' + this.selectionEnd._id + ' .set-range-end').prop('checked', true);
+            } else {
+              this.selectionEnd = {};
+              this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
+            }
+          break;
+      }
+    },
+    setEnd(block, status) {
+      
     }
   },
   events: {
@@ -459,6 +488,9 @@ export default {
           self.getBlocks();
         });
       });
+      this.$root.$on('for-bookedit:scroll-to-block', function(id) {
+        self.scrollToBlock(id);
+      })
   },
 
   beforeDestroy:  function() {
@@ -497,12 +529,15 @@ export default {
   .fixed-bottom {
     /*display: none;*/
     position: fixed;
-    margin-left: -10px;
+    /*margin-left: -10px;*/
     width: 99%;
     bottom: 0px;
     border: 1px solid black;
     border-radius: 0px;
     height: 222px;
+  }
+  a.go-to-block {
+    cursor: pointer;
   }
 
 </style>

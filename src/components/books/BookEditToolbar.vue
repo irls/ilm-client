@@ -85,7 +85,7 @@ export default {
       this.$router.push(path)
     },
     getCurrentBookUrl(format) {
-      return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/" + format;
+      return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/download/" + format;
     },
     getBookid() {
       return this.$store.state.currentBookid
