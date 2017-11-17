@@ -71,8 +71,8 @@ module.exports = {
         }
       },
       {
-          test: /medium-editor\.min\.js$/,
-          use: [ 'script-loader' ]
+        test: /medium-editor\.min\.js$/,
+        use: [ 'script-loader' ]
       }
     ]
   }

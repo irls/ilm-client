@@ -110,7 +110,7 @@ export const store = new Vuex.Store({
     },
 
     set_contentDBWatch (state, syncPointer) {
-        state.contentDBWatch =syncPointer;
+        state.contentDBWatch = syncPointer;
     },
 
     stop_contentDBWatch (state) {
@@ -428,6 +428,23 @@ export const store = new Vuex.Store({
             console.log('Block save error:', err);
         });
 
+    },
+
+    putBlockPart ({commit, state, dispatch}, blockData) {
+      let cleanBlock = blockData.block.cleanField(blockData.field);
+      blockData.block.partUpdate = true;
+      //console.log('putBlockPart', cleanBlock);
+      if (cleanBlock) {
+        return state.contentDB.get(cleanBlock._id)
+        .then(function(doc) {
+          return state.contentDB.put(_.merge(doc, cleanBlock))
+          .then((response) => {
+          })
+        })
+        .catch((err) => {
+          console.log('Block save error:', err);
+        });
+      } else return BPromise.resolve();
     },
 
     putMetaAuthors ({commit, state, dispatch}, authors) {
