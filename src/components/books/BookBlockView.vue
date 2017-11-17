@@ -486,6 +486,8 @@ export default {
       onVoiceworkChange: {
         get() {
           return this.voiceworkChange !== false;
+        },
+        set(val) {
         }
       },
       countArchParts: function () {
@@ -1356,7 +1358,7 @@ export default {
         Vue.nextTick(() => {
 
           this.$root.$emit('for-audioeditor:load-and-play', this.blockAudio.src, this.blockAudio.map, this.block._id);
-          
+
           let self = this;
           this.$root.$on('from-audioeditor:word-realign', function(map, blockId) {
             if (blockId == self.block._id && self.$refs.blockContent.querySelectorAll) {
@@ -1516,7 +1518,7 @@ export default {
         this.$emit('setRangeSelection', this.block, type, checked);
       },
       updateVoicework() {
-        
+
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/set_voicework';
         let api = this.$store.state.auth.getHttp();
         return api.post(api_url, {

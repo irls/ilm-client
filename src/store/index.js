@@ -249,19 +249,6 @@ export const store = new Vuex.Store({
     // login event
     connectDB ({ state, commit, dispatch }, session) {
         console.log('connectDB');
-
-        if (state.metaDB) state.metaDB.info()
-          .then(() =>{ state.metaDB.destroy() })
-          .catch(function (err) { return; });
-
-        if (state.contentDB) state.contentDB.info()
-          .then(() =>{ state.contentDB.destroy() })
-          .catch(function (err) { return; });
-
-        if (state.tasksDB) state.tasksDB.info()
-          .then(() =>{ state.tasksDB.destroy() })
-          .catch(function (err) { return; });
-
         commit('RESET_LOGIN_STATE');
         commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
