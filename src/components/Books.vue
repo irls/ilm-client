@@ -17,7 +17,8 @@
 
         </td> <!--collapseEditBar visible-->
         <td class='metaedit' v-if='metaVisible' rowspan="2">
-          <book-meta-edit v-if='metaVisible'></book-meta-edit>
+          <book-meta-edit v-if='metaVisible'
+            :blocksForAlignment="blocksForAlignment"></book-meta-edit>
         </td>
       </tr>
       <tr>
@@ -40,6 +41,9 @@
         </td>-->
       </tr>
     </table>
+    <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}]" >
+      <AudioEditor ref="audioEditor"></AudioEditor>
+    </nav>
   </div>
 </template>
 
@@ -56,6 +60,7 @@ import BookEditDisplay from './books/BookEdit_Display'
 import axios from 'axios'
 import superlogin from 'superlogin-client'
 import api_config from '../mixins/api_config.js'
+import AudioEditor from './AudioEditor'
 
 
 export default {
@@ -67,7 +72,12 @@ export default {
       metaVisible: false,
       metaAvailable: false,
       //colCount: 1,
-      currentBookid: this.$store.state.currentBookid
+      currentBookid: this.$store.state.currentBookid,
+      blocksForAlignment: {
+        start: {},
+        end: {},
+        count: 0
+      }
     }
   },
 
@@ -81,7 +91,8 @@ export default {
     BookEditJson,
     BookEditDisplay,
     axios,
-    superlogin
+    superlogin,
+    AudioEditor
   },
 
   computed: mapGetters(['bookEditMode', 'currentBook']),
@@ -100,6 +111,15 @@ export default {
             this.loadBook(this.$route.params.bookid)
             this.$router.replace({ path: '/books/' + this.$route.params.bookid })
         }
+        let self = this;
+        this.$root.$on('from-bookedit:set-selection', function(start, end) {
+          self.blocksForAlignment.start = start;
+          self.blocksForAlignment.end = end;
+          self.getBlockSelectionInfo();
+        });
+        this.$root.$on('from-bookblockview:voicework-type-changed', function() {
+          self.getBlockSelectionInfo();
+        });
   },
 
   methods: {
@@ -123,6 +143,23 @@ export default {
 //     },
     bookImportFinished(result) {
 
+    },
+    
+    showAudioeditor() {
+      return this.$refs.audioEditor && !this.$refs.audioEditor.isEmpty();
+    },
+    getBlockSelectionInfo() {
+      this.blocksForAlignment.count = 0;
+      if (this.blocksForAlignment.start._id && this.blocksForAlignment.end._id) {
+        let api_url = this.API_URL + 'books/' + this.$store.state.currentBookid + '/selection_alignment';
+        let api = this.$store.state.auth.getHttp();
+        api.get(api_url + '?' + 'start=' + this.blocksForAlignment.start._id + '&end=' + this.blocksForAlignment.end._id, {})
+          .then(response => {
+            if (response.status == 200) {
+              this.blocksForAlignment.count = response.data.count;
+            }
+          })
+      }
     },
 
     ...mapActions(['loadBook', 'updateBooksList'])

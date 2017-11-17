@@ -24,147 +24,150 @@
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false" />
-
       <AudioImport v-if="showModal_audio" @close="showModal_audio = false"
-       :book="currentBook"
-       :importTask="importTask"
-       :audiobook="audiobook"
-       :allowDownload="false" />
+        @audiofilesUploaded="setAudiobook"
+        :book="currentBook"
+        :importTask="importTask"
+        :audiobook="audiobook"
+        :allowDownload="false" />
 
       <div class="book-listing">
         <div class="row">
           <div v-if="tc_hasTask('metadata_cleanup')" class="col-sm-4">
-            <button v-if="!textCleanupProcess" class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Text cleanup finished</button>
-            <div v-else class="preloader-small"></div>
-          </div>
-          <div v-if="tc_hasTask('upload_audio')" class="col-sm-3">
-            <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload">
-              <i class="fa fa-file-audio-o"></i>&nbsp;Import Audio
-            </button>
+            <!-- Temporary hidden -->
+            <!-- <button v-if="!textCleanupProcess" class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Text cleanup finished</button>
+            <div v-else class="preloader-small"></div> -->
           </div>
         </div>
-        <fieldset>
-          <legend>Book Metadata </legend>
-          <table class='properties'>
+        <vue-tabs ref="panelTabs">
+          <vue-tab title="Audio Integration" :id="'audio-integration'">
+            <BookAudioIntegration ref="audioIntegration" :audiobook="audiobook" :blocksForAlignment="blocksForAlignment"
+              ></BookAudioIntegration>
+          </vue-tab>
+          <vue-tab title="Book Content" :id="'book-content'">
+            <fieldset>
+              <legend>Book Metadata </legend>
+              <table class='properties'>
 
-            <tr class='bookid'>
-              <td>Book Id</td>
-              <td class='disabled'>{{currentBook.bookid}}</td>
-            </tr>
+                <tr class='bookid'>
+                  <td>Book Id</td>
+                  <td class='disabled'>{{currentBook.bookid}}</td>
+                </tr>
 
-            <tr class='title'>
-              <td>Title</td>
-              <td><input v-model='currentBook.title' @input="update('title', $event)" :disabled="!allowMetadataEdit"></td>
-            </tr>
+                <tr class='title'>
+                  <td>Title</td>
+                  <td><input v-model='currentBook.title' @input="update('title', $event)" :disabled="!allowMetadataEdit"></td>
+                </tr>
 
-            <tr class='subtitle'>
-              <td>Subtitle</td>
-              <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)" :disabled="!allowMetadataEdit"></td>
-            </tr>
+                <tr class='subtitle'>
+                  <td>Subtitle</td>
+                  <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)" :disabled="!allowMetadataEdit"></td>
+                </tr>
 
-            <tr class='title'>
-              <td>Author</td>
-              <td><input v-model='currentBook.author' @input="update('author', $event)" :disabled="!allowMetadataEdit"></td>
-            </tr>
+                <tr class='title'>
+                  <td>Author</td>
+                  <td><input v-model='currentBook.author' @input="update('author', $event)" :disabled="!allowMetadataEdit"></td>
+                </tr>
 
-            <tr class='category'>
-              <td>Category</td>
-              <td>
-                <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
-                  <option v-for="(value, index) in subjectCategories" :value="value">{{ value }}</option>
-                </select>
-              </td>
-            </tr>
+                <tr class='category'>
+                  <td>Category</td>
+                  <td>
+                    <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                      <option v-for="(value, index) in subjectCategories" :value="value">{{ value }}</option>
+                    </select>
+                  </td>
+                </tr>
 
-            <tr class='language'>
-              <td>Language</td>
-              <td>
-                <select class="form-control" v-model='currentBook.lang' @change="change('lang')" :key="currentBookid" :disabled="!allowMetadataEdit">
-                  <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
-                </select>
-              </td>
-            </tr>
+                <tr class='language'>
+                  <td>Language</td>
+                  <td>
+                    <select class="form-control" v-model='currentBook.lang' @change="change('lang')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                      <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
+                    </select>
+                  </td>
+                </tr>
 
-            <tr class='sections'>
-              <td>Sections</td>
-              <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)" :disabled="!allowMetadataEdit"></td>
-            </tr>
+                <tr class='sections'>
+                  <td>Sections</td>
+                  <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)" :disabled="!allowMetadataEdit"></td>
+                </tr>
 
-            <tr class='numbering'>
-              <td>Numbering</td>
-              <td>
-                <select class="form-control" v-model='currentBook.numbering' @change="change('numbering')" :key="currentBookid" :disabled="!allowMetadataEdit">
-                  <option v-for="(value, key) in numberingOptions" :value="value">{{ value }}</option>
-                </select>
-                <!-- <input v-model='currentBook.numbering'> -->
-              </td>
-            </tr>
+                <tr class='numbering'>
+                  <td>Numbering</td>
+                  <td>
+                    <select class="form-control" v-model='currentBook.numbering' @change="change('numbering')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                      <option v-for="(value, key) in numberingOptions" :value="value">{{ value }}</option>
+                    </select>
+                    <!-- <input v-model='currentBook.numbering'> -->
+                  </td>
+                </tr>
 
-            <tr class='trans'>
-              <td>Translator</td>
-              <td><input v-model='currentBook.translator' @input="update('translator', $event)" :disabled="!allowMetadataEdit"></td>
-            </tr>
+                <tr class='trans'>
+                  <td>Translator</td>
+                  <td><input v-model='currentBook.translator' @input="update('translator', $event)" :disabled="!allowMetadataEdit"></td>
+                </tr>
 
-            <tr class='transfrom'>
-              <td>Tr From</td>
-              <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
-              <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
-            </tr>
+                <tr class='transfrom'>
+                  <td>Tr From</td>
+                  <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
+                  <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
+                </tr>
 
-          </table>
-        </fieldset>
+              </table>
+            </fieldset>
+
+          <fieldset class='description brief'>
+            <legend>Brief Description </legend>
+            <textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit"></textarea>
+          </fieldset>
+
+          <fieldset class='description long'>
+            <legend>Long Description </legend>
+            <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
+          </fieldset>
+
+          <fieldset class="publish" v-if="isLibrarian">
+            <!-- Fieldset Legend -->
+            <template v-if="currentBook.importStatus == 'staging'">
+              <legend>Staging Document (not shared with library)</legend>
+            </template>
+            <template v-else>
+              <legend>{{ currentBook.published ? 'Published' : 'Unpublished' }},
+                Version #{{ currentBook.version }}
+              </legend>
+            </template>
+
+            <!-- Publication Options -->
+            <table class='properties publication'>
+              <template v-if="currentBook.importStatus == 'staging'">
+                <tr><td rowspan='2'>
+                  <button class="btn btn-primary sharebtn" @click="shareBook"> Move book to Library</button>
+                </td></tr>
+              </template>
+              <template v-else>
+
+                <tr><td>Published</td> <td class='published'>
+                  <i :class="[currentBook.published ? 'fa-toggle-on' : 'fa-toggle-off', 'fa pubtoggle']"
+                    @click='publishedToggle'
+                  ></i>
+                </td></tr>
+
+                <tr v-if="currentBook.published"><td>Type</td> <td class='pubtype'>
+                  <select class="form-control" v-model='currentBook.pubType'>
+                    <option v-for="(value, index) in pubTypes" :value="value">{{ value }}</option>
+                  </select>
+                </td></tr>
+
+                <tr v-if="currentBook.published"><td>Ver. #{{ currentBook.version }}</td> <td class='version'>
+                  <button class="btn btn-primary new-version" @click="newVersion"> Save New Version</button>
+                </td></tr>
+
+              </template>
+            </table>
+          </fieldset>
+        </vue-tab>
+      </vue-tabs>
       </div>
-
-      <fieldset class='description brief'>
-        <legend>Brief Description </legend>
-        <textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit"></textarea>
-      </fieldset>
-
-      <fieldset class='description long'>
-        <legend>Long Description </legend>
-        <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
-      </fieldset>
-
-      <fieldset class="publish" v-if="isLibrarian">
-        <!-- Fieldset Legend -->
-        <template v-if="currentBook.importStatus == 'staging'">
-          <legend>Staging Document (not shared with library)</legend>
-        </template>
-        <template v-else>
-          <legend>{{ currentBook.published ? 'Published' : 'Unpublished' }},
-            Version #{{ currentBook.version }}
-          </legend>
-        </template>
-
-        <!-- Publication Options -->
-        <table class='properties publication'>
-          <template v-if="currentBook.importStatus == 'staging'">
-            <tr><td rowspan='2'>
-              <button class="btn btn-primary sharebtn" @click="shareBook"> Move book to Library</button>
-            </td></tr>
-          </template>
-          <template v-else>
-
-            <tr><td>Published</td> <td class='published'>
-              <i :class="[currentBook.published ? 'fa-toggle-on' : 'fa-toggle-off', 'fa pubtoggle']"
-                @click='publishedToggle'
-              ></i>
-            </td></tr>
-
-            <tr v-if="currentBook.published"><td>Type</td> <td class='pubtype'>
-              <select class="form-control" v-model='currentBook.pubType'>
-                <option v-for="(value, index) in pubTypes" :value="value">{{ value }}</option>
-              </select>
-            </td></tr>
-
-            <tr v-if="currentBook.published"><td>Ver. #{{ currentBook.version }}</td> <td class='version'>
-              <button class="btn btn-primary new-version" @click="newVersion"> Save New Version</button>
-            </td></tr>
-
-          </template>
-        </table>
-      </fieldset>
-
     </div>
 
     <book-edit-cover-modal
@@ -194,11 +197,12 @@
 </template>
 
 <script>
-
+import Vue from 'vue'
 import { mapGetters, mapActions } from 'vuex'
 import superlogin from 'superlogin-client'
 import BookDownload from './BookDownload'
 import BookEditCoverModal from './BookEditCoverModal'
+import BookAudioIntegration from './BookAudioIntegration'
 import AudioImport from '../audio/AudioImport'
 import _ from 'lodash'
 import PouchDB from 'pouchdb'
@@ -206,6 +210,7 @@ import axios from 'axios'
 import { alert, modal } from 'vue-strap'
 import task_controls from '../../mixins/task_controls.js'
 import api_config from '../../mixins/api_config.js'
+import { VueTabs, VTab } from 'vue-nav-tabs'
 var BPromise = require('bluebird');
 
 export default {
@@ -216,6 +221,9 @@ export default {
     BookDownload,
     BookEditCoverModal,
     AudioImport,
+    BookAudioIntegration,
+    'vue-tabs': VueTabs,
+    'vue-tab': VTab,
     alert,
     modal
   },
@@ -262,9 +270,9 @@ export default {
     }
   },
 
-  props: {
-
-  },
+  props: [
+    'blocksForAlignment'
+  ],
 
   computed: {
 
@@ -287,8 +295,16 @@ export default {
       }
     }
     this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor
-    this.getAudioBook(this.currentBookMeta.bookid).then(audio => {
-      this.audiobook = audio;
+    let self = this;
+    this.loadAudiobook()
+    this.$refs.audioIntegration.$on('uploadAudio', function() {
+      self.showModal_audio = true;
+    })
+    this.$refs.audioIntegration.$on('audiobookUpdated', function(response) {
+      self.audiobook = {};
+      Vue.nextTick(() => {
+        self.audiobook = response;
+      })
     })
   },
 
@@ -347,6 +363,7 @@ export default {
       this.currentBook = Object.assign({}, this.currentBookMeta);
       this.currentBook.coverimg = this.currentBookFiles.coverimg;
       this.isOwner = this.currentBook.owner == superlogin.getSession().user_id
+      this.loadAudiobook();
     },
 
     update: _.debounce(function (key, event) {
@@ -449,6 +466,22 @@ export default {
     getSharePrivateBookMessage() {
       let next_user = this.$store.state.tc_currentBookTasks.type == 1 ? 'proofer' : 'narrator';
       return 'This will make book visible to others and send it to the ' + next_user + '. Continue?';
+    },
+    loadAudiobook() {
+      let self = this;
+      this.getAudioBook(this.currentBookMeta.bookid).then(audio => {
+        self.audiobook = audio;//
+        //console.log(self.audiobook)
+        if (self.audiobook.bookid) {
+          self.$refs.panelTabs.findTabAndActivate('Audio Integration');
+        } else {
+          self.$refs.panelTabs.findTabAndActivate('Book Content');
+        }
+      })
+    },
+    setAudiobook(audiobook) {
+      console.log('SET AUDIOBOOK', audiobook)
+      this.audiobook = audiobook;
     },
     ...mapActions(['getAudioBook'])
   }
