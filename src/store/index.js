@@ -249,6 +249,19 @@ export const store = new Vuex.Store({
     // login event
     connectDB ({ state, commit, dispatch }, session) {
         console.log('connectDB');
+
+        if (state.metaDB) state.metaDB.info()
+          .then(() =>{ state.metaDB.destroy() })
+          .catch(function (err) { return; });
+
+        if (state.contentDB) state.contentDB.info()
+          .then(() =>{ state.contentDB.destroy() })
+          .catch(function (err) { return; });
+
+        if (state.tasksDB) state.tasksDB.info()
+          .then(() =>{ state.tasksDB.destroy() })
+          .catch(function (err) { return; });
+
         commit('RESET_LOGIN_STATE');
         commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
@@ -295,12 +308,12 @@ export const store = new Vuex.Store({
     // logout event
     disconnectDB ({ state, commit }) {
       axios.defaults.headers.common['Authorization'] = false;
-      window.setTimeout(() => {
+      //window.setTimeout(() => {
           if (state.metaDB) state.metaDB.destroy()
           if (state.contentDB) state.contentDB.destroy()
           if (state.tasksDB) state.tasksDB.destroy()
           commit('RESET_LOGIN_STATE');
-      }, 500)
+      //}, 500)
     },
 
     updateBooksList ({state, commit, dispatch}) {

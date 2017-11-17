@@ -5,7 +5,7 @@
       <h4 class="modal-title">Add Job</h4>
     </div>
     <div slot="modal-body" class="modal-body">
-      <div class="form-group">
+      <div class="form-group" v-if="false">
         <label>Type</label>
         <select v-model="type" class="form-control">
           <option v-for="task_type in task_types" :value="task_type.id">{{task_type.title}}</option>
@@ -83,10 +83,10 @@
       </div>
       <div class="col-sm-6 pull-right">
         <!-- Import Books Modal Popup -->
-        <BookImport :isModal="false" 
-          :bookId="createdJob.bookid" 
-          :multiple="false" 
-          :forceUpload="typeof createdJob.bookid != 'undefined'" 
+        <BookImport :isModal="false"
+          :bookId="createdJob.bookid"
+          :multiple="false"
+          :forceUpload="typeof createdJob.bookid != 'undefined'"
           @close_modal="bookImportFinished"
           @books_changed="bookListChanged" />
       </div>
@@ -137,8 +137,9 @@ export default {
         'with-audio': {
           'name': {'require': true},
           'roles': {
-            'editor': {'require': true}, 
-            'proofer': {'require': true}, 
+            'editor': {'require': true},
+            'proofer': {'require': true},
+            'narrator': {'require': true},
             'engineer': {'require': true}
           },
           'lang': {'require': true}
@@ -146,9 +147,9 @@ export default {
         'without-audio': {
           'name': {'require': true},
           'roles': {
-            'editor': {'require': true}, 
-            'proofer': {'require': true}, 
-            'narrator': {'require': true}, 
+            'editor': {'require': true},
+            'proofer': {'require': true},
+            'narrator': {'require': true},
             'engineer': {'require': true}
           },
           'lang': {'require': true}
@@ -261,7 +262,7 @@ export default {
               }
             }
           }
-        } 
+        }
       }
       return Object.keys(this.errors).length == 0
     },
@@ -286,28 +287,33 @@ export default {
     }
   },
   computed: {
-      
+
   },
   watch: {
     type(val) {
-      var self = this
       var selected = this.task_types.find(t => {
         return t.id == val
       })
       if (selected) {
-        self.subtypes = selected.subtypes
+        this.subtypes = selected.subtypes
       }
     },
     show() {
-      this.type = ''
+      this.type = 'with-audio'
       this.subtype = ''
       this.roles = {}
       this.name = ['']
       this.errors = {}
       this.description = ''
-      this.lang = ''
+      this.lang = 'en'
       this.createdJob = null
       this.createdJob = {}
+      if (process.env.NODE_ENV === 'development') {
+        this.roles['editor']   = this.users['editor'][0]._id;
+        this.roles['proofer']  = this.users['proofer'][0]._id;
+        this.roles['narrator'] = this.users['narrator'][0]._id;
+        this.roles['engineer'] = this.users['engineer'][0]._id;
+      }
     },
     'name': {
       handler(val) {
