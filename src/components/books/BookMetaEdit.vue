@@ -34,9 +34,8 @@
       <div class="book-listing">
         <div class="row">
           <div v-if="tc_hasTask('metadata_cleanup')" class="col-sm-4">
-            <!-- Temporary hidden -->
-            <!-- <button v-if="!textCleanupProcess" class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Text cleanup finished</button>
-            <div v-else class="preloader-small"></div> -->
+            <button v-if="!textCleanupProcess" class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Editing complete</button>
+            <div v-else class="preloader-small"></div>
           </div>
         </div>
         <vue-tabs ref="panelTabs">
@@ -176,7 +175,7 @@
       :img="currentBook"
     ></book-edit-cover-modal>
 
-    <alert v-model="hasError" placement="top" :duration="3000" type="danger" width="400px">
+    <alert v-model="hasError" placement="top" type="danger" width="400px" :dismissable="true">
       <span class="icon-ok-circled alert-icon-float-left"></span>
 
       <p>{{errorMessage}}.</p>
@@ -188,8 +187,8 @@
       <p>{{infoMessage}}.</p>
     </alert>
 
-    <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Share" cancel-text="Cancel" title="Share book" @ok="sharePrivateBook()">
-      <div v-html="getSharePrivateBookMessage()"></div>
+    <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Share" cancel-text="Cancel" title="" @ok="sharePrivateBook()">
+      <div v-html="sharePrivateBookMessage"></div>
     </modal>
 
   </div>
@@ -266,7 +265,8 @@ export default {
       showSharePrivateBookModal: false,
       allowMetadataEdit: false,
       textCleanupProcess: false,
-      audiobook: {}
+      audiobook: {},
+      sharePrivateBookMessage: ''
     }
   },
 
@@ -286,14 +286,7 @@ export default {
   mixins: [task_controls, api_config],
 
   mounted() {
-    for (let id in this.$store.state.tc_currentBookTasks.tasks) {
-      let record = this.$store.state.tc_currentBookTasks.tasks[id]
-      if (record.type == 'text-cleanup') {
-       this.cleanupTask = record
-      } else if (record.type == 'import-book') {
-        this.importTask = record
-      }
-    }
+    
     this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor
     let self = this;
     this.loadAudiobook()
@@ -349,6 +342,13 @@ export default {
         }
       },
       deep: true
+    },
+    showSharePrivateBookModal: {
+      handler(val) {
+        if (val === true) {
+          this.getSharePrivateBookMessage();
+        }
+      }
     }
 
   },
@@ -360,6 +360,14 @@ export default {
   methods: {
 
     init () {
+      for (let id in this.$store.state.tc_currentBookTasks.tasks) {
+        let record = this.$store.state.tc_currentBookTasks.tasks[id]
+        if (record.type == 'text-cleanup') {
+         this.cleanupTask = record
+        } else if (record.type == 'import-book') {
+          this.importTask = record
+        }
+      }
       this.currentBook = Object.assign({}, this.currentBookMeta);
       this.currentBook.coverimg = this.currentBookFiles.coverimg;
       this.isOwner = this.currentBook.owner == superlogin.getSession().user_id
@@ -449,13 +457,19 @@ export default {
           .then((doc) => {
             axios.put(self.API_URL + 'task/' + self.cleanupTask._id + '/finish_cleanup')
               .then((doc) => {
-                self.currentBook.private = false
-                self.$store.dispatch('tc_loadBookTask')
                 self.textCleanupProcess = false
-                self.infoMessage = 'Text cleanup task finished'
+                if (!doc.data.error) {
+                  self.currentBook.private = false
+                  self.$store.dispatch('tc_loadBookTask')
+                  self.infoMessage = 'Text cleanup task finished'
+                } else {
+                  self.liveUpdate('private', true)
+                  self.errorMessage = doc.data.error
+                }
               })
-              .catch((err) => {
+              .catch((err, test) => {
                 self.textCleanupProcess = false
+                self.liveUpdate('private', true)
               })
           })
           .catch((err) => {
@@ -464,8 +478,10 @@ export default {
       }
     },
     getSharePrivateBookMessage() {
-      let next_user = this.$store.state.tc_currentBookTasks.type == 1 ? 'proofer' : 'narrator';
-      return 'This will make book visible to others and send it to the ' + next_user + '. Continue?';
+      return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/selection_alignment?voicework=narration')
+      .then(resp => {
+        this.sharePrivateBookMessage = resp.data && resp.data.count > 0 ? 'Complete editing and request narration for ' + resp.data.count + ' blocks?' : 'Complete editing?';
+      });
     },
     loadAudiobook() {
       let self = this;
@@ -584,6 +600,9 @@ export default {
       background: url(/static/preloader-snake-small.gif);
       width: 34px;
       height: 34px;
+  }
+  .alert.top {
+    top: 120px;
   }
 
 </style>

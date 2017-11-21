@@ -2205,6 +2205,7 @@ export default {
       .preview-container, .picture-preview {
         max-height: 80vh;
         width: auto;
+        position: static;
       }
     }
     .save-illustration {
