@@ -105,7 +105,9 @@
           discardOnExit: false,
           mode: 'block',
           origFilePositions: {},
-          cursorPosition: false
+          cursorPosition: false,
+          dragLeft: null,
+          dragRight: null
         }
       },
       mounted() {
@@ -121,12 +123,15 @@
       beforeDestroy() {
         if (this.audioContext) {
           this.audioContext.close();
-          this.audioContext = null;
+          //this.audioContext = null;
           this.audiosourceEditor = null;
         }
       },
       methods: {
         load(audio, text, blockId, autostart = false, bookAudiofile = {}) {
+          if (this.audioContext && this.audioContext.state === 'closed') {
+            return false;//component was destroyed;
+          }
           let mode = bookAudiofile.id ? 'file' : 'block';
           let changeZoomLevel = mode != this.mode;
           if ((this.blockId && this.blockId != blockId) || mode == 'file' || mode != this.mode) {
@@ -231,6 +236,11 @@
             }
           ])
           .then(() => {
+            if (this.audiosourceEditor.tracks.length > 1) {
+              this.audiosourceEditor.getEventEmitter().emit('clear');
+              this.load(audio, text, blockId, autostart, bookAudiofile);
+              return;
+            }
             this._setSelectionOnWaveform();
             this.plEventEmitter = this.audiosourceEditor.getEventEmitter();
             if (!text) {
@@ -264,9 +274,7 @@
                           cursor_position < waveform_position || 
                           cursor_position > waveform_position + waveform_width)) {
                       let scrollPosition = cursor_position > waveform_position + waveform_width ? waveform_position + waveform_width / 2 : cursor_position;
-                      $('.playlist-tracks').animate({
-                        scrollLeft: scrollPosition
-                      }, 200);
+                      $('.playlist-tracks').scrollLeft(scrollPosition);
                   }
                 }
               }
@@ -319,7 +327,7 @@
               }
             });
             $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>');
-            new Draggable (document.getElementById('resize-selection-right'), {
+            self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
             
               limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
               onDrag: function(element, x, y, event) {
@@ -328,7 +336,7 @@
                 self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
               }
             })
-            new Draggable (document.getElementById('resize-selection-left'), {
+            self.dragLeft = new Draggable (document.getElementById('resize-selection-left'), {
               limit: {x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
               onDrag: function(element, x, y, event) {
                 $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
@@ -448,6 +456,7 @@
         },
         zoomIn() {
           if (this.allowZoomIn) {
+            this._setDraggableOptions();
             this.plEventEmitter.emit('zoomin');
             let index = this.zoomLevels.indexOf(this.zoomLevel)
             if (this.zoomLevels[--index]) {
@@ -460,6 +469,7 @@
         },
         zoomOut() {
           if (this.allowZoomOut) {
+            this._setDraggableOptions();
             this.plEventEmitter.emit('zoomout');
             let index = this.zoomLevels.indexOf(this.zoomLevel)
             if (this.zoomLevels[++index]) {
@@ -469,6 +479,18 @@
             return true;
           }
           return false;
+        },
+        _setDraggableOptions() {
+          if ($('.channel-0').length > 0 && this.dragLeft && this.dragRight) {
+            let width = $('.channel-0').width();
+            let self = this;
+            let t = setInterval(function(){
+              if ($('.channel-0').width() != width) {
+                self.dragRight.setOption('limit', {x: [0, $('.channel-0').width()], y: [0, 0]});
+                clearInterval(t);
+              }
+            }, 100);
+          }
         },
         goToStart() {
           if (this.mode == 'block') {
