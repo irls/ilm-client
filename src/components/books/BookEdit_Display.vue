@@ -4,20 +4,20 @@
     <BookTOC />
     <div v-for="(block, blid) in parlist">
       <div v-if="block.type == 'illustration'">
-        <img :class="block.classes.join(' ')" :src="block.getIllustration()"/>
+        <img :class="block.getClass()" :src="block.getIllustration()"/>
       </div>
       <div v-else-if="block.type == 'hr'">
         <hr/>
       </div>
       <div v-else
-        :class="block.classes.join(' ')"
+        :class="block.getClass()"
         :id="block.id"
         :data-parnum="block.parnum"
         :lang="block.language || meta.language"
         :data-type="block.type"
         v-html="block.content"></div>
     </div>
-    <infinite-loading :on-infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
+    <infinite-loading @infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
   </div>
 </template>
 
@@ -58,14 +58,14 @@ export default {
                     this.parlist.push(newBlock);
                 });
 
-                this.$refs.infiniteLoading.$emit('$InfiniteLoading:loaded');
+                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.loaded();
             } else {
-                this.$refs.infiniteLoading.$emit('$InfiniteLoading:complete');
+                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
             }
             this.isAllLoaded = this.$refs.infiniteLoading.isComplete;
             //console.log('loaded', result);
         }).catch((err)=>{
-            if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.$emit('$InfiniteLoading:complete');
+            if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
             console.log('Error: ', err.message);
         });
 
