@@ -46,6 +46,7 @@ import taskControls from '../../mixins/task_controls.js';
 import apiConfig from '../../mixins/api_config.js'
 import { dropdown } from 'vue-strap';
 import BookReimport from './BookReimport'
+import {mapGetters} from 'vuex';
 
 export default {
   data () {
@@ -80,9 +81,15 @@ export default {
       this.$store.commit('setEditMode', this.editMode)
     },
     goBack: function() {
-      let currentBookid = this.$store.state.currentBookid
-      let path = '/books' + (currentBookid?'/'+currentBookid:'')
-      this.$router.push(path)
+      if (this.currentBookMeta && this.currentBookMeta.collection_id) {
+        let currentBookid = this.$store.state.currentBookid
+        let path = '/collections/' + this.currentBookMeta.collection_id + '/' + (currentBookid?currentBookid:'')
+        this.$router.push(path)
+      } else {
+        let currentBookid = this.$store.state.currentBookid
+        let path = '/books' + (currentBookid?'/'+currentBookid:'')
+        this.$router.push(path)
+      }
     },
     getCurrentBookUrl(format) {
       return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/download/" + format;
@@ -113,6 +120,9 @@ export default {
   // },
   created: function () {
     if (!this.isAdmin) delete this.editModes.JSON;
+  },
+  computed: {
+    ...mapGetters(['currentBookMeta'])
   }
 }
 </script>

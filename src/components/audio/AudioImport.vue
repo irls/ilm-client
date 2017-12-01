@@ -28,7 +28,7 @@
 
             <img class="bookcover" :src="book.coverimg" />
             <h3 class="booktitle"> For: <i>{{book.title}}</i></h3>
-            <h4 class="bookauthor"> by {{book.author}} </h4>
+            <h4 class="bookauthor"> by {{book.author.join(',')}} </h4>
 
                 
                 <div v-if="audiobook._id && allowDownload" class="col-sm-12">

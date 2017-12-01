@@ -9,7 +9,7 @@
         </div>
         <h4 class='title'>{{ currentBook.title }}</h4>
         <h5 class='subtitle' v-if='currentBook.subtitle'>{{ currentBook.subtitle }}</h5>
-        <h5 class='author'>{{ currentBook.author }},
+        <h5 class='author'>{{ currentBook.author.join(',') }},
         <span class="pages">{{ Math.round(currentBook.wordcount / 300) }} pages &nbsp;
         </span></h5>
         <div style='clear: both'> </div>
@@ -63,9 +63,14 @@
                   <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
-                <tr class='title'>
+                <tr class='author'>
                   <td>Author</td>
-                  <td><input v-model='currentBook.author' @input="update('author', $event)" :disabled="!allowMetadataEdit"></td>
+                  <td>
+                    <template v-for="(author, i) in currentBook.author" >
+                      <input v-model='currentBook.author[i]' @input="update('author', $event)" :disabled="!allowMetadataEdit"><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}"><i class="fa fa-minus-circle" ></i></button>
+                    </template>
+                    <button v-on:click="addAuthor"><i class="fa fa-plus-circle"></i></button>
+                  </td>
                 </tr>
 
                 <tr class='category'>
@@ -80,7 +85,7 @@
                 <tr class='language'>
                   <td>Language</td>
                   <td>
-                    <select class="form-control" v-model='currentBook.lang' @change="change('lang')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                    <select class="form-control" v-model='currentBook.language' @change="change('language')" :key="currentBookid" :disabled="!allowMetadataEdit">
                       <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
                     </select>
                   </td>
@@ -110,6 +115,16 @@
                   <td>Tr From</td>
                   <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
                   <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
+                </tr>
+                
+                <tr class='collection'>
+                  <td>Collection</td>
+                  <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
+                  <td>
+                    <select @input="updateCollection($event)" :disabled="!allowMetadataEdit" class="form-control" v-model="currentBook.collection_id">
+                      <option v-model="currentBook.collection_id" v-for="c in collectionsList" :value="c._id">{{c.title}}</option>
+                    </select>
+                  </td>
                 </tr>
 
               </table>
@@ -190,6 +205,9 @@
     <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Share" cancel-text="Cancel" title="" @ok="sharePrivateBook()">
       <div v-html="sharePrivateBookMessage"></div>
     </modal>
+    <modal v-model="unlinkCollectionWarning" effect="fade" ok-text="Remove from collection" cancel-text="Cancel" @ok="updateCollection()" @cancel="cancelCollectionUpdate">
+      <p>Remove book from collection?</p>
+    </modal>
 
   </div>
 
@@ -266,7 +284,9 @@ export default {
       allowMetadataEdit: false,
       textCleanupProcess: false,
       audiobook: {},
-      sharePrivateBookMessage: ''
+      sharePrivateBookMessage: '',
+      collectionsList: [],
+      unlinkCollectionWarning: false
     }
   },
 
@@ -276,7 +296,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections']),
 
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
@@ -299,6 +319,10 @@ export default {
         self.audiobook = response;
       })
     })
+    this.collectionsList = [{'_id': '', 'title' :''}];
+    this.bookCollections.forEach(c => {
+      this.collectionsList.push(c);
+    });
   },
 
   watch: {
@@ -375,8 +399,46 @@ export default {
     },
 
     update: _.debounce(function (key, event) {
-      this.liveUpdate(key, event.target.value)
+      this.liveUpdate(key, key == 'author' ? this.currentBook.author : event.target.value)
     }, 300),
+    
+    updateCollection(event) {
+      if (event && event.target.value) {
+        let collectionId = event.target.value;
+        let api_url = this.API_URL + 'collection/' + collectionId + '/link_books';
+        let api = this.$store.state.auth.getHttp();
+        let self = this;
+        api.post(api_url, {books_ids: [this.currentBook._id]}, {}).then(function(response){
+          if (response.status===200) {
+            self.$router.push('/collections/' + collectionId + '/' + self.currentBookMeta._id);
+          } else {
+
+          }
+        }).catch((err) => {
+          
+        });
+      } else if (event) {
+        this.unlinkCollectionWarning = true;
+      } else {
+        let api_url = this.API_URL + 'collection/' + this.currentBookMeta.collection_id + '/unlink_books';
+        let api = this.$store.state.auth.getHttp();
+        let self = this;
+        api.post(api_url, {books_ids: [this.currentBook._id]}, {}).then(function(response){
+          if (response.status===200) {
+            self.$router.push('/books/' + self.currentBookMeta._id);
+          } else {
+
+          }
+        }).catch((err) => {
+          
+        });
+      }
+    },
+    
+    cancelCollectionUpdate() {
+      this.unlinkCollectionWarning = false;
+      this.currentBook.collection_id = this.currentBookMeta.collection_id;
+    },
 
     change (key) {
       this.liveUpdate(key, this.currentBook[key])
@@ -392,10 +454,10 @@ export default {
       return api.update(this.currentBookid, {
         [key]: value
       }).then(doc => {
-        console.log('success DB update: ', doc)
+        //console.log('success DB update: ', doc)
         return BPromise.resolve(doc)
       }).catch(err => {
-        console.log('error DB pdate: ', err)
+        //console.log('error DB pdate: ', err)
         return BPromise.reject(err)
       })
     },
@@ -426,7 +488,6 @@ export default {
     },
 
     uploadAudio () {
-      console.log("hello there")
       this.showModal_audio = true
     },
 
@@ -496,8 +557,17 @@ export default {
       })
     },
     setAudiobook(audiobook) {
-      console.log('SET AUDIOBOOK', audiobook)
       this.audiobook = audiobook;
+    },
+    addAuthor() {
+      this.currentBook.author.push('');
+      this.liveUpdate('author', this.currentBook.author);
+    },
+    removeAuthor(i) {
+      if (i > 0 || this.currentBook.author.length > 1) {
+        this.currentBook.author.splice(i, 1);
+        this.liveUpdate('author', this.currentBook.author);
+      }
     },
     ...mapActions(['getAudioBook'])
   }
@@ -585,6 +655,9 @@ export default {
   table tr.changed {border: 2px solid wheat}
   table tr input {font-size: 1em; width: 100%}
   tr.subtitle input {font-size: .85em; width: 100%; line-height: 1.85em;}
+  tr.author input {width: 80%;}
+  tr.author button {width: 15%; border: none; background-color: inherit;}
+  tr.author button.disabled i {display: none;}
   .disabled {font-style: italic; color: gray; font-size: .85em;}
 
   /* publication info */
