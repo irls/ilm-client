@@ -51,6 +51,7 @@
     "vue-router": "^2.2.0",
     "vue-strap": "github:wffranco/vue-strap",
     "vue2-filters": "^0.1.9",
+    "vuedraggable": "^2.15.0",
     "vuex": "^2.2.1",
     "vuex-router-sync": "^4.1.2",
     "waveform-playlist": "^3.0.4"

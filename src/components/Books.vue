@@ -95,7 +95,7 @@ export default {
     AudioEditor
   },
 
-  computed: mapGetters(['bookEditMode', 'currentBook']),
+  computed: mapGetters(['bookEditMode', 'currentBook', 'currentBookMeta']),
 
   watch: {
 //     '$store.state.route.params' (to, from) {
@@ -107,7 +107,7 @@ export default {
 
   mounted() {
         // load intial book
-        if (this.$route.params.hasOwnProperty('bookid')) {
+        if (this.$route.params.hasOwnProperty('bookid') && this.currentBookMeta._id != this.$route.params.bookid) {
             this.loadBook(this.$route.params.bookid)
             this.$router.replace({ path: '/books/' + this.$route.params.bookid })
         }

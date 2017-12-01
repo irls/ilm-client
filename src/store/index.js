@@ -16,6 +16,7 @@ const ILM_CONTENT = 'ilm_content';
 const ILM_CONTENT_META = 'ilm_content_meta';
 const ILM_CONTENT_FILES = 'ilm_library_files';
 const ILM_TASKS = 'ilm_tasks';
+const ILM_COLLECTIONS = 'ilm_collections';
 
 // const API_ALLBOOKS = '/static/books.json'
 
@@ -29,16 +30,19 @@ export const store = new Vuex.Store({
     isBookkeeper: false,
     isEngineer: false,
     isReader: false,
+    allowCollectionsEdit: false,
     allRolls: [],
 
     metaDB: false,
     contentDB: false,
     contentDBWatch: false,
     tasksDB: false,
+    collectionsDB: false,
 
     metaRemoteDB: false,
     contentRemoteDB: false,
     tasksRemoteDB: false,
+    collectionsRemoteDB: false,
 
     books_meta: [],
 
@@ -56,7 +60,12 @@ export const store = new Vuex.Store({
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": []},
     tc_tasksByBlock: {},
     tc_userTasks: {list: [], total: 0},
-    API_URL: process.env.ILM_API + '/api/v1/'
+    API_URL: process.env.ILM_API + '/api/v1/',
+    bookCollectionsAll: [],
+    bookCollections: [],
+    collectionsFilter: {title: '', language: ''},
+    currentCollection: {},
+    currentCollectionId: false
   },
 
   getters: {
@@ -78,12 +87,16 @@ export const store = new Vuex.Store({
     currentBookMeta: state => state.currentBookMeta,
     currentBookFiles: state => state.currentBookFiles,
     bookEditMode: state => state.editMode,
-    allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode),
+    allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode) && state.currentBookMeta.status != 'import_text',
     allowArchiving: state => state.isAdmin || state.isProofer,
     tc_currentBookTasks: state => state.tc_currentBookTasks,
     tc_tasksByBlock: state => state.tc_tasksByBlock,
     tc_userTasks: state => state.tc_userTasks,
     contentDBWatch: state => state.contentDBWatch,
+    allowCollectionsEdit: state => state.isAdmin || state.isLibrarian,
+    bookCollections: state => state.bookCollections,
+    currentCollection: state => state.currentCollection,
+    collectionsFilter: state => state.collectionsFilter,
     authors: state => {
       let result = [];
       if (state.currentBookMeta.authors) {
@@ -140,10 +153,15 @@ export const store = new Vuex.Store({
     SET_CURRENTBOOK_META (state, meta) {
       // state.currentBookid = meta._id
       // state.currentBook = book
-      state.currentBookMeta = meta
       state.currentBook_dirty = false
       state.currentBookMeta_dirty = false
-      state.currentBookid = meta._id
+      if (meta) {
+        state.currentBookMeta = meta
+        state.currentBookid = meta._id
+      } else {
+        state.currentBookMeta = {}
+        state.currentBookid = ''
+      }
     },
 
 //     CLEAN_CURRENTBOOK_FILES (state) {
@@ -155,6 +173,18 @@ export const store = new Vuex.Store({
         let url = URL.createObjectURL(fileObj.fileBlob);
         state.currentBookFiles[fileObj.fileName] = url;
       } else state.currentBookFiles[fileObj.fileName] = false;
+    },
+    
+    SET_CURRENT_COLLECTION (state, collection) {
+      state.currentCollection = collection;
+      state.currentCollectionId = collection._id ? collection._id : false;
+    },
+    
+    SET_COLLECTIONS_FILTER (state, filter) {
+      for(var field in filter) {
+        state.collectionsFilter[field] = filter[field];
+      }
+      //console.log(state.collectionsFilter)
     },
 
     setEditMode (state, editMode) {
@@ -236,6 +266,37 @@ export const store = new Vuex.Store({
       }
       state.tc_userTasks.total = tc_userTasks;
       state.allowBookEditMode = state.tc_currentBookTasks.tasks.length > 0;
+    },
+    PREPARE_BOOK_COLLECTIONS(state) {
+      if (state.isAdmin || state.isLibrarian) {
+        state.bookCollections = state.bookCollectionsAll;
+      } else if (state.tc_userTasks) {
+        if (state.tc_userTasks.total) {
+          let collections = [];
+          for (let jobid in state.tc_userTasks.list) {
+            state.bookCollectionsAll.forEach(c => {
+              if (c.books && c.books.indexOf(state.tc_userTasks.list[jobid].bookid) !== -1) {
+                let exists = collections.find(_c => _c.id === c.id);
+                if (!exists) {
+                  collections.push(c);
+                }
+              }
+            });
+          }
+          state.bookCollections = collections;
+        }
+      }
+      state.bookCollections.forEach(c => {
+        let pages = 0;
+        c.books.forEach(b => {
+          let book = state.books_meta.find(_b => _b._id === b);
+          if (book) {
+            pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
+          }
+        });
+        
+        c.pages = pages;
+      });
     }
 
   },
@@ -253,10 +314,12 @@ export const store = new Vuex.Store({
         commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
         commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
+        commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
         commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
         commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
         commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
+        commit('set_remoteDB', { dbProp: 'collectionsRemoteDB', dbName: ILM_COLLECTIONS });
 
         state.metaDB.replicate.from(state.metaRemoteDB)
         .on('complete', (info)=>{
@@ -290,6 +353,15 @@ export const store = new Vuex.Store({
             dispatch('tc_loadBookTask');
           })
         });
+        
+        state.collectionsDB.replicate.from(state.collectionsRemoteDB)
+        .on('complete', (info) => {
+          dispatch('updateCollectionsList');
+          state.collectionsDB.sync(state.collectionsRemoteDB, {live: true, retry: true})
+          .on('change', (change) => {
+            dispatch('updateCollectionsList');
+          })
+        });
     },
 
     // logout event
@@ -299,6 +371,7 @@ export const store = new Vuex.Store({
           if (state.metaDB) state.metaDB.destroy()
           if (state.contentDB) state.contentDB.destroy()
           if (state.tasksDB) state.tasksDB.destroy()
+          if (state.collectionsDB) state.collectionsDB.destroy()
           commit('RESET_LOGIN_STATE');
       //}, 500)
     },
@@ -310,6 +383,16 @@ export const store = new Vuex.Store({
         .then(books => {
           commit('SET_BOOKLIST', books)
           dispatch('tc_loadBookTask')
+        })
+    },
+    
+    updateCollectionsList({state, commit, dispatch}) {
+      let connection = state.collectionsDB.hoodieApi()
+      connection.findAll()
+        .then(collections => {
+          state.bookCollectionsAll = collections
+          commit('PREPARE_BOOK_COLLECTIONS');
+          dispatch('reloadCollection');
         })
     },
 
@@ -330,17 +413,21 @@ export const store = new Vuex.Store({
       if (oldBook && state.currentBook_dirty || state.currentBookMeta_dirty) {
         // save old state
       }
-      state.metaDB.get(book_id).then(meta => {
-        commit('SET_CURRENTBOOK_META', meta)
-        commit('TASK_LIST_LOADED')
-        state.filesRemoteDB.getAttachment(book_id, 'coverimg')
-        .then(fileBlob => {
-          commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
-        })
-        .catch((err)=>{
-          commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
-        })
-      }).catch((err)=>{})
+      if (book_id) {
+        state.metaDB.get(book_id).then(meta => {
+          commit('SET_CURRENTBOOK_META', meta)
+          commit('TASK_LIST_LOADED')
+          state.filesRemoteDB.getAttachment(book_id, 'coverimg')
+          .then(fileBlob => {
+            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
+          })
+          .catch((err)=>{
+            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
+          })
+        }).catch((err)=>{})
+      } else {
+        commit('SET_CURRENTBOOK_META', false)
+      }
 
 
     },
@@ -357,6 +444,29 @@ export const store = new Vuex.Store({
                 })
             })
         }
+    },
+    
+    loadCollection({commit, state}, id) {
+      if (id) {
+        state.currentCollectionId = id;
+        state.collectionsDB.get(id).then(collection => {
+          commit('SET_CURRENT_COLLECTION', collection);
+        }).catch((err)=>{
+          
+        })
+      } else {
+        commit('SET_CURRENT_COLLECTION', {});
+      }
+    },
+    
+    reloadCollection({state, commit}) {
+      if (state.currentCollectionId) {
+        state.collectionsDB.get(state.currentCollectionId).then(collection => {
+          commit('SET_CURRENT_COLLECTION', collection);
+        }).catch((err)=>{
+          
+        })
+      }
     },
 
     getBookMeta ({state}, bookid) {
@@ -480,6 +590,7 @@ export const store = new Vuex.Store({
           state.tc_tasksByBlock = {}
           state.tc_userTasks = {list: list.data.rows, total: 0}
           commit('TASK_LIST_LOADED')
+          commit('PREPARE_BOOK_COLLECTIONS');
         })
         .catch((err) => {})
     },

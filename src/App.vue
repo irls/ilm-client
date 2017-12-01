@@ -29,6 +29,13 @@ export default {
     '$route' () {
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.loadBook(this.$route.params.bookid)
+      } else {
+        this.loadBook(false);
+      }
+      if (this.$route.params.hasOwnProperty('collectionid')) {
+        this.loadCollection(this.$route.params.collectionid);
+      } else {
+        this.loadCollection(false);
       }
     }
   },
@@ -38,7 +45,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['loadBook', 'updateBooksList'])
+    ...mapActions(['loadBook', 'updateBooksList', 'loadCollection'])
   }
 }
 </script>

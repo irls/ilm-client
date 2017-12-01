@@ -91,7 +91,13 @@ export default {
       this.$store.commit('SET_CURRENTBOOK_FILTER', {importStatus: el.target.value})
     },
     bookCount () {
-      return this.$store.state.books_meta && this.$store.state.books_meta.length
+      if (this.$store.state.books_meta && this.$store.state.books_meta.length) {
+        let filtered = this.$store.state.books_meta.filter(m => !m.collection_id)
+          .filter(b => b.status !== 'import_text');
+        return filtered.length;
+      } else {
+        return 0;
+      }
     },
     editBook () {
       // console.log('/books/edit/'+ this.$store.state.currentBook._id)

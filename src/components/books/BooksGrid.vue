@@ -38,7 +38,10 @@ export default {
         {
           title: 'Author',
           path: 'author',
-          addClass: 'author'
+          addClass: 'author',
+          render(val) {
+            return val.join(', ');
+          }
         },
         // {
         //   title: 'BookID',
@@ -98,6 +101,7 @@ export default {
           let find = this.bookFilters.filter.toLowerCase().trim()
           return (str.indexOf(find) > -1)
         })
+        .filter(book => !book.collection_id)
       return filteredbooks
     },
 

@@ -8,7 +8,7 @@ Features:
 -->
 <template>
   <div>
-  <table class="table table-striped table-bordered table-hover">
+  <table class="table table-striped table-bordered table-hover" v-if="!draggable">
     <thead>
       <tr>
         <th v-for="key in columns"
@@ -38,6 +38,41 @@ Features:
       </tr>
     </tbody>
   </table>
+  <table class="table table-striped table-bordered table-hover" v-else>
+    <thead>
+      <tr v-if="sortable">
+        <th v-for="key in columns"
+          @click="sortBy(key.path)"
+          :class="[key.addClass, { act: sortKey == key.path}]"
+          >{{ key.title }}<span class="arrow" :class="sortOrders[key.path] > 0 ? 'asc' : 'dsc'"></span></th>
+      </tr>
+      <tr v-else>
+        <th v-for="key in columns"
+          :class="[key.addClass]"
+          >{{ key.title }}</th>
+      </tr>
+    </thead>
+    <draggable element="tbody" @end="endMove" ref="draggable" :move="checkMove" v-model="limitedData">
+    <!--  {{ key.render(entry[key.path]) }} -->
+      <tr v-for="entry in limitedData" @click="rowEvent(entry)" class="grid-row" :data-id="entry[idField]" :class='{selected : isSelected(entry[idField])}' >
+        <td v-for="key in columns" :class="[key.addClass]" class="grid-cell">
+          <template v-if="key.render">{{ key.render(entry[key.path]) }}</template>
+          <template v-else-if="key.html"> <span v-html="key.html(entry[key.path])"></span> </template>
+          <template v-else> {{entry[key.path]}} </template>
+        </td>
+      </tr>
+      <tr v-if="isLoading">
+        <td :colspan="columns.length" class="text-center noData">
+          <i class="fa fa-spinner fa-spin"></i>
+        </td>
+      </tr>
+      <tr v-if="!isLoading && !data.length">
+        <td :colspan="columns.length" class="text-center noData">
+          {{emptyTableText}}
+        </td>
+      </tr>
+    </draggable>
+  </table>
     <div class="row" v-if="noPages.length > 1">
       <div class="text-center">
         <ul class="pagination">
@@ -55,6 +90,8 @@ Features:
 </template>
 
 <script>
+  import draggable from 'vuedraggable';
+  import Vue from 'vue';
   export default {
     props: {
       data: Array, // Unfiltered table data
@@ -64,7 +101,12 @@ Features:
       rowsPerPage: Number, // Number of rows per page of results
       isLoading: false,
       idField: String, // name of field to used as a unique id
-      selected: Array // list of
+      selected: Array, // list of,
+      draggable: false,
+      sortable: true
+    },
+    components: {
+      draggable: draggable
     },
     data () {
       var sortOrders = {}
@@ -154,7 +196,17 @@ Features:
       },
       isVisible (id) {
         // console.log ('limiteddata: ', this.computed.limitedData)
+      },
+      endMove(event) {
+        this.$emit('orderChanged', {to: event.newIndex, from: event.oldIndex});
+      },
+      checkMove () {
+        //console.log('CHECK MOVE', arguments);
+        return true;
       }
+    },
+    mounted() {
+      
     }
   }
 </script>

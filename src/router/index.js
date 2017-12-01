@@ -9,6 +9,7 @@ import Help from '../components/Help'
 import Contact from '../components/Contact'
 import Align from '../components/Align'
 import AudioEditor from '../components/AudioEditor'
+import Collections from '../components/Collections'
 
 Vue.use(Router)
 
@@ -58,6 +59,18 @@ export default new Router({
     {
       path: '/audio_editor',
       component: AudioEditor
+    },
+    {
+      path: '/collections',
+      component: Collections
+    },
+    {
+      path: '/collections/:collectionid',
+      component: Collections
+    },
+    {
+      path: '/collections/:collectionid/:bookid',
+      component: Collections
     },
     { path: '*', redirect: '/books' }
   ]
