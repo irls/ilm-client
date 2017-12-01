@@ -288,7 +288,7 @@
 
 }
 #books_grid {
-  height: 60%;
+  height: 200px;
   overflow: scroll;
 }
 #books_grid::-webkit-scrollbar-track {
