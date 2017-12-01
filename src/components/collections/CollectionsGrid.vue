@@ -69,7 +69,7 @@
               path: 'author',
               addClass: 'author',
               render(val) {
-                return val.join(', ');
+                return val ? val.join(', ') : '';
               }
             },
             {
@@ -181,7 +181,8 @@
                     collections = collections.filter(item => {
                       let match = item.title.toLowerCase().indexOf(filter) !== -1;
                       item.books_list = item.books_list.filter(b => {
-                        return b.title.toLowerCase().indexOf(filter) !== -1 || b.author.join('|').toLowerCase().indexOf(filter) !== -1;
+                        return b.title.toLowerCase().indexOf(filter) !== -1 || 
+                                (b.author && b.author.join('|').toLowerCase().indexOf(filter) !== -1);
                       });
                       let book_match = item.books_list.length > 0;
                       item.match = match;
