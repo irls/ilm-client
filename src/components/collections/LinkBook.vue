@@ -37,7 +37,7 @@
           </div>
           <div class="modal-body clearfix">
             <div class="link-book-search"></div>
-            <Grid id='books_grid'
+            <Grid id='books_grid' class="link-books-grid"
               :data="linkBooksList"
               :columns="headers"
               :rowsPerPage="100"
@@ -287,20 +287,20 @@
 .modal-footer {
 
 }
-#books_grid {
+.link-books-grid {
   height: 200px;
   overflow: scroll;
 }
-#books_grid::-webkit-scrollbar-track {
+.link-books-grid::-webkit-scrollbar-track {
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
   border-radius: 10px;
   background-color: #F5F5F5;
 }
-#books_grid::-webkit-scrollbar {
+.link-books-grid::-webkit-scrollbar {
   width: 12px;
   background-color: #F5F5F5;
 }
-#books_grid::-webkit-scrollbar-thumb {
+.link-books-grid::-webkit-scrollbar-thumb {
   border-radius: 10px;
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
   background-color: #555;
