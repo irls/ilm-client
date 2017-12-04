@@ -821,42 +821,55 @@ export default {
       },
 
       audPlay: function(block_id, ev) {
-        this.audCleanClasses(block_id, ev);
-        this.player.playBlock('content-'+block_id);
+        if (this.player) {
+          this.audCleanClasses(block_id, ev);
+          this.player.playBlock('content-'+block_id);
+        }
       },
       audPlayFromSelection() {
-        let startElement = this._getParent(this.range.startContainer, 'w');
-        if (startElement) {
-          this.isAudStarted = true;
-          this.player.playFromWordElement(startElement, 'content-'+this.block._id);
+        if (this.player) {
+          let startElement = this._getParent(this.range.startContainer, 'w');
+          if (startElement) {
+            this.isAudStarted = true;
+            this.player.playFromWordElement(startElement, 'content-'+this.block._id);
+          }
         }
       },
       audPlaySelection() {
-        let startElement = this._getParent(this.range.startContainer, 'w');
-        let endElement = this._getParent(this.range.endContainer, 'w');
-        let startRange = this._getClosestAligned(startElement, 1);
-        if (!startRange) {
-          startRange = [0, 0];
+        if (this.player) {
+          let startElement = this._getParent(this.range.startContainer, 'w');
+          let endElement = this._getParent(this.range.endContainer, 'w');
+          let startRange = this._getClosestAligned(startElement, 1);
+          if (!startRange) {
+            startRange = [0, 0];
+          }
+          let endRange = this._getClosestAligned(endElement, 0);
+          if (!endRange) {
+            endRange = this._getClosestAligned(endElement, 1)
+          }
+          this.isAudStarted = true;
+          this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]);
+          this.$root.$emit('playBlock', this.block._id);
         }
-        let endRange = this._getClosestAligned(endElement, 0);
-        if (!endRange) {
-          endRange = this._getClosestAligned(endElement, 1)
-        }
-        this.isAudStarted = true;
-        this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]);
       },
       audPause: function(block_id, ev) {
-        this.player.pause();
+        if (this.player) {
+          this.player.pause();
+        }
       },
       audResume: function(block_id, ev) {
-        this.audCleanClasses(block_id, ev);
-        this.player.resume();
+        if (this.player) {
+          this.audCleanClasses(block_id, ev);
+          this.player.resume();
+        }
       },
       audStop: function(block_id, ev) {
-        this.player.pause();
-        this.isAudStarted = false;
-        this.isAudPaused = false;
-        this.audCleanClasses(block_id, ev);
+        if (this.player) {
+          this.player.pause();
+          this.isAudStarted = false;
+          this.isAudPaused = false;
+          this.audCleanClasses(block_id, ev);
+        }
       },
       audDeleteSelection() {
         let startElement = this._getParent(this.range.startContainer, 'w');
@@ -1291,18 +1304,28 @@ export default {
             on_start: ()=>{
                 this.isAudStarted = true;
                 this.isAudPaused = false;
+                this.$root.$emit('playBlock', this.block._id);
             },
             on_pause: ()=>{
                 this.isAudPaused = true;
             },
             on_resume: ()=>{
                 this.isAudPaused = false;
+                this.$root.$emit('playBlock', this.block._id);
             },
             on_complete: ()=>{
                 this.isAudStarted = false;
                 this.isAudPaused = false;
                 this.audCleanClasses(this.block._id, {});
             }
+        });
+        var self = this;
+        this.$root.$on('playBlock', function(blockid) {
+          if (blockid !== self.block._id) {
+            if (self.player) {
+              self.audStop();
+            }
+          }
         });
       },
       reRecord() {
@@ -1356,12 +1379,13 @@ export default {
         $('.table-body.-content').removeClass('editing');
         $('#' + this.block._id + ' .table-body.-content').addClass('editing');
         Vue.nextTick(() => {
-
+          
           this.$root.$emit('for-audioeditor:load-and-play', this.blockAudio.src, this.blockAudio.map, this.block._id);
 
           let self = this;
           this.$root.$on('from-audioeditor:word-realign', function(map, blockId) {
             if (blockId == self.block._id && self.$refs.blockContent.querySelectorAll) {
+              self.audStop();
               //console.log(self.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
               self.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
                 let _m = map.shift();
@@ -1375,11 +1399,13 @@ export default {
           });
           this.$root.$on('from-audioeditor:save', function(blockId) {
             if (blockId == self.block._id) {
+              self.audStop();
               self.assembleBlockAudioEdit();
             }
           });
           this.$root.$on('from-audioeditor:save-and-realign', function(blockId) {
             if (blockId == self.block._id) {
+              self.audStop();
               self.doReAlign()
                 .then(() => {
                   self.assembleBlockAudioEdit();
@@ -1388,6 +1414,7 @@ export default {
           })
           this.$root.$on('from-audioeditor:cut', function(blockId, start, end) {
             if (blockId == self.block._id) {
+              self.audStop();
               self._audDeletePart(start, end);
             }
           });
@@ -1406,11 +1433,13 @@ export default {
           });
           this.$root.$on('from-audioeditor:insert-silence', function(blockId, position, length) {
             if (blockId == self.block._id) {
+              self.audStop();
               self.insertSilence(position, length);
             }
           });
           this.$root.$on('from-audioeditor:undo', function(blockId, audio, text, isModified) {
             if (self.block._id == blockId) {
+              self.audStop();
               self.blockAudio.map = text;
               self.blockAudio.src = audio;
               self.block.content = text;
@@ -1420,6 +1449,7 @@ export default {
           });
           this.$root.$on('from-audioeditor:discard', function(blockId) {
             if (self.block._id == blockId) {
+              self.audStop();
               self.discardAudioEdit();
             }
           });

@@ -309,7 +309,7 @@ export default {
     
     this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor
     let self = this;
-    this.loadAudiobook()
+    this.loadAudiobook(true)
     this.$refs.audioIntegration.$on('uploadAudio', function() {
       self.showModal_audio = true;
     })
@@ -544,15 +544,17 @@ export default {
         this.sharePrivateBookMessage = resp.data && resp.data.count > 0 ? 'Complete editing and request narration for ' + resp.data.count + ' blocks?' : 'Complete editing?';
       });
     },
-    loadAudiobook() {
+    loadAudiobook(set_tab = false) {
       let self = this;
       this.getAudioBook(this.currentBookMeta.bookid).then(audio => {
         self.audiobook = audio;//
         //console.log(self.audiobook)
-        if (self.audiobook.bookid) {
-          self.$refs.panelTabs.findTabAndActivate('Audio Integration');
-        } else {
-          self.$refs.panelTabs.findTabAndActivate('Book Content');
+        if (set_tab) {
+          if (self.audiobook.bookid) {
+            self.$refs.panelTabs.findTabAndActivate('Audio Integration');
+          } else {
+            self.$refs.panelTabs.findTabAndActivate('Book Content');
+          }
         }
       })
     },
