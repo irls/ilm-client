@@ -74,7 +74,7 @@
               title: '',
               path: '_id',
               html (val) {
-                return `<input type="checkbox" class="link-book-select-toggle" name="select-link-${val}"/>`
+                return `<i class="fa fa-check-square"></i><i class="fa fa-square"></i><input type="checkbox" class="link-book-select-toggle" name="select-link-${val}"/>`
               }
             },
             {
@@ -290,6 +290,25 @@
 .link-books-grid {
   height: 200px;
   overflow: scroll;
+  .link-book-select-toggle {
+    display: none;
+  }
+  .grid-row {
+    .fa-square {
+      display: inline;
+    }
+    .fa-check-square {
+      display: none;
+    }
+    &.selected {
+      .fa-square {
+        display: none;
+      }
+      .fa-check-square {
+        display: inline;
+      }
+    }
+  }
 }
 .link-books-grid::-webkit-scrollbar-track {
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
