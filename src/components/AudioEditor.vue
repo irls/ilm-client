@@ -685,7 +685,7 @@
           }, 50);
         },
         _scrollToCursor() {
-          if (this.cursorPosition) {
+          if (this.cursorPosition && this.cursorPosition > 0) {
             let position = this.cursorPosition / (this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate);
             $('.cursor').css('left', position + 'px');
             setTimeout(() => {
