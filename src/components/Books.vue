@@ -1,6 +1,6 @@
 <template>
   <div id='booksarea' v-cloak>
-
+    
     <table id='bodytable'>
       <tr>
         <td :class="['toolbar-wrapper', metaVisible ? 'meta-visible' : '']">
@@ -102,6 +102,13 @@ export default {
 //       // react to route changes...
 //       // this.recountRows()
 //     }
+    'currentBookMeta.collection_id': {
+      handler() {
+        if (this.currentBookMeta && this.currentBookMeta.collection_id) {
+          this.$router.replace({ path: '/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta.bookid });
+        }
+      }
+    }
   },
   mixins: [api_config],
 
