@@ -33,7 +33,7 @@
         </div>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
-        <div class="table-body -content"
+        <div :class="['table-body', '-content', {'editing': isAudioEditing}]"
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row controls-top" :data-json="JSON.stringify(block)">
@@ -443,7 +443,8 @@ export default {
       recordStartCounter: 0,
       deleteBlockMessage: false,
       voiceworkChange: false,
-      voiceworkUpdateType: 'single'
+      voiceworkUpdateType: 'single',
+      isAudioEditing: false
     }
   },
   components: {
@@ -1376,8 +1377,10 @@ export default {
         this.$emit('joinBlocks', this.block, 'next');
       },
       showAudioEditor() {
-        $('.table-body.-content').removeClass('editing');
-        $('#' + this.block._id + ' .table-body.-content').addClass('editing');
+        //$('.table-body.-content').removeClass('editing');
+        //$('#' + this.block._id + ' .table-body.-content').addClass('editing');
+        this.isAudioEditing = true;
+        $('nav.fixed-bottom').removeClass('hidden');
         Vue.nextTick(() => {
           
           this.$root.$emit('for-audioeditor:load-and-play', this.blockAudio.src, this.blockAudio.map, this.block._id);
@@ -1420,6 +1423,8 @@ export default {
           });
           this.$root.$on('from-audioeditor:closed', function(blockId) {
             if (blockId == self.block._id) {
+              self.isAudioEditing = false;
+              $('nav.fixed-bottom').addClass('hidden');
               self.$root.$off('from-audioeditor:insert-silence');
               self.$root.$off('from-audioeditor:word-realign');
               self.$root.$off('from-audioeditor:save');

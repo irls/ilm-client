@@ -445,6 +445,7 @@
           this.audiosourceEditor.stop();
           this.isPlaying = false;
           this._clearWordSelection();
+          $('.playlist-tracks').scrollLeft(0);
           this.$root.$emit('from-audioeditor:stop');
         },
         pause() {
@@ -463,6 +464,7 @@
               this.zoomLevel = this.zoomLevels[index]
             }
             this._showSelectionBorders();
+            this._scrollToCursor();
             return true;
           }
           return false;
@@ -476,6 +478,7 @@
               this.zoomLevel = this.zoomLevels[index]
             }
             this._showSelectionBorders();
+            this._scrollToCursor();
             return true;
           }
           return false;
@@ -648,6 +651,25 @@
               $('[id="resize-selection-left"]').hide().css('left', 0);
             }
           }, 50);
+        },
+        _scrollToCursor() {
+          if (this.cursorPosition) {
+            let position = this.cursorPosition / (this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate);
+            $('.cursor').css('left', position + 'px');
+            setTimeout(() => {
+              $('.playlist-tracks').scrollLeft($('.cursor').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+            }, 50);
+          } else if (!this.isPlaying) {
+            if (this.isSinglePointSelection) {
+              setTimeout(function () {
+                $('.playlist-tracks').scrollLeft($('.selection.point').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+              }, 50);
+            } else if (this.hasSelection) {
+              setTimeout(function () {
+                $('.playlist-tracks').scrollLeft($('#resize-selection-left').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+              }, 50);
+            }
+          }
         },
         _clearWordSelection() {
           $(this.contentContainer).find('w').removeClass('selected');
