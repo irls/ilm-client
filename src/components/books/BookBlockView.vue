@@ -98,7 +98,7 @@
                   <select v-model='styleSel' style="min-width: 110px;"><!--v-model='block.classes'--><!--:value="style"-->
                     <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
                   </select>
-                  </label><!-- &nbsp;&nbsp;{{block.getClass()}} -->
+                  </label><!-- &nbsp;&nbsp;{{block.getClass()}}-->
                   <template v-if="tc_hasTask('content_cleanup')">
                     <label>Voicework:&nbsp;
                     <select v-model='voiceworkSel' style="min-width: 100px;" ref="voiceworkSel">
@@ -145,8 +145,8 @@
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div>
             <div class="table-row ocean">
-                <hr v-if="block.type=='hr'" />
-                <div v-else-if="block.type == 'illustration'" class="illustration-block">
+                <hr v-if="block.type=='hr'" :class="[block.getClass()]"/>
+                <div v-else-if="block.type == 'illustration'" :class="['illustration-block']">
                   <img v-if="block.illustration" :src="block.getIllustration()" :class="[block.getClass()]"/>
                   <div :class="['drag-uploader', 'no-picture', {'__hidden': this.isChanged}]">
                     <vue-picture-input
@@ -558,12 +558,18 @@ export default {
         }
       });
       this.updateFlagStatus(this.block._id);
+
       if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
         this.classSel = Object.keys(this.blockTypes[this.block.type])[0];
+      } else {
+        let blockClasses = Object.keys(this.block.classes);
+        if (blockClasses.length) {
+          this.classSel = blockClasses[0];
+        }
       }
+
       this.voiceworkSel = this.block.voicework;
       //this.detectMissedFlags();
-
   },
   methods: {
       ...mapActions([
@@ -658,6 +664,16 @@ export default {
           });
           this.isChanged = false;
           this.updateFlagStatus(this.block._id);
+
+          if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
+            this.classSel = Object.keys(this.blockTypes[this.block.type])[0];
+          } else {
+            let blockClasses = Object.keys(this.block.classes);
+            if (blockClasses.length) {
+              this.classSel = blockClasses[0];
+            }
+          }
+
           this.$refs.blockContent.focus();
         });
       },
@@ -1379,7 +1395,7 @@ export default {
         $('.table-body.-content').removeClass('editing');
         $('#' + this.block._id + ' .table-body.-content').addClass('editing');
         Vue.nextTick(() => {
-          
+
           this.$root.$emit('for-audioeditor:load-and-play', this.blockAudio.src, this.blockAudio.map, this.block._id);
 
           let self = this;
@@ -1629,34 +1645,36 @@ export default {
         this.reCount();
       },
       'classSel' (newVal, oldVal) {
-        //console.log('classSel');
+        //console.log('classSel', this.block._id, newVal, oldVal);
+        let styleCurr = this.block.setClass(newVal);
+        if (styleCurr) this.styleSel = styleCurr;
+        else this.styleSel = '';
         if (oldVal !== false) {
-          let styleCurr = this.block.setClass(newVal);
-          if (styleCurr) this.styleSel = styleCurr;
           this.setChanged(true);
         }
       },
       'styleSel' (newVal, oldVal) {
-        //console.log('styleSel');
-        if (oldVal !== false) {
-          this.block.setClassStyle(this.classSel, newVal);
-          this.setChanged(true);
-          if (this.block.type === 'illustration') {
-            this.setChanged(false);
-            if (this.editor) {
-              this.editor.removeElements();
-              this.editor.destroy();
-              Vue.nextTick(() => {
-                $('[id="' + this.block._id + '"] .illustration-block')
-                .removeAttr('contenteditable')
-                .removeAttr('data-placeholder');
-              });
-            }
-          } else {
-            if (!this.editor) {
-              this.initEditor();
-            }
+        //console.log('styleSel', newVal, oldVal);
+        this.block.setClassStyle(this.classSel, newVal);
+
+        if (this.block.type === 'illustration') {
+          this.setChanged(false);
+          if (this.editor) {
+            this.editor.removeElements();
+            this.editor.destroy();
+            Vue.nextTick(() => {
+              $('[id="' + this.block._id + '"] .illustration-block')
+              .removeAttr('contenteditable')
+              .removeAttr('data-placeholder');
+            });
           }
+        } else {
+          if (!this.editor) {
+            this.initEditor();
+          }
+        }
+        if (oldVal !== false) {
+          this.setChanged(true);
         }
       },
       'blockAudio.src' (newVal) {
@@ -1899,7 +1917,7 @@ export default {
     .content-wrap {
       margin: 6px 0 4px 0;
       /*padding: 6px 11px;*/
-      padding: 3.2px;
+      padding: 11px;
       border-radius: 8px;
       box-shadow: none;
       transition: box-shadow 900ms;
@@ -1907,7 +1925,7 @@ export default {
       &:hover {
           border: 1px solid silver;
           /*padding: 5px 10px;*/
-          padding: 2.2px;
+          padding: 10px;
           background: rgba(219, 232, 255, .3);
       }
       &:focus {
@@ -1942,8 +1960,8 @@ export default {
     }
     .illustration-block {
       img {
-        border: double black 10px;
-        max-height: 85vh;
+        border: solid grey 2px;
+        /*max-height: 85vh;*/
         padding: 4px;
       }
       .fa.fa-eye {

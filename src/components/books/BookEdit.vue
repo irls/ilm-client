@@ -457,7 +457,7 @@ export default {
       }
     },
     setEnd(block, status) {
-      
+
     }
   },
   events: {
@@ -499,7 +499,7 @@ export default {
 }
 </script>
 
-<style lang="less" src="./css/ocean.less"></style>
+<style lang='less' src='./css/ilm_base.less' scope></style>
 <style lang="less">
   #narrateStartCountdown {
       display: none;

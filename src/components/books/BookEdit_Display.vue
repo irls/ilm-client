@@ -7,7 +7,7 @@
         <img :class="block.getClass()" :src="block.getIllustration()"/>
       </div>
       <div v-else-if="block.type == 'hr'">
-        <hr/>
+        <hr :class="[block.getClass()]"/>
       </div>
       <div v-else
         :class="block.getClass()"
@@ -77,7 +77,7 @@ export default {
 
 
 <style scope>
-.ocean {
+/*.ocean {
   width: 100%; padding: 1em;
   font-family: 'gentium', serif; font-size: 1.5em;
   text-align: justify; justify-content: space-between;
@@ -86,7 +86,7 @@ export default {
 @font-face {
   font-family: 'gentium';
   src: url('/static/fonts/GentiumPlus-R.woff') format('woff') /* Pretty Modern Browsers */
-}
+/*}
 .ocean.showparnum {
   padding-left: 2em;
 }
@@ -98,6 +98,6 @@ img.illustration {
   margin: 10px auto !important;
   text-align: center;
   display: block;
-}
+}*/
 </style>
-<style lang='less' src='./css/ocean.less' scope></style>
+<style lang='less' src='./css/ilm_base.less' scope></style>

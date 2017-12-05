@@ -30,30 +30,32 @@ let BlockTypes = {
     translator: []
   },
   header: {
-    align: ['', 'left', 'center', 'right']
+    align: ['', 'left', 'center', 'right', 'justify'],
+    'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4']
   },
   subhead: {
     'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4'],
-    align: ['', 'left', 'center', 'right'],
+    align: ['', 'left', 'center', 'right', 'justify'],
     descriptor: ['', 'date', 'venue', 'subtitle']
   },
   par: {
-    font: ['', 'typewriter', 'monospace', 'oldbook', 'modern'],
+//     font: ['', 'typewriter', 'monospace', 'oldbook', 'modern'],
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
-    style: [' ', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline', 'rulebelow', 'bookgraphic'],
+    style: [' ', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline'/*, 'rulebelow', 'bookgraphic'*/],
+    align: ['', 'left', 'center', 'right', 'justify'],
     whitespace: ['', 'verse', 'pre'],
     padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
     author: ['', 'bab', 'baha', 'abd', 'shoghi', 'sacred', 'bible', 'muhammad', 'quran', 'jesus', 'ali', 'tradition', 'husayn'],
-    custom: ['', 'dropcap', 'blockquote', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer']
+    'paragraph type': ['', 'dropcap', 'blockquote', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer']
   },
   illustration: {
     size: ['', 'x-small', 'small', 'large', 'x-large'],
     align: ['', 'left', 'center', 'right']
   },
-  footnote: {
-    '': [],
-    fn: []
-  },
+//   footnote: {
+//     '': [],
+//     fn: []
+//   },
   hr: {
     size: ['', 'small', 'large']
   }
@@ -310,14 +312,20 @@ class BookBlock {
   setClass(val) {
     let styleCurr = false;
     if (val) {
-
-      if (Object.keys(BlockTypes[this.type])[0] === '') this.classes = {};
+      //console.log('setClass', this._id, val);
+      if (Object.keys(BlockTypes[this.type])[0] === '') {
+        if (!this.classes[val]) {
+          this.classes = {};
+          this.classes[val] = '';
+        }
+      }
 
       if (!this.classes[val]) {
         this.classes[val] = ''
       } else {
         styleCurr = this.classes[val];
       }
+
     } else {
       if (val === '') this.classes = {};
     }

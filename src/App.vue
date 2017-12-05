@@ -49,20 +49,3 @@ export default {
   }
 }
 </script>
-
-<style lang="stylus">
-/*#app {width: 98%; margin-left: 1%; margin-right: 1%}*/
-html
-  overflow: scroll;
-  overflow-x: hidden;
-  min-width: 769px;
-::-webkit-scrollbar
-    width: 0px;  /* remove scrollbar space */
-    background: transparent;  /* optional: just make scrollbar invisible */
-/* optional: show position indicator in red */
-::-webkit-scrollbar-thumb
-    background: #FF0000;
-body
-  background-color: white;
-  padding: 5px !important;
-</style>

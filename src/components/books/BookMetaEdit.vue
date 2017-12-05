@@ -91,20 +91,10 @@
                   </td>
                 </tr>
 
-                <tr class='sections'>
+<!--                <tr class='sections'>
                   <td>Sections</td>
                   <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)" :disabled="!allowMetadataEdit"></td>
-                </tr>
-
-                <tr class='numbering'>
-                  <td>Numbering</td>
-                  <td>
-                    <select class="form-control" v-model='currentBook.numbering' @change="change('numbering')" :key="currentBookid" :disabled="!allowMetadataEdit">
-                      <option v-for="(value, key) in numberingOptions" :value="value">{{ value }}</option>
-                    </select>
-                    <!-- <input v-model='currentBook.numbering'> -->
-                  </td>
-                </tr>
+                </tr>-->
 
                 <tr class='trans'>
                   <td>Translator</td>
@@ -116,7 +106,7 @@
                   <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
                   <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
                 </tr>
-                
+
                 <tr class='collection'>
                   <td>Collection</td>
                   <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
@@ -179,6 +169,10 @@
               </template>
             </table>
           </fieldset>
+        </vue-tab>
+        <vue-tab title="Styles" :id="'styles-switcher'">
+<!--            <BookAudioIntegration ref="audioIntegration" :audiobook="audiobook" :blocksForAlignment="blocksForAlignment"
+              ></BookAudioIntegration>-->
         </vue-tab>
       </vue-tabs>
       </div>
@@ -306,7 +300,7 @@ export default {
   mixins: [task_controls, api_config],
 
   mounted() {
-    
+
     this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor
     let self = this;
     this.loadAudiobook(true)
@@ -401,7 +395,7 @@ export default {
     update: _.debounce(function (key, event) {
       this.liveUpdate(key, key == 'author' ? this.currentBook.author : event.target.value)
     }, 300),
-    
+
     updateCollection(event) {
       if (event && event.target.value) {
         let collectionId = event.target.value;
@@ -415,7 +409,7 @@ export default {
 
           }
         }).catch((err) => {
-          
+
         });
       } else if (event) {
         this.unlinkCollectionWarning = true;
@@ -430,11 +424,11 @@ export default {
 
           }
         }).catch((err) => {
-          
+
         });
       }
     },
-    
+
     cancelCollectionUpdate() {
       this.unlinkCollectionWarning = false;
       this.currentBook.collection_id = this.currentBookMeta.collection_id;
