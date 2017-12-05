@@ -142,6 +142,16 @@
             //this.selection = {};
             this.close();
           }
+          if (bookAudiofile) {
+            if (bookAudiofile.positions) {
+              if (bookAudiofile.positions.start) {
+                //bookAudiofile.positions.start = parseInt(bookAudiofile.positions.start);
+              }
+              if (bookAudiofile.positions.end) {
+                //bookAudiofile.positions.end = parseInt(bookAudiofile.positions.end);
+              }
+            }
+          }
           
           this.words = [];
           this.currentWord = null;
@@ -331,8 +341,14 @@
             
               limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
               onDrag: function(element, x, y, event) {
+                let startX = 0;
+                if (self.selection && typeof self.selection.start !== 'undefined') {
+                  startX = self.selection.start / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
+                } else {
+                  startX = $('[id="resize-selection-left"]').position().left;
+                }
                 $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
-                self.audiosourceEditor.activeTrack.stateObj.startX = $('[id="resize-selection-left"]').position().left;
+                self.audiosourceEditor.activeTrack.stateObj.startX = startX;
                 self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
               }
             })
@@ -341,7 +357,13 @@
               onDrag: function(element, x, y, event) {
                 $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
                 $('.selection.segment').css('left', x - 5)
-                self.audiosourceEditor.activeTrack.stateObj.startX = $('[id="resize-selection-right"]').position().left
+                let startX = 0;
+                if (self.selection && typeof self.selection.end !== 'undefined') {
+                  startX = self.selection.end / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
+                } else {
+                  startX = $('[id="resize-selection-right"]').position().left;
+                }
+                self.audiosourceEditor.activeTrack.stateObj.startX = startX;
                 self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
               }
             })
@@ -351,8 +373,8 @@
                 this.origFilePositions = bookAudiofile.positions;
                 this.plEventEmitter.emit('select', bookAudiofile.positions.start, bookAudiofile.positions.end);
               } else {
-                this.plEventEmitter.emit('select', 0, this.audiosourceEditor.duration);
-                this.origFilePositions = {start: 0, end: this.audiosourceEditor.duration}
+                this.plEventEmitter.emit('select', 0, parseInt(this.audiosourceEditor.duration));
+                this.origFilePositions = {start: 0, end: parseInt(this.audiosourceEditor.duration)}
               }
               this._showSelectionBorders();
             }
@@ -644,7 +666,7 @@
           setTimeout(function() {
             let selection = $('.selection.segment')[0];
             if (selection) {
-              $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 3);
+              $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth);
               $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft);
             } else {
               $('[id="resize-selection-right"]').hide().css('left', 0);
