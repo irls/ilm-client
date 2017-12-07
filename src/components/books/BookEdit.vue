@@ -142,30 +142,32 @@ export default {
     },
 
     getBlocks() {
-      this.loadBlocks({
-            book_id: this.meta._id,
-            page: this.page++,
-            onpage: 20,
-            skipOffset: this.parlistSkip
-        }).then((result)=>{
-            let tmp = [];
-            if (result.length > 0) {
-                result.forEach((el, idx, arr)=>{
-                    let newBlock = new BookBlock(el.doc);
-                    newBlock.parnum = this.setBlockParnum(newBlock);
-                    tmp.push(newBlock);
-                });
-                if (tmp.length>0) this.parlist.push(tmp)
+      if (this.meta._id) {
+        this.loadBlocks({
+              book_id: this.meta._id,
+              page: this.page++,
+              onpage: 20,
+              skipOffset: this.parlistSkip
+          }).then((result)=>{
+              let tmp = [];
+              if (result.length > 0) {
+                  result.forEach((el, idx, arr)=>{
+                      let newBlock = new BookBlock(el.doc);
+                      newBlock.parnum = this.setBlockParnum(newBlock);
+                      tmp.push(newBlock);
+                  });
+                  if (tmp.length>0) this.parlist.push(tmp)
 
-                if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.loaded();
-            } else {
-                if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
-            }
-            this.isAllLoaded = this.$refs.scrollBookDown ? this.$refs.scrollBookDown.isComplete : false;
-        }).catch((err)=>{
-            if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
-            console.log('Error: ', err.message);
-        });
+                  if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.loaded();
+              } else {
+                  if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
+              }
+              this.isAllLoaded = this.$refs.scrollBookDown ? this.$refs.scrollBookDown.isComplete : false;
+          }).catch((err)=>{
+              if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
+              console.log('Error: ', err.message);
+          });
+      }
     },
 
     refreshBlock (change) {
@@ -495,6 +497,15 @@ export default {
 
   beforeDestroy:  function() {
     window.removeEventListener('keydown', this.eventKeyDown);
+  },
+  watch: {
+    'meta._id': {
+      handler() {
+        this.page = 0;
+        this.parlistSkip = 0;
+        this.getBlocks();
+      }
+    }
   }
 }
 </script>

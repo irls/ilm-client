@@ -102,10 +102,14 @@ export default {
 //       // react to route changes...
 //       // this.recountRows()
 //     }
-    'currentBookMeta.collection_id': {
-      handler() {
-        if (this.currentBookMeta && this.currentBookMeta.collection_id) {
+    'currentBookMeta': {
+      handler(val, old_val) {
+        if (!old_val._id && this.currentBookMeta && this.currentBookMeta.collection_id) {
           this.$router.replace({ path: '/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta.bookid });
+        } else if (this.metaVisible && !this.currentBookMeta._id) {
+          this.metaVisible = false;
+          this.metaAvailable = false;
+          
         }
       }
     }
