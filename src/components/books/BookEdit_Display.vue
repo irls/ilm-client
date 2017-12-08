@@ -1,8 +1,8 @@
 <template>
-  <div class='ocean showparnum'>
+  <div :class="['ilm-global-style', metaStyles]" >
     <BookDisplayHeader />
     <BookTOC />
-    <div v-for="(block, blid) in parlist">
+    <div v-for="(block, blid) in parlist" :class="['ocean']">
       <div v-if="block.type == 'illustration'">
         <img :class="block.getClass()" :src="block.getIllustration()"/>
       </div>
@@ -32,14 +32,30 @@ export default {
   name: 'BookEditDisplay',
   data () {
     return {
-      book: this.$store.state.currentBook,
-      meta: this.$store.state.currentBookMeta,
       parlist: [],
       page: 0
     }
   },
   components: {
     BookDisplayHeader, BookTOC, InfiniteLoading
+  },
+  computed: {
+      ...mapGetters({
+        book: 'currentBook',
+        meta: 'currentBookMeta'
+      }),
+      metaStyles: function () {
+          let result = '';
+          if (this.meta.styles) {
+            result = [];
+            for (let style in this.meta.styles) {
+              console.log('style', style, 'val', this.meta.styles[style]);
+              if (this.meta.styles[style].length) result.push(this.meta.styles[style]);
+            }
+            result = result.join(' ');
+          }
+          return result;
+      }
   },
   methods: {
     ...mapActions(['loadBlocks']),

@@ -58,7 +58,7 @@
     background: url(hr.svg) 50% 0 no-repeat;
     opacity: .5;
     &.small { background: url(hr2.png) 50% 0 no-repeat; background-size: 54px; margin-top: 1.5em; }
-    &.large { margin: 2.5em 0; background-size: 600px; }
+    &.large { background: url(hr.svg) 50% 0 no-repeat; margin: 2.5em 0; background-size: 600px; }
   }
 
   /***** Global alignment *****/
@@ -205,6 +205,28 @@
     }
   }
 
+  /***** Global block width *****/
+  .width-80 {
+    width: 80%;
+    margin: auto;
+  }
+  .width-65 {
+    width: 65%;
+    margin: auto;
+  }
+  .width-50 {
+    width: 50%;
+    margin: auto;
+  }
+  .width-45 {
+    width: 45%;
+    margin: auto;
+  }
+  .width-30 {
+    width: 30%;
+    margin: auto;
+  }
+
   /***** Global authors *****/
   .baha, .bab, .abd, .sacred,
   .bible, .muhammad, .quran,
@@ -294,4 +316,108 @@
     }
   }
 
+}
+
+.ilm-global-style {
+  &.typewriter {
+    .ocean {
+      font-family: Typewriter;
+    }
+  }
+  &.monospace {
+    .ocean {
+      font-family: monospace;
+    }
+  }
+
+  &.left {
+    .ocean {
+      text-align: left;
+    }
+  }
+  &.center {
+    .ocean {
+      text-align: center;
+    }
+  }
+  &.right {
+    .ocean {
+      text-align: right;
+    }
+  }
+  &.justify {
+    .ocean {
+      text-align: justify;
+    }
+    .ocean:after {
+      content: "";
+      display: inline-block;
+      width: 100%;
+    }
+  }
+
+  &.dropcap {
+    .ocean {
+      .par:first-letter {
+        float: left; padding-left:0; font-style: normal; text-indent:0; color: @secondary_color;
+        font-family: Romantik;
+        margin-right: .1em;
+        font-size: 3em; margin-top: -.12em; margin-bottom: -.5em;
+      }
+    }
+  }
+
+  &.blockquote {
+    .ocean {
+      .par { // these must always be within a div.par, not <p>
+        padding-left: 3em; padding-right: 1em;
+        /*&:before, &:after {content:'';} // no fake quotation marks*/
+      }
+    }
+  }
+
+  &.blockquote {
+    .ocean {
+      .par.content-wrap:hover {
+        padding-left: 2.95em; padding-right: 0.95em;
+      }
+    }
+  }
+
+
+/*  &.sitalcent {
+    font-style: italic; padding-left: 3em;
+  }
+  &.content-wrap {
+    &.sitalcent:hover {
+      padding-left: 2.95em;
+    }
+  }
+
+  &.editor-note, .question {
+    font-style: italic; color: @grayed_color;
+  }
+
+  &.signature, .reference {
+    text-align:right;
+  }
+
+  &.preamble, .prayer {
+    font-style:italic;
+  }*/
+}
+
+
+.global-hr-small {
+  hr {
+    height: 35px;
+    background: url(hr2.png) 50% 0 no-repeat; background-size: 54px; margin-top: 1.5em;
+  }
+}
+
+.global-hr-large {
+  hr {
+    background: url(hr.svg) 50% 0 no-repeat;
+    margin: 2.5em 0; background-size: 600px;
+  }
 }

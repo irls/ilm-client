@@ -171,8 +171,45 @@
           </fieldset>
         </vue-tab>
         <vue-tab title="Styles" :id="'styles-switcher'">
-<!--            <BookAudioIntegration ref="audioIntegration" :audiobook="audiobook" :blocksForAlignment="blocksForAlignment"
-              ></BookAudioIntegration>-->
+           <vue-tabs ref="stylesTabs">
+            <vue-tab title="Fonts" :id="'fonts-styles-switcher'">
+              <div>
+                <input type="radio" :id="'ft-default'" :value="''" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
+                <label :for="'ft-default'" class="style-label">default</label>
+              </div>
+              <div>
+                <input type="radio" :id="'ft-typewriter'" :value="'typewriter'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
+                <label :for="'ft-typewriter'" class="style-label">typewriter</label>
+              </div>
+              <div>
+                <input type="radio" :id="'ft-monospace'" :value="'monospace'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
+                <label :for="'ft-monospace'" class="style-label">monospace</label>
+              </div>
+              <div>
+                <input type="radio" :id="'ft-oldbook'" :value="'oldbook'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
+                <label :for="'ft-oldbook'" class="style-label">oldbook</label>
+              </div>
+            </vue-tab>
+            <vue-tab title="Align" :id="'align-styles-switcher'">
+
+              <div v-for="(align, key) in blockTypes.par['align']" >
+                <input type="radio" :id="'pt-'+align" :value="align" v-model="currentBook.styles.align" @change="update('styles.align', $event)">
+                <label :for="'pt-'+align" class="style-label">{{align.length ? align : 'default'}}</label>
+              </div>
+            </vue-tab>
+            <vue-tab title="Par" :id="'paragraphs-styles-switcher'">
+              <div v-for="(type, key) in blockTypes.par['paragraph type']" >
+                <input type="radio" :id="'pt-'+type" :value="type" v-model="currentBook.styles.parType" @change="update('styles.parType', $event)">
+                <label :for="'pt-'+type" class="style-label">{{type.length ? type : 'default'}}</label>
+              </div>
+            </vue-tab>
+            <vue-tab title="HR" :id="'hr-styles-switcher'">
+              <div v-for="(size, key) in blockTypes.hr['size']" >
+                <input type="radio" :id="'pt-'+size" :value="(size.length ?'global-hr-':'')+ size" v-model="currentBook.styles.hrSize" @change="update('styles.hrSize', $event)">
+                <label :for="'pt-'+size" class="style-label">{{size.length ? size : 'default'}}</label>
+              </div>
+            </vue-tab>
+          </vue-tabs>
         </vue-tab>
       </vue-tabs>
       </div>
@@ -210,6 +247,7 @@
 <script>
 import Vue from 'vue'
 import { mapGetters, mapActions } from 'vuex'
+import { BlockTypes } from '../../store/bookBlock'
 import superlogin from 'superlogin-client'
 import BookDownload from './BookDownload'
 import BookEditCoverModal from './BookEditCoverModal'
@@ -280,7 +318,8 @@ export default {
       audiobook: {},
       sharePrivateBookMessage: '',
       collectionsList: [],
-      unlinkCollectionWarning: false
+      unlinkCollectionWarning: false,
+      blockTypes: BlockTypes
     }
   },
 
@@ -442,12 +481,28 @@ export default {
       var dbPath = superlogin.getDbUrl('ilm_content_meta')
       if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
 
+      var keys = key.split('.');
+      key = keys[0];
+      if (keys.length > 1) {
+
+          this.currentBook[keys[0]][keys[1]] = value;
+
+          value = this.currentBook[keys[0]];
+
+      }
+      console.log('key', key, value);
+
+      var update = {
+        [key]: value
+      }
+
+      console.log('update', update);
+      //if (true) return;
       var db = new PouchDB(dbPath)
       var api = db.hoodieApi()
 
-      return api.update(this.currentBookid, {
-        [key]: value
-      }).then(doc => {
+      return api.update(this.currentBookid, update)
+      .then(doc => {
         //console.log('success DB update: ', doc)
         return BPromise.resolve(doc)
       }).catch(err => {
@@ -645,7 +700,7 @@ export default {
     border-collapse: separate; border-spacing: 3px;
   }
   table.properties td:nth-child(1) {width: 30%; padding: 3px; margin:0}
-  table.properties td:nth-child(2), input {width: auto; text-align: right}
+  table.properties td:nth-child(2) {width: auto; text-align: right}
   table.properties tr:nth-child(odd) {background-color: #F0F0F0}
   table tr {border: 2px solid white}
   table tr.changed {border: 2px solid wheat}
@@ -673,5 +728,31 @@ export default {
   .alert.top {
     top: 120px;
   }
+
+  .nav-tabs-navigation {
+    margin-top: 3px;
+  }
+
+  .tab-content input[type=radio] {
+    width: auto;
+    display: inline-block;
+    margin-top: 8px;
+    margin-left: 20px;
+    padding-top: 5px;
+  }
+
+  .tab-content input[type=radio]:focus {
+    box-shadow: none;
+  }
+
+  .tab-content .style-label {
+    margin-top: 4px;
+    margin-bottom: 0px;
+    display: inline-block;
+    vertical-align: top;
+    font-weight: 400;
+  }
+
+
 
 </style>

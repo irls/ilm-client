@@ -1,5 +1,5 @@
 <template>
-<div class="container-fluid">
+<div :class="['container-fluid ilm-global-style', metaStyles]">
 
     <template v-for="(sublist, page_Idx) in parlist">
     <div class="row" v-for="(block, block_Idx) in sublist" v-bind:key="block_Idx">
@@ -73,7 +73,19 @@ export default {
           book: 'currentBook',
           meta: 'currentBookMeta',
           watchBlk: 'contentDBWatch'
-      })
+      }),
+      metaStyles: function () {
+          let result = '';
+          if (this.meta.styles) {
+            result = [];
+            for (let style in this.meta.styles) {
+              console.log('style', style, 'val', this.meta.styles[style]);
+              if (this.meta.styles[style].length) result.push(this.meta.styles[style]);
+            }
+            result = result.join(' ');
+          }
+          return result;
+      }
   },
   mixins: [access, taskControls, api_config],
   components: {

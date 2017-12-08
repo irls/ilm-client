@@ -158,6 +158,9 @@ export const store = new Vuex.Store({
       if (meta) {
         state.currentBookMeta = meta
         state.currentBookid = meta._id
+        if (!state.currentBookMeta.styles) {
+          state.currentBookMeta.styles = {};
+        }
       } else {
         state.currentBookMeta = {}
         state.currentBookid = ''
@@ -174,12 +177,12 @@ export const store = new Vuex.Store({
         state.currentBookFiles[fileObj.fileName] = url;
       } else state.currentBookFiles[fileObj.fileName] = false;
     },
-    
+
     SET_CURRENT_COLLECTION (state, collection) {
       state.currentCollection = collection;
       state.currentCollectionId = collection._id ? collection._id : false;
     },
-    
+
     SET_COLLECTIONS_FILTER (state, filter) {
       for(var field in filter) {
         state.collectionsFilter[field] = filter[field];
@@ -294,7 +297,7 @@ export const store = new Vuex.Store({
             pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
           }
         });
-        
+
         c.pages = pages;
       });
     }
@@ -353,7 +356,7 @@ export const store = new Vuex.Store({
             dispatch('tc_loadBookTask');
           })
         });
-        
+
         state.collectionsDB.replicate.from(state.collectionsRemoteDB)
         .on('complete', (info) => {
           dispatch('updateCollectionsList');
@@ -385,7 +388,7 @@ export const store = new Vuex.Store({
           dispatch('tc_loadBookTask')
         })
     },
-    
+
     updateCollectionsList({state, commit, dispatch}) {
       let connection = state.collectionsDB.hoodieApi()
       connection.findAll()
@@ -445,26 +448,26 @@ export const store = new Vuex.Store({
             })
         }
     },
-    
+
     loadCollection({commit, state}, id) {
       if (id) {
         state.currentCollectionId = id;
         state.collectionsDB.get(id).then(collection => {
           commit('SET_CURRENT_COLLECTION', collection);
         }).catch((err)=>{
-          
+
         })
       } else {
         commit('SET_CURRENT_COLLECTION', {});
       }
     },
-    
+
     reloadCollection({state, commit}) {
       if (state.currentCollectionId) {
         state.collectionsDB.get(state.currentCollectionId).then(collection => {
           commit('SET_CURRENT_COLLECTION', collection);
         }).catch((err)=>{
-          
+
         })
       }
     },
