@@ -139,7 +139,9 @@
             <legend>Long Description </legend>
             <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
           </fieldset>
-
+          <fieldset>
+            <button class="btn btn-primary" v-on:click="publish()">Publish</button>
+          </fieldset>
           <fieldset class="publish" v-if="isLibrarian">
             <!-- Fieldset Legend -->
             <template v-if="currentBook.importStatus == 'staging'">
@@ -571,6 +573,12 @@ export default {
         this.liveUpdate('author', this.currentBook.author);
       }
     },
+    publish() {
+      return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish')
+      .then(resp => {
+        console.log(resp);
+      });
+    },
     ...mapActions(['getAudioBook'])
   }
 }
@@ -609,6 +617,22 @@ export default {
     margin-top:0px;
     margin-left:0;
     padding-left:0;
+    overflow: scroll;
+    height: 100%;
+  }
+  .sidebar::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 10px;
+    background-color: #F5F5F5;
+  }
+  .sidebar::-webkit-scrollbar {
+    width: 12px;
+    background-color: #F5F5F5;
+  }
+  .sidebar::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #555;
   }
 
   /* Main book cover image */
