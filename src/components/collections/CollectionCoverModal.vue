@@ -1,131 +1,63 @@
 <template>
   <div>
-    <modal name="import-collection-cover">
-      <div slot="modal-header" class="modal-header">
-        <div class="header-title">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <i class="fa fa-times-circle-o" aria-hidden="true"></i>
-          </button>
-          <img src='/static/bookstack.svg' class='book-logo'> <h3 class="header-h">Collection Cover</h3>
-        </div>
+    <modal name="import-collection-cover"
+      transition="nice-modal-fade"
+      :adaptive="false"
+      width="700px"
+      height="430px"
+      @before-open="modalOpened"
+      @before-close="modalClosed"
+      :class="'upload-collection-cover-modal'">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" v-on:click="close()">
+          <i class="fa fa-times-circle-o" aria-hidden="true"></i>
+        </button>
+        <img src='/static/bookstack.svg' class='book-logo'> <h3 class="header-h">Collection Cover</h3>
       </div>
+      <div class="modal-body">
+        <div id="upload_pane" class="tab-pane fade in">
+          <div class="row">
+            <div class="col-md-12">
 
-      <div slot="modal-body" class="modal-body">
-
-        <!-- Selection tabs for Upload or Create forms -->
-        <div class="row tabs">
-          <ul class="nav nav-tabs">
-            <li :class="{active: uploadMode}"><a data-toggle="tab" href="#upload_pane" @click="uploadMode = !uploadMode">Upload</a></li>
-            <li :class="{active: !uploadMode}"><a data-toggle="tab" href="#create_pane" @click="uploadMode = !uploadMode">Create New</a></li>
-          </ul>
-        </div>
-
-        <div class="tab-content">
-          <!-- Selection tabs for Upload or Create forms -->
-
-          <div id="upload_pane" class="tab-pane fade in"  :class="{active: uploadMode}">
-               <div class="row">
-              <div class="col-md-12">
-
-                <div class="col-sm-4">
-                  <img :src="uploadImage" class="preview_upload" v-show="uploadImage.length>0" />
-                  <img :src="uploadImageBlank" class="preview_upload" v-show="uploadImage.length<1" />
-                </div>
-
-                <div class="col-sm-8">
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                    <input type="text" class="form-control" placeholder="URL" v-model="uploadImage" />
-                  </div>
-
-                  <br> &nbsp;&nbsp;&nbsp;  or <br><br>
-
-                  <label class='btn btn-default' type="file">
-                    <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
-                    <input name="coverFile" type="file" v-show="false" accept="image/*"  @change="onFilesChange($event)"><br>
-                  </label>
-                </div>
-
+              <div class="col-sm-4">
+                <img :src="uploadImage" class="preview-upload" v-show="uploadImage.length>0" />
               </div>
+
+              <div class="col-sm-8">
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                  <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
+                </div>
+
+                <br> &nbsp;&nbsp;&nbsp;  or <br><br>
+
+                <label class='btn btn-default' type="file">
+                  <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
+                  <input name="coverFile" type="file" v-show="false" accept="image/*" class="upload-image-input" @change="onFilesChange($event)"><br>
+                </label>
+              </div>
+
             </div>
           </div>
-
-          <div id="create_pane" class="tab-pane fade in"  :class="{active: !uploadMode}">
-            <div class="row">
-
-              <!-- left column, display preview -->
-              <div class="col-md-4">
-                <div id="bookCoverPreviewMain">
-                  <div class="bookCoverPreviewWrap">
-                    <div class="book-cover"><img :src="tmp.coverimg"></div>
-                    <div ref="livePreviewTitle" id="livePreviewTitle" class="ql-editor" v-draggable="tmp.title"></div>
-                    <div ref="livePreviewAuthor" id="livePreviewAuthor" class="ql-editor" v-draggable="tmp.author"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- right column edit controls -->
-              <div class="col-md-8">
-                <div class="book-list">
-                  <!-- <div ref="quillContainerTitle" id="quillContainerTitle"></div> -->
-                </div>
-                
-                <div class="book-list">
-                  <!-- <div ref="quillContainerAuthor" id="quillContainerAuthor"></div> -->
-                </div>
-              </div>
-
-            </div> <!-- row? -->
-          </div> <!-- Create Pane -->
-
-        </div> <!-- tabbed content for create -->
-
-      </div> <!-- modal body -->
-
-      <div id='uploadingMsg' v-show='isUploading'>
-        <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
+        </div>
       </div>
-
-      <div slot="modal-footer" class="modal-footer">
-        <button class="btn btn-primary" type="button">Save</button>
+      <div class="modal-footer">
+        <button class="btn btn-primary" v-on:click="save()">Save</button>
       </div>
     </modal>
   </div>
 </template>
 <script>
   import modal from 'vue-js-modal';
+  import {mapGetters, mapActions} from 'vuex';
   import Vue from 'vue';
   Vue.use(modal);
   export default {
       name: 'CollectionCoverModal',
       data() {
         return {
-          uploadMode: true,
           uploadImage: '',
-          uploadImageBlank: 'https://dl.dropboxusercontent.com/u/382588/share/book_blank_sm.png',
-          isUploading: false,
-          uploadProgress: '',
-
-          tmp: {
-            coverimg: '',
-            title: {
-              text: 'Title',
-              top: 33,
-              left: 0,
-              scale: 1
-            },
-            author: {
-              text: 'Author',
-              top: 192,
-              left: 0,
-              scale: 1
-            }
-
-          },
-          quillTitle: null,
-          quillAuthor: null,
-          editorTitle: null,
-          editorAuthor: null
+          uploadURL: ''
         }
       },
       mounted() {
@@ -133,10 +65,134 @@
       },
       methods: {
         show() {
+          this.uploadImage = '';
+          this.uploadURL = '';
           this.$modal.show('import-collection-cover');
+        },
+        close() {
+          this.$modal.hide('import-collection-cover')
+        },
+        modalOpened() {
+          $('.fixed-wrapper .navtable').css('z-index', 0);
+          $('.toolbar-wrapper .toolbar').css('z-index', 0);
+        },
+        modalClosed() {
+          $('.fixed-wrapper .navtable').css('z-index', 999);
+          $('.toolbar-wrapper .toolbar').css('z-index', 999);
+        },
+        onFilesChange (e) {
+          var files = e.target.files || e.dataTransfer.files;
+          // console.log('*** onFilesChange', files)
+          if (!files.length) {
+            return;
+          }
+          this.createImage(files[0]);
+        },
+
+        createImage (file) {
+          // console.log('*** Creating new image', file)
+          var reader = new FileReader();
+          var vm = this;
+          reader.onload = e => { vm.uploadImage = e.target.result };
+          reader.readAsDataURL(file);
+        },
+        save() {
+          if (this.uploadImage) {
+            this.uploadNewImageData(this.uploadImage);
+          } else if (this.uploadURL) {
+            this.uploadNewImageUrl();
+          }
+        },
+        uploadNewImageData (urlData) {
+          if (urlData.length < 1) {
+            return;
+          }
+          
+          let collection_id = this.currentCollection._id;
+          let ilm_library_files = this.$store.state.filesRemoteDB;
+
+          return ilm_library_files.get(collection_id)
+            .then(doc => {
+              // cut out mime type part
+              let mime = urlData.substring(urlData.indexOf(':') + 1, urlData.indexOf(';'));
+              // cut out data part
+              urlData = urlData.substring(urlData.indexOf(',') + 1);
+
+              doc._attachments = (doc._attachments || {});
+              doc._attachments.coverimg = {content_type: mime, data: urlData};
+
+              return ilm_library_files.put(doc)
+                .then((doc)=>{
+                  this.close();
+                  return this.reloadCollection();
+                })
+                .catch(err => console.log(err));
+            }).catch(err => {
+              if (err.name === 'not_found') {
+                return ilm_library_files.put({_id: collection_id, type: 'collection'})
+                  .then(doc => {
+                    return this.uploadNewImageData(urlData);
+                  });
+              } else {
+                console.log('Oops, we should not ever be here... ', err);
+              }
+            })
+        },
+        uploadNewImageUrl() {
+          var vm = this
+          return new Promise((resolve, reject) => {
+            var image = new Image()
+            image.crossOrigin = 'anonymous'
+            image.onload = function () {
+              var canvas = document.createElement('canvas')
+              canvas.width = this.naturalWidth // or 'width' if you want a special/scaled size
+              canvas.height = this.naturalHeight // or 'height' if you want a special/scaled size
+              canvas.getContext('2d').drawImage(this, 0, 0)
+              resolve(vm.uploadNewImageData(canvas.toDataURL('image/png')))
+            }
+            image.src = vm.uploadURL;
+          })
+        },
+        ...mapActions(['reloadCollection'])
+      },
+      computed: {
+        ...mapGetters(['currentCollection'])
+      },
+      watch: {
+        uploadImage: {
+          handler(val) {
+            if (val) {
+              this.uploadURL = '';
+            } else {
+              $('.upload-image-input').val('');
+            }
+          }
+        },
+        uploadURL: {
+          handler(val) {
+            if (val) {
+              this.uploadImage = '';
+            }
+          }
         }
       }
   }
 </script>
 <style lang="less">
+  .upload-collection-cover-modal {
+    .book-logo {
+      width: 35px;
+    }
+    .modal-header {
+      padding: 10px 20px;
+      text-align: center;
+      h3 {
+        display: inline-block;
+      }
+    }
+    .preview-upload {
+      max-width: 200px;
+      height: 250px;
+    }
+  }
 </style>

@@ -2,7 +2,7 @@
   <div class="collection-meta col-sm-12">
     <div class="col-sm-12">
       <div class="coverimg" @click="changeCoverModal()">
-        <img height="80" v-if="collection.coverimg" v-bind:src="collection.coverimg" />
+        <img height="80" v-if="currentCollectionFiles.coverimg" v-bind:src="currentCollectionFiles.coverimg" />
         <div v-else class="coverimg-wrap"></div>
       </div>
     </div>
@@ -161,7 +161,7 @@
             return this.allowCollectionsEdit && (!this.collection.title || this.collection.title.length == 0);
           }
         },
-        ...mapGetters(['currentCollection', 'allowCollectionsEdit'])
+        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'currentCollectionFiles'])
       },
       watch: {
         'currentCollection': {
