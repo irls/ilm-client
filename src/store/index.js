@@ -31,6 +31,7 @@ export const store = new Vuex.Store({
     isEngineer: false,
     isReader: false,
     allowCollectionsEdit: false,
+    allowPublishCurrentBook: false,
     allRolls: [],
 
     metaDB: false,
@@ -65,7 +66,8 @@ export const store = new Vuex.Store({
     bookCollections: [],
     collectionsFilter: {title: '', language: ''},
     currentCollection: {},
-    currentCollectionId: false
+    currentCollectionId: false,
+    allowPublishCurrentCollection: false
   },
 
   getters: {
@@ -79,6 +81,7 @@ export const store = new Vuex.Store({
     isBookkeeper: state => state.isBookkeeper,
     isEngineer: state => state.isEngineer,
     isReader: state => state.isReader,
+    allowPublishCurrentBook: state => state.allowPublishCurrentBook,
     allRolls: state => state.allRolls,
     allBooks: state => state.books_meta,
     bookFilters: state => state.bookFilters,
@@ -97,6 +100,7 @@ export const store = new Vuex.Store({
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
     collectionsFilter: state => state.collectionsFilter,
+    allowPublishCurrentCollection: state => state.allowPublishCurrentCollection,
     authors: state => {
       let result = [];
       if (state.currentBookMeta.authors) {
@@ -297,6 +301,12 @@ export const store = new Vuex.Store({
         
         c.pages = pages;
       });
+    },
+    SET_ALLOW_BOOK_PUBLISH(state, allow) {
+      state.allowPublishCurrentBook = allow;
+    },
+    SET_ALLOW_COLLECTION_PUBLISH(state, allow) {
+      state.allowPublishCurrentCollection = allow;
     }
 
   },
@@ -417,6 +427,7 @@ export const store = new Vuex.Store({
         state.metaDB.get(book_id).then(meta => {
           commit('SET_CURRENTBOOK_META', meta)
           commit('TASK_LIST_LOADED')
+          dispatch('getTotalBookTasks');
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
@@ -436,6 +447,7 @@ export const store = new Vuex.Store({
         if (state.currentBookMeta._id) {
             state.metaDB.get(state.currentBookMeta._id).then((meta) => {
                 commit('SET_CURRENTBOOK_META', meta)
+                dispatch('getTotalBookTasks');
                 state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
                 .then(fileBlob => {
                   commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
@@ -446,16 +458,18 @@ export const store = new Vuex.Store({
         }
     },
     
-    loadCollection({commit, state}, id) {
+    loadCollection({commit, state, dispatch}, id) {
       if (id) {
         state.currentCollectionId = id;
         state.collectionsDB.get(id).then(collection => {
           commit('SET_CURRENT_COLLECTION', collection);
+          dispatch('allowCollectionPublish');
         }).catch((err)=>{
           
         })
       } else {
         commit('SET_CURRENT_COLLECTION', {});
+        commit('SET_ALLOW_COLLECTION_PUBLISH', false);
       }
     },
     
@@ -463,9 +477,30 @@ export const store = new Vuex.Store({
       if (state.currentCollectionId) {
         state.collectionsDB.get(state.currentCollectionId).then(collection => {
           commit('SET_CURRENT_COLLECTION', collection);
+          dispatch('allowCollectionPublish');
         }).catch((err)=>{
           
         })
+      }
+    },
+    
+    allowCollectionPublish({state, commit}) {
+      let allow_by_role = superlogin.confirmRole('librarian') || superlogin.confirmRole('admin');
+      if (allow_by_role && state.currentCollection && state.currentCollection.books && state.currentCollection.books.length > 0 && state.books_meta) {
+        let allow = typeof state.currentCollection.version === 'undefined' || state.currentCollection.version !== state.currentCollection.publishedVersion;
+        if (allow) {
+          state.currentCollection.books.forEach(b => {
+            if (allow) {
+              let _b = state.books_meta.find(__b => __b._id === b);
+              if (_b) {
+                allow = _b.published === true;
+              }
+            }
+          });
+        }
+        commit('SET_ALLOW_COLLECTION_PUBLISH', allow);
+      } else {
+        commit('SET_ALLOW_COLLECTION_PUBLISH', false);
       }
     },
 
@@ -625,6 +660,23 @@ export const store = new Vuex.Store({
         commit('TASK_LIST_LOADED')
       })
       .catch((err) => {})
+    },
+    
+    getTotalBookTasks({state, commit}) {
+      let allow_by_role = superlogin.confirmRole('librarian') || superlogin.confirmRole('admin')
+      if (state.currentBookid && allow_by_role) {
+        if (typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) {
+          commit('SET_ALLOW_BOOK_PUBLISH', false);
+        } else {
+          axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/total')
+            .then((response) => {
+              commit('SET_ALLOW_BOOK_PUBLISH', typeof response.data !== 'undefined' && /^[0-9]+$/.test(response.data) && parseInt(response.data) === 0);
+            })
+            .catch((err) => {})
+        }
+      } else {
+        commit('SET_ALLOW_BOOK_PUBLISH', false);
+      }
     }
 
 

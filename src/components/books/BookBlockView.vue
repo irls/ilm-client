@@ -809,7 +809,13 @@ export default {
           let blockSummary = this.block.calcFlagsSummary();
           task.nextStep = blockSummary.dir;
 
-          if (task.nextStep == 'proofer' && !this.block.hasAudio()) task.nextStep = 'narrator';
+          if (task.nextStep == 'proofer' && !this.block.hasAudio()) {
+            switch (this.block.voicework) {
+              case 'narration':
+                task.nextStep = 'narrator';
+                break;
+            }
+          }
 
           this.tc_approveBookTask(task)
           .then(response => {

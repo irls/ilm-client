@@ -26,6 +26,12 @@
         <div class="col-sm-9">
           {{collection.state}}
         </div>
+        <div class="col-sm-9">
+          Version: {{collection.version ? collection.version : '1.0'}}
+        </div>
+        <div class="col-sm-9" v-if="collection.publishedVersion">
+          Published version: {{collection.publishedVersion}}
+        </div>
       </fieldset>
     </div>
     <div class="col-sm-12">
@@ -44,6 +50,15 @@
       <fieldset>
         <legend>Description</legend>
         <textarea v-model="collection.description" @input="update('description', $event)" :disabled="!allowCollectionsEdit"></textarea>
+      </fieldset>
+    </div>
+    <div class="col-sm-12" v-if="allowPublishCurrentCollection">
+      <fieldset>
+        <legend>Publish</legend>
+        
+        <div class="col-sm-8">
+          <button class="btn btn-primary" v-on:click="publish()">Publish</button>
+        </div>
       </fieldset>
     </div>
     <linkBook v-if="linkBookModal"
@@ -134,10 +149,13 @@
           }).catch((err) => {
             self.onRemoveMessage = false;
           });
+        },
+        publish() {
+          
         }
       },
       computed: {
-        ...mapGetters(['currentCollection', 'allowCollectionsEdit'])
+        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'allowPublishCurrentCollection'])
       },
       watch: {
         'currentCollection': {

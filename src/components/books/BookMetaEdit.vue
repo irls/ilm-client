@@ -139,22 +139,22 @@
             <legend>Long Description </legend>
             <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
           </fieldset>
-          <fieldset>
-            <button class="btn btn-primary" v-on:click="publish()">Publish</button>
-          </fieldset>
-          <fieldset class="publish" v-if="isLibrarian">
+          <fieldset class="publish">
             <!-- Fieldset Legend -->
-            <template v-if="currentBook.importStatus == 'staging'">
-              <legend>Staging Document (not shared with library)</legend>
-            </template>
-            <template v-else>
+            <template>
               <legend>{{ currentBook.published ? 'Published' : 'Unpublished' }},
-                Version #{{ currentBook.version }}
               </legend>
+              <div>
+                Version #{{ currentBook.version ? currentBook.version : '1.0' }}
+              </div>
+              <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
+              <div v-if="allowPublishCurrentBook">
+                <button class="btn btn-primary" v-on:click="publish()">Publish</button>
+              </div>
             </template>
 
             <!-- Publication Options -->
-            <table class='properties publication'>
+            <!-- <table class='properties publication'>
               <template v-if="currentBook.importStatus == 'staging'">
                 <tr><td rowspan='2'>
                   <button class="btn btn-primary sharebtn" @click="shareBook"> Move book to Library</button>
@@ -179,7 +179,7 @@
                 </td></tr>
 
               </template>
-            </table>
+            </table> -->
           </fieldset>
         </vue-tab>
       </vue-tabs>
@@ -298,7 +298,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook']),
 
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
@@ -452,10 +452,16 @@ export default {
 
       var db = new PouchDB(dbPath)
       var api = db.hoodieApi()
-
-      return api.update(this.currentBookid, {
+      var update = {
         [key]: value
-      }).then(doc => {
+      };
+      if (typeof this.currentBook.version !== 'undefined' && this.currentBook.version === this.currentBook.publishedVersion) {
+        let versions = this.currentBook.version.split('.');
+        if (versions && versions.length == 2) {
+          update[['version']] = versions[0] + '.' + (parseInt(versions[1]) + 1);
+        }
+      }
+      return api.update(this.currentBookid, update).then(doc => {
         //console.log('success DB update: ', doc)
         return BPromise.resolve(doc)
       }).catch(err => {
@@ -618,7 +624,7 @@ export default {
     margin-left:0;
     padding-left:0;
     overflow: scroll;
-    height: 100%;
+    height: 80%;
   }
   .sidebar::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
