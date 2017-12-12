@@ -1,10 +1,16 @@
 <template>
   <div class="collection-meta col-sm-12">
     <div class="col-sm-12">
+      <div class="coverimg" @click="changeCoverModal()">
+        <img height="80" v-if="currentCollectionFiles.coverimg" v-bind:src="currentCollectionFiles.coverimg" />
+        <div v-else class="coverimg-wrap"></div>
+      </div>
+    </div>
+    <div class="col-sm-12">
       <i class="fa fa-book"></i>&nbsp;{{collection.title}}
     </div>
     <div class="col-sm-12">
-      {{collection.books ? collection.books.length : '0'}} docs, {{collection.pages}} pages
+      {{collectionBooksLength}} Books, {{collection.pages}} pages
     </div>
     <div class="col-sm-12" v-if="allowCollectionsEdit">
       <div class="col-sm-6">
@@ -31,11 +37,12 @@
     <div class="col-sm-12">
       <div class="col-sm-4">Title</div>
       <div class="col-sm-8">
-        <input type="text" v-model="collection.title" @input="update('title', $event)" :disabled="!allowCollectionsEdit"/>
+        <input type="text" v-model="collection.title" @input="update('title', $event)" :disabled="!allowCollectionsEdit" :class="[{'has-error': hasTitleWarning}]"/>
+        <span v-if="hasTitleWarning" class="error-message">Please define Collection title</span>
       </div>
       <div class="col-sm-4">Language</div>
       <div class="col-sm-8">
-        <select class="form-control" v-model='collection.language' @change="change('category')" :disabled="!allowCollectionsEdit">
+        <select class="form-control" v-model='collection.language' @change="change('category')" :disabled="!allowCollectionsEdit || collectionBooksLength > 0">
           <option v-for="(value, index) in languages" :value="index">{{ value }}</option>
         </select>
       </div>
@@ -51,9 +58,10 @@
       :languages="languages"></linkBook>
     <modal v-model="onRemoveMessage" effect="fade" title="" ok-text="Remove" cancel-text="Cancel" @ok="remove()">
       <p>
-        Remove {{collection.title}} Collection <template v-if="collection.books && collection.books.length">and unlink {{collection.books.length}} documents</template>?
+        Remove {{collection.title}} Collection <template v-if="collection.books && collection.books.length">and unlink {{collection.books.length}} Books</template>?
       </p>
     </modal>
+    <CollectionCoverModal ref="collectionCoverModal"></CollectionCoverModal>
   </div>
 </template>
 <script>
@@ -64,6 +72,7 @@
   import LinkBook from './LinkBook';
   import api_config from '../../mixins/api_config';
   import {modal} from 'vue-strap';
+  import CollectionCoverModal from './CollectionCoverModal';
   export default {
       name: 'CollectionMeta',
       data() {
@@ -80,12 +89,14 @@
             ro: 'Romanian'
           },
           linkBookModal: false,
-          onRemoveMessage: false
+          onRemoveMessage: false,
+          showCollectionCoverModal: false
         }
       },
       components: {
         'LinkBook': LinkBook,
-        'modal': modal
+        'modal': modal,
+        'CollectionCoverModal': CollectionCoverModal
       },
       mounted() {
         this.init();
@@ -134,10 +145,23 @@
           }).catch((err) => {
             self.onRemoveMessage = false;
           });
+        },
+        changeCoverModal() {
+          this.$refs.collectionCoverModal.show();
         }
       },
       computed: {
-        ...mapGetters(['currentCollection', 'allowCollectionsEdit'])
+        collectionBooksLength: {
+          get() {
+            return this.collection.books ? this.collection.books.length : 0;
+          }
+        },
+        hasTitleWarning: {
+          get() {
+            return this.allowCollectionsEdit && (!this.collection.title || this.collection.title.length == 0);
+          }
+        },
+        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'currentCollectionFiles'])
       },
       watch: {
         'currentCollection': {
@@ -169,6 +193,26 @@
       border: none;
       resize: none;
       height: 100px;
+    }
+    .has-error {
+      border: solid 1px red;
+    }
+    .error-message {
+      margin: 0px;
+    }
+    .coverimg {
+      padding:0; margin: 5px; margin-right: 8px;
+      float: left;
+      margin-left: 3px; 
+      margin-top: 10px;
+      background: white;
+      box-shadow: inset 0px 0px 3px 3px rgba(0,0,0,0.06);
+      cursor: pointer;
+      position: relative;
+    }
+    .coverimg-wrap {
+      height: 80px;
+      width: 60px;
     }
   }
 </style>
