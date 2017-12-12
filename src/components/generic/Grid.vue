@@ -19,7 +19,7 @@ Features:
     </thead>
     <tbody>
     <!--  {{ key.render(entry[key.path]) }} -->
-      <tr v-for="entry in limitedData" @click="rowEvent(entry)" class="grid-row" :data-id="entry[idField]" :class='{selected : isSelected(entry[idField])}' >
+      <tr v-for="entry in limitedData" @click="rowEvent(entry, $event)" class="grid-row" :data-id="entry[idField]" :class='{selected : isSelected(entry[idField])}' >
         <td v-for="key in columns" :class="[key.addClass]" class="grid-cell">
           <template v-if="key.render">{{ key.render(entry[key.path]) }}</template>
           <template v-else-if="key.html"> <span v-html="key.html(entry[key.path])"></span> </template>
@@ -54,7 +54,7 @@ Features:
     </thead>
     <draggable element="tbody" @end="endMove" ref="draggable" :move="checkMove" v-model="limitedData">
     <!--  {{ key.render(entry[key.path]) }} -->
-      <tr v-for="entry in limitedData" @click="rowEvent(entry)" class="grid-row" :data-id="entry[idField]" :class='{selected : isSelected(entry[idField])}' >
+      <tr v-for="entry in limitedData" @click="rowEvent(entry, $event)" class="grid-row" :data-id="entry[idField]" :class='{selected : isSelected(entry[idField])}' >
         <td v-for="key in columns" :class="[key.addClass]" class="grid-cell">
           <template v-if="key.render">{{ key.render(entry[key.path]) }}</template>
           <template v-else-if="key.html"> <span v-html="key.html(entry[key.path])"></span> </template>
@@ -172,8 +172,8 @@ Features:
         this.sortKey = key
         this.sortOrders[key] = this.sortOrders[key] * -1
       },
-      rowEvent (entry) { // Event broadcase from table with clicked element
-        this.$emit('clickRow', entry)
+      rowEvent (entry, event) { // Event broadcase from table with clicked element
+        this.$emit('clickRow', entry, event)
       },
       previous (e) { // Previous page click handler
         e.preventDefault()

@@ -48,7 +48,9 @@
   import BookMetaEdit from './books/BookMetaEdit';
   import { mapGetters, mapActions } from 'vuex';
   import AudioEditor from './AudioEditor';
+  import BookEdit from './books/BookEdit'
   import Vue from 'vue';
+  import api_config from '../mixins/api_config.js'
   export default {
       name: 'Collections',
       components: {
@@ -57,8 +59,10 @@
         CollectionsGrid: CollectionsGrid,
         CollectionMeta: CollectionMeta,
         BookMetaEdit: BookMetaEdit,
-        AudioEditor: AudioEditor
+        AudioEditor: AudioEditor,
+        BookEdit: BookEdit
       },
+      mixins: [api_config],
       data() {
         return {
           collectionMetaVisible: false,
@@ -72,8 +76,11 @@
         }
       },
       methods: {
-        isEditMode() {
-          return this.$store.state.route.path.indexOf('/books/edit') > -1
+        hasBookSelected () {
+          return !!this.currentBookMeta._id;
+        },
+        isEditMode () {
+          return this.$store.state.route.path.indexOf('/edit') > -1
         },
         onCollectionAdded(id) {
           //let current = this.bookCollections.find(bk => bk._id == id);
@@ -126,6 +133,19 @@
             }
           }, 500);
         },
+        getBlockSelectionInfo() {
+          this.blocksForAlignment.count = 0;
+          if (this.blocksForAlignment.start._id && this.blocksForAlignment.end._id) {
+            let api_url = this.API_URL + 'books/' + this.$store.state.currentBookid + '/selection_alignment';
+            let api = this.$store.state.auth.getHttp();
+            api.get(api_url + '?' + 'start=' + this.blocksForAlignment.start._id + '&end=' + this.blocksForAlignment.end._id, {})
+              .then(response => {
+                if (response.status == 200) {
+                  this.blocksForAlignment.count = response.data.count;
+                }
+              })
+          }
+        },
         ...mapActions(['loadCollection', 'loadBook'])
       },
       mounted() {
@@ -137,6 +157,15 @@
             this.loadBook(this.$route.params.bookid);
             
         }
+        let self = this;
+        this.$root.$on('from-bookedit:set-selection', function(start, end) {
+          self.blocksForAlignment.start = start;
+          self.blocksForAlignment.end = end;
+          self.getBlockSelectionInfo();
+        });
+        this.$root.$on('from-bookblockview:voicework-type-changed', function() {
+          self.getBlockSelectionInfo();
+        });
       },
       computed: {
         metaVisible: {
@@ -150,7 +179,7 @@
           }
         },
         ...mapGetters([
-          'currentCollection', 'currentBookMeta', 'collectionsFilter'
+          'currentCollection', 'currentBookMeta', 'collectionsFilter', 'bookEditMode'
         ])
       },
       watch: {

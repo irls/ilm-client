@@ -1,70 +1,88 @@
 <template>
-  <transition name="modal">
-    <div class="modal-mask" @click="$emit('close_modal')">
-      <div class="modal-wrapper">
-        <div class="modal-container" @click="$event.stopPropagation()">
-
-          <div class="modal-header">
-            <div class="header-title">
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')">
-              <i class="fa fa-times-circle-o" aria-hidden="true"></i>
-              </button>
-              <h4>Add books</h4>
+  <div>
+    <modal 
+      name="example-modal"
+      transition="nice-modal-fade"
+      :adaptive="true"
+      :resizable="true"
+      width="80%"
+      height="80%"
+      @before-open="modalOpened"
+      @before-close="modalClosed">
+      <div class="modal-header">
+        <div class="header-title">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')">
+          <i class="fa fa-times-circle-o" aria-hidden="true"></i>
+          </button>
+          <h4>Add books</h4>
+        </div>
+        <div class="col-sm-12">
+          <div class="col-sm-3">
+            <div class="col-sm-4">
+              <label>
+                <i class="fa fa-check-square" v-if="allSelected" v-on:click="allSelected = false"></i>
+                <i class="fa fa-square" v-else v-on:click="allSelected = true"></i>
+                All
+              </label>
             </div>
-            <div class="col-sm-12">
-              <div class="col-sm-3">
-                <input type="text" @keyup="filterChange('title', $event)" class="" placeholder="Search by author or title"></input>
-              </div>
-              <div class="col-sm-3">
-                <label>Language</label>
-                <select @change="filterChange('language', $event)">
-                  <option v-for="(name, code) in languages" :value="code">{{name}}</option>
-                </select>
-              </div>
-              <div class="col-sm-3">
-                <label>Collection</label>
-                <select @change="filterChange('collection', $event)">
-                  <option v-for="c in filterCollectionsList" :value="c._id">{{c.title}}</option>
-                </select>
-              </div>
-              <div class="col-sm-3">
-                <label>
-                  <input type="checkbox" @change="filterChange('published', $event)"/>
-                  Published
-                </label>
-              </div>
+            <div class="col-sm-8">
+              <input type="text" @keyup="filterChange('title', $event)" class="" placeholder="Search by author or title"></input>
             </div>
           </div>
-          <div class="modal-body clearfix">
-            <div class="link-book-search"></div>
-            <Grid id='books_grid' class="link-books-grid"
-              :data="linkBooksList"
-              :columns="headers"
-              :rowsPerPage="100"
-              @clickRow="rowClick"
-              :selected="selected"
-              :idField="idField"
-              :filter-key="''"></Grid>
+          <div class="col-sm-3">
+            <label>Language: </label>{{languages[currentCollection.language]}}
           </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" :disabled="selected.length == 0" v-on:click="onLinkMessage = true">
-              <i class="fa fa-plus"></i>&nbsp;Add to collection<span v-if="selected.length > 0">&nbsp;({{selected.length}})</span>
-            </button>
-            <button class="btn btn-default" v-on:click="$emit('close_modal')">Cancel</button>
+          <div class="col-sm-3">
+            <label>Collection</label>
+            <select @change="filterChange('collection', $event)">
+              <option v-for="c in filterCollectionsList" :value="c._id">{{c.title}}</option>
+            </select>
+          </div>
+          <div class="col-sm-3">
+            <label>
+              <input type="checkbox" @change="filterChange('published', $event)"/>
+              Published
+            </label>
           </div>
         </div>
       </div>
-      <modal v-model="onLinkMessage" effect="fade" title="" ok-text="Add to collection" cancel-text="Cancel" @ok="linkBooks()">
-        <p>Add {{selected.length}} Books to "{{currentCollection.title}}" Collection?</p>
-      </modal>
-    </div>
-  </transition>
+      <div class="modal-body clearfix">
+        <div class="link-book-search"></div>
+        <Grid id='books_grid' class="link-books-grid"
+          :data="linkBooksList"
+          :columns="headers"
+          :rowsPerPage="100"
+          @clickRow="rowClick"
+          :selected="selected"
+          :idField="idField"
+          :filter-key="''"></Grid>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" :disabled="selected.length == 0" v-on:click="linkBooks(true)">
+          <i class="fa fa-plus"></i>&nbsp;Add to collection<span v-if="selected.length > 0">&nbsp;({{selected.length}})</span>
+        </button>
+        <button class="btn btn-default" v-on:click="$emit('close_modal')">Cancel</button>
+      </div>
+    </modal>
+    <modal name="on-link-message" :height="150" :resizeable="false">
+      <div class="modal-header"></div>
+      <div class="modal-body">
+        <p>This will remove {{relinkCount}} of the selected books from their current collection(s).</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" v-on:click="hideModal('on-link-message')">Cancel</button>
+        <button class="btn btn-primary" v-on:click="linkBooks()">Confirm</button>
+      </div>
+    </modal>
+  </div>
 </template>
 <script>
   import Grid from '../generic/Grid';
   import {mapGetters} from 'vuex';
   import api_config from '../../mixins/api_config.js'
-  import {modal} from 'vue-strap';
+  import v_modal from 'vue-js-modal';
+  import Vue from 'vue';
+  Vue.use(v_modal, { dialog: true });
   export default {
       name: 'LinkBook',
       data() {
@@ -74,7 +92,7 @@
               title: '',
               path: '_id',
               html (val) {
-                return `<i class="fa fa-check-square"></i><i class="fa fa-square"></i><input type="checkbox" class="link-book-select-toggle" name="select-link-${val}"/>`
+                return `<i class="fa fa-check-square toggle-select"></i><i class="fa fa-square toggle-select"></i><input type="checkbox" class="link-book-select-toggle" name="select-link-${val}"/>`
               }
             },
             {
@@ -109,13 +127,13 @@
           idField: '_id',
           selected: [],
           booksFilter: {title: '', language: 'en', collection: 'not-linked', published: ''},
-          onLinkMessage: false
+          relinkCount: 0
         }
       },
       props: ['languages'],
       components: {
-        Grid: Grid,
-        modal: modal
+        Grid: Grid
+        //v_modal: v_modal
       },
       mixins: [api_config],
       computed: {
@@ -167,7 +185,19 @@
                 }
               }
             }
-            
+            let self = this;
+            Vue.nextTick(() => {
+              if (books.length == 0) {
+                self.allSelected = false;
+              } else {
+                self.selected.forEach((s, i) => {
+                  let b = books.find(_b => _b._id === s);
+                  if (!b) {
+                    self.selected.splice(i, 1);
+                  }
+                });
+              }
+            });
             return books;
           }
         },
@@ -182,38 +212,86 @@
             return collections;
           }
         },
+        allSelected: {
+          get() {
+            //console.log('CHECK ALL SELECTED', this.selected.length, this.linkBooksList.length);
+            return this.selected.length > 0 && this.selected.length == this.linkBooksList.length;
+          },
+          set(val) {
+            if (val === true) {
+              this.linkBooksList.forEach(b => {
+                if (this.selected.indexOf(b._id) === -1) {
+                  this.selected.push(b._id);
+                }
+              });
+            } else if (val === false) {
+              this.selected = [];
+            }
+          }
+        },
         ...mapGetters(['allBooks', 'currentCollection', 'bookCollections'])
       },
       methods: {
-        rowClick(item) {
-          if (item && item._id) {
-            $('[name="select-link-' + item._id + '"]').trigger('click');
+        rowClick(item, event) {
+          if (event && event.target && event.target.className.indexOf('toggle-select') !== -1) {
+            if (item && item._id) {
+              $('[name="select-link-' + item._id + '"]').trigger('click');
+            }
           }
         },
-        linkBooks() {
+        showModal(name) {
+          this.$modal.show(name);
+        },
+        hideModal(name) {
+          this.$modal.hide(name);
+        },
+        linkBooks(check = false) {
+          this.hideModal('on-link-message');
+          if (check === true) {
+            this.relinkCount = 0;
+            this.selected.forEach(s => {
+              let b = this.allBooks.find(_b => _b._id === s);
+              if (b && b.collection_id) {
+                ++this.relinkCount;
+              }
+            });
+            if (this.relinkCount > 0) {
+              this.showModal('on-link-message');
+              return;
+            }
+          }
           if (this.selected.length > 0) {
             let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/link_books';
             let api = this.$store.state.auth.getHttp();
             let self = this;
             api.post(api_url, {books_ids: this.selected}, {}).then(function(response){
-              self.onLinkMessage = false;
               if (response.status===200) {
                 self.$emit('close_modal');
               } else {
                 
               }
             }).catch((err) => {
-              self.onLinkMessage = false;
+              
             });
           }
         },
         filterChange(field, event) {
           
           this.booksFilter[field] = event.target.type === 'checkbox' ? (event.target.checked ? '1' : '') : event.target.value;
+        },
+        modalOpened() {
+          $('.fixed-wrapper .navtable').css('z-index', 0);
+          $('.toolbar-wrapper .toolbar').css('z-index', 0);
+        },
+        modalClosed() {
+          $('.fixed-wrapper .navtable').css('z-index', 999);
+          $('.toolbar-wrapper .toolbar').css('z-index', 999);
         }
       },
       mounted() {
+        this.booksFilter.language = this.currentCollection.language;
         let self = this;
+        this.showModal('example-modal');
         
         $('body').on('change', '.link-book-select-toggle', function(e) {
           let id = e.target.name.replace('select-link-', '');

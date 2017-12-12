@@ -9,36 +9,34 @@
       :idField="idField"
       :filter-key="''">
     </Grid> -->
-    <accordion>
-      <div :id="'collection-' + collection._id" v-for="collection in collectionsPage" :class="['collection-row', {'selected': currentCollection._id == collection._id}]" v-on:click="rowClick(collection, $event)">
-        <panel :is-open="isOpenPanel(collection)" 
-          v-bind:key="collection._id"
-          >
-          <span slot="header" class="collection-title">
-            <i class="fa fa-book"></i>&nbsp;
-            {{collection.title + ' ' + collection.books.length + ' Books, ' + collection.pages + ' pages'}}
-          </span>
-          <Grid id='books_grid'
-              :data="collection.books_list"
-              :columns="headers"
-              :rowsPerPage="100"
-              @clickRow="selectBook"
-              @orderChanged="moveBook(collection, $event)"
-              :selected="selectedBooks"
-              :idField="'_id'"
-              :filter-key="''"
-              :draggable="allowCollectionsEdit"
-              :sortable="false"
-              :ref="'grid-' + collection._id"></Grid>
-        </panel>
+    <div v-for="collection in collectionsPage" class="collection-container">
+      <div class="collection-title" :class="['collection-row', {'selected': currentCollection._id == collection._id}]" v-on:click="rowClick(collection, $event)">
+        <span slot="header" class="collection-title" @click.prevent.self>
+          <i class="fa fa-book"></i>&nbsp;
+          {{collection.title + ' ' + collection.books.length + ' Books, ' + collection.pages + ' pages'}}
+        </span>
       </div>
-    </accordion>
+      <Grid id='books_grid'
+          v-if="isOpenPanel(collection)"
+          :data="collection.books_list"
+          :columns="headers"
+          :rowsPerPage="100"
+          @clickRow="selectBook"
+          @orderChanged="moveBook(collection, $event)"
+          :selected="selectedBooks"
+          :idField="'_id'"
+          :filter-key="''"
+          :draggable="allowCollectionsEdit"
+          :sortable="false"
+          :ref="'grid-' + collection._id"
+          :class="['collection-books-grid']"
+          :customEmptyTableText="'No books'"></Grid>
+    </div>
   </div>
 </template>
 <script>
   import Grid from '../generic/Grid';
   import { mapGetters } from 'vuex';
-  import { accordion, panel } from 'vue-strap';
   import Vue from 'vue';
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
@@ -49,9 +47,7 @@
         
       },
       components: {
-        Grid: Grid,
-        accordion: accordion,
-        panel: panel
+        Grid: Grid
       },
       data() {
         return {
@@ -93,9 +89,12 @@
       },
       methods: {
         rowClick(collection, event) {
-          if (collection._id !== this.currentCollection._id && event.target && ['fa fa-book', 'panel-heading accordion-toggle', 'collection-title'].indexOf(event.target.className) !== -1) {
+          if (collection._id !== this.currentCollection._id/* && event.target && ['fa fa-book', 'panel-heading accordion-toggle', 'collection-title'].indexOf(event.target.className) !== -1*/) {
             this.$emit('selectCollection', collection._id);
             this.selectedBooks = [];
+          } else if (this.selectedBooks.length) {
+            this.selectedBooks = [];
+            this.$router.replace({ path: '/collections/' + collection._id })
           }
         },
         selectBook(book) {
@@ -103,6 +102,9 @@
           this.$emit('selectBook', book._id, book.collection_id);
         },
         isOpenPanel(collection) {
+          if (this.currentCollection._id) {
+            return this.currentCollection._id === collection._id;
+          }
           return collection.book_match || collection.books.indexOf(this.currentBookMeta._id) !== -1;
         },
         moveBook(collection, data) {
@@ -180,11 +182,13 @@
                   case 'title':
                     collections = collections.filter(item => {
                       let match = item.title.toLowerCase().indexOf(filter) !== -1;
-                      item.books_list = item.books_list.filter(b => {
-                        return b.title.toLowerCase().indexOf(filter) !== -1 || 
-                                (b.author && b.author.join('|').toLowerCase().indexOf(filter) !== -1);
-                      });
-                      let book_match = item.books_list.length > 0;
+                      if (!match) {
+                        item.books_list = item.books_list.filter(b => {
+                          return b.title.toLowerCase().indexOf(filter) !== -1 || 
+                                  (b.author && b.author.join('|').toLowerCase().indexOf(filter) !== -1);
+                        });
+                      }
+                      let book_match = !match && item.books_list.length > 0;
                       item.match = match;
                       item.book_match = book_match;
                       return match || book_match;//
@@ -246,6 +250,22 @@
   body.modal-open {
     .collection-row {
         position: inherit;
+    }
+  }
+  div.collection-title {
+    padding: 10px 5px;
+    background-color: #f5f5f5;
+    border-color: #ddd;
+    color: #333;
+    cursor: pointer;
+    &.selected {
+      background-color: #c6c2c2;
+    }
+  }
+  div.collection-container {
+    border: 1px solid #ddd;
+    div.collection-books-grid {
+      margin: 10px 15px;
     }
   }
 </style>

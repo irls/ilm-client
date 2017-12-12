@@ -85,7 +85,7 @@
                 <tr class='language'>
                   <td>Language</td>
                   <td>
-                    <select class="form-control" v-model='currentBook.language' @change="change('language')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                    <select class="form-control" v-model='currentBook.language' @change="change('language')" :key="currentBookid" :disabled="!allowMetadataEdit || currentBookMeta.collection_id">
                       <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
                     </select>
                   </td>
@@ -207,7 +207,7 @@
     <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Share" cancel-text="Cancel" title="" @ok="sharePrivateBook()">
       <div v-html="sharePrivateBookMessage"></div>
     </modal>
-    <modal v-model="unlinkCollectionWarning" effect="fade" ok-text="Remove from collection" cancel-text="Cancel" @ok="updateCollection()" @cancel="cancelCollectionUpdate">
+    <modal v-model="unlinkCollectionWarning" effect="fade" ok-text="Remove" cancel-text="Cancel" @ok="updateCollection()" @cancel="cancelCollectionUpdate">
       <p>Remove book from collection?</p>
     </modal>
 
@@ -287,7 +287,6 @@ export default {
       textCleanupProcess: false,
       audiobook: {},
       sharePrivateBookMessage: '',
-      collectionsList: [],
       unlinkCollectionWarning: false
     }
   },
@@ -299,6 +298,17 @@ export default {
   computed: {
 
     ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook']),
+    collectionsList: {
+      get() {
+        let list = [{'_id': '', 'title' :''}];
+        this.bookCollections.forEach(c => {
+          if (c.language == this.currentBookMeta.language) {
+            list.push(c);
+          }
+        });
+        return list;
+      }
+    },
 
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
@@ -321,10 +331,6 @@ export default {
         self.audiobook = response;
       })
     })
-    this.collectionsList = [{'_id': '', 'title' :''}];
-    this.bookCollections.forEach(c => {
-      this.collectionsList.push(c);
-    });
   },
 
   watch: {
@@ -412,7 +418,8 @@ export default {
         let self = this;
         api.post(api_url, {books_ids: [this.currentBook._id]}, {}).then(function(response){
           if (response.status===200) {
-            self.$router.push('/collections/' + collectionId + '/' + self.currentBookMeta._id);
+            self.$router.push('/books');
+            self.visible = false;
           } else {
 
           }
@@ -422,12 +429,13 @@ export default {
       } else if (event) {
         this.unlinkCollectionWarning = true;
       } else {
-        let api_url = this.API_URL + 'collection/' + this.currentBookMeta.collection_id + '/unlink_books';
+        let collection_id = this.currentBookMeta.collection_id;
+        let api_url = this.API_URL + 'collection/' + collection_id + '/unlink_books';
         let api = this.$store.state.auth.getHttp();
         let self = this;
         api.post(api_url, {books_ids: [this.currentBook._id]}, {}).then(function(response){
           if (response.status===200) {
-            self.$router.push('/books/' + self.currentBookMeta._id);
+            self.$router.push('/collections/' + collection_id);
           } else {
 
           }

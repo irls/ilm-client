@@ -66,6 +66,7 @@ export const store = new Vuex.Store({
     bookCollections: [],
     collectionsFilter: {title: '', language: ''},
     currentCollection: {},
+    currentCollectionFiles: { coverimg: false },
     currentCollectionId: false,
     allowPublishCurrentCollection: false
   },
@@ -99,6 +100,7 @@ export const store = new Vuex.Store({
     allowCollectionsEdit: state => state.isAdmin || state.isLibrarian,
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
+    currentCollectionFiles: state => state.currentCollectionFiles,
     collectionsFilter: state => state.collectionsFilter,
     allowPublishCurrentCollection: state => state.allowPublishCurrentCollection,
     authors: state => {
@@ -182,6 +184,15 @@ export const store = new Vuex.Store({
     SET_CURRENT_COLLECTION (state, collection) {
       state.currentCollection = collection;
       state.currentCollectionId = collection._id ? collection._id : false;
+    },
+    
+    SET_CURRENTCOLLECTION_FILES (state, fileObj) {
+      if (fileObj && fileObj.fileBlob) {
+        let url = URL.createObjectURL(fileObj.fileBlob);
+        state.currentCollectionFiles[fileObj.fileName] = url;
+      } else {
+        state.currentCollectionFiles[fileObj.fileName] = false;
+      }
     },
     
     SET_COLLECTIONS_FILTER (state, filter) {
@@ -464,6 +475,12 @@ export const store = new Vuex.Store({
         state.collectionsDB.get(id).then(collection => {
           commit('SET_CURRENT_COLLECTION', collection);
           dispatch('allowCollectionPublish');
+          state.filesRemoteDB.getAttachment(state.currentCollectionId, 'coverimg')
+          .then(fileBlob => {
+            commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
+          }).catch((err)=>{
+            commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: false});
+          })
         }).catch((err)=>{
           
         })
@@ -478,6 +495,12 @@ export const store = new Vuex.Store({
         state.collectionsDB.get(state.currentCollectionId).then(collection => {
           commit('SET_CURRENT_COLLECTION', collection);
           dispatch('allowCollectionPublish');
+          state.filesRemoteDB.getAttachment(state.currentCollectionId, 'coverimg')
+          .then(fileBlob => {
+            commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
+          }).catch((err)=>{
+            commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: false});
+          })
         }).catch((err)=>{
           
         })
