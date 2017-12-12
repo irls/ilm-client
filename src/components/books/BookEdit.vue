@@ -72,7 +72,8 @@ export default {
       ...mapGetters({
           book: 'currentBook',
           meta: 'currentBookMeta',
-          watchBlk: 'contentDBWatch'
+          watchBlk: 'contentDBWatch',
+          allBooks: 'allBooks'
       })
   },
   mixins: [access, taskControls, api_config],
@@ -460,6 +461,14 @@ export default {
     },
     setEnd(block, status) {
       
+    },
+    setBlockWatch() {
+      this.watchBlocks({book_id: this.meta._id})
+        .then(()=>{
+          this.watchBlk.on('change', (change) => {
+              this.refreshBlock(change);
+          });
+        });
     }
   },
   events: {
@@ -470,12 +479,7 @@ export default {
   mounted: function() {
       window.addEventListener('keydown', this.eventKeyDown);
 
-      this.watchBlocks({book_id: this.meta._id})
-      .then(()=>{
-          this.watchBlk.on('change', (change) => {
-              this.refreshBlock(change);
-          });
-      });
+      this.setBlockWatch();
       this.initRecorder();
       window.onscroll = function() {
         $('#narrateStartCountdown').css('top', document.scrollingElement.scrollTop + 'px');
@@ -504,6 +508,11 @@ export default {
         this.page = 0;
         this.parlistSkip = 0;
         this.getBlocks();
+      }
+    },
+    'allBooks': {
+      handler() {
+        this.setBlockWatch();
       }
     }
   }
