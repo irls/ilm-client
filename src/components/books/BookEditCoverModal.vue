@@ -233,7 +233,8 @@ export default {
 
   methods: {
     ...mapActions([
-      'reloadBookMeta'
+      'reloadBookMeta',
+      'updateBookVersion'
     ]),
     addBookCover (e) {
       console.log('addedBookCover', e.target.files[0])
@@ -291,7 +292,8 @@ export default {
         doc._attachments.coverimg = {content_type: mime, data: urlData}
 
         return this.ilm_library_files.put(doc).then((doc)=>{
-          return this.reloadBookMeta();
+          //return this.reloadBookMeta();
+          return this.updateBookVersion({minor: true});
         }).catch(err => console.log(err))
       }).catch(err => {
         if (err.name === 'not_found') return this.ilm_library_files.put({_id: bookid, type: 'book'})

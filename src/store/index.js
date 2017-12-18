@@ -469,6 +469,41 @@ export const store = new Vuex.Store({
         }
     },
     
+    updateBookVersion({state, dispatch}, update) {
+      if (state.currentBookMeta._id) {
+        if (typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion && state.currentBookMeta.published === true) {
+          let versions = state.currentBookMeta.version.split('.');
+          if (versions && versions.length == 2) {
+            if (update.minor) {
+              versions[1] = (parseInt(versions[1]) + 1);
+            }
+            if (update.major) {
+              versions[0] = (parseInt(versions[0]) + 1);
+              versions[1] = 0;
+            }
+            state.metaRemoteDB.get(state.currentBookMeta._id)
+              .then(meta => {
+                //console.log('FROM REMOTE', meta);
+                //console.log('LOCAL', test);
+                meta['version'] = versions[0] + '.' + versions[1];
+                meta['pubType'] = 'Unpublished';
+                meta['published'] = false;
+                meta['status'] = 'staging';
+                state.metaDB.put(meta)
+                  .then(() => {
+                    dispatch('reloadBookMeta');
+                    if (meta.collection_id) {
+                      dispatch('updateCollectionVersion', Object.assign({id: meta.collection_id}, update));
+                    }
+                  });
+              });
+          }
+        } else {
+          dispatch('reloadBookMeta');
+        }
+      }
+    },
+    
     loadCollection({commit, state, dispatch}, id) {
       if (id) {
         state.currentCollectionId = id;
@@ -490,7 +525,7 @@ export const store = new Vuex.Store({
       }
     },
     
-    reloadCollection({state, commit}) {
+    reloadCollection({state, commit, dispatch}) {
       if (state.currentCollectionId) {
         state.collectionsDB.get(state.currentCollectionId).then(collection => {
           commit('SET_CURRENT_COLLECTION', collection);
@@ -502,8 +537,39 @@ export const store = new Vuex.Store({
             commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: false});
           })
         }).catch((err)=>{
-          
+          console.log(err);
         })
+      }
+    },
+    
+    updateCollectionVersion({state, dispatch}, update) {
+      let id = update.id || state.currentCollection._id;
+      if (id) {
+        state.collectionsRemoteDB.get(state.currentCollection._id)
+          .then(collection => {
+            if (typeof collection.version !== 'undefined' && collection.version === collection.publishedVersion && collection.published === true) {
+              let versions = collection.version.split('.');
+              if (versions && versions.length == 2) {
+                if (update.minor) {
+                  versions[1] = (parseInt(versions[1]) + 1);
+                }
+                if (update.major) {
+                  versions[0] = (parseInt(versions[0]) + 1);
+                  versions[1] = 0;
+                }
+                    collection['version'] = versions[0] + '.' + versions[1];
+                    collection['published'] = false;
+                    collection['state'] = 'unpublished';
+                    state.collectionsRemoteDB.put(collection)
+                      .then(() => {
+                        dispatch('reloadCollection');
+                      });
+              }
+            } else {
+              dispatch('reloadCollection');
+            }
+        
+          });
       }
     },
     

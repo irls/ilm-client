@@ -463,15 +463,12 @@ export default {
       var update = {
         [key]: value
       };
-      if (typeof this.currentBook.version !== 'undefined' && this.currentBook.version === this.currentBook.publishedVersion) {
-        let versions = this.currentBook.version.split('.');
-        if (versions && versions.length == 2) {
-          update[['version']] = versions[0] + '.' + (parseInt(versions[1]) + 1);
-        }
-      }
       return api.update(this.currentBookid, update).then(doc => {
         //console.log('success DB update: ', doc)
-        return BPromise.resolve(doc)
+        return this.updateBookVersion({minor: true})
+          .then(() => {
+            return BPromise.resolve(doc)
+          });
       }).catch(err => {
         //console.log('error DB pdate: ', err)
         return BPromise.reject(err)
@@ -593,7 +590,7 @@ export default {
         console.log(resp);
       });
     },
-    ...mapActions(['getAudioBook'])
+    ...mapActions(['getAudioBook', 'updateBookVersion'])
   }
 }
 </script>

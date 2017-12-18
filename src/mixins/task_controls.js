@@ -1,5 +1,6 @@
 import axios from 'axios'
 import api_config from './api_config.js'
+import {mapGetters} from 'vuex';
 
 export default {
     data() {
@@ -36,9 +37,9 @@ export default {
         return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 6
       },
       tc_isShowEdit(blockid) {
-        return this.tc_hasTask('content_cleanup')
+        return !this.currentBookMeta.publishedVersion && (this.tc_hasTask('content_cleanup')
               || this.$store.state.isAdmin
-              || this.$store.state.isEditor
+              || this.$store.state.isEditor)
       },
       tc_isShowApproveContentFixAction(blockid) {
         return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 7;
@@ -51,5 +52,8 @@ export default {
           return t.type === 'narrate-block';
         });
       }
+    },
+    computed: {
+      ...mapGetters(['currentBookMeta'])
     }
 }
