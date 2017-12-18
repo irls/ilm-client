@@ -6,6 +6,7 @@ let defBlock = [
   '_id',
   '_rev',
   'bookid',
+  'chainid',
   'index',
   'tag',
   'content',
@@ -19,6 +20,7 @@ let defBlock = [
   'section',
   'secnum',
   'illustration',
+  'description',
   'voicework'
 ]
 
@@ -30,14 +32,16 @@ let BlockTypes = {
     translator: []
   },
   header: {
+    level: ['', 'h2', 'h3', 'h4', 'h5'],
     align: ['', 'left', 'center', 'right', 'justify'],
-    'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4']
-  },
-  subhead: {
     'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4'],
-    align: ['', 'left', 'center', 'right', 'justify'],
-    descriptor: ['', 'date', 'venue', 'subtitle']
+    style: [' ', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline'],
   },
+//   subhead: {
+//     'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4'],
+//     align: ['', 'left', 'center', 'right', 'justify'],
+//     descriptor: ['', 'date', 'venue', 'subtitle']
+//   },
   par: {
 //     font: ['', 'typewriter', 'monospace', 'oldbook', 'modern'],
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
@@ -47,7 +51,7 @@ let BlockTypes = {
     whitespace: ['', 'verse', 'pre'],
     padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
     author: ['', 'bab', 'baha', 'abd', 'shoghi', 'sacred', 'bible', 'muhammad', 'quran', 'jesus', 'ali', 'tradition', 'husayn'],
-    'paragraph type': ['', 'dropcap', 'blockquote', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer']
+    'paragraph type': ['', 'dropcap', 'blockquote', 'centerquote', 'dedication', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer']
   },
   illustration: {
     size: ['', 'x-small', 'small', 'large', 'x-large'],
@@ -68,6 +72,7 @@ class BookBlock {
     this._id = init._id || '';
     this._rev = init._rev || '';
     this.bookid = init.bookid || '';
+    this.chainid = init.chainid || '';
     this.index = typeof init.index !== 'undefined' ? init.index : '';
 
     this.tag = init.tag || '';
@@ -86,6 +91,7 @@ class BookBlock {
 
     this.deleted = init.deleted || false;
     this.illustration = init.illustration;
+    this.description = init.description || '';
     this.voicework = init.voicework;
     this.partUpdate = false;
   }

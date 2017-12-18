@@ -11,7 +11,7 @@
       </div>
     </td>
     <!-- Paragraph content Column -->
-    <td class='viewercontent ocean' v-else>
+    <td class='viewercontent ilm-block' v-else>
 
       <!-- Editor toolbar, only visible for editors -->
       <div class='blockinfo'><div class='blockinfo-content'>
@@ -335,9 +335,6 @@ export default {
 }
 </script>
 
-
-
-<style lang='less' src='./css/ocean.less'></style>
 <style scope>
 .viewer {
   display: table; width: 100%;
@@ -427,7 +424,7 @@ i.fa-microphone:hover, i.fa-stop-circle-o:hover  {color: maroon}
 
 div.par {display: block;}
 
-div.viewercontent.ocean div.content.par.dropcap::first-letter {
+div.viewercontent.ilm-block div.content.par.dropcap::first-letter {
   border: 2px solid silver;
   float: left !important; padding-left:0; font-style: 10em;; text-indent:0; color: darkgreen;
   margin-right: .1em; font-size: 3em; margin-top: -.12em; margin-bottom: -.5em;

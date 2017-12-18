@@ -172,6 +172,22 @@
         </vue-tab>
         <vue-tab title="Styles" :id="'styles-switcher'">
            <vue-tabs ref="stylesTabs">
+
+            <vue-tab title="Styles" :id="'global-styles-switcher'">
+              <div>
+                <input type="radio" :id="'gs-default'" :value="''" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                <label :for="'gs-default'" class="style-label">ILM</label>
+              </div>
+              <div>
+                <input type="radio" :id="'gs-ocean'" :value="'global-ocean'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                <label :for="'gs-ocean'" class="style-label">Ocean</label>
+              </div>
+              <div>
+                <input type="radio" :id="'gs-ffa'" :value="'global-ffa'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                <label :for="'gs-ffa'" class="style-label">FFA</label>
+              </div>
+            </vue-tab>
+
             <vue-tab title="Fonts" :id="'fonts-styles-switcher'">
               <div>
                 <input type="radio" :id="'ft-default'" :value="''" v-model="currentBook.styles.font" @change="update('styles.font', $event)">

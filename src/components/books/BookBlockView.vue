@@ -144,11 +144,12 @@
             <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div>
-            <div class="table-row ocean">
+            <div class="table-row ilm-block">
                 <hr v-if="block.type=='hr'" :class="[block.getClass()]"/>
-                <div v-else-if="block.type == 'illustration'" :class="['illustration-block']">
+
+                <div v-else-if="block.type == 'illustration'" :class="['table-body illustration-block']">
                   <img v-if="block.illustration" :src="block.getIllustration()" :class="[block.getClass()]"/>
-                  <div :class="['drag-uploader', 'no-picture', {'__hidden': this.isChanged}]">
+                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged}]">
                     <vue-picture-input
                       @change="onIllustrationChange"
                       @remove="onIllustrationChange"
@@ -162,7 +163,17 @@
                       <button class="btn btn-default" @click="uploadIllustration">Save picture</button>
                     </div>
                   </div>
+
+                  <div :class="['table-row content-description', block.getClass()]">
+                    <div class="description"
+                      contenteditable="true"
+                      @input="commitDescription($event)"
+                      v-html="block.description">
+                    </div>
+                  </div>
+
                 </div>
+                <!--<img v-if="block.illustration"-->
                 <div v-else class="content-wrap"
                 :id="'content-'+block._id"
                 ref="blockContent"
@@ -302,7 +313,7 @@
                 </block-cntx-menu>
 
             </div>
-            <!--<div class="table-row ocean">-->
+            <!--<div class="table-row ilm-block">-->
 
             <div class="table-row content-footnotes"
               v-if="block.footnotes.length > 0">
@@ -558,7 +569,6 @@ export default {
         }
       });
       this.updateFlagStatus(this.block._id);
-
       if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
         this.classSel = Object.keys(this.blockTypes[this.block.type])[0];
       } else {
@@ -732,11 +742,15 @@ export default {
         this.updateFlagStatus(this.block._id);
         return this.putBlock(this.block).then(()=>{
           this.isChanged = false;
-          if (this.$refs.blockContent.dataset.has_suggestion && this.$refs.blockContent.dataset.has_suggestion === 'true') {
-            console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
-            this.doReAlign();
+          if (this.$refs.blockContent) {
+            if (this.$refs.blockContent.dataset.has_suggestion) {
+              if (this.$refs.blockContent.dataset.has_suggestion === 'true') {
+                console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
+                this.doReAlign();
+              }
+            }
+            this.$refs.blockContent.dataset.has_suggestion = false;
           }
-          this.$refs.blockContent.dataset.has_suggestion = false;
           this.reCount();
         });
       },
@@ -999,6 +1013,10 @@ export default {
       },
       commitFootnote: function(pos, ev) {
         this.block.footnotes[pos] = ev.target.innerText.trim();
+        this.isChanged = true;
+      },
+      commitDescription: function(ev) {
+        this.block.description = ev.target.innerText.trim();
         this.isChanged = true;
       },
 
@@ -1716,7 +1734,7 @@ export default {
 
 <style lang='less'>
 @variable: 90px;
-.ocean {
+.ilm-block {
     padding: 0;
     .content-wrap {
       position: static;
@@ -1915,9 +1933,9 @@ export default {
     }
 
     .content-wrap {
-      margin: 6px 0 4px 0;
+      margin: 6px auto 4px auto;
       /*padding: 6px 11px;*/
-      padding: 11px;
+      /*padding: 11px;*/
       border-radius: 8px;
       box-shadow: none;
       transition: box-shadow 900ms;
@@ -1940,7 +1958,7 @@ export default {
 
     }
 
-    &.ocean {
+    &.ilm-block {
       .content-wrap {
         &.header, &.subhead {
           margin: 4px;
