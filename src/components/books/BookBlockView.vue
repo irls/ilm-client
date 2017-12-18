@@ -150,7 +150,7 @@
 
                 <div v-else-if="block.type == 'illustration'" :class="['table-body illustration-block']">
                   <img v-if="block.illustration" :src="block.getIllustration()" :class="[block.getClass()]"/>
-                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged}] v-if="allowEditing"">
+                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged}]" v-if="allowEditing">
                     <vue-picture-input
                       @change="onIllustrationChange"
                       @remove="onIllustrationChange"
@@ -175,6 +175,7 @@
 
                 </div>
                 <!--<img v-if="block.illustration"-->
+
                 <div v-else class="content-wrap"
                 :id="'content-'+block._id"
                 ref="blockContent"
@@ -188,7 +189,6 @@
                 @click="onClick"
                 @input="onInput"
                 @mouseenter="onHover"
-
                 @contextmenu.prevent="onContext">
                 </div>
                 <!--<div class="content-wrap">-->
