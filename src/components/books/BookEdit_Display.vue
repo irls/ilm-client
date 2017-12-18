@@ -1,13 +1,18 @@
 <template>
-  <div class='ocean showparnum'>
+  <div :class="['ilm-global-style', metaStyles]">
     <BookDisplayHeader />
     <BookTOC />
-    <div v-for="(block, blid) in parlist">
+    <div v-for="(block, blid) in parlist" :class="['ilm-block']">
       <div v-if="block.type == 'illustration'">
         <img :class="block.getClass()" :src="block.getIllustration()"/>
+        <div class="description"
+        :class="['content-description', block.getClass()]"
+        v-if="block.description.length"
+        v-html="block.description">
+        </div>
       </div>
       <div v-else-if="block.type == 'hr'">
-        <hr/>
+        <hr :class="[block.getClass()]"/>
       </div>
       <div v-else
         :class="block.getClass()"
@@ -32,8 +37,6 @@ export default {
   name: 'BookEditDisplay',
   data () {
     return {
-      book: this.$store.state.currentBook,
-      meta: this.$store.state.currentBookMeta,
       parlist: [],
       page: 0
     }
@@ -41,24 +44,44 @@ export default {
   components: {
     BookDisplayHeader, BookTOC, InfiniteLoading
   },
+  computed: {
+      ...mapGetters({
+        book: 'currentBook',
+        meta: 'currentBookMeta'
+      }),
+      metaStyles: function () {
+          let result = '';
+          if (this.meta.styles) {
+            result = [];
+            for (let style in this.meta.styles) {
+              //console.log('style', style, 'val', this.meta.styles[style]);
+              if (this.meta.styles[style].length) result.push(this.meta.styles[style]);
+            }
+            result = result.join(' ');
+          }
+          return result;
+      }
+  },
   methods: {
-    ...mapActions(['loadBlocks']),
+    ...mapActions(['loadBlocks', 'loadBlocksChain']),
     onInfiniteScroll() {
-      console.log('Loading blocks')
-      this.loadBlocks({
+      //console.log('Loading blocks')
+      this.loadBlocksChain({
             book_id: this.meta._id,
-            page: this.page++,
+            first_id: this.parlist.length > 0 ? this.parlist[this.parlist.length-1].chainid : false,
             onpage: 20
         }).then((result)=>{
-            console.log('Loading blocks finished')
+            //console.log('Loading blocks finished')
             if (result.length > 0) {
                 result.forEach((el, idx, arr)=>{
-                    //let newBlock = Object.assign(new this.newBlock(), el.doc);
-                    let newBlock = new BookBlock(el.doc);
+                    let newBlock = new BookBlock(el);
                     this.parlist.push(newBlock);
                 });
-
+              if (result.length < 20) {
+                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
+              } else {
                 if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.loaded();
+              }
             } else {
                 if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
             }
@@ -71,33 +94,5 @@ export default {
 
     },
   },
-
 }
 </script>
-
-
-<style scope>
-.ocean {
-  width: 100%; padding: 1em;
-  font-family: 'gentium', serif; font-size: 1.5em;
-  text-align: justify; justify-content: space-between;
-  color: black;
-}
-@font-face {
-  font-family: 'gentium';
-  src: url('/static/fonts/GentiumPlus-R.woff') format('woff') /* Pretty Modern Browsers */
-}
-.ocean.showparnum {
-  padding-left: 2em;
-}
-.ocean div[data-type] {
-  margin-bottom: 1em;
-}
-img.illustration {
-  max-height: 80vh;
-  margin: 10px auto !important;
-  text-align: center;
-  display: block;
-}
-</style>
-<style lang='less' src='./css/ocean.less' scope></style>

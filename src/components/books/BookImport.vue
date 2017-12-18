@@ -112,8 +112,8 @@
           <label class='btn btn-default' type="file">
             <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
-            <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip" 
-                   :multiple="multiple" 
+            <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip"
+                   :multiple="multiple"
                    @change="onFilesChange($event)"
                    v-bind:value="fileValue">
 
@@ -190,7 +190,7 @@ export default {
     alert
   },
   mounted() {
-    
+
   },
   computed: {
     selectedBookType: function() {
@@ -246,7 +246,7 @@ export default {
       if (!this.uploadFiles.audioFiles && this.audioURL.length) this.formData.append('audioURL', this.audioURL);
       this.formData.append('taskId', this.importTaskId);
       this.formData.append('bookId', this.bookId);
-      
+
       var config = {
         onUploadProgress: function(progressEvent) {
           var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total );
@@ -299,9 +299,9 @@ export default {
     },
     closeForm(response) {
       let self = this
-      setTimeout(function(){ 
+      setTimeout(function(){
         self.formReset()
-        self.$emit('close_modal', response) 
+        self.$emit('close_modal', response)
       }, 1000)
     }
   },

@@ -1,5 +1,5 @@
 <template>
-<div class="container-fluid">
+<div :class="['container-fluid ilm-global-style', metaStyles]">
 
     <template v-for="(sublist, page_Idx) in parlist">
     <div class="row" v-for="(block, block_Idx) in sublist" v-bind:key="block_Idx">
@@ -49,6 +49,8 @@ import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
 import { BookBlock }    from '../../store/bookBlock';
 
+//import IlmCss from './css/ilm'
+
 export default {
   data () {
     return {
@@ -74,7 +76,19 @@ export default {
           meta: 'currentBookMeta',
           watchBlk: 'contentDBWatch',
           allBooks: 'allBooks'
-      })
+      }),
+      metaStyles: function () {
+          let result = '';
+          if (this.meta.styles) {
+            result = [];
+            for (let style in this.meta.styles) {
+              //console.log('style', style, 'val', this.meta.styles[style]);
+              if (this.meta.styles[style].length) result.push(this.meta.styles[style]);
+            }
+            result = result.join(' ');
+          }
+          return result;
+      }
   },
   mixins: [access, taskControls, api_config],
   components: {
@@ -460,7 +474,7 @@ export default {
       }
     },
     setEnd(block, status) {
-      
+
     },
     setBlockWatch() {
       this.watchBlocks({book_id: this.meta._id})
@@ -518,8 +532,6 @@ export default {
   }
 }
 </script>
-
-<style lang="less" src="./css/ocean.less"></style>
 <style lang="less">
   #narrateStartCountdown {
       display: none;

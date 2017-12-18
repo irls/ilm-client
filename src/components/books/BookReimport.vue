@@ -15,7 +15,7 @@
           <div class="modal-body clearfix">
 
             <div class="col-sm-12">
-              <div class="col-sm-5">
+              <!--<div class="col-sm-5">
                 <div class="form-group">
                   <label for="booktype">Book Type:</label>
 
@@ -25,15 +25,14 @@
                   <span v-if="errors.bookType" class="alert alert-warning">{{errors.bookType}}</span>
 
                 </div>
-              </div>
+              </div>-->
               <!-- <div class="col-sm-7">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input type="text" class="form-control" placeholder="URL" v-model="bookURL"/>
                 </div>
               </div> -->
-              <div class="col-sm-7">
-                <span class="help-block">Book file or ZIP</span>
+              <div class="col-sm-12">
                 <!-- or &nbsp;&nbsp;&nbsp; -->
                 <label class='btn btn-default' type="file">
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
@@ -41,13 +40,17 @@
                   <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip" multiple="false" @change="onFilesChange($event)">
 
                 </label>
+                <span class="help-block">Book file or ZIP with files and images</span>
               </div>
-              
+
             </div>
 
+            <div class="col-sm-12">
             <div v-if="uploadFile" class="col-sm-12">
               {{ uploadFile.name }} - {{ humanFileSize(uploadFile.size, true) }}
             </div>
+            </div>
+
             <div class="col-sm-12 pull-right">
               <button class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
                 <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
@@ -109,7 +112,7 @@
       alert
     },
     mounted() {
-      
+
     },
     computed: {
       selectedBookType: function () {
@@ -200,16 +203,16 @@
         }, 1000)
       },
       validate() {
-        if (this.bookType === '') {
-          this.errors['bookType'] = 'Required';
-        } else {
+        //if (this.bookType === '') {
+        //  this.errors['bookType'] = 'Required';
+        //} else {
           this.errors['bookType'] = false;
           delete this.errors['bookType'];
-        }
+        //}
       }
     },
     watch: {
-      
+
     }
   }
 </script>

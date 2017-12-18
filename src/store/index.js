@@ -164,6 +164,9 @@ export const store = new Vuex.Store({
       if (meta) {
         state.currentBookMeta = meta
         state.currentBookid = meta._id
+        if (!state.currentBookMeta.styles) {
+          state.currentBookMeta.styles = {};
+        }
       } else {
         state.currentBookMeta = {}
         state.currentBookid = ''
@@ -180,12 +183,12 @@ export const store = new Vuex.Store({
         state.currentBookFiles[fileObj.fileName] = url;
       } else state.currentBookFiles[fileObj.fileName] = false;
     },
-    
+
     SET_CURRENT_COLLECTION (state, collection) {
       state.currentCollection = collection;
       state.currentCollectionId = collection._id ? collection._id : false;
     },
-    
+
     SET_CURRENTCOLLECTION_FILES (state, fileObj) {
       if (fileObj && fileObj.fileBlob) {
         let url = URL.createObjectURL(fileObj.fileBlob);
@@ -309,7 +312,7 @@ export const store = new Vuex.Store({
             pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
           }
         });
-        
+
         c.pages = pages;
       });
     },
@@ -374,7 +377,7 @@ export const store = new Vuex.Store({
             dispatch('tc_loadBookTask');
           })
         });
-        
+
         state.collectionsDB.replicate.from(state.collectionsRemoteDB)
         .on('complete', (info) => {
           dispatch('updateCollectionsList');
@@ -406,7 +409,7 @@ export const store = new Vuex.Store({
           dispatch('tc_loadBookTask')
         })
     },
-    
+
     updateCollectionsList({state, commit, dispatch}) {
       let connection = state.collectionsDB.hoodieApi()
       connection.findAll()
@@ -468,7 +471,7 @@ export const store = new Vuex.Store({
             })
         }
     },
-    
+
     updateBookVersion({state, dispatch}, update) {
       if (state.currentBookMeta._id) {
         if (typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion && state.currentBookMeta.published === true) {
@@ -517,14 +520,14 @@ export const store = new Vuex.Store({
             commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: false});
           })
         }).catch((err)=>{
-          
+
         })
       } else {
         commit('SET_CURRENT_COLLECTION', {});
         commit('SET_ALLOW_COLLECTION_PUBLISH', false);
       }
     },
-    
+
     reloadCollection({state, commit, dispatch}) {
       if (state.currentCollectionId) {
         state.collectionsDB.get(state.currentCollectionId).then(collection => {
@@ -625,6 +628,69 @@ export const store = new Vuex.Store({
             return res.rows;
         })
         .catch(err => err);
+    },
+
+    loopBlocksChain ({commit, state, dispatch}, params) {
+      let requests = [];
+      let results = [];
+
+      function defer() {
+        var res, rej;
+        var promise = new Promise((resolve, reject) => {
+          res = resolve;
+          rej = reject;
+        });
+        promise.resolve = res;
+        promise.reject = rej;
+        return promise;
+      }
+
+      for (var i = 0; i < params.onpage; ++i) {
+        requests[i] = defer();
+      }
+
+      (function loop(i, block_id) {
+        if (i < params.onpage) {
+          state.contentDB.get(block_id)
+          .then((b)=>{
+            if (b.audiosrc) {
+              b.audiosrc = process.env.ILM_API + b.audiosrc;
+            }
+            results.push(b);
+            loop(i+1, b.chainid);
+            requests[i].resolve();
+          })
+          .catch((err)=>{
+            for (var e = i; e < params.onpage; ++e) {
+              requests[e].resolve();
+            }
+          })
+        }
+      })(0, params.first_id);
+
+      return Promise.all(requests).then(function(values) {
+        return results;
+      });
+    },
+
+    loadBlocksChain ({commit, state, dispatch}, params) {
+      if (params.first_id) {
+        return dispatch('loopBlocksChain', params);
+      } else {
+        return state.contentDB
+        .query('filters_byBook/byBook', {
+          startkey: [params.book_id, 0],
+          endkey: [params.book_id, 0],
+          include_docs: true,
+        }).then(function (res) {
+          params.first_id = res.rows[0].doc._id;
+          return dispatch('loopBlocksChain', params).then((result) => {
+            return result;
+          });
+        })
+        .catch(err => err);
+      }
+
     },
 
     watchBlocks ({commit, state, dispatch}, params) {

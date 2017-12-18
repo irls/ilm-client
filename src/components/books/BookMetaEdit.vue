@@ -91,20 +91,10 @@
                   </td>
                 </tr>
 
-                <tr class='sections'>
+<!--                <tr class='sections'>
                   <td>Sections</td>
                   <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)" :disabled="!allowMetadataEdit"></td>
-                </tr>
-
-                <tr class='numbering'>
-                  <td>Numbering</td>
-                  <td>
-                    <select class="form-control" v-model='currentBook.numbering' @change="change('numbering')" :key="currentBookid" :disabled="!allowMetadataEdit">
-                      <option v-for="(value, key) in numberingOptions" :value="value">{{ value }}</option>
-                    </select>
-                    <!-- <input v-model='currentBook.numbering'> -->
-                  </td>
-                </tr>
+                </tr>-->
 
                 <tr class='trans'>
                   <td>Translator</td>
@@ -116,7 +106,7 @@
                   <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
                   <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
                 </tr>
-                
+
                 <tr class='collection'>
                   <td>Collection</td>
                   <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
@@ -182,6 +172,63 @@
             </table> -->
           </fieldset>
         </vue-tab>
+        <vue-tab title="Styles" :id="'styles-switcher'">
+           <vue-tabs ref="stylesTabs">
+
+            <vue-tab title="Styles" :id="'global-styles-switcher'">
+              <div>
+                <input type="radio" :id="'gs-default'" :value="''" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                <label :for="'gs-default'" class="style-label">ILM</label>
+              </div>
+              <div>
+                <input type="radio" :id="'gs-ocean'" :value="'global-ocean'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                <label :for="'gs-ocean'" class="style-label">Ocean</label>
+              </div>
+              <div>
+                <input type="radio" :id="'gs-ffa'" :value="'global-ffa'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                <label :for="'gs-ffa'" class="style-label">FFA</label>
+              </div>
+            </vue-tab>
+
+            <vue-tab title="Fonts" :id="'fonts-styles-switcher'">
+              <div>
+                <input type="radio" :id="'ft-default'" :value="''" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
+                <label :for="'ft-default'" class="style-label">default</label>
+              </div>
+              <div>
+                <input type="radio" :id="'ft-typewriter'" :value="'typewriter'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
+                <label :for="'ft-typewriter'" class="style-label">typewriter</label>
+              </div>
+              <div>
+                <input type="radio" :id="'ft-monospace'" :value="'monospace'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
+                <label :for="'ft-monospace'" class="style-label">monospace</label>
+              </div>
+              <div>
+                <input type="radio" :id="'ft-oldbook'" :value="'oldbook'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
+                <label :for="'ft-oldbook'" class="style-label">oldbook</label>
+              </div>
+            </vue-tab>
+            <vue-tab title="Align" :id="'align-styles-switcher'">
+
+              <div v-for="(align, key) in blockTypes.par['align']" >
+                <input type="radio" :id="'pt-'+align" :value="align" v-model="currentBook.styles.align" @change="update('styles.align', $event)">
+                <label :for="'pt-'+align" class="style-label">{{align.length ? align : 'default'}}</label>
+              </div>
+            </vue-tab>
+            <vue-tab title="Par" :id="'paragraphs-styles-switcher'">
+              <div v-for="(type, key) in blockTypes.par['paragraph type']" >
+                <input type="radio" :id="'pt-'+type" :value="type" v-model="currentBook.styles.parType" @change="update('styles.parType', $event)">
+                <label :for="'pt-'+type" class="style-label">{{type.length ? type : 'default'}}</label>
+              </div>
+            </vue-tab>
+            <vue-tab title="HR" :id="'hr-styles-switcher'">
+              <div v-for="(size, key) in blockTypes.hr['size']" >
+                <input type="radio" :id="'pt-'+size" :value="(size.length ?'global-hr-':'')+ size" v-model="currentBook.styles.hrSize" @change="update('styles.hrSize', $event)">
+                <label :for="'pt-'+size" class="style-label">{{size.length ? size : 'default'}}</label>
+              </div>
+            </vue-tab>
+          </vue-tabs>
+        </vue-tab>
       </vue-tabs>
       </div>
     </div>
@@ -218,6 +265,7 @@
 <script>
 import Vue from 'vue'
 import { mapGetters, mapActions } from 'vuex'
+import { BlockTypes } from '../../store/bookBlock'
 import superlogin from 'superlogin-client'
 import BookDownload from './BookDownload'
 import BookEditCoverModal from './BookEditCoverModal'
@@ -287,7 +335,8 @@ export default {
       textCleanupProcess: false,
       audiobook: {},
       sharePrivateBookMessage: '',
-      unlinkCollectionWarning: false
+      unlinkCollectionWarning: false,
+      blockTypes: BlockTypes
     }
   },
 
@@ -318,7 +367,7 @@ export default {
   mixins: [task_controls, api_config],
 
   mounted() {
-    
+
     this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor
     let self = this;
     this.loadAudiobook(true)
@@ -409,7 +458,7 @@ export default {
     update: _.debounce(function (key, event) {
       this.liveUpdate(key, key == 'author' ? this.currentBook.author : event.target.value)
     }, 300),
-    
+
     updateCollection(event) {
       if (event && event.target.value) {
         let collectionId = event.target.value;
@@ -424,7 +473,7 @@ export default {
 
           }
         }).catch((err) => {
-          
+
         });
       } else if (event) {
         this.unlinkCollectionWarning = true;
@@ -440,11 +489,11 @@ export default {
 
           }
         }).catch((err) => {
-          
+
         });
       }
     },
-    
+
     cancelCollectionUpdate() {
       this.unlinkCollectionWarning = false;
       this.currentBook.collection_id = this.currentBookMeta.collection_id;
@@ -458,6 +507,23 @@ export default {
       var dbPath = superlogin.getDbUrl('ilm_content_meta')
       if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
 
+      var keys = key.split('.');
+      key = keys[0];
+      if (keys.length > 1) {
+
+          this.currentBook[keys[0]][keys[1]] = value;
+
+          value = this.currentBook[keys[0]];
+
+      }
+      console.log('key', key, value);
+
+      var update = {
+        [key]: value
+      }
+
+      console.log('update', update);
+      //if (true) return;
       var db = new PouchDB(dbPath)
       var api = db.hoodieApi()
       var update = {
@@ -686,7 +752,7 @@ export default {
     border-collapse: separate; border-spacing: 3px;
   }
   table.properties td:nth-child(1) {width: 30%; padding: 3px; margin:0}
-  table.properties td:nth-child(2), input {width: auto; text-align: right}
+  table.properties td:nth-child(2) {width: auto; text-align: right}
   table.properties tr:nth-child(odd) {background-color: #F0F0F0}
   table tr {border: 2px solid white}
   table tr.changed {border: 2px solid wheat}
@@ -714,5 +780,31 @@ export default {
   .alert.top {
     top: 120px;
   }
+
+  .nav-tabs-navigation {
+    margin-top: 3px;
+  }
+
+  .tab-content input[type=radio] {
+    width: auto;
+    display: inline-block;
+    margin-top: 8px;
+    margin-left: 20px;
+    padding-top: 5px;
+  }
+
+  .tab-content input[type=radio]:focus {
+    box-shadow: none;
+  }
+
+  .tab-content .style-label {
+    margin-top: 4px;
+    margin-bottom: 0px;
+    display: inline-block;
+    vertical-align: top;
+    font-weight: 400;
+  }
+
+
 
 </style>

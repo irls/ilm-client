@@ -95,7 +95,9 @@ export default {
     AudioEditor
   },
 
-  computed: mapGetters(['bookEditMode', 'currentBook', 'currentBookMeta']),
+  computed: {
+    ...mapGetters(['bookEditMode', 'currentBook', 'currentBookMeta']),
+  },
 
   watch: {
 //     '$store.state.route.params' (to, from) {
@@ -155,7 +157,7 @@ export default {
     bookImportFinished(result) {
 
     },
-    
+
     showAudioeditor() {
       return this.$refs.audioEditor && !this.$refs.audioEditor.isEmpty();
     },
@@ -177,6 +179,8 @@ export default {
   }
 }
 </script>
+
+<style lang='less' src='./books/css/ilm_base.less' scope></style>
 
 <style lang="less">
 
