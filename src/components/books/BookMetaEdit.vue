@@ -139,20 +139,22 @@
             <legend>Long Description </legend>
             <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
           </fieldset>
-
-          <fieldset class="publish" v-if="isLibrarian">
+          <fieldset class="publish">
             <!-- Fieldset Legend -->
-            <template v-if="currentBook.importStatus == 'staging'">
-              <legend>Staging Document (not shared with library)</legend>
-            </template>
-            <template v-else>
+            <template>
               <legend>{{ currentBook.published ? 'Published' : 'Unpublished' }},
-                Version #{{ currentBook.version }}
               </legend>
+              <div>
+                Version #{{ currentBook.version ? currentBook.version : '1.0' }}
+              </div>
+              <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
+              <div v-if="allowPublishCurrentBook">
+                <button class="btn btn-primary" v-on:click="publish()">Publish</button>
+              </div>
             </template>
 
             <!-- Publication Options -->
-            <table class='properties publication'>
+            <!-- <table class='properties publication'>
               <template v-if="currentBook.importStatus == 'staging'">
                 <tr><td rowspan='2'>
                   <button class="btn btn-primary sharebtn" @click="shareBook"> Move book to Library</button>
@@ -177,7 +179,7 @@
                 </td></tr>
 
               </template>
-            </table>
+            </table> -->
           </fieldset>
         </vue-tab>
       </vue-tabs>
@@ -294,6 +296,8 @@ export default {
   ],
 
   computed: {
+
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook']),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -305,7 +309,6 @@ export default {
         return list;
       }
     },
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections']),
 
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
@@ -457,12 +460,15 @@ export default {
 
       var db = new PouchDB(dbPath)
       var api = db.hoodieApi()
-
-      return api.update(this.currentBookid, {
+      var update = {
         [key]: value
-      }).then(doc => {
+      };
+      return api.update(this.currentBookid, update).then(doc => {
         //console.log('success DB update: ', doc)
-        return BPromise.resolve(doc)
+        return this.updateBookVersion({minor: true})
+          .then(() => {
+            return BPromise.resolve(doc)
+          });
       }).catch(err => {
         //console.log('error DB pdate: ', err)
         return BPromise.reject(err)
@@ -578,7 +584,13 @@ export default {
         this.liveUpdate('author', this.currentBook.author);
       }
     },
-    ...mapActions(['getAudioBook'])
+    publish() {
+      return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish')
+      .then(resp => {
+        console.log(resp);
+      });
+    },
+    ...mapActions(['getAudioBook', 'updateBookVersion'])
   }
 }
 </script>
@@ -616,6 +628,22 @@ export default {
     margin-top:0px;
     margin-left:0;
     padding-left:0;
+    overflow: scroll;
+    height: 80%;
+  }
+  .sidebar::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 10px;
+    background-color: #F5F5F5;
+  }
+  .sidebar::-webkit-scrollbar {
+    width: 12px;
+    background-color: #F5F5F5;
+  }
+  .sidebar::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #555;
   }
 
   /* Main book cover image */

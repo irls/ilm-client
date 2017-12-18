@@ -31,6 +31,7 @@ export const store = new Vuex.Store({
     isEngineer: false,
     isReader: false,
     allowCollectionsEdit: false,
+    allowPublishCurrentBook: false,
     allRolls: [],
 
     metaDB: false,
@@ -66,7 +67,8 @@ export const store = new Vuex.Store({
     collectionsFilter: {title: '', language: ''},
     currentCollection: {},
     currentCollectionFiles: { coverimg: false },
-    currentCollectionId: false
+    currentCollectionId: false,
+    allowPublishCurrentCollection: false
   },
 
   getters: {
@@ -80,6 +82,7 @@ export const store = new Vuex.Store({
     isBookkeeper: state => state.isBookkeeper,
     isEngineer: state => state.isEngineer,
     isReader: state => state.isReader,
+    allowPublishCurrentBook: state => state.allowPublishCurrentBook,
     allRolls: state => state.allRolls,
     allBooks: state => state.books_meta,
     bookFilters: state => state.bookFilters,
@@ -99,6 +102,7 @@ export const store = new Vuex.Store({
     currentCollection: state => state.currentCollection,
     currentCollectionFiles: state => state.currentCollectionFiles,
     collectionsFilter: state => state.collectionsFilter,
+    allowPublishCurrentCollection: state => state.allowPublishCurrentCollection,
     authors: state => {
       let result = [];
       if (state.currentBookMeta.authors) {
@@ -308,6 +312,12 @@ export const store = new Vuex.Store({
         
         c.pages = pages;
       });
+    },
+    SET_ALLOW_BOOK_PUBLISH(state, allow) {
+      state.allowPublishCurrentBook = allow;
+    },
+    SET_ALLOW_COLLECTION_PUBLISH(state, allow) {
+      state.allowPublishCurrentCollection = allow;
     }
 
   },
@@ -428,6 +438,7 @@ export const store = new Vuex.Store({
         state.metaDB.get(book_id).then(meta => {
           commit('SET_CURRENTBOOK_META', meta)
           commit('TASK_LIST_LOADED')
+          dispatch('getTotalBookTasks');
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
@@ -447,6 +458,7 @@ export const store = new Vuex.Store({
         if (state.currentBookMeta._id) {
             state.metaDB.get(state.currentBookMeta._id).then((meta) => {
                 commit('SET_CURRENTBOOK_META', meta)
+                dispatch('getTotalBookTasks');
                 state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
                 .then(fileBlob => {
                   commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
@@ -457,11 +469,47 @@ export const store = new Vuex.Store({
         }
     },
     
-    loadCollection({commit, state}, id) {
+    updateBookVersion({state, dispatch}, update) {
+      if (state.currentBookMeta._id) {
+        if (typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion && state.currentBookMeta.published === true) {
+          let versions = state.currentBookMeta.version.split('.');
+          if (versions && versions.length == 2) {
+            if (update.minor) {
+              versions[1] = (parseInt(versions[1]) + 1);
+            }
+            if (update.major) {
+              versions[0] = (parseInt(versions[0]) + 1);
+              versions[1] = 0;
+            }
+            state.metaRemoteDB.get(state.currentBookMeta._id)
+              .then(meta => {
+                //console.log('FROM REMOTE', meta);
+                //console.log('LOCAL', test);
+                meta['version'] = versions[0] + '.' + versions[1];
+                meta['pubType'] = 'Unpublished';
+                meta['published'] = false;
+                meta['status'] = 'staging';
+                state.metaDB.put(meta)
+                  .then(() => {
+                    dispatch('reloadBookMeta');
+                    if (meta.collection_id) {
+                      dispatch('updateCollectionVersion', Object.assign({id: meta.collection_id}, update));
+                    }
+                  });
+              });
+          }
+        } else {
+          dispatch('reloadBookMeta');
+        }
+      }
+    },
+    
+    loadCollection({commit, state, dispatch}, id) {
       if (id) {
         state.currentCollectionId = id;
         state.collectionsDB.get(id).then(collection => {
           commit('SET_CURRENT_COLLECTION', collection);
+          dispatch('allowCollectionPublish');
           state.filesRemoteDB.getAttachment(state.currentCollectionId, 'coverimg')
           .then(fileBlob => {
             commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
@@ -473,13 +521,15 @@ export const store = new Vuex.Store({
         })
       } else {
         commit('SET_CURRENT_COLLECTION', {});
+        commit('SET_ALLOW_COLLECTION_PUBLISH', false);
       }
     },
     
-    reloadCollection({state, commit}) {
+    reloadCollection({state, commit, dispatch}) {
       if (state.currentCollectionId) {
         state.collectionsDB.get(state.currentCollectionId).then(collection => {
           commit('SET_CURRENT_COLLECTION', collection);
+          dispatch('allowCollectionPublish');
           state.filesRemoteDB.getAttachment(state.currentCollectionId, 'coverimg')
           .then(fileBlob => {
             commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
@@ -487,8 +537,59 @@ export const store = new Vuex.Store({
             commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: false});
           })
         }).catch((err)=>{
-          
+          console.log(err);
         })
+      }
+    },
+    
+    updateCollectionVersion({state, dispatch}, update) {
+      let id = update.id || state.currentCollection._id;
+      if (id) {
+        state.collectionsRemoteDB.get(state.currentCollection._id)
+          .then(collection => {
+            if (typeof collection.version !== 'undefined' && collection.version === collection.publishedVersion && collection.published === true) {
+              let versions = collection.version.split('.');
+              if (versions && versions.length == 2) {
+                if (update.minor) {
+                  versions[1] = (parseInt(versions[1]) + 1);
+                }
+                if (update.major) {
+                  versions[0] = (parseInt(versions[0]) + 1);
+                  versions[1] = 0;
+                }
+                    collection['version'] = versions[0] + '.' + versions[1];
+                    collection['published'] = false;
+                    collection['state'] = 'unpublished';
+                    state.collectionsRemoteDB.put(collection)
+                      .then(() => {
+                        dispatch('reloadCollection');
+                      });
+              }
+            } else {
+              dispatch('reloadCollection');
+            }
+        
+          });
+      }
+    },
+    
+    allowCollectionPublish({state, commit}) {
+      let allow_by_role = superlogin.confirmRole('librarian') || superlogin.confirmRole('admin');
+      if (allow_by_role && state.currentCollection && state.currentCollection.books && state.currentCollection.books.length > 0 && state.books_meta) {
+        let allow = typeof state.currentCollection.version === 'undefined' || state.currentCollection.version !== state.currentCollection.publishedVersion;
+        if (allow) {
+          state.currentCollection.books.forEach(b => {
+            if (allow) {
+              let _b = state.books_meta.find(__b => __b._id === b);
+              if (_b) {
+                allow = _b.published === true;
+              }
+            }
+          });
+        }
+        commit('SET_ALLOW_COLLECTION_PUBLISH', allow);
+      } else {
+        commit('SET_ALLOW_COLLECTION_PUBLISH', false);
       }
     },
 
@@ -648,6 +749,23 @@ export const store = new Vuex.Store({
         commit('TASK_LIST_LOADED')
       })
       .catch((err) => {})
+    },
+    
+    getTotalBookTasks({state, commit}) {
+      let allow_by_role = superlogin.confirmRole('librarian') || superlogin.confirmRole('admin')
+      if (state.currentBookid && allow_by_role) {
+        if (typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) {
+          commit('SET_ALLOW_BOOK_PUBLISH', false);
+        } else {
+          axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/total')
+            .then((response) => {
+              commit('SET_ALLOW_BOOK_PUBLISH', typeof response.data !== 'undefined' && /^[0-9]+$/.test(response.data) && parseInt(response.data) === 0);
+            })
+            .catch((err) => {})
+        }
+      } else {
+        commit('SET_ALLOW_BOOK_PUBLISH', false);
+      }
     }
 
 

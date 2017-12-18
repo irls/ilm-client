@@ -32,6 +32,15 @@
         <div class="col-sm-9">
           {{collection.state}}
         </div>
+        <div class="col-sm-9">
+          Version: {{collection.version ? collection.version : '1.0'}}
+        </div>
+        <div class="col-sm-9" v-if="collection.publishedVersion">
+          Published version: {{collection.publishedVersion}}
+        </div>
+        <div class="col-sm-9" v-if="allowPublishCurrentCollection">
+          <button class="btn btn-primary" v-on:click="publish()">Publish</button>
+        </div>
       </fieldset>
     </div>
     <div class="col-sm-12">
@@ -53,6 +62,7 @@
         <textarea v-model="collection.description" @input="update('description', $event)" :disabled="!allowCollectionsEdit"></textarea>
       </fieldset>
     </div>
+    
     <linkBook v-if="linkBookModal"
       @close_modal="linkBookModal = false"
       :languages="languages"></linkBook>
@@ -125,7 +135,7 @@
           this.collection[field] = value;
           return db.put(this.collection)
             .then(doc => {
-              
+              this.updateCollectionVersion({minor: true});
             }).catch(err => {
               
             })
@@ -146,9 +156,20 @@
             self.onRemoveMessage = false;
           });
         },
+        publish() {
+          let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/publish';
+          let api = this.$store.state.auth.getHttp();
+          let self = this;
+          api.post(api_url, {}, {}).then(function(response){
+            self.reloadCollection();
+          }).catch((err) => {
+            
+          });
+        },
         changeCoverModal() {
           this.$refs.collectionCoverModal.show();
-        }
+        },
+        ...mapActions(['reloadCollection', 'updateCollectionVersion'])
       },
       computed: {
         collectionBooksLength: {
@@ -161,7 +182,7 @@
             return this.allowCollectionsEdit && (!this.collection.title || this.collection.title.length == 0);
           }
         },
-        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'currentCollectionFiles'])
+        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'currentCollectionFiles', 'allowPublishCurrentCollection'])
       },
       watch: {
         'currentCollection': {
@@ -177,6 +198,8 @@
   .collection-meta {
     position: fixed;
     width: 29%;
+    height: 80%;
+    overflow: scroll;
     fieldset {
       border:1px solid #b9b6b6;
       position:relative;
@@ -214,5 +237,19 @@
       height: 80px;
       width: 60px;
     }
+  }
+  .collection-meta::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 10px;
+    background-color: #F5F5F5;
+  }
+  .collection-meta::-webkit-scrollbar {
+    width: 12px;
+    background-color: #F5F5F5;
+  }
+  .collection-meta::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #555;
   }
 </style>

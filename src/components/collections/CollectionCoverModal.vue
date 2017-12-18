@@ -124,7 +124,8 @@
               return ilm_library_files.put(doc)
                 .then((doc)=>{
                   this.close();
-                  return this.reloadCollection();
+                  //return this.reloadCollection();
+                  this.updateCollectionVersion({minor: true});
                 })
                 .catch(err => console.log(err));
             }).catch(err => {
@@ -153,7 +154,7 @@
             image.src = vm.uploadURL;
           })
         },
-        ...mapActions(['reloadCollection'])
+        ...mapActions(['reloadCollection', 'updateCollectionVersion'])
       },
       computed: {
         ...mapGetters(['currentCollection'])
