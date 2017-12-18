@@ -72,6 +72,10 @@ export default new Router({
       path: '/collections/:collectionid/:bookid',
       component: Collections
     },
+    {
+      path: '/collections/:collectionid/:bookid/edit',
+      component: Collections
+    },
     { path: '*', redirect: '/books' }
   ]
 })

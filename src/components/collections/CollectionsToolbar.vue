@@ -9,8 +9,8 @@
 
 
       <div class="td">
-        <input type="text" @keyup="filterChange('title', $event)" class="form-control" placeholder="Search by author or title"></input>
-        <select @change="filterChange('language', $event)">
+        <input type="text" @keyup="filterChange('title', $event)" class="form-control" placeholder="Search by author or title" v-model="collectionsFilter['title']"></input>
+        <select @change="filterChange('language', $event)" v-model="collectionsFilter['language']">
           <option v-for="(name, code) in languages" :value="code">{{name}}</option>
         </select>
       </div>
@@ -78,6 +78,9 @@
 
       },
       filterChange(field, event) {
+        if (this.$route.params.hasOwnProperty('collectionid')) {
+          this.$router.replace({ path: '/collections'});
+        }
         let filter = {};
         filter[field] = event.target.value;
         this.$store.commit('SET_COLLECTIONS_FILTER', filter);
@@ -104,7 +107,7 @@
         this.$emit('toggleMetaVisible', !this.metaVisible);
       },
       editBook() {
-        this.$router.push('/books/edit/' + this.currentBookMeta._id);
+        this.$router.push('/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta._id + '/edit');
       }
     },
     computed: {

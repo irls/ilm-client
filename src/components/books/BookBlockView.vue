@@ -33,7 +33,7 @@
         </div>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
-        <div class="table-body -content"
+        <div :class="['table-body', '-content', {'editing': isAudioEditing}]"
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row controls-top" :data-json="JSON.stringify(block)">
@@ -58,7 +58,7 @@
                         Hide archived flags</li>
 
                       <li class="separator"></li>
-                      <template v-if="tc_hasTask('content_cleanup') || _is('editor')">
+                      <template v-if="allowEditing">
                         <li @click="insertBlockBefore()">Insert block before</li>
                         <li @click="insertBlockAfter()">Insert block after</li>
                         <li @click="deleteBlockMessage = true">Delete block</li>
@@ -67,10 +67,10 @@
                         <li @click="joinWithNext()">Join with next block</li>
                         <li class="separator"></li>
                       </template>
-                      <li @click="discardBlock">
+                      <li @click="discardBlock" v-if="allowEditing">
                         <i class="fa fa-undo" aria-hidden="true"></i>
                         Discard un-saved changes</li>
-                      <li @click="discardAudio">
+                      <li @click="discardAudio" v-if="allowEditing">
                         <i class="fa fa-cloud-download" aria-hidden="true"></i>
                         Revert to original audio</li>
                     </block-menu>
@@ -80,37 +80,38 @@
                   <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
 
                   <!--<label v-if="block.type=='header'">start:&nbsp;<input type="checkbox"/></label>&nbsp;-->
-
-                  <!-- Block Type selector -->
-                  <label>type:&nbsp;
-                  <select v-model='block.type' style="min-width: 80px;"><!--v-model='block.type'--><!--:value="type"-->
-                    <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
-                  </select>
-                  </label>
-                  <!-- Block Class selector -->
-                  <label>classes:&nbsp;
-                  <select v-model='classSel' style="min-width: 100px;"><!--v-model='block.classes'--><!--:value="style"-->
-                    <option v-for="(val, key) in blockClasses" :value="key">{{ key }}</option>
-                  </select>
-                  </label>
-                  <!-- Block Class selector -->
-                  <label v-if="blockStyles">style:&nbsp;
-                  <select v-model='styleSel' style="min-width: 110px;"><!--v-model='block.classes'--><!--:value="style"-->
-                    <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
-                  </select>
-                  </label><!-- &nbsp;&nbsp;{{block.getClass()}}-->
-                  <template v-if="tc_hasTask('content_cleanup')">
-                    <label>Voicework:&nbsp;
-                    <select v-model='voiceworkSel' style="min-width: 100px;" ref="voiceworkSel">
-                      <option v-for="(val, key) in blockVoiceworks" :value="key">{{ val }}</option>
+                  <template v-if="allowEditing">
+                    <!-- Block Type selector -->
+                    <label>type:&nbsp;
+                    <select v-model='block.type' style="min-width: 80px;"><!--v-model='block.type'--><!--:value="type"-->
+                      <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                     </select>
                     </label>
+                    <!-- Block Class selector -->
+                    <label>classes:&nbsp;
+                    <select v-model='classSel' style="min-width: 100px;"><!--v-model='block.classes'--><!--:value="style"-->
+                      <option v-for="(val, key) in blockClasses" :value="key">{{ key }}</option>
+                    </select>
+                    </label>
+                    <!-- Block Class selector -->
+                    <label v-if="blockStyles">style:&nbsp;
+                    <select v-model='styleSel' style="min-width: 110px;"><!--v-model='block.classes'--><!--:value="style"-->
+                      <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
+                    </select>
+                  </label><!-- &nbsp;&nbsp;{{block.getClass()}}-->
+                    <template v-if="tc_hasTask('content_cleanup')">
+                      <label>Voicework:&nbsp;
+                      <select v-model='voiceworkSel' style="min-width: 100px;" ref="voiceworkSel">
+                        <option v-for="(val, key) in blockVoiceworks" :value="key">{{ val }}</option>
+                      </select>
+                      </label>
+                    </template>
                   </template>
               </div>
               <!--<div class="-hidden">-->
 
               <div class="par-ctrl -audio -hidden -right">
-                  <template v-if="blockAudio.src && (tc_showBlockNarrate(block._id) || isEditor) && !isAudioChanged">
+                  <template v-if="blockAudio.src && (tc_showBlockNarrate(block._id) || (isEditor && tc_isShowEdit(block._id))) && !isAudioChanged">
                     <i class="fa fa-pencil" v-on:click="showAudioEditor"></i>
                   </template>
                   <template v-if="player && blockAudio.src && !isRecording">
@@ -149,7 +150,7 @@
 
                 <div v-else-if="block.type == 'illustration'" :class="['table-body illustration-block']">
                   <img v-if="block.illustration" :src="block.getIllustration()" :class="[block.getClass()]"/>
-                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged}]">
+                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged}] v-if="allowEditing"">
                     <vue-picture-input
                       @change="onIllustrationChange"
                       @remove="onIllustrationChange"
@@ -288,7 +289,7 @@
 
                 </block-flag-popup>
 
-                <block-cntx-menu
+                <block-cntx-menu v-if="allowEditing"
                     ref="blockCntx"
                     dir="bottom"
                     :update="update"
@@ -340,7 +341,7 @@
               @click="assembleBlockProxy">
                   <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
               </div>
-              <div class="align-range -hidden -left">
+              <div class="align-range -hidden -left" v-if="allowEditing">
                 Set block range: <label><input type="checkbox" v-on:change="setRangeSelection('start', $event)" class="set-range-start" :disabled="!allowSetStart"/>&nbsp;Start</label><label>&nbsp;&nbsp;<input type="checkbox" v-on:change="setRangeSelection('end', $event)" class="set-range-end" :disabled="!allowSetEnd"/>&nbsp;End</label>
                 <template v-if="displaySelectionStart">
                   <a class="go-to-block" v-on:click="scrollToBlock(displaySelectionStart)">View start({{displaySelectionStart}})</a>
@@ -454,7 +455,8 @@ export default {
       recordStartCounter: 0,
       deleteBlockMessage: false,
       voiceworkChange: false,
-      voiceworkUpdateType: 'single'
+      voiceworkUpdateType: 'single',
+      isAudioEditing: false
     }
   },
   components: {
@@ -548,6 +550,11 @@ export default {
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
+      },
+      allowEditing: {
+        get() {
+          return this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup');
+        }
       }
   },
   beforeDestroy:  function() {
@@ -603,8 +610,16 @@ export default {
       //-- } -- end -- Checkers --//
       initEditor(force) {
         if ((!this.editor || force === true) && this.block.needsText()) {
-          this.editor = new MediumEditor('.content-wrap', {
-              toolbar: {
+          let extensions = {};
+          let toolbar = {buttons: []};
+          if (this.allowEditing) {
+            extensions = {
+                'quoteButton': new QuoteButton(),
+                'quotePreview': new QuotePreview(),
+                'suggestButton': new SuggestButton(),
+                'suggestPreview': new SuggestPreview()
+              };
+            toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
                   'superscript', 'subscript',
@@ -612,18 +627,16 @@ export default {
     //               'html', 'anchor',
                   'quoteButton', 'suggestButton'
                 ]
-              },
+              };
+          }
+          this.editor = new MediumEditor('.content-wrap', {
+              toolbar: toolbar,
               buttonLabels: 'fontawesome',
               quotesList: this.authors,
               onQuoteSave: this.onQuoteSave,
               suggestEl: this.suggestEl,
-              extensions: {
-                'quoteButton': new QuoteButton(),
-                'quotePreview': new QuotePreview(),
-                'suggestButton': new SuggestButton(),
-                'suggestPreview': new SuggestPreview()
-              },
-              disableEditing: !this.tc_isShowEdit(this.block._id)
+              extensions: extensions,
+              disableEditing: !this.allowEditing
           });
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
     //       this.editor.subscribe('positionToolbar', ()=>{})
@@ -640,7 +653,7 @@ export default {
         //console.log(this.tc_currentBookTasks.job.executors);
       },
       onBlur: function() {
-        if (this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
+        if (this.$refs.blockCntx && this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
       },
       onClick: function() {
         $('.medium-editor-toolbar').each(function(){
@@ -652,7 +665,9 @@ export default {
             $(this).css('display', 'none');
         });
         this.range = window.getSelection().getRangeAt(0).cloneRange();
-        this.$refs.blockCntx.open(e, this.range);
+        if (this.$refs.blockCntx) {
+          this.$refs.blockCntx.open(e, this.range);
+        }
       },
       update: function() {
         console.log('update');
@@ -838,7 +853,13 @@ export default {
           let blockSummary = this.block.calcFlagsSummary();
           task.nextStep = blockSummary.dir;
 
-          if (task.nextStep == 'proofer' && !this.block.hasAudio()) task.nextStep = 'narrator';
+          if (task.nextStep == 'proofer' && !this.block.hasAudio()) {
+            switch (this.block.voicework) {
+              case 'narration':
+                task.nextStep = 'narrator';
+                break;
+            }
+          }
 
           this.tc_approveBookTask(task)
           .then(response => {
@@ -1410,8 +1431,10 @@ export default {
         this.$emit('joinBlocks', this.block, 'next');
       },
       showAudioEditor() {
-        $('.table-body.-content').removeClass('editing');
-        $('#' + this.block._id + ' .table-body.-content').addClass('editing');
+        //$('.table-body.-content').removeClass('editing');
+        //$('#' + this.block._id + ' .table-body.-content').addClass('editing');
+        this.isAudioEditing = true;
+        $('nav.fixed-bottom').removeClass('hidden');
         Vue.nextTick(() => {
 
           this.$root.$emit('for-audioeditor:load-and-play', this.blockAudio.src, this.blockAudio.map, this.block._id);
@@ -1454,6 +1477,8 @@ export default {
           });
           this.$root.$on('from-audioeditor:closed', function(blockId) {
             if (blockId == self.block._id) {
+              self.isAudioEditing = false;
+              $('nav.fixed-bottom').addClass('hidden');
               self.$root.$off('from-audioeditor:insert-silence');
               self.$root.$off('from-audioeditor:word-realign');
               self.$root.$off('from-audioeditor:save');

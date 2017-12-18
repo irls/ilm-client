@@ -142,6 +142,16 @@
             //this.selection = {};
             this.close();
           }
+          if (bookAudiofile) {
+            if (bookAudiofile.positions) {
+              if (bookAudiofile.positions.start) {
+                //bookAudiofile.positions.start = parseInt(bookAudiofile.positions.start);
+              }
+              if (bookAudiofile.positions.end) {
+                //bookAudiofile.positions.end = parseInt(bookAudiofile.positions.end);
+              }
+            }
+          }
           
           this.words = [];
           this.currentWord = null;
@@ -331,9 +341,20 @@
             
               limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
               onDrag: function(element, x, y, event) {
+                let startX = 0;
+                if (self.selection && typeof self.selection.start !== 'undefined') {
+                  startX = self.selection.start / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
+                } else {
+                  startX = $('[id="resize-selection-left"]').position().left;
+                }
                 $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
-                self.audiosourceEditor.activeTrack.stateObj.startX = $('[id="resize-selection-left"]').position().left;
-                self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
+                self.audiosourceEditor.activeTrack.stateObj.startX = startX;
+                if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
+                  self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
+                } else {
+                  let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
+                  self.plEventEmitter.emit('select', self.selection.start, startSec);
+                }
               }
             })
             self.dragLeft = new Draggable (document.getElementById('resize-selection-left'), {
@@ -341,8 +362,19 @@
               onDrag: function(element, x, y, event) {
                 $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
                 $('.selection.segment').css('left', x - 5)
-                self.audiosourceEditor.activeTrack.stateObj.startX = $('[id="resize-selection-right"]').position().left
-                self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
+                let startX = 0;
+                if (self.selection && typeof self.selection.end !== 'undefined') {
+                  startX = self.selection.end / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
+                } else {
+                  startX = $('[id="resize-selection-right"]').position().left;
+                }
+                self.audiosourceEditor.activeTrack.stateObj.startX = startX;
+                if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
+                  self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
+                } else {
+                  let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
+                  self.plEventEmitter.emit('select', startSec, self.selection.end);
+                }
               }
             })
             this.onDiscardMessage = false;
@@ -351,8 +383,8 @@
                 this.origFilePositions = bookAudiofile.positions;
                 this.plEventEmitter.emit('select', bookAudiofile.positions.start, bookAudiofile.positions.end);
               } else {
-                this.plEventEmitter.emit('select', 0, this.audiosourceEditor.duration);
-                this.origFilePositions = {start: 0, end: this.audiosourceEditor.duration}
+                this.plEventEmitter.emit('select', 0, parseInt(this.audiosourceEditor.duration));
+                this.origFilePositions = {start: 0, end: parseInt(this.audiosourceEditor.duration)}
               }
               this._showSelectionBorders();
             }
@@ -445,6 +477,7 @@
           this.audiosourceEditor.stop();
           this.isPlaying = false;
           this._clearWordSelection();
+          $('.playlist-tracks').scrollLeft(0);
           this.$root.$emit('from-audioeditor:stop');
         },
         pause() {
@@ -463,6 +496,7 @@
               this.zoomLevel = this.zoomLevels[index]
             }
             this._showSelectionBorders();
+            this._scrollToCursor();
             return true;
           }
           return false;
@@ -476,6 +510,7 @@
               this.zoomLevel = this.zoomLevels[index]
             }
             this._showSelectionBorders();
+            this._scrollToCursor();
             return true;
           }
           return false;
@@ -641,13 +676,32 @@
           setTimeout(function() {
             let selection = $('.selection.segment')[0];
             if (selection) {
-              $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 3);
+              $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth);
               $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft);
             } else {
               $('[id="resize-selection-right"]').hide().css('left', 0);
               $('[id="resize-selection-left"]').hide().css('left', 0);
             }
           }, 50);
+        },
+        _scrollToCursor() {
+          if (this.cursorPosition && this.cursorPosition > 0) {
+            let position = this.cursorPosition / (this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate);
+            $('.cursor').css('left', position + 'px');
+            setTimeout(() => {
+              $('.playlist-tracks').scrollLeft($('.cursor').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+            }, 50);
+          } else if (!this.isPlaying) {
+            if (this.isSinglePointSelection) {
+              setTimeout(function () {
+                $('.playlist-tracks').scrollLeft($('.selection.point').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+              }, 50);
+            } else if (this.hasSelection) {
+              setTimeout(function () {
+                $('.playlist-tracks').scrollLeft($('#resize-selection-left').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+              }, 50);
+            }
+          }
         },
         _clearWordSelection() {
           $(this.contentContainer).find('w').removeClass('selected');

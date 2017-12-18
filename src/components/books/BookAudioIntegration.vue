@@ -493,7 +493,7 @@
           display: inline-block;
           width: 305px;
           .audiofile-player-controls {
-            width: 25px;
+            width: 19px;
             display: inline-block;
           }
           .audiofile-name {
@@ -513,6 +513,11 @@
         }
         .audiofile-options {
           display: inline-block;
+          .btn-group {
+            .dropdown-toggle {
+                padding: 6px;
+            }
+          }
           ul.dropdown-menu {
               margin-left: -35px;
               min-width: 80px;
