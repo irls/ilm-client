@@ -89,15 +89,16 @@ let QuoteButton = MediumEditor.Extension.extend({
         let sel = window.getSelection();
         if (sel.rangeCount) {
           let range = sel.getRangeAt(0);
+          let node = range.startContainer;
           quote.appendChild(range.extractContents());
           range.insertNode(quote);
           let prev = node.previousSibling;
-          if (prev.textContent.length == 0) {
+          if (prev && prev.textContent.length == 0) {
             let prevParent = prev.parentNode;
             prevParent.removeChild(prev);
           }
           let next = node.nextSibling;
-          if (next.textContent.length == 0) {
+          if (next && next.textContent.length == 0) {
             let prevParent = next.parentNode;
             prevParent.removeChild(next);
           }
@@ -548,6 +549,7 @@ let SuggestButton = MediumEditor.Extension.extend({
         let sel = window.getSelection();
         if (sel.rangeCount) {
           let range = sel.getRangeAt(0);
+          let node = range.startContainer;
           node.appendChild(range.extractContents());
           range.insertNode(node);
           let prev = node.previousSibling;
