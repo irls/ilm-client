@@ -17,6 +17,7 @@ const ILM_CONTENT_META = 'ilm_content_meta';
 const ILM_CONTENT_FILES = 'ilm_library_files';
 const ILM_TASKS = 'ilm_tasks';
 const ILM_COLLECTIONS = 'ilm_collections';
+const ILM_LIBRARIES = 'ilm_libraries';
 
 // const API_ALLBOOKS = '/static/books.json'
 
@@ -39,11 +40,13 @@ export const store = new Vuex.Store({
     contentDBWatch: false,
     tasksDB: false,
     collectionsDB: false,
+    librariesDB: false,
 
     metaRemoteDB: false,
     contentRemoteDB: false,
     tasksRemoteDB: false,
     collectionsRemoteDB: false,
+    librariesRemoteDB: false,
 
     books_meta: [],
 
@@ -68,7 +71,10 @@ export const store = new Vuex.Store({
     currentCollection: {},
     currentCollectionFiles: { coverimg: false },
     currentCollectionId: false,
-    allowPublishCurrentCollection: false
+    allowPublishCurrentCollection: false,
+    libraries: [],
+    currentLibrary: {},
+    currentLibraryId: false
   },
 
   getters: {
@@ -111,7 +117,9 @@ export const store = new Vuex.Store({
         })
       }
       return result;
-    }
+    },
+    libraries: state => state.libraries,
+    currentLibrary: state => state.currentLibrary
   },
 
   mutations: {
@@ -203,6 +211,11 @@ export const store = new Vuex.Store({
         state.collectionsFilter[field] = filter[field];
       }
       //console.log(state.collectionsFilter)
+    },
+    
+    SET_CURRENT_LIBRARY (state, library) {
+      state.currentLibrary = library;
+      state.currentLibraryId = library._id ? library._id : false;
     },
 
     setEditMode (state, editMode) {
@@ -321,6 +334,18 @@ export const store = new Vuex.Store({
     },
     SET_ALLOW_COLLECTION_PUBLISH(state, allow) {
       state.allowPublishCurrentCollection = allow;
+    },
+    SET_LIBRARIES(state, libraries) {
+      libraries.forEach(l => {
+        let published_books = 0;
+        l.books.forEach(b => {
+          if (l.published == true) {
+            ++published_books;
+          }
+        });
+        l.published_books = published_books;
+      });
+      state.libraries = libraries;
     }
 
   },
@@ -339,11 +364,13 @@ export const store = new Vuex.Store({
         commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
         commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
+        commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
         commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
         commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
         commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
         commit('set_remoteDB', { dbProp: 'collectionsRemoteDB', dbName: ILM_COLLECTIONS });
+        commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
 
         state.metaDB.replicate.from(state.metaRemoteDB)
         .on('complete', (info)=>{
@@ -386,6 +413,15 @@ export const store = new Vuex.Store({
             dispatch('updateCollectionsList');
           })
         });
+        
+        state.librariesDB.replicate.from(state.librariesRemoteDB)
+          .on('complete', () => {
+            dispatch('updateLibrariesList');
+            state.librariesDB.replicate.from(state.librariesRemoteDB, {live: true, retry: true})
+            .on('change', () => {
+              dispatch('updateLibrariesList');
+            });
+          });
     },
 
     // logout event
@@ -396,6 +432,7 @@ export const store = new Vuex.Store({
           if (state.contentDB) state.contentDB.destroy()
           if (state.tasksDB) state.tasksDB.destroy()
           if (state.collectionsDB) state.collectionsDB.destroy()
+          if (state.librariesDB) state.librariesDB.destroy()
           commit('RESET_LOGIN_STATE');
       //}, 500)
     },
@@ -593,6 +630,37 @@ export const store = new Vuex.Store({
         commit('SET_ALLOW_COLLECTION_PUBLISH', allow);
       } else {
         commit('SET_ALLOW_COLLECTION_PUBLISH', false);
+      }
+    },
+    
+    updateLibrariesList ({state, commit, dispatch}) {
+      state.librariesDB.hoodieApi().findAll()
+        .then(libraries => {
+          commit('SET_LIBRARIES', libraries);
+          dispatch('reloadLibrary');
+        })
+    },
+    
+    loadLibrary({commit, state, dispatch}, id) {
+      if (id) {
+        state.currentLibraryId = id;
+        state.librariesDB.get(id).then(library => {
+          commit('SET_CURRENT_LIBRARY', library);
+        }).catch((err)=>{
+
+        })
+      } else {
+        commit('SET_CURRENT_LIBRARY', {});
+      }
+    },
+
+    reloadLibrary({state, commit, dispatch}) {
+      if (state.currentLibraryId) {
+        state.librariesDB.get(state.currentLibraryId).then(library => {
+          commit('SET_CURRENT_LIBRARY', library);
+        }).catch((err)=>{
+          console.log(err);
+        })
       }
     },
 
