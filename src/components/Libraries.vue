@@ -496,6 +496,7 @@
         this.libraries.forEach(l => {
           let enabled_api = 0;
           let active_librarian = 0;
+          let published_books = 0;
           if (l.api_keys) {
             l.api_keys.forEach(k => {
               if (k.enabled) {
@@ -510,8 +511,14 @@
               }
             });
           }
+          l.books.forEach(b => {
+            if (l.published == true) {
+              ++published_books;
+            }
+          });
           l.enabled_api_keys = enabled_api;
           l.active_librarians = active_librarian;
+          l.published_books = published_books;
         });
       },
       ...mapActions(['updateLibrariesList', 'loadLibrary'])

@@ -336,15 +336,6 @@ export const store = new Vuex.Store({
       state.allowPublishCurrentCollection = allow;
     },
     SET_LIBRARIES(state, libraries) {
-      libraries.forEach(l => {
-        let published_books = 0;
-        l.books.forEach(b => {
-          if (l.published == true) {
-            ++published_books;
-          }
-        });
-        l.published_books = published_books;
-      });
       state.libraries = libraries;
     }
 
