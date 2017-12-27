@@ -73,23 +73,23 @@ export default {
     superlogin.removeAllListeners('login');
     // login event
     superlogin.once('login', (session) => {
-        console.log('login?');
-        if (session.token) {
-            axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
-            this.connectDB(session);
-        }
+      console.log('login event');
+      if (session.token) {
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
+        this.connectDB(session);
+      }
     });
 
     // logout event
     superlogin.on('logout', (message) => {
-          console.log('logout?',);
-          this.disconnectDB();
+      console.log('logout?');
+      this.disconnectDB();
     })
   },
 
   methods: {
     ...mapActions([
-      'connectDB', 'disconnectDB'
+      'destroyDB', 'connectDB', 'disconnectDB'
     ]),
 
     user_login () {
@@ -97,12 +97,20 @@ export default {
         this.loginError = 'Both Password and Username are required'
         return
       }
-      superlogin.login({
-        username: this.loginUser,
-        password: this.loginPassword
-      }).catch(error => {
-        this.loginError = error.message
+
+      console.log('user_login');
+
+      this.destroyDB()
+      .then(()=>{
+        console.log('do login');
+        superlogin.login({
+          username: this.loginUser,
+          password: this.loginPassword
+        }).catch(error => {
+          this.loginError = error.message
+        })
       })
+
     },
     user_passwordreset (email) {
       var self = this

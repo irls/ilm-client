@@ -197,7 +197,7 @@ export const store = new Vuex.Store({
         state.currentCollectionFiles[fileObj.fileName] = false;
       }
     },
-    
+
     SET_COLLECTIONS_FILTER (state, filter) {
       for(var field in filter) {
         state.collectionsFilter[field] = filter[field];
@@ -333,17 +333,19 @@ export const store = new Vuex.Store({
 
     // login event
     connectDB ({ state, commit, dispatch }, session) {
-        console.log('connectDB');
         commit('RESET_LOGIN_STATE');
+
         commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
         commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
+
         commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
         commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
         commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
         commit('set_remoteDB', { dbProp: 'collectionsRemoteDB', dbName: ILM_COLLECTIONS });
+
 
         state.metaDB.replicate.from(state.metaRemoteDB)
         .on('complete', (info)=>{
@@ -369,6 +371,7 @@ export const store = new Vuex.Store({
               // handle errors
             })
         });
+
         state.tasksDB.replicate.from(state.tasksRemoteDB)
         .on('complete', (info) => {
           state.tasksDB.sync(state.tasksRemoteDB, {live: true, retry: true})
@@ -386,6 +389,29 @@ export const store = new Vuex.Store({
             dispatch('updateCollectionsList');
           })
         });
+    },
+
+    destroyDB ({ state, commit, dispatch }) {
+      return new Promise((resolve, reject) => {
+
+        //if (!state.isLoggedIn) return resolve();
+
+        commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
+        commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
+        commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
+        commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
+
+        if (state.metaDB) state.metaDB.destroy()
+        if (state.contentDB) state.contentDB.destroy()
+        if (state.tasksDB) state.tasksDB.destroy()
+        if (state.collectionsDB) state.collectionsDB.destroy()
+
+        console.log('destroyDB');
+        window.setTimeout(() => {
+          console.log('destroyDB Done');
+          return resolve();
+        }, 50)
+      });
     },
 
     // logout event
@@ -506,7 +532,7 @@ export const store = new Vuex.Store({
         }
       }
     },
-    
+
     loadCollection({commit, state, dispatch}, id) {
       if (id) {
         state.currentCollectionId = id;
@@ -544,7 +570,7 @@ export const store = new Vuex.Store({
         })
       }
     },
-    
+
     updateCollectionVersion({state, dispatch}, update) {
       let id = update.id || state.currentCollection._id;
       if (id) {
@@ -571,11 +597,11 @@ export const store = new Vuex.Store({
             } else {
               dispatch('reloadCollection');
             }
-        
+
           });
       }
     },
-    
+
     allowCollectionPublish({state, commit}) {
       let allow_by_role = superlogin.confirmRole('librarian') || superlogin.confirmRole('admin');
       if (allow_by_role && state.currentCollection && state.currentCollection.books && state.currentCollection.books.length > 0 && state.books_meta) {
@@ -816,7 +842,7 @@ export const store = new Vuex.Store({
       })
       .catch((err) => {})
     },
-    
+
     getTotalBookTasks({state, commit}) {
       let allow_by_role = superlogin.confirmRole('librarian') || superlogin.confirmRole('admin')
       if (state.currentBookid && allow_by_role) {
