@@ -1,5 +1,5 @@
 <template>
-  <vue-tabs @tab-change="onTabChange" ref="tabs">
+  <vue-tabs @tab-change="onTabChange" ref="tabs" :class="'libraries-tabs'">
     <vue-tab title="Administer libraries">
       <table class="libraries-list">
         <tr class="toolbar-container">
@@ -198,7 +198,7 @@
         </div>
       </modal>
     </vue-tab>
-    <vue-tab title="Library content">
+    <vue-tab title="Library Books">
       <div>
         <h1>{{ msg }}</h1>
       </div>
@@ -288,7 +288,7 @@
         if (index === 0) {
           this.$router.replace({ path: '/libraries'});
         } else if (index === 1) {
-          this.$router.replace({ path: '/libraries-content'});
+          this.$router.replace({ path: '/library-books'});
         }
       },
       create() {
@@ -524,8 +524,8 @@
       ...mapActions(['updateLibrariesList', 'loadLibrary'])
     },
     mounted() {
-      if (this.$store.state.route.path.indexOf('/libraries-content') !== -1) {
-        this.$refs.tabs.findTabAndActivate('Library content');
+      if (this.$store.state.route.path.indexOf('/library-books') !== -1) {
+        this.$refs.tabs.findTabAndActivate('Library Books');
       }
       if (this.$route.params.hasOwnProperty('libraryid')) {
           this.loadLibrary(this.$route.params.libraryid);
@@ -588,13 +588,17 @@
 
 
 <style lang="less">
-  .nav-tabs-wrapper {
-    position: fixed;
-    height: 3em;
-    z-index: 999;
-    width: 100%;
-    background-color: white;
+  .libraries-tabs {
+    .nav-tabs-wrapper {
+      position: fixed;
+      height: 3em;
+      z-index: 999;
+      width: 100%;
+      background-color: white;
+    }
   }
+</style>
+<style scoped lang="less">
   .libraries-list {
     width: 100%;
     .toolbar-container {

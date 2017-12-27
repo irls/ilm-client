@@ -45,7 +45,7 @@ export default new Router({
       component: Libraries
     },
     {
-      path: '/libraries-content',
+      path: '/library-books',
       component: Libraries
     },
     {
