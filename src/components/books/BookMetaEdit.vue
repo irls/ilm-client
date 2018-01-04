@@ -451,7 +451,10 @@ export default {
       }
       this.currentBook = Object.assign({}, this.currentBookMeta);
       this.currentBook.coverimg = this.currentBookFiles.coverimg;
-      this.isOwner = this.currentBook.owner == superlogin.getSession().user_id
+      this.isOwner = this.currentBook.owner == superlogin.getSession().user_id;
+      if (this.currentBook.author && !Array.isArray(this.currentBook.author)) {
+        this.currentBook.author = [this.currentBook.author];
+      }
       this.loadAudiobook();
     },
 
