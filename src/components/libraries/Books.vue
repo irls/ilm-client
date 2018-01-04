@@ -13,8 +13,17 @@
               <select v-model="filters.language">
                 <option v-for="lang in languagesList" :value="lang.code">{{lang.name}}</option>
               </select>
-              <input type="text" class="search" placeholder="Search by author or title" v-model="filters.search" />
-              {{filtersSearchSuggestions}}
+              <div class="search-wrapper">
+                <input type="text" :class="['search', {'has-autocomplete': (filtersSearchSuggestions.length && searchSet !== filters.search) || (filters.search && filtersSearchSuggestions.length == 0)}]" placeholder="Search by author or title" v-model="filters.search" />
+                <div :class="['search-autocomplete', {'hidden': !filters.search || searchSet === filters.search}]">
+                  <template v-if="filtersSearchSuggestions.length">
+                    <div v-for="f in filtersSearchSuggestions" v-html="f.label" v-on:click="setSearch(f.value)"></div>
+                  </template>
+                  <template v-else>
+                    <div class="no-items">No matches found</div>
+                  </template>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -431,6 +440,7 @@
             libraryId: null, language: null, search: ''
           },
           filtersSearchSuggestions: [],
+          searchSet: '',
           repositoryFilters: {
             category: '', allBooks: false
           },
@@ -821,6 +831,16 @@
               }
             });
           }
+        },
+        addFilterSuggestion(value) {
+          let existing = this.filtersSearchSuggestions.find(s => s.value == value);
+          if (!existing) {
+            this.filtersSearchSuggestions.push({value: value, label: value.replace(new RegExp('(' + this.filters.search + ')', 'i'), '<b>$1</b>')});
+          }
+        },
+        setSearch(value) {
+          this.searchSet = value;
+          this.filters.search = value;
         }
       },
       computed: {
@@ -848,16 +868,12 @@
               let filter = this.filters.search.toLowerCase();
               let match = l.title.toLowerCase().indexOf(filter) !== -1;
               if (match) {
-                if (this.filtersSearchSuggestions.indexOf(l.title) === -1) {
-                  this.filtersSearchSuggestions.push(l.title);
-                }
+                this.addFilterSuggestion(l.title);
               }
               l.author.forEach(a => {
                 let match_author = a.toLowerCase().indexOf(filter) !== -1;
                 if (match_author) {
-                  if (this.filtersSearchSuggestions.indexOf(a) === -1) {
-                    this.filtersSearchSuggestions.push(a);
-                  }
+                  this.addFilterSuggestion(a);
                   if (!match) {
                     match = match_author;
                   }
@@ -881,17 +897,17 @@
             list = list.filter(l => {
               let match = l.title.toLowerCase().indexOf(search) !== -1;
               if (match) {
-                if (this.filtersSearchSuggestions.indexOf(l.title) === -1) {
-                  this.filtersSearchSuggestions.push(l.title);
-                }
+                this.addFilterSuggestion(l.title);
               }
-              if (!match) {
-                l.author.forEach(a => {
+              l.author.forEach(a => {
+                let match_author = a.toLowerCase().indexOf(search) !== -1;
+                if (match_author) {
+                  this.addFilterSuggestion(a);
                   if (!match) {
-                    match = a.toLowerCase().indexOf(search) !== -1;
+                    match = match_author;
                   }
-                });
-              }
+                }
+              });
               return match;
             });
           }
@@ -964,6 +980,9 @@
         'filters.search': {
           handler(val) {
             this.filtersSearchSuggestions = [];
+            if (this.searchSet != val) {
+              this.searchSet = '';
+            }
           }
         },
         'selectedLibrary': {
@@ -1051,11 +1070,33 @@
         display: inline-block;
         margin: 0px 0px 0px 20px;
       }
-      input.search {
-        border-radius: 8px;
-        border: 2px solid silver;
+      .search-wrapper {
+        position: relative;
         display: inline-block;
-        padding: 1px 4px;
+        input.search {
+          border-radius: 8px;
+          border: 2px solid silver;
+          display: inline-block;
+          padding: 1px 4px;
+          position: relative;
+          &.has-autocomplete {
+            border-radius: 8px 8px 0px 0px;
+          }
+        }
+        .search-autocomplete {
+          position: absolute;
+          border: 1px solid silver;
+          width: 100%;
+          padding: 2px 3px;
+          z-index: 9999;
+          background-color: white;
+          & > div {
+            cursor: pointer;
+            &:not(.no-items):hover {
+              background-color: #ece9e9;
+            }
+          }
+        }
       }
     }
     tr.grids {
