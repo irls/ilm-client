@@ -74,7 +74,9 @@ export const store = new Vuex.Store({
     allowPublishCurrentCollection: false,
     libraries: [],
     currentLibrary: {},
-    currentLibraryId: false
+    currentLibraryId: false,
+    
+    user: {}
   },
 
   getters: {
@@ -119,7 +121,8 @@ export const store = new Vuex.Store({
       return result;
     },
     libraries: state => state.libraries,
-    currentLibrary: state => state.currentLibrary
+    currentLibrary: state => state.currentLibrary,
+    user: state => state.user
   },
 
   mutations: {
@@ -336,7 +339,22 @@ export const store = new Vuex.Store({
       state.allowPublishCurrentCollection = allow;
     },
     SET_LIBRARIES(state, libraries) {
-      state.libraries = libraries;
+      if (state.isAdmin) {
+        state.libraries = libraries;
+      } else if (state.isLibrarian) {
+        let libraries_list = [];
+        libraries.forEach(l => {
+          if (l.librarians) {
+            let librarian = l.librarians.find(l => l.id == state.auth.getSession().user_id);
+            if (librarian) {
+              libraries_list.push(l)
+            }
+          }
+        });
+        state.libraries = libraries_list;
+      } else {
+        state.libraries = [];
+      }
     }
 
   },
@@ -407,12 +425,64 @@ export const store = new Vuex.Store({
         
         state.librariesDB.replicate.from(state.librariesRemoteDB)
           .on('complete', () => {
-            dispatch('updateLibrariesList');
-            state.librariesDB.replicate.from(state.librariesRemoteDB, {live: true, retry: true})
-            .on('change', () => {
-              dispatch('updateLibrariesList');
+            dispatch('updateLibrariesList');            
+            state.librariesDB.sync(state.librariesRemoteDB, {live: true, retry: true})
+              .on('change', () => {
+                dispatch('updateLibrariesList');
             });
           });
+        axios.get(state.API_URL + 'me')
+          .then(response => {
+            if (response) {
+              if (response.status == 200) {
+                state.user = response.data;
+              }
+            }
+          })
+          .catch(err => console.log(err));
+          
+//          state.librariesDB.replicate.from(state.librariesRemoteDB, {
+//          /*filter: '_view', 
+//          view: 'filters_byLibrarian/byLibrarian',
+//          query_params: {
+//            key: "librarian2"
+//          }*/
+//          filter: 'filters_byLibrarian/byLibrarian',
+//          query_params: {
+//            user_id: "librarian2"
+//          }
+//        })
+//          .on('complete', () => {
+//            dispatch('updateLibrariesList');
+//    
+//            setInterval(function() {
+//              state.librariesDB.replicate.from(state.librariesRemoteDB, {
+//              filter: 'filters_byLibrarian/byLibrarian',
+//              query_params: {
+//                user_id: "librarian2"
+//              }})
+//              .on('complete', () => {
+//                console.log('COMPLETE');
+//                dispatch('updateLibrariesList');
+//              })
+//              .on('change', (changes) => {
+//                console.log(changes);
+//                dispatch('updateLibrariesList');
+//              });
+//            }, 10000);
+//            /*state.librariesDB.sync(state.librariesRemoteDB, {
+//              live: true, 
+//              retry: true,
+//              filter: 'filters_byLibrarian/byLibrarian',
+//          query_params: {
+//            user_id: "librarian2"
+//          }
+//            })
+//            .on('change', (change) => {
+//              console.log(change);
+//              dispatch('updateLibrariesList');
+//            });*/
+//          });
     },
 
     // logout event
@@ -520,7 +590,7 @@ export const store = new Vuex.Store({
                 meta['pubType'] = 'Unpublished';
                 meta['published'] = false;
                 meta['status'] = 'staging';
-                state.metaDB.put(meta)
+                state.metaRemoteDB.put(meta)
                   .then(() => {
                     dispatch('reloadBookMeta');
                     if (meta.collection_id) {

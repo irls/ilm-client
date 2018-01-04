@@ -1,6 +1,6 @@
 <template>
   <vue-tabs @tab-change="onTabChange" ref="tabs" :class="'libraries-tabs'">
-    <vue-tab title="Administer libraries">
+    <vue-tab title="Administer libraries" v-if="isAdmin">
       <table class="libraries-list">
         <tr class="toolbar-container">
           <td class="">
@@ -30,7 +30,7 @@
                     <input type="text" @input="update('title', $event)" class="library-title" v-model="library.title"/>
                   </div>
                   <div class="td">
-                    <button class="btn btn-danger pull-right" v-on:click="showModal('on-collection-remove-message')" :disabled="library.api_keys && library.api_keys.length > 0">Delete Library</button>
+                    <button class="btn btn-danger pull-right" v-on:click="showModal('on-collection-remove-message')" :disabled="!allowDeleteLibrary">Delete Library</button>
                   </div>
                 </div>
                 <div class="tr">
@@ -199,6 +199,9 @@
       </modal>
     </vue-tab>
     <vue-tab title="Library Books">
+      <library-books></library-books>
+    </vue-tab>
+    <vue-tab title="Library Collections">
       <div>
         <h1>{{ msg }}</h1>
       </div>
@@ -220,6 +223,7 @@
   import LANGUAGES from '../../static/languages.json';
   var hat = require('hat');
   Vue.use(v_modal, { dialog: true });
+  import Books from './libraries/Books';
   export default {
     name: 'Libraries',
     data() {
@@ -272,7 +276,8 @@
       'vue-tabs': VueTabs,
       'vue-tab': VTab,
       'grid': Grid,
-      'v-select': select
+      'v-select': select,
+      'library-books': Books
     },
     mixins: [api_config],
     methods: {
@@ -283,6 +288,9 @@
           this.library = {};
         }
         this.loadLibrarians();
+        if (this.$store.state.route.path.indexOf('/library-books') === -1 && this.$store.state.route.path.indexOf('/library-collections') === -1 && !this.isAdmin) {
+          this.$router.replace({path: '/library-books'});
+        }
       },
       onTabChange(index, tabTo, tabFrom) {
         if (index === 0) {
@@ -425,22 +433,24 @@
         }
       },
       loadLibrarians() {
-        let api_url = this.API_URL + 'users?' + (new Date).toString();
-        let api = this.$store.state.auth.getHttp();
-        let self = this;
-        api.get(api_url, {}, {}).then(function(response){
-          if (response.status===200) {
-            let librarians = response.data.filter(u => {
-              return u.roles.indexOf('librarian') !== -1;
-            });
-            self.allLibrarians = librarians;
-            self._setLibrarians();
-          } else {
+        if (this.isAdmin) {
+          let api_url = this.API_URL + 'users?' + (new Date).toString();
+          let api = this.$store.state.auth.getHttp();
+          let self = this;
+          api.get(api_url, {}, {}).then(function(response){
+            if (response.status===200) {
+              let librarians = response.data.filter(u => {
+                return u.roles.indexOf('librarian') !== -1;
+              });
+              self.allLibrarians = librarians;
+              self._setLibrarians();
+            } else {
 
-          }
-        }).catch((err) => {
-          self.hideModal('on-collection-remove-message');
-        });
+            }
+          }).catch((err) => {
+            self.hideModal('on-collection-remove-message');
+          });
+        }
       },
       addLibrarian() {
         this.library.librarians = this.library.librarians || [];
@@ -555,7 +565,22 @@
           return librarians;
         }
       },
-      ...mapGetters(['libraries', 'currentLibrary'])
+      allowDeleteLibrary() {
+        if (this.library) {
+          if (!this.library.api_keys || this.library.api_keys.length == 0 ) {
+            return true;
+          }
+          let enabled_api_keys = 0;
+          this.library.api_keys.forEach(k => {
+            if (k.key && k.enabled) {
+              ++enabled_api_keys;
+            }
+          });
+          return enabled_api_keys == 0;
+        }
+        return false;
+      },
+      ...mapGetters(['libraries', 'currentLibrary', 'isAdmin'])
     },
     watch: {
       'currentLibrary': {
@@ -640,6 +665,7 @@
     overflow-y: scroll;
     height: 80%;
     padding-top: 100px;
+    width: 30%;
   }
   .library-title {
     width: 100%;

@@ -533,7 +533,11 @@ export default {
         //console.log('success DB update: ', doc)
         return this.updateBookVersion({minor: true})
           .then(() => {
-            return BPromise.resolve(doc)
+            return BPromise.resolve(doc);
+          })
+          .catch(err => {
+            //console.log(err);
+            return BPromise.reject(err);
           });
       }).catch(err => {
         //console.log('error DB pdate: ', err)
