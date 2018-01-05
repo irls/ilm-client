@@ -521,11 +521,13 @@ export const store = new Vuex.Store({
         commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
         commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
+        commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
 
         if (state.metaDB) state.metaDB.destroy()
         if (state.contentDB) state.contentDB.destroy()
         if (state.tasksDB) state.tasksDB.destroy()
         if (state.collectionsDB) state.collectionsDB.destroy()
+        if (state.librariesDB) state.librariesDB.destroy()
 
         console.log('destroyDB');
         window.setTimeout(() => {
