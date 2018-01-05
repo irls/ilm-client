@@ -125,7 +125,7 @@
             :currentImage="selectedBookImage"
             :libraryId="selectedLibrary._id"
             :bookId="selectedBook._id"
-            @imageUpdated="loadBookImage"></BookCoverModal>
+            @imageUpdated="bookImageUpdated"></BookCoverModal>
           <modal name="on-remove-modal"
             transition="nice-modal-fade"
             :adaptive="false"
@@ -607,6 +607,12 @@
               console.log(err);
             });
         },
+        bookImageUpdated() {
+          this.loadBookImage();
+          if (this.selectedBook._id && this.selectedBook.status === 'published') {
+            this.liveUpdate('status', 'unpublished');
+          }
+        },
         prepareSelectedLibraryBooks() {
           this.selectedLibraryBooks = [];
           if (this.selectedLibrary && this.selectedLibrary.books) {
@@ -638,7 +644,17 @@
                   delete this.publishValidationErrors[key];
                 }
                 book[key] = value;
-                return api.update(this.selectedLibrary._id, {books: library.books}).then(doc => {
+                if (book['status'] == 'published') {
+                  if (book.version) {
+                    let ver = book.version.split('.');
+                    if (ver && ver.length == 2) {
+                      book.version = ver[0] + '.' + (parseInt(ver[1]) + 1);
+                    }
+                  }
+                  book['status'] = 'unpublished';
+                }
+                let update = {books: library.books};
+                return api.update(this.selectedLibrary._id, update).then(doc => {
                     /*return this.updateBookVersion({minor: true})
                       .then(() => {
                         return BPromise.resolve(doc);
