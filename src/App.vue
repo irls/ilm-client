@@ -37,6 +37,11 @@ export default {
       } else {
         this.loadCollection(false);
       }
+      if (this.$route.params.hasOwnProperty('libraryid')) {
+        this.loadLibrary(this.$route.params.libraryid);
+      } else {
+        this.loadLibrary(false);
+      }
     }
   },
 
@@ -45,7 +50,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['loadBook', 'updateBooksList', 'loadCollection'])
+    ...mapActions(['loadBook', 'updateBooksList', 'loadCollection', 'loadLibrary'])
   }
 }
 </script>

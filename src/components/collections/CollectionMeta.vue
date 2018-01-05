@@ -199,7 +199,7 @@
     position: fixed;
     width: 29%;
     height: 80%;
-    overflow: scroll;
+    overflow-y: scroll;
     fieldset {
       border:1px solid #b9b6b6;
       position:relative;

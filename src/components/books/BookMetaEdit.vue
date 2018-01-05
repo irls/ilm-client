@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar">
 
-    <div id='bookmeta' v-if="currentBook">
+    <div id='bookmeta' v-if="currentBook" class="sidebar-bookmeta">
       <div class='booktopinfo'>
         <div class='coverimg' @click="bookEditCoverModalActive = true">
           <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
@@ -536,7 +536,11 @@ export default {
         //console.log('success DB update: ', doc)
         return this.updateBookVersion({minor: true})
           .then(() => {
-            return BPromise.resolve(doc)
+            return BPromise.resolve(doc);
+          })
+          .catch(err => {
+            //console.log(err);
+            return BPromise.reject(err);
           });
       }).catch(err => {
         //console.log('error DB pdate: ', err)
@@ -697,7 +701,7 @@ export default {
     margin-top:0px;
     margin-left:0;
     padding-left:0;
-    overflow: scroll;
+    overflow-y: scroll;
     height: 80%;
   }
   .sidebar::-webkit-scrollbar-track {
@@ -806,6 +810,10 @@ export default {
     display: inline-block;
     vertical-align: top;
     font-weight: 400;
+  }
+  
+  .sidebar-bookmeta {
+    width: 96%;
   }
 
 

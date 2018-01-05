@@ -17,6 +17,7 @@ const ILM_CONTENT_META = 'ilm_content_meta';
 const ILM_CONTENT_FILES = 'ilm_library_files';
 const ILM_TASKS = 'ilm_tasks';
 const ILM_COLLECTIONS = 'ilm_collections';
+const ILM_LIBRARIES = 'ilm_libraries';
 
 // const API_ALLBOOKS = '/static/books.json'
 
@@ -39,11 +40,13 @@ export const store = new Vuex.Store({
     contentDBWatch: false,
     tasksDB: false,
     collectionsDB: false,
+    librariesDB: false,
 
     metaRemoteDB: false,
     contentRemoteDB: false,
     tasksRemoteDB: false,
     collectionsRemoteDB: false,
+    librariesRemoteDB: false,
 
     books_meta: [],
 
@@ -68,7 +71,12 @@ export const store = new Vuex.Store({
     currentCollection: {},
     currentCollectionFiles: { coverimg: false },
     currentCollectionId: false,
-    allowPublishCurrentCollection: false
+    allowPublishCurrentCollection: false,
+    libraries: [],
+    currentLibrary: {},
+    currentLibraryId: false,
+    
+    user: {}
   },
 
   getters: {
@@ -133,7 +141,10 @@ export const store = new Vuex.Store({
         })
       }
       return result;
-    }
+    },
+    libraries: state => state.libraries,
+    currentLibrary: state => state.currentLibrary,
+    user: state => state.user
   },
 
   mutations: {
@@ -225,6 +236,11 @@ export const store = new Vuex.Store({
         state.collectionsFilter[field] = filter[field];
       }
       //console.log(state.collectionsFilter)
+    },
+    
+    SET_CURRENT_LIBRARY (state, library) {
+      state.currentLibrary = library;
+      state.currentLibraryId = library._id ? library._id : false;
     },
 
     setEditMode (state, editMode) {
@@ -345,6 +361,24 @@ export const store = new Vuex.Store({
     },
     SET_ALLOW_COLLECTION_PUBLISH(state, allow) {
       state.allowPublishCurrentCollection = allow;
+    },
+    SET_LIBRARIES(state, libraries) {
+      if (state.isAdmin) {
+        state.libraries = libraries;
+      } else if (state.isLibrarian) {
+        let libraries_list = [];
+        libraries.forEach(l => {
+          if (l.librarians) {
+            let librarian = l.librarians.find(l => l.id == state.auth.getSession().user_id);
+            if (librarian) {
+              libraries_list.push(l)
+            }
+          }
+        });
+        state.libraries = libraries_list;
+      } else {
+        state.libraries = [];
+      }
     }
 
   },
@@ -363,12 +397,14 @@ export const store = new Vuex.Store({
         commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
         commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
+        commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
 
         commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
         commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
         commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
         commit('set_remoteDB', { dbProp: 'collectionsRemoteDB', dbName: ILM_COLLECTIONS });
+        commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
 
 
         state.metaDB.replicate.from(state.metaRemoteDB)
@@ -413,6 +449,67 @@ export const store = new Vuex.Store({
             dispatch('updateCollectionsList');
           })
         });
+        
+        state.librariesDB.replicate.from(state.librariesRemoteDB)
+          .on('complete', () => {
+            dispatch('updateLibrariesList');            
+            state.librariesDB.sync(state.librariesRemoteDB, {live: true, retry: true})
+              .on('change', () => {
+                dispatch('updateLibrariesList');
+            });
+          });
+        axios.get(state.API_URL + 'me')
+          .then(response => {
+            if (response) {
+              if (response.status == 200) {
+                state.user = response.data;
+              }
+            }
+          })
+          .catch(err => console.log(err));
+          
+//          state.librariesDB.replicate.from(state.librariesRemoteDB, {
+//          /*filter: '_view', 
+//          view: 'filters_byLibrarian/byLibrarian',
+//          query_params: {
+//            key: "librarian2"
+//          }*/
+//          filter: 'filters_byLibrarian/byLibrarian',
+//          query_params: {
+//            user_id: "librarian2"
+//          }
+//        })
+//          .on('complete', () => {
+//            dispatch('updateLibrariesList');
+//    
+//            setInterval(function() {
+//              state.librariesDB.replicate.from(state.librariesRemoteDB, {
+//              filter: 'filters_byLibrarian/byLibrarian',
+//              query_params: {
+//                user_id: "librarian2"
+//              }})
+//              .on('complete', () => {
+//                console.log('COMPLETE');
+//                dispatch('updateLibrariesList');
+//              })
+//              .on('change', (changes) => {
+//                console.log(changes);
+//                dispatch('updateLibrariesList');
+//              });
+//            }, 10000);
+//            /*state.librariesDB.sync(state.librariesRemoteDB, {
+//              live: true, 
+//              retry: true,
+//              filter: 'filters_byLibrarian/byLibrarian',
+//          query_params: {
+//            user_id: "librarian2"
+//          }
+//            })
+//            .on('change', (change) => {
+//              console.log(change);
+//              dispatch('updateLibrariesList');
+//            });*/
+//          });
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -446,6 +543,7 @@ export const store = new Vuex.Store({
           if (state.contentDB) state.contentDB.destroy()
           if (state.tasksDB) state.tasksDB.destroy()
           if (state.collectionsDB) state.collectionsDB.destroy()
+          if (state.librariesDB) state.librariesDB.destroy()
           commit('RESET_LOGIN_STATE');
       //}, 500)
     },
@@ -542,7 +640,7 @@ export const store = new Vuex.Store({
                 meta['pubType'] = 'Unpublished';
                 meta['published'] = false;
                 meta['status'] = 'staging';
-                state.metaDB.put(meta)
+                state.metaRemoteDB.put(meta)
                   .then(() => {
                     dispatch('reloadBookMeta');
                     if (meta.collection_id) {
@@ -643,6 +741,37 @@ export const store = new Vuex.Store({
         commit('SET_ALLOW_COLLECTION_PUBLISH', allow);
       } else {
         commit('SET_ALLOW_COLLECTION_PUBLISH', false);
+      }
+    },
+    
+    updateLibrariesList ({state, commit, dispatch}) {
+      state.librariesDB.hoodieApi().findAll()
+        .then(libraries => {
+          commit('SET_LIBRARIES', libraries);
+          dispatch('reloadLibrary');
+        })
+    },
+    
+    loadLibrary({commit, state, dispatch}, id) {
+      if (id) {
+        state.currentLibraryId = id;
+        state.librariesDB.get(id).then(library => {
+          commit('SET_CURRENT_LIBRARY', library);
+        }).catch((err)=>{
+
+        })
+      } else {
+        commit('SET_CURRENT_LIBRARY', {});
+      }
+    },
+
+    reloadLibrary({state, commit, dispatch}) {
+      if (state.currentLibraryId) {
+        state.librariesDB.get(state.currentLibraryId).then(library => {
+          commit('SET_CURRENT_LIBRARY', library);
+        }).catch((err)=>{
+          console.log(err);
+        })
       }
     },
 
