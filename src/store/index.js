@@ -84,7 +84,22 @@ export const store = new Vuex.Store({
     isReader: state => state.isReader,
     allowPublishCurrentBook: state => state.allowPublishCurrentBook,
     allRolls: state => state.allRolls,
-    allBooks: state => state.books_meta,
+    allBooks: state => {
+      if (state.isAdmin || state.isLibrarian) {
+        return state.books_meta;
+      } else {
+        let books = [];
+        if (state.tc_userTasks && state.tc_userTasks.list) {
+          for (let t_id in state.tc_userTasks.list) {
+            let b = state.books_meta.find(_b => state.tc_userTasks.list[t_id].bookid == _b._id);
+            if (b) {
+              books.push(b);
+            }
+          };
+        }
+        return books;//state.books_meta
+      }
+    },
     bookFilters: state => state.bookFilters,
     currentBookid: state => state.currentBookid,
     currentBook: state => state.currentBook,
@@ -429,7 +444,7 @@ export const store = new Vuex.Store({
     updateBooksList ({state, commit, dispatch}) {
       console.log('updateBooksList');
       let ilmLibraryMeta = state.metaDB.hoodieApi()
-      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted') && (item.editor == state.auth.getSession().user_id || item.private == false)))
+      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted')))
         .then(books => {
           commit('SET_BOOKLIST', books)
           dispatch('tc_loadBookTask')
