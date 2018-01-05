@@ -89,11 +89,18 @@ export const store = new Vuex.Store({
         return state.books_meta;
       } else {
         let books = [];
+        //console.log(state.tc_userTasks);
         if (state.tc_userTasks && state.tc_userTasks.list) {
           for (let t_id in state.tc_userTasks.list) {
-            let b = state.books_meta.find(_b => state.tc_userTasks.list[t_id].bookid == _b._id);
-            if (b) {
-              books.push(b);
+            if (state.tc_userTasks.list[t_id].tasks && state.tc_userTasks.list[t_id].tasks.length > 0) {
+              let exists = books.find(_b => _b._id == state.tc_userTasks.list[t_id].bookid);
+              if (!exists) {
+                let b = state.books_meta.find(_b => state.tc_userTasks.list[t_id].bookid == _b._id);
+                if (b) {
+                  //console.log('Adding book', b._id);
+                  books.push(b);
+                }
+              }
             }
           };
         }
