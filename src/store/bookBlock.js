@@ -76,7 +76,7 @@ class BookBlock {
     this.index = typeof init.index !== 'undefined' ? init.index : '';
 
     this.tag = init.tag || '';
-    this.content = init.content || '';
+    this.content = init.content || '<p></p>';
     this.type = init.type || '';
     this.classes = init.classes || {};
     if (Array.isArray(this.classes)) this.classes = {};
@@ -91,7 +91,7 @@ class BookBlock {
 
     this.deleted = init.deleted || false;
     this.illustration = init.illustration;
-    this.description = init.description || '';
+    this.description = init.description || '<p></p>';
     this.voicework = init.voicework;
     this.partUpdate = false;
   }

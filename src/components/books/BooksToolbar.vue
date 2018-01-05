@@ -76,7 +76,8 @@ export default {
     'isAdmin',
     'isEditor',
     'isLibrarian',
-    'allowBookEditMode'
+    'allowBookEditMode',
+    'allBooks'
   ]),
 
   methods: {
@@ -91,9 +92,8 @@ export default {
       this.$store.commit('SET_CURRENTBOOK_FILTER', {importStatus: el.target.value})
     },
     bookCount () {
-      if (this.$store.state.books_meta && this.$store.state.books_meta.length) {
-        let filtered = this.$store.state.books_meta.filter(m => !m.collection_id)
-          .filter(b => b.status !== 'import_text');
+      if (this.allBooks && this.allBooks) {
+        let filtered = this.allBooks.filter(m => !m.collection_id);
         return filtered.length;
       } else {
         return 0;

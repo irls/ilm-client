@@ -65,7 +65,7 @@
               path: 'author',
               addClass: 'author',
               render(val) {
-                return val ? val.join(', ') : '';
+                return val && Array.isArray(val) ? val.join(', ') : val;
               }
             },
             {

@@ -9,7 +9,7 @@
         </div>
         <h4 class='title'>{{ currentBook.title }}</h4>
         <h5 class='subtitle' v-if='currentBook.subtitle'>{{ currentBook.subtitle }}</h5>
-        <h5 class='author'>{{ currentBook.author ? currentBook.author.join(',') : '' }},
+        <h5 class='author'>{{ currentBook.author && Array.isArray(currentBook.author) ? currentBook.author.join(',') : currentBook.author }},
         <span class="pages">{{ Math.round(currentBook.wordcount / 300) }} pages &nbsp;
         </span></h5>
         <div style='clear: both'> </div>
@@ -451,7 +451,10 @@ export default {
       }
       this.currentBook = Object.assign({}, this.currentBookMeta);
       this.currentBook.coverimg = this.currentBookFiles.coverimg;
-      this.isOwner = this.currentBook.owner == superlogin.getSession().user_id
+      this.isOwner = this.currentBook.owner == superlogin.getSession().user_id;
+      if (this.currentBook.author && !Array.isArray(this.currentBook.author)) {
+        this.currentBook.author = [this.currentBook.author];
+      }
       this.loadAudiobook();
     },
 

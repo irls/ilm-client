@@ -166,10 +166,11 @@
                   </div>
 
                   <div :class="['table-row content-description', block.getClass()]">
-                    <div class="description"
-                      contenteditable="true"
+                    <div class="content-wrap-desc description"
+                      ref="blockDescription"
                       @input="commitDescription($event)"
-                      v-html="block.description">
+                      v-html="block.description"
+                      @contextmenu.prevent="onContext">
                     </div>
                   </div>
 
@@ -289,7 +290,7 @@
 
                 </block-flag-popup>
 
-                <block-cntx-menu v-if="allowEditing"
+                <block-cntx-menu
                     ref="blockCntx"
                     dir="bottom"
                     :update="update"
@@ -304,9 +305,9 @@
                     <li class="separator"></li>
                     <li @click="audPlayFromSelection()">Play from here</li>
                     <li @click="audPlaySelection()">Play selection</li>
-                    <li @click="audDeleteSelection()">Delete audio in selection</li>
+                    <li v-if="allowEditing" @click="audDeleteSelection()">Delete audio in selection</li>
                   </template>
-                  <template v-if="!range.collapsed && tc_showBlockNarrate(block._id)">
+                  <template v-if="!range.collapsed && tc_showBlockNarrate(block._id) && allowEditing">
                     <li class="separator"></li>
                     <li @click="reRecord">Re-record audio</li>
                   </template>
@@ -322,9 +323,9 @@
                 v-for="(footnote, footnoteIdx) in block.footnotes">
                 <div class="table-row">
                   <div class="table-cell -num">{{footnoteIdx+1}}.</div>
-                  <div class="table-cell -text"
-                    :class="['js-footnote-val']"
-                    contenteditable="true"
+                  <div class="content-wrap-footn table-cell -text"
+                    :data-footnoteIdx="block._id +'_'+ footnoteIdx"
+                    :class="['js-footnote-val', 'js-footnote-'+ block._id]"
                     @input="commitFootnote(footnoteIdx, $event)"
                     v-html="footnote">
                   </div>
@@ -386,14 +387,19 @@
       </div>
       <div class="modal-body">
         <div>Apply "{{blockVoiceworks[voiceworkChange]}}" voicework type to</div>
-        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single"/>this {{block.type}}</label></div>
-        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all"/>all incomplete {{block.type}}s</label></div>
+        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{block.type}}</label></div>
+        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all incomplete {{block.type}}s</label></div>
         <div>This will also delete current audio from the {{block.type}}(s)</div>
       </div>
       <!-- custom buttons -->
       <div slot="modal-footer" class="modal-footer">
-        <button type="button" class="btn btn-default" @click="voiceworkChange = false">Cancel</button>
-        <button type="button" class="btn btn-confirm" @click="updateVoicework()">Apply</button>
+        <template v-if="!voiceworkUpdating">
+          <button type="button" class="btn btn-default" @click="voiceworkChange = false">Cancel</button>
+          <button type="button" class="btn btn-confirm" @click="updateVoicework()">Apply</button>
+        </template>
+        <template v-else>
+          <div class="voicework-preloader"></div>
+        </template>
       </div>
     </modal>
 </div>
@@ -425,6 +431,8 @@ export default {
       editor: false,
       player: false,
       range: false,
+      editorDescr: false,
+      editorFootn: false,
       flagsSel: false,
       flagEl: 'f',
       quoteEl: 'qq',
@@ -456,7 +464,8 @@ export default {
       deleteBlockMessage: false,
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
-      isAudioEditing: false
+      isAudioEditing: false,
+      voiceworkUpdating: false
     }
   },
   components: {
@@ -501,6 +510,10 @@ export default {
           return this.voiceworkChange !== false;
         },
         set(val) {
+          if (!val) {
+            this.voiceworkChange = false;
+            this.voiceworkUpdating = false;
+          }
         }
       },
       countArchParts: function () {
@@ -561,7 +574,7 @@ export default {
     if (this.editor) this.editor.destroy();
   },
   mounted: function() {
-      this.initEditor();
+      //this.initEditor();
       this.blockAudio = {'map': this.block.content, 'src': this.block.audiosrc ? this.block.audiosrc : ''};
       if (!this.player && this.blockAudio.src) {
           this.blockAudio.src = this.blockAudio.src + '?' + (new Date()).toJSON();
@@ -608,6 +621,29 @@ export default {
         return canFlag && !this.tc_hasTask('content_cleanup') && !this.range.collapsed;
       },
       //-- } -- end -- Checkers --//
+
+      destroyEditor() {
+        if (this.editor) {
+          //this.editor.removeElements();
+          this.editor.destroy();
+          if (this.block.type === 'illustration') {
+            Vue.nextTick(() => {
+              $('[id="' + this.block._id + '"] .illustration-block')
+              .removeAttr('contenteditable')
+              .removeAttr('data-placeholder');
+            });
+          }
+        }
+        if (this.editorDescr) {
+          //this.editorDescr.removeElements();
+          this.editorDescr.destroy();
+          //this.editorDescr = false;
+        }
+        if (this.editorFootn) {
+          this.editorFootn.destroy();
+        }
+      },
+
       initEditor(force) {
         if ((!this.editor || force === true) && this.block.needsText()) {
           let extensions = {};
@@ -640,7 +676,67 @@ export default {
           });
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
     //       this.editor.subscribe('positionToolbar', ()=>{})
-        }
+        }  else if (this.editor) this.editor.setup();
+
+        if ((!this.editorDescr || force === true) && this.block.needsText()) {
+          let extensions = {};
+          let toolbar = {buttons: []};
+          if (this.allowEditing) {
+            extensions = {
+                'quoteButton': new QuoteButton(),
+                'quotePreview': new QuotePreview()
+              };
+            toolbar = {
+                buttons: [
+                  'bold', 'italic', 'underline',
+                  'superscript', 'subscript',
+                  'orderedlist', 'unorderedlist',
+                  'quoteButton', 'suggestButton'
+                ]
+              };
+          }
+          this.editorDescr = new MediumEditor('.content-wrap-desc', {
+              toolbar: toolbar,
+              buttonLabels: 'fontawesome',
+              quotesList: this.authors,
+              onQuoteSave: this.onQuoteSave,
+              extensions: extensions,
+              disableEditing: !this.allowEditing
+          });
+        } else if (this.editorDescr) this.editorDescr.setup();
+
+        if ((!this.editorFootn || force === true) && this.block.needsText()) {
+          let extensions = {};
+          let toolbar = {buttons: []};
+          if (this.allowEditing) {
+            extensions = {
+                'quoteButton': new QuoteButton(),
+                'quotePreview': new QuotePreview(),
+                'suggestButton': new SuggestButton(),
+                'suggestPreview': new SuggestPreview()
+              };
+            toolbar = {
+                buttons: [
+                  'bold', 'italic', 'underline',
+                  'superscript', 'subscript',
+                  'orderedlist', 'unorderedlist',
+                  'quoteButton', 'suggestButton'
+                ]
+              };
+          }
+
+          this.editorFootn = new MediumEditor('.content-wrap-footn' , {
+              toolbar: toolbar,
+              buttonLabels: 'fontawesome',
+              quotesList: this.authors,
+              onQuoteSave: this.onQuoteSave,
+              suggestEl: this.suggestEl,
+              extensions: extensions,
+              disableEditing: !this.allowEditing
+          });
+        } else if (this.editorFootn) this.editorFootn.setup();
+
+        $('.medium-editor-toolbar.medium-editor-stalker-toolbar').css('display', '');
       },
       onQuoteSave: function() {
         this.putMetaAuthors(this.authors).then(()=>{
@@ -744,11 +840,17 @@ export default {
       assembleBlock: function(el) {
         switch (this.block.type) {
           case 'illustration':
+            this.block.description = this.$refs.blockDescription.innerHTML;
           case 'hr':
             this.block.content = '';
             break;
           default:
             this.block.content = this.$refs.blockContent.innerHTML;
+            if (this.block.footnotes && this.block.footnotes.length) {
+              this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+                this.block.footnotes[footnoteIdx] = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
+              });
+            }
             break;
         }
         this.block.classes = [this.block.classes];
@@ -998,6 +1100,8 @@ export default {
       },
 
       isFootnoteAllowed: function() {
+        if (!this.allowEditing) return false;
+        if (this.block.type == 'illustration') return false;
         if (!this.range) return false;
         let container = this.range.commonAncestorContainer;
         if (typeof container.length == 'undefined') return false;
@@ -1010,13 +1114,26 @@ export default {
         return regexp.test(checkRange.toString());
       },
       addFootnote: function() {
+
+        this.destroyEditor();
+
         let el = document.createElement('SUP');
         el.className = 'js-footnote-el';
         el.setAttribute('data-idx', this.block.footnotes.length);
         this.range.insertNode(el);
         let pos = this.updFootnotes(this.block.footnotes.length);
-        this.block.footnotes.splice(pos, 0, '');
+        this.block.footnotes.splice(pos, 0, '<p></p>');
         this.isChanged = true;
+
+        //if (this.editorFootn) {
+
+          //console.log(MediumEditor.getEditorFromElement('.content-wrap-footn'));
+          console.log('this.editorFootn', this.editorFootn);
+          Vue.nextTick(() => {
+            //this.destroyEditor();
+            this.initEditor();
+          });
+        //}
       },
       delFootnote: function(pos) {
         $('#'+this.block._id).find(`.js-footnote-el[data-idx='${pos+1}']`).remove();
@@ -1033,11 +1150,11 @@ export default {
         return pos;
       },
       commitFootnote: function(pos, ev) {
-        this.block.footnotes[pos] = ev.target.innerText.trim();
+        //this.block.footnotes[pos] = ev.target.innerText.trim();
         this.isChanged = true;
       },
       commitDescription: function(ev) {
-        this.block.description = ev.target.innerText.trim();
+        //this.block.description = ev.target.innerText.trim();
         this.isChanged = true;
       },
 
@@ -1150,7 +1267,7 @@ export default {
               if (comment.creator !== flagPart.creator) result = false;
             });
           } else {
-            if (this.$store.state.auth.confirmRole(flagPart.type)) result = true;
+            if (this.$store.state.auth.confirmRole(flagPart.type) || (flagPart.type === 'narrator' && this.$store.state.auth.confirmRole('editor'))) result = true;
           }
           return result;
       },
@@ -1607,7 +1724,8 @@ export default {
         this.$emit('setRangeSelection', this.block, type, checked);
       },
       updateVoicework() {
-
+        
+        this.voiceworkUpdating = true;
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/set_voicework';
         let api = this.$store.state.auth.getHttp();
         return api.post(api_url, {
@@ -1615,12 +1733,14 @@ export default {
           updateType: this.voiceworkUpdateType
         }, {})
           .then(response => {
+            this.voiceworkUpdating = false;
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
             }
             this.voiceworkChange = false;
           })
           .catch(err => {
+            this.voiceworkUpdating = false;
             this.voiceworkChange = false;
           });
       },
@@ -1702,20 +1822,11 @@ export default {
 
         if (this.block.type === 'illustration') {
           this.setChanged(false);
-          if (this.editor) {
-            this.editor.removeElements();
-            this.editor.destroy();
-            Vue.nextTick(() => {
-              $('[id="' + this.block._id + '"] .illustration-block')
-              .removeAttr('contenteditable')
-              .removeAttr('data-placeholder');
-            });
-          }
-        } else {
-          if (!this.editor) {
-            this.initEditor();
-          }
         }
+
+        this.destroyEditor()
+        this.initEditor();
+
         if (oldVal !== false) {
           this.setChanged(true);
         }
@@ -1981,6 +2092,21 @@ export default {
           transition: box-shadow 200ms;
       }
 
+    }
+
+    &.content-description {
+        line-height: 24pt;
+        .content-wrap-desc {
+          p {
+            margin: 0;
+          }
+        }
+    }
+
+    .content-wrap-footn {
+        p {
+          margin: 0;
+        }
     }
 
     &.ilm-block {
@@ -2322,5 +2448,15 @@ export default {
         font-size: 15px !important;
       }
     }
+  }
+  .voicework-preloader {
+      background: url(/static/preloader-snake-small.gif);
+      width: 100%;
+      height: 34px;
+      display: inline-block;
+      margin: 4px 0px;
+      background-repeat: no-repeat;
+      text-align: center;
+      background-position: center;
   }
 </style>

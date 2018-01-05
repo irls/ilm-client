@@ -92,7 +92,29 @@ export const store = new Vuex.Store({
     isReader: state => state.isReader,
     allowPublishCurrentBook: state => state.allowPublishCurrentBook,
     allRolls: state => state.allRolls,
-    allBooks: state => state.books_meta,
+    allBooks: state => {
+      if (state.isAdmin || state.isLibrarian) {
+        return state.books_meta;
+      } else {
+        let books = [];
+        //console.log(state.tc_userTasks);
+        if (state.tc_userTasks && state.tc_userTasks.list) {
+          for (let t_id in state.tc_userTasks.list) {
+            if (state.tc_userTasks.list[t_id].tasks && state.tc_userTasks.list[t_id].tasks.length > 0) {
+              let exists = books.find(_b => _b._id == state.tc_userTasks.list[t_id].bookid);
+              if (!exists) {
+                let b = state.books_meta.find(_b => state.tc_userTasks.list[t_id].bookid == _b._id);
+                if (b) {
+                  //console.log('Adding book', b._id);
+                  books.push(b);
+                }
+              }
+            }
+          };
+        }
+        return books;//state.books_meta
+      }
+    },
     bookFilters: state => state.bookFilters,
     currentBookid: state => state.currentBookid,
     currentBook: state => state.currentBook,
@@ -208,7 +230,7 @@ export const store = new Vuex.Store({
         state.currentCollectionFiles[fileObj.fileName] = false;
       }
     },
-    
+
     SET_COLLECTIONS_FILTER (state, filter) {
       for(var field in filter) {
         state.collectionsFilter[field] = filter[field];
@@ -310,9 +332,11 @@ export const store = new Vuex.Store({
           for (let jobid in state.tc_userTasks.list) {
             state.bookCollectionsAll.forEach(c => {
               if (c.books && c.books.indexOf(state.tc_userTasks.list[jobid].bookid) !== -1) {
-                let exists = collections.find(_c => _c.id === c.id);
-                if (!exists) {
-                  collections.push(c);
+                if (state.tc_userTasks.list[jobid].tasks && state.tc_userTasks.list[jobid].tasks.length > 0) {
+                  let exists = collections.find(_c => _c._id === c._id);
+                  if (!exists) {
+                    collections.push(c);
+                  }
                 }
               }
             });
@@ -367,19 +391,21 @@ export const store = new Vuex.Store({
 
     // login event
     connectDB ({ state, commit, dispatch }, session) {
-        console.log('connectDB');
         commit('RESET_LOGIN_STATE');
+
         commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
         commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
         commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
+
         commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
         commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
         commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
         commit('set_remoteDB', { dbProp: 'collectionsRemoteDB', dbName: ILM_COLLECTIONS });
         commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
+
 
         state.metaDB.replicate.from(state.metaRemoteDB)
         .on('complete', (info)=>{
@@ -405,6 +431,7 @@ export const store = new Vuex.Store({
               // handle errors
             })
         });
+
         state.tasksDB.replicate.from(state.tasksRemoteDB)
         .on('complete', (info) => {
           state.tasksDB.sync(state.tasksRemoteDB, {live: true, retry: true})
@@ -485,6 +512,29 @@ export const store = new Vuex.Store({
 //          });
     },
 
+    destroyDB ({ state, commit, dispatch }) {
+      return new Promise((resolve, reject) => {
+
+        //if (!state.isLoggedIn) return resolve();
+
+        commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
+        commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
+        commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
+        commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
+
+        if (state.metaDB) state.metaDB.destroy()
+        if (state.contentDB) state.contentDB.destroy()
+        if (state.tasksDB) state.tasksDB.destroy()
+        if (state.collectionsDB) state.collectionsDB.destroy()
+
+        console.log('destroyDB');
+        window.setTimeout(() => {
+          console.log('destroyDB Done');
+          return resolve();
+        }, 50)
+      });
+    },
+
     // logout event
     disconnectDB ({ state, commit }) {
       axios.defaults.headers.common['Authorization'] = false;
@@ -501,7 +551,7 @@ export const store = new Vuex.Store({
     updateBooksList ({state, commit, dispatch}) {
       console.log('updateBooksList');
       let ilmLibraryMeta = state.metaDB.hoodieApi()
-      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted') && (item.editor == state.auth.getSession().user_id || item.private == false)))
+      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted')))
         .then(books => {
           commit('SET_BOOKLIST', books)
           dispatch('tc_loadBookTask')
@@ -604,7 +654,7 @@ export const store = new Vuex.Store({
         }
       }
     },
-    
+
     loadCollection({commit, state, dispatch}, id) {
       if (id) {
         state.currentCollectionId = id;
@@ -642,7 +692,7 @@ export const store = new Vuex.Store({
         })
       }
     },
-    
+
     updateCollectionVersion({state, dispatch}, update) {
       let id = update.id || state.currentCollection._id;
       if (id) {
@@ -669,11 +719,11 @@ export const store = new Vuex.Store({
             } else {
               dispatch('reloadCollection');
             }
-        
+
           });
       }
     },
-    
+
     allowCollectionPublish({state, commit}) {
       let allow_by_role = superlogin.confirmRole('librarian') || superlogin.confirmRole('admin');
       if (allow_by_role && state.currentCollection && state.currentCollection.books && state.currentCollection.books.length > 0 && state.books_meta) {
@@ -945,7 +995,7 @@ export const store = new Vuex.Store({
       })
       .catch((err) => {})
     },
-    
+
     getTotalBookTasks({state, commit}) {
       let allow_by_role = superlogin.confirmRole('librarian') || superlogin.confirmRole('admin')
       if (state.currentBookid && allow_by_role) {
