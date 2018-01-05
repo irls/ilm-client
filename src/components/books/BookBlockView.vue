@@ -512,6 +512,7 @@ export default {
         set(val) {
           if (!val) {
             this.voiceworkChange = false;
+            this.voiceworkUpdating = false;
           }
         }
       },
