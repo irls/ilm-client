@@ -1,8 +1,8 @@
 <template>
 <div :class="['container-fluid ilm-global-style', metaStyles]">
 
-    <template v-for="(sublist, page_Idx) in parlist">
-    <div class="row" v-for="(block, block_Idx) in sublist" v-bind:key="block_Idx">
+    <!--<template v-for="(sublist, page_Idx) in parlist">-->
+    <div class="row" v-for="(block, block_Idx) in parlist" v-bind:key="block_Idx">
         <div class='col'>
           <BookBlockView
               :block="block"
@@ -12,18 +12,20 @@
               :reCount  ="reCountProxy"
               :recorder ="recorder"
               :blockOrderChanged ="blockOrderChanged"
+              :block_Idx = "block_Idx"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
-              @joinBlocks="joinBlocks"
+              :joinBlocks="joinBlocks"
               @setRangeSelection="setRangeSelection"
           />
         </div>
         <!--<div class='col'>-->
     </div>
     <!--<div class="row"-->
-    </template>
+
+    <!--</template>-->
 
     <infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>
 
@@ -95,7 +97,7 @@ export default {
       BookBlockView, InfiniteLoading
   },
   methods: {
-    ...mapActions(['loadBlocks', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart']),
+    ...mapActions(['loadBlocks', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId']),
 
     test() {
         //this.parlist.splice(0,1);
@@ -158,77 +160,83 @@ export default {
 
     getBlocks() {
       if (this.meta._id) {
-        this.loadBlocks({
-              book_id: this.meta._id,
-              page: this.page++,
-              onpage: 20,
-              skipOffset: this.parlistSkip
-          }).then((result)=>{
-              let tmp = [];
-              if (result.length > 0) {
-                  result.forEach((el, idx, arr)=>{
-                      let newBlock = new BookBlock(el.doc);
-                      newBlock.parnum = this.setBlockParnum(newBlock);
-                      tmp.push(newBlock);
-                  });
-                  if (tmp.length>0) this.parlist.push(tmp)
-
-                  if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.loaded();
-              } else {
-                  if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
-              }
-              this.isAllLoaded = this.$refs.scrollBookDown ? this.$refs.scrollBookDown.isComplete : false;
-          }).catch((err)=>{
+        let first_id = false;
+        if (this.parlist.length > 0) first_id = this.parlist[this.parlist.length-1].chainid;
+        else if (this.meta.startBlock_id) first_id = this.meta.startBlock_id;
+        this.loadBlocksChain({
+          book_id: this.meta._id,
+          first_id: first_id,
+          onpage: 20
+        })
+        .then((result)=>{
+          if (result.length > 0) {
+              result.forEach((el, idx, arr)=>{
+                let newBlock = new BookBlock(el);
+                this.parlist.push(newBlock);
+              });
+            if (result.length < 20) {
               if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
-              console.log('Error: ', err.message);
-          });
+            } else {
+              if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.loaded();
+            }
+          } else {
+              if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
+          }
+          this.isAllLoaded = this.$refs.scrollBookDown.isComplete;
+          //console.log('loaded', result);
+        })
+        .catch((err)=>{
+          if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
+          console.log('Error: ', err.message);
+        });
       }
     },
 
     refreshBlock (change) {
-        //console.log('refreshBlock', change.doc);
-        let prev_block = null;
-        this.parlist.forEach((el, idx0, arr)=>{
-            el.forEach((block, idx1)=>{
+        console.log('refreshBlock', change.doc);
+//         let prev_block = null;
+        this.parlist.forEach((block, idx, arr)=>{
+
                 if (block._id === change.id) {
                     if (change.doc.audiosrc) {
                       change.doc.audiosrc = process.env.ILM_API + change.doc.audiosrc;
                     }
                     if (change.deleted === true) {
-                      el.splice(idx1, 1);
-                      this.onBlockNumberChange(change.doc, idx0)
+                      this.parlist.splice(idx, 1);
+//                       this.onBlockNumberChange(change.doc, idx)
                     } else {
-                      if (this.parlist[idx0][idx1].partUpdate) {
-                        this.parlist[idx0][idx1]._rev = change.doc._rev;
+                      if (this.parlist[idx].partUpdate) {
+                        this.parlist[idx]._rev = change.doc._rev;
                       } else {
-                        Vue.set(this.parlist[idx0], idx1, new BookBlock(change.doc));
+                        Vue.set(this.parlist, idx, new BookBlock(change.doc));
                       }
                     }
-                } else if (prev_block && block.index > change.doc.index && prev_block.index < change.doc.index) {// new block
-                  let existing = el.find(_b => {
-                    return _b._id == change.doc._id;
-                  })
-                  if (!existing) {
-                    el.splice(idx1, 0, new BookBlock(change.doc))
-                    this.onBlockNumberChange(change.doc, idx0)
-                  }
-                } else if (!prev_block && idx0 == 0 && idx1 == 0 && change.doc.index < block.index) {// new block before list
-                  let existing = el.find(_b => {
-                    return _b._id == change.doc._id;
-                  })
-                  if (!existing) {
-                    this.parlist[idx0].unshift(new BookBlock(change.doc));
-                    this.onBlockNumberChange(change.doc, idx0);
-                  }
                 }
-                prev_block = block;
-            });
+//                 } else if (prev_block && block.index > change.doc.index && prev_block.index < change.doc.index) {// new block
+//                   let existing = el.find(_b => {
+//                     return _b._id == change.doc._id;
+//                   })
+//                   if (!existing) {
+//                     el.splice(idx, 0, new BookBlock(change.doc))
+// //                     this.onBlockNumberChange(change.doc, idx)
+//                   }
+//                 } else if (!prev_block && idx0 == 0 && idx1 == 0 && change.doc.index < block.index) {// new block before list
+//                   let existing = el.find(_b => {
+//                     return _b._id == change.doc._id;
+//                   })
+//                   if (!existing) {
+//                     this.parlist[idx].unshift(new BookBlock(change.doc));
+// //                     this.onBlockNumberChange(change.doc, idx0);
+//                   }
+//                 }
+//                 prev_block = block;
+
         });
-        if (prev_block && this.isAllLoaded && change.doc.index > prev_block.index) {// new block in the bottom
-          this.parlist[this.parlist.length - 1].push(new BookBlock(change.doc));
-          this.onBlockNumberChange(change.doc, this.parlist.length - 1);
-        }
-        this.initRecorder();
+//         if (prev_block && this.isAllLoaded && change.doc.index > prev_block.index) {// new block in the bottom
+//           this.parlist[this.parlist.length - 1].push(new BookBlock(change.doc));
+// //           this.onBlockNumberChange(change.doc, this.parlist.length - 1);
+//         }
+        //this.initRecorder();
     },
 
 //       return new Promise((resolve, reject) => {
@@ -292,11 +300,8 @@ export default {
 
     reCountProxy: function () {
       this.parCounter = { pref: 0, prefCnt: 0, curr: 1 };
-      this.parlist.forEach((el, idx0, arr)=>{
-        el.forEach((block, idx1)=>{
-          block.parnum = this.setBlockParnum(block);
-          //console.log(block._id, block.type, block.secnum, block.parnum);
-        })
+      this.parlist.forEach((block, idx, arr)=>{
+        block.parnum = this.setBlockParnum(block);
       })
     },
 
@@ -345,6 +350,7 @@ export default {
         }
       });
     },
+
     findNextBlock(block, task) {
       let next = false;
       for (let i = 0; i < this.parlist.length; ++i) {
@@ -365,54 +371,140 @@ export default {
       }
       return next;
     },
-    insertBlockBefore(block_id) {
-      this.insertBlock(block_id, 'before');
-    },
-    insertBlockAfter(block_id) {
-      this.insertBlock(block_id, 'after');
-    },
-    insertBlock(block_id, direction) {
-      let par = false;
-      let index = false;
-      let block;
-      for (let i = 0; i < this.parlist.length; ++i) {
-        block = this.parlist[i].find(p => {
-          return p._id == block_id;
-        });
-        if (block) {
-          par = this.parlist[i];
-          index = i;
-          i = this.parlist.length;
-        }
+
+    createEmptyBlock(bookid, block_id) {
+      let newBlock = {
+        _id: bookid + '_' + Date.now(),
+        bookid: bookid,
+        chainid: block_id,
+        tag: 'p',
+        type: 'par',
+        parnum: ''
       }
-      //console.log(index, par, block._id);
-      if (index !== false && par && block) {
-        let api_url = this.API_URL + 'book/block';
-        let api = this.$store.state.auth.getHttp();
-        api.post(api_url, {
-          block_id: block_id,
-          direction: direction
-        })
-        .then(response => {
-          ++this.parlistSkip;
-        })
-      }
+      return new BookBlock(newBlock);
     },
-    deleteBlock(block_id) {
-      let api_url = this.API_URL + 'book/block/' + block_id;
-        let api = this.$store.state.auth.getHttp();
-        api.delete(api_url, {})
-          .then(response => {
-            --this.parlistSkip;
+
+    insertBlockBefore(block, block_Idx) {
+      //this.insertBlock(block._id, 'before');
+      this.getBlockByChainId(block._id)
+      .then((blockBefore)=>{
+          let newBlock = this.createEmptyBlock(block.bookid, block._id);
+          this.parlist.splice(block_Idx, 0, newBlock);
+          this.putBlock(newBlock)
+          .then(()=>{
+            blockBefore.chainid = newBlock._id;
+            this.putBlockPart({
+              block: new BookBlock(blockBefore),
+              field: 'chainid'
+            }).then(()=>{});
           })
+          .catch((err)=>{})
+      })
+      .catch((err)=>err)
     },
-    joinBlocks(block, direction) {
+
+    insertBlockAfter(block, block_Idx) {
+      //this.insertBlock(block_id, 'after');
+      let newBlock = this.createEmptyBlock(block.bookid, block.chainid);
+      this.parlist.splice(block_Idx+1, 0, newBlock);
+      this.putBlock(newBlock)
+      .then(()=>{
+        block.chainid = newBlock._id;
+        this.putBlockPart({
+          block: new BookBlock(block),
+          field: 'chainid'
+        }).then(()=>{});
+      })
+      .catch((err)=>{})
+    },
+
+    insertBlock(block_id, direction) {
+
+//       let par = false;
+//       let index = false;
+//       let block;
+//       for (let i = 0; i < this.parlist.length; ++i) {
+//         block = this.parlist[i].find(p => {
+//           return p._id == block_id;
+//         });
+//         if (block) {
+//           par = this.parlist[i];
+//           index = i;
+//           i = this.parlist.length;
+//         }
+//       }
+//       //console.log(index, par, block._id);
+//       if (index !== false && par && block) {
+//         let api_url = this.API_URL + 'book/block';
+//         let api = this.$store.state.auth.getHttp();
+//         api.post(api_url, {
+//           block_id: block_id,
+//           direction: direction
+//         })
+//         .then(response => {
+//           ++this.parlistSkip;
+//         })
+//       }
+    },
+    deleteBlock(block, block_Idx) {
+//       let api_url = this.API_URL + 'book/block/' + block_id;
+//         let api = this.$store.state.auth.getHttp();
+//         api.delete(api_url, {})
+//           .then(response => {
+//             --this.parlistSkip;
+//           })
+
+      //book_meta._deleted =  true;
+      //return db_content_meta.put(book_meta)
+      this.getBlockByChainId(block._id)
+      .then((blockBefore)=>{
+          this.parlist.splice(block_Idx, 1);
+          block._deleted =  true;
+          this.putBlock(block)
+          .then(()=>{
+            blockBefore.chainid = block.chainid;
+            this.putBlockPart({
+              block: new BookBlock(blockBefore),
+              field: 'chainid'
+            }).then(()=>{});
+          })
+          .catch((err)=>{})
+      })
+      .catch((err)=>err)
+    },
+    joinBlocks(block, block_Idx, direction) {
       let api_url = this.API_URL + 'book/block_join/';
       let api = this.$store.state.auth.getHttp();
-      api.post(api_url, {
-        block_id: block._id,
-        direction: direction
-      });
+//       api.post(api_url, {
+//         block_id: block._id,
+//         direction: direction
+//       });
+      console.log('joinBlocks', block, block_Idx, direction);
+      let checkArr = ['par', 'title', 'header'];
+
+        switch(direction) {
+          case 'previous' : {
+            return this.getBlockByChainId(block._id)
+            .then((blockBefore)=>{
+              if (!checkArr.includes(block.type) || !checkArr.includes(blockBefore.type)) {
+                return Promise.reject('type');
+              }
+
+              return api.post(api_url, {
+                resultBlock_id: blockBefore._id,
+                donorBlock_id: block._id
+              });
+            })
+
+          } break;
+          case 'next' : {
+              return api.post(api_url, {
+                resultBlock_id: block._id,
+                donorBlock_id: block.chainid
+              });
+          } break;
+        };
+
     },
     setBlockOrderChanged(val) {
       this.blockOrderChanged = val;

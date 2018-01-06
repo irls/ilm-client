@@ -117,7 +117,7 @@
       panel,
       dropdown,
       modal
-      
+
     },
     props: {
       'audiobook': Object,
@@ -172,7 +172,7 @@
           self.$root.$emit('for-audioeditor:load-and-play', process.env.ILM_API + self.audiobook.importUrl + record.id, '', null, false, record)
         }
       });
-      
+
     },
     methods: {
       uploadAudio() {
@@ -194,21 +194,21 @@
           if (response.status===200) {
             self.$emit('audiobookUpdated', response.data);
           } else {
-            
+
           }
         }).catch((err) => {
           console.log('error: '+ err)
         });
       },
       addSelection(id, event, value) {
-        
+
         if (event && event.target) {
           value = event.target.checked;
         }
-        
+
         if (value === true) {
           if (this.selections.indexOf(id) === -1) {
-            this.selections.push(id) 
+            this.selections.push(id)
           }
         } else {
           this.selections.splice(this.selections.indexOf(id), 1)
@@ -229,7 +229,7 @@
       deleteAudio(id) {
         this.onDeleteMessage = true;
         this.deleting = id;
-        
+
       },
       deleteAudioProcess() {
         if (!this.deleting) {
@@ -345,9 +345,9 @@
           audiofiles: this.selections
         }, {}).then(function(response){
           if (response.status===200) {
-            
+
           } else {
-            
+
           }
           this.alignmentProcess = false;
         }).catch((err) => {
@@ -548,7 +548,7 @@
           }
         }
         input[type="text"] {
-            
+
         }
         input[disabled] {
             background-color: inherit;

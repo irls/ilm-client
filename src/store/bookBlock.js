@@ -21,7 +21,8 @@ let defBlock = [
   'secnum',
   'illustration',
   'description',
-  'voicework'
+  'voicework',
+  'markedAsDone'
 ]
 
 let BlockTypes = {
@@ -77,7 +78,7 @@ class BookBlock {
 
     this.tag = init.tag || '';
     this.content = init.content || '<p></p>';
-    this.type = init.type || '';
+    this.type = init.type || 'par';
     this.classes = init.classes || {};
     if (Array.isArray(this.classes)) this.classes = {};
 
@@ -94,6 +95,8 @@ class BookBlock {
     this.description = init.description || '<p></p>';
     this.voicework = init.voicework;
     this.partUpdate = false;
+
+    this.markedAsDone = init.markedAsDone || false;
   }
 
   clean() {

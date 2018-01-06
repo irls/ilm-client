@@ -33,13 +33,36 @@
 
       <div class="book-listing">
         <div class="row">
-          <div v-if="tc_hasTask('metadata_cleanup')" class="col-sm-4">
-            <button v-if="!textCleanupProcess" class="btn btn-primary" v-on:click="showSharePrivateBookModal = true">Editing complete</button>
+          <template v-if="tc_hasTask('metadata_cleanup')">
+            <div v-if="!textCleanupProcess" class="editing-wrapper">
+              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true">Editing complete</button>
+              <div class="col-sm-8 blocks-counter">
+                <span class="blocks-counter-value">{{currentBookBlocksLeft}}</span>Blocks need your approval {{currentBookBlocksLeftId}}
+              </div>
+            </div>
             <div v-else class="preloader-small"></div>
-          </div>
+          </template>
         </div>
         <vue-tabs ref="panelTabs">
           <vue-tab title="Audio Integration" :id="'audio-integration'">
+            <div class="t-box">
+              <template v-if="currentBook.isMastered">
+                <div class="btn-switch" @click="currentBook.isMastered = !currentBook.isMastered">
+                  <i class="fa fa-toggle-on"></i>
+                  <span class="s-label"> Mastered</span>
+                </div>
+              </template>
+              <template v-else>
+                <div class="btn-switch" @click="currentBook.isMastered = !currentBook.isMastered">
+                  <i class="fa fa-toggle-off"></i>
+                  <span class="s-label -disabled"> Mastered</span>
+                </div>
+              </template>
+
+              <button :class="['btn btn-primary btn-small btn-export-audio', currentBook.isMastered ? '':'-disabled']">
+                Export Audio
+              </button>
+            </div>
             <BookAudioIntegration ref="audioIntegration" :audiobook="audiobook" :blocksForAlignment="blocksForAlignment"
               ></BookAudioIntegration>
           </vue-tab>
@@ -346,7 +369,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId']),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -453,6 +476,7 @@ export default {
       this.currentBook.coverimg = this.currentBookFiles.coverimg;
       this.isOwner = this.currentBook.owner == superlogin.getSession().user_id
       this.loadAudiobook();
+      this.setCurrentBookBlocksLeft(this.currentBook._id);
     },
 
     update: _.debounce(function (key, event) {
@@ -656,7 +680,7 @@ export default {
         console.log(resp);
       });
     },
-    ...mapActions(['getAudioBook', 'updateBookVersion'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft'])
   }
 }
 </script>
@@ -664,7 +688,7 @@ export default {
 
 <style scoped src='./css/BookProperties.css'></style>
 
-<style scoped>
+<style scoped lang="less">
 
   .btn_download {
     border: 0px;
@@ -805,6 +829,66 @@ export default {
     font-weight: 400;
   }
 
+  .editing-wrapper {
+    margin-left: 15px;
+    .btn-edit-complete {
+      margin-bottom: 5px;
 
+    }
+
+    .blocks-counter {
+      vertical-align: middle;
+      line-height: 34px;
+      color: #337ab7;
+    }
+
+    .blocks-counter-value {
+      display: inline-block;
+      width: 50px;
+      float: none;
+      font-weight: bold;
+      text-align: right;
+      margin-right: 8px;
+    }
+  }
+
+  .t-box {
+    height: 45px;
+    border-left: 1px solid #ddd;
+    padding-top: 7px;
+    padding-left: 20px;
+    vertical-align: middle;
+
+    .btn-switch {
+      display: inline-block;
+      text-align: center;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    span.s-label {
+      /*margin-top: 6px;*/
+      float: none;
+      width: auto;
+      cursor: pointer;
+      line-height: 24px;
+      &.-disabled {
+        opacity: .65;
+      }
+    }
+    i.fa-toggle-on, i.fa-toggle-off {
+      /*margin-top: 6px;*/
+      font-size: 22px;
+      height: 22px;
+      line-height: 22px;
+      vertical-align: top;
+    }
+    .btn-export-audio {
+      margin-left: 10px;
+      &.-disabled {
+        opacity: .65;
+        cursor: not-allowed;
+      }
+    }
+  }
 
 </style>
