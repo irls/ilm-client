@@ -18,6 +18,7 @@
     "draggable": "4.1.2",
     "draggable-list": "1.4.0",
     "expose-loader": "^0.7.3",
+    "hat": "^0.0.3",
     "html2canvas": "^0.5.0-beta4",
     "install": "^0.8.7",
     "jquery": "^3.2.1",

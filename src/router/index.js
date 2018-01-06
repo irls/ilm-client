@@ -41,6 +41,14 @@ export default new Router({
       component: Libraries
     },
     {
+      path: '/libraries/:libraryid',
+      component: Libraries
+    },
+    {
+      path: '/library-books',
+      component: Libraries
+    },
+    {
       path: '/assignments',
       component: Tasks
     },

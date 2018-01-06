@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar">
 
-    <div id='bookmeta' v-if="currentBook">
+    <div id='bookmeta' v-if="currentBook" class="sidebar-bookmeta">
       <div class='booktopinfo'>
         <div class='coverimg' @click="bookEditCoverModalActive = true">
           <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
@@ -9,7 +9,7 @@
         </div>
         <h4 class='title'>{{ currentBook.title }}</h4>
         <h5 class='subtitle' v-if='currentBook.subtitle'>{{ currentBook.subtitle }}</h5>
-        <h5 class='author'>{{ currentBook.author ? currentBook.author.join(',') : '' }},
+        <h5 class='author'>{{ currentBook.author && Array.isArray(currentBook.author) ? currentBook.author.join(',') : currentBook.author }},
         <span class="pages">{{ Math.round(currentBook.wordcount / 300) }} pages &nbsp;
         </span></h5>
         <div style='clear: both'> </div>
@@ -474,7 +474,10 @@ export default {
       }
       this.currentBook = Object.assign({}, this.currentBookMeta);
       this.currentBook.coverimg = this.currentBookFiles.coverimg;
-      this.isOwner = this.currentBook.owner == superlogin.getSession().user_id
+      this.isOwner = this.currentBook.owner == superlogin.getSession().user_id;
+      if (this.currentBook.author && !Array.isArray(this.currentBook.author)) {
+        this.currentBook.author = [this.currentBook.author];
+      }
       this.loadAudiobook();
       this.setCurrentBookBlocksLeft(this.currentBook._id);
     },
@@ -557,7 +560,11 @@ export default {
         //console.log('success DB update: ', doc)
         return this.updateBookVersion({minor: true})
           .then(() => {
-            return BPromise.resolve(doc)
+            return BPromise.resolve(doc);
+          })
+          .catch(err => {
+            //console.log(err);
+            return BPromise.reject(err);
           });
       }).catch(err => {
         //console.log('error DB pdate: ', err)
@@ -718,7 +725,7 @@ export default {
     margin-top:0px;
     margin-left:0;
     padding-left:0;
-    overflow: scroll;
+    overflow-y: scroll;
     height: 80%;
   }
   .sidebar::-webkit-scrollbar-track {
@@ -827,6 +834,10 @@ export default {
     display: inline-block;
     vertical-align: top;
     font-weight: 400;
+  }
+  
+  .sidebar-bookmeta {
+    width: 96%;
   }
 
   .editing-wrapper {
