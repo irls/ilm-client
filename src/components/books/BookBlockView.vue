@@ -1803,7 +1803,7 @@ export default {
         this.$emit('setRangeSelection', this.block, type, checked);
       },
       updateVoicework() {
-        
+
         this.voiceworkUpdating = true;
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/set_voicework';
         let api = this.$store.state.auth.getHttp();
@@ -2532,9 +2532,10 @@ export default {
     }
   }
   .modal-content {
-  .modal-header {
-    padding-left: 15px;
-    padding-right: 15px;
+    .modal-header {
+      padding-left: 15px;
+      padding-right: 15px;
+    }
   }
   .voicework-preloader {
       background: url(/static/preloader-snake-small.gif);
