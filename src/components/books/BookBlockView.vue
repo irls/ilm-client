@@ -145,7 +145,7 @@
             <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div>
-            <div class="table-row ilm-block">
+            <div :class="['table-row ilm-block', block.markedAsDone ? '-marked':'']">
                 <hr v-if="block.type=='hr'" :class="[block.getClass()]"/>
 
                 <div v-else-if="block.type == 'illustration'" :class="['table-body illustration-block']">
@@ -321,6 +321,19 @@
               v-if="block.footnotes.length > 0">
               <div class="table-body footnote"
                 v-for="(footnote, footnoteIdx) in block.footnotes">
+
+                <div class="table-row controls-top"><div class="table-cell"></div><div class="table-cell">
+                  <template v-if="allowEditing">
+                    <template v-if="tc_hasTask('content_cleanup')">
+                      <label>Voicework:&nbsp;
+                      <select v-model='footnVoiceworkSel' style="min-width: 100px;" ref="footnVoiceworkSel">
+                        <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
+                      </select>
+                      </label>
+                    </template>
+                  </template>
+                </div></div>
+
                 <div class="table-row">
                   <div class="table-cell -num">{{footnoteIdx+1}}.</div>
                   <div class="content-wrap-footn table-cell -text"
@@ -360,12 +373,21 @@
                       @click="handleBlockFlagClick"
                     ></i>
                   </span>
-                  <span v-bind:class="{ '-disabled': isNeedWorkDisabled }"
+
+                  <span v-if="!isNeedWorkDisabled"
                     @click.prevent="reworkBlock">
                     <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
-                  <span v-bind:class="{ '-disabled': isApproveDisabled }"
+                  <span v-if="!isNeedWorkDisabled"
                     @click.prevent="approveBlock">
                     <i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
+
+                  <span v-if="isNeedWorkDisabled"
+                    @click.prevent="unmarkBlock">
+                    <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
+                  <span v-if="isNeedWorkDisabled"
+                    @click.prevent="markBlock">
+                    <i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
+
                   </template>
               </div>
               <!--<div class="-hidden">-->
@@ -377,6 +399,12 @@
     </div>
     <modal v-model="deleteBlockMessage" effect="fade" ok-text="Delete" cancel-text="Cancel" title="Delete block" @ok="deleteBlock()">
       <div>Delete block? </div>
+    </modal>
+    <modal v-model="unableJoinMessage" effect="fade" cancel-text="Close" title="Join blocks error">
+      <div slot="modal-body" class="modal-body">Unable to join blocks with different types </div>
+      <div slot="modal-footer" class="modal-footer">
+        <button type="button" class="btn btn-default" @click="unableJoinMessage = false">Close</button>
+      </div>
     </modal>
     <modal v-model="onVoiceworkChange" effect="fade">
       <!-- custom header -->
@@ -462,6 +490,7 @@ export default {
       isUpdating: false,
       recordStartCounter: 0,
       deleteBlockMessage: false,
+      unableJoinMessage: false,
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
       isAudioEditing: false,
@@ -475,7 +504,7 @@ export default {
       'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockOrderChanged', 'audioEditor'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockOrderChanged', 'block_Idx', 'audioEditor', 'joinBlocks'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -495,6 +524,12 @@ export default {
           'no_audio': 'No audio'
         }
       },
+      footnVoiceworks: function () {
+        return {
+          'tts': 'Text to Speach',
+          'no_audio': 'No audio'
+        }
+      },
       voiceworkSel: {
         get() {
           return this.block.voicework;
@@ -503,6 +538,16 @@ export default {
           if (val !== this.block.voicework) {
             this.voiceworkChange = val;
           }
+        }
+      },
+      footnVoiceworkSel: {
+        get() {
+          return 'ttn';
+        },
+        set(val) {
+//           if (val !== this.block.voicework) {
+//             this.voiceworkChange = val;
+//           }
         }
       },
       onVoiceworkChange: {
@@ -575,6 +620,7 @@ export default {
   },
   mounted: function() {
       //this.initEditor();
+      //console.log('mounted');
       this.blockAudio = {'map': this.block.content, 'src': this.block.audiosrc ? this.block.audiosrc : ''};
       if (!this.player && this.blockAudio.src) {
           this.blockAudio.src = this.blockAudio.src + '?' + (new Date()).toJSON();
@@ -604,7 +650,8 @@ export default {
   methods: {
       ...mapActions([
         'putMetaAuthors',
-        'tc_approveBookTask'
+        'tc_approveBookTask',
+        'setCurrentBookBlocksLeft'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false) {
@@ -937,6 +984,26 @@ export default {
       approveBlock: function(ev) {
         if (!this.isApproveDisabled) {
           this.actionWithBlock(ev);
+        }
+      },
+
+      unmarkBlock: function(ev) {
+        if (this.block.markedAsDone) {
+          this.block.markedAsDone = false;
+          this.assembleBlock(ev)
+          .then(()=>{
+            this.setCurrentBookBlocksLeft(this.block.bookid);
+          });
+        }
+      },
+
+      markBlock: function(ev) {
+        if (!this.block.markedAsDone) {
+          this.block.markedAsDone = true;
+          this.assembleBlock(ev)
+          .then(()=>{
+            this.setCurrentBookBlocksLeft(this.block.bookid);
+          });
         }
       },
 
@@ -1520,14 +1587,14 @@ export default {
         this.startRecording();
       },
       insertBlockBefore() {
-        this.$emit('insertBefore', this.block._id);
+        this.$emit('insertBefore', this.block, this.block_Idx);
       },
       insertBlockAfter() {
-        this.$emit('insertAfter', this.block._id);
+        this.$emit('insertAfter', this.block, this.block_Idx);
       },
       deleteBlock() {
         this.deleteBlockMessage = false;
-        this.$emit('deleteBlock', this.block._id);
+        this.$emit('deleteBlock', this.block, this.block_Idx);
         //this.block._deleted = true;
         //this.assembleBlock();
       },
@@ -1542,10 +1609,22 @@ export default {
         }
       },
       joinWithPrevious() {
-        this.$emit('joinBlocks', this.block, 'previous');
+        this.joinBlocks(this.block, this.block_Idx, 'previous')
+        .then(()=>{
+
+        })
+        .catch(()=>{
+          this.unableJoinMessage = true;
+        })
       },
       joinWithNext() {
-        this.$emit('joinBlocks', this.block, 'next');
+        this.joinBlocks(this.block, this.block_Idx, 'next')
+        .then(()=>{
+
+        })
+        .catch(()=>{
+          this.unableJoinMessage = true;
+        })
       },
       showAudioEditor() {
         //$('.table-body.-content').removeClass('editing');
@@ -1799,7 +1878,7 @@ export default {
           });
       },
       'block.type' (newVal) {
-        //console.log('block.type');
+        //console.log('block.type', this.blockTypes);
         this.setChanged(true);
         if (Object.keys(this.blockTypes[newVal])[0] !== '') {
           this.classSel = Object.keys(this.blockTypes[newVal])[0];
@@ -1890,6 +1969,9 @@ export default {
     }
     hr {
       position: static;
+    }
+    &.-marked {
+      background-color: rgba(219, 255, 255, 0.5);
     }
 }
 
@@ -2448,6 +2530,11 @@ export default {
         font-size: 15px !important;
       }
     }
+  }
+  .modal-content {
+  .modal-header {
+    padding-left: 15px;
+    padding-right: 15px;
   }
   .voicework-preloader {
       background: url(/static/preloader-snake-small.gif);

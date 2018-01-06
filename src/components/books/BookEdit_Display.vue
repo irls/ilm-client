@@ -65,33 +65,35 @@ export default {
   methods: {
     ...mapActions(['loadBlocks', 'loadBlocksChain']),
     onInfiniteScroll() {
-      //console.log('Loading blocks')
+      let first_id = false;
+      if (this.parlist.length > 0) first_id = this.parlist[this.parlist.length-1].chainid;
+      else if (this.meta.startBlock_id) first_id = this.meta.startBlock_id;
       this.loadBlocksChain({
-            book_id: this.meta._id,
-            first_id: this.parlist.length > 0 ? this.parlist[this.parlist.length-1].chainid : false,
-            onpage: 20
-        }).then((result)=>{
-            //console.log('Loading blocks finished')
-            if (result.length > 0) {
-                result.forEach((el, idx, arr)=>{
-                    let newBlock = new BookBlock(el);
-                    this.parlist.push(newBlock);
-                });
-              if (result.length < 20) {
-                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
-              } else {
-                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.loaded();
-              }
+          book_id: this.meta._id,
+          first_id: first_id,
+          onpage: 20
+      })
+      .then((result)=>{
+          if (result.length > 0) {
+              result.forEach((el, idx, arr)=>{
+                  let newBlock = new BookBlock(el);
+                  this.parlist.push(newBlock);
+              });
+            if (result.length < 20) {
+              if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
             } else {
-                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
+              if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.loaded();
             }
-            this.isAllLoaded = this.$refs.infiniteLoading.isComplete;
-            //console.log('loaded', result);
-        }).catch((err)=>{
-            if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
-            console.log('Error: ', err.message);
-        });
-
+          } else {
+              if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
+          }
+          this.isAllLoaded = this.$refs.infiniteLoading.isComplete;
+          //console.log('loaded', result);
+      })
+      .catch((err)=>{
+        if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
+        console.log('Error: ', err.message);
+      });
     },
   },
 }

@@ -57,6 +57,8 @@ export const store = new Vuex.Store({
     currentBookMeta_dirty: false,
     currentEditingBlockId: '',
     currentBookFiles: { coverimg: false },
+    currentBookBlocksLeft: 0,
+    currentBookBlocksLeftId: 'AAA',
 
     bookFilters: {filter: '', language: 'en', importStatus: 'staging'},
     editMode: 'Editor',
@@ -120,6 +122,8 @@ export const store = new Vuex.Store({
     currentBook: state => state.currentBook,
     currentBookMeta: state => state.currentBookMeta,
     currentBookFiles: state => state.currentBookFiles,
+    currentBookBlocksLeft: state => state.currentBookBlocksLeft,
+    currentBookBlocksLeftId: state => state.currentBookBlocksLeftId,
     bookEditMode: state => state.editMode,
     allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode) && state.currentBookMeta.status != 'import_text',
     allowArchiving: state => state.isAdmin || state.isProofer,
@@ -200,6 +204,9 @@ export const store = new Vuex.Store({
         if (!state.currentBookMeta.styles) {
           state.currentBookMeta.styles = {};
         }
+        if (!state.currentBookMeta.isMastered) {
+          state.currentBookMeta.isMastered = false;
+        }
       } else {
         state.currentBookMeta = {}
         state.currentBookid = ''
@@ -241,6 +248,14 @@ export const store = new Vuex.Store({
     SET_CURRENT_LIBRARY (state, library) {
       state.currentLibrary = library;
       state.currentLibraryId = library._id ? library._id : false;
+    },
+
+    SET_CURRENTBOOKBLOCKS_LEFT (state, blocksCount) {
+      state.currentBookBlocksLeft = blocksCount;
+    },
+
+    SET_CURRENTBOOKBLOCKS_LEFT_ID (state, blockId) {
+      state.currentBookBlocksLeftId = blockId;
     },
 
     setEditMode (state, editMode) {
@@ -842,9 +857,21 @@ export const store = new Vuex.Store({
             requests[i].resolve();
           })
           .catch((err)=>{
-            for (var e = i; e < params.onpage; ++e) {
-              requests[e].resolve();
-            }
+            // fallback if syncronization is not finished yet
+            state.contentRemoteDB.get(block_id)
+            .then((b)=>{
+              if (b.audiosrc) {
+                b.audiosrc = process.env.ILM_API + b.audiosrc;
+              }
+              results.push(b);
+              loop(i+1, b.chainid);
+              requests[i].resolve();
+            })
+            .catch((err)=>{
+              for (var e = i; e < params.onpage; ++e) {
+                requests[e].resolve();
+              }
+            })
           })
         }
       })(0, params.first_id);
@@ -906,9 +933,15 @@ export const store = new Vuex.Store({
           });
         })
         .catch((err) => {
-            console.log('Block save error:', err);
+            if (err.status == 404) {
+              return state.contentDB.put(cleanBlock)
+              .then((response) => {
+                // handle response
+              });
+            } else {
+              console.log('Block save error:', err);
+            }
         });
-
     },
 
     putBlockPart ({commit, state, dispatch}, blockData) {
@@ -1013,8 +1046,55 @@ export const store = new Vuex.Store({
       } else {
         commit('SET_ALLOW_BOOK_PUBLISH', false);
       }
-    }
+    },
 
+    setCurrentBookBlocksLeft({state, commit}, bookId) {
+      console.log('setCurrentBookBlocksLeft', bookId);
+
+      commit('SET_CURRENTBOOKBLOCKS_LEFT_ID', 'BBB');
+
+      return state.contentDB.query({
+        map: function (doc) {
+          if (!doc.markedAsDone) {
+            emit(doc.bookid);
+          }
+        },
+        reduce: '_count'
+      }, {
+        key: bookId, reduce: true, group: true
+      })
+      .then(function (result) {
+        console.log('result', result);
+        commit('SET_CURRENTBOOKBLOCKS_LEFT', result.rows[0].value);
+        return true;
+      })
+      .catch((err) => {
+        console.log('Block count error:', err);
+      });
+    },
+
+    getBlockByChainId({state, commit}, chainid) {
+      return state.contentDB.query({
+        map: function (doc) {
+          emit(doc.chainid, doc);
+        }
+      }, {
+        key: chainid/*, include_doc: true*/
+      })
+      .then(function (result) {
+        console.log('result', result);
+        if (result.rows.length) {
+          return result.rows[0].value;
+        } else {
+          return false;
+        }
+      })
+      .catch((err) => {
+        console.log('Block by chain error:', err);
+        //putBlockPart ({commit, state, dispatch}, blockData) {
+        return err;
+      });
+    }
 
   }
 })
