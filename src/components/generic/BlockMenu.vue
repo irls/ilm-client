@@ -62,6 +62,8 @@ import Vue from 'vue'
             this.viewMenu = false;
             this.top = 0 + 'px';
             this.left = 0 + 'px';
+
+            document.removeEventListener('click', this.close);
         },
 
         open: function(ev, block_Id) {
@@ -78,6 +80,8 @@ import Vue from 'vue'
                 this.setMenu(ev.clientX, ev.clientY, ev.target);
                 //this.$refs.menu.focus();
             }.bind(this));
+
+            setTimeout(() => document.addEventListener('click', this.close), 0);
         }
     },
     mounted: function() {

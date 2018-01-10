@@ -46,7 +46,8 @@
                     <block-menu
                         ref="blockMenu"
                         dir="top"
-                        :update="update">
+                        :update="update"
+                        @click.stop>
 
                       <li v-if="isHideArchFlags"
                         @click.prevent="toggleArchFlags()">
