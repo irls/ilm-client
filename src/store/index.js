@@ -77,7 +77,7 @@ export const store = new Vuex.Store({
     libraries: [],
     currentLibrary: {},
     currentLibraryId: false,
-    
+
     user: {}
   },
 
@@ -244,7 +244,7 @@ export const store = new Vuex.Store({
       }
       //console.log(state.collectionsFilter)
     },
-    
+
     SET_CURRENT_LIBRARY (state, library) {
       state.currentLibrary = library;
       state.currentLibraryId = library._id ? library._id : false;
@@ -464,10 +464,10 @@ export const store = new Vuex.Store({
             dispatch('updateCollectionsList');
           })
         });
-        
+
         state.librariesDB.replicate.from(state.librariesRemoteDB)
           .on('complete', () => {
-            dispatch('updateLibrariesList');            
+            dispatch('updateLibrariesList');
             state.librariesDB.sync(state.librariesRemoteDB, {live: true, retry: true})
               .on('change', () => {
                 dispatch('updateLibrariesList');
@@ -482,9 +482,9 @@ export const store = new Vuex.Store({
             }
           })
           .catch(err => console.log(err));
-          
+
 //          state.librariesDB.replicate.from(state.librariesRemoteDB, {
-//          /*filter: '_view', 
+//          /*filter: '_view',
 //          view: 'filters_byLibrarian/byLibrarian',
 //          query_params: {
 //            key: "librarian2"
@@ -496,7 +496,7 @@ export const store = new Vuex.Store({
 //        })
 //          .on('complete', () => {
 //            dispatch('updateLibrariesList');
-//    
+//
 //            setInterval(function() {
 //              state.librariesDB.replicate.from(state.librariesRemoteDB, {
 //              filter: 'filters_byLibrarian/byLibrarian',
@@ -513,7 +513,7 @@ export const store = new Vuex.Store({
 //              });
 //            }, 10000);
 //            /*state.librariesDB.sync(state.librariesRemoteDB, {
-//              live: true, 
+//              live: true,
 //              retry: true,
 //              filter: 'filters_byLibrarian/byLibrarian',
 //          query_params: {
@@ -760,7 +760,7 @@ export const store = new Vuex.Store({
         commit('SET_ALLOW_COLLECTION_PUBLISH', false);
       }
     },
-    
+
     updateLibrariesList ({state, commit, dispatch}) {
       state.librariesDB.hoodieApi().findAll()
         .then(libraries => {
@@ -768,7 +768,7 @@ export const store = new Vuex.Store({
           dispatch('reloadLibrary');
         })
     },
-    
+
     loadLibrary({commit, state, dispatch}, id) {
       if (id) {
         state.currentLibraryId = id;
@@ -1082,7 +1082,7 @@ export const store = new Vuex.Store({
         key: chainid/*, include_doc: true*/
       })
       .then(function (result) {
-        console.log('result', result);
+        //console.log('result', result);
         if (result.rows.length) {
           return result.rows[0].value;
         } else {
@@ -1094,6 +1094,37 @@ export const store = new Vuex.Store({
         //putBlockPart ({commit, state, dispatch}, blockData) {
         return err;
       });
+    },
+
+    setMetaData ({state, commit, dispatch}, data)
+    {
+      let keys = data.key.split('.');
+      let key = keys[0];
+      if (keys.length > 1) {
+        state.currentBookMeta[keys[0]][keys[1]] = value;
+        value = state.currentBookMeta[keys[0]];
+      }
+
+      let update = {
+        [key]: data.value
+      }
+
+      var api = state.metaDB.hoodieApi();
+
+      return api.update(state.currentBookMeta._id, update).then(doc => {
+        //console.log('success DB update: ', doc)
+        return dispatch('updateBookVersion', {minor: true})
+        .then(() => {
+          return Promise.resolve(doc);
+        })
+        .catch(err => {
+          //console.log(err);
+          return Promise.reject(err);
+        });
+      }).catch(err => {
+        //console.log('error DB pdate: ', err)
+        return Promise.reject(err);
+      })
     }
 
   }

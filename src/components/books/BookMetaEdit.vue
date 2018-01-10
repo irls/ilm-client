@@ -36,8 +36,8 @@
           <template v-if="tc_hasTask('metadata_cleanup')">
             <div v-if="!textCleanupProcess" class="editing-wrapper">
               <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true">Editing complete</button>
-              <div class="col-sm-8 blocks-counter">
-                <span class="blocks-counter-value">{{currentBookBlocksLeft}}</span>Blocks need your approval {{currentBookBlocksLeftId}}
+              <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
+                <span class="blocks-counter-value">{{currentBookBlocksLeft}}</span>Blocks need your approval
               </div>
             </div>
             <div v-else class="preloader-small"></div>
@@ -537,25 +537,20 @@ export default {
       var keys = key.split('.');
       key = keys[0];
       if (keys.length > 1) {
-
           this.currentBook[keys[0]][keys[1]] = value;
-
           value = this.currentBook[keys[0]];
-
       }
-      console.log('key', key, value);
+      //console.log('key', key, value);
 
       var update = {
         [key]: value
       }
 
-      console.log('update', update);
+      //console.log('update', update);
       //if (true) return;
       var db = new PouchDB(dbPath)
       var api = db.hoodieApi()
-      var update = {
-        [key]: value
-      };
+
       return api.update(this.currentBookid, update).then(doc => {
         //console.log('success DB update: ', doc)
         return this.updateBookVersion({minor: true})
@@ -686,6 +681,9 @@ export default {
       .then(resp => {
         console.log(resp);
       });
+    },
+    goToUnresolved() {
+      console.log('goToUnresolved');
     },
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft'])
   }
@@ -835,7 +833,7 @@ export default {
     vertical-align: top;
     font-weight: 400;
   }
-  
+
   .sidebar-bookmeta {
     width: 96%;
   }
@@ -851,6 +849,10 @@ export default {
       vertical-align: middle;
       line-height: 34px;
       color: #337ab7;
+      cursor: pointer;
+      &:hover {
+        text-decoration: underline;
+      }
     }
 
     .blocks-counter-value {
@@ -860,6 +862,9 @@ export default {
       font-weight: bold;
       text-align: right;
       margin-right: 8px;
+      &:hover {
+        text-decoration: underline;
+      }
     }
   }
 

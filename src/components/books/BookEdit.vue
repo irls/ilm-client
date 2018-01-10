@@ -11,7 +11,6 @@
               :putBlockPart ="putBlockPartProxy"
               :reCount  ="reCountProxy"
               :recorder ="recorder"
-              :blockOrderChanged ="blockOrderChanged"
               :block_Idx = "block_Idx"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
@@ -97,7 +96,7 @@ export default {
       BookBlockView, InfiniteLoading
   },
   methods: {
-    ...mapActions(['loadBlocks', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId']),
+    ...mapActions(['loadBlocks', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData']),
 
     test() {
         //this.parlist.splice(0,1);
@@ -183,6 +182,7 @@ export default {
               if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
           }
           this.isAllLoaded = this.$refs.scrollBookDown.isComplete;
+          this.reCountProxy();
           //console.log('loaded', result);
         })
         .catch((err)=>{
@@ -193,58 +193,28 @@ export default {
     },
 
     refreshBlock (change) {
-        console.log('refreshBlock', change.doc);
-//         let prev_block = null;
-        this.parlist.forEach((block, idx, arr)=>{
-
-                if (block._id === change.id) {
-                    if (change.doc.audiosrc) {
-                      change.doc.audiosrc = process.env.ILM_API + change.doc.audiosrc;
-                    }
-                    if (change.deleted === true) {
-                      this.parlist.splice(idx, 1);
-//                       this.onBlockNumberChange(change.doc, idx)
-                    } else {
-                      if (this.parlist[idx].partUpdate) {
-                        this.parlist[idx]._rev = change.doc._rev;
-                      } else {
-                        Vue.set(this.parlist, idx, new BookBlock(change.doc));
-                      }
-                    }
-                }
-//                 } else if (prev_block && block.index > change.doc.index && prev_block.index < change.doc.index) {// new block
-//                   let existing = el.find(_b => {
-//                     return _b._id == change.doc._id;
-//                   })
-//                   if (!existing) {
-//                     el.splice(idx, 0, new BookBlock(change.doc))
-// //                     this.onBlockNumberChange(change.doc, idx)
-//                   }
-//                 } else if (!prev_block && idx0 == 0 && idx1 == 0 && change.doc.index < block.index) {// new block before list
-//                   let existing = el.find(_b => {
-//                     return _b._id == change.doc._id;
-//                   })
-//                   if (!existing) {
-//                     this.parlist[idx].unshift(new BookBlock(change.doc));
-// //                     this.onBlockNumberChange(change.doc, idx0);
-//                   }
-//                 }
-//                 prev_block = block;
-
-        });
-//         if (prev_block && this.isAllLoaded && change.doc.index > prev_block.index) {// new block in the bottom
-//           this.parlist[this.parlist.length - 1].push(new BookBlock(change.doc));
-// //           this.onBlockNumberChange(change.doc, this.parlist.length - 1);
-//         }
-        //this.initRecorder();
+      console.log('refreshBlock', change.doc);
+      this.parlist.forEach((block, idx, arr)=>{
+        if (block._id === change.id) {
+          if (change.doc.audiosrc) {
+            change.doc.audiosrc = process.env.ILM_API + change.doc.audiosrc;
+          }
+          if (change.deleted === true) {
+            this.parlist.splice(idx, 1);
+          } else {
+            let _rev = this.parlist[idx]._rev;
+            if (this.parlist[idx].partUpdate) {
+              this.parlist[idx]._rev = change.doc._rev;
+            } else {
+              Vue.set(this.parlist, idx, new BookBlock(change.doc));
+              this.parlist[idx].isUpdated = true;
+            }
+          }
+        }
+      });
+      this.initRecorder();
+      this.reCountProxy();
     },
-
-//       return new Promise((resolve, reject) => {
-//           setTimeout(() => {
-//               if (typeof(this.book.content)==='undefined') return reject({message: 'book not found'});
-//           }, 1000);
-//       })
-
 
     hasClass: function(block, cssclass) {
       let list = block.classes.toLowerCase().trim().split(' ');
@@ -285,12 +255,10 @@ export default {
     getBlockProxy: function (block_id) {
       return this.getBlock(block_id)
       .then((res)=>{
-        this.parlist.forEach((el, idx0, arr)=>{
-          el.forEach((block, idx1)=>{
-            if (block._id === res._id) {
-              Vue.set(this.parlist[idx0], idx1, new BookBlock(res));
-            }
-          });
+        this.parlist.forEach((block, idx, arr)=>{
+          if (block._id === res._id) {
+            Vue.set(this.parlist, idx, new BookBlock(res));
+          }
         });
       })
       .catch((err)=>{
@@ -379,7 +347,8 @@ export default {
         chainid: block_id,
         tag: 'p',
         type: 'par',
-        parnum: ''
+        parnum: '',
+        content: '<w></w>'
       }
       return new BookBlock(newBlock);
     },
@@ -388,17 +357,24 @@ export default {
       //this.insertBlock(block._id, 'before');
       this.getBlockByChainId(block._id)
       .then((blockBefore)=>{
+          //console.log('blockBefore', blockBefore);
           let newBlock = this.createEmptyBlock(block.bookid, block._id);
           this.parlist.splice(block_Idx, 0, newBlock);
           this.putBlock(newBlock)
           .then(()=>{
-            blockBefore.chainid = newBlock._id;
-            this.putBlockPart({
-              block: new BookBlock(blockBefore),
-              field: 'chainid'
-            }).then(()=>{});
+            if (blockBefore) {
+              blockBefore.chainid = newBlock._id;
+              this.putBlockPart({
+                block: new BookBlock(blockBefore),
+                field: 'chainid'
+              })
+              .then(()=>{});
+            } else {
+              this.setMetaData({ key: 'startBlock_id', value: newBlock._id})
+              .then(()=>{});
+            }
           })
-          .catch((err)=>{})
+          .catch((err)=>err)
       })
       .catch((err)=>err)
     },
@@ -418,34 +394,6 @@ export default {
       .catch((err)=>{})
     },
 
-    insertBlock(block_id, direction) {
-
-//       let par = false;
-//       let index = false;
-//       let block;
-//       for (let i = 0; i < this.parlist.length; ++i) {
-//         block = this.parlist[i].find(p => {
-//           return p._id == block_id;
-//         });
-//         if (block) {
-//           par = this.parlist[i];
-//           index = i;
-//           i = this.parlist.length;
-//         }
-//       }
-//       //console.log(index, par, block._id);
-//       if (index !== false && par && block) {
-//         let api_url = this.API_URL + 'book/block';
-//         let api = this.$store.state.auth.getHttp();
-//         api.post(api_url, {
-//           block_id: block_id,
-//           direction: direction
-//         })
-//         .then(response => {
-//           ++this.parlistSkip;
-//         })
-//       }
-    },
     deleteBlock(block, block_Idx) {
 //       let api_url = this.API_URL + 'book/block/' + block_id;
 //         let api = this.$store.state.auth.getHttp();
@@ -453,20 +401,23 @@ export default {
 //           .then(response => {
 //             --this.parlistSkip;
 //           })
-
-      //book_meta._deleted =  true;
-      //return db_content_meta.put(book_meta)
       this.getBlockByChainId(block._id)
       .then((blockBefore)=>{
+          //console.log('blockBefore', blockBefore);
           this.parlist.splice(block_Idx, 1);
           block._deleted =  true;
           this.putBlock(block)
           .then(()=>{
-            blockBefore.chainid = block.chainid;
-            this.putBlockPart({
-              block: new BookBlock(blockBefore),
-              field: 'chainid'
-            }).then(()=>{});
+            if (blockBefore) {
+              blockBefore.chainid = block.chainid;
+              this.putBlockPart({
+                block: new BookBlock(blockBefore),
+                field: 'chainid'
+              }).then(()=>{});
+            } else {
+              this.setMetaData({ key: 'startBlock_id', value: block.chainid})
+              .then(()=>{});
+            }
           })
           .catch((err)=>{})
       })
@@ -479,7 +430,7 @@ export default {
 //         block_id: block._id,
 //         direction: direction
 //       });
-      console.log('joinBlocks', block, block_Idx, direction);
+      //console.log('joinBlocks', block, block_Idx, direction);
       let checkArr = ['par', 'title', 'header'];
 
         switch(direction) {
@@ -506,35 +457,35 @@ export default {
         };
 
     },
-    setBlockOrderChanged(val) {
-      this.blockOrderChanged = val;
-      let self = this;
-      setTimeout(function() {
-        self.blockOrderChanged = !val;
-      }, 1000);
-    },
-    refreshBlocksProperties(par_index) {
-      let ids = [];
-      this.parlist[par_index].forEach(b => {
-        ids.push(b._id);
-      });
-      this.$children.forEach(c => {
-        if (c.block && ids.indexOf(c.block._id) !== -1) {
-          this.refreshBlockProperties(c);
-        }
-      });
-    },
-    refreshBlockProperties(el) {
-      el.updateFlagStatus(el.block._id);
-    },
-    onBlockNumberChange(block, par_index) {
-      let self = this;
-      Vue.nextTick(function() {
-        self.refreshBlocksProperties(par_index);
-        self.initEditors(block, par_index);
-      });
-      this.setBlockOrderChanged(true);
-    },
+//     setBlockOrderChanged(val) {
+//       this.blockOrderChanged = val;
+//       let self = this;
+//       setTimeout(function() {
+//         self.blockOrderChanged = !val;
+//       }, 1000);
+//     },
+//     refreshBlocksProperties(par_index) {
+//       let ids = [];
+//       this.parlist[par_index].forEach(b => {
+//         ids.push(b._id);
+//       });
+//       this.$children.forEach(c => {
+//         if (c.block && ids.indexOf(c.block._id) !== -1) {
+//           this.refreshBlockProperties(c);
+//         }
+//       });
+//     },
+//     refreshBlockProperties(el) {
+//       el.updateFlagStatus(el.block._id);
+//     },
+//     onBlockNumberChange(block, par_index) {
+//       let self = this;
+//       Vue.nextTick(function() {
+//         self.refreshBlocksProperties(par_index);
+//         self.initEditors(block, par_index);
+//       });
+//       this.setBlockOrderChanged(true);
+//     },
     setRangeSelection(block, type, status) {
       switch (type) {
         case 'start':
