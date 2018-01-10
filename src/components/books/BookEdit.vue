@@ -11,7 +11,6 @@
               :putBlockPart ="putBlockPartProxy"
               :reCount  ="reCountProxy"
               :recorder ="recorder"
-              :blockOrderChanged ="blockOrderChanged"
               :block_Idx = "block_Idx"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
@@ -183,6 +182,7 @@ export default {
               if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
           }
           this.isAllLoaded = this.$refs.scrollBookDown.isComplete;
+          this.reCountProxy();
           //console.log('loaded', result);
         })
         .catch((err)=>{
@@ -202,10 +202,12 @@ export default {
           if (change.deleted === true) {
             this.parlist.splice(idx, 1);
           } else {
+            let _rev = this.parlist[idx]._rev;
             if (this.parlist[idx].partUpdate) {
               this.parlist[idx]._rev = change.doc._rev;
             } else {
               Vue.set(this.parlist, idx, new BookBlock(change.doc));
+              this.parlist[idx].isUpdated = true;
             }
           }
         }
@@ -345,7 +347,8 @@ export default {
         chainid: block_id,
         tag: 'p',
         type: 'par',
-        parnum: ''
+        parnum: '',
+        content: '<w></w>'
       }
       return new BookBlock(newBlock);
     },
@@ -454,35 +457,35 @@ export default {
         };
 
     },
-    setBlockOrderChanged(val) {
-      this.blockOrderChanged = val;
-      let self = this;
-      setTimeout(function() {
-        self.blockOrderChanged = !val;
-      }, 1000);
-    },
-    refreshBlocksProperties(par_index) {
-      let ids = [];
-      this.parlist[par_index].forEach(b => {
-        ids.push(b._id);
-      });
-      this.$children.forEach(c => {
-        if (c.block && ids.indexOf(c.block._id) !== -1) {
-          this.refreshBlockProperties(c);
-        }
-      });
-    },
-    refreshBlockProperties(el) {
-      el.updateFlagStatus(el.block._id);
-    },
-    onBlockNumberChange(block, par_index) {
-      let self = this;
-      Vue.nextTick(function() {
-        self.refreshBlocksProperties(par_index);
-        self.initEditors(block, par_index);
-      });
-      this.setBlockOrderChanged(true);
-    },
+//     setBlockOrderChanged(val) {
+//       this.blockOrderChanged = val;
+//       let self = this;
+//       setTimeout(function() {
+//         self.blockOrderChanged = !val;
+//       }, 1000);
+//     },
+//     refreshBlocksProperties(par_index) {
+//       let ids = [];
+//       this.parlist[par_index].forEach(b => {
+//         ids.push(b._id);
+//       });
+//       this.$children.forEach(c => {
+//         if (c.block && ids.indexOf(c.block._id) !== -1) {
+//           this.refreshBlockProperties(c);
+//         }
+//       });
+//     },
+//     refreshBlockProperties(el) {
+//       el.updateFlagStatus(el.block._id);
+//     },
+//     onBlockNumberChange(block, par_index) {
+//       let self = this;
+//       Vue.nextTick(function() {
+//         self.refreshBlocksProperties(par_index);
+//         self.initEditors(block, par_index);
+//       });
+//       this.setBlockOrderChanged(true);
+//     },
     setRangeSelection(block, type, status) {
       switch (type) {
         case 'start':

@@ -183,7 +183,7 @@
                 ref="blockContent"
                 v-html="block.content"
                 :class="[ block.getClass(), {
-                  'updated': isUpdated,
+                  'updated': block.isUpdated,
                   'playing': blockAudio.src,
                   'hide-archive': isHideArchFlags
                 }]"
@@ -476,7 +476,7 @@ export default {
       blockTypes: BlockTypes,
 
       isChanged: false,
-      isUpdated: false,
+
       isAudStarted: false,
       isAudPaused: false,
       isRecording: false,
@@ -505,7 +505,7 @@ export default {
       'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockOrderChanged', 'block_Idx', 'audioEditor', 'joinBlocks'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'block_Idx', 'audioEditor', 'joinBlocks'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -621,7 +621,7 @@ export default {
   },
   mounted: function() {
       //this.initEditor();
-      //console.log('mounted');
+      //console.log('mounted', this.block._id);
       this.blockAudio = {'map': this.block.content, 'src': this.block.audiosrc ? this.block.audiosrc : ''};
       if (!this.player && this.blockAudio.src) {
           this.blockAudio.src = this.blockAudio.src + '?' + (new Date()).toJSON();
@@ -1596,17 +1596,10 @@ export default {
       deleteBlock() {
         this.deleteBlockMessage = false;
         this.$emit('deleteBlock', this.block, this.block_Idx);
-        //this.block._deleted = true;
-        //this.assembleBlock();
       },
       setChanged(val) {
-        if (!this.blockOrderChanged || !val) {
+        if (!val) {
           this.isChanged = val;
-        }
-      },
-      setUpdated(val) {
-        if (!this.blockOrderChanged || !val) {
-          this.isUpdated = val;
         }
       },
       joinWithPrevious() {
@@ -1854,18 +1847,21 @@ export default {
       }
   },
   watch: {
-      'block._id' (newVal) {
-        this.isUpdated = false;
+      'block.isUpdated' (newVal) {
+        if (newVal) setTimeout(() => {
+          this.block.isUpdated = false;
+        }, 2000);
       },
-      'block._rev' (newVal) {
-          //console.log('block._rev', newVal);
+      'block._id' (newVal) {
+        //this.isUpdated = false;
+      },
+      'block._rev' (newVal, oldVal) {
+        //console.log('block._rev: ', this.block._rev, 'newVal: ', newVal, 'oldVal: ', oldVal);
+        if (newVal !== this.block._rev) {
+
           if (this.block.illustration) {
             this.block.illustration = this.block.illustration.split('?').shift() + '?' + Date.now()
           }
-          this.setUpdated(true);
-          setTimeout(() => {
-              this.setUpdated(false);
-          }, 2000);
           if (!this.blockAudio.src || !this.tc_showBlockNarrate(this.block._id)) {
             this.blockAudio = {
               'src': this.block.audiosrc ? this.block.audiosrc + '?' + (new Date()).toJSON() : '',
@@ -1877,6 +1873,7 @@ export default {
               flag.addEventListener('click', this.handleFlagClick);
             });
           });
+        }
       },
       'block.type' (newVal) {
         //console.log('block.type', this.blockTypes);
