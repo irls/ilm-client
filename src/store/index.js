@@ -1074,11 +1074,9 @@ export const store = new Vuex.Store({
     },
 
     getBlockByChainId({state, commit}, chainid) {
-      return state.contentDB.query(
-        'filters_byBlockChainId/byBlockChainId'
-      , {
-        key: chainid, include_docs: true,
-      })
+      let _query = 'filters_byBlockChainId/byBlockChainId';
+      let _params = { key: chainid, include_docs: true };
+      return state.contentDB.query (_query, _params)
       .then(function (result) {
         //console.log('result', result);
         if (result.rows.length) {
@@ -1088,9 +1086,29 @@ export const store = new Vuex.Store({
         }
       })
       .catch((err) => {
-        console.log('Block by chain error:', err);
-        //putBlockPart ({commit, state, dispatch}, blockData) {
-        return err;
+        if (err.status == 404) {
+          return state.contentRemoteDB.query (_query, _params)
+          .then(function (result) {
+            //console.log('result', result);
+            if (result.rows.length) {
+              return result.rows[0].doc;
+            } else {
+              return false;
+            }
+          })
+          .catch((err) => {
+            if (err.status == 404) {
+              console.log('Block by chain error:', err);
+            } else {
+              console.log('Block by chain error:', err);
+              return err;
+            }
+          });
+        } else {
+          console.log('Block by chain error:', err);
+          return err;
+        }
+
       });
     },
 
