@@ -1074,17 +1074,15 @@ export const store = new Vuex.Store({
     },
 
     getBlockByChainId({state, commit}, chainid) {
-      return state.contentDB.query({
-        map: function (doc) {
-          emit(doc.chainid, doc);
-        }
-      }, {
-        key: chainid/*, include_doc: true*/
+      return state.contentDB.query(
+        'filters_byBlockChainId/byBlockChainId'
+      , {
+        key: chainid, include_docs: true,
       })
       .then(function (result) {
         //console.log('result', result);
         if (result.rows.length) {
-          return result.rows[0].value;
+          return result.rows[0].doc;
         } else {
           return false;
         }
