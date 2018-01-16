@@ -963,6 +963,7 @@ export const store = new Vuex.Store({
         //console.log('putBlock', cleanBlock);
         return dispatch('getBlock', cleanBlock._id)
         .then(function(doc) {
+          cleanBlock._rev = doc._rev;
           return dispatch('_putBlock', cleanBlock)
           .then((response) => {
             // handle response
