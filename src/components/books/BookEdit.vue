@@ -64,7 +64,8 @@ export default {
       isAllLoaded: false,
       selectionStart: {},
       selectionEnd: {},
-      parCounter: { pref: 0, prefCnt: 0, curr: 1 }
+      parCounter: { pref: 0, prefCnt: 0, curr: 1 },
+      blocksListQuery: false
     }
   },
   computed: {
@@ -96,7 +97,7 @@ export default {
       BookBlockView, InfiniteLoading
   },
   methods: {
-    ...mapActions(['loadBlocks', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData']),
+    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData']),
 
     test() {
         //this.parlist.splice(0,1);
@@ -115,9 +116,29 @@ export default {
     },
 
     onScrollBookDown() {
-        //console.log('onScrollBookDown, page:', this.page);
+        //console.log('onScrollBookDown');
         //console.log( this.meta._id );
-        this.getBlocks();
+
+        if (this.meta._id) {
+          if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
+            this.getBloksUntil(this.$route.params.block);
+          } else {
+            this.getBlocks().then(res=>res).catch(err=>err);
+          }
+        } else {
+          if (this.$route.params.hasOwnProperty('bookid')) {
+            this.loadBook(this.$route.params.bookid)
+            .then(()=>{
+              if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
+                this.getBloksUntil(this.$route.params.block);
+              } else {
+                this.getBlocks().then(res=>res).catch(err=>err);
+              }
+            })
+          }
+        }
+
+
     },
 
     setBlockParnum(block) {
@@ -157,23 +178,24 @@ export default {
       return result;
     },
 
-    getBlocks() {
+    getBlocks(query) {
+      query = query || false;
       if (this.meta._id) {
         let first_id = false;
         if (this.parlist.length > 0) first_id = this.parlist[this.parlist.length-1].chainid;
         else if (this.meta.startBlock_id) first_id = this.meta.startBlock_id;
-        this.loadBlocksChain({
+        return this.loadBlocksChain({
           book_id: this.meta._id,
           first_id: first_id,
-          onpage: 20
+          onpage: 20, query: query
         })
         .then((result)=>{
-          if (result.length > 0) {
-              result.forEach((el, idx, arr)=>{
+          if (result.rows.length > 0) {
+              result.rows.forEach((el, idx, arr)=>{
                 let newBlock = new BookBlock(el);
                 this.parlist.push(newBlock);
               });
-            if (result.length < 20) {
+            if (result.finish) {
               if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
             } else {
               if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.loaded();
@@ -183,17 +205,56 @@ export default {
           }
           this.isAllLoaded = this.$refs.scrollBookDown.isComplete;
           this.reCountProxy();
-          //console.log('loaded', result);
+          //this.unresId = result.unresId;
+          return Promise.resolve(result.blockId);
         })
         .catch((err)=>{
           if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
           console.log('Error: ', err.message);
+          return Promise.reject(err);
         });
+      } else return Promise.reject(new Error('Empty meta._id'));
+    },
+
+    getBloksUntil (query) {
+
+      let result = false;
+      if (this.parlist.length) this.parlist.forEach((block, idx, arr)=>{
+
+        switch(query) {
+          case 'unresolved': {
+            if (!result && !block.markedAsDone) result = block._id;
+          } break;
+          default : {
+            if (!result && block._id === query) result = block._id;
+          } break;
+        };
+
+      });
+
+      if (!result) {
+        this.getBlocks(query)
+        .then((blockId)=>{
+          if (blockId && blockId !== true) {
+            this.$router.push({name: this.$route.name, params: { } });
+            Vue.nextTick(()=>{
+              this.scrollToBlock(blockId);
+            });
+          }
+
+        })
+        .catch((err)=>{
+          console.log('err:', err);
+          return err;
+        })
+      } else {
+        this.$router.push({name: this.$route.name, params: { } });
+        this.scrollToBlock(result);
       }
     },
 
     refreshBlock (change) {
-      console.log('refreshBlock', change.doc);
+      //console.log('refreshBlock', change.doc);
       this.parlist.forEach((block, idx, arr)=>{
         if (block._id === change.id) {
           if (change.doc.audiosrc) {
@@ -214,6 +275,16 @@ export default {
       });
       this.initRecorder();
       this.reCountProxy();
+    },
+
+    clearParlist () {
+      return new Promise ((resolve, reject)=>{
+        this.parlist.forEach((block, idx, arr)=>{
+          this.parlist[idx] = function(){};
+          this.parlist.splice(idx, 1);
+        });
+        return resolve();
+      })
     },
 
     hasClass: function(block, cssclass) {
@@ -304,8 +375,11 @@ export default {
       }
     },
     scrollToBlock(id) {
-      let offset = document.getElementById(id).getBoundingClientRect()
-      window.scrollTo(0, window.pageYOffset + offset.top - 110);
+      let domObj = document.getElementById(id);
+      if (domObj) {
+        let offset = domObj.getBoundingClientRect()
+        window.scrollTo(0, window.pageYOffset + offset.top - 110);
+      }
     },
     initEditors(block, par_index) {
       let ids = [];
@@ -343,6 +417,7 @@ export default {
     createEmptyBlock(bookid, block_id) {
       let newBlock = {
         _id: bookid + '_' + Date.now(),
+        _rev: '1-newrevisionnumber',
         bookid: bookid,
         chainid: block_id,
         tag: 'p',
@@ -364,6 +439,7 @@ export default {
           .then(()=>{
             if (blockBefore) {
               blockBefore.chainid = newBlock._id;
+              console.log('blockBefore', blockBefore.chainid);
               this.putBlockPart({
                 block: new BookBlock(blockBefore),
                 field: 'chainid'
@@ -542,17 +618,19 @@ export default {
         $('#narrateStartCountdown').css('top', document.scrollingElement.scrollTop + 'px');
         $('#narrateStartCountdown').css('height', '100%')
       }
-      let self = this;
-      this.$root.$on('book-reimported', function() {
-        self.page = 0;
-        Vue.set(self, 'parlist', []);
-        self.parlistSkip = 0;
-        Vue.nextTick(function() {
-          self.getBlocks();
+      this.$root.$on('book-reimported', ()=>{
+      console.log("$on('book-reimported')");
+
+        //Vue.set(this, 'parlist', new Array());
+        this.clearParlist()
+        .then(()=>{
+          this.$nextTick(() => {
+            this.$refs.scrollBookDown.attemptLoad();
+          });
         });
       });
-      this.$root.$on('for-bookedit:scroll-to-block', function(id) {
-        self.scrollToBlock(id);
+      this.$root.$on('for-bookedit:scroll-to-block', (id)=>{
+        this.scrollToBlock(id);
       })
   },
 
@@ -560,16 +638,22 @@ export default {
     window.removeEventListener('keydown', this.eventKeyDown);
   },
   watch: {
-    'meta._id': {
-      handler() {
-        this.page = 0;
-        this.parlistSkip = 0;
-        this.getBlocks();
-      }
-    },
+//     'meta._id': {
+//       handler() {
+//         this.page = 0;
+//         this.parlistSkip = 0;
+//         this.getBlocks();
+//       }
+//     },
     'allBooks': {
       handler() {
         this.setBlockWatch();
+      }
+    },
+    '$route' (toRoute, fromRoute) {
+      //console.log('$route', toRoute);
+      if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
+        this.getBloksUntil(this.$route.params.block);
       }
     }
   }

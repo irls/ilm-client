@@ -2,6 +2,11 @@ import Vue from 'vue'
 import Router from 'vue-router'
 
 import Books from '../components/Books'
+
+import BooksGrid from '../components/books/BooksGrid'
+import BookEdit from '../components/books/BookEdit'
+import BookEditDisplay from '../components/books/BookEdit_Display'
+
 import Users from '../components/Users'
 import Libraries from '../components/Libraries'
 import Tasks from '../components/Tasks'
@@ -21,16 +26,30 @@ export default new Router({
   routes: [
     {
       path: '/books',
-      component: Books
+      component: Books,
+      children: [
+        { path: '', component: BooksGrid }
+      ]
     },
     {
       path: '/books/:bookid',
-      component: Books
+      component: Books,
+      children: [
+        { path: '', component: BooksGrid },
+        {
+          path: 'edit/:block?', name: 'BookEdit',
+          component: BookEdit, meta: { mode: 'edit' }
+        },
+        {
+          path: 'display/:block?', name: 'BookEditDisplay',
+          component: BookEditDisplay, meta: { mode: 'edit' }
+        }
+      ]
     },
-    {
-      path: '/books/edit/:bookid',
-      component: Books
-    },
+//     {
+//       path: '/books/edit/:bookid',
+//       component: Books
+//     },
 
     {
       path: '/users',

@@ -63,7 +63,7 @@
                         <li @click="insertBlockBefore()">Insert block before</li>
                         <li @click="insertBlockAfter()">Insert block after</li>
                         <li @click="deleteBlockMessage = true">Delete block</li>
-                        <li>Split block</li>
+                        <!--<li>Split block</li>-->
                         <li @click="joinWithPrevious()">Join with previous block</li>
                         <li @click="joinWithNext()">Join with next block</li>
                         <li class="separator"></li>

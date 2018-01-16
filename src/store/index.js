@@ -603,7 +603,7 @@ export const store = new Vuex.Store({
         // save old state
       }
       if (book_id) {
-        state.metaDB.get(book_id).then(meta => {
+        return state.metaDB.get(book_id).then(meta => {
           commit('SET_CURRENTBOOK_META', meta)
           commit('TASK_LIST_LOADED')
           dispatch('getTotalBookTasks');
@@ -616,7 +616,8 @@ export const store = new Vuex.Store({
           })
         }).catch((err)=>{})
       } else {
-        commit('SET_CURRENTBOOK_META', false)
+        commit('SET_CURRENTBOOK_META', false);
+        return Promise.resolve()
       }
 
 
@@ -797,10 +798,17 @@ export const store = new Vuex.Store({
     },
 
     getBlock ({commit, state, dispatch}, block_id) {
-        return state.contentDB
+      return state.contentRemoteDB
         .get(block_id)
         .then(res => res)
-        .catch(err => err);
+        .catch((err) => {
+          if (err.status == 404) {
+          return state.contentDB
+            .get(block_id)
+            .then(res => res)
+            .catch(err => Promise.reject(err));
+          } else return Promise.reject(err);
+        });
     },
 
     loadBlocks ({commit, state, dispatch}, params) {
@@ -828,7 +836,12 @@ export const store = new Vuex.Store({
 
     loopBlocksChain ({commit, state, dispatch}, params) {
       let requests = [];
-      let results = [];
+      let results = {rows: [], finish: false, blockId: false};
+
+      if (!params.query) {
+        params.query == false;
+        results.blockId = true;
+      }
 
       function defer() {
         var res, rej;
@@ -841,43 +854,50 @@ export const store = new Vuex.Store({
         return promise;
       }
 
-      for (var i = 0; i < params.onpage; ++i) {
-        requests[i] = defer();
-      }
+      requests.push(defer());
 
       (function loop(i, block_id) {
-        if (i < params.onpage) {
-          state.contentDB.get(block_id)
+
+        if (i < params.onpage || !results.blockId) {
+
+          dispatch('getBlock', block_id)
           .then((b)=>{
             if (b.audiosrc) {
               b.audiosrc = process.env.ILM_API + b.audiosrc;
             }
-            results.push(b);
+
+            results.rows.push(b);
+
+            if (params.query) switch(params.query) {
+              case 'unresolved': {
+                if (!results.blockId && !b.markedAsDone) {
+                  results.blockId = b._id;
+                  i = params.onpage - 5;
+                }
+              } break;
+              default : {
+                if (!results.blockId && b._id === params.query) {
+                  results.blockId = b._id;
+                  i = params.onpage - 5;
+                }
+              } break;
+            };
+
             loop(i+1, b.chainid);
-            requests[i].resolve();
           })
           .catch((err)=>{
-            // fallback if syncronization is not finished yet
-            state.contentRemoteDB.get(block_id)
-            .then((b)=>{
-              if (b.audiosrc) {
-                b.audiosrc = process.env.ILM_API + b.audiosrc;
-              }
-              results.push(b);
-              loop(i+1, b.chainid);
-              requests[i].resolve();
-            })
-            .catch((err)=>{
-              for (var e = i; e < params.onpage; ++e) {
-                requests[e].resolve();
-              }
-            })
+            console.log('catch', err);
+            results.finish = true;
+            requests[0].resolve();
           })
         }
+        else requests[0].resolve();
       })(0, params.first_id);
 
-      return Promise.all(requests).then(function(values) {
-        return results;
+      return Promise.all(requests)
+      .then(() => {
+        //console.log('loopBlocksChain results', results);
+        return Promise.resolve(results);
       });
     },
 
@@ -922,19 +942,36 @@ export const store = new Vuex.Store({
         return true;
     },
 
+    _putBlock ({state}, block) {
+      console.log('_putBlock block', block);
+      return state.contentRemoteDB
+        .put(block)
+        .then(res => res)
+        .catch((err) => {
+          console.log('_putBlock err', err);
+          if (err.status == 404) {
+          return state.contentDB
+            .put(block)
+            .then(res => res)
+            .catch(err => Promise.reject(err));
+          } else return Promise.reject(err);
+        });
+    },
+
     putBlock ({commit, state, dispatch}, block) {
         let cleanBlock = block.clean();
         //console.log('putBlock', cleanBlock);
-        return state.contentDB.get(cleanBlock._id)
+        return dispatch('getBlock', cleanBlock._id)
         .then(function(doc) {
-          return state.contentDB.put(cleanBlock)
+          return dispatch('_putBlock', cleanBlock)
           .then((response) => {
             // handle response
           });
         })
         .catch((err) => {
+          console.log('putBlock getBlock err', err);
             if (err.status == 404) {
-              return state.contentDB.put(cleanBlock)
+              return dispatch('_putBlock', cleanBlock)
               .then((response) => {
                 // handle response
               });
@@ -949,9 +986,9 @@ export const store = new Vuex.Store({
       blockData.block.partUpdate = true;
       //console.log('putBlockPart', cleanBlock);
       if (cleanBlock) {
-        return state.contentDB.get(cleanBlock._id)
+        return dispatch('getBlock', cleanBlock._id)
         .then(function(doc) {
-          return state.contentDB.put(_.merge(doc, cleanBlock))
+          return dispatch('_putBlock', _.merge(doc, cleanBlock))
           .then((response) => {
           })
         })
@@ -1064,7 +1101,7 @@ export const store = new Vuex.Store({
         key: bookId, reduce: true, group: true
       })
       .then(function (result) {
-        console.log('result', result);
+        //console.log('result', result);
         commit('SET_CURRENTBOOKBLOCKS_LEFT', result.rows[0].value);
         return true;
       })
@@ -1076,7 +1113,8 @@ export const store = new Vuex.Store({
     getBlockByChainId({state, commit}, chainid) {
       let _query = 'filters_byBlockChainId/byBlockChainId';
       let _params = { key: chainid, include_docs: true };
-      return state.contentDB.query (_query, _params)
+      console.log('getBlockByChainId', chainid);
+      return state.contentRemoteDB.query (_query, _params)
       .then(function (result) {
         //console.log('result', result);
         if (result.rows.length) {
@@ -1087,7 +1125,7 @@ export const store = new Vuex.Store({
       })
       .catch((err) => {
         if (err.status == 404) {
-          return state.contentRemoteDB.query (_query, _params)
+          return state.contentDB.query (_query, _params)
           .then(function (result) {
             //console.log('result', result);
             if (result.rows.length) {

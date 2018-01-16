@@ -1,6 +1,6 @@
 <template>
   <div id='booksarea' v-cloak>
-    
+
     <table id='bodytable'>
       <tr>
         <td :class="['toolbar-wrapper', metaVisible ? 'meta-visible' : '']">
@@ -9,6 +9,7 @@
             :toggleMetaVisible="toggleMetaVisible"
             :hasBookSelected="hasBookSelected"
             :metaVisible="metaVisible"/>
+
             <BooksToolbar v-else
             @import_finished="bookImportFinished"
             :toggleMetaVisible="toggleMetaVisible"
@@ -23,13 +24,8 @@
       </tr>
       <tr>
         <td class='maincontent scrollable'>
-          <template v-if="isEditMode()">
-            <BookEdit v-if="bookEditMode == 'Editor'" />
-            <BookEditHtml v-else-if="bookEditMode == 'HTML'" />
-            <BookEditJson v-else-if="bookEditMode == 'JSON'" />
-            <BookEditDisplay v-else="bookEditMode == 'Display'" />
-          </template>
-          <BooksGrid v-else />
+          <router-view></router-view>
+
         </td>
 <!--        <td v-if='hasBookSelected() && !metaVisible'
             class='collapseEditBar'
@@ -51,12 +47,9 @@
 import { mapGetters, mapActions } from 'vuex'
 import BooksToolbar from './books/BooksToolbar'
 import BookEditToolbar from './books/BookEditToolbar'
-import BooksGrid from './books/BooksGrid'
 import BookMetaEdit from './books/BookMetaEdit'
-import BookEdit from './books/BookEdit'
 import BookEditHtml from './books/BookEdit_HTML'
 import BookEditJson from './books/BookEdit_JSON'
-import BookEditDisplay from './books/BookEdit_Display'
 import axios from 'axios'
 import superlogin from 'superlogin-client'
 import api_config from '../mixins/api_config.js'
@@ -83,13 +76,8 @@ export default {
 
   components: {
     BooksToolbar,
-    BooksGrid,
     BookMetaEdit,
     BookEditToolbar,
-    BookEdit,
-    BookEditHtml,
-    BookEditJson,
-    BookEditDisplay,
     axios,
     superlogin,
     AudioEditor
@@ -111,7 +99,6 @@ export default {
         } else if (this.metaVisible && !this.currentBookMeta._id) {
           this.metaVisible = false;
           this.metaAvailable = false;
-          
         }
       }
     }
@@ -120,10 +107,13 @@ export default {
 
   mounted() {
         // load intial book
-        if (this.$route.params.hasOwnProperty('bookid') && this.currentBookMeta._id != this.$route.params.bookid) {
-            this.loadBook(this.$route.params.bookid)
-            this.$router.replace({ path: '/books/' + this.$route.params.bookid })
+        // this.$router.replace({ path: '/books/' + this.$route.params.bookid })
+        if (this.$route.params.hasOwnProperty('bookid')) {
+          if (!this.currentBookMeta._id || this.currentBookMeta._id != this.$route.params.bookid) {
+            this.loadBook(this.$route.params.bookid);
+          }
         }
+
         let self = this;
         this.$root.$on('from-bookedit:set-selection', function(start, end) {
           self.blocksForAlignment.start = start;
@@ -146,7 +136,9 @@ export default {
       return !!this.currentBook
     },
     isEditMode () {
-      return this.$store.state.route.path.indexOf('/books/edit') > -1
+      return this.$route.matched.some(record => {
+        return record.meta.mode === 'edit'
+      })
     },
 //     recountRows () {
 //       let count = 1
