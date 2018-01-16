@@ -1,8 +1,8 @@
 <template>
 <div class="toolbar">
 
-  <h3 v-if="$store.state.currentBook" class='title'>
-    <i class="fa fa-pencil"></i> {{$store.state.currentBookMeta.title}}</h3>
+  <h3 v-if="currentBook" class='title'>
+    <i class="fa fa-pencil"></i> {{currentBookMeta.title}}</h3>
 
   <div class="pull-right">
 
@@ -31,7 +31,7 @@
         :bookId="getBookid()" />
     </template>
 
-    <ButtonRadioGroup id='viewmode' :values="editModes" @changeEditMode='viewSelect' :selected="editMode" :default="editMode"></ButtonRadioGroup>
+    <ButtonRadioGroup :values="editModes" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
     <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Meta</button>
 
@@ -51,14 +51,12 @@ import {mapGetters} from 'vuex';
 export default {
   data () {
     return {
-      editMode: 'Editor',
       editModes: {
-        'Editor': 'Editor',
+        'BookEdit': 'Edit' ,
         //'HTML': 'HTML',
         //'JSON': 'JSON',
-        'Display': 'Display'
+        'BookEditDisplay': 'Display'
       },
-      //currentBook: this.$store.state.currentBook,
       showBookReimport: false
     }
   },
@@ -69,16 +67,9 @@ export default {
     'metaVisible'
   ],
   methods: {
-    currentBook: function() {
-      return this.$store.state.currentBook
-    },
-    getEditMode: function() {
-      let editMode = this.$store.state.editMode
-      return editMode
-    },
+
     viewSelect: function(val) {
-      this.editMode = val
-      this.$store.commit('setEditMode', this.editMode)
+      this.$router.push({ name: val});
     },
     goBack: function() {
       if (this.currentBookMeta && this.currentBookMeta.collection_id) {
@@ -122,6 +113,18 @@ export default {
     if (!this.isAdmin) delete this.editModes.JSON;
   },
   computed: {
+
+    currRoute: function () {
+      let result = ''
+      return this.$route.name;
+    },
+
+    currentBook: function() {
+      return this.$store.state.currentBook
+    },
+    currentBookMeta: function() {
+      return this.$store.state.currentBookMeta
+    },
     ...mapGetters(['currentBookMeta'])
   }
 }

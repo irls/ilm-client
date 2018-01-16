@@ -73,7 +73,7 @@ export default {
     superlogin.removeAllListeners('login');
     // login event
     superlogin.once('login', (session) => {
-      console.log('login event');
+      //console.log('login event');
       if (session.token) {
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
         this.connectDB(session);

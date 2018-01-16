@@ -1,33 +1,32 @@
 <template>
   <div class="btn-group" role='group'>
-    <button type="button" v-for="(key, val) in values" @click="changeSelectVal(key)"
-      :class="[nowSelected==key ? 'btn-primary' : 'btn-default', 'btn']"
+    <button type="button" v-for="(val, key) in values" @click="changeSelectVal(key)"
+      :class="[selected==key ? 'btn-primary' : 'btn-default', 'btn']"
       >{{ val }}</button>
   </div>
 </template>
-
-
 
 <script>
   /* usage:
     <ButtonRadioGroup :values="colors" :selected.sync="color" default="green"></ButtonRadioGroup>
     colors: obj, selected.sync: string var, default: string
+    :class="[selectedVal==key ? 'btn-primary' : 'btn-default', 'btn']"
   */
   export default {
     data () {
       return {
-        nowSelected: '',
+        selected: false
       }
     },
-    props: ['values','selected','default'],
+    props: ['values', /*'selected',*/ 'default', 'onChange'],
     methods: {
       changeSelectVal: function(val) {
-        this.nowSelected = val;
-        this.$emit('changeEditMode', val); 
+        this.selected = val;
+        this.$emit('onChange', val);
       }
     },
     created: function() {
-      this.nowSelected = this.default;
+      if (!this.selected && this.default) this.selected = this.default;
     }
   }
 </script>

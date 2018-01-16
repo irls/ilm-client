@@ -683,7 +683,12 @@ export default {
       });
     },
     goToUnresolved() {
-      console.log('goToUnresolved');
+      if (this.$route.matched.some(record => {
+        return record.meta.mode === 'edit'
+      })) {
+        this.$router.push({name: this.$route.name, params: { block: 'unresolved' } });
+        //this.$router.push({name: this.$route.name, params: { block: '1_en_2v' } });
+      }
     },
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft'])
   }

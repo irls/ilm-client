@@ -1,7 +1,7 @@
 <template>
   <div :class="['ilm-global-style', metaStyles]">
-    <BookDisplayHeader />
-    <BookTOC />
+    <!--<BookDisplayHeader />-->
+    <!--<BookTOC />-->
     <div v-for="(block, blid) in parlist" :class="['ilm-block']">
       <div v-if="block.type == 'illustration'">
         <img :class="block.getClass()" :src="block.getIllustration()"/>
@@ -63,38 +63,53 @@ export default {
       }
   },
   methods: {
-    ...mapActions(['loadBlocks', 'loadBlocksChain']),
+    ...mapActions(['loadBlocks', 'loadBlocksChain', 'loadBook']),
+
     onInfiniteScroll() {
-      let first_id = false;
-      if (this.parlist.length > 0) first_id = this.parlist[this.parlist.length-1].chainid;
-      else if (this.meta.startBlock_id) first_id = this.meta.startBlock_id;
-      this.loadBlocksChain({
-          book_id: this.meta._id,
-          first_id: first_id,
-          onpage: 20
-      })
-      .then((result)=>{
-          if (result.length > 0) {
-              result.forEach((el, idx, arr)=>{
-                  let newBlock = new BookBlock(el);
-                  this.parlist.push(newBlock);
-              });
-            if (result.length < 20) {
-              if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
-            } else {
-              if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.loaded();
-            }
-          } else {
-              if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
-          }
-          this.isAllLoaded = this.$refs.infiniteLoading.isComplete;
-          //console.log('loaded', result);
-      })
-      .catch((err)=>{
-        if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
-        console.log('Error: ', err.message);
-      });
+      if (this.meta._id) {
+        this.getBlocks();
+      } else {
+        if (this.$route.params.hasOwnProperty('bookid')) {
+          this.loadBook(this.$route.params.bookid)
+          .then(()=>{
+            this.getBlocks();
+          })
+        }
+      }
     },
+    getBlocks() {
+      if (this.meta._id) {
+        let first_id = false;
+        if (this.parlist.length > 0) first_id = this.parlist[this.parlist.length-1].chainid;
+        else if (this.meta.startBlock_id) first_id = this.meta.startBlock_id;
+        this.loadBlocksChain({
+            book_id: this.meta._id,
+            first_id: first_id,
+            onpage: 20
+        })
+        .then((result)=>{
+            if (result.rows.length > 0) {
+                result.rows.forEach((el, idx, arr)=>{
+                    let newBlock = new BookBlock(el);
+                    this.parlist.push(newBlock);
+                });
+              if (result.finish) {
+                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
+              } else {
+                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.loaded();
+              }
+            } else {
+                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
+            }
+            this.isAllLoaded = this.$refs.infiniteLoading.isComplete;
+            //console.log('loaded', result);
+        })
+        .catch((err)=>{
+          if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
+          console.log('Error: ', err.message);
+        });
+      }
+    }
   },
 }
 </script>

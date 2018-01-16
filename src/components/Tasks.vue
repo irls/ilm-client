@@ -57,7 +57,7 @@
                 <div v-else-if="task.type == 'master-audio'">
                   <span class="import-link" v-on:click="importExportAudio(task, job.meta, job.audio)">Import audio</span>
                 </div>
-                <a v-else :href="'/books/edit/' + job.bookid">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
+                <a v-else :href="'/books/' + job.bookid + '/edit/unresolved'">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
               </div>
             </div>
           </div>
