@@ -306,9 +306,9 @@
                     <li class="separator"></li>
                     <li @click="audPlayFromSelection()">Play from here</li>
                     <li @click="audPlaySelection()">Play selection</li>
-                    <li v-if="allowEditing" @click="audDeleteSelection()">Delete audio in selection</li>
+                    <li v-if="allowEditing && !isAudioEditing" @click="audDeleteSelection()">Delete audio in selection</li>
                   </template>
-                  <template v-if="!range.collapsed && tc_showBlockNarrate(block._id) && allowEditing">
+                  <template v-if="!range.collapsed && tc_showBlockNarrate(block._id) && allowEditing && !isAudioEditing">
                     <li class="separator"></li>
                     <li @click="reRecord">Re-record audio</li>
                   </template>
@@ -352,7 +352,7 @@
 
             <div class="table-row controls-bottom">
               <div class="save-block -hidden -left"
-              v-bind:class="{ '-disabled': (!isChanged && !isAudioChanged) }"
+              v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing)) }"
               @click="assembleBlockProxy">
                   <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
               </div>
@@ -880,7 +880,7 @@ export default {
       },
 
       assembleBlockProxy: function (ev) {
-        if (this.isAudioChanged) return this.assembleBlockAudio(ev);
+        if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio(ev);
         else if (this.isChanged) return this.assembleBlock(ev);
         return BPromise.resolve();
       },
@@ -893,7 +893,7 @@ export default {
             this.block.content = '';
             break;
           default:
-            this.block.content = this.$refs.blockContent.innerHTML;
+            this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
             if (this.block.footnotes && this.block.footnotes.length) {
               this.block.footnotes.forEach((footnote, footnoteIdx)=>{
                 this.block.footnotes[footnoteIdx] = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
@@ -907,6 +907,12 @@ export default {
         this.updateFlagStatus(this.block._id);
         return this.putBlock(this.block).then(()=>{
           this.isChanged = false;
+          if (this.blockAudio.map) {
+            this.blockAudio.map = this.block.content;
+          }
+          if (this.isAudioEditing) {
+            this.$root.$emit('for-audioeditor:reload-text', this.block.content);
+          }
           if (this.$refs.blockContent) {
             if (this.$refs.blockContent.dataset.has_suggestion) {
               if (this.$refs.blockContent.dataset.has_suggestion === 'true') {
@@ -935,7 +941,7 @@ export default {
           let api = this.$store.state.auth.getHttp();
           return api.post(api_url, {}, {})
             .then(response => {
-              if (response.status == 200) {
+              if (response.status == 200 && response.data.audiosrc) {
                 this.block.content = this.blockAudio.map;
                 this.block.audiosrc = response.data.audiosrc;
                 this.blockAudio.map = '';
@@ -1624,6 +1630,9 @@ export default {
         //$('.table-body.-content').removeClass('editing');
         //$('#' + this.block._id + ' .table-body.-content').addClass('editing');
         this.isAudioEditing = true;
+        if (this.isAudioChanged) {
+          this.discardAudio();
+        }
         $('nav.fixed-bottom').removeClass('hidden');
         Vue.nextTick(() => {
 
@@ -1668,6 +1677,9 @@ export default {
           this.$root.$on('from-audioeditor:closed', function(blockId) {
             if (blockId == self.block._id) {
               self.isAudioEditing = false;
+              if (self.isAudioChanged) {
+                self.discardAudioEdit();
+              }
               $('nav.fixed-bottom').addClass('hidden');
               self.$root.$off('from-audioeditor:insert-silence');
               self.$root.$off('from-audioeditor:word-realign');
@@ -1919,7 +1931,9 @@ export default {
           }
           if (this.tc_showBlockNarrate(this.block._id) || this.isEditor) {
             let isChanged = newVal && this.block.audiosrc != newVal.split('?').shift();
-            this.isAudioChanged = isChanged;
+            if (!this.isAudioEditing) {
+              this.isAudioChanged = isChanged;
+            }
             if (isChanged) {
               this.infoMessage = 'Audio updated';
             }
@@ -1930,7 +1944,7 @@ export default {
         //console.log('Tmp audiomap', newVal);
         if (this.tc_showBlockNarrate(this.block._id)) {
           let isChanged = this.block.content != newVal;
-          if (!this.isAudioChanged) {
+          if (!this.isAudioChanged && !this.isAudioEditing) {
             this.isAudioChanged = isChanged;
           }
           if (this.$refs.blockContent) {

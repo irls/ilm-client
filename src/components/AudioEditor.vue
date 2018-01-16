@@ -119,6 +119,9 @@
         this.$root.$on('for-audioeditor:load', function(audio, text) {
           self.setAudio(audio, text);
         });
+        this.$root.$on('for-audioeditor:reload-text', function(text) {
+          self._setText(text);
+        });
       },
       beforeDestroy() {
         if (this.audioContext) {
@@ -153,38 +156,15 @@
             }
           }
           
-          this.words = [];
+          
           this.currentWord = null;
           this.mode = mode;
-          let annotations = [];
           
           let self = this;
-          let alignedWords = 0;
-          this.content = text;
+          
           this.audiofile = audio;
           this.blockId = blockId;
-          this.contentContainer = $('#content-' + this.blockId);
-          $('<div>' + this.content + '</div>').find('w').each(function() {
-            let map = $(this).attr('data-map');
-            if (map) {
-              let position = map.split(',');
-              if (position.length == 2) {
-                position[0] = parseInt(position[0]) / 1000;
-                position[1] = parseInt(position[1]) / 1000;
-                annotations.push({
-                  "begin": position[0], 
-                  "children": [], 
-                  "end": self._round(position[1] + position[0], 3), 
-                  "id": $(this).html().replace(/<\/?[^>]+(>|$)/g, ""), 
-                  "language": "eng", 
-                  "lines": []
-                });
-                self.words.push({start: position[0], end: self._round(position[0] + position[1], 3), index: self.words.length, alignedIndex: alignedWords++});
-              }
-            } else {
-              self.words.push({start: null, end: null, index: self.words.length});
-            }
-          })
+          
           if (!this.audiosourceEditor) {
             if (!this.audioContext) {
               this.audioContext = new (window.AudioContext || window.webkitAudioContext);
@@ -220,15 +200,12 @@
               }
             }
           }
-          if (this.audiosourceEditor.getEventEmitter().__ee__ && this.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
-            this.audiosourceEditor.getEventEmitter().off('dragged', this.audiosourceEditor.getEventEmitter().__ee__['dragged']);
-          }
-          this.audiosourceEditor.setAnnotations({
-              annotations: annotations,
-              editable: true,
-              isContinuousPlay: false,
-              linkEndpoints: true
-            });
+          /*try {
+            if (this.audiosourceEditor.getEventEmitter().__ee__ && this.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
+              this.audiosourceEditor.getEventEmitter().off('dragged', this.audiosourceEditor.getEventEmitter().__ee__['dragged']);
+            }
+          } catch(e) {}*/
+          this._setText(text);
           this.audiosourceEditor.load([
             {
               src: this.audiofile,
@@ -787,6 +764,55 @@
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
             this._showSelectionBorders();
           }
+        },
+        _setText(text) {
+          this.content = text;
+          let self = this;
+          let annotations = [];
+          let alignedWords = 0;
+          this.words = [];
+          this.contentContainer = $('#content-' + this.blockId);
+          $('<div>' + this.content + '</div>').find('w').each(function() {
+            let map = $(this).attr('data-map');
+            if (map) {
+              let position = map.split(',');
+              if (position.length == 2) {
+                position[0] = parseInt(position[0]) / 1000;
+                position[1] = parseInt(position[1]) / 1000;
+                annotations.push({
+                  "begin": position[0], 
+                  "children": [], 
+                  "end": self._round(position[1] + position[0], 3), 
+                  "id": $(this).html().replace(/<\/?[^>]+(>|$)/g, ""), 
+                  "language": "eng", 
+                  "lines": []
+                });
+                self.words.push({start: position[0], end: self._round(position[0] + position[1], 3), index: self.words.length, alignedIndex: alignedWords++});
+              }
+            } else {
+              self.words.push({start: null, end: null, index: self.words.length});
+            }
+          });
+          //console.log(self.audiosourceEditor.annotationList.renderResizeLeft);
+          if (self.audiosourceEditor.getEventEmitter().__ee__ && self.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
+            self.audiosourceEditor.getEventEmitter().off('dragged', self.audiosourceEditor.getEventEmitter().__ee__['dragged']);
+          }
+          if (self.audiosourceEditor) {
+            if (self.audiosourceEditor.annotationList.annotations.length > 0) {
+              $('.annotation-box').each(function(i, el) {
+                if(typeof annotations[i] !== 'undefined') {
+                  $(el).find('span.id').html(annotations[i].id);// workaround, waveform editor does not update text in annotations by annotations change
+                }
+              });
+            }
+            self.audiosourceEditor.setAnnotations({
+                annotations: annotations,
+                editable: true,
+                isContinuousPlay: false,
+                linkEndpoints: true
+              });
+            }
+            //self.audiosourceEditor.annotationList.renderResizeLeft(annotations.length - 1);
         }
       },
       computed: {
