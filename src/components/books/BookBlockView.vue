@@ -96,7 +96,7 @@
                     </label>
                     <!-- Block Class selector -->
                     <label v-if="blockStyles">style:&nbsp;
-                    <select v-model='styleSel' style="min-width: 110px;"><!--v-model='block.classes'--><!--:value="style"-->
+                    <select v-model='styleSel' style="min-width: 110px;" @input="setChanged(true)"><!--v-model='block.classes'--><!--:value="style"-->
                       <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
                     </select>
                   </label><!-- &nbsp;&nbsp;{{block.getClass()}}-->
@@ -351,7 +351,7 @@
             </div>
 
             <div class="table-row controls-bottom">
-              <div class="save-block -hidden -left"
+              <div class="save-block -left"
               v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing)) }"
               @click="assembleBlockProxy">
                   <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
@@ -1604,9 +1604,7 @@ export default {
         this.$emit('deleteBlock', this.block, this.block_Idx);
       },
       setChanged(val) {
-        if (!val) {
-          this.isChanged = val;
-        }
+        this.isChanged = val;
       },
       joinWithPrevious() {
         this.joinBlocks(this.block, this.block_Idx, 'previous')
@@ -1901,9 +1899,6 @@ export default {
         let styleCurr = this.block.setClass(newVal);
         if (styleCurr) this.styleSel = styleCurr;
         else this.styleSel = '';
-        if (oldVal !== false) {
-          this.setChanged(true);
-        }
       },
       'styleSel' (newVal, oldVal) {
         //console.log('styleSel', newVal, oldVal);
@@ -1916,9 +1911,6 @@ export default {
         this.destroyEditor()
         this.initEditor();
 
-        if (oldVal !== false) {
-          this.setChanged(true);
-        }
       },
       'blockAudio.src' (newVal) {
         if (newVal) {
@@ -2149,15 +2141,21 @@ export default {
           border: 1px solid silver;
           border-radius: 3px;
           padding: 0 3px 1px 3px;
+          margin-right: 10px;
+          background: rgba(204, 255, 217, 0.5);
           &:hover {
-              background: rgba(204, 255, 217, 0.2);
+              background: rgba(204, 255, 217, 0.9);
           }
+
           &.-disabled {
 /*                cursor: not-allowed;
               &:hover {
                   background: rgba(100, 100, 100, 0.2);
               }*/
               visibility: hidden;
+          }
+          .fa-save {
+            color: green;
           }
         }
     }
