@@ -90,7 +90,7 @@
                     </label>
                     <!-- Block Class selector -->
                     <label>classes:&nbsp;
-                    <select v-model='classSel' style="min-width: 100px;"><!--v-model='block.classes'--><!--:value="style"-->
+                    <select v-model='classSel' style="min-width: 100px;" @input="setChangedByClass(true)"><!--v-model='block.classes'--><!--:value="style"-->
                       <option v-for="(val, key) in blockClasses" :value="key">{{ key }}</option>
                     </select>
                     </label>
@@ -1605,6 +1605,11 @@ export default {
       },
       setChanged(val) {
         this.isChanged = val;
+      },
+      setChangedByClass(val) {
+        if (this.block.type === 'title') {
+          this.isChanged = val;
+        }
       },
       joinWithPrevious() {
         this.joinBlocks(this.block, this.block_Idx, 'previous')
