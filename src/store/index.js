@@ -1093,7 +1093,7 @@ export const store = new Vuex.Store({
 
       return state.contentDB.query({
         map: function (doc) {
-          if (!doc.markedAsDone) {
+          if (!doc.markedAsDone && (doc.voicework === 'audio_file' || doc.voicework === 'tts')) {
             emit(doc.bookid);
           }
         },
@@ -1102,8 +1102,8 @@ export const store = new Vuex.Store({
         key: bookId, reduce: true, group: true
       })
       .then(function (result) {
-        //console.log('result', result);
-        commit('SET_CURRENTBOOKBLOCKS_LEFT', result.rows[0].value);
+        console.log('result', result);
+        commit('SET_CURRENTBOOKBLOCKS_LEFT', typeof result.rows[0] === 'undefined' ? 0 : result.rows[0].value);
         return true;
       })
       .catch((err) => {

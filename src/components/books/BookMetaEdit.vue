@@ -35,7 +35,7 @@
         <div class="row">
           <template v-if="tc_hasTask('metadata_cleanup')">
             <div v-if="!textCleanupProcess" class="editing-wrapper">
-              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true">Editing complete</button>
+              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="currentBookBlocksLeft > 0">Editing complete</button>
               <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
                 <span class="blocks-counter-value">{{currentBookBlocksLeft}}</span>Blocks need your approval
               </div>

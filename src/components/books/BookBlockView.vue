@@ -1885,6 +1885,13 @@ export default {
               flag.addEventListener('click', this.handleFlagClick);
             });
           });
+        } else {
+          if (!this.blockAudio.src || !this.tc_showBlockNarrate(this.block._id)) {
+            this.blockAudio = {
+              'src': this.block.audiosrc ? this.block.audiosrc + '?' + (new Date()).toJSON() : '',
+              'map': this.block.content
+            };
+          }
         }
       },
       'block.type' (newVal) {
