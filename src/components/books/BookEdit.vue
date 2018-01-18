@@ -4,7 +4,7 @@
     <!--<template v-for="(sublist, page_Idx) in parlist">-->
     <div class="row" v-for="(block, block_Idx) in parlist" v-bind:key="block_Idx">
         <div class='col'>
-          <BookBlockView
+          <BookBlockView ref="blocks"
               :block="block"
               :putBlock ="putBlockProxy"
               :getBlock ="getBlockProxy"
@@ -423,7 +423,7 @@ export default {
         tag: 'p',
         type: 'par',
         parnum: '',
-        content: '<w></w>'
+        content: ''
       }
       return new BookBlock(newBlock);
     },
@@ -502,10 +502,7 @@ export default {
     joinBlocks(block, block_Idx, direction) {
       let api_url = this.API_URL + 'book/block_join/';
       let api = this.$store.state.auth.getHttp();
-//       api.post(api_url, {
-//         block_id: block._id,
-//         direction: direction
-//       });
+
       //console.log('joinBlocks', block, block_Idx, direction);
       let checkArr = ['par', 'title', 'header'];
 
@@ -513,22 +510,41 @@ export default {
           case 'previous' : {
             return this.getBlockByChainId(block._id)
             .then((blockBefore)=>{
-              if (!checkArr.includes(block.type) || !checkArr.includes(blockBefore.type)) {
+              //if (!checkArr.includes(block.type) || !checkArr.includes(blockBefore.type)) {
+              if (block.type !== blockBefore.type) {
                 return Promise.reject('type');
               }
-
-              return api.post(api_url, {
-                resultBlock_id: blockBefore._id,
-                donorBlock_id: block._id
-              });
+              if (!this.$refs.blocks[block_Idx-1]) {
+                return Promise.reject('type');
+              }
+              this.$refs.blocks[block_Idx-1].assembleBlockProxy()
+              .then(()=>{
+                return api.post(api_url, {
+                  resultBlock_id: blockBefore._id,
+                  donorBlock_id: block._id
+                });
+              })
             })
 
           } break;
           case 'next' : {
-              return api.post(api_url, {
-                resultBlock_id: block._id,
-                donorBlock_id: block.chainid
+            return this.getBlock(block.chainid)
+            .then((blockAfter)=>{
+              if (block.type !== blockAfter.type) {
+                return Promise.reject('type');
+              }
+              if (!this.$refs.blocks[block_Idx+1]) {
+                return Promise.reject('type');
+              }
+              this.$refs.blocks[block_Idx+1].assembleBlockProxy()
+              .then(()=>{
+                return api.post(api_url, {
+                  resultBlock_id: block._id,
+                  donorBlock_id: blockAfter._id
+                });
               });
+            })
+
           } break;
         };
 
