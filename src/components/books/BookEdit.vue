@@ -23,6 +23,20 @@
         <!--<div class='col'>-->
     </div>
     <!--<div class="row"-->
+    <modal v-model="doJoinBlocks.show" effect="fade" cancel-text="Close" title="Join blocks saving">
+      <div slot="modal-body" class="modal-body">All changes in selected blocks will saved. Continue ?</div>
+      <div slot="modal-footer" class="modal-footer">
+        <button type="button" class="btn btn-default" @click="doJoinBlocks.show = false;">Cancel</button>
+        <button v-if="doJoinBlocks.direction == 'previous'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
+        <button v-if="doJoinBlocks.direction == 'next'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
+      </div>
+    </modal>
+    <modal v-model="unableJoinMessage" effect="fade" cancel-text="Close" title="Join blocks error">
+      <div slot="modal-body" class="modal-body">Blocks with different types can't be joined</div>
+      <div slot="modal-footer" class="modal-footer">
+        <button type="button" class="btn btn-default" @click="unableJoinMessage = false">Close</button>
+      </div>
+    </modal>
 
     <!--</template>-->
 
@@ -49,6 +63,7 @@ import mediaStreamRecorder from 'recordrtc'
 import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
 import { BookBlock }    from '../../store/bookBlock';
+import { modal }        from 'vue-strap';
 
 //import IlmCss from './css/ilm'
 
@@ -65,7 +80,14 @@ export default {
       selectionStart: {},
       selectionEnd: {},
       parCounter: { pref: 0, prefCnt: 0, curr: 1 },
-      blocksListQuery: false
+      blocksListQuery: false,
+      unableJoinMessage: false,
+      doJoinBlocks: {
+        show: false,
+        action: false,
+        block: {},
+        block_Idx: false
+      }
     }
   },
   computed: {
@@ -94,7 +116,8 @@ export default {
   },
   mixins: [access, taskControls, api_config],
   components: {
-      BookBlockView, InfiniteLoading
+      BookBlockView, InfiniteLoading,
+      modal,
   },
   methods: {
     ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData']),
@@ -503,6 +526,13 @@ export default {
       let api_url = this.API_URL + 'book/block_join/';
       let api = this.$store.state.auth.getHttp();
 
+      block = block || this.doJoinBlocks.block;
+      block_Idx = block_Idx || this.doJoinBlocks.block_Idx;
+      direction = direction || this.doJoinBlocks.direction;
+
+      this.doJoinBlocks.block_Idx = false;
+      this.doJoinBlocks.block = {};
+
       //console.log('joinBlocks', block, block_Idx, direction);
       let checkArr = ['par', 'title', 'header'];
 
@@ -512,39 +542,95 @@ export default {
             .then((blockBefore)=>{
               //if (!checkArr.includes(block.type) || !checkArr.includes(blockBefore.type)) {
               if (block.type !== blockBefore.type) {
+                this.unableJoinMessage = true;
                 return Promise.reject('type');
               }
               if (!this.$refs.blocks[block_Idx-1]) {
+                this.unableJoinMessage = true;
                 return Promise.reject('type');
               }
-              this.$refs.blocks[block_Idx-1].assembleBlockProxy()
-              .then(()=>{
-                return api.post(api_url, {
-                  resultBlock_id: blockBefore._id,
-                  donorBlock_id: block._id
-                });
-              })
+              if (!this.doJoinBlocks.show
+              && (this.$refs.blocks[block_Idx].isChanged || this.$refs.blocks[block_Idx-1].isChanged))
+              {
+                this.doJoinBlocks.block = block;
+                this.doJoinBlocks.block_Idx = block_Idx;
+                this.doJoinBlocks.direction = direction;
+                this.doJoinBlocks.show = true;
+              }
+              else
+              {
+                this.doJoinBlocks.block = {};
+                this.$refs.blocks[block_Idx].assembleBlockProxy()
+                .then(()=>{
+                  this.$refs.blocks[block_Idx-1].assembleBlockProxy()
+                  .then(()=>{
+                    return api.post(api_url, {
+                      resultBlock_id: blockBefore._id,
+                      donorBlock_id: block._id
+                    })
+                    .then(()=>{
+                      this.doJoinBlocks.show = false;
+                      this.doJoinBlocks.block = {};
+                      this.doJoinBlocks.block_Idx = false;
+                      return Promise.resolve();
+                    })
+                    .catch((err)=>{
+                      this.doJoinBlocks.show = false;
+                      this.doJoinBlocks.block = {};
+                      this.doJoinBlocks.block_Idx = false;
+                      return Promise.reject(err);
+                    })
+                  })
+                })
+              }
             })
-
           } break;
           case 'next' : {
             return this.getBlock(block.chainid)
             .then((blockAfter)=>{
               if (block.type !== blockAfter.type) {
+                this.unableJoinMessage = true;
                 return Promise.reject('type');
               }
               if (!this.$refs.blocks[block_Idx+1]) {
+                this.unableJoinMessage = true;
                 return Promise.reject('type');
               }
-              this.$refs.blocks[block_Idx+1].assembleBlockProxy()
-              .then(()=>{
-                return api.post(api_url, {
-                  resultBlock_id: block._id,
-                  donorBlock_id: blockAfter._id
-                });
-              });
+              if (!this.doJoinBlocks.show
+              && (this.$refs.blocks[block_Idx].isChanged || this.$refs.blocks[block_Idx+1].isChanged))
+              {
+                this.doJoinBlocks.block = block;
+                this.doJoinBlocks.block_Idx = block_Idx;
+                this.doJoinBlocks.direction = direction;
+                this.doJoinBlocks.show = true;
+              }
+              else
+              {
+                this.doJoinBlocks.block = {};
+                this.$refs.blocks[block_Idx].assembleBlockProxy()
+                .then(()=>{
+                  this.$refs.blocks[block_Idx+1].assembleBlockProxy()
+                  .then(()=>{
+                    return api.post(api_url, {
+                      resultBlock_id: block._id,
+                      donorBlock_id: blockAfter._id
+                    })
+                    .then(()=>{
+                      this.doJoinBlocks.show = false;
+                      this.doJoinBlocks.block = {};
+                      this.doJoinBlocks.block_Idx = false;
+                      return Promise.resolve();
+                    })
+                    .catch((err)=>{
+                      this.doJoinBlocks.show = false;
+                      this.doJoinBlocks.block = {};
+                      this.doJoinBlocks.block_Idx = false;
+                      return Promise.reject(err);
+                    })
+                  })
+                })
+              }
             })
-
           } break;
         };
 

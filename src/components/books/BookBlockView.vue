@@ -64,8 +64,8 @@
                         <li @click="insertBlockAfter()">Insert block after</li>
                         <li @click="deleteBlockMessage = true">Delete block</li>
                         <!--<li>Split block</li>-->
-                        <li @click="joinWithPrevious(true)">Join with previous block</li>
-                        <li @click="joinWithNext(true)">Join with next block</li>
+                        <li @click="joinWithPrevious()">Join with previous block</li>
+                        <li @click="joinWithNext()">Join with next block</li>
                         <li class="separator"></li>
                       </template>
                       <li @click="discardBlock" v-if="allowEditing">
@@ -401,20 +401,6 @@
     <modal v-model="deleteBlockMessage" effect="fade" ok-text="Delete" cancel-text="Cancel" title="Delete block" @ok="deleteBlock()">
       <div>Delete block? </div>
     </modal>
-    <modal v-model="unableJoinMessage" effect="fade" cancel-text="Close" title="Join blocks error">
-      <div slot="modal-body" class="modal-body">Blocks with different types can't be joined</div>
-      <div slot="modal-footer" class="modal-footer">
-        <button type="button" class="btn btn-default" @click="unableJoinMessage = false">Close</button>
-      </div>
-    </modal>
-    <modal v-model="doJoinBlocksMessage.show" effect="fade" cancel-text="Close" title="Join blocks saving">
-      <div slot="modal-body" class="modal-body">All changes in selected blocks will saved. Continue ?</div>
-      <div slot="modal-footer" class="modal-footer">
-        <button type="button" class="btn btn-default" @click="doJoinBlocksMessage.show = false">Cancel</button>
-        <button v-if="doJoinBlocksMessage.action == 'previous'" type="button" class="btn btn-primary" @click="joinWithPrevious(false)">Save &amp; Join</button>
-        <button v-if="doJoinBlocksMessage.action == 'next'" type="button" class="btn btn-primary" @click="joinWithNext(false)">Save &amp; Join</button>
-      </div>
-    </modal>
     <modal v-model="onVoiceworkChange" effect="fade">
       <!-- custom header -->
       <div slot="modal-header" class="modal-header">
@@ -499,8 +485,6 @@ export default {
       isUpdating: false,
       recordStartCounter: 0,
       deleteBlockMessage: false,
-      doJoinBlocksMessage: { show: false, action: false },
-      unableJoinMessage: false,
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
       isAudioEditing: false,
@@ -1622,46 +1606,15 @@ export default {
           this.isChanged = val;
         }
       },
-      joinWithPrevious(isShowConfirm) {
-        isShowConfirm = isShowConfirm || false;
-        if (isShowConfirm) {
-          this.doJoinBlocksMessage.show = true;
-          this.doJoinBlocksMessage.action = 'previous';
-        } else {
-          this.assembleBlockProxy()
-          .then(()=>{
-            this.joinBlocks(this.block, this.block_Idx, 'previous')
-            .then(()=>{
-              this.doJoinBlocksMessage.show = false;
-            })
-            .catch(()=>{
-              this.doJoinBlocksMessage.show = false;
-              this.unableJoinMessage = true;
-            })
-          })
-          .catch(err=>err)
-        }
+      joinWithPrevious() {
+        this.joinBlocks(this.block, this.block_Idx, 'previous')
+        .then(()=>{})
+        .catch(()=>{})
       },
-      joinWithNext(isShowConfirm) {
-        isShowConfirm = isShowConfirm || false;
-        if (isShowConfirm) {
-          this.doJoinBlocksMessage.show = true;
-          this.doJoinBlocksMessage.action = 'next';
-        } else {
-          this.assembleBlockProxy()
-          .then(()=>{
-            this.doJoinBlocksMessage.show = false;
-            this.joinBlocks(this.block, this.block_Idx, 'next')
-            .then(()=>{
-              this.doJoinBlocksMessage.show = false;
-            })
-            .catch(()=>{
-              this.doJoinBlocksMessage.show = false;
-              this.unableJoinMessage = true;
-            })
-          })
-          .catch(err=>err)
-        }
+      joinWithNext() {
+        this.joinBlocks(this.block, this.block_Idx, 'next')
+        .then(()=>{})
+        .catch(()=>{})
       },
       showAudioEditor() {
         //$('.table-body.-content').removeClass('editing');
