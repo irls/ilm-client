@@ -484,7 +484,7 @@ export default {
 
     update: _.debounce(function (key, event) {
       this.liveUpdate(key, key == 'author' ? this.currentBook.author : event.target.value)
-    }, 300),
+    }, 500),
 
     updateCollection(event) {
       if (event && event.target.value) {
@@ -551,7 +551,8 @@ export default {
       var db = new PouchDB(dbPath)
       var api = db.hoodieApi()
 
-      return api.update(this.currentBookid, update).then(doc => {
+      return api.update(this.currentBookid, update)
+      .then(doc => {
         //console.log('success DB update: ', doc)
         return this.updateBookVersion({minor: true})
           .then(() => {

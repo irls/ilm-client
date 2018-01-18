@@ -84,7 +84,7 @@
                   <template v-if="allowEditing">
                     <!-- Block Type selector -->
                     <label>type:&nbsp;
-                    <select v-model='block.type' style="min-width: 80px;"><!--v-model='block.type'--><!--:value="type"-->
+                    <select v-model='block.type' style="min-width: 80px;" @input="setChanged(true)"><!--v-model='block.type'--><!--:value="type"-->
                       <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                     </select>
                     </label>
@@ -1604,9 +1604,11 @@ export default {
         this.$emit('deleteBlock', this.block, this.block_Idx);
       },
       setChanged(val) {
+        //console.log('setChanged', val);
         this.isChanged = val;
       },
       setChangedByClass(val) {
+        //console.log('setChangedByClass', this.block.type, val);
         if (this.block.type === 'title') {
           this.isChanged = val;
         }
@@ -1892,7 +1894,6 @@ export default {
       },
       'block.type' (newVal) {
         //console.log('block.type', this.blockTypes);
-        this.setChanged(true);
         if (Object.keys(this.blockTypes[newVal])[0] !== '') {
           this.classSel = Object.keys(this.blockTypes[newVal])[0];
         }
@@ -1908,14 +1909,8 @@ export default {
       'styleSel' (newVal, oldVal) {
         //console.log('styleSel', newVal, oldVal);
         this.block.setClassStyle(this.classSel, newVal);
-
-        if (this.block.type === 'illustration') {
-          this.setChanged(false);
-        }
-
         this.destroyEditor()
         this.initEditor();
-
       },
       'blockAudio.src' (newVal) {
         if (newVal) {
