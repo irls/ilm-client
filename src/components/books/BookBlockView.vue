@@ -401,12 +401,6 @@
     <modal v-model="deleteBlockMessage" effect="fade" ok-text="Delete" cancel-text="Cancel" title="Delete block" @ok="deleteBlock()">
       <div>Delete block? </div>
     </modal>
-    <modal v-model="unableJoinMessage" effect="fade" cancel-text="Close" title="Join blocks error">
-      <div slot="modal-body" class="modal-body">Unable to join blocks with different types </div>
-      <div slot="modal-footer" class="modal-footer">
-        <button type="button" class="btn btn-default" @click="unableJoinMessage = false">Close</button>
-      </div>
-    </modal>
     <modal v-model="onVoiceworkChange" effect="fade">
       <!-- custom header -->
       <div slot="modal-header" class="modal-header">
@@ -491,7 +485,6 @@ export default {
       isUpdating: false,
       recordStartCounter: 0,
       deleteBlockMessage: false,
-      unableJoinMessage: false,
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
       isAudioEditing: false,
@@ -880,12 +873,12 @@ export default {
       },
 
       assembleBlockProxy: function (ev) {
-        if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio(ev);
-        else if (this.isChanged) return this.assembleBlock(ev);
+        if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
+        else if (this.isChanged) return this.assembleBlock();
         return BPromise.resolve();
       },
 
-      assembleBlock: function(el) {
+      assembleBlock: function() {
         switch (this.block.type) {
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
@@ -916,7 +909,7 @@ export default {
           if (this.$refs.blockContent) {
             if (this.$refs.blockContent.dataset.has_suggestion) {
               if (this.$refs.blockContent.dataset.has_suggestion === 'true') {
-                console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
+                //console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
                 this.doReAlign();
               }
             }
@@ -926,7 +919,7 @@ export default {
         });
       },
 
-      checkBlockContentFlags: function(ev) {
+      checkBlockContentFlags: function() {
         if (this.block.flags) this.block.flags.forEach((flag, flagIdx)=>{
           if (flag._id !== this.block._id) {
             let node = this.$refs.blockContent.querySelector(`[data-flag="${flag._id}"]`);
@@ -935,7 +928,7 @@ export default {
         });
       },
 
-      assembleBlockAudio: function(ev) {
+      assembleBlockAudio: function() {
         if (this.blockAudio.map) {
           let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
           let api = this.$store.state.auth.getHttp();
@@ -1615,21 +1608,13 @@ export default {
       },
       joinWithPrevious() {
         this.joinBlocks(this.block, this.block_Idx, 'previous')
-        .then(()=>{
-
-        })
-        .catch(()=>{
-          this.unableJoinMessage = true;
-        })
+        .then(()=>{})
+        .catch(()=>{})
       },
       joinWithNext() {
         this.joinBlocks(this.block, this.block_Idx, 'next')
-        .then(()=>{
-
-        })
-        .catch(()=>{
-          this.unableJoinMessage = true;
-        })
+        .then(()=>{})
+        .catch(()=>{})
       },
       showAudioEditor() {
         //$('.table-body.-content').removeClass('editing');
