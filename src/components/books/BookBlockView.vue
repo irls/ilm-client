@@ -375,17 +375,17 @@
                     ></i>
                   </span>
 
-                  <span v-if="!isNeedWorkDisabled"
+                  <span v-if="!enableMarkAsDone"
                     @click.prevent="reworkBlock">
                     <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
-                  <span v-if="!isNeedWorkDisabled"
+                  <span v-if="!enableMarkAsDone"
                     @click.prevent="approveBlock">
                     <i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
 
-                  <span v-if="isNeedWorkDisabled"
-                    @click.prevent="unmarkBlock">
+                  <span v-if="enableMarkAsDone"
+                    @click.prevent="unmarkBlock" :class="[{'-disabled': !block.markedAsDone}]">
                     <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
-                  <span v-if="isNeedWorkDisabled"
+                  <span v-if="enableMarkAsDone" :class="[{'-disabled': block.markedAsDone}]"
                     @click.prevent="markBlock">
                     <i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
 
@@ -568,6 +568,9 @@ export default {
 
           return flagsSummary.stat !== 'open';
       },
+      enableMarkAsDone: function() {
+        return this._is('editor') && this.tc_hasTask('content_cleanup');
+      },
       isApproveDisabled: function () {
           if (this._is('editor') && !this.tc_getBlockTask(this.block._id)) return true;
           if (this._is('narrator') && !(this.blockAudio && this.blockAudio.src)) return true;
@@ -645,7 +648,8 @@ export default {
       ...mapActions([
         'putMetaAuthors',
         'tc_approveBookTask',
-        'setCurrentBookBlocksLeft'
+        'setCurrentBookBlocksLeft',
+        'setAllowAudioExport'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false) {
@@ -993,6 +997,7 @@ export default {
           this.assembleBlock(ev)
           .then(()=>{
             this.setCurrentBookBlocksLeft(this.block.bookid);
+            this.setAllowAudioExport();
           });
         }
       },
@@ -1003,6 +1008,7 @@ export default {
           this.assembleBlock(ev)
           .then(()=>{
             this.setCurrentBookBlocksLeft(this.block.bookid);
+            this.setAllowAudioExport();
           });
         }
       },
@@ -1811,6 +1817,8 @@ export default {
             this.voiceworkUpdating = false;
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
+              this.setCurrentBookBlocksLeft(this.block.bookid);
+              this.setAllowAudioExport();
             }
             this.voiceworkChange = false;
           })
@@ -1875,6 +1883,13 @@ export default {
               flag.addEventListener('click', this.handleFlagClick);
             });
           });
+        } else {
+          if (!this.blockAudio.src || !this.tc_showBlockNarrate(this.block._id)) {
+            this.blockAudio = {
+              'src': this.block.audiosrc ? this.block.audiosrc + '?' + (new Date()).toJSON() : '',
+              'map': this.block.content
+            };
+          }
         }
       },
       'block.type' (newVal) {
@@ -1930,6 +1945,11 @@ export default {
           if (isChanged) {
             this.infoMessage = 'Audio updated';
           }
+        }
+      },
+      'block.voicework': {
+        handler(val) {
+          this.setAllowAudioExport();
         }
       }
   }

@@ -35,7 +35,7 @@
         <div class="row">
           <template v-if="tc_hasTask('metadata_cleanup')">
             <div v-if="!textCleanupProcess" class="editing-wrapper">
-              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true">Editing complete</button>
+              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!allowEditingComplete">Editing complete</button>
               <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
                 <span class="blocks-counter-value">{{currentBookBlocksLeft}}</span>Blocks need your approval
               </div>
@@ -47,21 +47,22 @@
           <vue-tab title="Audio Integration" :id="'audio-integration'">
             <div class="t-box">
               <template v-if="currentBook.isMastered">
-                <div class="btn-switch" @click="currentBook.isMastered = !currentBook.isMastered">
+                <div class="btn-switch" @click="toggleIsMastered()">
                   <i class="fa fa-toggle-on"></i>
-                  <span class="s-label"> Mastered</span>
+                  <span :class="['s-label',  {'-disabled': !allowSetMastered}]"> Mastered</span>
                 </div>
               </template>
               <template v-else>
-                <div class="btn-switch" @click="currentBook.isMastered = !currentBook.isMastered">
+                <div class="btn-switch" @click="toggleIsMastered()">
                   <i class="fa fa-toggle-off"></i>
                   <span class="s-label -disabled"> Mastered</span>
                 </div>
               </template>
 
-              <button :class="['btn btn-primary btn-small btn-export-audio', currentBook.isMastered ? '':'-disabled']">
+              <a :class="['btn btn-primary btn-small btn-export-audio', {'-disabled': !allowExportAudio}]"
+                :href="API_URL + 'books/' + currentBook.bookid + '/audiobooks/' + audiobook._id + '/download'" target="_blank">
                 Export Audio
-              </button>
+              </a>
             </div>
             <BookAudioIntegration ref="audioIntegration" :audiobook="audiobook" :blocksForAlignment="blocksForAlignment"
               ></BookAudioIntegration>
@@ -359,7 +360,10 @@ export default {
       audiobook: {},
       sharePrivateBookMessage: '',
       unlinkCollectionWarning: false,
-      blockTypes: BlockTypes
+      blockTypes: BlockTypes,
+      allowEditingComplete: false,
+      allowExportAudio: false,
+      allowSetMastered: false
     }
   },
 
@@ -369,7 +373,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed']),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -453,6 +457,16 @@ export default {
           this.getSharePrivateBookMessage();
         }
       }
+    },
+    currentBookBlocksLeft: {
+      handler(val) {
+        this.allowEditingComplete = this.currentBookBlocksLeft == 0;
+      }
+    },
+    currentBookAudioExportAllowed: {
+      handler(val) {
+        this.allowExportAudio = this.currentBookAudioExportAllowed;
+      }
     }
 
   },
@@ -479,7 +493,17 @@ export default {
         this.currentBook.author = [this.currentBook.author];
       }
       this.loadAudiobook();
-      this.setCurrentBookBlocksLeft(this.currentBook._id);
+      this.allowEditingComplete = false;
+      this.setCurrentBookBlocksLeft(this.currentBook._id)
+        .then(() => {
+          this.allowEditingComplete = this.currentBookBlocksLeft == 0;
+        });
+      this.allowExportAudio = false;
+      this.setAllowAudioExport()
+        .then(() => {
+          this.allowExportAudio = this.currentBookAudioExportAllowed;
+        });
+      this.setAllowSetMastered();
     },
 
     update: _.debounce(function (key, event) {
@@ -655,6 +679,7 @@ export default {
       this.getAudioBook(this.currentBookMeta.bookid).then(audio => {
         self.audiobook = audio;//
         //console.log(self.audiobook)
+        self.setAllowSetMastered();
         if (set_tab) {
           if (self.audiobook.bookid) {
             self.$refs.panelTabs.findTabAndActivate('Audio Integration');
@@ -691,7 +716,35 @@ export default {
         //this.$router.push({name: this.$route.name, params: { block: '1_en_2v' } });
       }
     },
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft'])
+    toggleIsMastered() {
+      if (this.allowSetMastered) {
+        this.liveUpdate('isMastered',  !this.currentBook.isMastered)
+      }
+    },
+    setAllowSetMastered() {
+      this.allowSetMastered = false;
+      if (!this.audiobook || !this.audiobook.importFiles || this.audiobook.importFiles.length === 0) {
+        this.allowSetMastered = false;
+        if (this.currentBook.isMastered === true) {
+          this.liveUpdate('isMastered',  !this.currentBook.isMastered)
+        }
+      } else {
+        this.checkAllowSetAudioMastered()
+          .then(response => {
+            if (response && response.rows && typeof response.rows[0] !== 'undefined') {
+              this.allowSetMastered = response.rows[0].value === 0;
+            } else {
+              this.allowSetMastered = true;
+            }
+            if (!this.allowSetMastered) {
+              if (this.currentBook.isMastered === true) {
+                this.liveUpdate('isMastered',  !this.currentBook.isMastered);
+              }
+            }
+          })
+      }
+    },
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'setAllowAudioExport', 'checkAllowSetAudioMastered'])
   }
 }
 </script>
