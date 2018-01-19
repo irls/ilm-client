@@ -259,7 +259,9 @@ export default {
         this.getBlocks(query)
         .then((blockId)=>{
           if (blockId && blockId !== true) {
-            this.$router.push({name: this.$route.name, params: { } });
+            if (query == 'unresolved') {
+              this.$router.push({name: this.$route.name, params: { block: blockId } });
+            }
             Vue.nextTick(()=>{
               this.scrollToBlock(blockId);
             });
