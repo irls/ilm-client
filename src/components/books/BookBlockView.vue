@@ -84,19 +84,19 @@
                   <template v-if="allowEditing">
                     <!-- Block Type selector -->
                     <label>type:&nbsp;
-                    <select v-model='block.type' style="min-width: 80px;"><!--v-model='block.type'--><!--:value="type"-->
+                    <select v-model='block.type' style="min-width: 80px;" @input="setChanged(true)"><!--v-model='block.type'--><!--:value="type"-->
                       <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                     </select>
                     </label>
                     <!-- Block Class selector -->
                     <label>classes:&nbsp;
-                    <select v-model='classSel' style="min-width: 100px;"><!--v-model='block.classes'--><!--:value="style"-->
+                    <select v-model='classSel' style="min-width: 100px;" @input="setChangedByClass(true)"><!--v-model='block.classes'--><!--:value="style"-->
                       <option v-for="(val, key) in blockClasses" :value="key">{{ key }}</option>
                     </select>
                     </label>
                     <!-- Block Class selector -->
                     <label v-if="blockStyles">style:&nbsp;
-                    <select v-model='styleSel' style="min-width: 110px;"><!--v-model='block.classes'--><!--:value="style"-->
+                    <select v-model='styleSel' style="min-width: 110px;" @input="setChanged(true)"><!--v-model='block.classes'--><!--:value="style"-->
                       <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
                     </select>
                   </label><!-- &nbsp;&nbsp;{{block.getClass()}}-->
@@ -351,7 +351,7 @@
             </div>
 
             <div class="table-row controls-bottom">
-              <div class="save-block -hidden -left"
+              <div class="save-block -left"
               v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing)) }"
               @click="assembleBlockProxy">
                   <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
@@ -400,12 +400,6 @@
     </div>
     <modal v-model="deleteBlockMessage" effect="fade" ok-text="Delete" cancel-text="Cancel" title="Delete block" @ok="deleteBlock()">
       <div>Delete block? </div>
-    </modal>
-    <modal v-model="unableJoinMessage" effect="fade" cancel-text="Close" title="Join blocks error">
-      <div slot="modal-body" class="modal-body">Unable to join blocks with different types </div>
-      <div slot="modal-footer" class="modal-footer">
-        <button type="button" class="btn btn-default" @click="unableJoinMessage = false">Close</button>
-      </div>
     </modal>
     <modal v-model="onVoiceworkChange" effect="fade">
       <!-- custom header -->
@@ -491,7 +485,6 @@ export default {
       isUpdating: false,
       recordStartCounter: 0,
       deleteBlockMessage: false,
-      unableJoinMessage: false,
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
       isAudioEditing: false,
@@ -884,12 +877,12 @@ export default {
       },
 
       assembleBlockProxy: function (ev) {
-        if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio(ev);
-        else if (this.isChanged) return this.assembleBlock(ev);
+        if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
+        else if (this.isChanged) return this.assembleBlock();
         return BPromise.resolve();
       },
 
-      assembleBlock: function(el) {
+      assembleBlock: function() {
         switch (this.block.type) {
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
@@ -920,7 +913,7 @@ export default {
           if (this.$refs.blockContent) {
             if (this.$refs.blockContent.dataset.has_suggestion) {
               if (this.$refs.blockContent.dataset.has_suggestion === 'true') {
-                console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
+                //console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
                 this.doReAlign();
               }
             }
@@ -930,7 +923,7 @@ export default {
         });
       },
 
-      checkBlockContentFlags: function(ev) {
+      checkBlockContentFlags: function() {
         if (this.block.flags) this.block.flags.forEach((flag, flagIdx)=>{
           if (flag._id !== this.block._id) {
             let node = this.$refs.blockContent.querySelector(`[data-flag="${flag._id}"]`);
@@ -939,7 +932,7 @@ export default {
         });
       },
 
-      assembleBlockAudio: function(ev) {
+      assembleBlockAudio: function() {
         if (this.blockAudio.map) {
           let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
           let api = this.$store.state.auth.getHttp();
@@ -1610,27 +1603,24 @@ export default {
         this.$emit('deleteBlock', this.block, this.block_Idx);
       },
       setChanged(val) {
-        if (!val) {
+        //console.log('setChanged', val);
+        this.isChanged = val;
+      },
+      setChangedByClass(val) {
+        //console.log('setChangedByClass', this.block.type, val);
+        if (this.block.type === 'title') {
           this.isChanged = val;
         }
       },
       joinWithPrevious() {
         this.joinBlocks(this.block, this.block_Idx, 'previous')
-        .then(()=>{
-
-        })
-        .catch(()=>{
-          this.unableJoinMessage = true;
-        })
+        .then(()=>{})
+        .catch(()=>{})
       },
       joinWithNext() {
         this.joinBlocks(this.block, this.block_Idx, 'next')
-        .then(()=>{
-
-        })
-        .catch(()=>{
-          this.unableJoinMessage = true;
-        })
+        .then(()=>{})
+        .catch(()=>{})
       },
       showAudioEditor() {
         //$('.table-body.-content').removeClass('editing');
@@ -1904,7 +1894,6 @@ export default {
       },
       'block.type' (newVal) {
         //console.log('block.type', this.blockTypes);
-        this.setChanged(true);
         if (Object.keys(this.blockTypes[newVal])[0] !== '') {
           this.classSel = Object.keys(this.blockTypes[newVal])[0];
         }
@@ -1916,24 +1905,12 @@ export default {
         let styleCurr = this.block.setClass(newVal);
         if (styleCurr) this.styleSel = styleCurr;
         else this.styleSel = '';
-        if (oldVal !== false) {
-          this.setChanged(true);
-        }
       },
       'styleSel' (newVal, oldVal) {
         //console.log('styleSel', newVal, oldVal);
         this.block.setClassStyle(this.classSel, newVal);
-
-        if (this.block.type === 'illustration') {
-          this.setChanged(false);
-        }
-
         this.destroyEditor()
         this.initEditor();
-
-        if (oldVal !== false) {
-          this.setChanged(true);
-        }
       },
       'blockAudio.src' (newVal) {
         if (newVal) {
@@ -2169,15 +2146,21 @@ export default {
           border: 1px solid silver;
           border-radius: 3px;
           padding: 0 3px 1px 3px;
+          margin-right: 10px;
+          background: rgba(204, 255, 217, 0.5);
           &:hover {
-              background: rgba(204, 255, 217, 0.2);
+              background: rgba(204, 255, 217, 0.9);
           }
+
           &.-disabled {
 /*                cursor: not-allowed;
               &:hover {
                   background: rgba(100, 100, 100, 0.2);
               }*/
               visibility: hidden;
+          }
+          .fa-save {
+            color: green;
           }
         }
     }

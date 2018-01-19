@@ -666,7 +666,11 @@ export const store = new Vuex.Store({
                 meta['status'] = 'staging';
                 state.metaRemoteDB.put(meta)
                   .then(() => {
-                    dispatch('reloadBookMeta');
+                    //dispatch('reloadBookMeta');
+                    state.currentBookMeta.version = meta['version'];
+                    state.currentBookMeta.pubType = meta['pubType'];
+                    state.currentBookMeta.published = meta['published'];
+                    state.currentBookMeta.status = meta['status'];
                     if (meta.collection_id) {
                       dispatch('updateCollectionVersion', Object.assign({id: meta.collection_id}, update));
                     }
@@ -674,7 +678,8 @@ export const store = new Vuex.Store({
               });
           }
         } else {
-          dispatch('reloadBookMeta');
+          // olku: Because it`s happening every time when we try to update meta fields
+          // dispatch('reloadBookMeta');
         }
       }
     },

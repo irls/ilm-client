@@ -71,7 +71,7 @@ import Vue from 'vue';
                       this.under = true;
                       this.top = rect.top + window.scrollY - this.$refs.menu.offsetHeight - 5 + 'px';
                   }
-                  this.left = rect.left + 'px';
+                  this.left = (rect.left - 120) + 'px';
               }
               break;
               default : // case bottom
@@ -192,7 +192,7 @@ import Vue from 'vue';
     }
 
     &.-under::after {
-      left: 4px;
+      left: 120px;
       transform: rotate(-45deg);
       border: 6px solid black;
       border-color: transparent transparent #FAFAFA #FAFAFA;
@@ -201,7 +201,7 @@ import Vue from 'vue';
     }
 
     &.-over::before {
-      left: 18px;
+      left: 131px;
       transform: rotate(135deg);
       border: 6px solid black;
       border-color: transparent transparent #FAFAFA #FAFAFA;
