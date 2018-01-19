@@ -24,7 +24,7 @@
     </div>
     <!--<div class="row"-->
     <modal v-model="doJoinBlocks.show" effect="fade" cancel-text="Close" title="Join blocks saving">
-      <div slot="modal-body" class="modal-body">All changes in selected blocks will saved. Continue ?</div>
+      <div slot="modal-body" class="modal-body">Save changes and join blocks?</div>
       <div slot="modal-footer" class="modal-footer">
         <button type="button" class="btn btn-default" @click="doJoinBlocks.show = false;">Cancel</button>
         <button v-if="doJoinBlocks.direction == 'previous'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
