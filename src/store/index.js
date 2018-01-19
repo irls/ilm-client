@@ -1187,7 +1187,8 @@ export const store = new Vuex.Store({
     },
     
     setAllowAudioExport({state, commit}) {
-      if (state.isEditor && state.currentBookMeta._id) {
+      commit('SET_AUDIO_EXPORT_ALLOWED', false);
+      /*if (state.isEditor && state.currentBookMeta._id) {
         return axios.get(state.API_URL + 'books/' + state.currentBookMeta._id + '/allow_audio_export')
           .then(response => {
             if (response.status == 200 && typeof response.data.allow !== 'undefined') {
@@ -1201,7 +1202,7 @@ export const store = new Vuex.Store({
             commit('SET_AUDIO_EXPORT_ALLOWED', false);
             return false;
           });
-      }
+      }*/
     },
     
     checkAllowSetAudioMastered({state}) {
