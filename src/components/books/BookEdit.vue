@@ -354,7 +354,7 @@ export default {
       });
     },
     initRecorder() {
-      if (!this.recorder && this.tc_hasTask('block_narrate')) {
+      if (!this.recorder && this._is('narrator')) {
         navigator.getUserMedia({
           audio: true
         }, this.onMediaSuccess_msr, function (e) {

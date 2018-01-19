@@ -59,6 +59,7 @@ export const store = new Vuex.Store({
     currentBookFiles: { coverimg: false },
     currentBookBlocksLeft: 0,
     currentBookBlocksLeftId: 'AAA',
+    currentBookAudioExportAllowed: false,
 
     bookFilters: {filter: '', language: 'en', importStatus: 'staging'},
     editMode: 'Editor',
@@ -124,6 +125,7 @@ export const store = new Vuex.Store({
     currentBookFiles: state => state.currentBookFiles,
     currentBookBlocksLeft: state => state.currentBookBlocksLeft,
     currentBookBlocksLeftId: state => state.currentBookBlocksLeftId,
+    currentBookAudioExportAllowed: state => state.currentBookAudioExportAllowed,
     bookEditMode: state => state.editMode,
     allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode) && state.currentBookMeta.status != 'import_text',
     allowArchiving: state => state.isAdmin || state.isProofer,
@@ -394,6 +396,10 @@ export const store = new Vuex.Store({
       } else {
         state.libraries = [];
       }
+    },
+    
+    SET_AUDIO_EXPORT_ALLOWED(state, allowed) {
+      state.currentBookAudioExportAllowed = allowed ? true : false;
     }
 
   },
@@ -1091,14 +1097,7 @@ export const store = new Vuex.Store({
 
       commit('SET_CURRENTBOOKBLOCKS_LEFT_ID', 'BBB');
 
-      return state.contentDB.query({
-        map: function (doc) {
-          if (!doc.markedAsDone && (doc.voicework === 'audio_file' || doc.voicework === 'tts')) {
-            emit(doc.bookid);
-          }
-        },
-        reduce: '_count'
-      }, {
+      return state.contentRemoteDB.query('filters_notMarkedAsDone/notMarkedAsDone', {
         key: bookId, reduce: true, group: true
       })
       .then(function (result) {
@@ -1180,6 +1179,36 @@ export const store = new Vuex.Store({
         //console.log('error DB pdate: ', err)
         return Promise.reject(err);
       })
+    },
+    
+    setAllowAudioExport({state, commit}) {
+      if (state.isEditor && state.currentBookMeta._id) {
+        return axios.get(state.API_URL + 'books/' + state.currentBookMeta._id + '/allow_audio_export')
+          .then(response => {
+            if (response.status == 200 && typeof response.data.allow !== 'undefined') {
+              commit('SET_AUDIO_EXPORT_ALLOWED', response.data.allow);
+            } else {
+              commit('SET_AUDIO_EXPORT_ALLOWED', false);
+            }
+            return true;
+          })
+          .catch(err => {
+            commit('SET_AUDIO_EXPORT_ALLOWED', false);
+            return false;
+          });
+      }
+    },
+    
+    checkAllowSetAudioMastered({state}) {
+      if (state.currentBookMeta._id) {
+        return state.contentRemoteDB.query('filters_byVoiceworkAndBook/byVoiceworkAndBook', {start_key: [state.currentBookMeta._id, 'narration'], end_key: [state.currentBookMeta._id, 'narration', {}], reduce: true, group: true})
+          .then(response => {
+            return response;
+          })
+;
+      } else {
+        return false;
+      }
     }
 
   }
