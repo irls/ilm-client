@@ -275,17 +275,23 @@
   .baha, .bab, .abd, .sacred,
   .bible, .muhammad, .quran,
   .jesus, .ali, .tradition,
-  .husayn, .muh {
+  .husayn, .muh, [data-author] {
     font-style: italic;
   }
-  .baha {
+  .baha, [data-author="baha"] {
     color: @author1_color;
+    font-style: italic;
   }
-  .bab {
+  .bab, [data-author="bab"] {
     color: @author2_color;
+    font-style: italic;
   }
-  .abd {
+  .abd, [data-author="abd"] {
     color: @author3_color;
+    font-style: italic;
+  }
+  .shoghi, [data-author="shoghi"] {
+    font-style: italic;
   }
 
   /***** Global custom styles *****/
