@@ -164,7 +164,7 @@
     text-transform: uppercase;
   }
   .smallcaps {
-    text-transform: lowercase !important;
+    text-transform: lowercase /*!important*/;
   }
   .italic {
     font-style: italic;
@@ -275,17 +275,23 @@
   .baha, .bab, .abd, .sacred,
   .bible, .muhammad, .quran,
   .jesus, .ali, .tradition,
-  .husayn, .muh {
+  .husayn, .muh, [data-author] {
     font-style: italic;
   }
-  .baha {
+  .baha, [data-author="baha"] {
     color: @author1_color;
+    font-style: italic;
   }
-  .bab {
+  .bab, [data-author="bab"] {
     color: @author2_color;
+    font-style: italic;
   }
-  .abd {
+  .abd, [data-author="abd"] {
     color: @author3_color;
+    font-style: italic;
+  }
+  .shoghi, [data-author="shoghi"] {
+    font-style: italic;
   }
 
   /***** Global custom styles *****/
@@ -497,6 +503,11 @@
         font-style: italic;
         text-align: center;
       }
+      &.reference {
+        font-size: 75%;
+        color: rgba(26, 26, 26, 0.7);
+        text-align: right;
+      }
     }
 
     .title {
@@ -511,8 +522,12 @@
       &.h2 {
         font-family: GoudyHandtooled;
         color: #1a1a1a;
-        text-transform: uppercase;
+        /*text-transform: uppercase;*/
         font-size: 32pt;
+        &.smallcaps {
+          font-variant: small-caps;
+          text-transform: none;
+        }
       }
       &.h3 {
         font-family: Garamond1689;
@@ -521,8 +536,26 @@
         font-weight: normal;
         page-break-after: avoid;
         color: DarkOliveGreen;
-        text-transform: uppercase;
+        /*text-transform: uppercase;*/
         text-align: center;
+        &.smallcaps {
+          font-variant: small-caps;
+          text-transform: none;
+        }
+      }
+      &.h4 {
+        font-family: Garamond1689;
+        font-size: 20pt;
+        line-height: 1em;
+        font-weight: normal;
+        page-break-after: avoid;
+        color: DarkOliveGreen;
+        /*text-transform: uppercase;*/
+        text-align: center;
+        &.smallcaps {
+          font-variant: small-caps;
+          text-transform: none;
+        }
       }
     }
   }
@@ -593,6 +626,10 @@
         page-break-after: avoid;
         color: rgb(63, 74, 40);
         text-align: center;
+        /*&.smallcaps {
+          font-variant: small-caps;
+          text-transform: none;
+        }*/
       }
     }
 /*    &:after {

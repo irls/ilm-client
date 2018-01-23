@@ -365,7 +365,15 @@ class FlagPart {
   }
 }
 
+class FootNote {
+  constructor(init) {
+    this.content = init.content || '<p></p>';
+    this.voicework = init.voicework || 'tts';
+  }
+}
+
 export {
   BookBlock,
-  BlockTypes
+  BlockTypes,
+  FootNote
 }

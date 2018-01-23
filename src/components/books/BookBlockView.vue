@@ -327,7 +327,7 @@
                   <template v-if="allowEditing">
                     <template v-if="tc_hasTask('content_cleanup')">
                       <label>Voicework:&nbsp;
-                      <select v-model='footnVoiceworkSel' style="min-width: 100px;" ref="footnVoiceworkSel">
+                      <select v-model='footnote.voicework' style="min-width: 100px;" ref="footnVoiceworkSel" @input="commitFootnote(footnoteIdx, $event)">
                         <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                       </select>
                       </label>
@@ -341,7 +341,7 @@
                     :data-footnoteIdx="block._id +'_'+ footnoteIdx"
                     :class="['js-footnote-val', 'js-footnote-'+ block._id]"
                     @input="commitFootnote(footnoteIdx, $event)"
-                    v-html="footnote">
+                    v-html="footnote.content">
                   </div>
                   <div class="table-cell -control">
                     <span @click="delFootnote(footnoteIdx)"><i class="fa fa-trash"></i></span>
@@ -444,7 +444,7 @@ import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import access             from '../../mixins/access.js';
 import { modal }          from 'vue-strap';
-import { BlockTypes }     from '../../store/bookBlock'
+import { BlockTypes, FootNote }     from '../../store/bookBlock'
 import VuePictureInput    from 'vue-picture-input'
 var BPromise = require('bluebird');
 
@@ -893,7 +893,7 @@ export default {
             this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
             if (this.block.footnotes && this.block.footnotes.length) {
               this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-                this.block.footnotes[footnoteIdx] = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
+                this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
               });
             }
             break;
@@ -1195,7 +1195,7 @@ export default {
         el.setAttribute('data-idx', this.block.footnotes.length);
         this.range.insertNode(el);
         let pos = this.updFootnotes(this.block.footnotes.length);
-        this.block.footnotes.splice(pos, 0, '<p></p>');
+        this.block.footnotes.splice(pos, 0, new FootNote({}));
         this.isChanged = true;
 
         //if (this.editorFootn) {
