@@ -36,7 +36,8 @@ let BlockTypes = {
     level: ['', 'h2', 'h3', 'h4', 'h5'],
     align: ['', 'left', 'center', 'right', 'justify'],
     'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4'],
-    style: [' ', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline'],
+    style: ['', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline'],
+    type: ['', 'subhead']
   },
 //   subhead: {
 //     'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4'],
@@ -372,8 +373,49 @@ class FootNote {
   }
 }
 
+let setBlockParnum = function(block, parCounter) {
+  let result = false;
+  switch(block.type) {
+    case 'header' : {
+      // this.parCounter.curr = 1;
+
+      if (block.secnum === false) {
+        //this.parCounter.pref = false;
+        break;
+      }
+      if (block.secnum.length === 0) {
+        //this.parCounter.curr = 1;
+        parCounter.prefCnt++;
+        parCounter.pref = parCounter.prefCnt;
+        break;
+      }
+      if (!isNaN(block.secnum)) { // Number
+        parCounter.curr = 1;
+        parCounter.prefCnt = parseInt(block.secnum);
+        parCounter.pref = parCounter.prefCnt;
+      } else { // String
+        parCounter.curr = 1;
+        parCounter.pref = block.secnum;
+      }
+    } break;
+    case 'par' : {
+      if (block.parnum===false) {
+        break;
+      }
+      if (parCounter.pref === false) {
+        result = '';
+        break;
+      }
+      result = parCounter.pref+'.'+parCounter.curr;
+      parCounter.curr++;
+    } break;
+  };
+  return result;
+}
+
 export {
   BookBlock,
   BlockTypes,
-  FootNote
+  FootNote,
+  setBlockParnum
 }

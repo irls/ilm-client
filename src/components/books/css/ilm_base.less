@@ -97,10 +97,10 @@
   hr {
     display: block; border: 0;  margin: 1em;  height: 35px;
     text-align: center;
-    background: url(hr.svg) 50% 0 no-repeat;
+    background: url(hr.svg) 50% 50% no-repeat;
     opacity: .5;
-    &.small { background: url(hr2.png) 50% 0 no-repeat; background-size: 54px; margin-top: 1.5em; }
-    &.large { background: url(hr.svg) 50% 0 no-repeat; margin: 2.5em 0; background-size: 600px; }
+    &.small { background: url(hr2.png) 50% 50% no-repeat; background-size: 54px; margin-top: 1.5em; }
+    &.large { background: url(hr.svg) 50% 50% no-repeat; margin: 2.5em 0; background-size: 600px; }
   }
 
   /***** Global alignment *****/
@@ -486,16 +486,91 @@
 
     font-family: GentiumPlus,"Georgia","serif";
     font-size: 24px;
-    line-height: 1.45em;
     padding: 0;
+
+      /* Specific for display mode */
+      &.ilm-display {
+
+        .parnum {
+          float: left;
+          padding-top: 10px;
+          font-family: GentiumPlus, 'Georgia', 'serif';
+          padding-left: 15px;
+          color: rgba(26, 26, 26, 0.7);
+          font-size: 12px;
+          cursor: pointer;
+          /*content: attr(id);
+          vertical-align: top;
+          position: absolute;
+          top: 0;
+          left: -65px;*/
+        }
+
+        .footnotes {
+          margin-left: 70px;
+          margin-right: 40px;
+          font-family: GentiumPlus, 'Georgia', 'serif';
+          color: rgba(26, 26, 26, 0.7);
+          font-size: 80%;
+
+          .-hidden {
+            display: none;
+          }
+
+          .-num {
+            display: inline-block;
+            font-size: 80%;
+            margin-top: 5px;
+            margin-bottom: 5px;
+          }
+
+          .-text {
+            display: inline-block;
+          }
+        }
+
+        .par {
+          margin-left: 60px;
+          margin-right: 45px;
+          position: relative;
+
+          [data-pg]::before {
+            content: 'pg ' attr(data-pg);
+            color: rgba(26, 26, 26, 0.7);
+            padding: 0;
+            padding-left: 3px;
+            padding-right: 3px;
+            float: right;
+            margin-right: -4em;
+            font-size: 8pt;
+            font-style: normal;
+            position: absolute;
+            right: 12px;
+          }
+
+          sup[data-idx] {
+            font-family: GentiumPlus, 'Georgia', 'serif';
+            font-size: 15px;
+            color: rgba(26, 26, 26, 0.7);
+            cursor: pointer;
+
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+        }
+
+      }
 
     .par {
       text-align: justify;
+
       &:after {
         content: "";
         display: block;
         width: 100%;
       }
+
       &.dedication {
         width: 30%;
         margin-left: auto;
@@ -508,6 +583,11 @@
         color: rgba(26, 26, 26, 0.7);
         text-align: right;
       }
+      &.centerquote {
+        width: 20em;
+        margin-left: auto;
+        margin-right: auto;
+      }
     }
 
     .title {
@@ -519,6 +599,7 @@
     }
 
     .header {
+      margin-top: 50px;
       &.h2 {
         font-family: GoudyHandtooled;
         color: #1a1a1a;
@@ -527,6 +608,12 @@
         &.smallcaps {
           font-variant: small-caps;
           text-transform: none;
+        }
+        &.subhead {
+          font-family: Garamond1689;
+          color: DarkOliveGreen;
+          line-height: 1em;
+          font-weight: normal;
         }
       }
       &.h3 {
@@ -541,6 +628,12 @@
         &.smallcaps {
           font-variant: small-caps;
           text-transform: none;
+        }
+        &.subhead {
+          font-family: Garamond1689;
+          color: DarkOliveGreen;
+          line-height: 1em;
+          font-weight: normal;
         }
       }
       &.h4 {
@@ -568,7 +661,6 @@
 
     font-family: GentiumPlus, "Georgia","serif";
     font-size: 22px;
-    line-height: 1.45em;
     padding: 0 60px 2em;
 
     .par {

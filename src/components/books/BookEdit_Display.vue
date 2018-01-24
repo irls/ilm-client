@@ -2,7 +2,7 @@
   <div :class="['ilm-global-style', metaStyles]">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
-    <div v-for="(block, blid) in parlist" :class="['ilm-block']">
+    <div v-for="(block, blid) in parlist" :class="['ilm-block', 'ilm-display']">
       <div v-if="block.type == 'illustration'">
         <img :class="block.getClass()" :src="block.getIllustration()"/>
         <div class="description"
@@ -14,13 +14,32 @@
       <div v-else-if="block.type == 'hr'">
         <hr :class="[block.getClass()]"/>
       </div>
-      <div v-else
-        :class="block.getClass()"
-        :id="block.id"
-        :data-parnum="block.parnum"
-        :lang="block.language || meta.language"
-        :data-type="block.type"
-        v-html="block.content"></div>
+      <div v-else >
+        <div
+          v-if="block.parnum && block.parnum.length"
+          v-html="block.parnum"
+          :class="['parnum']">
+        </div>
+        <div
+          @click="handleFootnote($event)"
+          :class="[block.getClass()]"
+          :id="block.id"
+          :data-parnum="block.parnum"
+          :lang="block.language || meta.language"
+          :data-type="block.type"
+          v-html="block.content">
+        </div>
+        <div class="footnotes"
+          v-if="block.footnotes.length > 0">
+          <div class="-hidden" ref="footNotes"
+            v-for="(footnote, footnoteIdx) in block.footnotes">
+            <div class="-num">[fn{{footnote.ftnIdx+1}}]</div>
+            <div class="-text"
+              v-html="footnote.content">
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <infinite-loading @infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
   </div>
@@ -31,14 +50,16 @@ import BookDisplayHeader from './BookDisplayHeader'
 import BookTOC from './BookTOC'
 import InfiniteLoading from 'vue-infinite-loading'
 import { mapGetters, mapState, mapActions } from 'vuex'
-import { BookBlock }    from '../../store/bookBlock'
+import { BookBlock, setBlockParnum }    from '../../store/bookBlock'
 
 export default {
   name: 'BookEditDisplay',
   data () {
     return {
       parlist: [],
-      page: 0
+      page: 0,
+      parCounter: { pref: 0, prefCnt: 0, curr: 1 },
+      fntCounter: 0
     }
   },
   components: {
@@ -91,6 +112,20 @@ export default {
             if (result.rows.length > 0) {
                 result.rows.forEach((el, idx, arr)=>{
                     let newBlock = new BookBlock(el);
+                    newBlock.content = newBlock.content.replace(
+                      /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/gm,
+                      '<span data-pg="$1"></span>'
+                    );
+                    let ftnIdx = 0;
+                    newBlock.content = newBlock.content.replace(
+                      /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/gm,
+                      (idx)=>{
+                        newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+                        ftnIdx++;
+                        return `<sup data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
+                      }
+                    );
+                    //'<sup data-idx="$1">[$1]</sup>'
                     this.parlist.push(newBlock);
                 });
               if (result.finish) {
@@ -102,12 +137,26 @@ export default {
                 if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
             }
             this.isAllLoaded = this.$refs.infiniteLoading.isComplete;
-            //console.log('loaded', result);
+            this.reCountProxy();
         })
         .catch((err)=>{
           if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
           console.log('Error: ', err.message);
         });
+      }
+    },
+    reCountProxy: function () {
+      this.parCounter = { pref: 0, prefCnt: 0, curr: 1 };
+      this.parlist.forEach((block, idx, arr)=>{
+        block.parnum = setBlockParnum(block, this.parCounter);
+      })
+    },
+    handleFootnote: function (ev) {
+      if (ev.target.dataset.idx && this.$refs.footNotes[ev.target.dataset.idx]) {
+        let className = this.$refs.footNotes[ev.target.dataset.idx].className;
+        if (className == '-hidden') {
+          this.$refs.footNotes[ev.target.dataset.idx].className = '';
+        } else this.$refs.footNotes[ev.target.dataset.idx].className = '-hidden';
       }
     }
   },
