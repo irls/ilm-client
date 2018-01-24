@@ -62,7 +62,7 @@ import taskControls from '../../mixins/task_controls.js'
 import mediaStreamRecorder from 'recordrtc'
 import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
-import { BookBlock }    from '../../store/bookBlock';
+import { BookBlock, setBlockParnum }    from '../../store/bookBlock';
 import { modal }        from 'vue-strap';
 
 //import IlmCss from './css/ilm'
@@ -162,43 +162,6 @@ export default {
         }
 
 
-    },
-
-    setBlockParnum(block) {
-      let result = false;
-      switch(block.type) {
-        case 'header' : {
-          this.parCounter.curr = 1;
-
-          if (block.secnum === false) {
-            this.parCounter.pref = false;
-            break;
-          }
-          if (block.secnum.length === 0) {
-            this.parCounter.prefCnt++;
-            this.parCounter.pref = this.parCounter.prefCnt;
-            break;
-          }
-          if (!isNaN(block.secnum)) { // Number
-            this.parCounter.prefCnt = parseInt(block.secnum);
-            this.parCounter.pref = this.parCounter.prefCnt;
-          } else { // String
-            this.parCounter.pref = block.secnum;
-          }
-        } break;
-        case 'par' : {
-          if (block.parnum===false) {
-            break;
-          }
-          if (this.parCounter.pref === false) {
-            result = '';
-            break;
-          }
-          result = this.parCounter.pref+'.'+this.parCounter.curr;
-          this.parCounter.curr++;
-        } break;
-      };
-      return result;
     },
 
     getBlocks(query) {
@@ -365,7 +328,7 @@ export default {
     reCountProxy: function () {
       this.parCounter = { pref: 0, prefCnt: 0, curr: 1 };
       this.parlist.forEach((block, idx, arr)=>{
-        block.parnum = this.setBlockParnum(block);
+        block.parnum = setBlockParnum(block, this.parCounter);
       })
     },
 

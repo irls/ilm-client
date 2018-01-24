@@ -822,7 +822,7 @@ export default {
       discardBlock: function(block_id, ev) {
         this.getBlock(this.block._id)
         .then((block)=>{
-          this.$refs.blockContent.innerHTML = this.block.content;
+          if (this.$refs.blockContent) this.$refs.blockContent.innerHTML = this.block.content;
           Vue.nextTick(() => {
             if (this.$refs.blockContent) this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
               flag.addEventListener('click', this.handleFlagClick);
@@ -840,7 +840,7 @@ export default {
             }
           }
 
-          this.$refs.blockContent.focus();
+          if (this.$refs.blockContent) this.$refs.blockContent.focus();
         });
       },
       discardAudio: function() {
@@ -1191,7 +1191,6 @@ export default {
         this.destroyEditor();
 
         let el = document.createElement('SUP');
-        el.className = 'js-footnote-el';
         el.setAttribute('data-idx', this.block.footnotes.length);
         this.range.insertNode(el);
         let pos = this.updFootnotes(this.block.footnotes.length);
@@ -1209,14 +1208,14 @@ export default {
         //}
       },
       delFootnote: function(pos) {
-        $('#'+this.block._id).find(`.js-footnote-el[data-idx='${pos+1}']`).remove();
+        $('#'+this.block._id).find(`[data-idx='${pos+1}']`).remove();
         this.updFootnotes();
         this.block.footnotes.splice(pos, 1);
         this.isChanged = true;
       },
       updFootnotes: function(c_pos = 0) {
         let pos = 0;
-        $('#'+this.block._id).find('.js-footnote-el').each(function(idx) {
+        $('#'+this.block._id).find('[data-idx]').each(function(idx) {
           if ($(this).data('idx') == c_pos) pos = idx;
           $(this).text(idx+1).attr('data-idx', idx+1);
         });
