@@ -4,13 +4,13 @@
       <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'">
         <div class="file-catalogue">
           <div class="file-catalogue-buttons">
-            <div v-if="tc_hasTask('upload_audio')" class="upload-audio">
+            <div v-if="tc_hasTask('upload_audio') || tc_hasTask('audio_mastering')" class="upload-audio">
               <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload btn-small">
                 Import Audio
               </button>
             </div>
             <div class="delete-audio">
-              <button class="btn btn-danger btn-small" :disabled="selectionLength == 0" v-on:click="deleteAudio()">Delete<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
+              <button class="btn btn-danger btn-small" :disabled="selectionLength == 0 || !_is('editor')" v-on:click="deleteAudio()">Delete<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
             </div>
             <div class="unselect-audio">
               <button class="btn btn-default btn-small" :disabled="selectionLength == 0" v-on:click="checkAll(null, false)">Unselect<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
@@ -104,6 +104,8 @@
   import task_controls from '../../mixins/task_controls.js'
   import api_config from '../../mixins/api_config.js'
   import Vue from 'vue'
+  import access from '../../mixins/access.js';
+  import {mapGetters, mapActions} from 'vuex';
   var WaveformPlaylist = require('waveform-playlist');
   var List = require('draggable-list')
   //var d3 = require('d3')
@@ -137,7 +139,7 @@
         alignmentProcessModal: false
       }
     },
-    mixins: [task_controls, api_config],
+    mixins: [task_controls, api_config, access],
     mounted() {
       /*let ac = new (window.AudioContext || window.webkitAudioContext);
       this.player = WaveformPlaylist.init({
@@ -273,6 +275,9 @@
         this.deleting = false;
       },
       play(id, autostart) {
+        if (!this._is('editor')) {
+          return;
+        }
         if (id) {
           let record = this.audiobook.importFiles.find(f => {
             return f.id == id;
@@ -342,17 +347,19 @@
         api.post(api_url, {
           start: this.blocksForAlignment.start._id,
           end: this.blocksForAlignment.end._id,
-          audiofiles: this.selections
+          audiofiles: this.selections,
+          realign: this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0
         }, {}).then(function(response){
           if (response.status===200) {
 
           } else {
 
           }
-          this.alignmentProcess = false;
+          self.alignmentProcess = false;
+          self.setCurrentBookCounters();
         }).catch((err) => {
           console.log('error: '+ err)
-          this.alignmentProcess = false;
+          self.alignmentProcess = false;
         });
       },
       cancelAlign(force = false) {
@@ -376,7 +383,8 @@
       },
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
-      }
+      },
+      ...mapActions(['setCurrentBookCounters'])
     },
     computed: {
       selectionLength: {
@@ -397,7 +405,8 @@
       },
       hasBlocksForAlignment: function() {
         return this.blocksForAlignment.count > 0
-      }
+      },
+      ...mapGetters(['currentBookCounters'])
     },
     watch: {
       'audiobook': {

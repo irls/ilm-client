@@ -100,7 +100,7 @@
                       <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
                     </select>
                   </label><!-- &nbsp;&nbsp;{{block.getClass()}}-->
-                    <template v-if="tc_hasTask('content_cleanup')">
+                    <template v-if="tc_hasTask('content_cleanup') && !block.markedAsDone">
                       <label>Voicework:&nbsp;
                       <select v-model='voiceworkSel' style="min-width: 100px;" ref="voiceworkSel">
                         <option v-for="(val, key) in blockVoiceworks" :value="key">{{ val }}</option>
@@ -569,7 +569,7 @@ export default {
           return flagsSummary.stat !== 'open';
       },
       enableMarkAsDone: function() {
-        return this._is('editor') && this.tc_hasTask('content_cleanup');
+        return this._is('editor') && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
       },
       isApproveDisabled: function () {
           if (this._is('editor') && !this.tc_getBlockTask(this.block._id)) return true;
@@ -578,7 +578,10 @@ export default {
           return false;
       },
       isCompleted: function () {
-          if (this._is('editor') && this.tc_hasTask('content_cleanup')) return false;
+          if (this._is('editor') && (
+                  this.tc_hasTask('content_cleanup') || 
+                  (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')
+                )) return false;
           return this.tc_getBlockTask(this.block._id) ? false : true;
       },
       allowSetStart: function () {
@@ -649,7 +652,7 @@ export default {
         'putMetaAuthors',
         'tc_approveBookTask',
         'setCurrentBookBlocksLeft',
-        'setAllowAudioExport'
+        'setCurrentBookCounters'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false) {
@@ -997,18 +1000,21 @@ export default {
           this.assembleBlock(ev)
           .then(()=>{
             this.setCurrentBookBlocksLeft(this.block.bookid);
-            this.setAllowAudioExport();
+            this.setCurrentBookCounters(['not_marked_blocks']);
           });
         }
       },
 
       markBlock: function(ev) {
         if (!this.block.markedAsDone) {
+          if (!this.block.audiosrc && this.block.voicework === 'audio_file') {
+            return false;
+          }
           this.block.markedAsDone = true;
           this.assembleBlock(ev)
           .then(()=>{
             this.setCurrentBookBlocksLeft(this.block.bookid);
-            this.setAllowAudioExport();
+            this.setCurrentBookCounters(['not_marked_blocks']);
           });
         }
       },
@@ -1818,7 +1824,6 @@ export default {
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
               this.setCurrentBookBlocksLeft(this.block.bookid);
-              this.setAllowAudioExport();
             }
             this.voiceworkChange = false;
           })
@@ -1947,9 +1952,11 @@ export default {
           }
         }
       },
-      'block.voicework': {
+      'block.markedAsDone': {
         handler(val) {
-          this.setAllowAudioExport();
+          if (val !== this.block.markedAsDone) {
+            this.setCurrentBookCounters(['not_marked_blocks']);
+          }
         }
       }
   }

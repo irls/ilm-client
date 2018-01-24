@@ -61,12 +61,17 @@
       <p v-if="mode == 'block'">Discard unsaved audio changes?</p>
       <p v-if="mode == 'file'">Discard unsaved markers position?</p>
     </modal>
+    <modal v-model="onWordRepositionMessage" effect="fade" title="" ok-text="OK" cancel-text="" @ok="onWordRepositionMessage = false" :class="['on-word-reposition']">
+      <p>Words repositioning will be lost on unmastered audio</p>
+    </modal>
   </div>
 </template>
 <script>
   import Vue from 'vue'
   import api_config from '../mixins/api_config.js'
+  import task_controls from '../mixins/task_controls.js'
   import { modal } from 'vue-strap'
+  import {mapActions, mapGetters} from 'vuex'
   //import Peaks from 'peaks.js';
   var WaveformPlaylist = require('waveform-playlist');
   var WaveformData = require('waveform-data')
@@ -76,7 +81,7 @@
       components: {
         'modal': modal
       },
-      mixins: [api_config],
+      mixins: [api_config, task_controls],
       data() {
         return {
           audiosourceEditor: false,
@@ -107,7 +112,8 @@
           origFilePositions: {},
           cursorPosition: false,
           dragLeft: null,
-          dragRight: null
+          dragRight: null,
+          onWordRepositionMessage: false
         }
       },
       mounted() {
@@ -397,6 +403,9 @@
             ;
           });
           $('.wf-playlist').on('dragend', '.annotations-boxes .annotation-box .resize-handle', function(e) {
+            if (!self._isAnnotationsEditable()) {
+              self.onWordRepositionMessage = true;
+            }
             let map = [];
             self.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
               map.push([Math.round(al.start * 1000), Math.round((al.end - al.start) * 1000)]);
@@ -813,6 +822,9 @@
               });
             }
             //self.audiosourceEditor.annotationList.renderResizeLeft(annotations.length - 1);
+        },
+        _isAnnotationsEditable() {
+          return this.currentBookMeta.isMastered;
         }
       },
       computed: {
@@ -911,7 +923,8 @@
               return this.isModified;
             }
           }
-        }
+        },
+        ...mapGetters(['currentBookMeta'])
       },
       watch: {
         'cursorPosition': {
@@ -1055,6 +1068,11 @@
             cursor: ew-resize;
         }
     }
+    &.annotations-fixed {
+      .resize-handle {
+        display: none;
+      }
+    }
   }
   .block-content {
     w {
@@ -1168,6 +1186,11 @@
       background-color: #d9d9d9;
       height: 20px;
       line-height: 0.9;
+    }
+  }
+  .modal.on-word-reposition {
+    .btn.btn-default {
+      display: none;
     }
   }
 </style>
