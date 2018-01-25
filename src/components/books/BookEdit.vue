@@ -189,7 +189,7 @@ export default {
           } else {
               if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
           }
-          this.isAllLoaded = this.$refs.scrollBookDown.isComplete;
+          this.isAllLoaded = this.$refs.scrollBookDown ? this.$refs.scrollBookDown.isComplete : false;
           this.reCountProxy();
           //this.unresId = result.unresId;
           return Promise.resolve(result.blockId);
@@ -263,16 +263,6 @@ export default {
       });
       this.initRecorder();
       this.reCountProxy();
-    },
-
-    clearParlist () {
-      return new Promise ((resolve, reject)=>{
-        this.parlist.forEach((block, idx, arr)=>{
-          this.parlist[idx] = function(){};
-          this.parlist.splice(idx, 1);
-        });
-        return resolve();
-      })
     },
 
     hasClass: function(block, cssclass) {
@@ -686,15 +676,12 @@ export default {
         $('#narrateStartCountdown').css('height', '100%')
       }
       this.$root.$on('book-reimported', ()=>{
-      console.log("$on('book-reimported')");
 
-        //Vue.set(this, 'parlist', new Array());
-        this.clearParlist()
-        .then(()=>{
-          this.$nextTick(() => {
-            this.$refs.scrollBookDown.attemptLoad();
-          });
-        });
+        console.log("$on('book-reimported')");
+
+        Vue.set(this, 'parlist', new Array());
+        this.getBlocks();
+
       });
       this.$root.$on('for-bookedit:scroll-to-block', (id)=>{
         this.scrollToBlock(id);

@@ -1897,7 +1897,7 @@ export default {
         }
       },
       'block.type' (newVal) {
-        //console.log('block.type', this.blockTypes);
+        //console.log('block.type', this.block._id, this.blockTypes);
         if (Object.keys(this.blockTypes[newVal])[0] !== '') {
           this.classSel = Object.keys(this.blockTypes[newVal])[0];
         }
@@ -1905,7 +1905,7 @@ export default {
         this.reCount();
       },
       'classSel' (newVal, oldVal) {
-        //console.log('classSel', this.block._id, newVal, oldVal);
+        //if (this.block._id== "1_en_2s") console.log('classSel', this.block._id, ' newVal: ', newVal, ' oldVal: ', oldVal);
         let styleCurr = this.block.setClass(newVal);
         if (styleCurr) this.styleSel = styleCurr;
         else this.styleSel = '';

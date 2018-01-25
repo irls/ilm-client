@@ -188,6 +188,7 @@
   }
   .pre {
     white-space: pre;
+    font-family: monospace;
   }
 
   /***** Global paddings *****/
@@ -203,6 +204,15 @@
     }
   }
 
+  .list {
+    padding-left: 80px;
+  }
+  .content-wrap {
+    &.list:hover {
+      // because of border on hover
+      padding-left: 79px;
+    }
+  }
 
   .nopad {
     padding: 1px;
@@ -272,10 +282,11 @@
   }
 
   /***** Global authors *****/
-  .baha, .bab, .abd, .sacred,
-  .bible, .muhammad, .quran,
-  .jesus, .ali, .tradition,
-  .husayn, .muh, [data-author] {
+
+  .sacred, .bible, .muhammad,
+  .quran, .jesus, .muh,
+  [data-author] {
+    color: @main_text_color;
     font-style: italic;
   }
   .baha, [data-author="baha"] {
@@ -291,15 +302,29 @@
     font-style: italic;
   }
   .shoghi, [data-author="shoghi"] {
-    font-style: italic;
+    /*color: #333333;*/
+    /*font-style: italic;*/
+    color: @main_text_color;
+    font-style: normal;
+  }
+  .ali, [data-author="ali"],
+  .tradition, [data-author="tradition"],
+  .husayn, [data-author="husayn"] {
+    color: @main_text_color;
+    font-style: normal;
   }
 
   /***** Global custom styles *****/
   .dropcap:first-letter {
-    float: left; padding-left:0; font-style: normal; text-indent:0; color: @secondary_color;
+    float: left; padding-left:0;
+    font-style: normal; text-indent:0;
+    color: @secondary_color;
     font-family: Romantik;
     margin-right: .1em;
-    font-size: 3em; margin-top: -.12em; margin-bottom: -.5em;
+    font-size: 3em;
+    line-height: 68px;
+    margin-top: 5px;
+    margin-bottom: -5px;
   }
 
   .blockquote { // these must always be within a div.par, not <p>
@@ -418,7 +443,10 @@
         float: left; padding-left:0; font-style: normal; text-indent:0; color: @secondary_color;
         font-family: Romantik;
         margin-right: .1em;
-        font-size: 3em; margin-top: -.12em; margin-bottom: -.5em;
+        font-size: 3em;
+        line-height: 68px;
+        margin-top: 5px;
+        margin-bottom: -5px;
       }
     }
   }
@@ -533,6 +561,7 @@
           margin-left: 60px;
           margin-right: 45px;
           position: relative;
+          line-height: 34px; /* need for dropcap */
 
           [data-pg]::before {
             content: 'pg ' attr(data-pg);
@@ -558,6 +587,10 @@
               text-decoration: underline;
             }
           }
+        }
+
+        .description {
+          text-transform: uppercase;
         }
 
       }
@@ -588,6 +621,9 @@
         margin-left: auto;
         margin-right: auto;
       }
+      &.editor-note/*, .question*/ {
+        font-style: normal; color: @grayed_color;
+      }
     }
 
     .title {
@@ -596,6 +632,12 @@
       text-transform: uppercase;
       font-size: 50pt;
       line-height: 50pt;
+
+      &.subtitle {
+        font-family: Garamond1689;
+        font-size: 40pt;
+        color: @secondary_color;
+      }
     }
 
     .header {
@@ -611,7 +653,7 @@
         }
         &.subhead {
           font-family: Garamond1689;
-          color: DarkOliveGreen;
+          color: @secondary_color;
           line-height: 1em;
           font-weight: normal;
         }
@@ -622,7 +664,7 @@
         line-height: 1em;
         font-weight: normal;
         page-break-after: avoid;
-        color: DarkOliveGreen;
+        color: @secondary_color;
         /*text-transform: uppercase;*/
         text-align: center;
         &.smallcaps {
@@ -631,7 +673,7 @@
         }
         &.subhead {
           font-family: Garamond1689;
-          color: DarkOliveGreen;
+          color: @secondary_color;
           line-height: 1em;
           font-weight: normal;
         }
@@ -642,7 +684,7 @@
         line-height: 1em;
         font-weight: normal;
         page-break-after: avoid;
-        color: DarkOliveGreen;
+        color: @secondary_color;
         /*text-transform: uppercase;*/
         text-align: center;
         &.smallcaps {
