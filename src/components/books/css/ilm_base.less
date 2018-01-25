@@ -296,10 +296,15 @@
 
   /***** Global custom styles *****/
   .dropcap:first-letter {
-    float: left; padding-left:0; font-style: normal; text-indent:0; color: @secondary_color;
+    float: left; padding-left:0;
+    font-style: normal; text-indent:0;
+    color: @secondary_color;
     font-family: Romantik;
     margin-right: .1em;
-    font-size: 3em; margin-top: -.12em; margin-bottom: -.5em;
+    font-size: 3em;
+    line-height: 68px;
+    margin-top: 5px;
+    margin-bottom: -5px;
   }
 
   .blockquote { // these must always be within a div.par, not <p>
@@ -418,7 +423,10 @@
         float: left; padding-left:0; font-style: normal; text-indent:0; color: @secondary_color;
         font-family: Romantik;
         margin-right: .1em;
-        font-size: 3em; margin-top: -.12em; margin-bottom: -.5em;
+        font-size: 3em;
+        line-height: 68px;
+        margin-top: 5px;
+        margin-bottom: -5px;
       }
     }
   }
@@ -533,6 +541,7 @@
           margin-left: 60px;
           margin-right: 45px;
           position: relative;
+          line-height: 34px; /* need for dropcap */
 
           [data-pg]::before {
             content: 'pg ' attr(data-pg);
