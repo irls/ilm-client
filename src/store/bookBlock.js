@@ -53,7 +53,7 @@ let BlockTypes = {
     whitespace: ['', 'verse', 'pre'],
     padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
     author: ['', 'bab', 'baha', 'abd', 'shoghi', 'sacred', 'bible', 'muhammad', 'quran', 'jesus', 'ali', 'tradition', 'husayn'],
-    'paragraph type': ['', 'dropcap', 'blockquote', 'centerquote', 'dedication', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer']
+    'paragraph type': ['', 'dropcap', 'blockquote', 'centerquote', 'dedication', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer', 'list']
   },
   illustration: {
     size: ['', 'x-small', 'small', 'large', 'x-large'],
@@ -313,7 +313,7 @@ class BookBlock {
     if (this.classes && typeof this.classes === 'object') {
       for (let key in this.classes) {
         if (key) {
-          if (this.classes[key] && this.classes[key] !== '') result += ' ' + /*key.replace(/\s/g, '-') + '-' +*/ this.classes[key];
+          if (this.classes[key] && this.classes[key] !== '') result += ' '+ this.classes[key];
           else if (Object.keys(BlockTypes[this.type])[0] === '') result += ' ' + key.replace(/\s/g, '-');
         }
       }
@@ -330,6 +330,7 @@ class BookBlock {
         if (!this.classes[val]) {
           this.classes = {};
           this.classes[val] = '';
+          styleCurr = val;
         }
       }
 
