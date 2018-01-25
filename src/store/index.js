@@ -59,7 +59,6 @@ export const store = new Vuex.Store({
     currentBookFiles: { coverimg: false },
     currentBookBlocksLeft: 0,
     currentBookBlocksLeftId: 'AAA',
-    currentBookAudioExportAllowed: false,
 
     bookFilters: {filter: '', language: 'en', importStatus: 'staging'},
     editMode: 'Editor',
@@ -79,7 +78,8 @@ export const store = new Vuex.Store({
     currentLibrary: {},
     currentLibraryId: false,
 
-    user: {}
+    user: {},
+    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0'}
   },
 
   getters: {
@@ -125,7 +125,6 @@ export const store = new Vuex.Store({
     currentBookFiles: state => state.currentBookFiles,
     currentBookBlocksLeft: state => state.currentBookBlocksLeft,
     currentBookBlocksLeftId: state => state.currentBookBlocksLeftId,
-    currentBookAudioExportAllowed: state => state.currentBookAudioExportAllowed,
     bookEditMode: state => state.editMode,
     allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode) && state.currentBookMeta.status != 'import_text',
     allowArchiving: state => state.isAdmin || state.isProofer,
@@ -150,7 +149,8 @@ export const store = new Vuex.Store({
     },
     libraries: state => state.libraries,
     currentLibrary: state => state.currentLibrary,
-    user: state => state.user
+    user: state => state.user,
+    currentBookCounters: state => state.currentBookCounters
   },
 
   mutations: {
@@ -321,6 +321,9 @@ export const store = new Vuex.Store({
                   assignments.push('block_narrate');
                 }
                 break;
+              case 'master-audio':
+                assignments.push('audio_mastering');
+                break;
               case '': // approve book
                 assignments.push('content');
                 assignments.push('content_approve');
@@ -398,8 +401,8 @@ export const store = new Vuex.Store({
       }
     },
     
-    SET_AUDIO_EXPORT_ALLOWED(state, allowed) {
-      state.currentBookAudioExportAllowed = allowed ? true : false;
+    SET_CURRENTBOOK_COUNTER(state, counter) {
+      state.currentBookCounters[counter.name] = counter.value;
     }
 
   },
@@ -1098,7 +1101,7 @@ export const store = new Vuex.Store({
     },
 
     setCurrentBookBlocksLeft({state, commit}, bookId) {
-      console.log('setCurrentBookBlocksLeft', bookId);
+      //console.log('setCurrentBookBlocksLeft', bookId);
 
       commit('SET_CURRENTBOOKBLOCKS_LEFT_ID', 'BBB');
 
@@ -1106,7 +1109,7 @@ export const store = new Vuex.Store({
         key: bookId, reduce: true, group: true
       })
       .then(function (result) {
-        console.log('result', result);
+        //console.log('result', result);
         commit('SET_CURRENTBOOKBLOCKS_LEFT', typeof result.rows[0] === 'undefined' ? 0 : result.rows[0].value);
         return true;
       })
@@ -1186,25 +1189,6 @@ export const store = new Vuex.Store({
       })
     },
     
-    setAllowAudioExport({state, commit}) {
-      commit('SET_AUDIO_EXPORT_ALLOWED', false);
-      /*if (state.isEditor && state.currentBookMeta._id) {
-        return axios.get(state.API_URL + 'books/' + state.currentBookMeta._id + '/allow_audio_export')
-          .then(response => {
-            if (response.status == 200 && typeof response.data.allow !== 'undefined') {
-              commit('SET_AUDIO_EXPORT_ALLOWED', response.data.allow);
-            } else {
-              commit('SET_AUDIO_EXPORT_ALLOWED', false);
-            }
-            return true;
-          })
-          .catch(err => {
-            commit('SET_AUDIO_EXPORT_ALLOWED', false);
-            return false;
-          });
-      }*/
-    },
-    
     checkAllowSetAudioMastered({state}) {
       if (state.currentBookMeta._id) {
         return state.contentRemoteDB.query('filters_byVoiceworkAndBook/byVoiceworkAndBook', {start_key: [state.currentBookMeta._id, 'narration'], end_key: [state.currentBookMeta._id, 'narration', {}], reduce: true, group: true})
@@ -1214,6 +1198,85 @@ export const store = new Vuex.Store({
 ;
       } else {
         return false;
+      }
+    },
+    
+    setCurrentBookCounters({state, commit, dispatch}, counters = []) {
+      if (counters.length == 0 || counters.indexOf('narration_blocks') !== -1) {
+        dispatch('_setNarrationBlocksCounter');
+      }
+      if (counters.length == 0 || counters.indexOf('not_marked_blocks') !== -1) {
+        dispatch('_setNotMarkedAsDoneBlocksCounter');
+      }
+      if (counters.length == 0 || counters.indexOf('not_proofed_audio_blocks') !== -1) {
+        dispatch('_setNotProofedAudioBlocksCounter');
+      }
+    },
+    
+    _setNarrationBlocksCounter({state, commit}) {
+      commit('SET_CURRENTBOOK_COUNTER', {name: 'narration_blocks', value: '0'});
+      if (state.currentBookid) {
+        let bookid = state.currentBookid;
+        state.contentRemoteDB.query('filters_byVoiceworkAndBook/byVoiceworkAndBook', {
+          start_key: [bookid, 'narration'],
+          end_key: [bookid, 'narration', {}],
+          reduce: true,
+          group: true
+        })
+          .then(response => {
+            commit('SET_CURRENTBOOK_COUNTER', {name: 'narration_blocks', value: typeof response.rows[0] === 'undefined' ? 0 : response.rows[0].value});
+          })
+          .catch(err => console.log(err));
+      }
+    },
+    
+    _setNotMarkedAsDoneBlocksCounter({state, commit}) {
+      commit('SET_CURRENTBOOK_COUNTER', {name: 'not_marked_blocks', value: '0'})
+      if (state.currentBookid) {
+        let bookid = state.currentBookid;
+        state.contentRemoteDB.query('filters_notMarkedAsDone/notMarkedAsDone', {
+              key: bookid,
+              reduce: true, 
+              group: true
+            })
+              .then(response => {
+                commit('SET_CURRENTBOOK_COUNTER', {name: 'not_marked_blocks', value: typeof response.rows[0] === 'undefined' ? 0 : response.rows[0].value});
+              })
+              .catch(err => console.log(err));
+      }
+    },
+    _setNotProofedAudioBlocksCounter({state, commit}) {
+      commit('SET_CURRENTBOOK_COUNTER', {name: 'not_proofed_audio_blocks', value: '0'});
+      if (state.currentBookid) {
+        let tasks = [];
+        let bookid = state.currentBookid;
+        tasks.push(state.contentRemoteDB.query('filters_byStatus/byStatus', {
+              start_key: [bookid, 'editor', false, 1], 
+              end_key: [bookid, 'editor', false, 1, {}], 
+              reduce: true, 
+              group: true
+            }));
+            tasks.push(state.contentRemoteDB.query('filters_byStatus/byStatus', {
+              start_key: [bookid, 'narrator'], 
+              end_key: [bookid, 'narrator', {}], 
+              reduce: true, 
+              group: true
+            }));
+            tasks.push(state.contentRemoteDB.query('filters_byStatus/byStatus', {
+              start_key: [bookid, 'proofer', false, 1], 
+              end_key: [bookid, 'proofer', false, 1, {}], 
+              reduce: true, 
+              group: true
+            }));
+        return Promise.all(tasks)
+            .then(results => {
+              let not_proofed_blocks = 0;
+              not_proofed_blocks+=typeof results[0].rows[0] === 'undefined' ? 0 : results[0].rows[0].value;
+              not_proofed_blocks+=typeof results[1].rows[0] === 'undefined' ? 0 : results[1].rows[0].value;
+              not_proofed_blocks+=typeof results[2].rows[0] === 'undefined' ? 0 : results[2].rows[0].value;
+              commit('SET_CURRENTBOOK_COUNTER', {name: 'not_proofed_audio_blocks', value: not_proofed_blocks});
+            })
+            .catch(err => console.log(err));
       }
     }
 

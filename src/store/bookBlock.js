@@ -22,7 +22,8 @@ let defBlock = [
   'illustration',
   'description',
   'voicework',
-  'markedAsDone'
+  'markedAsDone',
+  'status'
 ]
 
 let BlockTypes = {
@@ -98,6 +99,7 @@ class BookBlock {
     this.partUpdate = false;
 
     this.markedAsDone = init.markedAsDone || false;
+    this.status = init.status;
 
     this.isUpdated = false;
   }

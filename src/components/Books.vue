@@ -54,6 +54,7 @@ import axios from 'axios'
 import superlogin from 'superlogin-client'
 import api_config from '../mixins/api_config.js'
 import AudioEditor from './AudioEditor'
+import task_controls from '../mixins/task_controls.js'
 
 
 export default {
@@ -84,7 +85,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['bookEditMode', 'currentBook', 'currentBookMeta']),
+    ...mapGetters(['bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters']),
   },
 
   watch: {
@@ -103,7 +104,7 @@ export default {
       }
     }
   },
-  mixins: [api_config],
+  mixins: [api_config, task_controls],
 
   mounted() {
         // load intial book
@@ -158,7 +159,11 @@ export default {
       if (this.blocksForAlignment.start._id && this.blocksForAlignment.end._id) {
         let api_url = this.API_URL + 'books/' + this.$store.state.currentBookid + '/selection_alignment';
         let api = this.$store.state.auth.getHttp();
-        api.get(api_url + '?' + 'start=' + this.blocksForAlignment.start._id + '&end=' + this.blocksForAlignment.end._id, {})
+        let query = 'start=' + this.blocksForAlignment.start._id + '&end=' + this.blocksForAlignment.end._id;
+        if (this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0) {
+          query+='&voicework=all_audio&realign=true';
+        }
+        api.get(api_url + '?' + query, {})
           .then(response => {
             if (response.status == 200) {
               this.blocksForAlignment.count = response.data.count;

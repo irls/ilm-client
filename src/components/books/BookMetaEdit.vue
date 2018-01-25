@@ -35,9 +35,18 @@
         <div class="row">
           <template v-if="tc_hasTask('metadata_cleanup')">
             <div v-if="!textCleanupProcess" class="editing-wrapper">
-              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!allowEditingComplete">Editing complete</button>
+              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Editing complete</button>
               <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
-                <span class="blocks-counter-value">{{currentBookBlocksLeft}}</span>Blocks need your approval
+                <span class="blocks-counter-value">{{currentBookCounters.not_marked_blocks}}</span>Blocks need your approval
+              </div>
+            </div>
+            <div v-else class="preloader-small"></div>
+          </template>
+          <template v-if="tc_hasTask('audio_mastering')">
+            <div v-if="!audioMasteringProcess" class="editing-wrapper">
+              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Mastering complete</button>
+              <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
+                <span class="blocks-counter-value">{{currentBookCounters.not_marked_blocks}}</span>Blocks need your approval
               </div>
             </div>
             <div v-else class="preloader-small"></div>
@@ -49,7 +58,7 @@
               <template v-if="currentBook.isMastered">
                 <div class="btn-switch" @click="toggleIsMastered()">
                   <i class="fa fa-toggle-on"></i>
-                  <span :class="['s-label',  {'-disabled': !allowSetMastered}]"> Mastered</span>
+                  <span :class="['s-label',  {'-disabled': !isAllowSetMastered}]"> Mastered</span>
                 </div>
               </template>
               <template v-else>
@@ -58,13 +67,17 @@
                   <span class="s-label -disabled"> Mastered</span>
                 </div>
               </template>
-
-              <a :class="['btn btn-primary btn-small btn-export-audio', {'-disabled': !allowExportAudio}]"
-                :href="API_URL + 'books/' + currentBook.bookid + '/audiobooks/' + audiobook._id + '/download'" target="_blank">
+              <a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
+                Export Audio
+              </a>
+              <a v-else class="btn btn-primary btn-small btn-export-audio"
+                :href="API_URL + 'books/' + currentBook.bookid + '/audiobooks/download'" target="_blank">
                 Export Audio
               </a>
             </div>
-            <BookAudioIntegration ref="audioIntegration" :audiobook="audiobook" :blocksForAlignment="blocksForAlignment"
+            <BookAudioIntegration ref="audioIntegration" 
+                :audiobook="audiobook" 
+                :blocksForAlignment="blocksForAlignment"
               ></BookAudioIntegration>
           </vue-tab>
           <vue-tab title="Book Content" :id="'book-content'">
@@ -275,11 +288,14 @@
       <p>{{infoMessage}}.</p>
     </alert>
 
-    <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Share" cancel-text="Cancel" title="" @ok="sharePrivateBook()">
+    <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Complete" cancel-text="Close" title="" @ok="sharePrivateBook()">
       <div v-html="sharePrivateBookMessage"></div>
     </modal>
     <modal v-model="unlinkCollectionWarning" effect="fade" ok-text="Remove" cancel-text="Cancel" @ok="updateCollection()" @cancel="cancelCollectionUpdate">
       <p>Remove book from collection?</p>
+    </modal>
+    <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="completeAudioMastering()">
+      <p>Complete mastering?</p>
     </modal>
 
   </div>
@@ -301,6 +317,7 @@ import axios from 'axios'
 import { alert, modal } from 'vue-strap'
 import task_controls from '../../mixins/task_controls.js'
 import api_config from '../../mixins/api_config.js'
+import access from '../../mixins/access.js'
 import { VueTabs, VTab } from 'vue-nav-tabs'
 var BPromise = require('bluebird');
 
@@ -346,6 +363,7 @@ export default {
       bookEditCoverModalActive: false,
       currentBook: {},
       cleanupTask: {},
+      masteringTask: {},
       importTask: {},
       linkTaskError: '',
       isOwner: false,
@@ -355,15 +373,13 @@ export default {
       infoMessage: '',//to display info on action finished
       approveMetadataComment: '',
       showSharePrivateBookModal: false,
+      showAudioMasteringModal: false,
       allowMetadataEdit: false,
       textCleanupProcess: false,
       audiobook: {},
-      sharePrivateBookMessage: '',
       unlinkCollectionWarning: false,
       blockTypes: BlockTypes,
-      allowEditingComplete: false,
-      allowExportAudio: false,
-      allowSetMastered: false
+      audioMasteringProcess: false
     }
   },
 
@@ -373,7 +389,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters']),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -388,10 +404,64 @@ export default {
 
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
+    },
+    
+    isAllowExportAudio: {
+      get() {
+        if (!this._is('editor')) {
+          return false;
+        }
+        if (this.currentBookCounters.not_marked_blocks === 0 && this.currentBookCounters.narration_blocks === 0) {
+          return true;
+        }
+        if (this.currentBookCounters.narration_blocks > 0 && this.currentBookCounters.not_proofed_audio_blocks === 0) {
+          return true;
+        }
+        return false;
+      }
+    },
+    isAllowEditingComplete: {
+      get() {
+        if (this.tc_hasTask('metadata_cleanup')) {
+          if (this.currentBookCounters.not_marked_blocks === 0) {
+            return true;
+          }
+        } else if (this.tc_hasTask('audio_mastering')) {
+          if (this.currentBookMeta.isMastered && this.currentBookCounters.not_marked_blocks === 0) {
+            return true;
+          }
+        }
+        return false;
+      }
+    },
+    isAllowSetMastered: {
+      get() {
+        if (!this.tc_hasTask('metadata_cleanup') && !this.tc_hasTask('audio_mastering')) {
+          return false;
+        }
+        if (this.audiobook && this.audiobook.importFiles && this.audiobook.importFiles.length > 0 && (this.tc_hasTask('audio_mastering') || this.currentBookCounters.narration_blocks === 0)) {
+          return true;
+        }
+        if ((this.audiobook._id && (!this.audiobook.importFiles || this.audiobook.importFiles.length === 0)) || parseInt(this.currentBookCounters.narration_blocks) > 0) {
+          if (this.currentBook.isMastered === true) {
+            this.liveUpdate('isMastered',  !this.currentBook.isMastered)
+          }
+        }
+        return false;
+      }
+    },
+    sharePrivateBookMessage: {
+      get() {
+        if (this.currentBookCounters.narration_blocks > 0) {
+          return 'Complete editing and request narration for ' + this.currentBookCounters.narration_blocks + ' blocks?'
+        } else {
+          return 'Complete editing?';
+        }
+      }
     }
   },
 
-  mixins: [task_controls, api_config],
+  mixins: [task_controls, api_config, access],
 
   mounted() {
 
@@ -406,7 +476,12 @@ export default {
       Vue.nextTick(() => {
         self.audiobook = response;
       })
-    })
+    });
+    this.$root.$on('from-bookblockview:voicework-type-changed', function() {
+      self.setAllowSetMastered();
+      self.setCurrentBookCounters(['narration_blocks']);
+    });
+    this.setCurrentBookCounters();
   },
 
   watch: {
@@ -451,22 +526,16 @@ export default {
       },
       deep: true
     },
-    showSharePrivateBookModal: {
-      handler(val) {
-        if (val === true) {
-          this.getSharePrivateBookMessage();
-        }
-      }
-    },
     currentBookBlocksLeft: {
       handler(val) {
-        this.allowEditingComplete = this.currentBookBlocksLeft == 0;
+        
       }
     },
-    currentBookAudioExportAllowed: {
+    audiobook: {
       handler(val) {
-        this.allowExportAudio = this.currentBookAudioExportAllowed;
-      }
+        this.setAllowSetMastered();
+      },
+      deep: true
     }
 
   },
@@ -484,6 +553,8 @@ export default {
          this.cleanupTask = record
         } else if (record.type == 'import-book') {
           this.importTask = record
+        } else if (record.type === 'master-audio') {
+          this.masteringTask = record;
         }
       }
       this.currentBook = Object.assign({}, this.currentBookMeta);
@@ -493,17 +564,10 @@ export default {
         this.currentBook.author = [this.currentBook.author];
       }
       this.loadAudiobook();
-      this.allowEditingComplete = false;
-      this.setCurrentBookBlocksLeft(this.currentBook._id)
+      /*this.setCurrentBookBlocksLeft(this.currentBook._id)
         .then(() => {
-          this.allowEditingComplete = this.currentBookBlocksLeft == 0;
-        });
-      this.allowExportAudio = false;
-      this.setAllowAudioExport()
-        .then(() => {
-          this.allowExportAudio = this.currentBookAudioExportAllowed;
-        });
-      this.setAllowSetMastered();
+          
+        });*/
     },
 
     update: _.debounce(function (key, event) {
@@ -668,11 +732,23 @@ export default {
           })
       }
     },
-    getSharePrivateBookMessage() {
-      return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/selection_alignment?voicework=narration')
-      .then(resp => {
-        this.sharePrivateBookMessage = resp.data && resp.data.count > 0 ? 'Complete editing and request narration for ' + resp.data.count + ' blocks?' : 'Complete editing?';
-      });
+    completeAudioMastering() {
+      this.audioMasteringProcess = true;
+      var self = this;
+      self.showAudioMasteringModal = false;
+      axios.put(self.API_URL + 'task/' + self.masteringTask._id + '/finish_mastering')
+        .then((doc) => {
+          self.audioMasteringProcess = false
+          if (!doc.data.error) {
+            self.$store.dispatch('tc_loadBookTask')
+            self.infoMessage = 'Mastering task finished'
+          } else {
+            self.errorMessage = doc.data.error
+          }
+        })
+        .catch((err, test) => {
+          self.audioMasteringProcess = false;
+        })
     },
     loadAudiobook(set_tab = false) {
       let self = this;
@@ -717,11 +793,12 @@ export default {
       }
     },
     toggleIsMastered() {
-      if (this.allowSetMastered) {
+      if (this.isAllowSetMastered) {
         this.liveUpdate('isMastered',  !this.currentBook.isMastered)
       }
     },
     setAllowSetMastered() {
+      return;
       this.allowSetMastered = false;
       if (!this.audiobook || !this.audiobook.importFiles || this.audiobook.importFiles.length === 0) {
         this.allowSetMastered = false;
@@ -744,7 +821,30 @@ export default {
           })
       }
     },
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'setAllowAudioExport', 'checkAllowSetAudioMastered'])
+    setAllowExportAudio() {
+      this.allowExportAudio = false;
+      if (this.isEditor && this.currentBookMeta._id) {
+        if (this.tc_hasTask('audio_mastering')) {
+          this.allowExportAudio = true;
+        } else {
+          let self = this;
+          return axios.get(this.API_URL + 'books/' + this.currentBookMeta._id + '/allow_audio_export')
+            .then(response => {
+              if (response.status == 200 && typeof response.data.allow !== 'undefined') {
+                self.allowExportAudio = response.data.allow;
+              } else {
+                self.allowExportAudio = false;
+              }
+              return true;
+            })
+            .catch(err => {
+              self.allowExportAudio = false;
+              return false;
+            });
+        }
+      }
+    },
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters'])
   }
 }
 </script>

@@ -51,6 +51,7 @@
   import BookEdit from './books/BookEdit'
   import Vue from 'vue';
   import api_config from '../mixins/api_config.js'
+  import task_controls from '../mixins/task_controls.js'
   export default {
       name: 'Collections',
       components: {
@@ -62,7 +63,7 @@
         AudioEditor: AudioEditor,
         BookEdit: BookEdit
       },
-      mixins: [api_config],
+      mixins: [api_config, task_controls],
       data() {
         return {
           collectionMetaVisible: false,
@@ -138,7 +139,11 @@
           if (this.blocksForAlignment.start._id && this.blocksForAlignment.end._id) {
             let api_url = this.API_URL + 'books/' + this.$store.state.currentBookid + '/selection_alignment';
             let api = this.$store.state.auth.getHttp();
-            api.get(api_url + '?' + 'start=' + this.blocksForAlignment.start._id + '&end=' + this.blocksForAlignment.end._id, {})
+            let query = 'start=' + this.blocksForAlignment.start._id + '&end=' + this.blocksForAlignment.end._id;
+            if (this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0) {
+              query+='&voicework=all_audio&realign=true';
+            }
+            api.get(api_url + '?' + query, {})
               .then(response => {
                 if (response.status == 200) {
                   this.blocksForAlignment.count = response.data.count;
@@ -179,7 +184,7 @@
           }
         },
         ...mapGetters([
-          'currentCollection', 'currentBookMeta', 'collectionsFilter', 'bookEditMode'
+          'currentCollection', 'currentBookMeta', 'collectionsFilter', 'bookEditMode', 'currentBookCounters'
         ])
       },
       watch: {
