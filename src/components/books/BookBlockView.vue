@@ -999,7 +999,7 @@ export default {
           this.block.markedAsDone = false;
           this.assembleBlock(ev)
           .then(()=>{
-            this.setCurrentBookBlocksLeft(this.block.bookid);
+            //this.setCurrentBookBlocksLeft(this.block.bookid);
             this.setCurrentBookCounters(['not_marked_blocks']);
           });
         }
@@ -1013,7 +1013,7 @@ export default {
           this.block.markedAsDone = true;
           this.assembleBlock(ev)
           .then(()=>{
-            this.setCurrentBookBlocksLeft(this.block.bookid);
+            //this.setCurrentBookBlocksLeft(this.block.bookid);
             this.setCurrentBookCounters(['not_marked_blocks']);
           });
         }
@@ -1823,7 +1823,7 @@ export default {
             this.voiceworkUpdating = false;
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
-              this.setCurrentBookBlocksLeft(this.block.bookid);
+              //this.setCurrentBookBlocksLeft(this.block.bookid);
             }
             this.voiceworkChange = false;
           })

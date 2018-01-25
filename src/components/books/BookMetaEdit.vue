@@ -37,7 +37,7 @@
             <div v-if="!textCleanupProcess" class="editing-wrapper">
               <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Editing complete</button>
               <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
-                <span class="blocks-counter-value">{{currentBookBlocksLeft}}</span>Blocks need your approval
+                <span class="blocks-counter-value">{{currentBookCounters.not_marked_blocks}}</span>Blocks need your approval
               </div>
             </div>
             <div v-else class="preloader-small"></div>
@@ -46,7 +46,7 @@
             <div v-if="!audioMasteringProcess" class="editing-wrapper">
               <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Mastering complete</button>
               <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
-                <span class="blocks-counter-value">{{currentBookBlocksLeft}}</span>Blocks need your approval
+                <span class="blocks-counter-value">{{currentBookCounters.not_marked_blocks}}</span>Blocks need your approval
               </div>
             </div>
             <div v-else class="preloader-small"></div>
@@ -564,10 +564,10 @@ export default {
         this.currentBook.author = [this.currentBook.author];
       }
       this.loadAudiobook();
-      this.setCurrentBookBlocksLeft(this.currentBook._id)
+      /*this.setCurrentBookBlocksLeft(this.currentBook._id)
         .then(() => {
           
-        });
+        });*/
     },
 
     update: _.debounce(function (key, event) {
