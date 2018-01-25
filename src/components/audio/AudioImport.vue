@@ -175,8 +175,13 @@ export default {
     saveDisabled: function() {
       return (this.uploadFiles === 0)
     },
-    showDuplicateFilesWarning: function () {
-      return this.uploadFilesDuplicates.length > 0;
+    showDuplicateFilesWarning: {
+      get() {
+        return this.uploadFilesDuplicates.length > 0;
+      },
+      set() {
+        
+      }
     }
   },
   methods: {
