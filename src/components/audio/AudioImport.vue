@@ -532,5 +532,9 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
     padding: 10px;
     color: white;
 }
+#audioFiles {
+  max-height: 80px;
+  overflow-y: scroll;
+}
 
 </style>
