@@ -43,13 +43,22 @@
             <div v-else class="preloader-small"></div>
           </template>
           <template v-if="tc_hasTask('audio_mastering')">
-            <div v-if="!audioMasteringProcess" class="editing-wrapper">
-              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Mastering complete</button>
-              <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
-                <span class="blocks-counter-value">{{currentBookCounters.not_marked_blocks}}</span>Blocks need your approval
+            <div v-if="currentBookCounters.not_proofed_audio_blocks === 0">
+              <div v-if="!audioMasteringProcess" class="editing-wrapper">
+                <div class="col-sm-8 blocks-counter">
+                  <span class="blocks-counter-value">0</span>Blocks need your approval
+                </div>
               </div>
             </div>
-            <div v-else class="preloader-small"></div>
+            <template v-else>
+              <div v-if="!audioMasteringProcess" class="editing-wrapper">
+                <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Mastering complete</button>
+                <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
+                  <span class="blocks-counter-value">{{currentBookCounters.not_marked_blocks}}</span>Blocks need your approval
+                </div>
+              </div>
+              <div v-else class="preloader-small"></div>
+            </template>
           </template>
         </div>
         <vue-tabs ref="panelTabs">
@@ -410,6 +419,9 @@ export default {
       get() {
         if (!this._is('editor')) {
           return false;
+        }
+        if (this.tc_hasTask('audio_mastering')) {
+          return true;
         }
         if (this.currentBookCounters.not_marked_blocks === 0 && this.currentBookCounters.narration_blocks === 0) {
           return true;
