@@ -944,8 +944,9 @@ export default {
               if (response.status == 200 && response.data.audiosrc) {
                 this.block.content = this.blockAudio.map;
                 this.block.audiosrc = response.data.audiosrc;
-                this.blockAudio.map = '';
-                this.blockAudio.src = '';
+                //this.blockAudio.map = '';
+                this.blockAudio.src = process.env.ILM_API + response.data.audiosrc;
+                this.isAudioChanged = false;
                 return this.putBlock(this.block);
               }
             })
@@ -1926,7 +1927,7 @@ export default {
             this.blockAudio.src+= '?' + (new Date()).toJSON();
           }
           if (this.tc_showBlockNarrate(this.block._id) || this.isEditor) {
-            let isChanged = newVal && this.block.audiosrc != newVal.split('?').shift();
+            let isChanged = newVal && this.block.audiosrc != newVal.split('?').shift() && !(this.block.audiosrc.inexOf('_tmp.') !== -1 && newVal.indexOf('_tmp.') === -1);
             if (!this.isAudioEditing) {
               this.isAudioChanged = isChanged;
             }
