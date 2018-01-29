@@ -385,7 +385,7 @@
                   <span v-if="enableMarkAsDone"
                     @click.prevent="unmarkBlock" :class="[{'-disabled': !block.markedAsDone}]">
                     <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
-                  <span v-if="enableMarkAsDone" :class="[{'-disabled': block.markedAsDone}]"
+                  <span v-if="enableMarkAsDone" :class="[{'-disabled': markAsDoneButtonDisabled}]"
                     @click.prevent="markBlock">
                     <i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
 
@@ -570,6 +570,9 @@ export default {
       },
       enableMarkAsDone: function() {
         return this._is('editor') && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
+      },
+      markAsDoneButtonDisabled: function() {
+        return this.block.markedAsDone || (this.block.status && this.block.status.proofed === true);
       },
       isApproveDisabled: function () {
           if (this._is('editor') && !this.tc_getBlockTask(this.block._id)) return true;
@@ -1007,7 +1010,7 @@ export default {
       },
 
       markBlock: function(ev) {
-        if (!this.block.markedAsDone) {
+        if (!this.block.markedAsDone && !this.markAsDoneButtonDisabled) {
           if (!this.block.audiosrc && this.block.voicework === 'audio_file') {
             return false;
           }

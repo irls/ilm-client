@@ -55,7 +55,11 @@
                   </button>
                 </div>
                 <div v-else-if="task.type == 'master-audio'">
-                  <span class="import-link" v-on:click="importExportAudio(task, job.meta, job.audio)">Import audio</span>
+                  <!-- <span class="import-link" v-on:click="importExportAudio(task, job.meta, job.audio)">Import audio</span> -->
+                  <a class="btn-export-audio"
+                    :href="API_URL + 'books/' + job.bookid + '/audiobooks/download'" target="_blank">
+                    Export Audio
+                  </a>
                 </div>
                 <a v-else :href="'/books/' + job.bookid + '/edit/unresolved'">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
               </div>
@@ -88,8 +92,9 @@ import superlogin from 'superlogin-client'
 import BookImport from './books/BookImport'
 import AudioImport from './audio/AudioImport'
 import { mapGetters, mapActions } from 'vuex'
+import api_config from '../mixins/api_config.js';
 var BPromise = require('bluebird');
-const API_URL = process.env.ILM_API + '/api/v1/'
+
 export default {
   data () {
     return {
@@ -117,6 +122,8 @@ export default {
       audio_import_multiple: true
     }
   },
+  
+  mixins: [api_config],
 
   components: {
     VueTabs,
@@ -199,7 +206,7 @@ export default {
     },
     getTaskTypes() {
       var self = this
-      return axios.get(API_URL + 'tasks/types').then(types => {
+      return axios.get(this.API_URL + 'tasks/types').then(types => {
         self.task_types = types.data
         return BPromise.resolve(self.task_types)
       })
@@ -209,7 +216,7 @@ export default {
     },
     getTaskUsers() {
       var self = this
-      axios.get(API_URL + 'tasks/users').then(users => {
+      axios.get(this.API_URL + 'tasks/users').then(users => {
         for (var role in self.users) {
           self.users[role] = []
           for (var i in users.data) {
