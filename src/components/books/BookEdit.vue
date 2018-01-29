@@ -383,22 +383,23 @@ export default {
 
     findNextBlock(block, task) {
       let next = false;
-      for (let i = 0; i < this.parlist.length; ++i) {
-        next = this.parlist[i].find(p => {
-          let isNext = p.index > block.index;
+      let curr = Object.assign({}, block);
+      do {
+        curr = this.parlist.find(p => {
+          return p._id == curr.chainid;
+        });
+        if (curr) {
           if (task) {
             switch (task) {
               case 'narrate':
-                isNext = isNext && this.tc_showBlockNarrate(p._id);
+                if (this.tc_showBlockNarrate(curr._id)) {
+                  next = curr;
+                }
                 break;
             }
           }
-          return isNext;
-        });
-        if (next) {
-          return next;
         }
-      }
+      } while (curr && !next);
       return next;
     },
 
