@@ -577,7 +577,8 @@ export default {
       isApproveDisabled: function () {
           if (this._is('editor') && !this.tc_getBlockTask(this.block._id)) return true;
           if (this._is('narrator') && !(this.blockAudio && this.blockAudio.src)) return true;
-          if (!(this.block.calcFlagsSummary().stat !== 'open')) return true;
+          let flags_summary = this.block.calcFlagsSummary();
+          if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir)) return true;
           return false;
       },
       isCompleted: function () {
