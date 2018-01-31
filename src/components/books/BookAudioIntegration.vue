@@ -67,8 +67,9 @@
       </panel>
       <panel :is-open="false" :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'">
         <select-tts-voice
-          :selected="[]"
-          @select=""
+          selected=""
+          customClass=""
+          @select="testSelected"
         ></select-tts-voice>
       </panel>
     </accordion>
@@ -388,6 +389,9 @@
       },
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
+      },
+      testSelected(val) {
+        console.log('testSelected', val);
       },
       ...mapActions(['setCurrentBookCounters'])
     },

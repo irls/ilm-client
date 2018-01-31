@@ -409,11 +409,6 @@ export const store = new Vuex.Store({
     },
 
     SET_TTS_VOICES (state, ttsVoices) {
-//       let result = [];
-//       if (ttsVoices.length) ttsVoices.forEach((voice)=>{
-//         result.push(voice);
-//       });
-//       state.ttsVoices = result;
       state.ttsVoices = ttsVoices;
     }
   },
