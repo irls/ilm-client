@@ -79,7 +79,9 @@ export const store = new Vuex.Store({
     currentLibraryId: false,
 
     user: {},
-    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0'}
+    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0'},
+
+    ttsVoices : []
   },
 
   getters: {
@@ -150,7 +152,8 @@ export const store = new Vuex.Store({
     libraries: state => state.libraries,
     currentLibrary: state => state.currentLibrary,
     user: state => state.user,
-    currentBookCounters: state => state.currentBookCounters
+    currentBookCounters: state => state.currentBookCounters,
+    ttsVoices: state => state.ttsVoices
   },
 
   mutations: {
@@ -400,11 +403,19 @@ export const store = new Vuex.Store({
         state.libraries = [];
       }
     },
-    
+
     SET_CURRENTBOOK_COUNTER(state, counter) {
       state.currentBookCounters[counter.name] = counter.value;
-    }
+    },
 
+    SET_TTS_VOICES (state, ttsVoices) {
+//       let result = [];
+//       if (ttsVoices.length) ttsVoices.forEach((voice)=>{
+//         result.push(voice);
+//       });
+//       state.ttsVoices = result;
+      state.ttsVoices = ttsVoices;
+    }
   },
 
   actions: {
@@ -1188,7 +1199,7 @@ export const store = new Vuex.Store({
         return Promise.reject(err);
       })
     },
-    
+
     checkAllowSetAudioMastered({state}) {
       if (state.currentBookMeta._id) {
         return state.contentRemoteDB.query('filters_byVoiceworkAndBook/byVoiceworkAndBook', {start_key: [state.currentBookMeta._id, 'narration'], end_key: [state.currentBookMeta._id, 'narration', {}], reduce: true, group: true})
@@ -1200,7 +1211,7 @@ export const store = new Vuex.Store({
         return false;
       }
     },
-    
+
     setCurrentBookCounters({state, commit, dispatch}, counters = []) {
       if (counters.length == 0 || counters.indexOf('narration_blocks') !== -1) {
         dispatch('_setNarrationBlocksCounter');
@@ -1212,7 +1223,7 @@ export const store = new Vuex.Store({
         dispatch('_setNotProofedAudioBlocksCounter');
       }
     },
-    
+
     _setNarrationBlocksCounter({state, commit}) {
       commit('SET_CURRENTBOOK_COUNTER', {name: 'narration_blocks', value: '0'});
       if (state.currentBookid) {
@@ -1229,14 +1240,14 @@ export const store = new Vuex.Store({
           .catch(err => console.log(err));
       }
     },
-    
+
     _setNotMarkedAsDoneBlocksCounter({state, commit}) {
       commit('SET_CURRENTBOOK_COUNTER', {name: 'not_marked_blocks', value: '0'})
       if (state.currentBookid) {
         let bookid = state.currentBookid;
         state.contentRemoteDB.query('filters_notMarkedAsDone/notMarkedAsDone', {
               key: bookid,
-              reduce: true, 
+              reduce: true,
               group: true
             })
               .then(response => {
@@ -1251,21 +1262,21 @@ export const store = new Vuex.Store({
         let tasks = [];
         let bookid = state.currentBookid;
         tasks.push(state.contentRemoteDB.query('filters_byStatus/byStatus', {
-              start_key: [bookid, 'editor', false, 1], 
-              end_key: [bookid, 'editor', false, 1, {}], 
-              reduce: true, 
+              start_key: [bookid, 'editor', false, 1],
+              end_key: [bookid, 'editor', false, 1, {}],
+              reduce: true,
               group: true
             }));
             tasks.push(state.contentRemoteDB.query('filters_byStatus/byStatus', {
-              start_key: [bookid, 'narrator'], 
-              end_key: [bookid, 'narrator', {}], 
-              reduce: true, 
+              start_key: [bookid, 'narrator'],
+              end_key: [bookid, 'narrator', {}],
+              reduce: true,
               group: true
             }));
             tasks.push(state.contentRemoteDB.query('filters_byStatus/byStatus', {
-              start_key: [bookid, 'proofer', false, 1], 
-              end_key: [bookid, 'proofer', false, 1, {}], 
-              reduce: true, 
+              start_key: [bookid, 'proofer', false, 1],
+              end_key: [bookid, 'proofer', false, 1, {}],
+              reduce: true,
               group: true
             }));
         return Promise.all(tasks)
@@ -1278,6 +1289,14 @@ export const store = new Vuex.Store({
             })
             .catch(err => console.log(err));
       }
+    },
+
+    loadTTSVoices({state, commit}) {
+      return axios.get(state.API_URL + 'tts/voices')
+      .then((response) => {
+        commit('SET_TTS_VOICES', response.data);
+      })
+      .catch((err) => {})
     }
 
   }

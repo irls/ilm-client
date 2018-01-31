@@ -75,8 +75,8 @@
                 Export Audio
               </a>
             </div>
-            <BookAudioIntegration ref="audioIntegration" 
-                :audiobook="audiobook" 
+            <BookAudioIntegration ref="audioIntegration"
+                :audiobook="audiobook"
                 :blocksForAlignment="blocksForAlignment"
               ></BookAudioIntegration>
           </vue-tab>
@@ -405,7 +405,7 @@ export default {
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
     },
-    
+
     isAllowExportAudio: {
       get() {
         if (!this._is('editor')) {
@@ -528,7 +528,7 @@ export default {
     },
     currentBookBlocksLeft: {
       handler(val) {
-        
+
       }
     },
     audiobook: {
@@ -566,7 +566,7 @@ export default {
       this.loadAudiobook();
       /*this.setCurrentBookBlocksLeft(this.currentBook._id)
         .then(() => {
-          
+
         });*/
     },
 

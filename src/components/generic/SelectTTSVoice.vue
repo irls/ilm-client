@@ -1,23 +1,22 @@
 <template>
   <v-select
     :options="options"
-    options-label="name"
-    options-value="code"
+    options-label="Name"
+    options-value="Id"
     v-model="selectedValue"
-    name="languages[]"
+    name="ttsVoices[]"
     :search="search"
-    multiple
-    :placeholder="'Editor Languages'"
+    :placeholder="'Select Voice'"
   ></v-select>
 </template>
 <script>
 
 import { select } from 'vue-strap'
-import LANGUAGES from '../../../static/languages.json'
+import { mapGetters, mapActions } from 'vuex'
 
 export default {
 
-  name: 'select-tts-voice',
+  name: 'SelectTTSVoice',
 
   components: {
     'vSelect': select
@@ -25,10 +24,18 @@ export default {
 
   data () {
     return {
-      options: LANGUAGES,
+      options: [],
       selectedValue: [],
       search: ''
     }
+  },
+
+  computed: {
+    ...mapGetters(['ttsVoices'])
+  },
+
+  methods: {
+    ...mapActions(['loadTTSVoices'])
   },
 
   props: [
@@ -46,7 +53,12 @@ export default {
 
   mounted () {
     this.selectedValue = this.selected
+    this.loadTTSVoices()
+    .then(()=>{
+      this.options = this.ttsVoices;
+      //console.log('this.options', typeof this.ttsVoices, this.ttsVoices);
+    })
+    .catch(err=>err)
   }
-
 }
 </script>

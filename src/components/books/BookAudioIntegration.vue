@@ -66,7 +66,10 @@
         </div>
       </panel>
       <panel :is-open="false" :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'">
-        <div></div>
+        <select-tts-voice
+          :selected="[]"
+          @select=""
+        ></select-tts-voice>
       </panel>
     </accordion>
     <modal v-model="onDeleteMessage" effect="fade">
@@ -106,6 +109,7 @@
   import Vue from 'vue'
   import access from '../../mixins/access.js';
   import {mapGetters, mapActions} from 'vuex';
+  import SelectTTSVoice from '../generic/SelectTTSVoice'
   var WaveformPlaylist = require('waveform-playlist');
   var List = require('draggable-list')
   //var d3 = require('d3')
@@ -118,7 +122,8 @@
       accordion,
       panel,
       dropdown,
-      modal
+      modal,
+      'select-tts-voice':SelectTTSVoice
 
     },
     props: {
