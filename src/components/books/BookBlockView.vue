@@ -588,7 +588,9 @@ export default {
         return this._is('editor') && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
       },
       markAsDoneButtonDisabled: function() {
-        return this.block.markedAsDone || (this.block.status && this.block.status.proofed === true);
+        return this.block.markedAsDone || 
+                (this.block.status && this.block.status.proofed === true) || 
+                !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
       },
       isApproveDisabled: function () {
           if (this._is('editor') && !this.tc_getBlockTask(this.block._id)) return true;
@@ -1035,7 +1037,7 @@ export default {
       },
 
       markBlock: function(ev) {
-        if (!this.block.markedAsDone && !this.markAsDoneButtonDisabled) {
+        if (!this.markAsDoneButtonDisabled) {
           if (!this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts')) {
             return false;
           }
