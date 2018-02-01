@@ -616,6 +616,7 @@ export const store = new Vuex.Store({
           commit('SET_CURRENTBOOK_META', meta)
           commit('TASK_LIST_LOADED')
           dispatch('getTotalBookTasks');
+          dispatch('setCurrentBookCounters');
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
