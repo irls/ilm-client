@@ -100,11 +100,15 @@
                       <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
                     </select>
                   </label><!-- &nbsp;&nbsp;{{block.getClass()}}-->
-                    <template v-if="tc_hasTask('content_cleanup') && !block.markedAsDone">
+                    <template v-if="allowVoiceworkChange()">
                       <label>Voicework:&nbsp;
                       <select v-model='voiceworkSel' style="min-width: 100px;" ref="voiceworkSel">
-                        <option v-for="(val, key) in blockVoiceworks" :value="key">{{ val }}</option>
+                        <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
+                      </label>
+                    </template>
+                    <template v-else>
+                      <label>Voicework:&nbsp;{{blockVoiceworks[block.voicework]}}
                       </label>
                     </template>
                   </template>
@@ -382,9 +386,6 @@
                     @click.prevent="approveBlock">
                     <i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
 
-                  <span v-if="enableMarkAsDone"
-                    @click.prevent="unmarkBlock" :class="[{'-disabled': !block.markedAsDone}]">
-                    <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
                   <span v-if="enableMarkAsDone" :class="[{'-disabled': markAsDoneButtonDisabled}]"
                     @click.prevent="markBlock">
                     <i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
@@ -518,6 +519,18 @@ export default {
           'no_audio': 'No audio'
         }
       },
+      blockVoiceworksSel: function() {
+        if (this.tc_hasTask('content_cleanup')) {
+          return this.blockVoiceworks;
+        }
+        let voiceworks = {};
+        for (let k in this.blockVoiceworks) {
+          if (['tts', 'no_audio'].indexOf(k) !== -1) {
+            voiceworks[k] = this.blockVoiceworks[k];
+          }
+        }
+        return voiceworks;
+      },
       footnVoiceworks: function () {
         return {
           'tts': 'Text to Speach',
@@ -569,6 +582,9 @@ export default {
           return flagsSummary.stat !== 'open';
       },
       enableMarkAsDone: function() {
+        if (this.tc_getBlockTask(this.block._id)) {
+          return false;
+        }
         return this._is('editor') && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
       },
       markAsDoneButtonDisabled: function() {
@@ -906,10 +922,18 @@ export default {
             break;
         }
         this.block.classes = [this.block.classes];
+        if (this.block.markedAsDone === true) {
+          this.block.markedAsDone = false;
+        }
+        if (this.block._markedAsDone) {
+          this.block.markedAsDone = true;
+          delete this.block._markedAsDone;
+        }
 
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
         return this.putBlock(this.block).then(()=>{
+          this.$emit('blockUpdated', this.block._id);
           this.isChanged = false;
           if (this.blockAudio.map) {
             this.blockAudio.map = this.block.content;
@@ -1012,10 +1036,10 @@ export default {
 
       markBlock: function(ev) {
         if (!this.block.markedAsDone && !this.markAsDoneButtonDisabled) {
-          if (!this.block.audiosrc && this.block.voicework === 'audio_file') {
+          if (!this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts')) {
             return false;
           }
-          this.block.markedAsDone = true;
+          this.block._markedAsDone = true;
           this.assembleBlock(ev)
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
@@ -1046,7 +1070,7 @@ export default {
                 break;
             }
           }
-
+          
           this.tc_approveBookTask(task)
           .then(response => {
             if (response.status == 200) {}
@@ -1863,6 +1887,12 @@ export default {
         this.reCount();
         this.putBlockPart({block: this.block, field: 'parnum'}).then(()=>{
         });
+      },
+      allowVoiceworkChange() {
+        if (this.tc_hasTask('content_cleanup')) {
+          return true;
+        }
+        return this.tc_hasBlockTask(this.block._id, 'approve-new-block') || this.tc_hasBlockTask(this.block._id, 'approve-modified-block');
       }
   },
   watch: {

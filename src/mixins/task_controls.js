@@ -51,6 +51,14 @@ export default {
         return this.$store.state.tc_tasksByBlock[block_id].find(t => {
           return t.type === 'narrate-block';
         });
+      },
+      tc_hasBlockTask(block_id, type) {
+        if (!this.$store.state.tc_tasksByBlock[block_id]) {
+          return false;
+        }
+        return this.$store.state.tc_tasksByBlock[block_id].find(t => {
+          return t.type === type;
+        });
       }
     },
     computed: {
