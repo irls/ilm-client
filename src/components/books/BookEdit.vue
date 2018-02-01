@@ -18,6 +18,7 @@
               @deleteBlock="deleteBlock"
               :joinBlocks="joinBlocks"
               @setRangeSelection="setRangeSelection"
+              @blockUpdated="blockUpdated"
           />
         </div>
         <!--<div class='col'>-->
@@ -402,8 +403,22 @@ export default {
         tag: 'p',
         type: 'par',
         parnum: '',
-        content: ''
+        content: '',
+        voicework: 'no_audio',
+        status: {
+          assignee: 'editor',
+          proofed: false
+        }
       }
+      if (this.tc_hasTask('content_cleanup')) {
+        newBlock.status['stage'] = 'cleanup';
+        newBlock.markedAsDone = false;
+        newBlock.voicework = 'audio_file';
+      } else {
+        newBlock.status['not_process'] = true;
+        newBlock.markedAsDone = false;
+      }
+      
       return new BookBlock(newBlock);
     },
 
@@ -415,7 +430,7 @@ export default {
           let newBlock = this.createEmptyBlock(block.bookid, block._id);
           this.parlist.splice(block_Idx, 0, newBlock);
           this.putBlock(newBlock)
-          .then(()=>{
+          .then((createdBlock)=>{
             if (blockBefore) {
               blockBefore.chainid = newBlock._id;
               console.log('blockBefore', blockBefore.chainid);
@@ -428,6 +443,9 @@ export default {
               this.setMetaData({ key: 'startBlock_id', value: newBlock._id})
               .then(()=>{});
             }
+            if (!this.tc_hasTask('content_cleanup')) {
+              this._createBlockSubtask(createdBlock.id, 'approve-new-block', 'editor')
+            }
           })
           .catch((err)=>err)
       })
@@ -439,14 +457,36 @@ export default {
       let newBlock = this.createEmptyBlock(block.bookid, block.chainid);
       this.parlist.splice(block_Idx+1, 0, newBlock);
       this.putBlock(newBlock)
-      .then(()=>{
+      .then((createdBlock)=>{
         block.chainid = newBlock._id;
+        if (!this.tc_hasTask('content_cleanup')) {
+          this._createBlockSubtask(createdBlock.id, 'approve-new-block', 'editor')
+        }
         this.putBlockPart({
           block: new BookBlock(block),
           field: 'chainid'
         }).then(()=>{});
       })
       .catch((err)=>{})
+    },
+    blockUpdated(blockid) {
+      if (this._is('editor') && !this.tc_hasTask('content_cleanup') && !this.tc_getBlockTask(blockid)) {
+        this._createBlockSubtask(blockid, 'approve-modified-block', 'editor');
+      }
+    },
+    _createBlockSubtask(blockid, type, executor) {
+      axios.post(this.API_URL + 'task/subtask_by_book', {
+        bookid: this.meta._id,
+        params: {
+          type: type,
+          executor: executor,
+          blockid: blockid
+        }
+      })
+        .then((response) => {
+
+        })
+        .catch((err) => {})
     },
 
     deleteBlock(block, block_Idx) {

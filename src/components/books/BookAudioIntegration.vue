@@ -4,7 +4,7 @@
       <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'">
         <div class="file-catalogue">
           <div class="file-catalogue-buttons">
-            <div v-if="tc_hasTask('upload_audio') || tc_hasTask('audio_mastering')" class="upload-audio">
+            <div v-if="_is('editor')" class="upload-audio">
               <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload btn-small">
                 Import Audio
               </button>

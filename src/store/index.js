@@ -981,6 +981,7 @@ export const store = new Vuex.Store({
           return dispatch('_putBlock', cleanBlock)
           .then((response) => {
             // handle response
+            return Promise.resolve(response);
           });
         })
         .catch((err) => {
@@ -989,6 +990,7 @@ export const store = new Vuex.Store({
               return dispatch('_putBlock', cleanBlock)
               .then((response) => {
                 // handle response
+                return Promise.resolve(response);
               });
             } else {
               console.log('Block save error:', err);
