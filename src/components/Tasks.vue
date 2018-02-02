@@ -54,13 +54,6 @@
                     <i class="fa fa-file-audio-o"></i>Import audio
                   </button>
                 </div>
-                <div v-else-if="task.type == 'master-audio'">
-                  <!-- <span class="import-link" v-on:click="importExportAudio(task, job.meta, job.audio)">Import audio</span> -->
-                  <a class="btn-export-audio"
-                    :href="API_URL + 'books/' + job.bookid + '/audiobooks/download'" target="_blank">
-                    Export Audio
-                  </a>
-                </div>
                 <a v-else :href="'/books/' + job.bookid + '/edit/unresolved'">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
               </div>
             </div>
