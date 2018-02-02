@@ -1286,13 +1286,20 @@ export const store = new Vuex.Store({
       }
     },
 
-    loadTTSVoices({state, commit}) {
+    getTTSVoices({state, commit}) {
       return axios.get(state.API_URL + 'tts/voices')
       .then((response) => {
         commit('SET_TTS_VOICES', response.data);
       })
-      .catch((err) => {})
-    }
+      .catch(err => err)
+    },
 
+    getTestSpeech({state, commit}, data) {
+      return axios.get(state.API_URL + `tts/testspeech/${data.voiceId}/${data.text}`)
+      .then((response) => {
+        return response;
+      })
+      .catch(err => err)
+    }
   }
 })

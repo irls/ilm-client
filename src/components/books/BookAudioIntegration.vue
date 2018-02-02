@@ -66,11 +66,66 @@
         </div>
       </panel>
       <panel :is-open="false" :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'">
-        <select-tts-voice
-          selected=""
-          customClass=""
-          @select="testSelected"
-        ></select-tts-voice>
+        <div class="tts-volume-label">Volume:</div>
+        <vue-slider ref="slider" v-model="pre_volume" :min="0.0" :max="1.0" :interval="0.1" :tooltip="false"></vue-slider>
+        <table class="table table-striped table-bordered table-voices">
+        <thead>
+          <tr>
+            <th>Block</th><th>Voice</th>
+          </tr>
+        </thead>
+        <tbody v-if="pre_options">
+          <tr>
+            <td>Title</td>
+            <td><select-tts-voice
+              pre_selected=""
+              :pre_volume="pre_volume"
+              :pre_options="pre_options"
+            ></select-tts-voice></td>
+          </tr>
+          <tr>
+            <td>Header</td>
+            <td><select-tts-voice
+              pre_selected=""
+              :pre_volume="pre_volume"
+              :pre_options="pre_options"
+            ></select-tts-voice></td>
+          </tr>
+          <tr>
+            <td>Subheader</td>
+            <td><select-tts-voice
+              pre_selected=""
+              :pre_volume="pre_volume"
+              :pre_options="pre_options"
+            ></select-tts-voice></td>
+          </tr>
+          <tr>
+            <td>Paragraph</td>
+            <td><select-tts-voice
+              pre_selected=""
+              :pre_volume="pre_volume"
+              :pre_options="pre_options"
+            ></select-tts-voice></td>
+          </tr>
+          <tr>
+            <td>Footnote</td>
+            <td><select-tts-voice
+              pre_selected=""
+              :pre_volume="pre_volume"
+              :pre_options="pre_options"
+            ></select-tts-voice></td>
+          </tr>
+        </tbody>
+        </table>
+        <p v-if="hasBlocksForAlignment">
+          {{blocksForAlignment.count}} blocks in range: <a class="go-to-block" v-on:click="scrollToBlock(blocksForAlignment.start._id)">{{blocksForAlignment.start._id}}</a> - <a class="go-to-block" v-on:click="scrollToBlock(blocksForAlignment.end._id)">{{blocksForAlignment.end._id}}</a><!-- need audio-->
+        </p>
+        <!--<div class="pull-left" v-if="hasBlocksForAlignment && !enableAlignment">
+          <span class="red">Select audio</span>
+        </div>-->
+        <div class="pull-right align-process-start">
+          <button v-if="!alignmentProcess" class="btn btn-default" :disabled="!enableAlignment" v-on:click="align()">Align with text</button>
+        </div>
       </panel>
     </accordion>
     <modal v-model="onDeleteMessage" effect="fade">
@@ -110,6 +165,7 @@
   import Vue from 'vue'
   import access from '../../mixins/access.js';
   import {mapGetters, mapActions} from 'vuex';
+  import vueSlider from 'vue-slider-component';
   import SelectTTSVoice from '../generic/SelectTTSVoice'
   var WaveformPlaylist = require('waveform-playlist');
   var List = require('draggable-list')
@@ -124,6 +180,7 @@
       panel,
       dropdown,
       modal,
+      vueSlider,
       'select-tts-voice':SelectTTSVoice
 
     },
@@ -142,7 +199,9 @@
         paused: false,
         draggableList: false,
         alignmentProcess: false,
-        alignmentProcessModal: false
+        alignmentProcessModal: false,
+        pre_options: false,
+        pre_volume: 1.0
       }
     },
     mixins: [task_controls, api_config, access],
@@ -181,6 +240,11 @@
         }
       });
 
+      this.getTTSVoices()
+      .then(()=>{
+        this.pre_options = this.ttsVoices;
+      })
+      .catch(err=>err);
     },
     methods: {
       uploadAudio() {
@@ -390,10 +454,7 @@
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
-      testSelected(val) {
-        console.log('testSelected', val);
-      },
-      ...mapActions(['setCurrentBookCounters'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices'])
     },
     computed: {
       selectionLength: {
@@ -415,7 +476,7 @@
       hasBlocksForAlignment: function() {
         return this.blocksForAlignment.count > 0
       },
-      ...mapGetters(['currentBookCounters'])
+      ...mapGetters(['currentBookCounters', 'ttsVoices'])
     },
     watch: {
       'audiobook': {
@@ -601,6 +662,31 @@
     .modal-footer {
       button {
           width: 100%;
+      }
+    }
+  }
+  .table.table-voices {
+    margin-top: 10px;
+    thead {
+      tr {
+
+      }
+      th {
+        background-color: silver;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        border-bottom: none;
+      }
+    }
+    tbody {
+      tr:nth-child(odd) {
+        background-color:#eee;
+      }
+      td {
+        vertical-align: middle;
+      }
+      td:nth-child(2) {
+        width: 280px;
       }
     }
   }
