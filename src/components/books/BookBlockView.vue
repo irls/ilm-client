@@ -1963,13 +1963,13 @@ export default {
             this.blockAudio.src+= '?' + (new Date()).toJSON();
           }
           if (this.tc_showBlockNarrate(this.block._id) || this.isEditor) {
-            let isChanged = newVal && this.block.audiosrc != newVal.split('?').shift() && !(this.block.audiosrc.inexOf('_tmp.') !== -1 && newVal.indexOf('_tmp.') === -1);
+            /*let isChanged = newVal && this.block.audiosrc != newVal.split('?').shift() && !(this.block.audiosrc && this.block.audiosrc.indexOf('_tmp.') !== -1 && newVal.indexOf('_tmp.') === -1);
             if (!this.isAudioEditing) {
               this.isAudioChanged = isChanged;
             }
             if (isChanged) {
               this.infoMessage = 'Audio updated';
-            }
+            }*/
           }
         }
       },

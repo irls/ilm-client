@@ -470,7 +470,7 @@ export default {
       .catch((err)=>{})
     },
     blockUpdated(blockid) {
-      if (this._is('editor') && !this.tc_hasTask('content_cleanup') && !this.tc_getBlockTask(blockid)) {
+      if (this._is('editor') && !this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') && !this.tc_getBlockTask(blockid)) {
         this._createBlockSubtask(blockid, 'approve-modified-block', 'editor');
       }
     },
