@@ -124,6 +124,8 @@ export default {
         this.$root.$on('from-bookblockview:voicework-type-changed', function() {
           self.getBlockSelectionInfo();
         });
+
+//         this.loadTTSVoices();
   },
 
   methods: {
@@ -172,7 +174,7 @@ export default {
       }
     },
 
-    ...mapActions(['loadBook', 'updateBooksList'])
+    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices'])
   }
 }
 </script>

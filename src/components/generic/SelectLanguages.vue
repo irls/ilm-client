@@ -17,7 +17,7 @@ import LANGUAGES from '../../../static/languages.json'
 
 export default {
 
-  name: 'SelectLanguages',
+  name: 'select-tts-voice',
 
   components: {
     'vSelect': select
