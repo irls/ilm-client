@@ -421,7 +421,7 @@
           realign: this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0
         }, {}).then(function(response){
           if (response.status===200) {
-
+            self.$root.$emit('bookBlocksUpdates', response.data);
           } else {
 
           }
