@@ -1075,7 +1075,11 @@ export default {
           
           this.tc_approveBookTask(task)
           .then(response => {
-            if (response.status == 200) {}
+            if (response.status == 200) {
+              if (typeof response.data._id !== 'undefined') {
+                this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
+              }
+            }
           })
           .catch(err => {});
         });
@@ -1853,6 +1857,7 @@ export default {
             this.voiceworkUpdating = false;
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
+              this.$root.$emit('bookBlocksUpdates', response.data);
               //this.setCurrentBookBlocksLeft(this.block.bookid);
             }
             this.voiceworkChange = false;

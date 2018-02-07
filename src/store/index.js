@@ -1076,8 +1076,8 @@ export const store = new Vuex.Store({
       commit('ALLOW_BOOK_EDIT_MODE', state.tc_currentBookTasks.tasks.length > 0);
     },
 
-    tc_approveBookTask({state, commit}, task) {
-      axios.post(state.API_URL + 'task/' + task.blockid + '/approve_block',
+    tc_approveBookTask({state, commit, dispatch}, task) {
+      return axios.post(state.API_URL + 'task/' + task.blockid + '/approve_block',
       {
         'bookId': task.bookid || false,
         'taskId': task._id || false,
@@ -1085,9 +1085,20 @@ export const store = new Vuex.Store({
         'taskType': task.type || false
       })
       .then((list) => {
-        state.tc_tasksByBlock = {}
-        state.tc_userTasks = {list: list.data.rows, total: 0}
-        commit('TASK_LIST_LOADED')
+        //console.log('APPROVE TC', list)
+        //state.tc_tasksByBlock = {}
+        //state.tc_userTasks = {list: list.data.rows, total: 0}
+        //commit('TASK_LIST_LOADED')
+        if(Array.isArray(state.tc_currentBookTasks.tasks)) {// temporary remove current block task to disable it
+          state.tc_currentBookTasks.tasks.forEach((t, i) => {
+            if (t.blockid == task.blockid) {
+              state.tc_currentBookTasks.tasks.splice(i, 1);
+            }
+          });
+        }
+        //state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": []};
+        dispatch('tc_loadBookTask');
+        return Promise.resolve(list);
       })
       .catch((err) => {})
     },

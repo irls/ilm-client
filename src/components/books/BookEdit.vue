@@ -700,6 +700,43 @@ export default {
               this.refreshBlock(change);
           });
         });
+    },
+    _updateBlocksFromResponse(data) {
+      
+      if (data && Array.isArray(data.blocks)) {
+        if (data.blocks.length) {
+          data.blocks.forEach(b => {
+            let replace = null;
+            let block = this.parlist.find((_b, i) => {
+              if (_b._id === b._id) {
+                replace = i;
+                return true;
+              }
+              return false;
+            });
+            if (block && block._rev != b._rev) {
+              //console.log('OLD REV', block._rev, replace)
+              block = new BookBlock(b);
+              Vue.set(this.parlist, replace, block);
+              this.parlist[replace].isUpdated = true;
+              //console.log('REV', block._rev, b._rev);
+            }
+          });
+        } else {//getBlock
+          this.parlist.forEach((block, i) => {
+            this.getBlock(block._id)
+              .then(b => {
+                if (block && block._rev != b._rev) {
+                  //console.log('OLD REV', block._rev, replace)
+                  block = new BookBlock(b);
+                  Vue.set(this.parlist, i, block);
+                  this.parlist[i].isUpdated = true;
+                  //console.log('REV', block._rev, b._rev);
+                }
+              });
+          });
+        }
+      }
     }
   },
   events: {
@@ -727,6 +764,10 @@ export default {
       this.$root.$on('for-bookedit:scroll-to-block', (id)=>{
         this.scrollToBlock(id);
       })
+      
+      this.$root.$on('bookBlocksUpdates', (data) => {
+        this._updateBlocksFromResponse(data);
+      });
   },
 
   beforeDestroy:  function() {
