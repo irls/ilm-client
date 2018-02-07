@@ -717,6 +717,9 @@ export default {
             if (block && block._rev != b._rev) {
               //console.log('OLD REV', block._rev, replace)
               block = new BookBlock(b);
+              if (block.audiosrc) {
+                block.audiosrc = process.env.ILM_API + block.audiosrc;
+              }
               Vue.set(this.parlist, replace, block);
               this.parlist[replace].isUpdated = true;
               //console.log('REV', block._rev, b._rev);
@@ -729,6 +732,9 @@ export default {
                 if (block && block._rev != b._rev) {
                   //console.log('OLD REV', block._rev, replace)
                   block = new BookBlock(b);
+                  if (block.audiosrc) {
+                    block.audiosrc = process.env.ILM_API + block.audiosrc;
+                  }
                   Vue.set(this.parlist, i, block);
                   this.parlist[i].isUpdated = true;
                   //console.log('REV', block._rev, b._rev);
