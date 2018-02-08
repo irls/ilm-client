@@ -298,7 +298,7 @@ class BookBlock {
 
   getIllustration() {
     if (this.illustration) {
-      return process.env.ILM_API + this.illustration;
+      return process.env.ILM_API + this.illustration + '?' + (new Date()).toJSON();
     }
   }
 
