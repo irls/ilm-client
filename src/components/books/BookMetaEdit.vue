@@ -79,10 +79,9 @@
               <a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
                 Export Audio
               </a>
-              <a v-else class="btn btn-primary btn-small btn-export-audio"
-                :href="API_URL + 'books/' + currentBook.bookid + '/audiobooks/download'" target="_blank">
+              <button v-else class="btn btn-primary btn-small btn-export-audio" v-on:click="startGenerateAudiofile()">
                 Export Audio
-              </a>
+              </button>
             </div>
             <BookAudioIntegration ref="audioIntegration"
                 :audiobook="audiobook"
@@ -306,6 +305,20 @@
     <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="completeAudioMastering()">
       <p>Complete mastering?</p>
     </modal>
+    <modal v-model="generatingAudiofile" :backdrop="false" effect="fade">
+      <div slot="modal-header" class="modal-header">
+        <h4>Generating merged audiofile</h4>
+      </div>
+      <div slot="modal-body" class="modal-body download-audiofile">
+          <div class="align-preloader" v-if="!currentBook.mergedAudiofile"></div>
+          <div v-else>
+            <a class="btn btn-primary" :href="mergedAudiofileLink" target="_blank">Open file</a>
+          </div>
+      </div>
+      <div slot="modal-footer" class="modal-footer">
+        <button v-if="currentBook.mergedAudiofile" v-on:click="generatingAudiofile = false" class="btn btn-primary">Close</button>
+      </div>
+    </modal>
 
   </div>
 
@@ -388,7 +401,8 @@ export default {
       audiobook: {},
       unlinkCollectionWarning: false,
       blockTypes: BlockTypes,
-      audioMasteringProcess: false
+      audioMasteringProcess: false,
+      generatingAudiofile: false
     }
   },
 
@@ -468,6 +482,15 @@ export default {
           return 'Complete editing and request narration for ' + this.currentBookCounters.narration_blocks + ' blocks?'
         } else {
           return 'Complete editing?';
+        }
+      }
+    },
+    mergedAudiofileLink: {
+      get() {
+        if (this.currentBook.mergedAudiofile) {
+          return process.env.ILM_API + this.currentBook.mergedAudiofile
+        } else {
+          return '';
         }
       }
     }
@@ -856,6 +879,13 @@ export default {
         }
       }
     },
+    startGenerateAudiofile() {
+      this.currentBook.mergedAudiofile = null;
+      this.liveUpdate('mergedAudiofile', null);
+      this.generatingAudiofile = true;
+      axios.get(this.API_URL + 'books/' + this.currentBook.bookid + '/audiobooks/download')
+      //:href="API_URL + 'books/' + currentBook.bookid + '/audiobooks/download'" target="_blank"
+    },
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters'])
   }
 }
@@ -1075,6 +1105,16 @@ export default {
         opacity: .65;
         cursor: not-allowed;
       }
+    }
+  }
+  .modal-body {
+    .align-preloader {
+      width: 100%;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    &.download-audiofile {
+      text-align: center;
     }
   }
 
