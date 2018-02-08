@@ -155,7 +155,7 @@
 
                 <div v-else-if="block.type == 'illustration'" :class="['table-body illustration-block']">
                   <img v-if="block.illustration" :src="block.getIllustration()" :class="[block.getClass()]"/>
-                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged}]" v-if="allowEditing">
+                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing">
                     <vue-picture-input
                       @change="onIllustrationChange"
                       @remove="onIllustrationChange"
@@ -165,9 +165,9 @@
                       :removable="true"
                       :crop="false">
                     </vue-picture-input>
-                    <div class="save-illustration" v-if="isIllustrationChanged">
+                    <!-- <div class="save-illustration" v-if="isIllustrationChanged">
                       <button class="btn btn-default" @click="uploadIllustration">Save picture</button>
-                    </div>
+                    </div> -->
                   </div>
 
                   <div :class="['table-row content-description', block.getClass()]">
@@ -356,7 +356,7 @@
 
             <div class="table-row controls-bottom">
               <div class="save-block -left"
-              v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing)) }"
+              v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
               @click="assembleBlockProxy">
                   <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
               </div>
@@ -902,8 +902,16 @@ export default {
       },
 
       assembleBlockProxy: function (ev) {
-        if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
-        else if (this.isChanged) return this.assembleBlock();
+        if (this.block.type == 'illustration') {
+          if (this.isIllustrationChanged) {
+            return this.uploadIllustration();
+          } else if (this.isChanged) {
+            return this.assembleBlock();
+          }
+        } else {
+          if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
+          else if (this.isChanged) return this.assembleBlock();
+        }
         return BPromise.resolve();
       },
 
@@ -1814,6 +1822,7 @@ export default {
       uploadIllustration(event) {
         let formData = new FormData();
         formData.append('illustration', this.$refs.illustrationInput.file, this.$refs.illustrationInput.file.name);
+        formData.append('block', JSON.stringify({'description': this.$refs.blockDescription.innerHTML}));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/image';
         let self = this;
@@ -1823,6 +1832,15 @@ export default {
             self.$refs.illustrationInput.removeImage();
             let offset = document.getElementById(self.block._id).getBoundingClientRect()
             window.scrollTo(0, window.pageYOffset + offset.top);
+            self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
+            self.isChanged = false;
+            //if (self.editor) {
+              //self.editor.destroy();
+            //}
+            $('[id="' + self.block._id + '"] .illustration-block')
+              .removeAttr('contenteditable')
+              .removeAttr('data-placeholder');
+            self.isIllustrationChanged = false;
           } else {
 
           }
@@ -1833,11 +1851,17 @@ export default {
       onIllustrationChange() {
         //console.log(arguments, this.$refs.illustrationInput.image);
         if (this.$refs.illustrationInput && this.$refs.illustrationInput.image) {
-          $('[id="' + this.block._id + '"] .drag-uploader').removeClass('no-picture');
+          
           this.isIllustrationChanged = true;
+          Vue.nextTick(() => {
+            $('[id="' + this.block._id + '"] .drag-uploader').removeClass('no-picture');
+          });
         } else {
-          $('[id="' + this.block._id + '"] .drag-uploader').addClass('no-picture');
+          
           this.isIllustrationChanged = false;
+          Vue.nextTick(() => {
+            $('[id="' + this.block._id + '"] .drag-uploader').addClass('no-picture');
+          });
         }
       },
       setRangeSelection(type, event) {
@@ -1896,6 +1920,9 @@ export default {
         });
       },
       allowVoiceworkChange() {
+        if (this.block.type == 'illustration' || this.block.type == 'hr') {
+          return false;
+        }
         if (this.tc_hasTask('content_cleanup')) {
           return true;
         }
