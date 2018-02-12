@@ -307,16 +307,19 @@
     </modal>
     <modal v-model="generatingAudiofile" :backdrop="false" effect="fade">
       <div slot="modal-header" class="modal-header">
-        <h4>Generating merged audiofile</h4>
+        <h4>Export audio</h4>
       </div>
       <div slot="modal-body" class="modal-body download-audiofile">
-          <div class="align-preloader" v-if="!currentBook.mergedAudiofile"></div>
+          <template  v-if="!currentBook.mergedAudiofile">
+            <div>Generating audiofile</div>
+            <div class="align-preloader"></div>
+          </template>
           <div v-else>
-            <a class="btn btn-primary" :href="mergedAudiofileLink" target="_blank">Open file</a>
+            <a class="btn btn-primary" :href="mergedAudiofileLink" target="_blank">Download</a>
           </div>
       </div>
       <div slot="modal-footer" class="modal-footer">
-        <button v-if="currentBook.mergedAudiofile" v-on:click="generatingAudiofile = false" class="btn btn-primary">Close</button>
+        <a v-if="currentBook.mergedAudiofile" v-on:click="generatingAudiofile = false" class="btn btn-default">Cancel</a>
       </div>
     </modal>
 

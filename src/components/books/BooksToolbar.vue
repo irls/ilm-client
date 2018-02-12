@@ -93,7 +93,9 @@ export default {
     },
     bookCount () {
       if (this.allBooks && this.allBooks) {
-        let filtered = this.allBooks.filter(m => !m.collection_id);
+        let filtered = this.allBooks
+                .filter(m => !m.collection_id)
+                .filter(m => m.importStatus);
         return filtered.length;
       } else {
         return 0;

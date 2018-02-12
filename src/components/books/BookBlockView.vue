@@ -2026,6 +2026,13 @@ export default {
             this.setCurrentBookCounters(['not_marked_blocks']);
           }
         }
+      },
+      'isCompleted': {
+        handler(val, oldVal) {
+          Vue.nextTick(() => {
+            this.updateFlagStatus(this.block._id);
+          });
+        }
       }
   }
 }
