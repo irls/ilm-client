@@ -87,6 +87,7 @@
             <BookAudioIntegration ref="audioIntegration"
                 :audiobook="audiobook"
                 :blocksForAlignment="blocksForAlignment"
+                @onTtsSelect="ttsUpdate"
               ></BookAudioIntegration>
           </vue-tab>
           <vue-tab title="Book Content" :id="'book-content'">
@@ -354,14 +355,38 @@ export default {
         'Stories', 'Verse', 'History', 'Ideas', 'Science'
       ],
       languages: {
-        en: 'English',
-        es: 'Spanish',
-        du: 'German',
-        ru: 'Russian',
-        ar: 'Arabic',
-        fa: 'Farsi',
-        cn: 'Chinese',
-        ro: 'Romanian'
+        "en":     'English',
+        //"en-US":     'US English',
+        //"en-GB":     'British English',
+        //"en-AU":     'Australian English',
+        //"en-GB-WLS": 'Welsh English',
+        //"en-IN":     'Indian English',
+
+        "de":     'German',
+        "da":     'Danish',
+        "cy":     'Welsh',
+
+        "es":     'Spanish',
+        //"es-ES":     'Castilian Spanish',
+
+        "fr":     'French',
+        //"fr-CA":     'Canadian French',
+
+        "is":     'Icelandic',
+        "it":     'Italian',
+        "ko":     'Korean',
+        "ja":     'Japanese',
+        "nb":     'Norwegian',
+        "nl":     'Dutch',
+        "pl":     'Polish',
+
+        "pt":     'Portuguese',
+        //"pt-BR":     'Brazilian Portuguese',
+
+        "ro":     'Romanian',
+        "ru":     'Russian',
+        "sv":     'Swedish',
+        "tr":     'Turkish',
       },
       numberingOptions: ['x', 'x.x', 'x.x.x'],
       dirty: {
@@ -582,10 +607,6 @@ export default {
         });*/
     },
 
-    update: _.debounce(function (key, event) {
-      this.liveUpdate(key, key == 'author' ? this.currentBook.author : event.target.value)
-    }, 500),
-
     updateCollection(event) {
       if (event && event.target.value) {
         let collectionId = event.target.value;
@@ -626,9 +647,17 @@ export default {
       this.currentBook.collection_id = this.currentBookMeta.collection_id;
     },
 
+    ttsUpdate(key, value) {
+      this.liveUpdate(key, value)
+    },
+
     change (key) {
       this.liveUpdate(key, this.currentBook[key])
     },
+
+    update: _.debounce(function (key, event) {
+      this.liveUpdate(key, key == 'author' ? this.currentBook.author : event.target.value)
+    }, 500),
 
     liveUpdate (key, value) {
       var dbPath = superlogin.getDbUrl('ilm_content_meta')
@@ -644,6 +673,11 @@ export default {
 
       var update = {
         [key]: value
+      }
+
+      // Batch updates
+      if (key === 'language') {
+        update.voices = false;
       }
 
       //console.log('update', update);

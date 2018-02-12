@@ -78,53 +78,57 @@
           <tr>
             <td>Title</td>
             <td><select-tts-voice
-              pre_selected=""
+              :pre_selected="currentBookMeta.voices.title"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
+              @onSelect="onTtsSelect('title', $event)"
             ></select-tts-voice></td>
           </tr>
           <tr>
             <td>Header</td>
             <td><select-tts-voice
-              pre_selected=""
+              :pre_selected="currentBookMeta.voices.header"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
+              @onSelect="onTtsSelect('header', $event)"
             ></select-tts-voice></td>
           </tr>
-          <tr>
+          <!--<tr>
             <td>Subheader</td>
             <td><select-tts-voice
               pre_selected=""
               :pre_volume="pre_volume"
               :pre_options="pre_options"
             ></select-tts-voice></td>
-          </tr>
+          </tr>-->
           <tr>
             <td>Paragraph</td>
             <td><select-tts-voice
-              pre_selected=""
+              :pre_selected="currentBookMeta.voices.paragraph"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
+              @onSelect="onTtsSelect('paragraph', $event)"
             ></select-tts-voice></td>
           </tr>
           <tr>
             <td>Footnote</td>
             <td><select-tts-voice
-              pre_selected=""
+              :pre_selected="currentBookMeta.voices.footnote"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
+              @onSelect="onTtsSelect('footnote', $event)"
             ></select-tts-voice></td>
           </tr>
         </tbody>
         </table>
-        <p v-if="hasBlocksForAlignment">
-          {{blocksForAlignment.count}} blocks in range: <a class="go-to-block" v-on:click="scrollToBlock(blocksForAlignment.start._id)">{{blocksForAlignment.start._id}}</a> - <a class="go-to-block" v-on:click="scrollToBlock(blocksForAlignment.end._id)">{{blocksForAlignment.end._id}}</a><!-- need audio-->
+        <p v-if="blocksForAlignment.start._id || blocksForAlignment.end._id">
+          <span v-if="hasBlocksForAlignment">{{blocksForAlignment.countTTS}}</span> blocks in range: <a class="go-to-block" v-on:click="scrollToBlock(blocksForAlignment.start._id)">{{blocksForAlignment.start._id}}</a> - <a class="go-to-block" v-on:click="scrollToBlock(blocksForAlignment.end._id)">{{blocksForAlignment.end._id}}</a><!-- need audio-->
         </p>
         <!--<div class="pull-left" v-if="hasBlocksForAlignment && !enableAlignment">
           <span class="red">Select audio</span>
         </div>-->
         <div class="pull-right align-process-start">
-          <button v-if="!alignmentProcess" class="btn btn-default" :disabled="!enableAlignment" v-on:click="align()">Align with text</button>
+          <button v-if="!alignmentProcess" class="btn btn-default" :disabled="!enableTtsAlignment" v-on:click="alignTts()">Convert text to speech &amp; Align with text</button>
         </div>
       </panel>
     </accordion>
@@ -240,7 +244,7 @@
         }
       });
 
-      this.getTTSVoices()
+      this.getTTSVoices(/*this.currentBookMeta.language*/)
       .then(()=>{
         this.pre_options = this.ttsVoices;
       })
@@ -451,9 +455,40 @@
           });
         }
       },
+      alignTts() {
+        let api_url = this.API_URL + 'books/' + this.currentBookid + '/selection_alignment';
+        let formData = new FormData();
+        let api = this.$store.state.auth.getHttp()
+        this.alignmentProcess = true;
+        api.post(api_url, {
+          start: this.blocksForAlignment.start._id,
+          end: this.blocksForAlignment.end._id,
+          audiofiles: false,
+          realign: false,/*this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0*/
+          voicework: 'all_with_tts',
+          voices: this.currentBookMeta.voices
+        }, {}).then((response)=>{
+          if (response.status===200) {
+
+          } else {
+
+          }
+          this.alignmentProcess = false;
+          this.setCurrentBookCounters();
+        }).catch((err) => {
+          console.log('error: '+ err)
+          this.alignmentProcess = false;
+        });
+      },
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
+
+      onTtsSelect(key, value) {
+        this.currentBookMeta.voices[key] = value;
+        this.$emit('onTtsSelect', 'voices.'+ key, value);
+      },
+
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices'])
     },
     computed: {
@@ -473,10 +508,25 @@
       enableAlignment: function() {
         return this.hasBlocksForAlignment && this.selectionLength > 0
       },
+      enableTtsAlignment: function() {
+        let voicesSelected = true;
+        if (this.currentBookMeta.voices) {
+          for(let voice in this.currentBookMeta.voices) {
+            if (!this.currentBookMeta.voices[voice] || this.currentBookMeta.voices[voice].length == 0) {
+              voicesSelected = false;
+            }
+          }
+        }
+//         console.log('enableTtsAlignment', blocksSelected, voicesSelected);
+        return this.hasBlocksForTTS && voicesSelected;
+      },
       hasBlocksForAlignment: function() {
         return this.blocksForAlignment.count > 0
       },
-      ...mapGetters(['currentBookCounters', 'ttsVoices'])
+      hasBlocksForTTS: function() {
+        return this.blocksForAlignment.countTTS > 0
+      },
+      ...mapGetters(['currentBookCounters', 'ttsVoices', 'currentBookid', 'currentBookMeta'])
     },
     watch: {
       'audiobook': {
@@ -512,7 +562,10 @@
         handler(val) {
           this.alignmentProcessModal = val;
         }
-      }
+      },
+      'ttsVoices': function (val) {
+        this.pre_options = val;
+      },
     }
   }
 </script>
