@@ -70,7 +70,8 @@ export default {
       blocksForAlignment: {
         start: {},
         end: {},
-        count: 0
+        count: 0,
+        countTTS: 0
       }
     }
   },
@@ -164,11 +165,14 @@ export default {
         let query = 'start=' + this.blocksForAlignment.start._id + '&end=' + this.blocksForAlignment.end._id;
         if (this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0) {
           query+='&voicework=all_audio&realign=true';
+        } else { // In case of normal task (with tts counter)
+          query+='&voicework=all_with_tts';
         }
         api.get(api_url + '?' + query, {})
           .then(response => {
             if (response.status == 200) {
               this.blocksForAlignment.count = response.data.count;
+              this.blocksForAlignment.countTTS = response.data.countTTS;
             }
           })
       }

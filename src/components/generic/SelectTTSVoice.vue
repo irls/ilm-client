@@ -2,7 +2,7 @@
 <div>
   <i class="fa fa-play-circle button-play-tts disabled" @click="playAudio"></i>
   <div class="js-select2-wrapper">
-    <select class="js-select2">
+    <select class="js-select2" >
       <slot></slot>
     </select>
   </div>
@@ -14,6 +14,7 @@
   import 'select2'
   import 'select2/dist/css/select2.css'
 
+//import Vue from 'vue'
 import { mapGetters, mapActions } from 'vuex'
 
 export default {
@@ -34,7 +35,7 @@ export default {
   },
 
   props: [
-    'pre_selected', 'pre_options', 'pre_volume'
+    'pre_selected', 'pre_options', 'pre_volume',
   ],
 //     data example:
 //       {
@@ -111,10 +112,12 @@ export default {
       .val(this.value)
       .trigger('change')
       // emit event on change.
-      .on('change', (e) => {
-        this.$emit('select', e.target.value);
-        this.value = e.target.value;
-        this.applyAudio(e.target.value);
+      .on('select2:select', (e) => {
+        this.$emit('onSelect', e.target.value);
+        if (this.value !== e.target.value) {
+          this.applyAudio(e.target.value);
+          this.value = e.target.value;
+        }
       })
       .on('select2:unselecting', function() {
         $(this).one('select2:opening', function(ev) { ev.preventDefault(); });
@@ -124,31 +127,36 @@ export default {
     let _this = this;
     this.$root.$on('from-bookedit:set-selection', function(start, end) {
       let block = start || end;
+      let text = '';
       if (block && block.content) {
-        _this.text = block.content.replace(/<[^>]*>?/g, "").substring(0, 32);
+        text = block.content.replace(/<[^>]*>?/g, "").substring(0, 32);
       } else {
-        _this.text = false;
+        text = false;
       }
-      if (_this.audio64 && _this.value) {
-        _this.applyAudio(_this.value);
+      if (_this.text !== text) {
+        _this.text = text;
+        if (_this.audio64 && _this.value) {
+          _this.applyAudio(_this.value);
+        }
       }
     });
   },
 
   watch: {
-    options: function (options) {
+    pre_options: function (options) {
       // update options
       $(this.$el).find('.js-select2')
       .empty()
       .select2({ data: options, ...this.config })
       .val(this.value)
-      .trigger('change')
+      .trigger('change');
     }
   },
 
   destroyed: function () {
     $(this.$el).find('.js-select2').off().select2('destroy');
     this.$root.$off('from-bookedit:set-selection');
+    console.log('destroyed');
   }
 }
 </script>

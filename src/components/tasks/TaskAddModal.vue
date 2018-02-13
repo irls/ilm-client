@@ -67,7 +67,7 @@
       <div class="form-group">
         <label>Language</label>
         <select class="form-control" v-model="lang">
-          <option v-for="l in langs" :value="l">{{l}}</option>
+          <option v-for="(name, code) in langs" :value="code">{{name}}</option>
         </select>
         <div v-if="errors.lang" v-for="err in errors.lang" class="error-message" v-text="err"></div>
       </div>
@@ -99,6 +99,7 @@ import modalMixin from './../../mixins/modal'
 import axios from 'axios'
 import superlogin from 'superlogin-client'
 import BookImport from '../books/BookImport'
+import { Languages } from "../../mixins/lang_config.js"
 var getSlug = require('speakingurl')
 const TASKS_URL = process.env.ILM_API + '/api/v1/task'
 export default {
@@ -132,7 +133,7 @@ export default {
       roles: {},
       name: [''],
       lang: '',
-      langs: ['en', 'ua'],
+      langs: Languages,
       fields_by_type: {
         'with-audio': {
           'name': {'require': true},

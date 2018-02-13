@@ -60,7 +60,7 @@ export const store = new Vuex.Store({
     currentBookBlocksLeft: 0,
     currentBookBlocksLeftId: 'AAA',
 
-    bookFilters: {filter: '', language: 'en', importStatus: 'staging'},
+    bookFilters: {filter: '', language: '', importStatus: 'staging'},
     editMode: 'Editor',
     allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": []},
@@ -153,7 +153,17 @@ export const store = new Vuex.Store({
     currentLibrary: state => state.currentLibrary,
     user: state => state.user,
     currentBookCounters: state => state.currentBookCounters,
-    ttsVoices: state => state.ttsVoices
+    ttsVoices: state => {
+      if (state.currentBookMeta.language === '') return state.ttsVoices;
+      let langPrefix = state.currentBookMeta.language.split('-')[0];
+      let result = [];
+      if (state.ttsVoices) {
+        state.ttsVoices.forEach((batch)=>{
+          if (batch.code.indexOf(langPrefix+'-') !== -1) result.push(batch);
+        })
+      }
+      return result;
+    }
   },
 
   mutations: {
@@ -211,6 +221,14 @@ export const store = new Vuex.Store({
         }
         if (!state.currentBookMeta.isMastered) {
           state.currentBookMeta.isMastered = false;
+        }
+        if (!state.currentBookMeta.voices) {
+          state.currentBookMeta.voices = {
+            title: '',
+            header: '',
+            paragraph: '',
+            footnote: ''
+          };
         }
       } else {
         state.currentBookMeta = {}
@@ -887,6 +905,12 @@ export const store = new Vuex.Store({
               b.audiosrc = process.env.ILM_API + b.audiosrc;
             }
 
+            if (b.footnotes) b.footnotes.forEach((f, fIdx)=>{
+              if (f.audiosrc) {
+                f.audiosrc = process.env.ILM_API + f.audiosrc +'?'+ (new Date()).toJSON();
+              }
+            })
+
             results.rows.push(b);
 
             if (params.query) switch(params.query) {
@@ -1300,8 +1324,8 @@ export const store = new Vuex.Store({
       }
     },
 
-    getTTSVoices({state, commit}) {
-      return axios.get(state.API_URL + 'tts/voices')
+    getTTSVoices({state, commit}, lang) {
+      return axios.get(state.API_URL + 'tts/voices' + (lang ? `/${lang}` : ''))
       .then((response) => {
         commit('SET_TTS_VOICES', response.data);
       })

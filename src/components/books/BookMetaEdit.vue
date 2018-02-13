@@ -86,6 +86,7 @@
             <BookAudioIntegration ref="audioIntegration"
                 :audiobook="audiobook"
                 :blocksForAlignment="blocksForAlignment"
+                @onTtsSelect="ttsUpdate"
               ></BookAudioIntegration>
           </vue-tab>
           <vue-tab title="Book Content" :id="'book-content'">
@@ -343,6 +344,7 @@ import { alert, modal } from 'vue-strap'
 import task_controls from '../../mixins/task_controls.js'
 import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
+import { Languages } from "../../mixins/lang_config.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
 var BPromise = require('bluebird');
 
@@ -369,16 +371,7 @@ export default {
       subjectCategories: [
         'Stories', 'Verse', 'History', 'Ideas', 'Science'
       ],
-      languages: {
-        en: 'English',
-        es: 'Spanish',
-        du: 'German',
-        ru: 'Russian',
-        ar: 'Arabic',
-        fa: 'Farsi',
-        cn: 'Chinese',
-        ro: 'Romanian'
-      },
+      languages: Languages,
       numberingOptions: ['x', 'x.x', 'x.x.x'],
       dirty: {
       },
@@ -608,10 +601,6 @@ export default {
         });*/
     },
 
-    update: _.debounce(function (key, event) {
-      this.liveUpdate(key, key == 'author' ? this.currentBook.author : event.target.value)
-    }, 500),
-
     updateCollection(event) {
       if (event && event.target.value) {
         let collectionId = event.target.value;
@@ -652,9 +641,17 @@ export default {
       this.currentBook.collection_id = this.currentBookMeta.collection_id;
     },
 
+    ttsUpdate(key, value) {
+      this.liveUpdate(key, value)
+    },
+
     change (key) {
       this.liveUpdate(key, this.currentBook[key])
     },
+
+    update: _.debounce(function (key, event) {
+      this.liveUpdate(key, key == 'author' ? this.currentBook.author : event.target.value)
+    }, 500),
 
     liveUpdate (key, value) {
       var dbPath = superlogin.getDbUrl('ilm_content_meta')
@@ -670,6 +667,11 @@ export default {
 
       var update = {
         [key]: value
+      }
+
+      // Batch updates
+      if (key === 'language') {
+        update.voices = false;
       }
 
       //console.log('update', update);

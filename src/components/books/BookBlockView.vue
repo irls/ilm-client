@@ -132,7 +132,7 @@
                           @click="audResume(block._id, $event)"></i>
                         <i class="fa fa-stop-circle-o"
                           @click="audStop(block._id, $event)"></i>
-                        <div class="empty-control"></div><!-- empty block to keep order -->
+                        <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
                       </template>
                   </template>
                   <template v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
@@ -325,30 +325,56 @@
             <div class="table-row content-footnotes"
               v-if="block.footnotes.length > 0">
               <div class="table-body footnote"
-                v-for="(footnote, footnoteIdx) in block.footnotes">
+                v-for="(footnote, ftnIdx) in block.footnotes">
 
-                <div class="table-row controls-top"><div class="table-cell"></div><div class="table-cell">
-                  <template v-if="allowEditing">
-                    <template v-if="tc_hasTask('content_cleanup')">
-                      <label>Voicework:&nbsp;
-                      <select v-model='footnote.voicework' style="min-width: 100px;" ref="footnVoiceworkSel" @input="commitFootnote(footnoteIdx, $event)">
-                        <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
-                      </select>
-                      </label>
+                <div class="table-row controls-top -hidden">
+                  <div class="table-cell"></div>
+                  <div class="table-cell">
+                    <template v-if="allowEditing">
+                      <template v-if="tc_hasTask('content_cleanup')">
+                        <label>Voicework:&nbsp;
+                        <select v-model='footnote.voicework' style="min-width: 100px;" ref="footnVoiceworkSel" @input="commitFootnote(ftnIdx, $event)">
+                          <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
+                        </select>
+                        </label>
+                      </template>
                     </template>
-                  </template>
-                </div></div>
+                  </div>
+                  <div class="table-cell -audio -right">
+                    <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && (isEditor && tc_isShowEdit(block._id))"> <!--&& !isAudioChanged"-->
+                      <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor(footnote, ftnIdx, $event)"></i>
+                    </template>
+                    <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
+                        <template v-if="!FtnAudio.isStarted || FtnAudio.isStarted!==`${block._id}_${ftnIdx}`">
+                          <i class="fa fa-play-circle-o"
+                            @click="FtnAudio.audPlay(block._id, ftnIdx)"></i>
+                          <i class="fa fa-stop-circle-o disabled"></i>
+                        </template>
+                        <template v-else>
+                          <i class="fa fa-pause-circle-o" v-if="!FtnAudio.isPaused"
+                            @click="FtnAudio.audPause(block._id, ftnIdx)"></i>
+                          <i class="fa fa-play-circle-o paused" v-else
+                            @click="FtnAudio.audResume(block._id, ftnIdx)"></i>
+                          <i class="fa fa-stop-circle-o"
+                            @click="FtnAudio.audStop(block._id, ftnIdx)"></i>
+                          <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
+                        </template>
+                    </template>
+                  </div>
+                </div>
 
                 <div class="table-row">
-                  <div class="table-cell -num">{{footnoteIdx+1}}.</div>
+                  <div class="table-cell -num">{{ftnIdx+1}}.</div>
                   <div class="content-wrap-footn table-cell -text"
-                    :data-footnoteIdx="block._id +'_'+ footnoteIdx"
-                    :class="['js-footnote-val', 'js-footnote-'+ block._id]"
-                    @input="commitFootnote(footnoteIdx, $event)"
+                    :id="block._id +'_'+ ftnIdx"
+                    :data-audiosrc="footnote.audiosrc"
+                    :data-footnoteIdx="block._id +'_'+ ftnIdx"
+                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}]"
+                    @input="commitFootnote(ftnIdx, $event)"
                     v-html="footnote.content">
                   </div>
                   <div class="table-cell -control">
-                    <span @click="delFootnote(footnoteIdx)"><i class="fa fa-trash"></i></span>
+                    <span @click="delFootnote(ftnIdx)"><i class="fa fa-trash"></i></span>
                   </div>
                 </div>
               </div>
@@ -482,6 +508,16 @@ export default {
         src: '',
         map: ''
       },
+      FtnAudio: {
+        player: false,
+        isStarted: false,
+        isPaused: false,
+        isEditing: false,
+        isChanged: false,
+        map: '',
+        audPlay: function(){}
+      },
+
       reRecordPosition: false,
       isUpdating: false,
       recordStartCounter: 0,
@@ -588,8 +624,8 @@ export default {
         return this._is('editor') && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
       },
       markAsDoneButtonDisabled: function() {
-        return this.block.markedAsDone || 
-                (this.block.status && this.block.status.proofed === true) || 
+        return this.block.markedAsDone ||
+                (this.block.status && this.block.status.proofed === true) ||
                 !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
       },
       isApproveDisabled: function () {
@@ -601,7 +637,7 @@ export default {
       },
       isCompleted: function () {
           if (this._is('editor') && (
-                  this.tc_hasTask('content_cleanup') || 
+                  this.tc_hasTask('content_cleanup') ||
                   (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')
                 )) return false;
           return this.tc_getBlockTask(this.block._id) ? false : true;
@@ -648,6 +684,19 @@ export default {
           this.blockAudio.src = this.blockAudio.src + '?' + (new Date()).toJSON();
           this.initPlayer();
       }
+
+      if (this.block.footnotes && this.block.footnotes.length) {
+        this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+          if (footnote.audiosrc && !this.FtnAudio.player) {
+            this.initFootnotePlayer(this.FtnAudio);
+            return true;
+          }
+        });
+      }
+
+//       if (this.block._id == '1_en_2s') {
+//         console.log('this.FtnAudio11', this.FtnAudio);
+//       }
 
       Vue.nextTick(() => {
         if (this.$refs.blockContent) {
@@ -882,6 +931,20 @@ export default {
           });
       },
 
+      discardFtnAudio: function() {
+//         this.blockAudio.src = this.block.audiosrc;
+//         this.blockAudio.map = this.block.content;
+//         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
+//         let api = this.$store.state.auth.getHttp();
+//         api.delete(api_url, {}, {})
+//           .then(response => {
+//
+//           })
+//           .catch(err => {
+//
+//           });
+      },
+
       discardAudioEdit: function() {
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
         let api = this.$store.state.auth.getHttp();
@@ -1080,7 +1143,7 @@ export default {
                 break;
             }
           }
-          
+
           this.tc_approveBookTask(task)
           .then(response => {
             if (response.status == 200) {
@@ -1217,6 +1280,17 @@ export default {
         });
         let trail_class = this.player.config.trail_class
         $('#'+block_id).find('.'+trail_class).each(function(){
+          $(this).removeClass(trail_class);
+        });
+      },
+
+      audFootnoteCleanClasses: function(ftnId) {
+        let reading_class = this.FtnAudio.player.config.reading_class
+        $(`#${ftnId}`).find('.'+reading_class).each(function(){
+          $(this).removeClass(reading_class);
+        });
+        let trail_class = this.FtnAudio.player.config.trail_class
+        $(`#${ftnId}`).find('.'+trail_class).each(function(){
           $(this).removeClass(trail_class);
         });
       },
@@ -1590,6 +1664,64 @@ export default {
         this.isRecordingPaused = false;
         this.recorder.resumeRecording();
       },
+      initFootnotePlayer(playerObj) {
+        let parent = this;
+        playerObj.audPlay = function (blockId, ftnIdx) {
+          parent.$root.$emit('playBlockFootnote', `${blockId}_${ftnIdx}`);
+          parent.$root.$emit('playBlock', false);
+          this.isStarted = `${blockId}_${ftnIdx}`;
+          this.player.playBlock(`${blockId}_${ftnIdx}`);
+        }
+
+        playerObj.audPause = function (blockId, ftnIdx) {
+          this.isPaused = true;
+          this.player.pause();
+        }
+
+        playerObj.audResume = function (blockId, ftnIdx) {
+          this.isPaused = false;
+          this.player.resume();
+        }
+
+        playerObj.audStop = function (blockId, ftnIdx) {
+          this.player.pause();
+          parent.audFootnoteCleanClasses(this.isStarted);
+          this.isStarted = false;
+          this.isPaused = false;
+        }
+
+        playerObj.player = new ReadAlong({
+            forceLineScroll: false
+        },{
+          on_start:   ()=>{},
+          on_pause:   ()=>{},
+          on_resume:  ()=>{},
+          on_complete:()=>{
+            playerObj.isStarted = false;
+            playerObj.isPaused = false;
+            parent.audFootnoteCleanClasses(playerObj.isStarted);
+          }
+        });
+
+        parent.$root.$on('playBlockFootnote', (ftnId)=>{
+          if (playerObj.isStarted !== ftnId) {
+            if (playerObj.player) {
+              playerObj.player.pause();
+              parent.audFootnoteCleanClasses(playerObj.isStarted);
+              playerObj.isStarted = false;
+              playerObj.isPaused = false;
+            }
+          }
+        });
+        parent.$root.$on('playBlock', (blockid)=>{
+          if (playerObj.player) {
+            playerObj.player.pause();
+            parent.audFootnoteCleanClasses(playerObj.isStarted);
+            playerObj.isStarted = false;
+            playerObj.isPaused = false;
+          }
+        });
+      },
       initPlayer() {
         this.player = new ReadAlong({
             forceLineScroll: false
@@ -1598,6 +1730,7 @@ export default {
                 this.isAudStarted = true;
                 this.isAudPaused = false;
                 this.$root.$emit('playBlock', this.block._id);
+                this.$root.$emit('playBlockFootnote', false);
             },
             on_pause: ()=>{
                 this.isAudPaused = true;
@@ -1669,6 +1802,17 @@ export default {
         this.joinBlocks(this.block, this.block_Idx, 'next')
         .then(()=>{})
         .catch(()=>{})
+      },
+      showFootnoteAudioEditor(footnote, ftnIdx) {
+        this.FtnAudio.isEditing = true;
+        this.FtnAudio.map = footnote.content;
+        if (this.FtnAudio.isChanged) {
+          this.discardFtnAudio();
+        }
+
+        this.$root.$emit('for-audioeditor:load-and-play', footnote.audiosrc, this.FtnAudio.map, `${this.block._id}_${ftnIdx}`);
+
+        $('nav.fixed-bottom').removeClass('hidden');
       },
       showAudioEditor() {
         //$('.table-body.-content').removeClass('editing');
@@ -2034,6 +2178,10 @@ export default {
           });
         }
       }
+  },
+  destroyed: function () {
+    this.$root.$off('playBlockFootnote');
+    this.$root.$off('playBlock');
   }
 }
 </script>
@@ -2107,7 +2255,7 @@ export default {
       }
       .-text {
         width: 100%;
-        background: rgba(204, 255, 217, 0.5);
+        background: rgba(51, 122, 183, 0.04);
         padding: 3px;
         height: 21px;
         min-height: 21px;
@@ -2337,7 +2485,7 @@ export default {
     color: #303030;
 }
 
-.par-ctrl {
+.par-ctrl, .controls-top {
     width: auto;
     .fa-paragraph, .fa-header {
         margin-left: 4px;
@@ -2352,9 +2500,10 @@ export default {
         font-size: 20px;
         top: 5px;
     }
-    &.-audio {
+    .-audio {
+        width: 100px;
         .fa {
-            font-size: 22px;
+            font-size: 18px;
         }
     }
     .fa.disabled {
@@ -2366,12 +2515,13 @@ export default {
 }
 
   /* A tricky way to create a lightweight highlight effect */
-  .content-wrap[data-audiosrc].playing {
+  .content-wrap[data-audiosrc].playing,
+  .content-wrap-footn[data-audiosrc].playing {
       w[data-map] {
         background: linear-gradient(
             transparent,
             transparent 50%,
-            rgba(0,255,0,.2) 55%,
+            rgba(0,255,0,.3) 55%,
             transparent 70%,
             transparent
         );
