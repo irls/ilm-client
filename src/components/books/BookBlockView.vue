@@ -342,7 +342,7 @@
                   </div>
                   <div class="table-cell -audio -right">
                     <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && (isEditor && tc_isShowEdit(block._id))"> <!--&& !isAudioChanged"-->
-                      <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor"></i>
+                      <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor(footnote, ftnIdx, $event)"></i>
                     </template>
                     <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
                         <template v-if="!FtnAudio.isStarted || FtnAudio.isStarted!==`${block._id}_${ftnIdx}`">
@@ -512,6 +512,9 @@ export default {
         player: false,
         isStarted: false,
         isPaused: false,
+        isEditing: false,
+        isChanged: false,
+        map: '',
         audPlay: function(){}
       },
 
@@ -926,6 +929,20 @@ export default {
           .catch(err => {
 
           });
+      },
+
+      discardFtnAudio: function() {
+//         this.blockAudio.src = this.block.audiosrc;
+//         this.blockAudio.map = this.block.content;
+//         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
+//         let api = this.$store.state.auth.getHttp();
+//         api.delete(api_url, {}, {})
+//           .then(response => {
+//
+//           })
+//           .catch(err => {
+//
+//           });
       },
 
       discardAudioEdit: function() {
@@ -1774,8 +1791,16 @@ export default {
         .then(()=>{})
         .catch(()=>{})
       },
-      showFootnoteAudioEditor() {
+      showFootnoteAudioEditor(footnote, ftnIdx) {
+        this.FtnAudio.isEditing = true;
+        this.FtnAudio.map = footnote.content;
+        if (this.FtnAudio.isChanged) {
+          this.discardFtnAudio();
+        }
 
+        this.$root.$emit('for-audioeditor:load-and-play', footnote.audiosrc, this.FtnAudio.map, `${this.block._id}_${ftnIdx}`);
+
+        $('nav.fixed-bottom').removeClass('hidden');
       },
       showAudioEditor() {
         //$('.table-body.-content').removeClass('editing');
@@ -2114,6 +2139,10 @@ export default {
           }
         }
       }
+  },
+  destroyed: function () {
+    this.$root.$off('playBlockFootnote');
+    this.$root.$off('playBlock');
   }
 }
 </script>
