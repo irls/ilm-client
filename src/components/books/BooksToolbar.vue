@@ -22,6 +22,7 @@
 
   <!-- Language Dropdown -->
   <select @change="booksLanguageChange">
+    <option value="">Any language</option>
     <option v-for="(name, code) in languages" :value="code">{{name}}</option>
   </select>
 
@@ -39,6 +40,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import BookImport from './BookImport'
+import { Languages } from "../../mixins/lang_config.js"
 
 export default {
 
@@ -52,16 +54,7 @@ export default {
     return {
       filterStr: '',
       showImportBooksModal: false,
-      languages: {
-        en: 'English',
-        es: 'Spanish',
-        du: 'German',
-        ru: 'Russian',
-        ar: 'Arabic',
-        fa: 'Farsi',
-        cn: 'Chinese',
-        ro: 'Romanian'
-      }
+      languages: Languages
     }
   },
 

@@ -94,7 +94,7 @@ export default {
 
     books () { // filtered list of books
       let filteredbooks = this.allBooks
-        .filter(book => (book.language === this.bookFilters.language))
+        .filter(book => (this.bookFilters.language == '' || book.language === this.bookFilters.language))
         .filter(book => book.importStatus === this.bookFilters.importStatus)
         .filter(book => {
           let str = `${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}`.toLowerCase()

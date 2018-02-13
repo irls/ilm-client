@@ -60,7 +60,7 @@ export const store = new Vuex.Store({
     currentBookBlocksLeft: 0,
     currentBookBlocksLeftId: 'AAA',
 
-    bookFilters: {filter: '', language: 'en', importStatus: 'staging'},
+    bookFilters: {filter: '', language: '', importStatus: 'staging'},
     editMode: 'Editor',
     allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": []},

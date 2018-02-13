@@ -328,6 +328,7 @@ import { alert, modal } from 'vue-strap'
 import task_controls from '../../mixins/task_controls.js'
 import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
+import { Languages } from "../../mixins/lang_config.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
 var BPromise = require('bluebird');
 
@@ -354,40 +355,7 @@ export default {
       subjectCategories: [
         'Stories', 'Verse', 'History', 'Ideas', 'Science'
       ],
-      languages: {
-        "en":     'English',
-        //"en-US":     'US English',
-        //"en-GB":     'British English',
-        //"en-AU":     'Australian English',
-        //"en-GB-WLS": 'Welsh English',
-        //"en-IN":     'Indian English',
-
-        "de":     'German',
-        "da":     'Danish',
-        "cy":     'Welsh',
-
-        "es":     'Spanish',
-        //"es-ES":     'Castilian Spanish',
-
-        "fr":     'French',
-        //"fr-CA":     'Canadian French',
-
-        "is":     'Icelandic',
-        "it":     'Italian',
-        "ko":     'Korean',
-        "ja":     'Japanese',
-        "nb":     'Norwegian',
-        "nl":     'Dutch',
-        "pl":     'Polish',
-
-        "pt":     'Portuguese',
-        //"pt-BR":     'Brazilian Portuguese',
-
-        "ro":     'Romanian',
-        "ru":     'Russian',
-        "sv":     'Swedish',
-        "tr":     'Turkish',
-      },
+      languages: Languages,
       numberingOptions: ['x', 'x.x', 'x.x.x'],
       dirty: {
       },
