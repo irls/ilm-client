@@ -418,7 +418,7 @@ export default {
         newBlock.status['not_process'] = true;
         newBlock.markedAsDone = false;
       }
-      
+
       return new BookBlock(newBlock);
     },
 
@@ -500,7 +500,7 @@ export default {
       .then((blockBefore)=>{
           //console.log('blockBefore', blockBefore);
           this.parlist.splice(block_Idx, 1);
-          block._deleted =  true;
+          block._deleted = true;
           this.putBlock(block)
           .then(()=>{
             if (blockBefore) {
@@ -564,10 +564,13 @@ export default {
                       resultBlock_id: blockBefore._id,
                       donorBlock_id: block._id
                     })
-                    .then(()=>{
+                    .then((response)=>{
                       this.doJoinBlocks.show = false;
                       this.doJoinBlocks.block = {};
                       this.doJoinBlocks.block_Idx = false;
+                      if (response.data.ok && response.data.blocks) {
+                        this._updateBlocksFromResponse({blocks: response.data.blocks});
+                      }
                       return Promise.resolve();
                     })
                     .catch((err)=>{
@@ -611,10 +614,13 @@ export default {
                       resultBlock_id: block._id,
                       donorBlock_id: blockAfter._id
                     })
-                    .then(()=>{
+                    .then((response)=>{
                       this.doJoinBlocks.show = false;
                       this.doJoinBlocks.block = {};
                       this.doJoinBlocks.block_Idx = false;
+                      if (response.data.ok && response.data.blocks) {
+                        this._updateBlocksFromResponse({blocks: response.data.blocks});
+                      }
                       return Promise.resolve();
                     })
                     .catch((err)=>{
@@ -629,37 +635,8 @@ export default {
             })
           } break;
         };
-
     },
-//     setBlockOrderChanged(val) {
-//       this.blockOrderChanged = val;
-//       let self = this;
-//       setTimeout(function() {
-//         self.blockOrderChanged = !val;
-//       }, 1000);
-//     },
-//     refreshBlocksProperties(par_index) {
-//       let ids = [];
-//       this.parlist[par_index].forEach(b => {
-//         ids.push(b._id);
-//       });
-//       this.$children.forEach(c => {
-//         if (c.block && ids.indexOf(c.block._id) !== -1) {
-//           this.refreshBlockProperties(c);
-//         }
-//       });
-//     },
-//     refreshBlockProperties(el) {
-//       el.updateFlagStatus(el.block._id);
-//     },
-//     onBlockNumberChange(block, par_index) {
-//       let self = this;
-//       Vue.nextTick(function() {
-//         self.refreshBlocksProperties(par_index);
-//         self.initEditors(block, par_index);
-//       });
-//       this.setBlockOrderChanged(true);
-//     },
+
     setRangeSelection(block, type, status) {
       switch (type) {
         case 'start':
@@ -702,7 +679,6 @@ export default {
         });
     },
     _updateBlocksFromResponse(data) {
-      
       if (data && Array.isArray(data.blocks)) {
         if (data.blocks.length) {
           data.blocks.forEach(b => {
@@ -714,7 +690,10 @@ export default {
               }
               return false;
             });
-            if (block && block._rev != b._rev) {
+            if (block && b.deleted) {
+              this.parlist.splice(replace, 1);
+            }
+            else if (block && block._rev != b._rev) {
               //console.log('OLD REV', block._rev, replace)
               block = new BookBlock(b);
               if (block.audiosrc) {
@@ -770,7 +749,7 @@ export default {
       this.$root.$on('for-bookedit:scroll-to-block', (id)=>{
         this.scrollToBlock(id);
       })
-      
+
       this.$root.$on('bookBlocksUpdates', (data) => {
         this._updateBlocksFromResponse(data);
       });
