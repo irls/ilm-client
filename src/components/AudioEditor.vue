@@ -965,6 +965,15 @@
   @waveform-height: 80px;
   .waveform {
       max-height: @waveform-height;
+      .resize-selection {
+          width: 1px;
+          height: 100%;
+          border: 1px solid green;
+          cursor: ew-resize;
+          position: absolute;
+          z-index: 1000;
+          display: none;
+      }
   }
   .waveform-playlist {
     background-color: #d9d9d9;
@@ -1131,15 +1140,6 @@
     .audio-controls {
       display: inline-block;
     }
-  }
-  .resize-selection {
-      width: 1px;
-      height: 100%;
-      border: 1px solid green;
-      cursor: ew-resize;
-      position: absolute;
-      z-index: 1000;
-      display: none;
   }
   .cursor-position {
       width: 1px;
