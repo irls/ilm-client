@@ -637,12 +637,16 @@ export default {
           if (this._is('narrator') && !(this.blockAudio && this.blockAudio.src)) return true;
           let flags_summary = this.block.calcFlagsSummary();
           if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir)) return true;
+          if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir)) {
+            return true;
+          }
           return false;
       },
       needWorkButtonDisabled: function() {
         if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
           return true;
         }
+        return false;
       },
       isCompleted: function () {
           if (this._is('editor') && (
@@ -742,8 +746,12 @@ export default {
             if (!this._is('admin') && this._is('editor')) canFlag = false;
           } break;
           case 'narrator' : {
-            if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
-            else if (!this._is('admin') && this._is('narrator')) canFlag = false;
+            if (this.block.voicework !== 'narration') {
+              canFlag = false;
+            } else {
+              if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
+              else if (!this._is('admin') && this._is('narrator')) canFlag = false;
+            }
           } break;
         };
         return canFlag && !this.tc_hasTask('content_cleanup') && !this.range.collapsed;
