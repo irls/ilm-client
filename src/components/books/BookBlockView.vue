@@ -62,7 +62,7 @@
                       <template v-if="allowEditing">
                         <li @click="insertBlockBefore()">Insert block before</li>
                         <li @click="insertBlockAfter()">Insert block after</li>
-                        <li @click="deleteBlockMessage = true">Delete block</li>
+                        <li @click="showModal('delete-block-message')">Delete block</li>
                         <!--<li>Split block</li>-->
                         <li @click="joinWithPrevious()">Join with previous block</li>
                         <li @click="joinWithNext()">Join with next block</li>
@@ -405,10 +405,10 @@
                     ></i>
                   </span>
 
-                  <span v-if="!enableMarkAsDone"
+                  <span v-if="!enableMarkAsDone" :class="[{'-disabled': needWorkButtonDisabled}]"
                     @click.prevent="reworkBlock">
                     <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
-                  <span v-if="!enableMarkAsDone"
+                  <span v-if="!enableMarkAsDone" :class="[{'-disabled': isApproveDisabled}]"
                     @click.prevent="approveBlock">
                     <i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
 
@@ -425,12 +425,19 @@
     </div>
     <div class="table-cell controls-right">
     </div>
-    <modal v-model="deleteBlockMessage" effect="fade" ok-text="Delete" cancel-text="Cancel" title="Delete block" @ok="deleteBlock()">
-      <div>Delete block? </div>
-    </modal>
-    <modal v-model="onVoiceworkChange" effect="fade">
+    <modal :name="'delete-block-message' + block._id" :height="150" :resizeable="false">
+        <div class="modal-header"></div>
+        <div class="modal-body">
+          <p>Delete block?</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" v-on:click="hideModal('delete-block-message')">Cancel</button>
+          <button class="btn btn-primary" v-on:click="deleteBlock()">Delete</button>
+        </div>
+      </modal>
+    <modal :name="'voicework-change' + block._id" :resizeable="false" :height="250">
       <!-- custom header -->
-      <div slot="modal-header" class="modal-header">
+      <div class="modal-header">
         <h4 class="modal-title">
           Voicework update
         </h4>
@@ -442,7 +449,7 @@
         <div>This will also delete current audio from the {{block.type}}(s)</div>
       </div>
       <!-- custom buttons -->
-      <div slot="modal-footer" class="modal-footer">
+      <div class="modal-footer">
         <template v-if="!voiceworkUpdating">
           <button type="button" class="btn btn-default" @click="voiceworkChange = false">Cancel</button>
           <button type="button" class="btn btn-confirm" @click="updateVoicework()">Apply</button>
@@ -470,10 +477,12 @@ import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import access             from '../../mixins/access.js';
-import { modal }          from 'vue-strap';
+//import { modal }          from 'vue-strap';
+import v_modal from 'vue-js-modal';
 import { BlockTypes, FootNote }     from '../../store/bookBlock'
 import VuePictureInput    from 'vue-picture-input'
 var BPromise = require('bluebird');
+Vue.use(v_modal, { dialog: true });
 
 export default {
   data () {
@@ -521,7 +530,6 @@ export default {
       reRecordPosition: false,
       isUpdating: false,
       recordStartCounter: 0,
-      deleteBlockMessage: false,
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
       isAudioEditing: false,
@@ -532,7 +540,7 @@ export default {
       'block-menu': BlockMenu,
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
-      'modal': modal,
+      //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
   props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'block_Idx', 'audioEditor', 'joinBlocks'],
@@ -580,6 +588,7 @@ export default {
         set(val) {
           if (val !== this.block.voicework) {
             this.voiceworkChange = val;
+            this.showModal('voicework-change');
           }
         }
       },
@@ -591,17 +600,6 @@ export default {
 //           if (val !== this.block.voicework) {
 //             this.voiceworkChange = val;
 //           }
-        }
-      },
-      onVoiceworkChange: {
-        get() {
-          return this.voiceworkChange !== false;
-        },
-        set(val) {
-          if (!val) {
-            this.voiceworkChange = false;
-            this.voiceworkUpdating = false;
-          }
         }
       },
       countArchParts: function () {
@@ -624,16 +622,27 @@ export default {
         return this._is('editor') && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
       },
       markAsDoneButtonDisabled: function() {
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
+          return true;
+        }
         return this.block.markedAsDone ||
                 (this.block.status && this.block.status.proofed === true) ||
                 !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
       },
       isApproveDisabled: function () {
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
+          return true;
+        }
           if (this._is('editor') && !this.tc_getBlockTask(this.block._id)) return true;
           if (this._is('narrator') && !(this.blockAudio && this.blockAudio.src)) return true;
           let flags_summary = this.block.calcFlagsSummary();
           if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir)) return true;
           return false;
+      },
+      needWorkButtonDisabled: function() {
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
+          return true;
+        }
       },
       isCompleted: function () {
           if (this._is('editor') && (
@@ -1780,8 +1789,14 @@ export default {
         this.$emit('insertAfter', this.block, this.block_Idx);
       },
       deleteBlock() {
-        this.deleteBlockMessage = false;
+        this.hideModal('delete-block-message');
         this.$emit('deleteBlock', this.block, this.block_Idx);
+      },
+      showModal(name) {
+        this.$modal.show(name + this.block._id);
+      },
+      hideModal(name) {
+        this.$modal.hide(name + this.block._id);
       },
       setChanged(val) {
         //console.log('setChanged', val);
@@ -2189,6 +2204,13 @@ export default {
           Vue.nextTick(() => {
             this.updateFlagStatus(this.block._id);
           });
+        }
+      },
+      'voiceworkChange': {
+        handler(val) {
+          if (val === false) {
+            this.hideModal('voicework-change');
+          }
         }
       }
   },
