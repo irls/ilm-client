@@ -971,7 +971,7 @@
           border: 1px solid green;
           cursor: ew-resize;
           position: absolute;
-          z-index: 1000;
+          z-index: 1001;
           display: none;
       }
   }
