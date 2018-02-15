@@ -474,6 +474,7 @@
 
           }
           this.alignmentProcess = false;
+          this.alignmentProcessModal = false;
           this.setCurrentBookCounters();
         }).catch((err) => {
           console.log('error: '+ err)

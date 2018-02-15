@@ -249,6 +249,13 @@ export default {
           if (change.doc.audiosrc) {
             change.doc.audiosrc = process.env.ILM_API + change.doc.audiosrc;
           }
+
+          if (change.doc.footnotes) change.doc.footnotes.forEach((f, fIdx)=>{
+            if (f.audiosrc) {
+              f.audiosrc = process.env.ILM_API + f.audiosrc +'?'+ (new Date()).toJSON();
+            }
+          });
+
           if (change.deleted === true) {
             this.parlist.splice(idx, 1);
           } else {

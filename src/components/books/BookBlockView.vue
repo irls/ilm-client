@@ -1995,13 +1995,13 @@ export default {
       onIllustrationChange() {
         //console.log(arguments, this.$refs.illustrationInput.image);
         if (this.$refs.illustrationInput && this.$refs.illustrationInput.image) {
-          
+
           this.isIllustrationChanged = true;
           Vue.nextTick(() => {
             $('[id="' + this.block._id + '"] .drag-uploader').removeClass('no-picture');
           });
         } else {
-          
+
           this.isIllustrationChanged = false;
           Vue.nextTick(() => {
             $('[id="' + this.block._id + '"] .drag-uploader').addClass('no-picture');
@@ -2131,7 +2131,7 @@ export default {
       },
       'blockAudio.src' (newVal) {
         if (newVal) {
-          //console.log('Book audio', newVal, this.block._id);
+          console.log('Book audio', newVal, this.block._id);
           if (!this.player) {
             this.initPlayer();
           }
@@ -2148,6 +2148,19 @@ export default {
             }*/
           }
         }
+      },
+      'block.footnotes': {
+        handler: function (val, oldVal) {
+          if (this.block.footnotes && this.block.footnotes.length) {
+            this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+              if (footnote.audiosrc && !this.FtnAudio.player) {
+                this.initFootnotePlayer(this.FtnAudio);
+                return true;
+              }
+            });
+          }
+        },
+        deep: true
       },
       'blockAudio.map' (newVal) {
         //console.log('Tmp audiomap', newVal);

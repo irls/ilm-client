@@ -563,32 +563,33 @@
           position: relative;
           line-height: 34px; /* need for dropcap */
 
-          [data-pg]::before {
-            content: 'pg ' attr(data-pg);
-            color: rgba(26, 26, 26, 0.7);
-            padding: 0;
-            padding-left: 3px;
-            padding-right: 3px;
-            float: right;
-            margin-right: -4em;
-            font-size: 8pt;
-            font-style: normal;
-            position: absolute;
-            right: 12px;
-          }
-
           sup[data-idx] {
-            font-family: GentiumPlus, 'Georgia', 'serif';
             font-size: 15px;
-            color: rgba(26, 26, 26, 0.7);
-            cursor: pointer;
-
-            &:hover {
-              text-decoration: underline;
-            }
           }
         }
+        [data-pg]::before {
+          content: 'pg ' attr(data-pg);
+          color: rgba(26, 26, 26, 0.7);
+          padding: 0;
+          padding-left: 3px;
+          padding-right: 3px;
+          float: right;
+          margin-right: -4em;
+          font-size: 8pt;
+          font-style: normal;
+          position: absolute;
+          right: 12px;
+        }
 
+        sup[data-idx] {
+          font-family: GentiumPlus, 'Georgia', 'serif';
+          color: rgba(26, 26, 26, 0.7);
+          cursor: pointer;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
         .description {
           text-transform: uppercase;
         }
@@ -705,12 +706,110 @@
     font-size: 22px;
     padding: 0 60px 2em;
 
+      /* Specific for display mode */
+      &.ilm-display {
+
+        .parnum {
+          float: left;
+          padding-top: 10px;
+          font-family: GentiumPlus, 'Georgia', 'serif';
+          padding-left: 15px;
+          color: rgba(26, 26, 26, 0.7);
+          font-size: 12px;
+          cursor: pointer;
+        }
+
+        .footnotes {
+          margin-left: 70px;
+          margin-right: 40px;
+          font-family: GentiumPlus, 'Georgia', 'serif';
+          color: rgba(26, 26, 26, 0.7);
+          font-size: 80%;
+
+          .-hidden {
+            display: none;
+          }
+
+          .-num {
+            display: inline-block;
+            font-size: 80%;
+            margin-top: 5px;
+            margin-bottom: 5px;
+          }
+
+          .-text {
+            display: inline-block;
+          }
+        }
+
+        .par {
+          margin-left: 60px;
+          margin-right: 45px;
+          position: relative;
+          line-height: 34px; /* need for dropcap */
+
+          sup[data-idx] {
+            font-size: 15px;
+          }
+        }
+
+
+        [data-pg]::before {
+          content: 'pg ' attr(data-pg);
+          color: rgba(26, 26, 26, 0.7);
+          padding: 0;
+          padding-left: 3px;
+          padding-right: 3px;
+          float: right;
+          margin-right: -4em;
+          font-size: 8pt;
+          font-style: normal;
+          position: absolute;
+          right: 12px;
+        }
+
+        sup[data-idx] {
+          font-family: GentiumPlus, 'Georgia', 'serif';
+          color: rgba(26, 26, 26, 0.7);
+          cursor: pointer;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+
+        .description {
+          text-transform: uppercase;
+        }
+
+      }
+
     .par {
       text-align: justify;
       &:after {
         content: "";
         display: block;
         width: 100%;
+      }
+      &.dedication {
+        width: 30%;
+        margin-left: auto;
+        margin-right: auto;
+        font-style: italic;
+        text-align: center;
+      }
+      &.reference {
+        font-size: 75%;
+        color: rgba(26, 26, 26, 0.7);
+        text-align: right;
+      }
+      &.centerquote {
+        width: 20em;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      &.editor-note/*, .question*/ {
+        font-style: normal; color: @grayed_color;
       }
     }
 
