@@ -405,10 +405,10 @@
                     ></i>
                   </span>
 
-                  <span v-if="!enableMarkAsDone"
+                  <span v-if="!enableMarkAsDone" :class="[{'-disabled': needWorkButtonDisabled}]"
                     @click.prevent="reworkBlock">
                     <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
-                  <span v-if="!enableMarkAsDone"
+                  <span v-if="!enableMarkAsDone" :class="[{'-disabled': isApproveDisabled}]"
                     @click.prevent="approveBlock">
                     <i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
 
@@ -624,16 +624,27 @@ export default {
         return this._is('editor') && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
       },
       markAsDoneButtonDisabled: function() {
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
+          return true;
+        }
         return this.block.markedAsDone ||
                 (this.block.status && this.block.status.proofed === true) ||
                 !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
       },
       isApproveDisabled: function () {
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
+          return true;
+        }
           if (this._is('editor') && !this.tc_getBlockTask(this.block._id)) return true;
           if (this._is('narrator') && !(this.blockAudio && this.blockAudio.src)) return true;
           let flags_summary = this.block.calcFlagsSummary();
           if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir)) return true;
           return false;
+      },
+      needWorkButtonDisabled: function() {
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
+          return true;
+        }
       },
       isCompleted: function () {
           if (this._is('editor') && (
