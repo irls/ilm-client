@@ -653,6 +653,15 @@ export default {
                   this.tc_hasTask('content_cleanup') ||
                   (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')
                 )) return false;
+          if (this._is('editor')) {
+            let flags_summary = this.block.calcFlagsSummary();
+            if (this.block._id == '220-2_en_2t') {
+              console.log(flags_summary, this.tc_getBlockTask(this.block._id));
+            }
+            if (flags_summary && flags_summary.stat === 'open' && ['editor', 'narrator'].indexOf(flags_summary.dir) !== -1) {
+              return false;
+            }
+          }
           return this.tc_getBlockTask(this.block._id) ? false : true;
       },
       allowSetStart: function () {
