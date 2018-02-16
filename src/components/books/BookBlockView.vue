@@ -767,19 +767,21 @@ export default {
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false) {
         let canFlag = true;
-        if (flagType) switch(flagType) {
-          case 'editor' : {
-            if (!this._is('admin') && this._is('editor')) canFlag = false;
-          } break;
-          case 'narrator' : {
-            if (this.block.voicework !== 'narration') {
-              canFlag = false;
-            } else {
-              if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
-              else if (!this._is('admin') && this._is('narrator')) canFlag = false;
-            }
-          } break;
-        };
+        if (flagType) {
+          switch(flagType) {
+            case 'editor' : {
+              if (this._is('editor')) canFlag = false;
+            } break;
+            case 'narrator' : {
+              if (this.block.voicework !== 'narration') {
+                canFlag = false;
+              } else {
+                if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
+                else if (this._is('narrator')) canFlag = false;
+              }
+            } break;
+          };
+        }
         return canFlag && !this.tc_hasTask('content_cleanup') && !this.range.collapsed;
       },
       //-- } -- end -- Checkers --//
