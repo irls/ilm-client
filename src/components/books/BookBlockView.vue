@@ -42,7 +42,7 @@
                   <div class="block-menu">
                     <i class="glyphicon glyphicon-menu-hamburger"
                     @click.prevent="$refs.blockMenu.open($event, block._id)">
-                    </i>
+                    </i><!-- {{changes}} -->
                     <block-menu
                         ref="blockMenu"
                         dir="top"
@@ -84,7 +84,7 @@
                   <template v-if="allowEditing">
                     <!-- Block Type selector -->
                     <label>type:&nbsp;
-                    <select v-model='block.type' style="min-width: 80px;" @input="setChanged(true)"><!--v-model='block.type'--><!--:value="type"-->
+                    <select v-model='block.type' style="min-width: 80px;" @input="setChanged(true, 'type')"><!--v-model='block.type'--><!--:value="type"-->
                       <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                     </select>
                     </label>
@@ -96,7 +96,7 @@
                     </label>
                     <!-- Block Class selector -->
                     <label v-if="blockStyles">style:&nbsp;
-                    <select v-model='styleSel' style="min-width: 110px;" @input="setChanged(true)"><!--v-model='block.classes'--><!--:value="style"-->
+                    <select v-model='styleSel' style="min-width: 110px;" @input="setChanged(true, 'style')"><!--v-model='block.classes'--><!--:value="style"-->
                       <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
                     </select>
                   </label><!-- &nbsp;&nbsp;{{block.getClass()}}-->
@@ -533,7 +533,8 @@ export default {
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
       isAudioEditing: false,
-      voiceworkUpdating: false
+      voiceworkUpdating: false,
+      changes: []
     }
   },
   components: {
@@ -633,6 +634,9 @@ export default {
         if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
           return true;
         }
+          if (this.isCanApproveWithoutTask) {
+            return false;
+          }
           if (this._is('editor') && !this.tc_getBlockTask(this.block._id)) return true;
           if (this._is('narrator') && !(this.blockAudio && this.blockAudio.src)) return true;
           let flags_summary = this.block.calcFlagsSummary();
@@ -641,6 +645,19 @@ export default {
             return true;
           }
           return false;
+      },
+      isCanApproveWithoutTask: function() {
+        if (this._is('editor')) {
+          let flags_summary = this.block.calcFlagsSummary();
+          if (flags_summary && 
+                  flags_summary.stat === 'resolved' && 
+                  flags_summary.dir === 'proofer' &&
+                  this.block.status &&
+                  this.block.status.assignee === 'narrator') {
+            return true;
+          }
+        }
+        return false;
       },
       needWorkButtonDisabled: function() {
         if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
@@ -655,10 +672,10 @@ export default {
                 )) return false;
           if (this._is('editor')) {
             let flags_summary = this.block.calcFlagsSummary();
-            if (this.block._id == '220-2_en_2t') {
-              console.log(flags_summary, this.tc_getBlockTask(this.block._id));
-            }
             if (flags_summary && flags_summary.stat === 'open' && ['editor', 'narrator'].indexOf(flags_summary.dir) !== -1) {
+              return false;
+            }
+            if (this.isCanApproveWithoutTask) {
               return false;
             }
           }
@@ -917,6 +934,7 @@ export default {
       },
       onInput: function(el) {
         this.isChanged = true;
+        this.pushChange('content');
         el.target.focus();
       },
       discardBlock: function(block_id, ev) {
@@ -1032,7 +1050,9 @@ export default {
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
         return this.putBlock(this.block).then(()=>{
-          this.$emit('blockUpdated', this.block._id);
+          if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1)) {
+            this.$emit('blockUpdated', this.block._id);
+          }
           this.isChanged = false;
           if (this.blockAudio.map) {
             this.blockAudio.map = this.block.content;
@@ -1345,6 +1365,7 @@ export default {
         let pos = this.updFootnotes(this.block.footnotes.length);
         this.block.footnotes.splice(pos, 0, new FootNote({}));
         this.isChanged = true;
+        this.pushChange('footnotes');
 
         //if (this.editorFootn) {
 
@@ -1361,6 +1382,7 @@ export default {
         this.updFootnotes();
         this.block.footnotes.splice(pos, 1);
         this.isChanged = true;
+        this.pushChange('footnotes');
       },
       updFootnotes: function(c_pos = 0) {
         let pos = 0;
@@ -1373,10 +1395,12 @@ export default {
       commitFootnote: function(pos, ev) {
         //this.block.footnotes[pos] = ev.target.innerText.trim();
         this.isChanged = true;
+        this.pushChange('footnotes');
       },
       commitDescription: function(ev) {
         //this.block.description = ev.target.innerText.trim();
         this.isChanged = true;
+        this.pushChange('description');
       },
 
       addFlag: function(ev, type = 'editor') {
@@ -1396,6 +1420,7 @@ export default {
           }
           this.$refs.blockFlagPopup.scrollBottom();
           this.isChanged = true;
+          this.pushChange('flags');
         }
       },
 
@@ -1407,6 +1432,7 @@ export default {
 
         this.$refs.blockFlagPopup.scrollBottom();
         this.isChanged = true;
+        this.pushChange('flags');
       },
 
       detectExistingFlag: function(ev) {
@@ -1457,6 +1483,7 @@ export default {
           flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
           this.$refs.blockFlagControl.dataset.status = 'open';
           this.isChanged = true;
+          this.pushChange('flags');
         }
 
         this.flagsSel = this.block.flags.filter((flag)=>{
@@ -1527,6 +1554,7 @@ export default {
               this.updateFlagStatus(this.flagsSel._id);
             }
             this.isChanged = true;
+            this.pushChange('flags');
         }
       },
 
@@ -1541,6 +1569,7 @@ export default {
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
         this.isChanged = true;
+        this.pushChange('flags');
       },
 
       reopenFlagPart: function(ev, partIdx) {
@@ -1548,6 +1577,7 @@ export default {
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
         this.isChanged = true;
+        this.pushChange('flags');
       },
 
       hideFlagPart: function(ev, partIdx) {
@@ -1555,6 +1585,7 @@ export default {
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
         this.isChanged = true;
+        this.pushChange('flags');
       },
 
       unHideFlagPart: function(ev, partIdx) {
@@ -1562,6 +1593,7 @@ export default {
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
         this.isChanged = true;
+        this.pushChange('flags');
       },
 
       toggleArchFlags: function(ev, partIdx) {
@@ -1815,14 +1847,18 @@ export default {
       hideModal(name) {
         this.$modal.hide(name + this.block._id);
       },
-      setChanged(val) {
+      setChanged(val, type = null) {
         //console.log('setChanged', val);
         this.isChanged = val;
+        if (val && type) {
+          this.pushChange(type);
+        }
       },
       setChangedByClass(val) {
         //console.log('setChangedByClass', this.block.type, val);
         if (this.block.type === 'title') {
           this.isChanged = val;
+          this.pushChange('class');
         }
       },
       joinWithPrevious() {
@@ -1871,6 +1907,7 @@ export default {
               self.block.content = self.$refs.blockContent.innerHTML;
               self.blockAudio.map = self.block.content;
               self.isChanged = true;
+              self.pushChange('content');
             }
           });
           this.$root.$on('from-audioeditor:save', function(blockId) {
@@ -2103,6 +2140,20 @@ export default {
           return true;
         }
         return this.tc_hasBlockTask(this.block._id, 'approve-new-block') || this.tc_hasBlockTask(this.block._id, 'approve-modified-block');
+      },
+      pushChange(change) {
+        if (this.changes.indexOf(change) === -1) {
+          this.changes.push(change);
+        }
+      },
+      flushChanges() {
+        this.changes = [];
+      },
+      unsetChange(change) {
+        let index = this.changes.indexOf(change);
+        if (index !== -1) {
+          this.changes.splice(index, 1);
+        }
       }
   },
   watch: {
@@ -2214,6 +2265,31 @@ export default {
         handler(val) {
           if (val === false) {
             this.hideModal('voicework-change');
+          }
+        }
+      },
+      'isChanged' : {
+        handler(val) {
+          if (val === false) {
+            this.flushChanges();
+          }
+        }
+      },
+      'isAudioChanged': {
+        handler(val) {
+          if (val) {
+            this.pushChange('audio');
+          } else {
+            this.unsetChange('audio');
+          }
+        }
+      },
+      'isIllustrationChanged': {
+        handler(val) {
+          if (val) {
+            this.pushChange('illustration');
+          } else {
+            this.unsetChange('illustration');
           }
         }
       }
