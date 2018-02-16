@@ -30,10 +30,13 @@ import Vue from 'vue'
         setMenu: function(x, y, target) {
 
             let dir = this.$refs.menu.getAttribute('dir') || 'top';
-
-            this.left = x + 2 + 'px';
+            x+= 2;
+            if (x + $(this.$refs.menu).outerWidth() > window.innerWidth) {
+              x = window.innerWidth - $(this.$refs.menu).outerWidth() - 10;
+            }
+            this.left = x + 'px';
             this.top = y + window.pageYOffset + 'px';
-
+            
         },
 
         getSelectionCoords: function() {
