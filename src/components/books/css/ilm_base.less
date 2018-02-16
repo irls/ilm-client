@@ -192,8 +192,6 @@
   }
 
   /***** Global paddings *****/
-
-
   .par {
     padding: @normal_padding;
   }
@@ -282,7 +280,6 @@
   }
 
   /***** Global authors *****/
-
   .sacred, .bible, .muhammad,
   .quran, .jesus, .muh,
   [data-author] {
@@ -823,12 +820,31 @@
     .header {
       &.h2 {
         font-family: Garamond1689;
-        color: rgb(104, 122, 67);
+        color: rgb(63, 74, 40);
+        font-weight: 700;
+        font-size: 2.5em;
+        &.subhead {
+          font-weight: 700;
+          font-size: 1.7em;
+        }
+
+
+      }
+      &.h3 {
+        font-family: Garamond1689;
         text-align: right;
         float: left;
         width: 100%;
         font-weight: 700;
         min-height: 95px;
+        color: rgb(104, 122, 67);
+
+/*        font-size: 1.7em;
+        line-height: 1.45em;
+        font-weight: 700;
+        page-break-after: avoid;
+        color: rgb(63, 74, 40);
+        text-align: center;*/
 
         &:before {
           float: right;
@@ -850,19 +866,6 @@
           background-size: 100% 15px;
           clear: both;
         }
-      }
-      &.h3 {
-        font-family: Garamond1689;
-        font-size: 1.7em;
-        line-height: 1.45em;
-        font-weight: 700;
-        page-break-after: avoid;
-        color: rgb(63, 74, 40);
-        text-align: center;
-        /*&.smallcaps {
-          font-variant: small-caps;
-          text-transform: none;
-        }*/
       }
     }
 /*    &:after {
