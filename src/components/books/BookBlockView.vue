@@ -405,7 +405,7 @@
                     ></i>
                   </span>
 
-                  <span v-if="!enableMarkAsDone" :class="[{'-disabled': needWorkButtonDisabled}]"
+                  <span v-if="!enableMarkAsDone" :class="[{'-disabled': isNeedWorkDisabled}]"
                     @click.prevent="reworkBlock">
                     <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
                   <span v-if="!enableMarkAsDone" :class="[{'-disabled': isApproveDisabled}]"
@@ -610,6 +610,12 @@ export default {
           return this.block.flags && this.block.flags.length;
       },
       isNeedWorkDisabled: function () {
+          if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
+            return true;
+          }
+          if (!this.tc_getBlockTask(this.block._id)) {
+            return true;
+          }
           let flagsSummary = this.block.calcFlagsSummary();
           let executors = this.tc_currentBookTasks.job.executors;
           if (executors[flagsSummary.dir] ==  this.auth.getSession().user_id) return true;
@@ -634,12 +640,16 @@ export default {
         if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
           return true;
         }
+        let flags_summary = this.block.calcFlagsSummary();
           if (this.isCanApproveWithoutTask) {
-            return false;
+            if (flags_summary.stat === 'open') {
+              return true;
+            } else {
+              return false;
+            }
           }
           if (this._is('editor') && !this.tc_getBlockTask(this.block._id)) return true;
           if (this._is('narrator') && !(this.blockAudio && this.blockAudio.src)) return true;
-          let flags_summary = this.block.calcFlagsSummary();
           if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir)) return true;
           if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir)) {
             return true;
@@ -648,20 +658,8 @@ export default {
       },
       isCanApproveWithoutTask: function() {
         if (this._is('editor')) {
-          let flags_summary = this.block.calcFlagsSummary();
-          if (flags_summary && 
-                  flags_summary.stat === 'resolved' && 
-                  flags_summary.dir === 'proofer' &&
-                  this.block.status &&
-                  this.block.status.assignee === 'narrator') {
-            return true;
-          }
-        }
-        return false;
-      },
-      needWorkButtonDisabled: function() {
-        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
-          return true;
+          let task = this.tc_getBlockTaskOtherRole(this.block._id);
+          return task ? true : false;
         }
         return false;
       },
@@ -1175,9 +1173,14 @@ export default {
           let task = this.tc_getBlockTask(this.block._id);
 
           if (!task) {
-             task = {
-              blockid: this.block._id,
-              bookid: this.block.bookid
+             let other_task = this.tc_getBlockTaskOtherRole(this.block._id);
+             if (other_task) {
+               task = Object.assign({}, other_task);
+             } else {
+              task = {
+               blockid: this.block._id,
+               bookid: this.block.bookid
+             }
             }
           }
 
@@ -1191,7 +1194,7 @@ export default {
                 break;
             }
           }
-
+          
           this.tc_approveBookTask(task)
           .then(response => {
             if (response.status == 200) {

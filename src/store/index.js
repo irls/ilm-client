@@ -63,7 +63,7 @@ export const store = new Vuex.Store({
     bookFilters: {filter: '', language: '', importStatus: 'staging'},
     editMode: 'Editor',
     allowBookEditMode: false,
-    tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": []},
+    tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": []},
     tc_tasksByBlock: {},
     tc_userTasks: {list: [], total: 0},
     API_URL: process.env.ILM_API + '/api/v1/',
@@ -358,7 +358,7 @@ export const store = new Vuex.Store({
               state.tc_tasksByBlock[t.blockid].push(t)
             }
           })
-          state.tc_currentBookTasks = {job: job, tasks: job.tasks, assignments: assignments}
+          state.tc_currentBookTasks = {job: job, tasks: job.tasks, assignments: assignments, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : []}
         }
       }
       state.tc_userTasks.total = tc_userTasks;
@@ -1094,7 +1094,7 @@ export const store = new Vuex.Store({
           if (t.blockid) {
             state.tc_tasksByBlock[t.blockid] = t
           }*/
-          state.tc_currentBookTasks = {job: job, tasks: job.tasks}
+          state.tc_currentBookTasks = {job: job, tasks: job.tasks, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : []}
         }
       }
       commit('ALLOW_BOOK_EDIT_MODE', state.tc_currentBookTasks.tasks.length > 0);
