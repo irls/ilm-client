@@ -71,7 +71,14 @@ import Vue from 'vue';
                       this.under = true;
                       this.top = rect.top + window.scrollY - this.$refs.menu.offsetHeight - 5 + 'px';
                   }
-                  this.left = (rect.left - 120) + 'px';
+                  let left = (target.offsetLeft - 120);
+                  if (left + $(this.$refs.menu).outerWidth() > window.innerWidth) {
+                    left = window.innerWidth - $(this.$refs.menu).outerWidth() - 20;
+                  }
+                  if (left < 10) {
+                    left = 10;
+                  }
+                  this.left = left + 'px';
               }
               break;
               default : // case bottom

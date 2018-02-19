@@ -59,6 +59,17 @@ export default {
         return this.$store.state.tc_tasksByBlock[block_id].find(t => {
           return t.type === type;
         });
+      },
+      tc_getBlockTaskOtherRole(blockid) {
+        if (this.$store.state.tc_currentBookTasks.can_resolve_tasks) {
+          let tasks = this.$store.state.tc_currentBookTasks.can_resolve_tasks.find((t) => {
+            return t.blockid == blockid;
+          })
+          if (tasks && tasks.isArray) return tasks[0];
+          return tasks;
+        } else {
+          return false;
+        }
       }
     },
     computed: {
