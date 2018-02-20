@@ -693,7 +693,7 @@ export default {
         return this.$parent.selectionStart._id == this.block._id ? this.$parent.selectionEnd._id : false;
       },
       showBlockFlagControl() {
-        if (this.isCanFlag('narrator') || this.isCanFlag('editor')) {
+        if (this.isCanFlag('narrator', false) || this.isCanFlag('editor', false)) {
           return true;
         }
         let flags_summary = this.block.calcFlagsSummary();
@@ -774,7 +774,7 @@ export default {
         'setCurrentBookCounters'
       ]),
       //-- Checkers -- { --//
-      isCanFlag: function (flagType = false) {
+      isCanFlag: function (flagType = false, range_required = true) {
         let canFlag = true;
         if (flagType) {
           switch(flagType) {
@@ -791,7 +791,8 @@ export default {
             } break;
           };
         }
-        return canFlag && !this.tc_hasTask('content_cleanup') && !this.range.collapsed;
+        
+        return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
       },
       //-- } -- end -- Checkers --//
 
