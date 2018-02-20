@@ -400,6 +400,7 @@
                   <template v-if="!isCompleted">
                   <span>
                     <i class="glyphicon glyphicon-flag"
+                      v-if="showBlockFlagControl"
                       ref="blockFlagControl"
                       @click="handleBlockFlagClick"
                     ></i>
@@ -690,6 +691,16 @@ export default {
       },
       displaySelectionEnd() {
         return this.$parent.selectionStart._id == this.block._id ? this.$parent.selectionEnd._id : false;
+      },
+      showBlockFlagControl() {
+        if (this.isCanFlag('narrator') || this.isCanFlag('editor')) {
+          return true;
+        }
+        let flags_summary = this.block.calcFlagsSummary();
+        if (flags_summary && flags_summary.stat === 'open' && (this._is(flags_summary.dir) || (this._is('editor') && flags_summary.dir === 'narrator'))) {
+          return true;
+        }
+        return false;
       },
       ...mapGetters({
           auth: 'auth',
@@ -1171,7 +1182,7 @@ export default {
         this.assembleBlockProxy(ev)
         .then(()=>{
           let task = this.tc_getBlockTask(this.block._id);
-
+          
           if (!task) {
              let other_task = this.tc_getBlockTaskOtherRole(this.block._id);
              if (other_task) {
