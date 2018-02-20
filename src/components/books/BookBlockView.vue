@@ -627,7 +627,7 @@ export default {
         if (this.tc_getBlockTask(this.block._id)) {
           return false;
         }
-        return this._is('editor') && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
+        return this._is('editor', true) && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
       },
       markAsDoneButtonDisabled: function() {
         if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
@@ -649,27 +649,27 @@ export default {
               return false;
             }
           }
-          if (this._is('editor') && !this.tc_getBlockTask(this.block._id)) return true;
-          if (this._is('narrator') && !(this.blockAudio && this.blockAudio.src)) return true;
-          if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir)) return true;
-          if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir)) {
+          if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
+          if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src)) return true;
+          if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
+          if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
             return true;
           }
           return false;
       },
       isCanApproveWithoutTask: function() {
-        if (this._is('editor')) {
+        if (this._is('editor', true)) {
           let task = this.tc_getBlockTaskOtherRole(this.block._id);
           return task ? true : false;
         }
         return false;
       },
       isCompleted: function () {
-          if (this._is('editor') && (
+          if (this._is('editor', true) && (
                   this.tc_hasTask('content_cleanup') ||
                   (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')
                 )) return false;
-          if (this._is('editor')) {
+          if (this._is('editor', true)) {
             let flags_summary = this.block.calcFlagsSummary();
             if (flags_summary && flags_summary.stat === 'open' && ['editor', 'narrator'].indexOf(flags_summary.dir) !== -1) {
               return false;
@@ -697,7 +697,7 @@ export default {
           return true;
         }
         let flags_summary = this.block.calcFlagsSummary();
-        if (flags_summary && flags_summary.stat === 'open' && (this._is(flags_summary.dir) || (this._is('editor') && flags_summary.dir === 'narrator'))) {
+        if (flags_summary && flags_summary.stat === 'open' && (this._is(flags_summary.dir, true) || (this._is('editor', true) && flags_summary.dir === 'narrator'))) {
           return true;
         }
         return false;
@@ -779,14 +779,14 @@ export default {
         if (flagType) {
           switch(flagType) {
             case 'editor' : {
-              if (this._is('editor')) canFlag = false;
+              if (this._is('editor', true)) canFlag = false;
             } break;
             case 'narrator' : {
               if (this.block.voicework !== 'narration') {
                 canFlag = false;
               } else {
                 if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
-                else if (this._is('narrator')) canFlag = false;
+                else if (this._is('narrator', true)) canFlag = false;
               }
             } break;
           };

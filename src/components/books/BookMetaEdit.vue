@@ -33,32 +33,41 @@
 
       <div class="book-listing">
         <div class="row">
-          <template v-if="tc_hasTask('metadata_cleanup')">
-            <div v-if="!textCleanupProcess" class="editing-wrapper">
-              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Editing complete</button>
-              <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
-                <span class="blocks-counter-value">{{currentBookCounters.not_marked_blocks}}</span>Blocks need your approval
-              </div>
-            </div>
-            <div v-else class="preloader-small"></div>
-          </template>
-          <template v-if="tc_hasTask('audio_mastering')">
-            <div v-if="currentBookCounters.not_proofed_audio_blocks === 0">
-              <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                <div class="col-sm-8 blocks-counter">
-                  <span class="blocks-counter-value">0</span>Blocks need your approval
-                </div>
-              </div>
-            </div>
-            <template v-else>
-              <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Mastering complete</button>
+          <template v-if="tc_hasTask('metadata_cleanup') || tc_hasTask('audio_mastering')">
+            <template v-if="tc_hasTask('metadata_cleanup')">
+              <div v-if="!textCleanupProcess" class="editing-wrapper">
+                <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Editing complete</button>
                 <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
                   <span class="blocks-counter-value">{{currentBookCounters.not_marked_blocks}}</span>Blocks need your approval
                 </div>
               </div>
               <div v-else class="preloader-small"></div>
             </template>
+            <template v-if="tc_hasTask('audio_mastering')">
+              <div v-if="currentBookCounters.not_proofed_audio_blocks === 0">
+                <div v-if="!audioMasteringProcess" class="editing-wrapper">
+                  <div class="col-sm-8 blocks-counter">
+                    <span class="blocks-counter-value">0</span>Blocks need your approval
+                  </div>
+                </div>
+              </div>
+              <template v-else>
+                <div v-if="!audioMasteringProcess" class="editing-wrapper">
+                  <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Mastering complete</button>
+                  <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
+                    <span class="blocks-counter-value">{{currentBookCounters.not_marked_blocks}}</span>Blocks need your approval
+                  </div>
+                </div>
+                <div v-else class="preloader-small"></div>
+              </template>
+            </template>
+          </template>
+          <template v-else>
+            <div class="editing-wrapper">
+              <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
+                <span class="blocks-counter-value">{{tc_currentBookTasks.tasks.length}}</span>Blocks need your approval
+              </div>
+            </div>
           </template>
         </div>
         <vue-tabs ref="panelTabs">
@@ -408,7 +417,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks']),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];

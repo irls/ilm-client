@@ -210,7 +210,13 @@ export default {
 
         switch(query) {
           case 'unresolved': {
-            if (!result && !block.markedAsDone) result = block._id;
+            if (this.tc_hasTask('metadata_cleanup') || this.tc_hasTask('audio_mastering')) {
+              if (!result && !block.markedAsDone && (!block.status || !block.status.proofed)) result = block._id;
+            } else {
+              if (!result && this.tc_getBlockTask(block._id)) {
+                result = block._id;
+              }
+            }
           } break;
           default : {
             if (!result && block._id === query) result = block._id;
@@ -218,7 +224,7 @@ export default {
         };
 
       });
-
+      
       if (!result) {
         this.getBlocks(query)
         .then((blockId)=>{
@@ -477,7 +483,7 @@ export default {
       .catch((err)=>{})
     },
     blockUpdated(blockid) {
-      if (this._is('editor') && !this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') && !this.tc_getBlockTask(blockid)) {
+      if (this._is('editor', true) && !this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') && !this.tc_getBlockTask(blockid)) {
         this._createBlockSubtask(blockid, 'approve-modified-block', 'editor');
       }
     },
