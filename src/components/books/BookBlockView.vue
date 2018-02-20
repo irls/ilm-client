@@ -1291,6 +1291,7 @@ export default {
               this.blockAudio.map = response.data.content;
               this.block.content = response.data.content;
               this.block.audiosrc = this.blockAudio.src;
+              this.isAudioChanged = true;
               this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
             }
           })
