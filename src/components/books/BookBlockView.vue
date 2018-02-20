@@ -400,6 +400,7 @@
                   <template v-if="!isCompleted">
                   <span>
                     <i class="glyphicon glyphicon-flag"
+                      v-if="showBlockFlagControl"
                       ref="blockFlagControl"
                       @click="handleBlockFlagClick"
                     ></i>
@@ -626,7 +627,7 @@ export default {
         if (this.tc_getBlockTask(this.block._id)) {
           return false;
         }
-        return this._is('editor') && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
+        return this._is('editor', true) && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
       },
       markAsDoneButtonDisabled: function() {
         if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
@@ -648,27 +649,27 @@ export default {
               return false;
             }
           }
-          if (this._is('editor') && !this.tc_getBlockTask(this.block._id)) return true;
-          if (this._is('narrator') && !(this.blockAudio && this.blockAudio.src)) return true;
-          if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir)) return true;
-          if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir)) {
+          if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
+          if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src)) return true;
+          if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
+          if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
             return true;
           }
           return false;
       },
       isCanApproveWithoutTask: function() {
-        if (this._is('editor')) {
+        if (this._is('editor', true)) {
           let task = this.tc_getBlockTaskOtherRole(this.block._id);
           return task ? true : false;
         }
         return false;
       },
       isCompleted: function () {
-          if (this._is('editor') && (
+          if (this._is('editor', true) && (
                   this.tc_hasTask('content_cleanup') ||
                   (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')
                 )) return false;
-          if (this._is('editor')) {
+          if (this._is('editor', true)) {
             let flags_summary = this.block.calcFlagsSummary();
             if (flags_summary && flags_summary.stat === 'open' && ['editor', 'narrator'].indexOf(flags_summary.dir) !== -1) {
               return false;
@@ -690,6 +691,16 @@ export default {
       },
       displaySelectionEnd() {
         return this.$parent.selectionStart._id == this.block._id ? this.$parent.selectionEnd._id : false;
+      },
+      showBlockFlagControl() {
+        if (this.isCanFlag('narrator', false) || this.isCanFlag('editor', false)) {
+          return true;
+        }
+        let flags_summary = this.block.calcFlagsSummary();
+        if (flags_summary && flags_summary.stat === 'open' && (this._is(flags_summary.dir, true) || (this._is('editor', true) && flags_summary.dir === 'narrator'))) {
+          return true;
+        }
+        return false;
       },
       ...mapGetters({
           auth: 'auth',
@@ -763,24 +774,25 @@ export default {
         'setCurrentBookCounters'
       ]),
       //-- Checkers -- { --//
-      isCanFlag: function (flagType = false) {
+      isCanFlag: function (flagType = false, range_required = true) {
         let canFlag = true;
         if (flagType) {
           switch(flagType) {
             case 'editor' : {
-              if (this._is('editor')) canFlag = false;
+              if (this._is('editor', true)) canFlag = false;
             } break;
             case 'narrator' : {
               if (this.block.voicework !== 'narration') {
                 canFlag = false;
               } else {
                 if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
-                else if (this._is('narrator')) canFlag = false;
+                else if (this._is('narrator', true)) canFlag = false;
               }
             } break;
           };
         }
-        return canFlag && !this.tc_hasTask('content_cleanup') && !this.range.collapsed;
+        
+        return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
       },
       //-- } -- end -- Checkers --//
 
@@ -1171,7 +1183,7 @@ export default {
         this.assembleBlockProxy(ev)
         .then(()=>{
           let task = this.tc_getBlockTask(this.block._id);
-
+          
           if (!task) {
              let other_task = this.tc_getBlockTaskOtherRole(this.block._id);
              if (other_task) {
@@ -1291,6 +1303,7 @@ export default {
               this.blockAudio.map = response.data.content;
               this.block.content = response.data.content;
               this.block.audiosrc = this.blockAudio.src;
+              this.isAudioChanged = true;
               this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
             }
           })

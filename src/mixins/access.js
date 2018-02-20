@@ -31,8 +31,16 @@ export default {
     }
   },
   methods: {
-    _is (role) {
-      return this.$store.state.auth.confirmRole(role);
+    _is (role, for_current_book = false) {
+      if (!for_current_book) {
+        return this.$store.state.auth.confirmRole(role);
+      } else {
+        let session = this.$store.state.auth.getSession();
+        if (this.$store.state.tc_currentBookTasks && this.$store.state.tc_currentBookTasks.job && this.$store.state.tc_currentBookTasks.job.executors && session && session.user_id) {
+          return this.$store.state.tc_currentBookTasks.job.executors[role] === session.user_id
+        }
+      }
+      return false;
     },
 
     libraryDB () {
