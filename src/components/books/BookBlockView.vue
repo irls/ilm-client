@@ -1543,7 +1543,12 @@ export default {
               if (comment.creator !== flagPart.creator) result = false;
             });
           } else {
-            if (this.$store.state.auth.confirmRole(flagPart.type) || (flagPart.type === 'narrator' && this.$store.state.auth.confirmRole('editor'))) result = true;
+            if (this._is(flagPart.type, true) && this.tc_getBlockTask(this.block._id)) {
+              result = true;
+            }
+            if (!result && flagPart.type === 'narrator' && this._is('editor', true)) {
+              result = true;
+            }
           }
           return result;
       },
