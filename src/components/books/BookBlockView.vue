@@ -773,6 +773,9 @@ export default {
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
+        if (!this.tc_getBlockTask(this.block._id)) {
+          return false;
+        }
         let canFlag = true;
         if (flagType) {
           switch(flagType) {
@@ -1499,6 +1502,9 @@ export default {
 
         if (foundBlockFlag.length == 0) {
           if (this.allowBlockFlag) {
+            if (type === 'editor' && this._is('editor', true)) {
+              type = 'narrator';
+            }
             flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
             this.$refs.blockFlagControl.dataset.status = 'open';
             this.isChanged = true;
