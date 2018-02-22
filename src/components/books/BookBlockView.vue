@@ -399,8 +399,7 @@
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
                   <template v-if="!isCompleted">
                   <span>
-                    <i class="glyphicon glyphicon-flag"
-                      v-if="showBlockFlagControl"
+                    <i :class="['glyphicon', 'glyphicon-flag', {'flag-disabled': !allowBlockFlag}]"
                       ref="blockFlagControl"
                       @click="handleBlockFlagClick"
                     ></i>
@@ -692,11 +691,11 @@ export default {
       displaySelectionEnd() {
         return this.$parent.selectionStart._id == this.block._id ? this.$parent.selectionEnd._id : false;
       },
-      showBlockFlagControl() {
+      allowBlockFlag() {
         if (this.isCanFlag('narrator', false) || this.isCanFlag('editor', false)) {
           return true;
         }
-        let flags_summary = this.block.calcFlagsSummary();
+        let flags_summary = this.block.calcFlagsSummary(true);
         if (flags_summary && flags_summary.stat === 'open' && (this._is(flags_summary.dir, true) || (this._is('editor', true) && flags_summary.dir === 'narrator'))) {
           return true;
         }
@@ -1499,10 +1498,14 @@ export default {
         });
 
         if (foundBlockFlag.length == 0) {
-          flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
-          this.$refs.blockFlagControl.dataset.status = 'open';
-          this.isChanged = true;
-          this.pushChange('flags');
+          if (this.allowBlockFlag) {
+            flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
+            this.$refs.blockFlagControl.dataset.status = 'open';
+            this.isChanged = true;
+            this.pushChange('flags');
+          } else {
+            return;
+          }
         }
 
         this.flagsSel = this.block.flags.filter((flag)=>{
@@ -2772,6 +2775,12 @@ export default {
       &:before {
         color: gray;
       }
+    }
+  }
+  .glyphicon-flag.flag-disabled {
+    color: lightgray;
+    &:before {
+      color: lightgray;
     }
   }
 

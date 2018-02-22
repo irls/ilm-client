@@ -262,15 +262,17 @@ class BookBlock {
     return 'hidden';
   }
 
-  calcFlagsSummary() {
+  calcFlagsSummary(block_level_only = false) {
     let status = {'open': 0, 'resolved': 0, 'hidden': 0};
     let direction = {'editor': 0, 'narrator': 0};
     if (this.flags && this.flags.length) {
       this.flags.forEach((flag)=>{
         if (flag.parts && flag.parts.length) {
           flag.parts.forEach((part)=>{
-            status[part.status] += 1;
-            if (part.status == 'open') direction[part.type] += 1;
+            if (!block_level_only || !part.content) {
+              status[part.status] += 1;
+              if (part.status == 'open') direction[part.type] += 1;
+            }
           });
         }
       });
