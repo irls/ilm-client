@@ -232,12 +232,12 @@
 
 
                     <a href="#" class="flag-control -right -top"
-                      v-if="allowArchiving && part.status == 'resolved'"
+                      v-if="_is('proofer') && part.status == 'resolved'"
                       @click.prevent="hideFlagPart($event, partIdx)">
                       Archive flag</a>
 
                     <a href="#" class="flag-control -right -top"
-                      v-if="allowArchiving && part.status == 'hidden'"
+                      v-if="_is('proofer') && part.status == 'hidden'"
                       @click.prevent="unHideFlagPart($event, partIdx)">
                       Unarchive flag</a>
 
@@ -709,7 +709,6 @@ export default {
           watchBlk: 'contentDBWatch',
           tc_currentBookTasks: 'tc_currentBookTasks',
           authors: 'authors',
-          allowArchiving: 'allowArchiving',
           isEditor: 'isEditor'
       }),
       illustrationChaged() {

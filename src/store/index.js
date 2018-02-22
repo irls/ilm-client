@@ -129,7 +129,7 @@ export const store = new Vuex.Store({
     currentBookBlocksLeftId: state => state.currentBookBlocksLeftId,
     bookEditMode: state => state.editMode,
     allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode) && state.currentBookMeta.status != 'import_text',
-    allowArchiving: state => state.isAdmin || state.isProofer,
+    allowArchiving: state => state.isProofer,
     tc_currentBookTasks: state => state.tc_currentBookTasks,
     tc_tasksByBlock: state => state.tc_tasksByBlock,
     tc_userTasks: state => state.tc_userTasks,
