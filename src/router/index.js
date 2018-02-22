@@ -37,7 +37,7 @@ export default new Router({
       children: [
         { path: '', component: BooksGrid },
         {
-          path: 'edit/:block?', name: 'BookEdit',
+          path: 'edit/:block?/:task_type?', name: 'BookEdit',
           component: BookEdit, meta: { mode: 'edit' }
         },
         {

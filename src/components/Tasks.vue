@@ -54,7 +54,7 @@
                     <i class="fa fa-file-audio-o"></i>Import audio
                   </button>
                 </div>
-                <a v-else :href="'/books/' + job.bookid + '/edit/unresolved'">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
+                <a v-else :href="'/books/' + job.bookid + '/edit/unresolved/' + task.type">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
               </div>
             </div>
           </div>

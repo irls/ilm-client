@@ -38,7 +38,7 @@
               <div v-if="!textCleanupProcess" class="editing-wrapper">
                 <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Editing complete</button>
                 <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
-                  <span class="blocks-counter-value">{{currentBookCounters.not_marked_blocks}}</span>Blocks need your approval
+                  <span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval
                 </div>
               </div>
               <div v-else class="preloader-small"></div>
@@ -55,7 +55,7 @@
                 <div v-if="!audioMasteringProcess" class="editing-wrapper">
                   <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Mastering complete</button>
                   <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
-                    <span class="blocks-counter-value">{{currentBookCounters.not_marked_blocks}}</span>Blocks need your approval
+                    <span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval
                   </div>
                 </div>
                 <div v-else class="preloader-small"></div>
@@ -64,8 +64,8 @@
           </template>
           <template v-else>
             <div class="editing-wrapper">
-              <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
-                <span class="blocks-counter-value">{{tc_currentBookTasks.tasks.length}}</span>Blocks need your approval
+              <div class="col-sm-8 blocks-counter" @click="goToUnresolved(true)">
+                <span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval
               </div>
             </div>
           </template>
@@ -498,6 +498,24 @@ export default {
           return '';
         }
       }
+    },
+    blocksToApproveCounter: {
+      get() {
+        if (this.tc_hasTask('metadata_cleanup') || this.tc_hasTask('audio_mastering')) {
+          if (this.tc_hasTask('metadata_cleanup')) {
+              return this.currentBookCounters.not_marked_blocks;
+          }
+          if (this.tc_hasTask('audio_mastering')) {
+            if (this.currentBookCounters.not_proofed_audio_blocks === 0) {
+              return 0;
+            } else {
+              return this.currentBookCounters.not_marked_blocks;
+            }
+          }
+        } else {
+          return this.tc_currentBookTasks.tasks.length;
+        }
+      }
     }
   },
 
@@ -833,11 +851,18 @@ export default {
         console.log(resp);
       });
     },
-    goToUnresolved() {
+    goToUnresolved(with_task = false) {
+      if (this.blocksToApproveCounter === 0) {
+        return;
+      }
       if (this.$route.matched.some(record => {
         return record.meta.mode === 'edit'
       })) {
-        this.$router.push({name: this.$route.name, params: { block: 'unresolved' } });
+        let params = { block: 'unresolved' };
+        if (with_task) {
+          params['task_type'] = true
+        }
+        this.$router.push({name: this.$route.name, params:  params});
         //this.$router.push({name: this.$route.name, params: { block: '1_en_2v' } });
       }
     },
