@@ -100,7 +100,8 @@ export default {
           book: 'currentBook',
           meta: 'currentBookMeta',
           watchBlk: 'contentDBWatch',
-          allBooks: 'allBooks'
+          allBooks: 'allBooks',
+          tc_tasksByBlock: 'tc_tasksByBlock'
       }),
       metaStyles: function () {
           let result = '';
@@ -145,7 +146,7 @@ export default {
 
         if (this.meta._id) {
           if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
-            this.getBloksUntil(this.$route.params.block);
+            this.getBloksUntil(this.$route.params.block, this.$route.params.task_type);
           } else {
             this.getBlocks().then(res=>res).catch(err=>err);
           }
@@ -154,7 +155,7 @@ export default {
             this.loadBook(this.$route.params.bookid)
             .then(()=>{
               if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
-                this.getBloksUntil(this.$route.params.block);
+                this.getBloksUntil(this.$route.params.block, this.$route.params.task_type);
               } else {
                 this.getBlocks().then(res=>res).catch(err=>err);
               }
@@ -165,7 +166,7 @@ export default {
 
     },
 
-    getBlocks(query) {
+    getBlocks(query, task_type = null) {
       query = query || false;
       if (this.meta._id) {
         let first_id = false;
@@ -174,7 +175,8 @@ export default {
         return this.loadBlocksChain({
           book_id: this.meta._id,
           first_id: first_id,
-          onpage: 20, query: query
+          onpage: 20, query: query,
+          task: task_type
         })
         .then((result)=>{
           if (result.rows.length > 0) {
@@ -203,9 +205,20 @@ export default {
       } else return Promise.reject(new Error('Empty meta._id'));
     },
 
-    getBloksUntil (query) {
-
+    getBloksUntil (query, task_type = null) {
+      if (task_type && task_type !== 'text-cleanup' && task_type !== 'master-audio') {
+        if (!Object.keys(this.tc_tasksByBlock).length) {
+          return;
+        }
+      }
       let result = false;
+      if (task_type === 'true') {
+        task_type = true;
+      }
+      if (!task_type && !this._is('editor')) {
+        task_type = true;
+      }
+      
       if (this.parlist.length) this.parlist.forEach((block, idx, arr)=>{
 
         switch(query) {
@@ -213,8 +226,12 @@ export default {
             if (this.tc_hasTask('metadata_cleanup') || this.tc_hasTask('audio_mastering')) {
               if (!result && !block.markedAsDone && (!block.status || !block.status.proofed)) result = block._id;
             } else {
-              if (!result && this.tc_getBlockTask(block._id)) {
-                result = block._id;
+              
+              if (!result) {
+                let task = this.tc_getBlockTask(block._id);
+                if (task && (task_type === true || task.type === task_type)) {
+                  result = block._id;
+                }
               }
             }
           } break;
@@ -226,7 +243,7 @@ export default {
       });
       
       if (!result) {
-        this.getBlocks(query)
+        this.getBlocks(query, task_type)
         .then((blockId)=>{
           if (blockId && blockId !== true) {
             if (query == 'unresolved') {
@@ -787,7 +804,18 @@ export default {
     '$route' (toRoute, fromRoute) {
       //console.log('$route', toRoute);
       if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
-        this.getBloksUntil(this.$route.params.block);
+        this.getBloksUntil(this.$route.params.block, this.$route.params.task_type);
+      }
+    },
+    'tc_tasksByBlock': {
+      handler(val, oldVal) {
+        if (Object.keys(val).length && !Object.keys(oldVal).length) {
+          if (this.$route.params.hasOwnProperty('block') && this.$route.params.block && !this.parlist.length) {
+            this.getBloksUntil(this.$route.params.block, this.$route.params.task_type);
+          }
+        } else {
+          
+        }
       }
     }
   }

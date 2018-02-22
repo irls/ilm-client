@@ -1175,6 +1175,7 @@ export default {
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
             this.setCurrentBookCounters(['not_marked_blocks']);
+            this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
           });
         }
       },
@@ -1213,6 +1214,7 @@ export default {
               if (typeof response.data._id !== 'undefined') {
                 this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
               }
+              this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
             }
           })
           .catch(err => {});
@@ -2232,7 +2234,7 @@ export default {
       },
       'blockAudio.src' (newVal) {
         if (newVal) {
-          console.log('Book audio', newVal, this.block._id);
+          //console.log('Book audio', newVal, this.block._id);
           if (!this.player) {
             this.initPlayer();
           }

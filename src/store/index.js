@@ -881,7 +881,12 @@ export const store = new Vuex.Store({
         params.query == false;
         results.blockId = true;
       }
-
+      if (params.task) {
+        if (['text-cleanup', 'master-audio'].indexOf(params.task) !== -1) {
+          delete params.task;
+        }
+      }
+      
       function defer() {
         var res, rej;
         var promise = new Promise((resolve, reject) => {
@@ -915,9 +920,29 @@ export const store = new Vuex.Store({
 
             if (params.query) switch(params.query) {
               case 'unresolved': {
-                if (!results.blockId && !b.markedAsDone) {
-                  results.blockId = b._id;
-                  i = params.onpage - 5;
+                if (!results.blockId) {
+                  if (params.task) {
+                    if (state.tc_tasksByBlock && typeof state.tc_tasksByBlock[b._id] !== 'undefined') {
+                      if (params.task === true) {
+                        results.blockId = b._id;
+                      } else {
+                        let t = state.tc_tasksByBlock[b._id].find(_t =>  {
+                          return _t.type === params.task;
+                        })
+                        if (t) {
+                          results.blockId = b._id;
+                        }
+                      }
+                    } else {
+                      
+                    }
+                    
+                  } else {
+                    if (!b.markedAsDone && (!b.status || !b.status.proofed)) {
+                      results.blockId = b._id;
+                      i = params.onpage - 5;
+                    }
+                  }
                 }
               } break;
               default : {
