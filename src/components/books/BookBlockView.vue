@@ -2338,6 +2338,17 @@ export default {
             this.unsetChange('illustration');
           }
         }
+      },
+      'block.content': {
+        handler(val) {
+          Vue.nextTick(() => {
+            if (this.$refs.blockContent) {
+              this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+                flag.addEventListener('click', this.handleFlagClick);
+              });
+            }
+          });
+        }
       }
   },
   destroyed: function () {
