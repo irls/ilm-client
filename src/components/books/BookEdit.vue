@@ -12,6 +12,7 @@
               :reCount  ="reCountProxy"
               :recorder ="recorder"
               :block_Idx = "block_Idx"
+              :blockReindexProcess="blockReindexProcess"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
@@ -88,7 +89,8 @@ export default {
         action: false,
         block: {},
         block_Idx: false
-      }
+      },
+      blockReindexProcess: false
     }
   },
   computed: {
@@ -528,6 +530,7 @@ export default {
 //           })
       this.getBlockByChainId(block._id)
       .then((blockBefore)=>{
+          this.blockReindexProcess = true;
           //console.log('blockBefore', blockBefore);
           this.parlist.splice(block_Idx, 1);
           block._deleted = true;
@@ -535,18 +538,38 @@ export default {
           .then(()=>{
             if (blockBefore) {
               blockBefore.chainid = block.chainid;
+              this._setBlockChainId(blockBefore._id, block.chainid)
               this.putBlockPart({
                 block: new BookBlock(blockBefore),
                 field: 'chainid'
-              }).then(()=>{});
+              }).then((response)=>{
+                this.blockReindexProcess = false
+              });
             } else {
               this.setMetaData({ key: 'startBlock_id', value: block.chainid})
-              .then(()=>{});
+              .then((response)=>{
+                this.blockReindexProcess = false
+              });
             }
           })
           .catch((err)=>{})
       })
       .catch((err)=>err)
+    },
+    _setBlockChainId(id, chainid) {
+      let index = null;
+      let b = this.parlist.find((_b, i) => {
+        if (_b._id === id) {
+          index = i;
+          return true;
+        }
+        return false;
+      });
+      if (b) {
+        //console.log('BEFORE FOUND', _before, index)
+        b.chainid = chainid;
+        Vue.set(this.parlist, index, new BookBlock(b));
+      }
     },
     joinBlocks(block, block_Idx, direction) {
       let api_url = this.API_URL + 'book/block_join/';

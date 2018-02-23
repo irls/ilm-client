@@ -425,14 +425,19 @@
     </div>
     <div class="table-cell controls-right">
     </div>
-    <modal :name="'delete-block-message' + block._id" :height="150" :resizeable="false">
+    <modal :name="'delete-block-message' + block._id" :height="150" :resizeable="false" :clickToClose="false">
         <div class="modal-header"></div>
         <div class="modal-body">
           <p>Delete block?</p>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-default" v-on:click="hideModal('delete-block-message')">Cancel</button>
-          <button class="btn btn-primary" v-on:click="deleteBlock()">Delete</button>
+          <template v-if="deletePending">
+            <div class="voicework-preloader"></div>
+          </template>
+          <template v-else>
+            <button class="btn btn-default" v-on:click="hideModal('delete-block-message')">Cancel</button>
+            <button class="btn btn-primary" v-on:click="deleteBlock()">Delete</button>
+          </template>
         </div>
       </modal>
     <modal :name="'voicework-change' + block._id" :resizeable="false" :height="250">
@@ -534,7 +539,8 @@ export default {
       voiceworkUpdateType: 'single',
       isAudioEditing: false,
       voiceworkUpdating: false,
-      changes: []
+      changes: [],
+      deletePending: false
     }
   },
   components: {
@@ -544,7 +550,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'block_Idx', 'audioEditor', 'joinBlocks'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'block_Idx', 'audioEditor', 'joinBlocks', 'blockReindexProcess'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -1871,8 +1877,13 @@ export default {
         this.$emit('insertAfter', this.block, this.block_Idx);
       },
       deleteBlock() {
-        this.hideModal('delete-block-message');
-        this.$emit('deleteBlock', this.block, this.block_Idx);
+        if (!this.blockReindexProcess) {
+          this.deletePending = false;
+          this.hideModal('delete-block-message');
+          this.$emit('deleteBlock', this.block, this.block_Idx);
+        } else {
+          this.deletePending = true;
+        }
       },
       showModal(name) {
         this.$modal.show(name + this.block._id);
@@ -2348,6 +2359,13 @@ export default {
               });
             }
           });
+        }
+      },
+      'blockReindexProcess': {
+        handler(val, oldVal) {
+          if (this.deletePending && oldVal && !val) {
+            this.deleteBlock();
+          }
         }
       }
   },

@@ -1016,13 +1016,13 @@ export const store = new Vuex.Store({
       console.log('_putBlock block', block);
       return state.contentRemoteDB
         .put(block)
-        .then(res => res)
+        .then(res => Promise.resolve(res))
         .catch((err) => {
           console.log('_putBlock err', err);
           if (err.status == 404) {
           return state.contentDB
             .put(block)
-            .then(res => res)
+            .then(res => Promise.resolve(res))
             .catch(err => Promise.reject(err));
           } else return Promise.reject(err);
         });
@@ -1063,10 +1063,12 @@ export const store = new Vuex.Store({
         .then(function(doc) {
           return dispatch('_putBlock', _.merge(doc, cleanBlock))
           .then((response) => {
+            return Promise.resolve(response)
           })
         })
         .catch((err) => {
           console.log('Block save error:', err);
+          return Promise.reject(err);
         });
       } else return BPromise.resolve();
     },
