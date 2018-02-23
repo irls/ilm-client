@@ -25,7 +25,7 @@
               <li v-for="(audiofile, index) in audiobook.importFiles" class="audiofile">
                 <div :class="['audiofile-info', {'playing': playing == audiofile.id}]">
                   <div class="audiofile-player-controls">
-                    <i class="fa fa-play-circle-o" v-on:click="play(audiofile.id, true)"></i>
+                    <i class="fa fa-play-circle-o" v-on:mousedown="capture(audiofile.id)"></i>
                     <!-- <i class="fa fa-play-circle-o red" v-on:click="play()" v-if="paused === audiofile.id"></i>
                     <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
                     <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
@@ -201,6 +201,7 @@
         player: false,
         playing: false,
         paused: false,
+        captured: false,
         draggableList: false,
         alignmentProcess: false,
         alignmentProcessModal: false,
@@ -349,6 +350,7 @@
         this.deleting = false;
       },
       play(id, autostart) {
+        this.captured = false;
         if (!this._is('editor')) {
           return;
         }
@@ -389,6 +391,9 @@
           this.player.play();
         }
         this.paused = false;
+      },
+      capture(id) {
+        this.captured = id;// it is done because sometimes browser generates only drag event, not click
       },
       pause() {
         this.player.pause();
@@ -549,7 +554,23 @@
             Vue.nextTick(() => {
               self.draggableList = new List(document.querySelector('.draggable-list'));
               self.draggableList.on('move', function (node, newIndex, prevIndex) {
+                self.captured = false;
                 self.saveAudiobook([[prevIndex, newIndex]]);
+              })
+              self.draggableList.on('dndstart', function(){
+                //console.log(self.captured);
+              })
+              self.draggableList.on('dndcancel', function(){
+                self.captured = false;
+              })
+              self.draggableList.on('dndstop', function(){
+                if (self.captured) {// it is done because sometimes browser generates only drag event, not click
+                  if (!self.playing) {
+                    self.play(self.captured, true);
+                  } else {
+                    self.captured = false;
+                  }
+                }
               })
               self.selections.forEach(s => {
                 $('input[name="' + s + '"]').prop('checked', true);
