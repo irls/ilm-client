@@ -21,8 +21,8 @@
             </div>
           </div>
           <div class="file-catalogue-files-wrapper">
-            <ul class="file-catalogue-files draggable-list">
-              <li v-for="(audiofile, index) in audiobook.importFiles" class="audiofile">
+            <draggable v-model="audiobook.importFiles" class="file-catalogue-files">
+              <div v-for="(audiofile, index) in audiobook.importFiles" class="audiofile">
                 <div :class="['audiofile-info', {'playing': playing == audiofile.id}]">
                   <div class="audiofile-player-controls">
                     <i class="fa fa-play-circle-o" v-on:click="play(audiofile.id, true)"></i>
@@ -49,8 +49,8 @@
                     </li>
                   </dropdown>
                 </div>
-              </li>
-            </ul>
+              </div>
+            </draggable>
           </div>
         </div>
         <div>
@@ -172,7 +172,7 @@
   import vueSlider from 'vue-slider-component';
   import SelectTTSVoice from '../generic/SelectTTSVoice'
   var WaveformPlaylist = require('waveform-playlist');
-  var List = require('draggable-list')
+  import draggable from 'vuedraggable';
   //var d3 = require('d3')
   export default {
     name: 'BookAudioIntegration',
@@ -185,7 +185,8 @@
       dropdown,
       modal,
       vueSlider,
-      'select-tts-voice':SelectTTSVoice
+      'select-tts-voice':SelectTTSVoice,
+      draggable
 
     },
     props: {
