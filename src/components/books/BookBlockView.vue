@@ -676,8 +676,10 @@ export default {
                 )) return false;
           if (this._is('editor', true)) {
             let flags_summary = this.block.calcFlagsSummary();
-            if (flags_summary && flags_summary.stat === 'open' && ['editor', 'narrator'].indexOf(flags_summary.dir) !== -1) {
-              return false;
+            if (!this.block.status || this.block.status.assignee !== 'proofer') {
+              if (flags_summary && flags_summary.stat === 'open' && ['editor', 'narrator'].indexOf(flags_summary.dir) !== -1) {
+                return false;
+              }
             }
             if (this.isCanApproveWithoutTask) {
               return false;
