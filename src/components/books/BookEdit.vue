@@ -13,6 +13,7 @@
               :recorder ="recorder"
               :block_Idx = "block_Idx"
               :blockReindexProcess="blockReindexProcess"
+              :getBloksUntil="getBloksUntil"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
@@ -207,7 +208,7 @@ export default {
       } else return Promise.reject(new Error('Empty meta._id'));
     },
 
-    getBloksUntil (query, task_type = null) {
+    getBloksUntil (query, task_type = null, start_index = null) {
       if (task_type && task_type !== 'text-cleanup' && task_type !== 'master-audio') {
         if (!Object.keys(this.tc_tasksByBlock).length) {
           return;
@@ -222,8 +223,8 @@ export default {
       }
       
       if (this.parlist.length) this.parlist.forEach((block, idx, arr)=>{
-
-        switch(query) {
+        if (idx > start_index || typeof start_index === 'undefined' || start_index === null) {
+          switch(query) {
           case 'unresolved': {
             if (this.tc_hasTask('metadata_cleanup') || this.tc_hasTask('audio_mastering')) {
               if (!result && !block.markedAsDone && (!block.status || !block.status.proofed)) result = block._id;
@@ -241,6 +242,7 @@ export default {
             if (!result && block._id === query) result = block._id;
           } break;
         };
+      }
 
       });
       
@@ -252,8 +254,10 @@ export default {
               this.$router.push({name: this.$route.name, params: { block: blockId } });
             }
             Vue.nextTick(()=>{
-              this.scrollToBlock(blockId);
+              this.scrollToBlock(blockId, 'middle');
             });
+          } else if (typeof start_index !== 'undefined' && start_index !== null) {
+            this.getBloksUntil(query, task_type);
           }
 
         })
@@ -263,7 +267,7 @@ export default {
         })
       } else {
         this.$router.push({name: this.$route.name, params: { } });
-        this.scrollToBlock(result);
+        this.scrollToBlock(result, 'middle');
       }
     },
 
@@ -385,11 +389,20 @@ export default {
         }
       }
     },
-    scrollToBlock(id) {
+    scrollToBlock(id, position = 'top') {
       let domObj = document.getElementById(id);
       if (domObj) {
         let offset = domObj.getBoundingClientRect()
-        window.scrollTo(0, window.pageYOffset + offset.top - 110);
+        switch (position) {
+          case 'top':
+            window.scrollTo(0, window.pageYOffset + offset.top - 110);
+            break;
+          case 'middle':
+            //window.scrollTo(0, window.pageYOffset + offset.top - ($(window).height() / 2));
+            let scrollTo = window.pageYOffset + offset.top - ($(window).height() / 2);
+            $('html, body').animate({scrollTop: scrollTo},1000);
+            break;
+        }
       }
     },
     initEditors(block, par_index) {

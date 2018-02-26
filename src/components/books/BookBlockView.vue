@@ -550,7 +550,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'block_Idx', 'audioEditor', 'joinBlocks', 'blockReindexProcess'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'block_Idx', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -1182,7 +1182,8 @@ export default {
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
             this.setCurrentBookCounters(['not_marked_blocks']);
-            this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
+            //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
+            this.getBloksUntil('unresolved', null, this.block_Idx)
           });
         }
       },
@@ -1221,7 +1222,8 @@ export default {
               if (typeof response.data._id !== 'undefined') {
                 this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
               }
-              this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
+              //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
+              this.getBloksUntil('unresolved', true, this.block_Idx)
             }
           })
           .catch(err => {});
