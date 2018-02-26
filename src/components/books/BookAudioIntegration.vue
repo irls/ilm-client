@@ -21,7 +21,7 @@
             </div>
           </div>
           <div class="file-catalogue-files-wrapper">
-            <draggable v-model="audiobook.importFiles" class="file-catalogue-files">
+            <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
               <div v-for="(audiofile, index) in audiobook.importFiles" class="audiofile">
                 <div :class="['audiofile-info', {'playing': playing == audiofile.id}]">
                   <div class="audiofile-player-controls">
@@ -490,6 +490,12 @@
         this.currentBookMeta.voices[key] = value;
         this.$emit('onTtsSelect', 'voices.'+ key, value);
       },
+      
+      listReorder(info) {
+        if (info && typeof info.newIndex !== 'undefined' && typeof info.oldIndex !== 'undefined') {
+          this.saveAudiobook([[info.oldIndex, info.newIndex]]);
+        }
+      },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices'])
     },
@@ -551,10 +557,10 @@
               /*self.draggableList = new List(document.querySelector('.draggable-list'));
               self.draggableList.on('move', function (node, newIndex, prevIndex) {
                 self.saveAudiobook([[prevIndex, newIndex]]);
-              })
+              })*/
               self.selections.forEach(s => {
                 $('input[name="' + s + '"]').prop('checked', true);
-              });*/
+              });
             })
           }
         },
