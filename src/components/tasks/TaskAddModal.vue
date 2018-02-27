@@ -26,7 +26,7 @@
           <i class="fa fa-minus-circle" v-if="name.length > 1" v-on:click="removeBook(n)"></i><br/>
           <input type="text" class="form-control" v-model="id[n]" disabled />
         </div>
-        <i class="fa fa-plus-circle add-book" v-on:click="addBook()"></i>
+        <!-- <i class="fa fa-plus-circle add-book" v-on:click="addBook()"></i> -->
         <div v-if="errors.name" v-for="err in errors.name" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group" v-if="showField('roles.editor')">
@@ -57,13 +57,13 @@
         </select>
         <div v-if="errors['roles.narrator']" v-for="err in errors['roles.narrator']" class="error-message" v-text="err"></div>
       </div>
-      <div class="form-group" v-if="showField('roles.engineer')">
+      <!-- <div class="form-group" v-if="showField('roles.engineer')">
         <label>Engineer</label>
         <select class="form-control" v-model="roles['engineer']">
           <option v-for="user_engineer in users['engineer']" :value="user_engineer._id">{{user_engineer.email}}</option>
         </select>
         <div v-if="errors['roles.engineer']" v-for="err in errors['roles.engineer']" class="error-message" v-text="err"></div>
-      </div>
+      </div> -->
       <div class="form-group">
         <label>Language</label>
         <select class="form-control" v-model="lang">
@@ -140,8 +140,8 @@ export default {
           'roles': {
             'editor': {'require': true},
             'proofer': {'require': true},
-            'narrator': {'require': true},
-            'engineer': {'require': true}
+            'narrator': {'require': true}//,
+            //'engineer': {'require': true}
           },
           'lang': {'require': true}
         },

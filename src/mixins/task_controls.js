@@ -1,5 +1,6 @@
 import axios from 'axios'
 import api_config from './api_config.js'
+import access from './access.js';
 import {mapGetters} from 'vuex';
 
 export default {
@@ -11,7 +12,7 @@ export default {
     mounted() {
 
     },
-    mixins: [api_config],
+    mixins: [api_config, access],
     methods: {
 
       tc_hasTask(type) {
@@ -37,9 +38,7 @@ export default {
         return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 6
       },
       tc_isShowEdit(blockid) {
-        return !this.currentBookMeta.publishedVersion && (this.tc_hasTask('content_cleanup')
-              || this.$store.state.isAdmin
-              || this.$store.state.isEditor)
+        return this._is('editor', true)
       },
       tc_isShowApproveContentFixAction(blockid) {
         return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 7;
