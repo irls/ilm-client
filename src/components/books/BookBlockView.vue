@@ -1133,10 +1133,10 @@ export default {
           }, {})
             .then(response => {
               if (response.status == 200) {
-                //this.block.content = this.blockAudio.map;
-                //this.block.audiosrc = response.data.audiosrc;
-                //this.blockAudio.map = '';
-                //this.blockAudio.src = '';
+                this.block.content = response.data.content;
+                this.block.audiosrc = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
+                this.blockAudio.map = response.data.content;
+                this.blockAudio.src = this.block.audiosrc;
                 //return this.putBlock(this.block);
                 this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
                 this.isAudioChanged = false;
