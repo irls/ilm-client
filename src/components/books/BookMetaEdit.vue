@@ -7,6 +7,9 @@
           <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
           <div v-else class='coverimg-wrap'></div>
         </div>
+        <template v-if="isAdmin">
+          <button class="hidden" v-on:click="removeBook()">Remove</button>
+        </template>
         <h4 class='title'>{{ currentBook.title }}</h4>
         <h5 class='subtitle' v-if='currentBook.subtitle'>{{ currentBook.subtitle }}</h5>
         <h5 class='author'>{{ currentBook.author && Array.isArray(currentBook.author) ? currentBook.author.join(',') : currentBook.author }},
@@ -924,6 +927,11 @@ export default {
       this.generatingAudiofile = true;
       axios.get(this.API_URL + 'books/' + this.currentBook.bookid + '/audiobooks/download')
       //:href="API_URL + 'books/' + currentBook.bookid + '/audiobooks/download'" target="_blank"
+    },
+    removeBook() {
+      if (this.isAdmin) {
+        axios.delete(this.API_URL + 'books/' + this.currentBook.bookid)
+      }
     },
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters'])
   }
