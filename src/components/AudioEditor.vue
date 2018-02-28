@@ -792,7 +792,7 @@
                   "begin": position[0], 
                   "children": [], 
                   "end": self._round(position[1] + position[0], 3), 
-                  "id": $(this).html().replace(/<\/?[^>]+(>|$)/g, ""), 
+                  "id": $(this).text(), 
                   "language": "eng", 
                   "lines": []
                 });
