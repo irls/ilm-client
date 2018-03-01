@@ -33,7 +33,7 @@
     "pouchdb-hoodie-api": "^2.0.0",
     "pug": "^2.0.0-beta3",
     "pug-loader": "^2.3.0",
-    "readalong": "github:chadananda/readalong",
+    "readalong": "^1.0.9",
     "recordrtc": "^5.4.2",
     "sass-loader": "^6.0.3",
     "speakingurl": "^13.0.0",
