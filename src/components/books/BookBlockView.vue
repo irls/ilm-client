@@ -1047,8 +1047,10 @@ export default {
         switch (this.block.type) {
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
+            this.block.voicework = 'no_audio';
           case 'hr':
             this.block.content = '';
+            this.block.voicework = 'no_audio';
             break;
           default:
             this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
