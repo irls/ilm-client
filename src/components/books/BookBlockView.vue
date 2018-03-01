@@ -397,14 +397,13 @@
               </div>
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
-                  <template v-if="!isCompleted">
                   <span>
-                    <i :class="['glyphicon', 'glyphicon-flag', {'flag-disabled': !allowBlockFlag}]"
+                    <i :class="['glyphicon', 'glyphicon-flag']"
                       ref="blockFlagControl"
                       @click="handleBlockFlagClick"
                     ></i>
                   </span>
-
+                  <template v-if="!isCompleted">
                   <span v-if="!enableMarkAsDone" :class="[{'-disabled': isNeedWorkDisabled}]"
                     @click.prevent="reworkBlock">
                     <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
