@@ -5,6 +5,7 @@
     <div class="row" v-for="(block, block_Idx) in parlist" v-bind:key="block_Idx">
         <div class='col'>
           <BookBlockView ref="blocks"
+              :key="block._id"
               :block="block"
               :putBlock ="putBlockProxy"
               :getBlock ="getBlockProxy"

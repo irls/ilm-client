@@ -113,7 +113,8 @@
           cursorPosition: false,
           dragLeft: null,
           dragRight: null,
-          onWordRepositionMessage: false
+          onWordRepositionMessage: false,
+          playlistScrollPosition: 0
         }
       },
       mounted() {
@@ -138,13 +139,16 @@
       },
       methods: {
         load(audio, text, blockId, autostart = false, bookAudiofile = {}) {
+          $('.playlist-tracks').off('scroll');
           if (this.audioContext && this.audioContext.state === 'closed') {
             return false;//component was destroyed;
           }
           let mode = bookAudiofile.id ? 'file' : 'block';
           let changeZoomLevel = mode != this.mode;
           if ((this.blockId && this.blockId != blockId) || mode == 'file' || mode != this.mode) {
+            this.silenceLength = 0.1;
             this.isModified = false;
+            this.playlistScrollPosition = 0;
             //this.isAudioModified = false;
             //this.contentHistory = [];
             //this.audioHistory = [];
@@ -234,6 +238,10 @@
               this.load(audio, text, blockId, autostart, bookAudiofile);
               return;
             }
+            $('.playlist-tracks').scrollLeft(this.playlistScrollPosition);
+            $('.playlist-tracks').on('scroll', () => {
+              this.playlistScrollPosition = $('.playlist-tracks').scrollLeft();
+            });
             this._setSelectionOnWaveform();
             this.plEventEmitter = this.audiosourceEditor.getEventEmitter();
             if (!text) {
@@ -632,6 +640,7 @@
           }
         },
         _setDefaults() {
+          $('.playlist-tracks').off('scroll');
           this.words = [];
           this.currentWord = null;
           this.selection = {};
@@ -792,7 +801,7 @@
                   "begin": position[0], 
                   "children": [], 
                   "end": self._round(position[1] + position[0], 3), 
-                  "id": $(this).html().replace(/<\/?[^>]+(>|$)/g, ""), 
+                  "id": $(this).text(), 
                   "language": "eng", 
                   "lines": []
                 });

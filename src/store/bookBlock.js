@@ -119,6 +119,8 @@ class BookBlock {
     });
     if (this.audiosrc) {
       this.audiosrc = this.audiosrc.replace(process.env.ILM_API, '');
+      this.audiosrc = this.audiosrc.split('?').shift();
+      this.audiosrc = this.audiosrc.replace(/(.*)-v-\d+(\..*)/, '$1$2');
     }
     if (this.illustration) {
       this.illustration = this.illustration.replace(process.env.ILM_API, '');

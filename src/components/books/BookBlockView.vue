@@ -397,14 +397,13 @@
               </div>
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
-                  <template v-if="!isCompleted">
                   <span>
-                    <i :class="['glyphicon', 'glyphicon-flag', {'flag-disabled': !allowBlockFlag}]"
+                    <i :class="['glyphicon', 'glyphicon-flag']"
                       ref="blockFlagControl"
                       @click="handleBlockFlagClick"
                     ></i>
                   </span>
-
+                  <template v-if="!isCompleted">
                   <span v-if="!enableMarkAsDone" :class="[{'-disabled': isNeedWorkDisabled}]"
                     @click.prevent="reworkBlock">
                     <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
@@ -1047,11 +1046,14 @@ export default {
         switch (this.block.type) {
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
+            this.block.voicework = 'no_audio';
           case 'hr':
             this.block.content = '';
+            this.block.voicework = 'no_audio';
             break;
           default:
             this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+            this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
             if (this.block.footnotes && this.block.footnotes.length) {
               this.block.footnotes.forEach((footnote, footnoteIdx)=>{
                 this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
@@ -1133,10 +1135,10 @@ export default {
           }, {})
             .then(response => {
               if (response.status == 200) {
-                //this.block.content = this.blockAudio.map;
-                //this.block.audiosrc = response.data.audiosrc;
-                //this.blockAudio.map = '';
-                //this.blockAudio.src = '';
+                this.block.content = response.data.content;
+                this.block.audiosrc = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
+                this.blockAudio.map = response.data.content;
+                this.blockAudio.src = this.block.audiosrc;
                 //return this.putBlock(this.block);
                 this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
                 this.isAudioChanged = false;

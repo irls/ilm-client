@@ -500,6 +500,9 @@
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices'])
     },
+    beforeDestroy() {
+      this.$root.$off('from-audioeditor:save-positions');
+    },
     computed: {
       selectionLength: {
         get() {
