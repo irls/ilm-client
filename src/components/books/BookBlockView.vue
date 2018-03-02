@@ -36,7 +36,7 @@
         <div :class="['table-body', '-content', {'editing': isAudioEditing}]"
         @mouseleave="onBlur"
         @click="onBlur">
-            <div class="table-row controls-top" :data-json="JSON.stringify(block)">
+            <div class="table-row controls-top"><!--:data-json="JSON.stringify(block)"-->
 
               <div class="par-ctrl -hidden -left">
                   <div class="block-menu">
@@ -800,7 +800,7 @@ export default {
             } break;
           };
         }
-        
+
         return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
       },
       //-- } -- end -- Checkers --//
@@ -841,9 +841,9 @@ export default {
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  'superscript', 'subscript',
+                  //'superscript', 'subscript',
                   'orderedlist', 'unorderedlist',
-    //               'html', 'anchor',
+                  //'html', 'anchor',
                   'quoteButton', 'suggestButton'
                 ]
               };
@@ -1194,7 +1194,7 @@ export default {
         this.assembleBlockProxy(ev)
         .then(()=>{
           let task = this.tc_getBlockTask(this.block._id);
-          
+
           if (!task) {
              let other_task = this.tc_getBlockTaskOtherRole(this.block._id);
              if (other_task) {
@@ -1217,7 +1217,7 @@ export default {
                 break;
             }
           }
-          
+
           this.tc_approveBookTask(task)
           .then(response => {
             if (response.status == 200) {

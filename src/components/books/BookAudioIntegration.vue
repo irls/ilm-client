@@ -478,8 +478,9 @@
           this.alignmentProcessModal = false;
           this.setCurrentBookCounters();
         }).catch((err) => {
-          console.log('error: '+ err)
           this.alignmentProcess = false;
+          this.alignmentProcessModal = false;
+          console.log('error11: '+ err);
         });
       },
       scrollToBlock(id) {
@@ -490,7 +491,7 @@
         this.currentBookMeta.voices[key] = value;
         this.$emit('onTtsSelect', 'voices.'+ key, value);
       },
-      
+
       listReorder(info) {
         if (info && typeof info.newIndex !== 'undefined' && typeof info.oldIndex !== 'undefined') {
           this.saveAudiobook([[info.oldIndex, info.newIndex]]);
