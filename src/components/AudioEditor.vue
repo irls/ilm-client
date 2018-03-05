@@ -147,6 +147,7 @@
           let changeZoomLevel = mode != this.mode;
           if ((this.blockId && this.blockId != blockId) || mode == 'file' || mode != this.mode) {
             this.silenceLength = 0.1;
+            this.cursorPosition = false;
             this.isModified = false;
             this.playlistScrollPosition = 0;
             //this.isAudioModified = false;
