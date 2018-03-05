@@ -208,7 +208,7 @@
                     :countArchParts="countArchParts"
                 >
 
-                  <template v-for="(part, partIdx) in flagsSel.parts">
+                  <template v-if="flagsSel" v-for="(part, partIdx) in flagsSel.parts">
                     <template v-if="part.status!=='hidden' || !isHideArchFlags || !isHideArchParts">
                     <li>
 
@@ -232,12 +232,12 @@
 
 
                     <a href="#" class="flag-control -right -top"
-                      v-if="_is('proofer') && part.status == 'resolved'"
+                      v-if="_is('proofer', true) && part.status == 'resolved' && !isCompleted"
                       @click.prevent="hideFlagPart($event, partIdx)">
                       Archive flag</a>
 
                     <a href="#" class="flag-control -right -top"
-                      v-if="_is('proofer') && part.status == 'hidden'"
+                      v-if="_is('proofer', true) && part.status == 'hidden' && !isCompleted"
                       @click.prevent="unHideFlagPart($event, partIdx)">
                       Unarchive flag</a>
 
@@ -275,12 +275,12 @@
                       Flag for editing also</a>
                     </template>
 
-                    <a v-if="part.status == 'resolved' && !part.collapsed"
+                    <a v-if="part.status == 'resolved' && !part.collapsed && !isCompleted"
                       href="#" class="flag-control"
                       @click.prevent="reopenFlagPart($event, partIdx)">
                       Re-open flag</a>
 
-                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed"
+                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && !isCompleted"
                       href="#" class="flag-control -left"
                       @click.prevent="resolveFlagPart($event, partIdx)">
                       Resolve flag</a>
@@ -1567,7 +1567,7 @@ export default {
 
       canDeleteFlagPart: function (flagPart) {
           let result = false;
-          if (flagPart.creator === this.auth.getSession().user_id) {
+          if (!this.isCompleted && flagPart.creator === this.auth.getSession().user_id) {
             result = true;
             if (flagPart.comments.length) flagPart.comments.forEach((comment)=>{
               if (comment.creator !== flagPart.creator) result = false;
@@ -2371,6 +2371,20 @@ export default {
         handler(val, oldVal) {
           if (this.deletePending && oldVal && !val) {
             this.deleteBlock();
+          }
+        }
+      },
+      'block.flags': {
+        handler(val) {
+          if (this.isCompleted) {
+            Vue.nextTick(() => {
+              if (this.$refs.blockContent) {
+                this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+                  flag.addEventListener('click', this.handleFlagClick);
+                });
+              }
+            });
+            this.updateFlagStatus(this.block._id);
           }
         }
       }
