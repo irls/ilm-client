@@ -132,38 +132,11 @@
         </div>
       </panel>
     </accordion>
-    <modal v-model="onDeleteMessage" effect="fade">
-      <!-- custom header -->
-      <div slot="modal-header" class="modal-header">
-        <h4 class="modal-title" v-if="deleting">
-          Delete audio file?
-        </h4>
-        <h4 class="modal-title" v-else>
-          Delete {{ selectionLength }} audio files?
-        </h4>
-      </div>
-      <!-- custom buttons -->
-      <div slot="modal-footer" class="modal-footer">
-        <button type="button" class="btn btn-default" @click="discardDeleteAudio()">Cancel</button>
-        <button type="button" class="btn btn-confirm" @click="deleteAudioProcess()">Delete<span v-if="!deleting">({{ selectionLength }})</span></button>
-      </div>
-    </modal>
-    <modal v-model="alignmentProcessModal" effect="false" @closed="cancelAlign()" class="align-modal">
-      <div slot="modal-header" class="modal-header">
-        <h4>Aligning blocks {{blocksForAlignment.start._id}} - {{blocksForAlignment.end._id}} with audio</h4>
-      </div>
-      <div slot="modal-body" class="modal-body">
-          <div class="align-preloader"></div>
-      </div>
-      <div slot="modal-footer" class="modal-footer">
-        <button type="button" class="btn btn-default" v-on:click="cancelAlign()">Cancel</button>
-      </div>
-    </modal>
     <div id="player"></div>
   </div>
 </template>
 <script>
-  import {accordion, panel, dropdown, modal} from 'vue-strap'
+  import {accordion, panel, dropdown} from 'vue-strap'
   import task_controls from '../../mixins/task_controls.js'
   import api_config from '../../mixins/api_config.js'
   import Vue from 'vue'
@@ -183,7 +156,6 @@
       accordion,
       panel,
       dropdown,
-      modal,
       vueSlider,
       'select-tts-voice':SelectTTSVoice,
       draggable
@@ -204,7 +176,6 @@
         paused: false,
         draggableList: false,
         alignmentProcess: false,
-        alignmentProcessModal: false,
         pre_options: false,
         pre_volume: 1.0
       }
@@ -475,7 +446,6 @@
 
           }
           this.alignmentProcess = false;
-          this.alignmentProcessModal = false;
           this.setCurrentBookCounters();
         }).catch((err) => {
           console.log('error: '+ err)
@@ -571,7 +541,53 @@
       },
       'alignmentProcess': {
         handler(val) {
-          this.alignmentProcessModal = val;
+          if (val) {
+            this.$root.$emit('show-modal', {
+              title: 'Aligning blocks ' + this.blocksForAlignment.start._id + ' - ' + this.blocksForAlignment.end._id + ' with audio',
+              text: '<div class="align-preloader"></div>',
+              buttons: [
+                {
+                  title: 'Cancel',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                    this.cancelAlign();
+                  },
+                }
+              ],
+              class: ['align-modal']
+            });
+          } else {
+            this.$root.$emit('hide-modal');
+          }
+        }
+      },
+      'onDeleteMessage': {
+        handler(val) {
+          if (val) {
+            this.$root.$emit('show-modal', {
+              title: this.deleting ? '<h4 class="modal-title">Delete audio file?</h4>' : '<h4 class="modal-title">Delete ' + this.selectionLength + ' audio files?</h4>',
+              text: '',
+              buttons: [
+                {
+                  title: 'Cancel',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                    this.discardDeleteAudio();
+                  }
+                },
+                {
+                  title: 'Delete' + (!this.deleting ? '<span >(' + this.selectionLength + ')</span>' : ''),
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                    this.deleteAudioProcess();
+                  }
+                }
+              ]
+            });
+          } else {
+            this.$root.$emit('hide-modal');
+          }
+          
         }
       },
       'ttsVoices': function (val) {
@@ -711,10 +727,12 @@
   }
   .align-preloader {
       background: url(/static/preloader-snake-small.gif);
-      width: 34px;
+      width: 100%;
       height: 34px;
       display: inline-block;
       margin: 4px 0px;
+      background-repeat: no-repeat;
+      background-position-x: center;
   }
   .align-modal {
     .modal-header {

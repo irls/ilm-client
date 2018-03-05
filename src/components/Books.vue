@@ -40,6 +40,7 @@
     <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}]" >
       <AudioEditor ref="audioEditor"></AudioEditor>
     </nav>
+    <v-dialog :clickToClose="false"/>
   </div>
 </template>
 
@@ -55,6 +56,10 @@ import superlogin from 'superlogin-client'
 import api_config from '../mixins/api_config.js'
 import AudioEditor from './AudioEditor'
 import task_controls from '../mixins/task_controls.js'
+import Vue from 'vue';
+var modal = require('vue-js-modal');
+
+Vue.use(modal, {dialog: true});
 
 
 export default {
@@ -125,6 +130,8 @@ export default {
         this.$root.$on('from-bookblockview:voicework-type-changed', function() {
           self.getBlockSelectionInfo();
         });
+        this.$root.$on('show-modal', (params) => {this.showModal(params)})
+        this.$root.$on('hide-modal', () => {this.hideModal()})
 
 //         this.loadTTSVoices();
   },
@@ -176,6 +183,13 @@ export default {
             }
           })
       }
+    },
+    
+    showModal(params) {
+      this.$modal.show('dialog', params);
+    },
+    hideModal() {
+      this.$modal.hide('dialog');
     },
 
     ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices'])
