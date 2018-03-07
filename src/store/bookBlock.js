@@ -23,7 +23,8 @@ let defBlock = [
   'description',
   'voicework',
   'markedAsDone',
-  'status'
+  'status',
+  'audiosrc_ver'
 ]
 
 let BlockTypes = {
@@ -100,6 +101,7 @@ class BookBlock {
 
     this.markedAsDone = init.markedAsDone || false;
     this.status = init.status;
+    this.audiosrc_ver = init.audiosrc_ver || {};
 
     this.isUpdated = false;
   }
@@ -121,6 +123,12 @@ class BookBlock {
       this.audiosrc = this.audiosrc.replace(process.env.ILM_API, '');
       this.audiosrc = this.audiosrc.split('?').shift();
       this.audiosrc = this.audiosrc.replace(/(.*)-v-\d+(\..*)/, '$1$2');
+    }
+    if (this.audiosrc_ver) {
+      for (let t in this.audiosrc_ver)
+      this.audiosrc_ver[t] = this.audiosrc_ver[t].replace(process.env.ILM_API, '');
+      this.audiosrc_ver[t] = this.audiosrc_ver[t].split('?').shift();
+      this.audiosrc_ver[t] = this.audiosrc_ver[t].replace(/(.*)-v-\d+(\..*)/, '$1$2');
     }
     if (this.illustration) {
       this.illustration = this.illustration.replace(process.env.ILM_API, '');
@@ -304,6 +312,13 @@ class BookBlock {
     if (this.illustration) {
       return process.env.ILM_API + this.illustration + '?' + (new Date()).toJSON();
     }
+  }
+  
+  getAudiosrc(ver = false) {
+    if (!ver  || !this.audiosrc_ver) {
+      return this.audiosrc;
+    }
+    return typeof this.audiosrc_ver[ver] === 'undefined' ? this.audiosrc : process.env.ILM_API + this.audiosrc_ver[ver] +'?'+ (new Date()).toJSON();
   }
 
   needsText() {

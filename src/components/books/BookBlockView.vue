@@ -732,9 +732,8 @@ export default {
   mounted: function() {
       //this.initEditor();
       //console.log('mounted', this.block._id);
-      this.blockAudio = {'map': this.block.content, 'src': this.block.audiosrc ? this.block.audiosrc : ''};
+      this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
       if (!this.player && this.blockAudio.src) {
-          this.blockAudio.src = this.blockAudio.src + '?' + (new Date()).toJSON();
           this.initPlayer();
       }
 
@@ -982,7 +981,7 @@ export default {
         });
       },
       discardAudio: function() {
-        this.blockAudio.src = this.block.audiosrc;
+        this.blockAudio.src = this.block.getAudiosrc('m4a');
         this.blockAudio.map = this.block.content;
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
         let api = this.$store.state.auth.getHttp();
@@ -2224,7 +2223,7 @@ export default {
           }
           if (!this.blockAudio.src || !this.tc_showBlockNarrate(this.block._id)) {
             this.blockAudio = {
-              'src': this.block.audiosrc ? this.block.audiosrc + '?' + (new Date()).toJSON() : '',
+              'src': this.block.getAudiosrc('m4a'),
               'map': this.block.content
             };
           }
@@ -2236,7 +2235,7 @@ export default {
         } else {
           if (!this.blockAudio.src || !this.tc_showBlockNarrate(this.block._id)) {
             this.blockAudio = {
-              'src': this.block.audiosrc ? this.block.audiosrc + '?' + (new Date()).toJSON() : '',
+              'src': this.block.getAudiosrc('m4a'),
               'map': this.block.content
             };
           }
