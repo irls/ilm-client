@@ -193,6 +193,10 @@ export default {
     },
 
     ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices'])
+  },
+  
+  destroyed: function () {
+    this.$root.$off('from-bookedit:set-selection');
   }
 }
 </script>
