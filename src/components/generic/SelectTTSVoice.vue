@@ -35,7 +35,7 @@ export default {
   },
 
   props: [
-    'pre_selected', 'pre_options', 'pre_volume',
+    'pre_selected', 'pre_options', 'pre_volume', 'blocksForAlignment'
   ],
 //     data example:
 //       {
@@ -61,7 +61,7 @@ export default {
 
     applyAudio(val) {
       if (val.length) {
-        console.log('applyAudio', this.text);
+        //console.log('applyAudio', this.text);
         let text = this.text || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
         this.getTestSpeech({voiceId: val, text: text})
         .then((response)=>{
@@ -82,6 +82,22 @@ export default {
         snd.addEventListener('ended', function () {df.removeChild(snd);});
         snd.play();
       }
+    },
+    
+    setVoiceTest(start, end) {
+      let block = start || end;
+      let text = '';
+      if (block && block.content) {
+        text = block.content.replace(/<[^>]*>?/g, "").substring(0, 32);
+      } else {
+        text = false;
+      }
+      if (this.text !== text) {
+        this.text = text;
+        if (this.value) {
+          this.applyAudio(this.value);
+        }
+      }
     }
   },
 
@@ -94,11 +110,6 @@ export default {
       .catch(err=>err);
     } else {
       this.options = this.pre_options;
-    }
-
-    if (this.pre_selected) {
-      this.value = this.pre_selected;
-      this.applyAudio(this.value);
     }
 
     //console.log('this.value', this.value);
@@ -124,21 +135,16 @@ export default {
       }); // according to https://github.com/select2/select2/issues/3320
     })
 
-    let _this = this;
-    this.$root.$on('from-bookedit:set-selection', function(start, end) {
-      let block = start || end;
-      let text = '';
-      if (block && block.content) {
-        text = block.content.replace(/<[^>]*>?/g, "").substring(0, 32);
+    if (this.pre_selected) {
+      this.value = this.pre_selected;
+      if ((this.blocksForAlignment.start && this.blocksForAlignment.start._id) || (this.blocksForAlignment.end && this.blocksForAlignment.end._id)) {
+        this.setVoiceTest(this.blocksForAlignment.start, this.blocksForAlignment.end);
       } else {
-        text = false;
+        this.applyAudio(this.value);
       }
-      if (_this.text !== text) {
-        _this.text = text;
-        if (_this.audio64 && _this.value) {
-          _this.applyAudio(_this.value);
-        }
-      }
+    }
+    this.$root.$on('from-bookedit:set-voice-test', (start, end) => {
+      this.setVoiceTest(start, end);
     });
   },
 
@@ -155,8 +161,8 @@ export default {
 
   destroyed: function () {
     $(this.$el).find('.js-select2').off().select2('destroy');
-    this.$root.$off('from-bookedit:set-selection');
-    console.log('destroyed');
+    this.$root.$off('from-bookedit:set-voice-test');
+    //console.log('destroyed');
   }
 }
 </script>
