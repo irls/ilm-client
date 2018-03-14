@@ -60,12 +60,22 @@
 
                       <li class="separator"></li>
                       <template v-if="allowEditing">
-                        <li @click="insertBlockBefore()">Insert block before</li>
-                        <li @click="insertBlockAfter()">Insert block after</li>
-                        <li @click="showModal('delete-block-message')">Delete block</li>
+                        <li @click="insertBlockBefore()">
+                          <i class="fa fa-angle-up" aria-hidden="true"></i>
+                          Insert block before</li>
+                        <li @click="insertBlockAfter()">
+                          <i class="fa fa-angle-down" aria-hidden="true"></i>
+                          Insert block after</li>
+                        <li @click="showModal('delete-block-message')">
+                          <i class="fa fa-trash" aria-hidden="true"></i>
+                          Delete block</li>
                         <!--<li>Split block</li>-->
-                        <li @click="joinWithPrevious()">Join with previous block</li>
-                        <li @click="joinWithNext()">Join with next block</li>
+                        <li @click="joinWithPrevious()">
+                          <i class="fa fa-angle-double-up" aria-hidden="true"></i>
+                          Join with previous block</li>
+                        <li @click="joinWithNext()">
+                          <i class="fa fa-angle-double-down" aria-hidden="true"></i>
+                          Join with next block</li>
                         <li class="separator"></li>
                       </template>
                       <li @click="discardBlock" v-if="allowEditing">
@@ -425,20 +435,20 @@
     <div class="table-cell controls-right">
     </div>
     <modal :name="'delete-block-message' + block._id" :height="150" :resizeable="false" :clickToClose="false">
-        <div class="modal-header"></div>
-        <div class="modal-body">
-          <p>Delete block?</p>
-        </div>
-        <div class="modal-footer">
-          <template v-if="deletePending">
-            <div class="voicework-preloader"></div>
-          </template>
-          <template v-else>
-            <button class="btn btn-default" v-on:click="hideModal('delete-block-message')">Cancel</button>
-            <button class="btn btn-primary" v-on:click="deleteBlock()">Delete</button>
-          </template>
-        </div>
-      </modal>
+      <div class="modal-header"></div>
+      <div class="modal-body">
+        <p>Delete block?</p>
+      </div>
+      <div class="modal-footer">
+        <template v-if="deletePending">
+          <div class="voicework-preloader"></div>
+        </template>
+        <template v-else>
+          <button class="btn btn-default" v-on:click="hideModal('delete-block-message')">Cancel</button>
+          <button class="btn btn-primary" v-on:click="deleteBlock()">Delete</button>
+        </template>
+      </div>
+    </modal>
     <modal :name="'voicework-change' + block._id" :resizeable="false" :height="250">
       <!-- custom header -->
       <div class="modal-header">
