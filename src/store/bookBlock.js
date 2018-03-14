@@ -104,6 +104,8 @@ class BookBlock {
     this.audiosrc_ver = init.audiosrc_ver || {};
 
     this.isUpdated = false;
+    
+    this.history = {};
   }
 
   clean() {
@@ -125,10 +127,11 @@ class BookBlock {
       this.audiosrc = this.audiosrc.replace(/(.*)-v-\d+(\..*)/, '$1$2');
     }
     if (this.audiosrc_ver) {
-      for (let t in this.audiosrc_ver)
-      this.audiosrc_ver[t] = this.audiosrc_ver[t].replace(process.env.ILM_API, '');
-      this.audiosrc_ver[t] = this.audiosrc_ver[t].split('?').shift();
-      this.audiosrc_ver[t] = this.audiosrc_ver[t].replace(/(.*)-v-\d+(\..*)/, '$1$2');
+      for (let t in this.audiosrc_ver) {
+        this.audiosrc_ver[t] = this.audiosrc_ver[t].replace(process.env.ILM_API, '');
+        this.audiosrc_ver[t] = this.audiosrc_ver[t].split('?').shift();
+        this.audiosrc_ver[t] = this.audiosrc_ver[t].replace(/(.*)-v-\d+(\..*)/, '$1$2');
+      }
     }
     if (this.illustration) {
       this.illustration = this.illustration.replace(process.env.ILM_API, '');
@@ -314,11 +317,68 @@ class BookBlock {
     }
   }
   
-  getAudiosrc(ver = false) {
+  getAudiosrc(ver = false, full = true) {
     if (!ver  || !this.audiosrc_ver) {
       return this.audiosrc;
     }
-    return typeof this.audiosrc_ver[ver] === 'undefined' ? this.audiosrc : process.env.ILM_API + this.audiosrc_ver[ver] +'?'+ (new Date()).toJSON();
+    let path = typeof this.audiosrc_ver[ver] === 'undefined' ? this.audiosrc : this.audiosrc_ver[ver];
+    if (!path) {
+      return false;
+    }
+    return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
+  }
+  
+  getAudiosrcFootnote(idx, ver = false, full = true) {
+    let f = this.footnotes && this.footnotes[idx] ? this.footnotes[idx] : false;
+    if (!f) {
+      return false;
+    }
+    let path = false;
+    if (!ver  || !f.audiosrc_ver) {
+      path = f.audiosrc;
+    } else {
+      path = typeof f.audiosrc_ver[ver] === 'undefined' ? f.audiosrc : f.audiosrc_ver[ver];
+    }
+    if (!path) {
+      return false;
+    }
+    return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
+  }
+  
+  setContent(content) {
+    this.set('content', content);
+  }
+  
+  setAudiosrc(path, ver = {}) {
+    this.set('audiosrc', path);
+    this.set('audiosrc_ver', ver);
+  }
+  
+  undoContent() {
+    this.undo('content');
+  }
+  
+  undoAudiosrc() {
+    this.undo('audiosrc');
+    this.undo('audiosrc_ver');
+  }
+  
+  setAudiosrcFootnote(idx, path, ver) {
+    this.set('footnotes.' + idx + '.audiosrc', path);
+    this.set('footnotes.' + idx + '.audiosrc_ver', ver);
+  }
+  
+  setContentFootnote(idx, content) {
+    this.set('footnotes.' + idx + '.content', content);
+  }
+  
+  undoContentFootnote(idx) {
+    this.undo('footnotes.' + idx + '.content');
+  }
+  
+  undoAudiosrcFootnote(idx) {
+    this.undo('footnotes.' + idx + '.audiosrc');
+    this.undo('footnotes.' + idx + '.audiosrc_ver');
   }
 
   needsText() {
@@ -370,6 +430,48 @@ class BookBlock {
   setClassStyle(classVal, val) {
     if (typeof val !== 'undefined') this.classes[classVal] = val;
     if (val === '') delete this.classes[classVal];
+  }
+  
+  set(field, value) {
+    if (!this.history[field]) {
+      this.history[field] = [];
+    }
+    if (field.indexOf('.') === -1) {
+      this.history[field].push(this[field]);
+      this[field] = value;
+    } else {
+      let f = null;
+      let o = this;
+      let path = field.split('.');
+      do {
+        f = path.shift();
+        if (typeof o[f] === 'undefined') {
+          return false;
+        }
+        o = o[f];
+      } while(path.length > 1);
+      f = path.shift();
+      this.history[field].push(o[f]);
+      o[f] = value;
+    }
+  }
+  
+  undo(field) {
+    if (this.history[field]) {
+      if (field.indexOf('.') === -1) {
+        this[field] = this.history[field].pop();
+      } else {
+        let f = null;
+        let o = this;
+        let path = field.split('.');
+        do {
+          f = path.shift();
+          o = o[f];
+        } while(path.length > 1);
+        f = path.shift();
+        o[f] = this.history[field].pop();
+      }
+    }
   }
 
 }
