@@ -67,7 +67,7 @@
       </panel>
       <panel :is-open="false" :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
         <div class="tts-volume-label">Volume:</div>
-        <vue-slider ref="slider" v-model="pre_volume" :min="0.0" :max="1.0" :interval="0.1" :tooltip="false"></vue-slider>
+        <vue-slider ref="slider" v-model="pre_volume" :min="0.1" :max="1.0" :interval="0.1" :tooltip="false"></vue-slider>
         <table class="table table-striped table-bordered table-voices">
         <thead>
           <tr>
@@ -477,7 +477,7 @@
           this.saveAudiobook([[info.oldIndex, info.newIndex]]);
         }
       },
-      
+
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices'])
     },
     beforeDestroy() {
@@ -598,7 +598,7 @@
           } else {
             this.$root.$emit('hide-modal');
           }
-          
+
         }
       },
       'ttsVoices': function (val) {
