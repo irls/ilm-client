@@ -222,7 +222,7 @@ export default {
       if (!task_type && !this._is('editor')) {
         task_type = true;
       }
-      
+
       if (this.parlist.length) this.parlist.forEach((block, idx, arr)=>{
         if (idx > start_index || typeof start_index === 'undefined' || start_index === null) {
           switch(query) {
@@ -230,7 +230,7 @@ export default {
             if (this.tc_hasTask('metadata_cleanup') || this.tc_hasTask('audio_mastering')) {
               if (!result && !block.markedAsDone && (!block.status || !block.status.proofed)) result = block._id;
             } else {
-              
+
               if (!result) {
                 let task = this.tc_getBlockTask(block._id);
                 if (task && (task_type === true || task.type === task_type)) {
@@ -246,7 +246,7 @@ export default {
       }
 
       });
-      
+
       if (!result) {
         this.getBlocks(query, task_type)
         .then((blockId)=>{
@@ -798,7 +798,6 @@ export default {
   },
   mounted: function() {
       window.addEventListener('keydown', this.eventKeyDown);
-
       this.setBlockWatch();
       this.initRecorder();
       window.onscroll = function() {
@@ -809,6 +808,9 @@ export default {
 
         console.log("$on('book-reimported')");
 
+        this.$refs.blocks.forEach((block)=>{
+          block._id = null;
+        });
         Vue.set(this, 'parlist', new Array());
         this.getBlocks();
 
@@ -824,6 +826,8 @@ export default {
 
   beforeDestroy:  function() {
     window.removeEventListener('keydown', this.eventKeyDown);
+    this.setRangeSelection({}, 'start', false);
+    this.setRangeSelection({}, 'end', false);
   },
   watch: {
 //     'meta._id': {
@@ -839,7 +843,7 @@ export default {
       }
     },
     '$route' (toRoute, fromRoute) {
-      //console.log('$route', toRoute);
+      //console.log('$route', toRoute, fromRoute);
       if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
         this.getBloksUntil(this.$route.params.block, this.$route.params.task_type);
       }
@@ -851,7 +855,7 @@ export default {
             this.getBloksUntil(this.$route.params.block, this.$route.params.task_type);
           }
         } else {
-          
+
         }
       }
     }
