@@ -1,11 +1,12 @@
 <template>
 
-  <modal id="userAddModal" :value="show" effect="fade" @closed="closed">
-    <div slot="modal-header" class="modal-header">
-      <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
+  <modal id="userAddModal" effect="fade" @closed="closed" name="add-user-modal" :clickToClose="false" :resizeable="false" height="auto" width="400" >
+    <section class="modal-js-dialog">
+    <div class="modal-header">
+      <button type="button" class="close" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
       <h4 class="modal-title"><i class="fa fa-user"></i>Add User</h4><i class="fa fa-user user-icon"></i></div>
     </div>
-    <div slot="modal-body" class="modal-body">
+    <div class="modal-body">
       <div v-if="error" class="error-message" v-text="error"></div>
       <div class="form-group"><span class="input-group-addon"></span>
           <input type="text" class="form-control" placeholder="Real Name" v-model="name">
@@ -39,16 +40,20 @@
         ></select-languages>
       </div>
     </div>
-    <div slot="modal-footer" class="modal-footer">
+    <div class="modal-footer">
       <button class="btn btn-primary" type="button" @click="ok">Submit </button>
     </div>
+    </section>
   </modal>
 
 </template>
 
 <script>
 
-import { modal } from 'vue-strap'
+import Vue from 'vue'
+import v_modal from 'vue-js-modal';
+Vue.use(v_modal, { dialog: true });
+//import { modal } from 'vue-strap'
 import SelectRoles from './../generic/SelectRoles'
 import SelectLanguages from './../generic/SelectLanguages'
 import modalMixin from './../../mixins/modal'
@@ -60,7 +65,7 @@ export default {
   mixins: [modalMixin],
 
   components: {
-    modal,
+//     modal,
     SelectRoles,
     SelectLanguages
   },
@@ -86,16 +91,19 @@ export default {
   },
 
   watch: {
-    show () {
-      this.name = ""
-      this.username = ""
-      this.email = ""
-      this.password = ""
-      this.confirmPassword = ""
-      this.roles = []
-      this.languages = []
-      this.errors = {}
-      this.error = ''
+    show (val) {
+      if (val) {
+        this.name = ""
+        this.username = ""
+        this.email = ""
+        this.password = ""
+        this.confirmPassword = ""
+        this.roles = []
+        this.languages = []
+        this.errors = {}
+        this.error = ''
+        this.$modal.show('add-user-modal');
+      } else this.$modal.hide('add-user-modal');
     }
   },
 
@@ -133,7 +141,7 @@ export default {
         });
     },
     cancel () {
-      //console.log('cancel')
+      //this.$modal.hide('add-user-modal');
       this.$emit('closed', false)
     }
   }
@@ -144,14 +152,19 @@ export default {
 <style lang="stylus">
 #userAddModal
   i
-    margin-right: 10px;
-  .modal-dialog
+    margin-right: 10px
+
+  .v--modal-box.v--modal
+    overflow: visible
+
+  .modal-js-dialog
     width: 400px
-    margin-top: 10%
+    margin: 10px
 
     .modal-header
       position: relative
       border-bottom: 0 solid #e5e5e5
+      width: 370px
       .modal-title
         display: inline-block
         font-size: 18px
@@ -170,6 +183,8 @@ export default {
         position: absolute
         right: 10px
         top: 34px
+      .close
+        margin-top: -2px
 
     .modal-body
       margin-top: 20px
@@ -201,7 +216,11 @@ export default {
           min-width: 312px
           .btn-content
             margin: 2px 0
-.error-message {color: red; margin: .5em;
+    .modal-footer
+      width: 370px
+
+.error-message {
+  color: red; margin: .5em;
   border-radius: 5px;
   text-shadow: -1px -1px 10px rgba(255, 255, 0, 1);
   margin-left: 12%;

@@ -139,6 +139,14 @@ class BookBlock {
     }
     if (Array.isArray(this.classes) && this.classes.length) this.classes = this.classes[0];
     //if (this.parnum!==false) this.parnum = '';
+
+    this.content = this.content.replace(/data-(.*?)="(.*?)"/igm,
+    function(match, $1, $2) {
+      var tmp = document.createElement("DIV");
+      tmp.innerHTML = $2;
+      tmp = tmp.textContent || tmp.innerText || "";
+      return 'data-'+$1+'="'+_.escape(tmp)+'"';
+    })
     return _.pick(this, defBlock);
   }
 

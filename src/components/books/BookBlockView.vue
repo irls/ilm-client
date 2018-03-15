@@ -36,7 +36,7 @@
         <div :class="['table-body', '-content', {'editing': isAudioEditing}]"
         @mouseleave="onBlur"
         @click="onBlur">
-            <div class="table-row controls-top" :data-json="JSON.stringify(block)">
+            <div class="table-row controls-top"><!--:data-json="JSON.stringify(block)"-->
 
               <div class="par-ctrl -hidden -left">
                   <div class="block-menu">
@@ -60,12 +60,26 @@
 
                       <li class="separator"></li>
                       <template v-if="allowEditing">
-                        <li @click="insertBlockBefore()">Insert block before</li>
-                        <li @click="insertBlockAfter()">Insert block after</li>
-                        <li @click="showModal('delete-block-message')">Delete block</li>
+                        <li @click="insertBlockBefore()">
+                          <i class="fa fa-angle-up" aria-hidden="true"></i>
+                          Insert block before</li>
+                        <li @click="insertBlockAfter()">
+                          <i class="fa fa-angle-down" aria-hidden="true"></i>
+                          Insert block after</li>
+                        <li @click="showModal('delete-block-message')">
+                          <i class="fa fa-trash" aria-hidden="true"></i>
+                          Delete block</li>
                         <!--<li>Split block</li>-->
-                        <li @click="joinWithPrevious()">Join with previous block</li>
-                        <li @click="joinWithNext()">Join with next block</li>
+                        <li @click="joinWithPrevious()">
+                          <i class="fa fa-angle-double-up" aria-hidden="true"></i>
+                          Join with previous block</li>
+                        <li @click="joinWithNext()">
+                          <i class="fa fa-angle-double-down" aria-hidden="true"></i>
+                          Join with next block</li>
+                        <li class="separator"></li>
+                        <li @click="showModal('block-html')">
+                          <i class="fa fa-code" aria-hidden="true"></i>
+                          Edit HTML</li>
                         <li class="separator"></li>
                       </template>
                       <li @click="discardBlock" v-if="allowEditing">
@@ -425,21 +439,21 @@
     </div>
     <div class="table-cell controls-right">
     </div>
-    <modal :name="'delete-block-message' + block._id" :height="150" :resizeable="false" :clickToClose="false">
-        <div class="modal-header"></div>
-        <div class="modal-body">
-          <p>Delete block?</p>
-        </div>
-        <div class="modal-footer">
-          <template v-if="deletePending">
-            <div class="voicework-preloader"></div>
-          </template>
-          <template v-else>
-            <button class="btn btn-default" v-on:click="hideModal('delete-block-message')">Cancel</button>
-            <button class="btn btn-primary" v-on:click="deleteBlock()">Delete</button>
-          </template>
-        </div>
-      </modal>
+    <modal :name="'delete-block-message' + block._id" :resizeable="false" :clickToClose="false">
+      <div class="modal-header"></div>
+      <div class="modal-body">
+        <p>Delete block?</p>
+      </div>
+      <div class="modal-footer">
+        <template v-if="deletePending">
+          <div class="voicework-preloader"></div>
+        </template>
+        <template v-else>
+          <button class="btn btn-default" v-on:click="hideModal('delete-block-message')">Cancel</button>
+          <button class="btn btn-primary" v-on:click="deleteBlock()">Delete</button>
+        </template>
+      </div>
+    </modal>
     <modal :name="'voicework-change' + block._id" :resizeable="false" :height="250">
       <!-- custom header -->
       <div class="modal-header">
@@ -461,6 +475,26 @@
         </template>
         <template v-else>
           <div class="voicework-preloader"></div>
+        </template>
+      </div>
+    </modal>
+    <modal :name="'block-html' + block._id" height="auto" width="90%" class="block-html-modal" :clickToClose="false" @opened="setHtml">
+      <div class="modal-header">
+        <h4 class="modal-title">
+          Block: {{block._id}}
+        </h4>
+        <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
+      </div>
+      <div class="modal-body">
+        <textarea :ref="'block-html' + block._id" class="block-html"></textarea>
+      </div>
+      <div class="modal-footer">
+        <template v-if="deletePending">
+          <div class="voicework-preloader"></div>
+        </template>
+        <template v-else>
+          <button class="btn btn-default" v-on:click="hideModal('block-html')">Cancel</button>
+          <button class="btn btn-primary" v-on:click="setContent()">Apply</button>
         </template>
       </div>
     </modal>
@@ -800,7 +834,7 @@ export default {
             } break;
           };
         }
-        
+
         return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
       },
       //-- } -- end -- Checkers --//
@@ -841,9 +875,9 @@ export default {
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  'superscript', 'subscript',
+                  //'superscript', 'subscript',
                   'orderedlist', 'unorderedlist',
-    //               'html', 'anchor',
+                  //'html', 'anchor',
                   'quoteButton', 'suggestButton'
                 ]
               };
@@ -1229,7 +1263,7 @@ export default {
         this.assembleBlockProxy(ev)
         .then(()=>{
           let task = this.tc_getBlockTask(this.block._id);
-          
+
           if (!task) {
              let other_task = this.tc_getBlockTaskOtherRole(this.block._id);
              if (other_task) {
@@ -1252,7 +1286,7 @@ export default {
                 break;
             }
           }
-          
+
           this.tc_approveBookTask(task)
           .then(response => {
             if (response.status == 200) {
@@ -2318,6 +2352,15 @@ export default {
         if (index !== -1) {
           this.changes.splice(index, 1);
         }
+      },
+      setHtml() {
+        this.$refs['block-html' + this.block._id].value = this.$refs.blockContent.innerHTML;
+      },
+      setContent() {
+        //console.log(this.$refs['block-html' + this.block._id])
+        this.block.content = this.$refs['block-html' + this.block._id].value;
+        this.isChanged = true;
+        this.hideModal('block-html');
       }
   },
   watch: {
@@ -2851,6 +2894,7 @@ export default {
         );
         /*cursor: pointer*/
       }
+
       w:not([data-map]) {
         background: linear-gradient(
             transparent,
@@ -2859,6 +2903,12 @@ export default {
             transparent 80%,
             transparent
         );
+      }
+
+      [data-idx], [data-pg] {
+        w:not([data-map]) {
+          background: none;
+        }
       }
 
       /* hover effect to show which word is affected */
@@ -3112,6 +3162,29 @@ export default {
     .modal-header {
       padding-left: 15px;
       padding-right: 15px;
+    }
+  }
+
+  .block-html-modal {
+    .modal-header {
+      width: 100%;
+      .modal-title {
+        float: left;
+        margin-left: 15px;
+        width: 80%;
+      }
+      .modal-close-button {
+        float: right;
+        margin-right: 15px;
+      }
+    }
+    .modal-body {
+      overflow: visible;
+    }
+    textarea.block-html {
+      width: 100%;
+      height: 250px;
+      resize: vertical;
     }
   }
   .voicework-preloader {

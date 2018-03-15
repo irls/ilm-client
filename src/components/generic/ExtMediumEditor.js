@@ -356,7 +356,7 @@ let QuoteButton = MediumEditor.Extension.extend({
 
     let styles = '';
     quotesList.forEach(item=>{
-      styles+= `[data-author="${item.text}"] {color: ${item.color};}`
+      styles+= `.ilm-block [data-author="${item.text}"] {color: ${item.color};}`
     })
 
     // browser detection (based on prototype.js)

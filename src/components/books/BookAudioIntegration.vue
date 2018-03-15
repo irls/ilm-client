@@ -1,7 +1,7 @@
 <template>
   <div>
-    <accordion>
-      <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'">
+    <accordion :one-at-atime="true" ref="accordionAudio">
+      <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile">
         <div class="file-catalogue">
           <div class="file-catalogue-buttons">
             <div v-if="_is('editor')" class="upload-audio">
@@ -65,9 +65,9 @@
           </div>
         </div>
       </panel>
-      <panel :is-open="false" :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'">
+      <panel :is-open="false" :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
         <div class="tts-volume-label">Volume:</div>
-        <vue-slider ref="slider" v-model="pre_volume" :min="0.0" :max="1.0" :interval="0.1" :tooltip="false"></vue-slider>
+        <vue-slider ref="slider" v-model="pre_volume" :min="0.1" :max="1.0" :interval="0.1" :tooltip="false"></vue-slider>
         <table class="table table-striped table-bordered table-voices">
         <thead>
           <tr>
@@ -81,6 +81,7 @@
               :pre_selected="currentBookMeta.voices.title"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
+              :blocksForAlignment="blocksForAlignment"
               @onSelect="onTtsSelect('title', $event)"
             ></select-tts-voice></td>
           </tr>
@@ -90,6 +91,7 @@
               :pre_selected="currentBookMeta.voices.header"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
+              :blocksForAlignment="blocksForAlignment"
               @onSelect="onTtsSelect('header', $event)"
             ></select-tts-voice></td>
           </tr>
@@ -99,6 +101,7 @@
               pre_selected=""
               :pre_volume="pre_volume"
               :pre_options="pre_options"
+              :blocksForAlignment="blocksForAlignment"
             ></select-tts-voice></td>
           </tr>-->
           <tr>
@@ -107,6 +110,7 @@
               :pre_selected="currentBookMeta.voices.paragraph"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
+              :blocksForAlignment="blocksForAlignment"
               @onSelect="onTtsSelect('paragraph', $event)"
             ></select-tts-voice></td>
           </tr>
@@ -116,6 +120,7 @@
               :pre_selected="currentBookMeta.voices.footnote"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
+              :blocksForAlignment="blocksForAlignment"
               @onSelect="onTtsSelect('footnote', $event)"
             ></select-tts-voice></td>
           </tr>
@@ -196,6 +201,13 @@
       var self = this;
       this.$root.$on('from-audioeditor:close', function() {
         self.playing = false;
+      })
+      var openAudio = this.$refs.panelAudiofile ? this.$refs.panelAudiofile.open : false;
+      var openTTS = this.$refs.panelTTS ? this.$refs.panelTTS.open : false;
+      this.$root.$on('from-bookedit:set-selection', (start, end) => {
+        if (!openAudio && openTTS) {
+          this.$root.$emit('from-bookedit:set-voice-test', start, end)
+        }
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
         let record = self.audiobook.importFiles.find(_f => {
@@ -423,8 +435,9 @@
           this.alignmentProcess = false;
           this.setCurrentBookCounters();
         }).catch((err) => {
-          console.log('error: '+ err)
           this.alignmentProcess = false;
+          this.alignmentProcessModal = false;
+          console.log('error11: '+ err);
         });
       },
       scrollToBlock(id) {
@@ -435,7 +448,7 @@
         this.currentBookMeta.voices[key] = value;
         this.$emit('onTtsSelect', 'voices.'+ key, value);
       },
-      
+
       listReorder(info) {
         if (info && typeof info.newIndex !== 'undefined' && typeof info.oldIndex !== 'undefined') {
           this.saveAudiobook([[info.oldIndex, info.newIndex]]);
@@ -474,7 +487,7 @@
           }
         }
 //         console.log('enableTtsAlignment', blocksSelected, voicesSelected);
-        return this.hasBlocksForTTS && voicesSelected;
+        return this.hasBlocksForTTS && voicesSelected && this.blocksForAlignment.start._id && this.blocksForAlignment.end._id;
       },
       hasBlocksForAlignment: function() {
         return this.blocksForAlignment.count > 0
@@ -562,7 +575,7 @@
           } else {
             this.$root.$emit('hide-modal');
           }
-          
+
         }
       },
       'ttsVoices': function (val) {
