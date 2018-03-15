@@ -1126,10 +1126,8 @@ export default {
           return api.post(api_url, {}, {})
             .then(response => {
               if (response.status == 200 && response.data.audiosrc) {
-                this.block.content = this.blockAudio.map;
-                this.block.audiosrc = response.data.audiosrc;
-                //this.blockAudio.map = '';
-                this.blockAudio.src = process.env.ILM_API + response.data.audiosrc;
+                this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+                this.blockAudio.src = this.block.getAudiosrc('m4a');
                 this.isAudioChanged = false;
                 return this.putBlock(this.block);
               }
@@ -1781,8 +1779,11 @@ export default {
               .then(response => {
                 self.isUpdating = false;
                 if (response.status == 200) {
-                  self.blockAudio.src = process.env.ILM_API + response.data.audiosrc + '?' + (new Date()).toJSON();
-                  self.blockAudio.map = response.data.content;
+                  //self.blockAudio.map = response.data.content;
+                  self.block.setContent(response.data.content);
+                  self.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+                  self.blockAudio.src = self.block.getAudiosrc('m4a');
+                  self.isAudioChanged = true;
                 }
                 self.reRecordPosition = false;
               })
