@@ -202,9 +202,9 @@
       this.$root.$on('from-audioeditor:close', function() {
         self.playing = false;
       })
-      var openAudio = this.$refs.panelAudiofile ? this.$refs.panelAudiofile.open : false;
-      var openTTS = this.$refs.panelTTS ? this.$refs.panelTTS.open : false;
       this.$root.$on('from-bookedit:set-selection', (start, end) => {
+        var openAudio = this.$refs.panelAudiofile ? this.$refs.panelAudiofile.open : false;
+        var openTTS = this.$refs.panelTTS ? this.$refs.panelTTS.open : false;
         if (!openAudio && openTTS) {
           this.$root.$emit('from-bookedit:set-voice-test', start, end)
         }
@@ -471,7 +471,7 @@
 
       onTtsSelect(key, value) {
         this.currentBookMeta.voices[key] = value;
-        this.$emit('onTtsSelect', 'voices.'+ key, value);
+        if (value) this.$emit('onTtsSelect', 'voices.'+ key, value);
       },
 
       listReorder(info) {
@@ -511,7 +511,7 @@
             }
           }
         }
-//         console.log('enableTtsAlignment', blocksSelected, voicesSelected);
+        //console.log('enableTtsAlignment', voicesSelected, this.currentBookMeta.voices);
         return this.hasBlocksForTTS && voicesSelected && this.blocksForAlignment.start._id && this.blocksForAlignment.end._id;
       },
       hasBlocksForAlignment: function() {

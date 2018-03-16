@@ -83,7 +83,7 @@ export default {
         snd.play();
       }
     },
-    
+
     setVoiceTest(start, end) {
       let block = start || end;
       let text = '';
@@ -113,7 +113,7 @@ export default {
     }
 
     //console.log('this.value', this.value);
-
+    let $this = this;
     $(this.$el).ready(() => {
       $(this.$el).find('.js-select2')
       .select2({
@@ -124,15 +124,20 @@ export default {
       .trigger('change')
       // emit event on change.
       .on('select2:select', (e) => {
+        //console.log('select2:select', e.target.value);
         this.$emit('onSelect', e.target.value);
         if (this.value !== e.target.value) {
           this.applyAudio(e.target.value);
           this.value = e.target.value;
         }
       })
-      .on('select2:unselecting', function() {
+      .on('select2:unselecting', function () {
+        // according to https://github.com/select2/select2/issues/3320
         $(this).one('select2:opening', function(ev) { ev.preventDefault(); });
-      }); // according to https://github.com/select2/select2/issues/3320
+        //console.log('select2:unselecting', this.value);
+        $this.value = '';
+        $this.$emit('onSelect', '');
+      });
     })
 
     if (this.pre_selected) {

@@ -77,10 +77,12 @@
                           <i class="fa fa-angle-double-down" aria-hidden="true"></i>
                           Join with next block</li>
                         <li class="separator"></li>
+                        <template v-if="block.type != 'illustration' && block.type != 'hr'">
                         <li @click="showModal('block-html')">
                           <i class="fa fa-code" aria-hidden="true"></i>
                           Edit HTML</li>
                         <li class="separator"></li>
+                        </template>
                       </template>
                       <li @click="discardBlock" v-if="allowEditing">
                         <i class="fa fa-undo" aria-hidden="true"></i>
@@ -2240,7 +2242,9 @@ export default {
         }
       },
       setHtml() {
-        this.$refs['block-html' + this.block._id].value = this.$refs.blockContent.innerHTML;
+        if (this.$refs.blockContent) {
+          this.$refs['block-html' + this.block._id].value = this.$refs.blockContent.innerHTML;
+        }
       },
       setContent() {
         //console.log(this.$refs['block-html' + this.block._id])

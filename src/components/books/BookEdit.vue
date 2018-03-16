@@ -273,7 +273,7 @@ export default {
     },
 
     refreshBlock (change) {
-      //console.log('refreshBlock', change.doc);
+      console.log('refreshBlock', change.doc);
       this.parlist.forEach((block, idx, arr)=>{
         if (block._id === change.id) {
           if (change.doc.audiosrc) {
