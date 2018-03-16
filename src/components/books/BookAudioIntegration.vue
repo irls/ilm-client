@@ -210,7 +210,6 @@
         }
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
-        id = id.split('/').pop();
         let record = self.audiobook.importFiles.find(_f => {
           return _f.id == id;
         });
@@ -341,33 +340,9 @@
             return f.id == id;
           })
           if (record/* && this.player*/) {
-            this.$root.$emit('for-audioeditor:load-and-play', process.env.ILM_API + this.audiobook.importUrl + record.id, '', null, autostart, record)
+            let audio_th = record['ver'] && record['ver']['m4a'] ? record['ver']['m4a'] : record.id
+            this.$root.$emit('for-audioeditor:load-and-play', process.env.ILM_API + this.audiobook.importUrl + audio_th, '', null, autostart, record)
             this.playing = id;
-            /*this.player.getEventEmitter().emit('clear');
-            this.player.load([
-              {
-                src: process.env.ILM_API + this.audiobook.importUrl + id,
-                name: 'block-audio',
-                gain: 0.5,
-                waveOutlineColor: '#f3f3f3',
-                customClass: 'block-audio',
-                states: {
-                  cursor: true,
-                  fadein: true,
-                  fadeout: true,
-                  select: true,
-                  shift: true,
-                }
-              }
-            ]).then(() => {
-              this.player.play();
-              this.playing = id;
-              let self = this;
-              this.player.getEventEmitter().on('finished', function() {
-                self.playing = false;
-                self.paused = false;
-              });
-            });*/
           }
         } else if (this.player) {
           this.player.play();
