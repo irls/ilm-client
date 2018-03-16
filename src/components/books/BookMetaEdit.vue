@@ -841,7 +841,7 @@ export default {
           this.startWatchAudiobook(audiobook._id)
             .then(() => {
               this.audiobookWatch.on('change', (change) => {
-                //console.log('AUDIOBOOK CHANGE', change)
+                console.log('AUDIOBOOK CHANGE', change)
                 if (change && change.doc) {
                   this.setAudiobook(change.doc);
                 }
