@@ -906,15 +906,15 @@ export const store = new Vuex.Store({
 
           dispatch('getBlock', block_id)
           .then((b)=>{
-            if (b.audiosrc) {
+            /*if (b.audiosrc) {
               b.audiosrc = process.env.ILM_API + b.audiosrc;
-            }
+            }*/
 
-            if (b.footnotes) b.footnotes.forEach((f, fIdx)=>{
+            /*if (b.footnotes) b.footnotes.forEach((f, fIdx)=>{
               if (f.audiosrc) {
                 f.audiosrc = process.env.ILM_API + f.audiosrc +'?'+ (new Date()).toJSON();
               }
-            })
+            })*/
 
             results.rows.push(b);
 

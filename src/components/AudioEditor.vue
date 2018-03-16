@@ -114,7 +114,8 @@
           dragLeft: null,
           dragRight: null,
           onWordRepositionMessage: false,
-          playlistScrollPosition: 0
+          playlistScrollPosition: 0,
+          audiofileId: null
         }
       },
       mounted() {
@@ -144,6 +145,9 @@
             return false;//component was destroyed;
           }
           let mode = bookAudiofile.id ? 'file' : 'block';
+          if (bookAudiofile.id) {
+            this.audiofileId = bookAudiofile.id;
+          }
           let changeZoomLevel = mode != this.mode;
           if ((this.blockId && this.blockId != blockId) || mode == 'file' || mode != this.mode) {
             this.silenceLength = 0.1;
@@ -599,7 +603,7 @@
               this.isModified = false;
             }
           } else if(this.mode == 'file') {
-            this.$root.$emit('from-audioeditor:save-positions', this.audiofile, this.selection);
+            this.$root.$emit('from-audioeditor:save-positions', this.audiofileId, this.selection);
             this.origFilePositions = this.selection;
           }
         },

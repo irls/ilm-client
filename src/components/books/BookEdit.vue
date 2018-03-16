@@ -276,15 +276,15 @@ export default {
       console.log('refreshBlock', change.doc);
       this.parlist.forEach((block, idx, arr)=>{
         if (block._id === change.id) {
-          if (change.doc.audiosrc) {
+          /*if (change.doc.audiosrc) {
             change.doc.audiosrc = process.env.ILM_API + change.doc.audiosrc;
-          }
+          }*/
 
-          if (change.doc.footnotes) change.doc.footnotes.forEach((f, fIdx)=>{
+          /*if (change.doc.footnotes) change.doc.footnotes.forEach((f, fIdx)=>{
             if (f.audiosrc) {
               f.audiosrc = process.env.ILM_API + f.audiosrc +'?'+ (new Date()).toJSON();
             }
-          });
+          });*/
 
           if (change.deleted === true) {
             this.parlist.splice(idx, 1);
@@ -547,26 +547,29 @@ export default {
           this.blockReindexProcess = true;
           //console.log('blockBefore', blockBefore);
           this.parlist.splice(block_Idx, 1);
-          block._deleted = true;
-          this.putBlock(block)
-          .then(()=>{
-            if (blockBefore) {
-              blockBefore.chainid = block.chainid;
-              this._setBlockChainId(blockBefore._id, block.chainid)
-              this.putBlockPart({
-                block: new BookBlock(blockBefore),
-                field: 'chainid'
-              }).then((response)=>{
-                this.blockReindexProcess = false
-              });
-            } else {
-              this.setMetaData({ key: 'startBlock_id', value: block.chainid})
-              .then((response)=>{
-                this.blockReindexProcess = false
-              });
-            }
-          })
-          .catch((err)=>{})
+          
+          if (blockBefore) {
+            blockBefore.chainid = block.chainid;
+            this._setBlockChainId(blockBefore._id, block.chainid)
+            this.putBlockPart({
+              block: new BookBlock(blockBefore),
+              field: 'chainid'
+            }).then((response)=>{
+              this.blockReindexProcess = false
+            });
+          } else {
+            this.setMetaData({ key: 'startBlock_id', value: block.chainid})
+            .then((response)=>{
+              this.blockReindexProcess = false
+            });
+          }
+          let api_url = this.API_URL + 'book/block/' + block._id;
+          let api = this.$store.state.auth.getHttp();
+          api.delete(api_url, {})
+            .then((response)=>{
+
+            })
+            .catch(err => console.log(err));
       })
       .catch((err)=>err)
     },
@@ -763,9 +766,9 @@ export default {
             else if (block && block._rev != b._rev) {
               //console.log('OLD REV', block._rev, replace)
               block = new BookBlock(b);
-              if (block.audiosrc) {
+              /*if (block.audiosrc) {
                 block.audiosrc = process.env.ILM_API + block.audiosrc;
-              }
+              }*/
               Vue.set(this.parlist, replace, block);
               this.parlist[replace].isUpdated = true;
               //console.log('REV', block._rev, b._rev);
@@ -779,7 +782,7 @@ export default {
                   //console.log('OLD REV', block._rev, replace)
                   block = new BookBlock(b);
                   if (block.audiosrc) {
-                    block.audiosrc = process.env.ILM_API + block.audiosrc;
+                    //block.audiosrc = process.env.ILM_API + block.audiosrc;
                   }
                   Vue.set(this.parlist, i, block);
                   this.parlist[i].isUpdated = true;
