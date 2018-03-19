@@ -420,7 +420,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks', 'audiobookWatch']),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -823,7 +823,7 @@ export default {
     loadAudiobook(set_tab = false) {
       let self = this;
       this.getAudioBook(this.currentBookMeta.bookid).then(audio => {
-        self.audiobook = audio;//
+        self.setAudiobook(audio);//
         //console.log(self.audiobook)
         self.setAllowSetMastered();
         if (set_tab) {
@@ -836,6 +836,20 @@ export default {
       })
     },
     setAudiobook(audiobook) {
+      if (audiobook._id && audiobook._id != this.audiobook._id) {
+        if (!this.audiobookWatch) {
+          this.startWatchAudiobook(audiobook._id)
+            .then(() => {
+              this.audiobookWatch.on('change', (change) => {
+                console.log('AUDIOBOOK CHANGE', change)
+                if (change && change.doc) {
+                  this.setAudiobook(change.doc);
+                }
+              });
+            })
+            .catch(err => err);
+        }
+      }
       this.audiobook = audiobook;
     },
     addAuthor() {
@@ -933,7 +947,7 @@ export default {
         axios.delete(this.API_URL + 'books/' + this.currentBook.bookid)
       }
     },
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'startWatchAudiobook'])
   }
 }
 </script>

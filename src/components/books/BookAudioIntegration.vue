@@ -23,32 +23,39 @@
           <div class="file-catalogue-files-wrapper">
             <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
               <div v-for="(audiofile, index) in audiobook.importFiles" class="audiofile">
-                <div :class="['audiofile-info', {'playing': playing == audiofile.id}]">
-                  <div class="audiofile-player-controls">
-                    <i class="fa fa-play-circle-o" v-on:click="play(audiofile.id, true)"></i>
-                    <!-- <i class="fa fa-play-circle-o red" v-on:click="play()" v-if="paused === audiofile.id"></i>
-                    <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
-                    <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
+                <template v-if="audiofile.status == 'processing'">
+                  <div class="audiofile-info">
+                    <i>Processing, {{audiofile.name}}</i>
                   </div>
-                  <div class="audiofile-name">
-                    <span v-if="renaming !== audiofile.id" class="audiofile-name-edit" @click="play(audiofile.id, false)"  :title="audiofile.name">{{audiofile.name}}</span>
-                    <input type="text" v-model="audiofile.name" class="audiofile-name-edit"
-                         @focusout="saveAudiobook()"
-                         v-else />
+                </template>
+                <template v-else>
+                  <div :class="['audiofile-info', {'playing': playing == audiofile.id}]">
+                    <div class="audiofile-player-controls">
+                      <i class="fa fa-play-circle-o" v-on:click="play(audiofile.id, true)"></i>
+                      <!-- <i class="fa fa-play-circle-o red" v-on:click="play()" v-if="paused === audiofile.id"></i>
+                      <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
+                      <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
+                    </div>
+                    <div class="audiofile-name">
+                      <span v-if="renaming !== audiofile.id" class="audiofile-name-edit" @click="play(audiofile.id, false)"  :title="audiofile.name">{{audiofile.name}}</span>
+                      <input type="text" v-model="audiofile.name" class="audiofile-name-edit"
+                           @focusout="saveAudiobook()"
+                           v-else />
+                    </div>
+                    <div class="audiofile-duration"><span>({{ parseAudioLength(audiofile.duration) }})</span></div>
                   </div>
-                  <div class="audiofile-duration"><span>({{ parseAudioLength(audiofile.duration) }})</span></div>
-                </div>
-                <div class="audiofile-options">
-                  <input type="checkbox" :name="audiofile.id" @change="addSelection(audiofile.id, $event)"/>
-                  <dropdown text="..." type="default">
-                    <li><i class="fa fa-pencil"></i>
-                      <a v-on:click="renameAudiofile(audiofile.id)">Rename</a>
-                    </li>
-                    <li><i class="fa fa-trash"></i>
-                      <a v-on:click="deleteAudio(audiofile.id)">Delete</a>
-                    </li>
-                  </dropdown>
-                </div>
+                  <div class="audiofile-options">
+                    <input type="checkbox" :name="audiofile.id" @change="addSelection(audiofile.id, $event)"/>
+                    <dropdown text="..." type="default">
+                      <li><i class="fa fa-pencil"></i>
+                        <a v-on:click="renameAudiofile(audiofile.id)">Rename</a>
+                      </li>
+                      <li><i class="fa fa-trash"></i>
+                        <a v-on:click="deleteAudio(audiofile.id)">Delete</a>
+                      </li>
+                    </dropdown>
+                  </div>
+                </template>
               </div>
             </draggable>
           </div>
@@ -450,7 +457,7 @@
       },
 
       listReorder(info) {
-        if (info && typeof info.newIndex !== 'undefined' && typeof info.oldIndex !== 'undefined') {
+        if (info && typeof info.newIndex !== 'undefined' && typeof info.oldIndex !== 'undefined' && info.newIndex !== info.oldIndex) {
           this.saveAudiobook([[info.oldIndex, info.newIndex]]);
         }
       },
@@ -639,6 +646,9 @@
         .audiofile-info {
           display: inline-block;
           width: 305px;
+          white-space: nowrap;
+          max-width: 80%;
+          overflow: hidden;
           .audiofile-player-controls {
             width: 19px;
             display: inline-block;
@@ -646,10 +656,13 @@
           .audiofile-name {
             display: inline-block;
             cursor: pointer;
+            white-space: nowrap;
+            max-width: 65%;
+            overflow: hidden;
           }
           .audiofile-duration {
-            width: 50px;
             display: inline-block;
+            overflow: hidden;
           }
           &.playing {
             color: maroon;

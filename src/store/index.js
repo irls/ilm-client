@@ -38,6 +38,7 @@ export const store = new Vuex.Store({
     metaDB: false,
     contentDB: false,
     contentDBWatch: false,
+    audiobookWatch: false,
     tasksDB: false,
     collectionsDB: false,
     librariesDB: false,
@@ -136,6 +137,7 @@ export const store = new Vuex.Store({
     tc_tasksByBlock: state => state.tc_tasksByBlock,
     tc_userTasks: state => state.tc_userTasks,
     contentDBWatch: state => state.contentDBWatch,
+    audiobookWatch: state => state.audiobookWatch,
     allowCollectionsEdit: state => state.isAdmin || state.isLibrarian,
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
@@ -193,6 +195,17 @@ export const store = new Vuex.Store({
         if (state.contentDBWatch) {
             state.contentDBWatch.cancel();
             state.contentDBWatch = false;
+        }
+    },
+    
+    set_audiobookWatch (state, syncPointer) {
+        state.audiobookWatch = syncPointer;
+    },
+
+    stop_audiobookWatch (state) {
+        if (state.audiobookWatch) {
+            state.audiobookWatch.cancel();
+            state.audiobookWatch = false;
         }
     },
 
@@ -1038,6 +1051,27 @@ export const store = new Vuex.Store({
         commit('set_contentDBWatch', contentDBWatch);
         return true;
     },
+    
+    startWatchAudiobook ({commit, state, dispatch}, id) {
+        commit('stop_audiobookWatch');
+        let contentDBWatch = state.contentDB.changes({
+            since: 'now',
+            live: true,
+            include_docs: true,
+            filter: function (doc) {
+                return doc._id === id;
+            }
+        });
+        contentDBWatch.removeAllListeners('change');
+        contentDBWatch
+        .on('complete', function(info) {
+            //console.log('contentDBWatch Cancelled');
+        }).on('error', function (err) {
+            console.log(err);
+        });
+        commit('set_audiobookWatch', contentDBWatch);
+        return true;
+    },
 
     _putBlock ({state}, block) {
       console.log('_putBlock block', block);
@@ -1125,8 +1159,8 @@ export const store = new Vuex.Store({
     getAudioBook ({state}, bookid) {
       return axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
         .then(audio => {
-          if (audio.data && audio.data.rows && audio.data.rows[0]) {
-            return audio.data.rows[0].doc;
+          if (audio.data) {
+            return audio.data;
           } else {
             return {};
           }
