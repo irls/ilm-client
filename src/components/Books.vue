@@ -38,7 +38,8 @@
       </tr>
     </table>
     <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}]" >
-      <AudioEditor ref="audioEditor"></AudioEditor>
+      <AudioEditor ref="audioEditor"
+        :blocksForAlignment="blocksForAlignment"></AudioEditor>
     </nav>
     <v-dialog :clickToClose="false"/>
   </div>

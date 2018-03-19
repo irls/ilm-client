@@ -81,6 +81,7 @@
       components: {
         'modal': modal
       },
+      props: ['blocksForAlignment'],
       mixins: [api_config, task_controls],
       data() {
         return {
@@ -115,7 +116,8 @@
           dragRight: null,
           onWordRepositionMessage: false,
           playlistScrollPosition: 0,
-          audiofileId: null
+          audiofileId: null,
+          blockMap: {}
         }
       },
       mounted() {
@@ -140,6 +142,11 @@
       },
       methods: {
         load(audio, text, blockId, autostart = false, bookAudiofile = {}) {
+          if (bookAudiofile && bookAudiofile.blockMap) {
+            this.blockMap = bookAudiofile.blockMap;
+          } else {
+            this.blockMap = {};
+          }
           $('.playlist-tracks').off('scroll');
           if (this.audioContext && this.audioContext.state === 'closed') {
             return false;//component was destroyed;
@@ -375,14 +382,16 @@
             })
             this.onDiscardMessage = false;
             if (this.mode == 'file') {
-              if (bookAudiofile && bookAudiofile.positions) {
-                this.origFilePositions = bookAudiofile.positions;
-                this.plEventEmitter.emit('select', bookAudiofile.positions.start, bookAudiofile.positions.end);
-              } else {
-                this.plEventEmitter.emit('select', 0, parseInt(this.audiosourceEditor.duration));
-                this.origFilePositions = {start: 0, end: parseInt(this.audiosourceEditor.duration)}
+              if (!this._setBlocksSelection()) {
+                if (bookAudiofile && bookAudiofile.positions) {
+                  this.origFilePositions = bookAudiofile.positions;
+                  this.plEventEmitter.emit('select', bookAudiofile.positions.start, bookAudiofile.positions.end);
+                } else {
+                  this.plEventEmitter.emit('select', 0, parseInt(this.audiosourceEditor.duration));
+                  this.origFilePositions = {start: 0, end: parseInt(this.audiosourceEditor.duration)}
+                }
+                this._showSelectionBorders();
               }
-              this._showSelectionBorders();
             }
             if (this.discardOnExit) {
               this.discardOnExit = false;
@@ -672,8 +681,8 @@
           let step = parseInt('1' + '0'.repeat(precision));
           return Math.round(val * step) / step;
         },
-        _showSelectionBorders() {
-          setTimeout(function() {
+        _showSelectionBorders(scroll_to_selection = false) {
+          setTimeout(() => {
             let selection = $('.selection.segment')[0];
             if (selection) {
               $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth);
@@ -681,6 +690,9 @@
             } else {
               $('[id="resize-selection-right"]').hide().css('left', 0);
               $('[id="resize-selection-left"]').hide().css('left', 0);
+            }
+            if (scroll_to_selection) {
+              this._scrollToCursor();
             }
           }, 50);
         },
@@ -839,6 +851,35 @@
         },
         _isAnnotationsEditable() {
           return this.currentBookMeta.isMastered;
+        },
+        _setBlocksSelection() {
+          if (this.blocksForAlignment && ((this.blocksForAlignment.start && this.blocksForAlignment.start._id) || (this.blocksForAlignment.end && this.blocksForAlignment.end._id)) && this.plEventEmitter) {
+            let start = false;
+            let end = false;
+            if (this.blocksForAlignment.start && this.blocksForAlignment.start._id && this.blockMap[this.blocksForAlignment.start._id]) {
+              start = parseInt(this.blockMap[this.blocksForAlignment.start._id][0])/1000;
+              if (!this.blocksForAlignment.end || !this.blocksForAlignment.end._id) {
+                end = parseInt(this.blockMap[this.blocksForAlignment.start._id][1])/1000;
+              }
+            }
+            if (this.blocksForAlignment.end && this.blocksForAlignment.end._id && this.blockMap[this.blocksForAlignment.end._id]) {
+              end = parseInt(this.blockMap[this.blocksForAlignment.end._id][1])/1000;
+              if (!this.blocksForAlignment.start || !this.blocksForAlignment.start._id) {
+                start = parseInt(this.blockMap[this.blocksForAlignment.end._id][0])/1000;
+              }
+            }
+            
+            if (start !== false && end !== false && start <= end) {
+              this.selection.start = start;
+              this.selection.end = end;
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              this._showSelectionBorders(true);
+              return true;
+            } else {
+              return false;
+            }
+          }
+          return false;
         }
       },
       computed: {
@@ -971,6 +1012,13 @@
               $('#cursor-position').css('left', pos);
             }
           }
+        },
+        'blocksForAlignment': {
+          handler(val) {
+            //console.log('blocksForAlignment CHANGED', val)
+            this._setBlocksSelection();
+          },
+          deep: true
         }
       }
   }
