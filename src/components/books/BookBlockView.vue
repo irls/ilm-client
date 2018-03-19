@@ -60,21 +60,36 @@
 
                       <li class="separator"></li>
                       <template v-if="allowEditing">
-                        <li @click="insertBlockBefore()">
+                        <li v-if="!isBlocked" @click="insertBlockBefore()">
                           <i class="fa fa-angle-up" aria-hidden="true"></i>
                           Insert block before</li>
-                        <li @click="insertBlockAfter()">
+                        <li v-else class="disabled">
+                          <i class="fa menu-preloader" aria-hidden="true"></i>
+                          Insert block before</li>
+                        <li v-if="!isBlocked" @click="insertBlockAfter()">
                           <i class="fa fa-angle-down" aria-hidden="true"></i>
                           Insert block after</li>
-                        <li @click="showModal('delete-block-message')">
+                        <li v-else class="disabled">
+                          <i class="fa menu-preloader" aria-hidden="true"></i>
+                          Insert block after</li>
+                        <li v-if="!isBlocked" @click="showModal('delete-block-message')">
                           <i class="fa fa-trash" aria-hidden="true"></i>
                           Delete block</li>
+                        <li v-else class="disabled">
+                          <i class="fa menu-preloader" aria-hidden="true"></i>
+                          Delete block</li>
                         <!--<li>Split block</li>-->
-                        <li @click="joinWithPrevious()">
+                        <li v-if="!isBlocked" @click="joinWithPrevious()">
                           <i class="fa fa-angle-double-up" aria-hidden="true"></i>
                           Join with previous block</li>
-                        <li @click="joinWithNext()">
+                        <li v-else class="disabled">
+                          <i class="fa menu-preloader" aria-hidden="true"></i>
+                          Join with previous block</li>
+                        <li v-if="!isBlocked" @click="joinWithNext()">
                           <i class="fa fa-angle-double-down" aria-hidden="true"></i>
+                          Join with next block</li>
+                        <li v-else class="disabled">
+                          <i class="fa menu-preloader" aria-hidden="true"></i>
                           Join with next block</li>
                         <li class="separator"></li>
                         <template v-if="block.type != 'illustration' && block.type != 'hr'">
@@ -441,7 +456,7 @@
     </div>
     <div class="table-cell controls-right">
     </div>
-    <modal :name="'delete-block-message' + block._id" :resizeable="false" :clickToClose="false">
+    <modal :name="'delete-block-message' + block._id" :resizeable="false" :clickToClose="false" height="auto">
       <div class="modal-header"></div>
       <div class="modal-body">
         <p>Delete block?</p>
@@ -491,13 +506,8 @@
         <textarea :ref="'block-html' + block._id" class="block-html"></textarea>
       </div>
       <div class="modal-footer">
-        <template v-if="deletePending">
-          <div class="voicework-preloader"></div>
-        </template>
-        <template v-else>
           <button class="btn btn-default" v-on:click="hideModal('block-html')">Cancel</button>
           <button class="btn btn-primary" v-on:click="setContent()">Apply</button>
-        </template>
       </div>
     </modal>
 </div>
@@ -753,7 +763,8 @@ export default {
           watchBlk: 'contentDBWatch',
           tc_currentBookTasks: 'tc_currentBookTasks',
           authors: 'authors',
-          isEditor: 'isEditor'
+          isEditor: 'isEditor',
+          isBlocked: 'isBlocked'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
@@ -1390,7 +1401,7 @@ export default {
           .then(response => {
             this.isUpdating = false;
             if (response.status == 200) {
-              
+
               if (footnoteIdx === null) {
                 this.blockAudio.map = response.data.content;
                 this.block.setContent(response.data.content);
@@ -1499,7 +1510,7 @@ export default {
         this.block.footnotes.splice(pos, 0, new FootNote({}));
         this.isChanged = true;
         this.pushChange('footnotes');
-        
+
         //if (this.editorFootn) {
 
           //console.log(MediumEditor.getEditorFromElement('.content-wrap-footn'));
@@ -2823,7 +2834,23 @@ export default {
       height: 20px;
       .fa, .glyphicon {
         margin-right: 5px;
+        &.menu-preloader {
+          background: url(/static/preloader-snake-transparent-small.gif);
+          width: 18px;
+          height: 16px;
+          display: inline-block;
+          background-repeat: no-repeat;
+          text-align: center;
+          background-position: 0 0;
+          background-size: 83%;
+          margin-bottom: -3px;
+          margin-right: -1px;
+        }
       }
+      .disabled {
+        color: gray;
+      }
+
     }
     .illustration-block {
       img {
@@ -3201,4 +3228,5 @@ export default {
       text-align: center;
       background-position: center;
   }
+
 </style>

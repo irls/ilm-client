@@ -82,7 +82,9 @@ export const store = new Vuex.Store({
     user: {},
     currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0'},
 
-    ttsVoices : []
+    ttsVoices : [],
+
+    blockers: []
   },
 
   getters: {
@@ -165,7 +167,10 @@ export const store = new Vuex.Store({
         })
       }
       return result;
-    }
+    },
+
+    isBlocked: state => state.blockers.length > 0,
+    blockers: state => state.blockers
   },
 
   mutations: {
@@ -441,6 +446,15 @@ export const store = new Vuex.Store({
 
     SET_TTS_VOICES (state, ttsVoices) {
       state.ttsVoices = ttsVoices;
+    },
+
+    set_blocker (state, bName) {
+      if (state.blockers.indexOf(bName) == -1) state.blockers.push(bName);
+    },
+    clear_blocker (state, bName) {
+      let idx = state.blockers.indexOf(bName);
+      //console.log('clear_blocker', bName, idx, state.blockers);
+      if (idx > -1) state.blockers.splice(idx, 1);
     }
   },
 
@@ -850,16 +864,29 @@ export const store = new Vuex.Store({
     },
 
     getBlock ({commit, state, dispatch}, block_id) {
+      commit('set_blocker', 'getBlock');
       return state.contentRemoteDB
         .get(block_id)
-        .then(res => res)
+        .then(res => {
+          commit('clear_blocker', 'getBlock');
+          return res
+        })
         .catch((err) => {
           if (err.status == 404) {
           return state.contentDB
             .get(block_id)
-            .then(res => res)
-            .catch(err => Promise.reject(err));
-          } else return Promise.reject(err);
+            .then(res => {
+              commit('clear_blocker', 'getBlock');
+              return res
+            })
+            .catch(err => {
+              commit('clear_blocker', 'getBlock');
+              return Promise.reject(err)
+            });
+          } else {
+            commit('clear_blocker', 'getBlock');
+            return Promise.reject(err);
+          }
         });
     },
 
@@ -899,7 +926,7 @@ export const store = new Vuex.Store({
           delete params.task;
         }
       }
-      
+
       function defer() {
         var res, rej;
         var promise = new Promise((resolve, reject) => {
@@ -947,9 +974,9 @@ export const store = new Vuex.Store({
                         }
                       }
                     } else {
-                      
+
                     }
-                    
+
                   } else {
                     if (!b.markedAsDone && (!b.status || !b.status.proofed)) {
                       results.blockId = b._id;
@@ -1064,6 +1091,7 @@ export const store = new Vuex.Store({
 
     putBlock ({commit, state, dispatch}, block) {
         let cleanBlock = block.clean();
+        commit('set_blocker', 'putBlock');
         //console.log('putBlock', cleanBlock);
         return dispatch('getBlock', cleanBlock._id)
         .then(function(doc) {
@@ -1071,18 +1099,21 @@ export const store = new Vuex.Store({
           return dispatch('_putBlock', cleanBlock)
           .then((response) => {
             // handle response
+            commit('clear_blocker', 'putBlock');
             return Promise.resolve(response);
           });
         })
         .catch((err) => {
-          console.log('putBlock getBlock err', err);
+            console.log('putBlock getBlock err', err);
             if (err.status == 404) {
               return dispatch('_putBlock', cleanBlock)
               .then((response) => {
                 // handle response
+                commit('clear_blocker', 'putBlock');
                 return Promise.resolve(response);
               });
             } else {
+              commit('clear_blocker', 'putBlock');
               console.log('Block save error:', err);
             }
         });
@@ -1093,18 +1124,23 @@ export const store = new Vuex.Store({
       blockData.block.partUpdate = true;
       //console.log('putBlockPart', cleanBlock);
       if (cleanBlock) {
+        commit('set_blocker', 'putBlockPart');
         return dispatch('getBlock', cleanBlock._id)
         .then(function(doc) {
           return dispatch('_putBlock', _.merge(doc, cleanBlock))
           .then((response) => {
+            commit('clear_blocker', 'putBlockPart');
             return Promise.resolve(response)
           })
         })
         .catch((err) => {
           console.log('Block save error:', err);
+          commit('clear_blocker', 'putBlock');
           return Promise.reject(err);
         });
-      } else return BPromise.resolve();
+      } else {
+        return BPromise.resolve();
+      }
     },
 
     putMetaAuthors ({commit, state, dispatch}, authors) {
@@ -1224,12 +1260,13 @@ export const store = new Vuex.Store({
     },
 
     getBlockByChainId({state, commit}, chainid) {
+      commit('set_blocker', 'getBlockByChainId');
       let _query = 'filters_byBlockChainId/byBlockChainId';
       let _params = { key: chainid, include_docs: true };
       console.log('getBlockByChainId', chainid);
       return state.contentRemoteDB.query (_query, _params)
       .then(function (result) {
-        //console.log('result', result);
+        commit('clear_blocker', 'getBlockByChainId');
         if (result.rows.length) {
           return result.rows[0].doc;
         } else {
@@ -1240,7 +1277,7 @@ export const store = new Vuex.Store({
         if (err.status == 404) {
           return state.contentDB.query (_query, _params)
           .then(function (result) {
-            //console.log('result', result);
+            commit('clear_blocker', 'getBlockByChainId');
             if (result.rows.length) {
               return result.rows[0].doc;
             } else {
@@ -1248,6 +1285,7 @@ export const store = new Vuex.Store({
             }
           })
           .catch((err) => {
+            commit('clear_blocker', 'getBlockByChainId');
             if (err.status == 404) {
               console.log('Block by chain error:', err);
             } else {
@@ -1257,6 +1295,7 @@ export const store = new Vuex.Store({
           });
         } else {
           console.log('Block by chain error:', err);
+          commit('clear_blocker', 'getBlockByChainId');
           return err;
         }
 
@@ -1399,6 +1438,14 @@ export const store = new Vuex.Store({
         return response;
       })
       .catch(err => err)
+    },
+
+    freeze({commit}, bName) {
+      commit('set_blocker', bName);
+    },
+
+    unfreeze({commit}, bName) {
+      commit('clear_blocker', bName);
     }
   }
 })

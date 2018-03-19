@@ -105,7 +105,9 @@ export default {
           meta: 'currentBookMeta',
           watchBlk: 'contentDBWatch',
           allBooks: 'allBooks',
-          tc_tasksByBlock: 'tc_tasksByBlock'
+          tc_tasksByBlock: 'tc_tasksByBlock',
+          isBlocked: 'isBlocked',
+          blockers: 'blockers',
       }),
       metaStyles: function () {
           let result = '';
@@ -126,7 +128,7 @@ export default {
       modal,
   },
   methods: {
-    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData']),
+    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze']),
 
     test() {
         //this.parlist.splice(0,1);
@@ -274,6 +276,7 @@ export default {
 
     refreshBlock (change) {
       console.log('refreshBlock', change.doc);
+      console.log('blockers', this.blockers);
       this.parlist.forEach((block, idx, arr)=>{
         if (block._id === change.id) {
           /*if (change.doc.audiosrc) {
@@ -542,21 +545,27 @@ export default {
 //           .then(response => {
 //             --this.parlistSkip;
 //           })
+      this.freeze('deleteBlock');
       this.getBlockByChainId(block._id)
       .then((blockBefore)=>{
           this.blockReindexProcess = true;
           //console.log('blockBefore', blockBefore);
           this.parlist.splice(block_Idx, 1);
-          
+
           if (blockBefore) {
             blockBefore.chainid = block.chainid;
-            this._setBlockChainId(blockBefore._id, block.chainid)
+            this._setBlockChainId(blockBefore._id, block.chainid);
+            this.freeze('putBlockPart');
             this.putBlockPart({
               block: new BookBlock(blockBefore),
               field: 'chainid'
             }).then((response)=>{
               this.blockReindexProcess = false
-            });
+              this.unfreeze('putBlockPart');
+            }).catch((err)=>{
+              this.unfreeze('putBlockPart');
+              return err;
+            })
           } else {
             this.setMetaData({ key: 'startBlock_id', value: block.chainid})
             .then((response)=>{
@@ -565,13 +574,24 @@ export default {
           }
           let api_url = this.API_URL + 'book/block/' + block._id;
           let api = this.$store.state.auth.getHttp();
+          this.freeze('api.delete');
           api.delete(api_url, {})
             .then((response)=>{
-
+              console.log('api.delete', 'then');
+              this.unfreeze('api.delete');
+              this.unfreeze('deleteBlock');
             })
-            .catch(err => console.log(err));
+            .catch(err => {
+              console.log(err);
+              this.unfreeze('api.delete');
+              this.unfreeze('deleteBlock');
+              return err;
+            });
       })
-      .catch((err)=>err)
+      .catch((err)=>{
+        this.unfreeze('deleteBlock');
+        return err;
+      })
     },
     _setBlockChainId(id, chainid) {
       let index = null;
@@ -630,6 +650,7 @@ export default {
                 .then(()=>{
                   this.$refs.blocks[block_Idx-1].assembleBlockProxy()
                   .then(()=>{
+                    this.freeze('joinBlocks');
                     return api.post(api_url, {
                       resultBlock_id: blockBefore._id,
                       donorBlock_id: block._id
@@ -641,12 +662,14 @@ export default {
                       if (response.data.ok && response.data.blocks) {
                         this._updateBlocksFromResponse({blocks: response.data.blocks});
                       }
+                      this.unfreeze('joinBlocks');
                       return Promise.resolve();
                     })
                     .catch((err)=>{
                       this.doJoinBlocks.show = false;
                       this.doJoinBlocks.block = {};
                       this.doJoinBlocks.block_Idx = false;
+                      this.unfreeze('joinBlocks');
                       return Promise.reject(err);
                     })
                   })
@@ -655,6 +678,7 @@ export default {
             })
           } break;
           case 'next' : {
+            this.freeze('joinBlocks');
             return this.getBlock(block.chainid)
             .then((blockAfter)=>{
               if (block.type !== blockAfter.type) {
@@ -672,6 +696,7 @@ export default {
                 this.doJoinBlocks.block_Idx = block_Idx;
                 this.doJoinBlocks.direction = direction;
                 this.doJoinBlocks.show = true;
+                this.unfreeze('joinBlocks');
               }
               else
               {
@@ -691,18 +716,20 @@ export default {
                       if (response.data.ok && response.data.blocks) {
                         this._updateBlocksFromResponse({blocks: response.data.blocks});
                       }
+                      this.unfreeze('joinBlocks');
                       return Promise.resolve();
                     })
                     .catch((err)=>{
                       this.doJoinBlocks.show = false;
                       this.doJoinBlocks.block = {};
                       this.doJoinBlocks.block_Idx = false;
+                      this.unfreeze('joinBlocks');
                       return Promise.reject(err);
                     })
                   })
                 })
               }
-            })
+             })
           } break;
         };
     },

@@ -2,7 +2,7 @@
 <div class="toolbar">
 
   <h3 v-if="currentBook" class='title'>
-    <i class="fa fa-pencil"></i> {{currentBookMeta.title}}</h3>
+    <i :class="['fa fa-pencil', isBlocked ? '-blocked':'-free']"></i> {{currentBookMeta.title}}</h3>
 
   <div class="pull-right">
 
@@ -125,7 +125,7 @@ export default {
     currentBookMeta: function() {
       return this.$store.state.currentBookMeta
     },
-    ...mapGetters(['currentBookMeta'])
+    ...mapGetters(['currentBookMeta', 'isBlocked'])
   }
 }
 </script>
@@ -184,6 +184,15 @@ button:hover {
 
 h3.title i {
   font-size: 24pt;
+}
+
+.fa.fa-pencil {
+  &.-blocked {
+    color: red;
+  }
+  &.-free {
+    color: green;
+  }
 }
 
 </style>
