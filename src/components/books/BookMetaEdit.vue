@@ -230,7 +230,7 @@
             </table> -->
           </fieldset>
         </vue-tab>
-        <vue-tab title="Styles" :id="'styles-switcher'">
+        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!allowMetadataEdit">
            <vue-tabs ref="stylesTabs">
 
             <vue-tab title="Styles" :id="'global-styles-switcher'">
@@ -526,7 +526,7 @@ export default {
 
   mounted() {
 
-    this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor
+    this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor || this.isAdmin
     let self = this;
     this.loadAudiobook(true)
     this.$refs.audioIntegration.$on('uploadAudio', function() {

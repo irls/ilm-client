@@ -2835,7 +2835,7 @@ export default {
       .fa, .glyphicon {
         margin-right: 5px;
         &.menu-preloader {
-          background: url(/static/preloader-snake-small.gif);
+          background: url(/static/preloader-snake-transparent-small.gif);
           width: 18px;
           height: 16px;
           display: inline-block;
