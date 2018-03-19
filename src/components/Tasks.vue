@@ -115,7 +115,7 @@ export default {
       audio_import_multiple: true
     }
   },
-  
+
   mixins: [api_config],
 
   components: {
@@ -324,7 +324,7 @@ export default {
 }
 .tasks-box {
   width: 100%;
-  margin-left: 35px;
+  padding-left: 35px;
 }
 
 .task-type.td {

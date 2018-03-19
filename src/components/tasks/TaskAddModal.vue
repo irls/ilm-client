@@ -73,7 +73,7 @@
       </div>
       <div class="form-group">
         <label>Description</label>
-        <textarea v-model="description" class="form-control" rows="5"></textarea>
+        <textarea v-model="description" class="form-control job-descr" rows="5"></textarea>
         <div v-if="errors.description" v-for="err in errors.description" class="error-message" v-text="err"></div>
       </div>
     </div>
@@ -339,5 +339,8 @@ i.add-book {
 .book-row input {
   width: 90%;
   display: inline-block;
+}
+textarea.job-descr {
+  resize: vertical;
 }
 </style>
