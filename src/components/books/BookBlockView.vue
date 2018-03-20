@@ -2189,10 +2189,21 @@ export default {
           this.$root.$on('from-audioeditor:select', (blockId, start, end) => {
             if (check_id == blockId) {
               //console.log(start, end)
-              if (this.$refs.blockContent) {
+              let ref;
+              if (footnoteIdx !== null) {
+                ref = this.$refs['footnoteContent_' + footnoteIdx];
+                if (ref) {
+                  ref = ref[0];
+                }
+              } else {
+                if (this.$refs.blockContent) {
+                  ref = this.$refs.blockContent;
+                }
+              }
+              if (ref && ref.querySelectorAll) {
                 start = parseInt(start * 1000);
                 end = parseInt(end * 1000);
-                this.$refs.blockContent.querySelectorAll('w').forEach(e => {
+                ref.querySelectorAll('w').forEach(e => {
                   let map = $(e).attr('data-map');
                   if(map) {
                     map = map.split(',');
@@ -2410,34 +2421,49 @@ export default {
         this.hideModal('block-html');
       },
       addContentListeners() {
+        let handler = (id, ref) => {
+          if (window.getSelection) {
+            //let content = this.range.extractContents();
+            let range = window.getSelection().getRangeAt(0).cloneRange();
+            //console.log(this.range, window.getSelection(), range)
+            let startElement = this._getParent(range.startContainer, 'w');
+            let endElement = this._getParent(range.endContainer, 'w');
+            let startRange = this._getClosestAligned(startElement, 1);
+            if (!startRange) {
+              startRange = [0, 0];
+            }
+            let endRange = this._getClosestAligned(endElement, 0);
+            if (!endRange) {
+              endRange = this._getClosestAligned(endElement, 1)
+            }
+            if (startRange && endRange) {
+              //console.log(startRange[0], endRange[0] + endRange[1])
+              this.$root.$emit('for-audioeditor:select', id, startRange[0], endRange[0] + endRange[1]);
+            }
+            //console.log(startElement, endElement, startRange, endRange)
+          }
+
+          ref.querySelectorAll('w').forEach(e => {
+            $(e).removeClass('selected');
+          });
+        }
         if (this.$refs.blockContent) {
           this.$refs.blockContent.addEventListener("mouseup", () => {
             //console.log('Selection changed.'); 
-            if (window.getSelection) {
-              //let content = this.range.extractContents();
-              let range = window.getSelection().getRangeAt(0).cloneRange();
-              //console.log(this.range, window.getSelection(), range)
-              let startElement = this._getParent(range.startContainer, 'w');
-              let endElement = this._getParent(range.endContainer, 'w');
-              let startRange = this._getClosestAligned(startElement, 1);
-              if (!startRange) {
-                startRange = [0, 0];
-              }
-              let endRange = this._getClosestAligned(endElement, 0);
-              if (!endRange) {
-                endRange = this._getClosestAligned(endElement, 1)
-              }
-              if (startRange && endRange) {
-                //console.log(startRange[0], endRange[0] + endRange[1])
-                this.$root.$emit('for-audioeditor:select', this.block._id, startRange[0], endRange[0] + endRange[1]);
-              }
-              //console.log(startElement, endElement, startRange, endRange)
-            }
-            
-            this.$refs.blockContent.querySelectorAll('w').forEach(e => {
-              $(e).removeClass('selected');
-            });
+            handler(this.block._id, this.$refs.blockContent);
           });
+        }
+        if (this.block.footnotes) {
+          for (let i in this.block.footnotes) {
+            let ref = this.$refs['footnoteContent_' + i];
+            if (ref) {
+              ref = ref[0];
+              ref.addEventListener("mouseup", () => {
+                //console.log('Selection changed.'); 
+                handler(this.block._id + '_' + i, ref);
+              });
+            }
+          }
         }
       }
   },

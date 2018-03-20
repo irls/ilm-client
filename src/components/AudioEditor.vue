@@ -825,6 +825,9 @@
           let alignedWords = 0;
           this.words = [];
           this.contentContainer = $('#content-' + this.blockId);
+          if (this.contentContainer.length == 0) {
+            this.contentContainer = $('#' + this.blockId);//footnote
+          }
           $('<div>' + this.content + '</div>').find('w').each(function() {
             let map = $(this).attr('data-map');
             if (map) {
