@@ -138,6 +138,7 @@
             this.blockSelectionEmit = true;
             this.selection.start = start / 1000;
             this.selection.end = end / 1000;
+            this._clearWordSelection();
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
             this._showSelectionBorders(true);
           }
@@ -429,6 +430,7 @@
               self.scrollPlayerToAnnotation(index, 'middle');
             }
             if (show_selection) {
+              self.blockSelectionEmit = true;
               self._setWordSelection(index, true);
             } else {
               self._clearWordSelection();
@@ -436,6 +438,7 @@
           });
           $('.wf-playlist').on('click', '.annotations-boxes .annotation-box', function(e) {
             let index = $('.annotations-boxes .annotation-box').index($(this));
+            self.blockSelectionEmit = true;
             self._setWordSelection(index, true);
             ;
           });
@@ -1038,8 +1041,9 @@
         'selection': {
           handler(val) {
             if (!this.blockSelectionEmit) {
-              if (val.start && val.end) {
+              if (typeof val.start !== 'undefined' && typeof val.end !== 'undefined') {
                 //console.log('ON SELECT ')
+                this._clearWordSelection();
                 this.$root.$emit('from-audioeditor:select', this.blockId, val.start, val.end);
               }
             } else {
