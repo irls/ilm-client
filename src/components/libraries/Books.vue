@@ -81,9 +81,9 @@
               </label>
             </div>
           </div>
-          
+
         </div>
-        
+
         <div class="library-books-wrapper">
           <grid v-if="selectedLibrary._id"
             :data="libraryBooksList"
@@ -94,7 +94,7 @@
             :customEmptyTableText="'No books'"
             :class="['books-grid', 'library-books-grid']"
             :selected="selectedBooks"></grid>
-          <i :class="['fa', 'toggle-meta', {'fa-chevron-left': !metaVisible}, {'fa-chevron-right': metaVisible}]" v-on:click="toggleMetaOpened()" v-if="selectedBook._id"></i>  
+          <i :class="['fa', 'toggle-meta', {'fa-chevron-left': !metaVisible}, {'fa-chevron-right': metaVisible}]" v-on:click="toggleMetaOpened()" v-if="selectedBook._id"></i>
         </div>
       </td>
       <td v-if="metaVisible && selectedBook._id" class="meta-container">
@@ -257,7 +257,7 @@
               <tr>
                 <td>Category</td>
                 <td>
-                  
+
                   <v-select
                     :options="categoriesList"
                     :search="true"
@@ -408,7 +408,7 @@
               </tr>
             </table>
           </fieldset>
-          
+
         </div>
       </td>
     </tr>
@@ -558,7 +558,7 @@
           let api = this.$store.state.auth.getHttp();
           let self = this;
           api.get(api_url, {}, {}).then(function(response){
-            
+
             if (response.status===200) {
               self.repositoryBooks = response.data;
               self.prepareRepositoryBooks();
@@ -566,7 +566,7 @@
 
             }
           }).catch((err) => {
-            
+
           });
         },
         clickRowRepositoryBooks(object, event) {
@@ -1169,12 +1169,12 @@
             }
           }
         }
-        
+
       }
     }
     select {
       padding: 3px;
-      height: 2.5em;
+      height: 34px;
     }
     .toggle-meta {
       background-color: black;

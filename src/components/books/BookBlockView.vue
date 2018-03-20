@@ -2572,11 +2572,14 @@ export default {
 @variable: 90px;
 .ilm-block {
     padding: 0;
+    .medium-editor-placeholder:after {
+      top: -6px;
+    }
     .content-wrap {
-      position: static;
+      position: relative;
       &.par {
-        min-height: 47px;
-        position: static;
+        min-height: 54px;
+        /*position: relative;*/
       }
       &.title {
         min-height: 77.5px;

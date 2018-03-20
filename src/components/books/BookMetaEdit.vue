@@ -981,12 +981,12 @@ export default {
   .sidebar {
     position: fixed;
     width: 29%;
-
+    min-width: 356px;
     margin-top:0px;
     margin-left:0;
     padding-left:0;
     overflow-y: scroll;
-    height: 80%;
+    height: 92%;
   }
   .sidebar::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);

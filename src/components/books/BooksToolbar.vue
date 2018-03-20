@@ -112,13 +112,6 @@ export default {
 
 <style lang="less" scoped>
 
-.toolbar {
-  width:inherit;
-  position: fixed;
-  z-index: 9999;
-  margin-top: -20px;
-  background: #FFFFFF;
-}
 
 h3 {
   margin: 0;
@@ -127,11 +120,16 @@ h3 {
 }
 
 select {
-  padding: 3px; height: 2.5em;
+  padding: 3px; height: 34px;
+}
+
+input.form-control {
+  height: 34px;
 }
 
 .btn {
   margin-right: .5em;
+  vertical-align: top;
 
   &.btn-meta {
      margin-left: 40px;

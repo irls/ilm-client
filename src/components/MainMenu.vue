@@ -10,7 +10,7 @@
         <router-link to="/books" tag='li'
         v-show="isAdmin || isEditor || isLibrarian"
         ><a>Books</a></router-link>
-        
+
         <router-link to="/collections" tag="li">
           <a>Collections</a>
         </router-link>
@@ -28,7 +28,7 @@
 
         <router-link to="/align" class='presentation' tag='li'
         v-show='isAdmin || isLibrarian'><a>Check alignment</a></router-link>
-        
+
         <router-link to="/audio_editor" class='presentation' tag='li'
         v-show='isAdmin || isLibrarian'><a>AudioEditor</a></router-link>
 
@@ -73,31 +73,25 @@ export default {
 <style scoped>
   .fixed-wrapper {
     width: 100%;
-    height: 70px;
+    height: 43px;
+    position: absolute;
+    top: 0px; left: 0px;
   }
 
   /* Navigation Menu Table (Oh yes I did!) */
   table.navtable {
-   position: fixed;
-   background: #FFFFFF;
-   z-index: 9999;
-   width: 100%;
-   margin:0;
-   margin-top: -5px;
-   height: 4em;
-   /*min-width: 768px; display: table;*/
-   /*background: silver;
-   border: .25 px solid gray;*/
-
+    background: #FFFFFF;
+    width: 100%;
+    height: 43px;
   }
   .navtable tr {vertical-align: top; font-size: 1.2em; }
-  .navtable td {vertical-align: top; text-align: left; padding-top: 5px;}
+  .navtable td {vertical-align: top; text-align: left; /*padding-top: 5px;*/}
   .navtable td.logo {min-width: 20px; width: 20px;}
 
   .logo img{max-width: 20px; margin:0; margin-top: 2px; position: absolute;}
 
-  .navtable td.menu {padding-left: 10px;}
-  .navtable td.right {float: right; padding-right: 5px;}
+  .navtable td.menu {padding-left: 10px; padding-top: 2px;}
+  .navtable td.right {float: right; padding-right: 5px; padding-top: 2px;}
 
   /* non-adaptive navigation list */
   .navlist { list-style-type: none; margin:0; padding:0; }
