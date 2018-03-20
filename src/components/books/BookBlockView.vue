@@ -341,7 +341,6 @@
                     <li class="separator"></li>
                     <li @click="audPlayFromSelection()">Play from here</li>
                     <li @click="audPlaySelection()">Play selection</li>
-                    <li v-if="allowEditing && !isAudioEditing" @click="audDeleteSelection()">Delete audio in selection</li>
                   </template>
                   <template v-if="!range.collapsed && tc_showBlockNarrate(block._id) && allowEditing && !isAudioEditing">
                     <li class="separator"></li>
@@ -804,6 +803,7 @@ export default {
           this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
             flag.addEventListener('click', this.handleFlagClick);
           });
+          this.addContentListeners();
         }
       });
       this.updateFlagStatus(this.block._id);
@@ -1010,9 +1010,12 @@ export default {
         .then((block)=>{
           if (this.$refs.blockContent) this.$refs.blockContent.innerHTML = this.block.content;
           Vue.nextTick(() => {
-            if (this.$refs.blockContent) this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-              flag.addEventListener('click', this.handleFlagClick);
-            });
+            if (this.$refs.blockContent) {
+              this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+                flag.addEventListener('click', this.handleFlagClick);
+              });
+              this.addContentListeners();
+            }
           });
           this.isChanged = false;
           this.updateFlagStatus(this.block._id);
@@ -1070,7 +1073,7 @@ export default {
                 this.block.content = response.data.content;
                 this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                 this.blockAudio.map = response.data.content;
-                this.block.audiosrc = this.blockAudio.src;
+                //this.block.audiosrc = this.blockAudio.src;
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
                 this.isAudioChanged = false;
                 this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
@@ -2148,6 +2151,7 @@ export default {
               self.$root.$off('from-audioeditor:undo');
               self.$root.$off('from-audioeditor:discard');
               self.$root.$off('from-audioeditor:closed');
+              self.$root.$off('from-audioeditor:select');
               $('#' + self.block._id + ' .table-body.-content').removeClass('editing');
             }
           });
@@ -2180,6 +2184,34 @@ export default {
             if (check_id == blockId) {
               self.audStop();
               self.discardAudioEdit(footnoteIdx);
+            }
+          });
+          this.$root.$on('from-audioeditor:select', (blockId, start, end) => {
+            if (check_id == blockId) {
+              //console.log(start, end)
+              if (this.$refs.blockContent) {
+                start = parseInt(start * 1000);
+                end = parseInt(end * 1000);
+                this.$refs.blockContent.querySelectorAll('w').forEach(e => {
+                  let map = $(e).attr('data-map');
+                  if(map) {
+                    map = map.split(',');
+                    if (map.length == 2) {
+                      map[0] = parseInt(map[0]);
+                      map[1] = map[0] + parseInt(map[1]);
+                      if ((map[0] >= start && map[0] < end) || 
+                              (map[0] < start && map[1] > start)) {
+                        //console.log(map[0], start, map[1], end)
+                        //console.log(e)
+                        $(e).addClass('selected');
+                      } else {
+                        //console.log('NOT', map, start, end, e)
+                        $(e).removeClass('selected');
+                      }
+                    }
+                  }
+                });
+              }
             }
           });
         });
@@ -2376,6 +2408,37 @@ export default {
         this.block.content = this.$refs['block-html' + this.block._id].value;
         this.isChanged = true;
         this.hideModal('block-html');
+      },
+      addContentListeners() {
+        if (this.$refs.blockContent) {
+          this.$refs.blockContent.addEventListener("mouseup", () => {
+            //console.log('Selection changed.'); 
+            if (window.getSelection) {
+              //let content = this.range.extractContents();
+              let range = window.getSelection().getRangeAt(0).cloneRange();
+              //console.log(this.range, window.getSelection(), range)
+              let startElement = this._getParent(range.startContainer, 'w');
+              let endElement = this._getParent(range.endContainer, 'w');
+              let startRange = this._getClosestAligned(startElement, 1);
+              if (!startRange) {
+                startRange = [0, 0];
+              }
+              let endRange = this._getClosestAligned(endElement, 0);
+              if (!endRange) {
+                endRange = this._getClosestAligned(endElement, 1)
+              }
+              if (startRange && endRange) {
+                //console.log(startRange[0], endRange[0] + endRange[1])
+                this.$root.$emit('for-audioeditor:select', this.block._id, startRange[0], endRange[0] + endRange[1]);
+              }
+              //console.log(startElement, endElement, startRange, endRange)
+            }
+            
+            this.$refs.blockContent.querySelectorAll('w').forEach(e => {
+              $(e).removeClass('selected');
+            });
+          });
+        }
       }
   },
   watch: {
@@ -2401,9 +2464,12 @@ export default {
             };
           }
           Vue.nextTick(() => {
-            if (this.$refs.blockContent) this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-              flag.addEventListener('click', this.handleFlagClick);
-            });
+            if (this.$refs.blockContent) {
+              this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+                flag.addEventListener('click', this.handleFlagClick);
+              });
+              this.addContentListeners();
+            }
           });
         } else {
           if (!this.blockAudio.src || !this.tc_showBlockNarrate(this.block._id)) {
@@ -2535,6 +2601,7 @@ export default {
               this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
                 flag.addEventListener('click', this.handleFlagClick);
               });
+              this.addContentListeners();
             }
           });
         }

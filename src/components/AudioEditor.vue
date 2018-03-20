@@ -117,7 +117,8 @@
           onWordRepositionMessage: false,
           playlistScrollPosition: 0,
           audiofileId: null,
-          blockMap: {}
+          blockMap: {},
+          blockSelectionEmit: false
         }
       },
       mounted() {
@@ -131,6 +132,15 @@
         });
         this.$root.$on('for-audioeditor:reload-text', function(text) {
           self._setText(text);
+        });
+        this.$root.$on('for-audioeditor:select', (block_id, start, end) => {
+          if (this.blockId === block_id) {
+            this.blockSelectionEmit = true;
+            this.selection.start = start / 1000;
+            this.selection.end = end / 1000;
+            this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            this._showSelectionBorders(true);
+          }
         });
       },
       beforeDestroy() {
@@ -400,6 +410,11 @@
             } else if (autostart) {
               this.play();
             }
+          })
+          .catch(err => {
+            //console.log(err)
+            this._setDefaults();
+            this.close();
           });
           $('#' + this.blockId).on('click', '#content-' + this.blockId + ' w', function() {
             let index = $('#content-' + self.blockId).find('w[data-map]').index($(this));
@@ -1017,6 +1032,19 @@
           handler(val) {
             //console.log('blocksForAlignment CHANGED', val)
             this._setBlocksSelection();
+          },
+          deep: true
+        },
+        'selection': {
+          handler(val) {
+            if (!this.blockSelectionEmit) {
+              if (val.start && val.end) {
+                //console.log('ON SELECT ')
+                this.$root.$emit('from-audioeditor:select', this.blockId, val.start, val.end);
+              }
+            } else {
+              this.blockSelectionEmit = false;
+            }
           },
           deep: true
         }
