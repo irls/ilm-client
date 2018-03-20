@@ -1054,7 +1054,7 @@ export const store = new Vuex.Store({
     
     startWatchAudiobook ({commit, state, dispatch}, id) {
         commit('stop_audiobookWatch');
-        let contentDBWatch = state.contentDB.changes({
+        let contentDBWatch = state.contentRemoteDB.changes({
             since: 'now',
             live: true,
             include_docs: true,
