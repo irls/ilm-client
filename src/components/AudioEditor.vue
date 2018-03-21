@@ -931,18 +931,18 @@
             let end = false;
             if (this.blocksForAlignment.start && this.blocksForAlignment.start._id && this.blockMap[this.blocksForAlignment.start._id]) {
               start = parseInt(this.blockMap[this.blocksForAlignment.start._id][0])/1000;
-              if (!this.blocksForAlignment.end || !this.blocksForAlignment.end._id) {
+              if (!this.blocksForAlignment.end || !this.blocksForAlignment.end._id || !this.blockMap[this.blocksForAlignment.end._id]) {
                 end = parseInt(this.blockMap[this.blocksForAlignment.start._id][1])/1000;
               }
             }
             if (this.blocksForAlignment.end && this.blocksForAlignment.end._id && this.blockMap[this.blocksForAlignment.end._id]) {
               end = parseInt(this.blockMap[this.blocksForAlignment.end._id][1])/1000;
-              if (!this.blocksForAlignment.start || !this.blocksForAlignment.start._id) {
+              if (!this.blocksForAlignment.start || !this.blocksForAlignment.start._id || !this.blockMap[this.blocksForAlignment.start._id]) {
                 start = parseInt(this.blockMap[this.blocksForAlignment.end._id][0])/1000;
               }
             }
             
-            if (start !== false && end !== false && start <= end) {
+            if (start !== false && end !== false && start < end) {
               this.selection.start = start;
               this.selection.end = end;
               this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
