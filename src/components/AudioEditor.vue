@@ -383,7 +383,9 @@
                 } else {
                   startX = $('[id="resize-selection-left"]').position().left;
                 }
-                $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
+                if ($('.selection.segment').length > 0) {
+                  $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
+                }
                 self.audiosourceEditor.activeTrack.stateObj.startX = startX;
                 if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
                   self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
@@ -819,9 +821,22 @@
           if (this.isSinglePointSelection) {
             new_selection.end = new_selection.start;
           }
-          if (new_selection.start >= 0 && new_selection.end <= this.audiosourceEditor.activeTrack.duration && new_selection.start <= new_selection.end) {
+          if (this._round(new_selection.start, 1) == this._round(new_selection.end, 1) && field == 's') {
+            switch (part) {
+              case 'start':
+                new_selection.end+= 0.1;
+                break;
+              case 'end':
+                new_selection.start-= 0.1;
+                break;
+            }
+            new_selection.end = this._round(new_selection.end, 1);
+            new_selection.start = this._round(new_selection.start, 1);
+          }
+          if (new_selection.start >= 0 && new_selection.end <= this.audiosourceEditor.activeTrack.duration && new_selection.start < new_selection.end) {
             this.selection = new_selection;
             this._setSelectionOnWaveform();
+            this.cursorPosition = this.selection.start;
             this._showSelectionBorders(true);
           }
         },
