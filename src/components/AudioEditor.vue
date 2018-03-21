@@ -1,10 +1,16 @@
 <template>
   <div>
+    <cntx-menu
+          ref="waveformContext"
+          dir="bottom">
+        <li v-on:click="setSelectionStart(null, $event)">Selection Start</li>
+        <li v-on:click="setSelectionEnd(null, $event)">Selection End</li>
+      </cntx-menu>
     <div class="waveform-playlist">
       <div class="close-player-container pull-right">
         <span class="close-player" v-on:click="close()">&times;</span>
       </div>
-      <div class="waveform-wrapper">
+      <div class="waveform-wrapper" @contextmenu.prevent="onContext">
         <div id="playlist" class="wf-playlist"></div>
       </div>
       <div class="player-controls">
@@ -24,13 +30,27 @@
           <div v-if="selection.start >= 0">
             <div>Selection Start</div>
             <div>
-              <input type="text" v-model="selectionStartH" disabled />:<input type="text" v-model="selectionStartM" disabled />:<input type="number" v-model="selectionStartS" class="sec" step="0.1" ref="selectionStartNum" />
+              <template v-if="mode == 'block'">
+                <input type="text" v-model="selectionStartH" disabled />:<input type="text" v-model="selectionStartM" disabled />:<input type="number" v-model="selectionStartS" class="sec" step="0.1" ref="selectionStartNum" />
+              </template>
+              <template v-else-if="mode == 'file'">
+                <input type="number" step="1" v-model="selectionStartH" />:
+                <input type="number" step="1" v-model="selectionStartM" />:
+                <input type="number" v-model="selectionStartS" class="sec" step="0.1" ref="selectionStartNum" />
+              </template>
             </div>
           </div>
           <div v-if="selection.end >= 0">
             <div>Selection End</div>
             <div>
-              <input type="text" v-model="selectionEndH" disabled />:<input type="text" v-model="selectionEndM" disabled />:<input type="number" v-model="selectionEndS" class="sec" step="0.1" ref="selectionEndNum" :disabled="isSinglePointSelection"/>
+              <template v-if="mode == 'block'">
+                <input type="text" v-model="selectionEndH" disabled />:<input type="text" v-model="selectionEndM" disabled />:<input type="number" v-model="selectionEndS" class="sec" step="0.1" ref="selectionEndNum" :disabled="isSinglePointSelection"/>
+              </template>
+              <template v-else-if="mode == 'file'">
+                <input type="number" step="1" v-model="selectionEndH" />:
+                <input type="number" step="1" v-model="selectionEndM" />:
+                <input type="number" v-model="selectionEndS" class="sec" step="0.1" ref="selectionEndNum" :disabled="isSinglePointSelection"/>
+              </template>
             </div>
           </div>
           <template v-if="mode == 'block'">
@@ -70,6 +90,7 @@
   import Vue from 'vue'
   import api_config from '../mixins/api_config.js'
   import task_controls from '../mixins/task_controls.js'
+  import BlockContextMenu from './generic/BlockContextMenu';
   import { modal } from 'vue-strap'
   import {mapActions, mapGetters} from 'vuex'
   //import Peaks from 'peaks.js';
@@ -79,7 +100,8 @@
   export default {
       name: 'AudioEditor',
       components: {
-        'modal': modal
+        'modal': modal,
+        'cntx-menu': BlockContextMenu
       },
       props: ['blocksForAlignment'],
       mixins: [api_config, task_controls],
@@ -800,6 +822,7 @@
           if (new_selection.start >= 0 && new_selection.end <= this.audiosourceEditor.activeTrack.duration && new_selection.start <= new_selection.end) {
             this.selection = new_selection;
             this._setSelectionOnWaveform();
+            this._showSelectionBorders(true);
           }
         },
         _addHistory(text, audio) {
@@ -901,6 +924,51 @@
             }
           }
           return false;
+        },
+        onContext: function(e) {
+          if (this.mode == 'file') {
+            $('.medium-editor-toolbar').each(function(){
+                $(this).css('display', 'none');
+            });
+            if (this.$refs.waveformContext) {
+              this.$refs.waveformContext.open(e, {}, $('.waveform-playlist').offset().top);
+            }
+          }
+        },
+        setSelectionStart(val, event) {
+          if (this.mode == 'file') {
+            if (this.audiosourceEditor) {
+              let start = val !== null ? val : $('.cursor-position').position().left * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+              if (start > this.selection.end) {
+                if (this.audiosourceEditor.activeTrack && this.audiosourceEditor.activeTrack.duration) {
+                  this.selection.end = this.audiosourceEditor.activeTrack.duration;
+                } else {
+                  return;
+                }
+              }
+              this.selection.start = start;
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              this._showSelectionBorders();
+            } else {
+              return;
+            }
+          }
+        },
+        setSelectionEnd(val, event) {
+          if (this.mode == 'file') {
+            if (this.audiosourceEditor) {
+              let end = val !== null ? val : $('.cursor-position').position().left * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+              if (end < this.selection.start) {
+                this.selection.start = 0;
+              }
+              this.selection.end = end;
+              this.cursorPosition = this.selection.start;
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              this._showSelectionBorders();
+            } else {
+              return;
+            }
+          }
         }
       },
       computed: {
