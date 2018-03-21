@@ -377,6 +377,12 @@
             
               limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
               onDrag: function(element, x, y, event) {
+                if ($('[id="resize-selection-left"]').position().left >= x) {
+                  let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
+                  self.selection.start = start-1;
+                  self._setSelectionOnWaveform();
+                  return false;
+                }
                 let startX = 0;
                 if (self.selection && typeof self.selection.start !== 'undefined') {
                   startX = self.selection.start / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
@@ -393,11 +399,18 @@
                   let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
                   self.plEventEmitter.emit('select', self.selection.start, startSec);
                 }
+                self.cursorPosition = self.selection.start;
               }
             })
             self.dragLeft = new Draggable (document.getElementById('resize-selection-left'), {
               limit: {x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
               onDrag: function(element, x, y, event) {
+                if ($('[id="resize-selection-right"]').position().left <= x) {
+                  let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
+                  self.selection.end = start+1;
+                  self._setSelectionOnWaveform();
+                  return false;
+                }
                 $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
                 $('.selection.segment').css('left', x - 5)
                 let startX = 0;
@@ -413,6 +426,7 @@
                   let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
                   self.plEventEmitter.emit('select', startSec, self.selection.end);
                 }
+                self.cursorPosition = self.selection.start;
               }
             })
             this.onDiscardMessage = false;
@@ -1125,7 +1139,7 @@
           deep: true
         },
         'selection': {
-          handler(val) {
+          handler(val, oldVal) {
             if (!this.blockSelectionEmit) {
               if (typeof val.start !== 'undefined' && typeof val.end !== 'undefined') {
                 //console.log('ON SELECT ')
