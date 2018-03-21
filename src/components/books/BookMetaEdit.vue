@@ -410,7 +410,8 @@ export default {
       unlinkCollectionWarning: false,
       blockTypes: BlockTypes,
       audioMasteringProcess: false,
-      generatingAudiofile: false
+      generatingAudiofile: false,
+      audiobookChecker: false
     }
   },
 
@@ -420,7 +421,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks', 'audiobookWatch']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks']),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -834,10 +835,26 @@ export default {
           }
         }
       })
+      .catch(err => this.setAudiobook({}))
     },
     setAudiobook(audiobook) {
       if (audiobook._id && audiobook._id != this.audiobook._id) {
-        if (!this.audiobookWatch) {
+        if (this.audiobookChecker) {
+          clearInterval(this.audiobookChecker);
+        }
+        this.audiobookChecker = setInterval(() => {
+            var dbPath = superlogin.getDbUrl('ilm_content')
+            var db = new PouchDB(dbPath)
+            db.get(audiobook._id)
+              .then((a) => {
+                //console.log(a)
+                if (a) {
+                  this.setAudiobook(a)
+                }
+              })
+              .catch(err => console.log(err))
+          }, 20000);
+        /*if (!this.audiobookWatch) {
           this.startWatchAudiobook(audiobook._id)
             .then(() => {
               this.audiobookWatch.on('change', (change) => {
@@ -848,6 +865,11 @@ export default {
               });
             })
             .catch(err => err);
+        }*/
+      }
+      if (!audiobook._id) {
+        if (this.audiobookChecker) {
+          clearInterval(this.audiobookChecker);
         }
       }
       this.audiobook = audiobook;
@@ -947,7 +969,7 @@ export default {
         axios.delete(this.API_URL + 'books/' + this.currentBook.bookid)
       }
     },
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'startWatchAudiobook'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters'])
   }
 }
 </script>
