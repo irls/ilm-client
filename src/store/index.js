@@ -18,6 +18,12 @@ const ILM_CONTENT_FILES = 'ilm_library_files';
 const ILM_TASKS = 'ilm_tasks';
 const ILM_COLLECTIONS = 'ilm_collections';
 const ILM_LIBRARIES = 'ilm_libraries';
+const POUCH_CFG = {
+    ajax: {
+        timeout: 120000,
+        heartbeat: 300000
+    }
+};
 
 // const API_ALLBOOKS = '/static/books.json'
 
@@ -176,7 +182,7 @@ export const store = new Vuex.Store({
   mutations: {
 
     set_localDB (state, payload) {
-        state[payload.dbProp] = new PouchDB(payload.dbName);
+        state[payload.dbProp] = new PouchDB(payload.dbName, POUCH_CFG);
     },
 
     set_remoteDB (state, payload) {
@@ -184,7 +190,7 @@ export const store = new Vuex.Store({
         if (process.env.DOCKER) {
             dbPath = dbPath.replace('couchdb', 'localhost')
         }
-        state[payload.dbProp] = new PouchDB(dbPath);
+        state[payload.dbProp] = new PouchDB(dbPath, POUCH_CFG);
     },
 
     set_contentDBWatch (state, syncPointer) {
@@ -197,7 +203,7 @@ export const store = new Vuex.Store({
             state.contentDBWatch = false;
         }
     },
-    
+
     set_audiobookWatch (state, syncPointer) {
         state.audiobookWatch = syncPointer;
     },
@@ -1051,7 +1057,7 @@ export const store = new Vuex.Store({
         commit('set_contentDBWatch', contentDBWatch);
         return true;
     },
-    
+
     startWatchAudiobook ({commit, state, dispatch}, id) {
         commit('stop_audiobookWatch');
         let contentDBWatch = state.contentRemoteDB.changes({
