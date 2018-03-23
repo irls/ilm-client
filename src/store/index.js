@@ -21,7 +21,7 @@ const ILM_LIBRARIES = 'ilm_libraries';
 const POUCH_CFG = {
     ajax: {
         timeout: 120000,
-        heartbeat: 300000
+        heartbeat: 20000
     }
 };
 
