@@ -240,7 +240,7 @@ export default {
           }
         }
         &.maincontent {
-          padding-top: 5px;
+          /*padding-top: 5px;*/
           height: 100%;
           .scroll-wrapper {
             height: 100%;

@@ -60,6 +60,7 @@ export const store = new Vuex.Store({
     currentBookFiles: { coverimg: false },
     currentBookBlocksLeft: 0,
     currentBookBlocksLeftId: 'AAA',
+    currentBookToc: {bookId: '', data: []},
 
     bookFilters: {filter: '', language: '', importStatus: 'staging'},
     editMode: 'Editor',
@@ -197,7 +198,7 @@ export const store = new Vuex.Store({
             state.contentDBWatch = false;
         }
     },
-    
+
     set_audiobookWatch (state, syncPointer) {
         state.audiobookWatch = syncPointer;
     },
@@ -699,6 +700,17 @@ export const store = new Vuex.Store({
         }
     },
 
+    loadBookToc({state, commit}, bookId) {
+      if (state.currentBookToc.bookId === bookId) return state.currentBookToc;
+      return axios.get(state.API_URL + `books/toc/${bookId}`)
+      .then((response) => {
+        state.currentBookToc.bookId = bookId;
+        state.currentBookToc.data = response.data;
+        return response;
+      })
+      .catch(err => err)
+    },
+
     updateBookVersion({state, dispatch}, update) {
       if (state.currentBookMeta._id) {
         if (typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion && state.currentBookMeta.published === true) {
@@ -916,6 +928,116 @@ export const store = new Vuex.Store({
     loopBlocksChain ({commit, state, dispatch}, params) {
       let requests = [];
       let results = {rows: [], finish: false, blockId: false};
+     console.log('loopBlocksChain', params);
+
+      if (!params.query) {
+        params.query == false;
+        results.blockId = params.first_id;
+      }
+      if (params.task) {
+        if (['text-cleanup', 'master-audio'].indexOf(params.task) !== -1) {
+          delete params.task;
+        }
+      }
+
+      function defer() {
+        var res, rej;
+        var promise = new Promise((resolve, reject) => {
+          res = resolve;
+          rej = reject;
+        });
+        promise.resolve = res;
+        promise.reject = rej;
+        return promise;
+      }
+
+      requests.push(defer());
+
+      (function loop(i, block_id) {
+
+        if (i < params.onpage || !results.blockId) {
+
+          dispatch('getBlock', block_id)
+          .then((b)=>{
+
+            results.rows.push(b);
+
+            if (params.query) switch(params.query) {
+              case 'unresolved': {
+                if (!results.blockId) {
+                  if (params.task) {
+                    if (state.tc_tasksByBlock && typeof state.tc_tasksByBlock[b._id] !== 'undefined') {
+                      if (params.task === true) {
+                        results.blockId = b._id;
+                      } else {
+                        let t = state.tc_tasksByBlock[b._id].find(_t =>  {
+                          return _t.type === params.task;
+                        })
+                        if (t) {
+                          results.blockId = b._id;
+                        }
+                      }
+                    } else {
+
+                    }
+
+                  } else {
+                    if (!b.markedAsDone && (!b.status || !b.status.proofed)) {
+                      results.blockId = b._id;
+                      i = params.onpage - 5;
+                    }
+                  }
+                }
+              } break;
+              default : {
+                if (!results.blockId && b._id === params.query) {
+                  results.blockId = b._id;
+                  i = params.onpage - 5;
+                }
+              } break;
+            };
+
+            loop(i+1, b.chainid);
+          })
+          .catch((err)=>{
+            console.log('catch', err);
+            results.finish = true;
+            requests[0].resolve();
+          })
+        }
+        else requests[0].resolve();
+      })(0, params.first_id);
+
+      return Promise.all(requests)
+      .then(() => {
+        console.log('loopBlocksChain results', results);
+        return Promise.resolve(results);
+      });
+    },
+
+    loadBlocksChain ({commit, state, dispatch}, params) {
+      if (params.first_id) {
+        return dispatch('loopBlocksChain', params);
+      } else {
+        return state.contentDB
+        .query('filters_byBook/byBook', {
+          startkey: [params.book_id, 0],
+          endkey: [params.book_id, 0],
+          include_docs: true,
+        }).then(function (res) {
+          params.first_id = res.rows[0].doc._id;
+          return dispatch('loopBlocksChain', params).then((result) => {
+            return result;
+          });
+        })
+        .catch(err => err);
+      }
+
+    },
+
+    loopBlocksPrevChain ({commit, state, dispatch}, params) {
+      let requests = [];
+      let results = {rows: [], finish: false, blockId: false};
 
       if (!params.query) {
         params.query == false;
@@ -946,15 +1068,6 @@ export const store = new Vuex.Store({
 
           dispatch('getBlock', block_id)
           .then((b)=>{
-            /*if (b.audiosrc) {
-              b.audiosrc = process.env.ILM_API + b.audiosrc;
-            }*/
-
-            /*if (b.footnotes) b.footnotes.forEach((f, fIdx)=>{
-              if (f.audiosrc) {
-                f.audiosrc = process.env.ILM_API + f.audiosrc +'?'+ (new Date()).toJSON();
-              }
-            })*/
 
             results.rows.push(b);
 
@@ -1011,9 +1124,9 @@ export const store = new Vuex.Store({
       });
     },
 
-    loadBlocksChain ({commit, state, dispatch}, params) {
+    loadBlocksPrevChain ({commit, state, dispatch}, params) {
       if (params.first_id) {
-        return dispatch('loopBlocksChain', params);
+        return dispatch('loopBlocksPrevChain', params);
       } else {
         return state.contentDB
         .query('filters_byBook/byBook', {
@@ -1051,7 +1164,7 @@ export const store = new Vuex.Store({
         commit('set_contentDBWatch', contentDBWatch);
         return true;
     },
-    
+
     startWatchAudiobook ({commit, state, dispatch}, id) {
         commit('stop_audiobookWatch');
         let contentDBWatch = state.contentDB.changes({

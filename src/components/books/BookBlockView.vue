@@ -1267,7 +1267,7 @@ export default {
             //this.setCurrentBookBlocksLeft(this.block.bookid);
             this.setCurrentBookCounters(['not_marked_blocks']);
             //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
-            this.getBloksUntil('unresolved', null, this.block_Idx)
+            this.getBloksUntil('unresolved', null, this.block._id)
           });
         }
       },
@@ -1307,7 +1307,7 @@ export default {
                 this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
               }
               //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
-              this.getBloksUntil('unresolved', true, this.block_Idx)
+              this.getBloksUntil('unresolved', true, this.block._id)
             }
           })
           .catch(err => {});
@@ -2564,6 +2564,7 @@ export default {
   destroyed: function () {
     this.$root.$off('playBlockFootnote');
     this.$root.$off('playBlock');
+    this.destroyEditor();
   }
 }
 </script>

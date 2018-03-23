@@ -47,7 +47,7 @@
 
 <script>
 import BookDisplayHeader from './BookDisplayHeader'
-import BookTOC from './BookTOC'
+//import BookTOC from './BookTOC'
 import InfiniteLoading from 'vue-infinite-loading'
 import { mapGetters, mapState, mapActions } from 'vuex'
 import { BookBlock, setBlockParnum }    from '../../store/bookBlock'
@@ -63,7 +63,7 @@ export default {
     }
   },
   components: {
-    BookDisplayHeader, BookTOC, InfiniteLoading
+    BookDisplayHeader, InfiniteLoading,  /*BookTOC,*/
   },
   computed: {
       ...mapGetters({
