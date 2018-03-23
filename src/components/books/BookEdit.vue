@@ -3,7 +3,9 @@
   :class="['container-fluid content-scroll-wrapper ilm-global-style', metaStyles]">
 
   <div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >
-    <!--<infinite-loading ref="scrollBookUp" v-if="scrolledUp"></infinite-loading>-->
+
+    <div class="infinite-loading-container" v-show="isBlocked && blockers.indexOf('loadBookUp') >-1"><div><i class="loading-default"></i></div></div>
+
     <!--<template v-for="(sublist, page_Idx) in parlist">-->
     <div class="row" v-for="(block, block_Idx) in parlist" v-bind:key="block_Idx">
         <div class='col'>
@@ -30,6 +32,7 @@
         <!--<div class='col'>-->
     </div>
     <!--<div class="row"-->
+    <div class="infinite-loading-container" v-show="isBlocked && blockers.indexOf('loadBookDown') >-1"><div><i class="loading-default"></i></div></div>
     <!--<infinite-loading ref="scrollBookDown" v-if="scrolledDown"></infinite-loading>-->
   </div>
   <!--<div class="content-scroll"-->
@@ -88,7 +91,7 @@ export default {
       recorder: false,
       parlistSkip: 0,
       blockOrderChanged: false,
-      isAllLoaded: false,
+      //isAllLoaded: false,
       selectionStart: {},
       selectionEnd: {},
       parCounter: { pref: 0, prefCnt: 0, curr: 1 },
@@ -102,8 +105,8 @@ export default {
       },
       blockReindexProcess: false,
       scrollTop: 0,
-      scrolledUp: false,
-      scrolledDown: false
+//       scrolledUp: true,
+//       scrolledDown: false
     }
   },
   computed: {
@@ -139,7 +142,7 @@ export default {
       modal,
   },
   methods: {
-    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze']),
+    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze']),
 
     test() {
         //this.parlist.splice(0,1);
@@ -150,25 +153,27 @@ export default {
     loadBookMeta() {
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.freeze('loadBookMeta');
-        this.loadBook(this.$route.params.bookid)
+        return this.loadBook(this.$route.params.bookid)
         .then(()=>{
           this.unfreeze('loadBookMeta');
         }).catch((err)=>{
           this.unfreeze('loadBookMeta');
         });
-      }
+      } else return Promise.reject();
     },
 
-    loadBookDown() {
+    loadBookDown(checkRoute = true) {
+      console.log('loadBookDown');
       //this.freeze('loadBookDown');
 
-      if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
+      if (checkRoute && this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
 //         if (this.$route.params.block == 'unresolved') {
+          this.freeze('loadBookDown');
           this.getBloksUntil(this.$route.params.block, this.$route.params.task_type)
             .then(res=>{
-            /*this.unfreeze('loadBookDown'); */return res;
+            this.unfreeze('loadBookDown'); return res;
           }).catch(err=>{
-            /*this.unfreeze('loadBookDown'); */return err;
+            this.unfreeze('loadBookDown'); return err;
           });
 /*
         } else {
@@ -195,8 +200,43 @@ export default {
     },
 
     loadBookUp() {
-      this.freeze('loadBookUp');
-      this.unfreeze('loadBookUp');
+      if (this.parlist.length > 0) {
+        console.log('loadBookUp', this.parlist[0]._id);
+        let startId = this.parlist[0]._id;
+        this.freeze('loadBookUp');
+        return this.getBlocksUp(startId)
+        .then(res=>{
+          console.log('getBlocksUp then', res.blockId);
+          this.unfreeze('loadBookUp');
+          return startId;
+        }).catch(err=>{
+          this.unfreeze('loadBookUp');
+          return startId;
+        });
+      }
+    },
+
+    getBlocksUp(startId) {
+      console.log('getBlocksUp', startId);
+      return this.loadBlocksChainUp({
+        book_id: this.meta._id,
+        startId: startId,
+        onpage: 20
+      })
+      .then((result)=>{
+        if (result.rows.length > 0) {
+          result.rows.forEach((el, idx, arr)=>{
+            let newBlock = new BookBlock(el);
+            this.parlist.unshift(newBlock);
+          });
+        }
+        result.blockId = result.rows[0]._id
+        return Promise.resolve(result);
+      })
+      .catch((err)=>{
+        console.log('BlocksUp Error: ', err.message);
+        return Promise.reject(err);
+      });
     },
 
     getBlocks(query = false, task_type = null, ) {
@@ -223,22 +263,21 @@ export default {
                 let newBlock = new BookBlock(el);
                 this.parlist.push(newBlock);
               });
-            if (result.finish) {
+            /*if (result.finish) {
               if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
             } else {
               if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.loaded();
-            }
+            }*/
           } else {
-              if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
+              /*if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();*/
           }
-          this.isAllLoaded = this.$refs.scrollBookDown ? this.$refs.scrollBookDown.isComplete : false;
+          /*this.isAllLoaded = this.$refs.scrollBookDown ? this.$refs.scrollBookDown.isComplete : false;*/
           this.reCountProxy();
           //this.unresId = result.unresId;
-          this.scrolledDown = false;
           return Promise.resolve(result.blockId);
         })
         .catch((err)=>{
-          if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
+          /*if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();*/
           console.log('Error: ', err.message);
           return Promise.reject(err);
         });
@@ -289,7 +328,7 @@ export default {
           }
 
         });
-        console.log('found', found);
+        //console.log('found', found);
         if (found) {
           return resolve(found);
         } else { // if there is no such blocks already in parlist
@@ -299,7 +338,7 @@ export default {
           Vue.set(this, 'parlist', new Array());
           this.getBlocks(query, task_type, fromId)
           .then(res=>{
-            console.log('getBlocks response', res);
+            //console.log('getBlocks response', res);
             return resolve(res);
           }).catch(err=>{
             return reject(err);
@@ -903,31 +942,37 @@ export default {
 
       //console.log('currTop', currTop, 'dataHeight', dataHeight);
       //console.log(ev.deltaY);
+      ev.preventDefault();
 
-//       if (Math.abs(currTop) > dataHeight) {
-//         //console.log(Math.abs(currTop) , dataHeight);
-//         ev.preventDefault();
-//         if (!this.scrolledDown) {
-//           this.scrolledDown = true;
-//           //console.log('this.scrolledDown', this.scrolledDown);
-//           //this.onScrollBookDown();
-//         }
-//       } else if (currTop > 100) {
-//         if (!this.scrolledUp) {
-//           this.scrolledUp = true;
-//           setTimeout(()=>{
-//             this.scrolledUp = false;
-//             this.scrollTop = 10;
-//           }, 3000)
-//         }
-//
-//       } else {
+      if (Math.abs(currTop) > dataHeight) {
+        //console.log(Math.abs(currTop) , dataHeight);
+        //ev.preventDefault();
+        if (!this.isBlocked) {
+          //this.scrolledDown = true;
+          console.log('scrolled down');
+          //this.loadBookDown(false);
+        }
+      } else if (currTop > 100) {
+        if (!this.isBlocked) {
+          this.loadBookUp()
+          .then((startId)=>{
+            setTimeout(()=>{
+              this.scrollToBlock(startId, 'middle');
+            }, 100);
+          }).catch((startId)=>{
+            console.log('6');
+            this.scrollToBlock(startId);
+          })
+          //this.scrollTop = 0; //TODO remove
+        }
+      } else {
         this.scrollTop -= ev.deltaY;
+
         var editors = document.getElementsByClassName('medium-editor-toolbar-active');
         if (editors && editors.length) { //move editor toolbar
           editors[0].style.top = editors[0].getBoundingClientRect().top - ev.deltaY +'px';
         }
-//       }
+      }
 
       //console.log('scrollTop', this.scrollTop, 'currTop', currTop, 'dataHeight', dataHeight);
 
@@ -940,6 +985,7 @@ export default {
         Vue.nextTick(()=>{
           let offset = document.getElementById(id).getBoundingClientRect().y;
           let currTop = this.$refs.contentScrollRef.getBoundingClientRect().y;
+          console.log('offset', offset, 'currTop', currTop, 'diff', offset - currTop);
           currTop = offset - currTop;
           switch (position) {
           case 'middle': {
@@ -951,22 +997,6 @@ export default {
           this.scrollTop = -(currTop);
         });
       }
-
-
-//       let domObj = document.getElementById(id);
-//       if (domObj) {
-//         let offset = domObj.getBoundingClientRect()
-//         switch (position) {
-//           case 'top':
-//             window.scrollTo(0, window.pageYOffset + offset.top - 110);
-//             break;
-//           case 'middle':
-//             //window.scrollTo(0, window.pageYOffset + offset.top - ($(window).height() / 2));
-//             let scrollTo = window.pageYOffset + offset.top - ($(window).height() / 2);
-//             $('html, body').animate({scrollTop: scrollTo},1000);
-//             break;
-//         }
-//       }
     }
 
   },
@@ -978,14 +1008,18 @@ export default {
   mounted: function() {
       //this.onScrollBookDown();
 
-      //console.log('mounted', this.meta._id);
+      console.log('mounted', this.meta._id);
       if (this.meta._id) {
         this.loadBookDown();
-      } else {
+      } /*else {
         setTimeout(()=>{
-          this.loadBookMeta();
+          this.loadBookMeta()
+          .then(()=>{
+            console.log('2');
+            this.loadBookDown();
+          }).catch(err=>err);
         }, 300);
-      }
+      }*/
 
       window.addEventListener('keydown', this.eventKeyDown);
       this.setBlockWatch();
@@ -1022,7 +1056,7 @@ export default {
   watch: {
     'meta._id': {
       handler(newVal, oldVal) {
-        //console.log('meta._id', newVal, oldVal);
+        console.log('meta._id', newVal, oldVal);
         if (newVal) {
           this.loadBookDown();
         }
@@ -1108,6 +1142,51 @@ export default {
       width: 100%;
       margin-left: -30px;
       padding-left: 30px;
+    }
+  }
+
+  .infinite-loading-container {
+    width: 100%;
+    text-align: center;
+    [class^=loading-] {
+      display: inline-block;
+      margin: 15px 0;
+      width: 28px;
+      height: 28px;
+      font-size: 28px;
+      line-height: 28px;
+      border-radius: 50%;
+    }
+  }
+
+  .loading-default {
+    position: relative;
+    border: 1px solid #999;
+    -webkit-animation: loading-rotating ease 1.5s infinite;
+    animation: loading-rotating ease 1.5s infinite;
+
+    // rotate animation
+    @keyframes loading-rotating {
+      0%{
+        transform: rotate(0);
+      }
+      100%{
+        transform: rotate(360deg);
+      }
+    }
+
+    &:before {
+      content: "";
+      position: absolute;
+      display: block;
+      top: 0;
+      left: 50%;
+      margin-top: -3px;
+      margin-left: -3px;
+      width: 6px;
+      height: 6px;
+      background-color: #999;
+      border-radius: 50%;
     }
   }
 

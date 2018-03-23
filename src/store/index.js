@@ -21,6 +21,17 @@ const ILM_LIBRARIES = 'ilm_libraries';
 
 // const API_ALLBOOKS = '/static/books.json'
 
+function defer() {
+  var res, rej;
+  var promise = new Promise((resolve, reject) => {
+    res = resolve;
+    rej = reject;
+  });
+  promise.resolve = res;
+  promise.reject = rej;
+  return promise;
+}
+
 export const store = new Vuex.Store({
   state: {
     auth: superlogin,
@@ -940,17 +951,6 @@ export const store = new Vuex.Store({
         }
       }
 
-      function defer() {
-        var res, rej;
-        var promise = new Promise((resolve, reject) => {
-          res = resolve;
-          rej = reject;
-        });
-        promise.resolve = res;
-        promise.reject = rej;
-        return promise;
-      }
-
       requests.push(defer());
 
       (function loop(i, block_id) {
@@ -1035,87 +1035,32 @@ export const store = new Vuex.Store({
 
     },
 
-    loopBlocksPrevChain ({commit, state, dispatch}, params) {
+    loopBlocksChainUp ({commit, state, dispatch}, params) {
+      console.log('lOOp_BlocksChainUp', params);
       let requests = [];
       let results = {rows: [], finish: false, blockId: false};
-
-      if (!params.query) {
-        params.query == false;
-        results.blockId = true;
-      }
-      if (params.task) {
-        if (['text-cleanup', 'master-audio'].indexOf(params.task) !== -1) {
-          delete params.task;
-        }
-      }
-
-      function defer() {
-        var res, rej;
-        var promise = new Promise((resolve, reject) => {
-          res = resolve;
-          rej = reject;
-        });
-        promise.resolve = res;
-        promise.reject = rej;
-        return promise;
-      }
 
       requests.push(defer());
 
       (function loop(i, block_id) {
 
-        if (i < params.onpage || !results.blockId) {
-
-          dispatch('getBlock', block_id)
+        if (i < params.onpage && block_id) {
+          console.log('loopBlocksChainUp block_id: ', block_id);
+          dispatch('getBlockByChainId', block_id)
           .then((b)=>{
-
-            results.rows.push(b);
-
-            if (params.query) switch(params.query) {
-              case 'unresolved': {
-                if (!results.blockId) {
-                  if (params.task) {
-                    if (state.tc_tasksByBlock && typeof state.tc_tasksByBlock[b._id] !== 'undefined') {
-                      if (params.task === true) {
-                        results.blockId = b._id;
-                      } else {
-                        let t = state.tc_tasksByBlock[b._id].find(_t =>  {
-                          return _t.type === params.task;
-                        })
-                        if (t) {
-                          results.blockId = b._id;
-                        }
-                      }
-                    } else {
-
-                    }
-
-                  } else {
-                    if (!b.markedAsDone && (!b.status || !b.status.proofed)) {
-                      results.blockId = b._id;
-                      i = params.onpage - 5;
-                    }
-                  }
-                }
-              } break;
-              default : {
-                if (!results.blockId && b._id === params.query) {
-                  results.blockId = b._id;
-                  i = params.onpage - 5;
-                }
-              } break;
-            };
-
-            loop(i+1, b.chainid);
+            if (b && b._id) {
+              results.rows.push(b);
+              loop(i+1, b._id);
+            } else requests[0].resolve();
           })
           .catch((err)=>{
-            console.log('catch', err);
+            console.log('loopBlocksChainUp Catch: ', err);
             results.finish = true;
             requests[0].resolve();
           })
         }
         else requests[0].resolve();
-      })(0, params.first_id);
+      })(0, params.startId);
 
       return Promise.all(requests)
       .then(() => {
@@ -1124,24 +1069,13 @@ export const store = new Vuex.Store({
       });
     },
 
-    loadBlocksPrevChain ({commit, state, dispatch}, params) {
-      if (params.first_id) {
-        return dispatch('loopBlocksPrevChain', params);
+    loadBlocksChainUp ({commit, state, dispatch}, params) {
+      console.log('load_BlocksChainUp', params);
+      if (params.startId) {
+        return dispatch('loopBlocksChainUp', params);
       } else {
-        return state.contentDB
-        .query('filters_byBook/byBook', {
-          startkey: [params.book_id, 0],
-          endkey: [params.book_id, 0],
-          include_docs: true,
-        }).then(function (res) {
-          params.first_id = res.rows[0].doc._id;
-          return dispatch('loopBlocksChain', params).then((result) => {
-            return result;
-          });
-        })
-        .catch(err => err);
+        return Promise.reject({ message: 'no start id'})
       }
-
     },
 
     watchBlocks ({commit, state, dispatch}, params) {
@@ -1376,7 +1310,7 @@ export const store = new Vuex.Store({
       commit('set_blocker', 'getBlockByChainId');
       let _query = 'filters_byBlockChainId/byBlockChainId';
       let _params = { key: chainid, include_docs: true };
-      console.log('getBlockByChainId', chainid);
+      //console.log('getBlockByChainId', chainid);
       return state.contentRemoteDB.query (_query, _params)
       .then(function (result) {
         commit('clear_blocker', 'getBlockByChainId');
