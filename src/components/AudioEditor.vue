@@ -373,7 +373,7 @@
                 self.selection = {start: start, end: end}
               }
             });
-            $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>');
+            $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>').after('<div id="context-position" class="context-position"></div>');
             self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
             
               limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
@@ -745,7 +745,7 @@
           setTimeout(() => {
             let selection = $('.selection.segment')[0];
             if (selection) {
-              $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth);
+              $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
               $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft);
             } else {
               $('[id="resize-selection-right"]').hide().css('left', 0);
@@ -1160,6 +1160,16 @@
             }
           },
           deep: true
+        },
+        'contextPosition': {
+          handler(val) {
+            if (val !== null) {
+              $('#context-position').css('left', val + $('.playlist-tracks').scrollLeft());
+              $('#context-position').show();
+            } else {
+              $('#context-position').hide();
+            }
+          }
         }
       }
   }
@@ -1176,6 +1186,7 @@
           position: absolute;
           z-index: 1001;
           display: none;
+          background-color: green;
       }
   }
   .waveform-playlist {
@@ -1349,6 +1360,14 @@
       height: 100%;
       border: 1px solid black;
       background-color: black;
+      position: absolute;
+      z-index: 1000;
+      display: none;
+  }
+  .context-position {
+      width: 1px;
+      height: 100%;
+      background-color: green;
       position: absolute;
       z-index: 1000;
       display: none;
