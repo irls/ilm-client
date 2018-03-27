@@ -11,7 +11,7 @@
         <span class="close-player" v-on:click="close()">&times;</span>
       </div>
       <div class="waveform-wrapper" @contextmenu.prevent="onContext">
-        <div id="playlist" class="wf-playlist"></div>
+        <div id="playlist" class="wf-playlist" ref="playlist"></div>
       </div>
       <div class="player-controls">
         
@@ -506,13 +506,17 @@
             e.preventDefault();
           });
           if (self.mode == 'file') {
-            $('body').on('click', '.block-audio', function(e) {
-              if (e && e.target && e.target.className && e.target.className.indexOf('resize-selection') !== -1) {
-                return;
-              }
-              self.cursorPosition = (e.offsetX) * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
-              $('.cursor').css('left', e.offsetX);
-            });
+            let eventsTimer = setInterval(() => {
+              let ref = this.$refs.playlist.querySelector('.block-audio');
+              $(ref).on('click', (e) => {
+                clearInterval(eventsTimer);
+                if (e && e.target && e.target.className && e.target.className.indexOf('resize-selection') !== -1) {
+                  return;
+                }
+                this.cursorPosition = (e.offsetX) * this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate;
+                $('.cursor').css('left', e.offsetX);
+              })
+            }, 500);
           }
         },
         setAudio(audio, text, saveToHistory) {
