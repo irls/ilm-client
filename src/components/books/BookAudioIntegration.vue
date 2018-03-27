@@ -435,7 +435,7 @@
           voices: this.currentBookMeta.voices
         }, {}).then((response)=>{
           if (response.status===200) {
-
+            this.$root.$emit('bookBlocksUpdates', response.data);
           } else {
 
           }
