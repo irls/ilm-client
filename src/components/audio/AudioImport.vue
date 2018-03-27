@@ -205,7 +205,7 @@ export default {
           let exist = false;
           if (this.audiobook._id) {
             exist = this.audiobook.importFiles.find(_f => {
-              return _f.origName == file.name;
+              return _f.origName == file.name || _f.group_id === file.name;
             });
           }
           if (exist) {
