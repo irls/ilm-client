@@ -2081,7 +2081,8 @@ export default {
 
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
           let text = footnote ? footnote.content : this.blockAudio.map;
-          this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, check_id);
+          let loadBlock = footnoteIdx !== null ? {_id: check_id, voicework: footnote ? footnote.voicework : 'tts'} : this.block;
+          this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
 
           let self = this;
           this.$root.$on('from-audioeditor:word-realign', function(map, blockId) {

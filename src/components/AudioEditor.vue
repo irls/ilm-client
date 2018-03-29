@@ -112,6 +112,7 @@
           content: "",//'<w data-map="0,335">Either </w><w data-map="335,250">the </w><w data-map="585,60">well </w><w data-map="645,200">was </w><w data-map="845,255">very </w><w data-map="1100,360">deep, </w><w data-map="1460,165">or </w><w data-map="1625,165">she </w><w data-map="1790,310">fell </w><w data-map="2100,280">very </w><w data-map="2380,680">slowly, </w><w data-map="3060,20">for </w><w data-map="3080,270">she </w><w data-map="3350,500">had </w><w data-map="3850,395">plenty  </w><w data-map="4245,25">of </w><w data-map="4270,190">time </w><w data-map="4460,355">as </w><w data-map="4815,115">she </w><w data-map="4930,265">went </w><w data-map="5195,220">down </w><w data-map="5415,115">to </w><w data-map="5530,150">look </w><w data-map="5680,750">about </w><w data-map="6430,450">her. </w><w data-map="6880,435">First, </w><w data-map="7315,100">she </w><w data-map="7415,265">tried </w><w data-map="7680,10">to </w><w>look </w><w data-map="7690,10">down </w><w data-map="7700,50">and </w><w data-map="7750,230">make </w><w data-map="7980,190">out </w><w data-map="8170,160">what </w><w data-map="8330,110">she </w><w data-map="8440,225">was  </w><w data-map="8665,315">coming </w><w data-map="8980,260">to, </w><w data-map="9240,555">but </w><w data-map="9795,80">it </w><w data-map="9875,175">was </w><w data-map="10050,150">too </w><w data-map="10200,115">dark </w><w data-map="10315,145">to </w><w data-map="10460,380">see </w><w data-map="10840,600">anything; </w><w data-map="11440,585">then </w><w data-map="12025,125">she </w><w data-map="12150,550">looked </w><w data-map="12700,250">at </w><w data-map="12950,165">the  </w><w data-map="13115,185">sides </w><w data-map="13300,170">of </w><w data-map="13470,130">the </w><w>well, </w><w data-map="13600,70">and </w><w data-map="13670,315">noticed </w><w data-map="13985,95">that </w><w>they </w><w data-map="14080,120">were </w><w data-map="14200,475">filled </w><w data-map="14675,185">with </w><w data-map="14860,245">cupboards </w><w data-map="15105,370">and  </w><w data-map="15475,1045">book-shelves; </w><w data-map="16520,305">here </w><w data-map="16825,20">and </w><w data-map="16845,160">there </w><w data-map="17005,160">she </w><w data-map="17165,180">saw </w><w data-map="17345,300">maps </w><w data-map="17645,330">and </w><w data-map="17975,400">pictures </w><w data-map="18375,180">hung </w><w data-map="18555,305">upon </w><w data-map="18860,820">pegs. </w><w data-map="19680,325">She  </w><w data-map="20005,240">took </w><w data-map="20245,215">down </w><w data-map="20460,80">a </w><w data-map="20540,295">jar </w><w data-map="20835,195">from </w><w data-map="21030,50">one </w><w data-map="21080,75">of </w><w data-map="21155,5">the </w><w data-map="21160,380">shelves </w><w data-map="21540,225">as </w><w data-map="21765,190">she </w><w data-map="21955,1005">passed; </w><w>it </w><w data-map="22960,265">was </w><w data-map="23225,395">labelled  </w><w data-map="23620,530">‘ORANGE </w><w data-map="24150,1010">MARMALADE’, </w><w data-map="25160,160">but </w><w data-map="25320,245">to </w><w data-map="25565,60">her </w><w data-map="25625,155">great </w><w data-map="25780,1030">disappointment </w><w data-map="26810,105">it </w><w data-map="26915,240">was </w><w data-map="27155,765">empty: </w><w data-map="27920,150">she </w><w data-map="28070,145">did  </w><w data-map="28215,170">not </w><w data-map="28385,110">like </w><w data-map="28495,115">to </w><w data-map="28610,485">drop </w><w data-map="29095,120">the </w><w data-map="29215,405">jar, </w><w data-map="29620,405">so </w><w data-map="30025,135">she </w><w data-map="30160,410">managed </w><w data-map="30570,140">to </w><w data-map="30710,165">put  </w><w data-map="30875,115">it </w><w data-map="30990,235">into </w><w data-map="31225,10">one </w><w data-map="31235,10">of </w><w data-map="31245,225">the </w><w data-map="31470,380">cupboards </w><w data-map="31850,205">as </w><w data-map="32055,165">she </w><w data-map="32220,195">fell </w><w data-map="32415,405">past </w><w data-map="32820,1060">it.</w>',
           audiofile: "",//'http://localhost:3000/audiofiles/aaiw1_en/aaiw1_en_31/aaiw1_en_31.flac',
           blockId: null,
+          block: null,
           plEventEmitter: false,
           words: [],
           currentWord: null,
@@ -147,8 +148,8 @@
       mounted() {
         this.audioContext = new (window.AudioContext || window.webkitAudioContext);
         let self = this;
-        this.$root.$on('for-audioeditor:load-and-play', function(audio, text, blockId, autostart, mode, reloadOnChange) {
-          self.load(audio, text, blockId, autostart, mode, reloadOnChange);
+        this.$root.$on('for-audioeditor:load-and-play', function(audio, text, block, autostart, mode, reloadOnChange) {
+          self.load(audio, text, block, autostart, mode, reloadOnChange);
         });
         this.$root.$on('for-audioeditor:load', function(audio, text) {
           self.setAudio(audio, text);
@@ -175,7 +176,8 @@
         }
       },
       methods: {
-        load(audio, text, blockId, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
+        load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
+          let blockId = block ? block._id : null;
           if (bookAudiofile && bookAudiofile.blockMap) {
             this.blockMap = bookAudiofile.blockMap;
           } else {
@@ -226,6 +228,7 @@
           
           this.audiofile = audio;
           this.blockId = blockId;
+          this.block = block;
           
           if (!this.audiosourceEditor) {
             if (!this.audioContext) {
@@ -287,7 +290,7 @@
           .then(() => {
             if (this.audiosourceEditor.tracks.length > 1) {
               this.audiosourceEditor.getEventEmitter().emit('clear');
-              this.load(audio, text, blockId, autostart, bookAudiofile);
+              this.load(audio, text, block, autostart, bookAudiofile);
               return;
             }
             $('.playlist-tracks').scrollLeft(this.playlistScrollPosition);
@@ -535,7 +538,7 @@
           if (saveToHistory && this.content && this.audiofile) {
             this._addHistory(this.content, this.audiofile);
           }
-          this.load(audio, text, this.blockId);
+          this.load(audio, text, this.block);
         },
         play(cursorPosition) {
           if (typeof cursorPosition === 'undefined' && this.cursorPosition !== false) {
@@ -937,7 +940,7 @@
             //self.audiosourceEditor.annotationList.renderResizeLeft(annotations.length - 1);
         },
         _isAnnotationsEditable() {
-          return this.currentBookMeta.isMastered;
+          return this.currentBookMeta.isMastered || (this.block && this.block.voicework === 'tts');
         },
         _setBlocksSelection() {
           if (this.blocksForAlignment && ((this.blocksForAlignment.start && this.blocksForAlignment.start._id) || (this.blocksForAlignment.end && this.blocksForAlignment.end._id)) && this.plEventEmitter) {
