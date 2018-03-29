@@ -2234,13 +2234,16 @@ export default {
         let parent = false;
         do {
           parent = parent === false ? node.parentElement : parent.parentElement;
-          if (parent.localName == tag) {
+          if (parent && parent.localName == tag) {
             return parent;
           }
         } while(parent);
         return null;
       },
       _getClosestAligned(node, direction) {
+        if (!node) {
+          return null;
+        }
         if (node.dataset && node.dataset.map) {
           let splitted = node.dataset.map.split(',');
           if (splitted.length == 2) {
