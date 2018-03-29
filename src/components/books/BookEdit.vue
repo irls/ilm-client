@@ -14,9 +14,8 @@
     <div class="row content-scroll-item"
       v-bind:style="{ 'top': screenTop + 'px' }"
       v-bind:id="'s-'+block._id"
-      v-for="(block, block_Idx) in parlistV"
-      v-bind:key="block_Idx"
-      v-bind:data-abs="block.absoluteTop">
+      v-for="(block, block_Idx) in parlistC"
+      v-bind:key="block_Idx">
       <div class='col' ><!--v-if="block.isVisible"-->
         <BookBlockView ref="blocks"
             :key="block._id"
@@ -159,6 +158,13 @@ export default {
         return this.parlist.filter((block)=>{
           return block.isVisible == true;
         })
+      },
+      parlistC: function() {
+        let result = {};
+        this.parlist.forEach((block)=>{
+          if (block.isVisible == true) result[block._id] = block;
+        })
+        return result;
       }
   },
   mixins: [access, taskControls, api_config],
