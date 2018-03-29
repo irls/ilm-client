@@ -363,7 +363,7 @@
                     <template v-if="allowEditing">
                       <template v-if="tc_hasTask('content_cleanup')">
                         <label>Voicework:&nbsp;
-                        <select v-model='footnote.voicework' style="min-width: 100px;" ref="footnVoiceworkSel" @input="commitFootnote(ftnIdx, $event)">
+                        <select v-model='footnote.voicework' style="min-width: 100px;" ref="footnVoiceworkSel" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                           <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                         </select>
                         </label>
@@ -1539,10 +1539,13 @@ export default {
         });
         return pos;
       },
-      commitFootnote: function(pos, ev) {
+      commitFootnote: function(pos, ev, field = null) {
         //this.block.footnotes[pos] = ev.target.innerText.trim();
         this.isChanged = true;
         this.pushChange('footnotes');
+        if (field === 'voicework') {
+          this.block.setAudiosrcFootnote(pos, '');
+        }
       },
       commitDescription: function(ev) {
         //this.block.description = ev.target.innerText.trim();
