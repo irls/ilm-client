@@ -1,40 +1,52 @@
 <template>
-<div v-on:mousewheel="scrollContent" ref="contentScrollWrapRef"
+<div v-on:wheel="scrollContent" ref="contentScrollWrapRef"
   :class="['container-fluid content-scroll-wrapper ilm-global-style', metaStyles]">
 
-  <div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >
+  <!--<div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >-->
 
-    <div class="infinite-loading-container" v-show="isBlocked && blockers.indexOf('loadBookUp') >-1"><div><i class="loading-default"></i></div></div>
+    <div v-show="upScreenTop"
+    class="infinite-loading-container -up"
+    v-bind:style="{ top: upScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookUp') >-1"-->
+      <div><i class="loading-default"></i></div>
+    </div>
 
     <!--<template v-for="(sublist, page_Idx) in parlist">-->
-    <div class="row" v-for="(block, block_Idx) in parlist" v-bind:key="block_Idx">
-        <div class='col'>
-          <BookBlockView ref="blocks"
-              :key="block._id"
-              :block="block"
-              :putBlock ="putBlockProxy"
-              :getBlock ="getBlockProxy"
-              :putBlockPart ="putBlockPartProxy"
-              :reCount  ="reCountProxy"
-              :recorder ="recorder"
-              :block_Idx = "block_Idx"
-              :blockReindexProcess="blockReindexProcess"
-              :getBloksUntil="getBloksUntil"
-              @stopRecordingAndNext="stopRecordingAndNext"
-              @insertBefore="insertBlockBefore"
-              @insertAfter="insertBlockAfter"
-              @deleteBlock="deleteBlock"
-              :joinBlocks="joinBlocks"
-              @setRangeSelection="setRangeSelection"
-              @blockUpdated="blockUpdated"
-          />
-        </div>
-        <!--<div class='col'>-->
+    <div class="row content-scroll-item"
+      v-bind:style="{ 'top': screenTop + 'px' }"
+      v-bind:id="'s-'+block._id"
+      v-for="(block, block_Idx) in parlistV"
+      v-bind:key="block_Idx"
+      v-bind:data-abs="block.absoluteTop">
+      <div class='col' ><!--v-if="block.isVisible"-->
+        <BookBlockView ref="blocks"
+            :key="block._id"
+            :block="block"
+            :putBlock ="putBlockProxy"
+            :getBlock ="getBlockProxy"
+            :putBlockPart ="putBlockPartProxy"
+            :reCount  ="reCountProxy"
+            :recorder ="recorder"
+            :block_Idx = "block_Idx"
+            :blockReindexProcess="blockReindexProcess"
+            :getBloksUntil="getBloksUntil"
+            @stopRecordingAndNext="stopRecordingAndNext"
+            @insertBefore="insertBlockBefore"
+            @insertAfter="insertBlockAfter"
+            @deleteBlock="deleteBlock"
+            :joinBlocks="joinBlocks"
+            @setRangeSelection="setRangeSelection"
+            @blockUpdated="blockUpdated"
+        />
+      </div>
+      <!--<div class='col'>-->
     </div>
-    <!--<div class="row"-->
-    <div class="infinite-loading-container" v-show="isBlocked && blockers.indexOf('loadBookDown') >-1"><div><i class="loading-default"></i></div></div>
+    <!--<div class="row"--> <!--v-show="hasScrollDown"-->
+    <div
+      class="infinite-loading-container -down"
+      v-bind:style="{ top: downScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookDown') >-1"-->
+      <div><i class="loading-default"></i></div></div>
     <!--<infinite-loading ref="scrollBookDown" v-if="scrolledDown"></infinite-loading>-->
-  </div>
+  <!--</div>-->
   <!--<div class="content-scroll"-->
     <modal v-model="doJoinBlocks.show" effect="fade" cancel-text="Close" title="Join blocks saving">
       <div slot="modal-body" class="modal-body">Save changes and join blocks?</div>
@@ -87,9 +99,8 @@ export default {
     return {
       page: 0,
       parlist: [],
-      autoload: true,
+      //autoload: true,
       recorder: false,
-      parlistSkip: 0,
       blockOrderChanged: false,
       //isAllLoaded: false,
       selectionStart: {},
@@ -104,15 +115,24 @@ export default {
         block_Idx: false
       },
       blockReindexProcess: false,
-      scrollTop: 0,
-//       scrolledUp: true,
-//       scrolledDown: false
+
+      hasScrollUp: true,
+      hasScrollDown: true,
+
+      upScreenTop: -85,
+      downScreenTop: 0,
+      screenTop: 0,
+
+      lazyLoader: null,
+      lazyLoaderDir: 'down',
+
     }
   },
   computed: {
       // --- From store --- //
       ...mapState({
           //bookBlock: 'bookBlock'
+          //parlist: 'parList'
       }),
       ...mapGetters({
           book: 'currentBook',
@@ -121,7 +141,7 @@ export default {
           allBooks: 'allBooks',
           tc_tasksByBlock: 'tc_tasksByBlock',
           isBlocked: 'isBlocked',
-          blockers: 'blockers',
+          blockers: 'blockers'
       }),
       metaStyles: function () {
           let result = '';
@@ -134,6 +154,11 @@ export default {
             result = result.join(' ');
           }
           return result;
+      },
+      parlistV: function() {
+        return this.parlist.filter((block)=>{
+          return block.isVisible == true;
+        })
       }
   },
   mixins: [access, taskControls, api_config],
@@ -145,12 +170,11 @@ export default {
     ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze']),
 
     test() {
-        //this.parlist.splice(0,1);
-        //console.log(this.parlist);
         window.scrollTo(0, document.body.scrollHeight-500);
     },
 
     loadBookMeta() {
+      console.log('$route.params.bookid', this.$route.params.bookid);
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.freeze('loadBookMeta');
         return this.loadBook(this.$route.params.bookid)
@@ -162,8 +186,57 @@ export default {
       } else return Promise.reject();
     },
 
-    loadBookDown(checkRoute = true) {
-      console.log('loadBookDown');
+    lazyLoad(isFake = true)
+    {
+      if (isFake) return;
+      //console.log('lazyLoaderDir', this.lazyLoaderDir, this.hasScrollDown, this.hasScrollUp);
+      if (this.isBlocked && this.lazyLoader) clearTimeout(this.lazyLoader);
+      if (!this.isBlocked && (this.hasScrollDown || this.hasScrollUp)) this.lazyLoader = setTimeout(()=>{
+        switch(this.lazyLoaderDir) {
+          case 'down' : {
+            if (this.hasScrollDown)
+            {
+              let startId = this.meta.startBlock_id;
+              if (this.parlist.length > 0) startId = this.parlist[this.parlist.length-1].chainid;
+              console.log('getBlocks', startId);
+              this.getBlocks(startId, 1, false)
+              .then(()=>{
+                this.lazyLoaderDir = 'up';
+                this.lazyLoad();
+              }).catch(()=>{
+                this.lazyLoaderDir = 'down';
+                this.lazyLoad();
+              })
+            } else {
+              this.lazyLoaderDir = 'up';
+              this.lazyLoad();
+            }
+          } break;
+          case 'up' : {
+            if (this.hasScrollUp)
+            {
+              let startId = this.parlist[0]._id;
+              this.getBlocksUp(startId, 1, false)
+              .then(()=>{
+                this.lazyLoaderDir = 'down';
+                this.lazyLoad();
+              }).catch(()=>{
+                this.lazyLoaderDir = 'up';
+                this.lazyLoad();
+              })
+            } else {
+              this.lazyLoaderDir = 'down';
+              this.lazyLoad();
+            }
+          } break;
+        };
+
+        //this.lazyLoad();
+      }, 10);
+    },
+
+    loadBookDown(checkRoute = true, isVisible = true) {
+      //console.log('loadBookDown');
       //this.freeze('loadBookDown');
 
       if (checkRoute && this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
@@ -171,7 +244,9 @@ export default {
           this.freeze('loadBookDown');
           this.getBloksUntil(this.$route.params.block, this.$route.params.task_type)
             .then(res=>{
-            this.unfreeze('loadBookDown'); return res;
+            this.unfreeze('loadBookDown');
+            this.lazyLoad();
+            return res;
           }).catch(err=>{
             this.unfreeze('loadBookDown'); return err;
           });
@@ -188,26 +263,29 @@ export default {
         }*/
 
       } else {
+        let startId = this.meta.startBlock_id;
+        if (this.parlist.length > 0) startId = this.parlist[this.parlist.length-1].chainid;
 
         this.freeze('loadBookDown');
-        this.getBlocks()
+        this.getBlocks(startId, 10, isVisible)
         .then(res=>{
-          this.unfreeze('loadBookDown'); return res;
+          this.unfreeze('loadBookDown');
+          this.lazyLoad();
+          return res;
         }).catch(err=>{
           this.unfreeze('loadBookDown'); return err;
         });
       }
     },
 
-    loadBookUp() {
+    loadBookUp(isVisible = true, startId = false) {
       if (this.parlist.length > 0) {
-        console.log('loadBookUp', this.parlist[0]._id);
-        let startId = this.parlist[0]._id;
+        startId = startId || this.parlist[0]._id;
         this.freeze('loadBookUp');
-        return this.getBlocksUp(startId)
+        return this.getBlocksUp(startId, 5, isVisible)
         .then(res=>{
-          console.log('getBlocksUp then', res.blockId);
           this.unfreeze('loadBookUp');
+          this.lazyLoad();
           return startId;
         }).catch(err=>{
           this.unfreeze('loadBookUp');
@@ -216,76 +294,106 @@ export default {
       }
     },
 
-    getBlocksUp(startId) {
-      console.log('getBlocksUp', startId);
+    getBlocksUp(startId, onPage = 5, isVisible = true) {
+      console.log('getBlocksUp', startId, onPage, isVisible);
       return this.loadBlocksChainUp({
         book_id: this.meta._id,
         startId: startId,
-        onpage: 20
+        onpage: onPage
       })
       .then((result)=>{
         if (result.rows.length > 0) {
           result.rows.forEach((el, idx, arr)=>{
             let newBlock = new BookBlock(el);
+            newBlock.isVisible = isVisible;
             this.parlist.unshift(newBlock);
           });
-        }
+        } else this.hasScrollUp = false;
         result.blockId = result.rows[0]._id
         return Promise.resolve(result);
       })
       .catch((err)=>{
         console.log('BlocksUp Error: ', err.message);
+        this.hasScrollUp = false;
         return Promise.reject(err);
       });
     },
 
-    getBlocks(query = false, task_type = null, ) {
-    console.log('getBlocks', query, task_type );
-      if (query || this.meta._id) {
+    getBlocks(startId, onPage = 10, isVisible = true) {
+      console.log('getBlocks->meta', startId, this.meta);
+      return this.loadBlocksChain({
+        book_id: this.meta._id,
+        startId: startId,
+        onpage: onPage
+      })
+      .then((result)=>{
+        if (result.rows.length > 0) {
+          let prevHeight = 0;
+          result.rows.forEach((el, idx, arr)=>{
+            let newBlock = new BookBlock(el);
+            this.parlist.push(newBlock);
+            newBlock.isVisible = isVisible;
+//             if (isVisible) Vue.nextTick(()=>{
+//               newBlock.screenTop = prevHeight;
+//               prevHeight += document.getElementById('s-'+newBlock._id).getBoundingClientRect().height;
+//             });
+          });
+        } else this.hasScrollDown = false;
+        result.blockId = result.rows[0]._id
+        return Promise.resolve(result);
+      })
+      .catch((err)=>{
+        console.log('BlocksDown Error: ', err.message);
+        this.hasScrollDown = false;
+        return Promise.reject(err);
+      });
 
-        let first_id = false;
-        if (query && query !== 'unresolved') first_id = query;
-
-        if (!first_id) {
-          if (this.parlist.length > 0) first_id = this.parlist[this.parlist.length-1].chainid;
-          else if (this.meta._id && this.meta.startBlock_id) first_id = this.meta.startBlock_id;
-        }
-
-        return this.loadBlocksChain({
-          book_id: this.meta._id,
-          first_id: first_id,
-          onpage: 20, /*query: query,*/
-          task: task_type
-        })
-        .then((result)=>{
-          if (result.rows.length > 0) {
-              result.rows.forEach((el, idx, arr)=>{
-                let newBlock = new BookBlock(el);
-                this.parlist.push(newBlock);
-              });
-            /*if (result.finish) {
-              if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
-            } else {
-              if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.loaded();
-            }*/
-          } else {
-              /*if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();*/
-          }
-          /*this.isAllLoaded = this.$refs.scrollBookDown ? this.$refs.scrollBookDown.isComplete : false;*/
-          this.reCountProxy();
-          //this.unresId = result.unresId;
-          return Promise.resolve(result.blockId);
-        })
-        .catch((err)=>{
-          /*if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();*/
-          console.log('Error: ', err.message);
-          return Promise.reject(err);
-        });
-      } else return Promise.reject(new Error('Empty meta._id'));
+//     console.log('getBlocks', query, task_type );
+//       if (query || this.meta._id) {
+//
+//         let first_id = false;
+//         if (query && query !== 'unresolved') first_id = query;
+//
+//         if (!first_id) {
+//           if (this.parlist.length > 0) first_id = this.parlist[this.parlist.length-1].chainid;
+//           else if (this.meta._id && this.meta.startBlock_id) first_id = this.meta.startBlock_id;
+//         }
+//
+//         return this.loadBlocksChain({
+//           book_id: this.meta._id,
+//           first_id: first_id,
+//           onpage: 20, /*query: query,*/
+//           task: task_type
+//         })
+//         .then((result)=>{
+//           if (result.rows.length > 0) {
+//               result.rows.forEach((el, idx, arr)=>{
+//                 let newBlock = new BookBlock(el);
+//                 this.parlist.push(newBlock);
+//               });
+//             /*if (result.finish) {
+//               if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();
+//             } else {
+//               if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.loaded();
+//             }*/
+//           } else {
+//               /*if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();*/
+//           }
+//           /*this.isAllLoaded = this.$refs.scrollBookDown ? this.$refs.scrollBookDown.isComplete : false;*/
+//           this.reCountProxy();
+//           //this.unresId = result.unresId;
+//           return Promise.resolve(result.blockId);
+//         })
+//         .catch((err)=>{
+//           /*if (this.$refs.scrollBookDown) this.$refs.scrollBookDown.stateChanger.complete();*/
+//           console.log('Error: ', err.message);
+//           return Promise.reject(err);
+//         });
+//       } else return Promise.reject(new Error('Empty meta._id'));
     },
 
-    getBloksUntil (query, task_type = null, fromId = null) {
-      console.log('getBloksUntil', query, task_type, fromId);
+    getBloksUntil (startId, task_type = null, fromId = null) {
+      //console.log('getBloksUntil', startId, task_type, fromId);
       return new Promise((resolve, reject)=>{
         if (task_type && task_type !== 'text-cleanup' && task_type !== 'master-audio') {
           if (!Object.keys(this.tc_tasksByBlock).length) {
@@ -307,7 +415,7 @@ export default {
           if (isStartSearch !== true) { // skip until the last approves block
             if (block._id === isStartSearch) isStartSearch = true;
           } else {
-            switch(query) {
+            switch(startId) {
               case 'unresolved': {
                 if (this.tc_hasTask('metadata_cleanup') || this.tc_hasTask('audio_mastering')) {
                   if (!found && !block.markedAsDone && (!block.status || !block.status.proofed)) found = block._id;
@@ -322,7 +430,7 @@ export default {
                 }
               } break;
               default : {
-                if (!found && block._id === query) found = block._id;
+                if (!found && block._id === startId) found = block._id;
               } break;
             }
           }
@@ -336,7 +444,8 @@ export default {
             block.block._id = null;
           });
           Vue.set(this, 'parlist', new Array());
-          this.getBlocks(query, task_type, fromId)
+          //this.getBlocks(startId, task_type, fromId)
+          this.getBlocks(startId)
           .then(res=>{
             //console.log('getBlocks response', res);
             return resolve(res);
@@ -936,46 +1045,101 @@ export default {
     },
     scrollContent(ev) {
 
-      let wrapHeight = this.$refs.contentScrollWrapRef.clientHeight;
-      let dataHeight = this.$refs.contentScrollRef.clientHeight - wrapHeight;
-      let currTop = this.$refs.contentScrollRef.getBoundingClientRect().y;
+      let wrapHeight = this.$refs.contentScrollWrapRef.getBoundingClientRect().height;
 
-      //console.log('currTop', currTop, 'dataHeight', dataHeight);
-      //console.log(ev.deltaY);
-      ev.preventDefault();
+// //       console.log('currTop', currTop, 'dataHeight', dataHeight);
+// //       console.log('hasScrollDown', this.hasScrollDown);
+// //       console.log('hasScrollUp', this.hasScrollUp);
+      //console.log('ev.deltaY', ev.deltaY);
+      //console.log('ev', ev);
+      if (ev.deltaY !== false) ev.preventDefault();
 
-      if (Math.abs(currTop) > dataHeight) {
-        //console.log(Math.abs(currTop) , dataHeight);
-        //ev.preventDefault();
-        if (!this.isBlocked) {
-          //this.scrolledDown = true;
-          console.log('scrolled down');
-          //this.loadBookDown(false);
+      if (ev.deltaY < 0 && this.blockers.indexOf('loadBookUp') >-1) return;
+
+      let step = (ev.deltaY!==false) ? (ev.deltaY > 0 ? 42 : -42) : 0;
+
+      if (this.parlistV[0]) {
+        let firstHeight;
+        try {
+          firstHeight = document.getElementById('s-'+this.parlistV[0]._id).getBoundingClientRect().height;
+        } catch (err) {
+          console.log('catch', this.parlistV[0]._id);
+          this.screenTop -= step;
+          return;
         }
-      } else if (currTop > 100) {
-        if (!this.isBlocked) {
-          this.loadBookUp()
-          .then((startId)=>{
-            setTimeout(()=>{
-              this.scrollToBlock(startId, 'middle');
-            }, 100);
-          }).catch((startId)=>{
-            console.log('6');
-            this.scrollToBlock(startId);
+        //console.log('firstHeight', firstHeight);
+        //if (!firstHeight) return;
+
+        this.screenTop -= step;
+
+        this.upScreenTop = false;
+        if (ev.deltaY < 0 && this.screenTop > 0)
+        { // first block moved down -> try to show previous
+          let prevBlock = this.parlist.find((block)=>{
+            return block.chainid == this.parlistV[0]._id;
           })
-          //this.scrollTop = 0; //TODO remove
+          if (prevBlock) { // already loaded
+            prevBlock.isVisible = true;
+            if (this.parlistV.length > 10) {
+              this.parlistV[this.parlistV.length-1].isVisible = false;
+            }
+            Vue.nextTick(()=>{
+              let prevHeight = document.getElementById('s-'+this.parlistV[0]._id).getBoundingClientRect().height;
+              if (prevHeight) {
+                this.screenTop = this.screenTop - prevHeight;
+              };
+            });
+          } else {
+            this.upScreenTop = 1//this.parlistV[0].screenTop + 65;
+            this.loadBookUp(false, this.parlistV[0]._id)
+            .then(()=>{
+              prevBlock = this.parlist.find((block)=>{
+                return block.chainid == this.parlistV[0]._id;
+              })
+              prevBlock.isVisible = true;
+              if (this.parlistV.length > 10) {
+                this.parlistV[this.parlistV.length-1].isVisible = false;
+              }
+              Vue.nextTick(()=>{
+                this.upScreenTop = false;
+                let prevHeight = document.getElementById('s-'+this.parlistV[0]._id).getBoundingClientRect().height;
+                if (prevHeight) {
+                  this.screenTop = this.screenTop - prevHeight;
+                };
+              });
+            }).catch(err=>err);
+          }
         }
-      } else {
-        this.scrollTop -= ev.deltaY;
+        else if (ev.deltaY > 0 && (this.screenTop + firstHeight) < 0) //ev.deltaY < 0
+        {
+          this.parlistV[0].isVisible = false;
+          if (this.parlistV.length < 10) {
+            let nextBlock = this.parlist.find((block)=>{
+              return block._id == this.parlistV[this.parlistV.length-1].chainid;
+            })
+            if (nextBlock) { // already loaded
+              nextBlock.isVisible = true;
+            } else {
+              this.getBlocks(this.parlistV[this.parlistV.length-1].chainid, 5, false)
+              .then(()=>{
+                nextBlock = this.parlist.find((block)=>{
+                  return block._id == this.parlistV[this.parlistV.length-1].chainid;
+                });
+                nextBlock.isVisible = true;
+              }).catch(err=>err);
+            }
+          }
+          Vue.nextTick(()=>{
+            this.screenTop = this.screenTop + firstHeight;
+          });
+        }
+
+      } else return;
 
         var editors = document.getElementsByClassName('medium-editor-toolbar-active');
         if (editors && editors.length) { //move editor toolbar
-          editors[0].style.top = editors[0].getBoundingClientRect().top - ev.deltaY +'px';
+          editors[0].style.top = editors[0].getBoundingClientRect().top - step +'px';
         }
-      }
-
-      //console.log('scrollTop', this.scrollTop, 'currTop', currTop, 'dataHeight', dataHeight);
-
     },
 
     scrollToBlock(id, position = 'top') {
@@ -1009,17 +1173,21 @@ export default {
       //this.onScrollBookDown();
 
       console.log('mounted', this.meta._id);
+
+      //this.upScreenTop = -85;
+      //this.downScreenTop = this.$refs.contentScrollWrapRef.getBoundingClientRect().height;
+
       if (this.meta._id) {
-        this.loadBookDown();
-      } /*else {
-        setTimeout(()=>{
+        this.loadBookDown()
+      } else {
+        /*setTimeout(()=>{*/
           this.loadBookMeta()
-          .then(()=>{
+          /*.then(()=>{
             console.log('2');
             this.loadBookDown();
           }).catch(err=>err);
-        }, 300);
-      }*/
+        }, 300);*/
+      }
 
       window.addEventListener('keydown', this.eventKeyDown);
       this.setBlockWatch();
@@ -1035,6 +1203,8 @@ export default {
           block._id = null;
         });
         Vue.set(this, 'parlist', new Array());
+        this.hasScrollUp= true;
+        this.hasScrollDown= true;
         this.loadBookDown();
 
       });
@@ -1058,6 +1228,8 @@ export default {
       handler(newVal, oldVal) {
         console.log('meta._id', newVal, oldVal);
         if (newVal) {
+          this.hasScrollUp= true;
+          this.hasScrollDown= true;
           this.loadBookDown();
         }
       }
@@ -1070,6 +1242,8 @@ export default {
     '$route' (toRoute, fromRoute) {
       console.log('$route', toRoute, fromRoute);
       if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
+        this.hasScrollUp= true;
+        this.hasScrollDown= true;
         this.getBloksUntil(this.$route.params.block, this.$route.params.task_type)
         .then((blockId)=>{
           this.scrollToBlock(blockId, 'middle');
@@ -1137,20 +1311,32 @@ export default {
     overflow-y: hidden;
     overflow-x: auto;
     .content-scroll {
-      position: absolute;
+      position: relative;
       top: 0;
       width: 100%;
       margin-left: -30px;
       padding-left: 30px;
     }
+    .content-scroll-item {
+      position: relative;
+      width: 100%;
+    }
   }
+
+
 
   .infinite-loading-container {
     width: 100%;
     text-align: center;
+    position: absolute;
+    margin-left: -15px;
+    margin-right: -15px;
+    &.-down {
+      position: relative;
+    }
     [class^=loading-] {
       display: inline-block;
-      margin: 15px 0;
+      margin: 0;/*15px */
       width: 28px;
       height: 28px;
       font-size: 28px;

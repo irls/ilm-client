@@ -104,7 +104,10 @@ class BookBlock {
     this.audiosrc_ver = init.audiosrc_ver || {};
 
     this.isUpdated = false;
-    
+    this.isVisible = true;
+    this.absoluteTop = 0;
+    this.screenTop = 0;
+
     this.history = {};
   }
 
@@ -324,7 +327,7 @@ class BookBlock {
       return process.env.ILM_API + this.illustration + '?' + (new Date()).toJSON();
     }
   }
-  
+
   getAudiosrc(ver = false, full = true) {
     if (!ver  || !this.audiosrc_ver) {
       return this.audiosrc;
@@ -335,7 +338,7 @@ class BookBlock {
     }
     return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
   }
-  
+
   getAudiosrcFootnote(idx, ver = false, full = true) {
     let f = this.footnotes && this.footnotes[idx] ? this.footnotes[idx] : false;
     if (!f) {
@@ -352,38 +355,38 @@ class BookBlock {
     }
     return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
   }
-  
+
   setContent(content) {
     this.set('content', content);
   }
-  
+
   setAudiosrc(path, ver = {}) {
     this.set('audiosrc', path);
     this.set('audiosrc_ver', ver);
   }
-  
+
   undoContent() {
     this.undo('content');
   }
-  
+
   undoAudiosrc() {
     this.undo('audiosrc');
     this.undo('audiosrc_ver');
   }
-  
+
   setAudiosrcFootnote(idx, path, ver) {
     this.set('footnotes.' + idx + '.audiosrc', path);
     this.set('footnotes.' + idx + '.audiosrc_ver', ver);
   }
-  
+
   setContentFootnote(idx, content) {
     this.set('footnotes.' + idx + '.content', content);
   }
-  
+
   undoContentFootnote(idx) {
     this.undo('footnotes.' + idx + '.content');
   }
-  
+
   undoAudiosrcFootnote(idx) {
     this.undo('footnotes.' + idx + '.audiosrc');
     this.undo('footnotes.' + idx + '.audiosrc_ver');
@@ -439,7 +442,7 @@ class BookBlock {
     if (typeof val !== 'undefined') this.classes[classVal] = val;
     if (val === '') delete this.classes[classVal];
   }
-  
+
   set(field, value) {
     if (!this.history[field]) {
       this.history[field] = [];
@@ -463,7 +466,7 @@ class BookBlock {
       o[f] = value;
     }
   }
-  
+
   undo(field) {
     if (this.history[field]) {
       if (field.indexOf('.') === -1) {
