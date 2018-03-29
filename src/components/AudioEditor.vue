@@ -147,8 +147,8 @@
       mounted() {
         this.audioContext = new (window.AudioContext || window.webkitAudioContext);
         let self = this;
-        this.$root.$on('for-audioeditor:load-and-play', function(audio, text, blockId, autostart, mode) {
-          self.load(audio, text, blockId, autostart, mode);
+        this.$root.$on('for-audioeditor:load-and-play', function(audio, text, blockId, autostart, mode, reloadOnChange) {
+          self.load(audio, text, blockId, autostart, mode, reloadOnChange);
         });
         this.$root.$on('for-audioeditor:load', function(audio, text) {
           self.setAudio(audio, text);
@@ -175,7 +175,7 @@
         }
       },
       methods: {
-        load(audio, text, blockId, autostart = false, bookAudiofile = {}) {
+        load(audio, text, blockId, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
           if (bookAudiofile && bookAudiofile.blockMap) {
             this.blockMap = bookAudiofile.blockMap;
           } else {
@@ -190,7 +190,13 @@
             this.audiofileId = bookAudiofile.id;
           }
           let changeZoomLevel = mode != this.mode;
-          if ((this.blockId && this.blockId != blockId) || mode == 'file' || mode != this.mode) {
+          if (this.audiosourceEditor) {
+            let emitter = this.audiosourceEditor.getEventEmitter();
+            if (emitter) {
+              emitter.emit('clear');
+            }
+          }
+          if ((this.blockId && this.blockId != blockId) || (mode == 'file' && reloadOnChange) || mode != this.mode) {
             this.silenceLength = 0.1;
             this.cursorPosition = false;
             this.isModified = false;

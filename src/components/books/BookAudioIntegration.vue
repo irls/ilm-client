@@ -343,12 +343,13 @@
           return;
         }
         if (id) {
+          let reloadOnChange = this.playing != id
           let record = this.audiobook.importFiles.find(f => {
             return f.id == id;
           })
           if (record/* && this.player*/) {
             let audio_th = record['ver'] && record['ver']['m4a'] ? record['ver']['m4a'] : record.id
-            this.$root.$emit('for-audioeditor:load-and-play', process.env.ILM_API + this.audiobook.importUrl + audio_th, '', null, autostart, record)
+            this.$root.$emit('for-audioeditor:load-and-play', process.env.ILM_API + this.audiobook.importUrl + audio_th, '', null, autostart, record, reloadOnChange)
             this.playing = id;
           }
         } else if (this.player) {
@@ -392,6 +393,7 @@
         }, {}).then(function(response){
           if (response.status===200) {
             self.$root.$emit('bookBlocksUpdates', response.data);
+            self.$emit('alignmentFinished');
           } else {
 
           }
@@ -506,7 +508,7 @@
     },
     watch: {
       'audiobook': {
-        handler(val) {
+        handler(val, oldVal) {
           //console.log('Audiobook changed');
           if (typeof val.importFiles !== 'undefined') {
             val.importFiles.forEach(_if => {
@@ -530,6 +532,20 @@
                 $('input[name="' + s + '"]').prop('checked', true);
               });
             })
+            if (this.playing && val.importFiles && Array.isArray(val.importFiles) && 
+                    oldVal.importFiles && Array.isArray(oldVal.importFiles)) {
+              let file = val.importFiles.find(f => f.id == this.playing);
+              let fileOld = oldVal.importFiles.find(f => f.id == this.playing);
+              if (file && fileOld) {
+                let map = file.blockMap;
+                let mapOld = fileOld.blockMap;
+                if (typeof map !== 'undefined') {
+                  if (typeof mapOld === 'undefined' || !_.isEqual(map, mapOld)) {
+                    this.play(this.playing);
+                  }
+                }
+              }
+            }
           }
         },
         deep: true

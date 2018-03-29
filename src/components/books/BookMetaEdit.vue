@@ -99,6 +99,7 @@
                 :audiobook="audiobook"
                 :blocksForAlignment="blocksForAlignment"
                 @onTtsSelect="ttsUpdate"
+                @alignmentFinished="loadAudiobook()"
               ></BookAudioIntegration>
           </vue-tab>
           <vue-tab title="Book Content" :id="'book-content'">
