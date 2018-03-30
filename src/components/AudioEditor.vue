@@ -80,7 +80,7 @@
         <p>Discard unsaved audio changes?</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-default">Cancel</button>
+        <button class="btn btn-default" v-on:click="hideModal('onDiscardMessage')">Cancel</button>
         <button class="btn btn-primary" v-on:click="discard()">Discard</button>
       </div>
     </modal>
