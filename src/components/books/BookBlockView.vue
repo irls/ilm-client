@@ -2156,15 +2156,15 @@ export default {
                 self.discardAudioEdit(footnoteIdx, false);
               }
               $('nav.fixed-bottom').addClass('hidden');
-              self.$root.$off('from-audioeditor:insert-silence');
-              self.$root.$off('from-audioeditor:word-realign');
-              self.$root.$off('from-audioeditor:save');
-              self.$root.$off('from-audioeditor:save-and-realign');
-              self.$root.$off('from-audioeditor:cut');
-              self.$root.$off('from-audioeditor:undo');
-              self.$root.$off('from-audioeditor:discard');
-              self.$root.$off('from-audioeditor:closed');
-              self.$root.$off('from-audioeditor:select');
+              //self.$root.$off('from-audioeditor:insert-silence');
+              //self.$root.$off('from-audioeditor:word-realign');
+              //self.$root.$off('from-audioeditor:save');
+              //self.$root.$off('from-audioeditor:save-and-realign');
+              //self.$root.$off('from-audioeditor:cut');
+              //self.$root.$off('from-audioeditor:undo');
+              //self.$root.$off('from-audioeditor:discard');
+              //self.$root.$off('from-audioeditor:closed');
+              //self.$root.$off('from-audioeditor:select');
               $('#' + self.block._id + ' .table-body.-content').removeClass('editing');
             }
           });
