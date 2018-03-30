@@ -337,6 +337,7 @@ export const store = new Vuex.Store({
     TASK_LIST_LOADED (state) {
       let tc_userTasks = 0;
       state.tc_tasksByBlock = {};
+      state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": []};
       for (let jobid in state.tc_userTasks.list) {
         let job = Object.assign({}, state.tc_userTasks.list[jobid])
         tc_userTasks+= job.tasks.length
@@ -1188,6 +1189,7 @@ export const store = new Vuex.Store({
     },
 
     tc_setCurrentBookTasks({state}) {
+      state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": []};
       for (let jobid in state.tc_userTasks.list) {
         let job = state.tc_userTasks.list[jobid]
         if (job.bookid == state.currentBookid) {
