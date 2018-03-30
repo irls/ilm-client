@@ -2080,7 +2080,7 @@ export default {
           }
         }
         let check_id = footnoteIdx !== null ? this.block._id + '_' + footnoteIdx : this.block._id;
-        $('nav.fixed-bottom').removeClass('hidden');
+        
         Vue.nextTick(() => {
 
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
@@ -2089,6 +2089,11 @@ export default {
           this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
 
           let self = this;
+          this.$root.$on('from-audioeditor:block-loaded', function(blockId) {
+            if (blockId == check_id) {
+              $('nav.fixed-bottom').removeClass('hidden');
+            }
+          });
           this.$root.$on('from-audioeditor:word-realign', function(map, blockId) {
             if (blockId == check_id) {
               self.audStop();
