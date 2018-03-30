@@ -1060,7 +1060,7 @@ export default {
 //           });
       },
 
-      discardAudioEdit: function(footnoteIdx = null) {
+      discardAudioEdit: function(footnoteIdx = null, reload = true) {
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
         if (footnoteIdx !== null) {
           api_url+= '/footnote/' + footnoteIdx;
@@ -1076,13 +1076,17 @@ export default {
                 //this.block.audiosrc = this.blockAudio.src;
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
                 this.isAudioChanged = false;
-                this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
+                if (reload) {
+                  this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
+                }
               } else {
                 let resp_block = response.data;
                 let resp_f = resp_block.footnotes[footnoteIdx];
                 this.block.setContentFootnote(footnoteIdx, resp_f.content);
                 this.block.setAudiosrcFootnote(footnoteIdx, resp_f.audiosrc, resp_f.audiosrc_ver);
-                this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
+                if (reload) {
+                  this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
+                }
                 this.audioEditFootnote.isAudioChanged = false;
               }
             }
@@ -2144,7 +2148,7 @@ export default {
             if (blockId == check_id) {
               self.isAudioEditing = false;
               if (self.isAudioChanged) {
-                self.discardAudioEdit(footnoteIdx);
+                self.discardAudioEdit(footnoteIdx, false);
               }
               $('nav.fixed-bottom').addClass('hidden');
               self.$root.$off('from-audioeditor:insert-silence');

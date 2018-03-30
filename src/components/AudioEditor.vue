@@ -65,7 +65,7 @@
         </div>
         <div class="audio-controls" v-if="isModifiedComputed && mode == 'block'">
           <button class="btn btn-default" v-if="history.length" v-on:click="undo()">Undo</button>
-          <button class="btn btn-default" v-on:click="onDiscardMessage = true">Discard</button>
+          <button class="btn btn-default" v-on:click="showModal('onDiscardMessage')">Discard</button>
           <button class="btn btn-primary" v-on:click="save()">Save</button>
           <button class="btn btn-primary" v-on:click="saveAndRealign()">Save & Re-align</button>
         </div>
@@ -74,15 +74,36 @@
         </div>
       </div>
     </div>
-    <modal v-model="onDiscardMessage" effect="fade" title="" ok-text="Discard" cancel-text="Cancel" @ok="discard()">
-      <p>Discard unsaved audio changes?</p>
+    <modal name="onDiscardMessage" :resizeable="false" :clickToClose="false" height="auto">
+      <div class="modal-header"></div>
+      <div class="modal-body">
+        <p>Discard unsaved audio changes?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default">Cancel</button>
+        <button class="btn btn-primary" v-on:click="discard()">Discard</button>
+      </div>
     </modal>
-    <modal v-model="onExitMessage" effect="fade" title="" ok-text="Confirm" cancel-text="Cancel" @ok="discardAndExit()" @closed="checkExitState()">
-      <p v-if="mode == 'block'">Discard unsaved audio changes?</p>
-      <p v-if="mode == 'file'">Discard unsaved markers position?</p>
+    <modal name="onExitMessage" :resizeable="false" :clickToClose="false" height="auto">
+      <div class="modal-header"></div>
+      <div class="modal-body">
+        <p v-if="mode == 'block'">Discard unsaved audio changes?</p>
+        <p v-if="mode == 'file'">Discard unsaved markers position?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" v-on:click="checkExitState()">Cancel</button>
+        <button v-if="mode == 'block'" class="btn btn-primary" v-on:click="discardAndExit()">Confirm</button>
+        <button v-if="mode == 'file'" class="btn btn-primary" v-on:click="discardAndExit()">Discard</button>
+      </div>
     </modal>
-    <modal v-model="onWordRepositionMessage" effect="fade" title="" ok-text="OK" cancel-text="" @ok="onWordRepositionMessage = false" :class="['on-word-reposition']">
-      <p>Words repositioning will be lost on unmastered audio</p>
+    <modal name="onWordRepositionMessage" :class="['on-word-reposition']" :resizeable="false" :clickToClose="false" height="auto">
+      <div class="modal-header"></div>
+      <div class="modal-body">
+        <p>Words repositioning will be lost on unmastered audio</p>
+      </div>
+      <div class="modal-footer">
+         <button class="btn btn-primary" v-on:click="hideModal('onWordRepositionMessage')">OK</button>
+      </div>
     </modal>
   </div>
 </template>
@@ -91,16 +112,18 @@
   import api_config from '../mixins/api_config.js'
   import task_controls from '../mixins/task_controls.js'
   import BlockContextMenu from './generic/BlockContextMenu';
-  import { modal } from 'vue-strap'
+  //import { modal } from 'vue-strap'
+  import v_modal from 'vue-js-modal';
   import {mapActions, mapGetters} from 'vuex'
   //import Peaks from 'peaks.js';
   var WaveformPlaylist = require('waveform-playlist');
   var WaveformData = require('waveform-data')
   var Draggable = require ('draggable')
+  Vue.use(v_modal, { dialog: true });
   export default {
       name: 'AudioEditor',
       components: {
-        'modal': modal,
+        //'modal': modal,
         'cntx-menu': BlockContextMenu
       },
       props: ['blocksForAlignment'],
@@ -129,20 +152,18 @@
           isAudioModified: false,
           history: [],
           isHistoryFull: true,
-          onDiscardMessage: false,
-          onExitMessage: false,
           discardOnExit: false,
           mode: 'block',
           origFilePositions: {},
           cursorPosition: false,
           dragLeft: null,
           dragRight: null,
-          onWordRepositionMessage: false,
           playlistScrollPosition: 0,
           audiofileId: null,
           blockMap: {},
           blockSelectionEmit: false,
-          contextPosition: null
+          contextPosition: null,
+          pendingLoad: null
         }
       },
       mounted() {
@@ -192,22 +213,31 @@
             this.audiofileId = bookAudiofile.id;
           }
           let changeZoomLevel = mode != this.mode;
+          if ((this.blockId && this.blockId != blockId) || (mode == 'file' && reloadOnChange) || mode != this.mode) {
+            if (this.isModifiedComputed) {
+              this.pendingLoad = arguments;
+              this.showModal('onExitMessage');
+              return;
+            }
+            this.silenceLength = 0.1;
+            this.cursorPosition = false;
+            this.isModified = false;
+            this.playlistScrollPosition = 0;
+            this.selection = {};
+            this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
+            this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
+            this._clearWordSelection();
+            //this.isAudioModified = false;
+            //this.contentHistory = [];
+            //this.audioHistory = [];
+            //this.close();
+          }
+          this.pendingLoad = null;
           if (this.audiosourceEditor) {
             let emitter = this.audiosourceEditor.getEventEmitter();
             if (emitter) {
               emitter.emit('clear');
             }
-          }
-          if ((this.blockId && this.blockId != blockId) || (mode == 'file' && reloadOnChange) || mode != this.mode) {
-            this.silenceLength = 0.1;
-            this.cursorPosition = false;
-            this.isModified = false;
-            this.playlistScrollPosition = 0;
-            //this.isAudioModified = false;
-            //this.contentHistory = [];
-            //this.audioHistory = [];
-            //this.selection = {};
-            this.close();
           }
           if (bookAudiofile) {
             if (bookAudiofile.positions) {
@@ -292,6 +322,11 @@
               this.audiosourceEditor.getEventEmitter().emit('clear');
               this.load(audio, text, block, autostart, bookAudiofile);
               return;
+            }
+            if (this.blockId) {
+              this.$root.$emit('from-audioeditor:block-loaded', this.blockId);
+            } else if (bookAudiofile && bookAudiofile.id) {
+              this.$root.$emit('from-audioeditor:audio-loaded', bookAudiofile.id);
             }
             $('.playlist-tracks').scrollLeft(this.playlistScrollPosition);
             $('.playlist-tracks').on('scroll', () => {
@@ -439,7 +474,7 @@
                 //self.cursorPosition = self.selection.start;
               }
             })
-            this.onDiscardMessage = false;
+            this.hideModal('onDiscardMessage');
             if (this.mode == 'file') {
               if (!this._setBlocksSelection()) {
                 if (bookAudiofile && bookAudiofile.positions) {
@@ -492,7 +527,7 @@
           });
           $('.wf-playlist').on('dragend', '.annotations-boxes .annotation-box .resize-handle', function(e) {
             if (!self._isAnnotationsEditable()) {
-              self.onWordRepositionMessage = true;
+              self.showModal('onWordRepositionMessage');
             }
             let map = [];
             self.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
@@ -660,7 +695,7 @@
         },
         close() {
           if (this.isModifiedComputed) {
-            this.onExitMessage = true;
+            this.showModal('onExitMessage');
           } else {
             if (this.plEventEmitter) {
               this.plEventEmitter.emit('automaticscroll', false);
@@ -668,8 +703,8 @@
               this._clearWordSelection();
             }
             this._setDefaults();
-            this.$root.$emit('from-audioeditor:closed', this.blockId);
-            this.$root.$emit('from-audioeditor:close');
+            this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
+            this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
           }
         },
         addSilence() {
@@ -712,18 +747,41 @@
         discard() {
           this.$root.$emit('from-audioeditor:discard', this.blockId);
           this._setDefaults();
+          this.hideModal('onDiscardMessage');
         },
         discardAndExit() {
-          this.discardOnExit = true;
-          this.onExitMessage = false;
+          //this.discardOnExit = true;
+          this.hideModal('onExitMessage');
           if (this.mode == 'file') {
-            //this.selection = this.origFilePositions;
-            //this.close();
+            this.selection = this.origFilePositions;
+          } else if (this.mode == 'block') {
+            this.isModified = false;
+          }
+          if (this.pendingLoad) {
+            if (this.plEventEmitter) {
+              this.plEventEmitter.emit('automaticscroll', false);
+              this._clearWordSelection();
+            }
+            this._setDefaults();
+            this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
+            this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
+            this.load(...this.pendingLoad);
+          } else {
+            this.close();
           }
         },
         checkExitState() {
+          this.hideModal('onExitMessage');
           if (this.discardOnExit) {
             this.discard();
+          } else {
+            /*if (this.pendingLoad) {
+              if (this.pendingLoad[3]) {
+                this.$root.$emit('from-audioeditor:closed', this.pendingLoad[3]);
+              } else {
+                this.$root.$emit('from-audioeditor:close');
+              }
+            }*/
           }
         },
         _setDefaults() {
@@ -737,10 +795,16 @@
           this.isPlaying = false;
           this.isPaused = false;
           this.origFilePositions = {};
-          this.onExitMessage = false;
+          this.hideModal('onExitMessage');
           if (this.plEventEmitter) {
             this.plEventEmitter.emit('clear');
           }
+        },
+        showModal(name) {
+          this.$modal.show(name);
+        },
+        hideModal(name) {
+          this.$modal.hide(name);
         },
         _numToTime(val) {
           let val_check = parseInt(val);
@@ -783,7 +847,9 @@
               }, 50);
             } else if (this.hasSelection) {
               setTimeout(function () {
-                $('.playlist-tracks').scrollLeft($('#resize-selection-left').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+                if ($('#resize-selection-left').length > 0 && $('.playlist-tracks').length > 0) {
+                  $('.playlist-tracks').scrollLeft($('#resize-selection-left').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+                }
               }, 50);
             }
           }

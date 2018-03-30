@@ -206,8 +206,10 @@
         linkEndpoints: false
       });*/
       var self = this;
-      this.$root.$on('from-audioeditor:close', function() {
-        self.playing = false;
+      this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
+        if (audiofileId && self.playing === audiofileId) {
+          self.playing = false;
+        }
       })
       this.$root.$on('from-bookedit:set-selection', (start, end) => {
         var openAudio = this.$refs.panelAudiofile ? this.$refs.panelAudiofile.open : false;
@@ -231,6 +233,12 @@
         })
         if (record) {
           self.$root.$emit('for-audioeditor:load-and-play', process.env.ILM_API + self.audiobook.importUrl + record.id, '', null, false, record)
+        }
+      });
+      this.$root.$on('from-audioeditor:audio-loaded', (id) => {
+        let record = this.audiobook.importFiles.find(f => f.id === id);
+        if (record) {
+          this.playing = id;
         }
       });
 
@@ -349,8 +357,7 @@
           })
           if (record/* && this.player*/) {
             let audio_th = record['ver'] && record['ver']['m4a'] ? record['ver']['m4a'] : record.id
-            this.$root.$emit('for-audioeditor:load-and-play', process.env.ILM_API + this.audiobook.importUrl + audio_th, '', null, autostart, record, reloadOnChange)
-            this.playing = id;
+            this.$root.$emit('for-audioeditor:load-and-play', process.env.ILM_API + this.audiobook.importUrl + audio_th, '', null, autostart, record, reloadOnChange);
           }
         } else if (this.player) {
           this.player.play();
