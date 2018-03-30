@@ -171,7 +171,7 @@ export default {
         let api_url = this.API_URL + 'books/' + this.$store.state.currentBookid + '/selection_alignment';
         let api = this.$store.state.auth.getHttp();
         let query = 'start=' + this.blocksForAlignment.start._id + '&end=' + this.blocksForAlignment.end._id;
-        if (this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0) {
+        if (this.tc_hasTask('audio_mastering') || (this.tc_hasTask('content_cleanup') && this.currentBookCounters.not_marked_blocks === 0)) {
           query+='&voicework=all_audio&realign=true';
         } else { // In case of normal task (with tts counter)
           query+='&voicework=all_with_tts';
