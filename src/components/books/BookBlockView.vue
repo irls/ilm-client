@@ -2561,6 +2561,9 @@ export default {
         }
       }
   },
+  beforeDestroy: function () {
+    console.log('beforeDestroy', this.block._id);
+  },
   destroyed: function () {
     this.$root.$off('playBlockFootnote');
     this.$root.$off('playBlock');

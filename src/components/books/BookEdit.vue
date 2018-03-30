@@ -173,7 +173,7 @@ export default {
       modal,
   },
   methods: {
-    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze']),
+    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask']),
 
     test() {
         window.scrollTo(0, document.body.scrollHeight-500);
@@ -1188,11 +1188,12 @@ export default {
       } else {
         /*setTimeout(()=>{*/
           this.loadBookMeta()
-          /*.then(()=>{
-            console.log('2');
-            this.loadBookDown();
-          }).catch(err=>err);
-        }, 300);*/
+          .then(()=>{
+            if (this.parlist.length == 0) {
+              this.loadBookDown();
+              this.tc_loadBookTask();
+            }
+          })
       }
 
       window.addEventListener('keydown', this.eventKeyDown);
