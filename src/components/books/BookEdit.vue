@@ -296,8 +296,25 @@ export default {
             if (this.parlist[idx].partUpdate) {
               this.parlist[idx]._rev = change.doc._rev;
             } else {
-              Vue.set(this.parlist, idx, new BookBlock(change.doc));
-              this.parlist[idx].isUpdated = true;
+              let ref = this.$refs.blocks.find(r => {
+                return r && r.block && r.block._id === change.doc._id;
+              });
+              let block = this.parlist[idx];
+              let newBlock = new BookBlock(change.doc);
+              if (ref && (ref.isChanged || ref.isAudioChanged || ref.isIllustrationChanged)) {
+                if (block.status && newBlock.status && block.status.assignee === newBlock.status.assignee) {
+                  this.parlist._rev = change.doc._rev;
+                } else {
+                  ref.isChanged = false;
+                  ref.isAudioChanged = false;
+                  ref.isIllustrationChanged = false;
+                  Vue.set(this.parlist, idx, newBlock);
+                  this.parlist[idx].isUpdated = true;
+                }
+              } else {
+                Vue.set(this.parlist, idx, newBlock);
+                this.parlist[idx].isUpdated = true;
+              }
             }
           }
         }

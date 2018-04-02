@@ -1840,6 +1840,7 @@ export default {
                   self.block.setContent(response.data.content);
                   self.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                   self.blockAudio.src = self.block.getAudiosrc('m4a');
+                  self.blockAudio.map = self.block.content;
                   self.isAudioChanged = true;
                 }
                 self.reRecordPosition = false;
@@ -3008,7 +3009,7 @@ export default {
         top: 5px;
     }
     .-audio {
-        width: 100px;
+        width: 130px;
         .fa {
             font-size: 18px;
         }
