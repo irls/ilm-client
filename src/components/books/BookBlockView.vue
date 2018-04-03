@@ -817,6 +817,7 @@ export default {
       }
 
       this.voiceworkSel = this.block.voicework;
+      this.isChanged = this.block.isChanged;
       //this.detectMissedFlags();
   },
   methods: {
@@ -2508,6 +2509,7 @@ export default {
           if (val === false) {
             this.flushChanges();
           }
+          this.block.isChanged = val;
         }
       },
       'isAudioChanged': {
@@ -2562,7 +2564,28 @@ export default {
       }
   },
   beforeDestroy: function () {
-    console.log('beforeDestroy', this.block._id);
+     //console.log('beforeDestroy', this.block._id);
+//     console.log('this.isChanged', this.isChanged);
+    if (this.isChanged) {
+        switch (this.block.type) { // part from assembleBlock: function()
+          case 'illustration':
+            this.block.description = this.$refs.blockDescription.innerHTML;
+            this.block.voicework = 'no_audio';
+          case 'hr':
+            this.block.content = '';
+            this.block.voicework = 'no_audio';
+            break;
+          default:
+            this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+            this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+            if (this.block.footnotes && this.block.footnotes.length) {
+              this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+                this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
+              });
+            }
+            break;
+        }
+    }
   },
   destroyed: function () {
     this.$root.$off('playBlockFootnote');

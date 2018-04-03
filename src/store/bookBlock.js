@@ -104,6 +104,7 @@ class BookBlock {
     this.audiosrc_ver = init.audiosrc_ver || {};
 
     this.isUpdated = false;
+    this.isChanged = false;
     this.isVisible = true;
     this.absoluteTop = 0;
     this.screenTop = 0;
