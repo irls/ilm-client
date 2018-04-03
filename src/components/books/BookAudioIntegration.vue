@@ -158,6 +158,8 @@
   import SelectTTSVoice from '../generic/SelectTTSVoice'
   var WaveformPlaylist = require('waveform-playlist');
   import draggable from 'vuedraggable';
+  import superlogin from 'superlogin-client';
+  import PouchDB from 'pouchdb';
   //var d3 = require('d3')
   export default {
     name: 'BookAudioIntegration',
@@ -189,7 +191,8 @@
         draggableList: false,
         alignmentProcess: false,
         pre_options: false,
-        pre_volume: 1.0
+        pre_volume: 1.0,
+        aligningBlocks: []
       }
     },
     mixins: [task_controls, api_config, access],
@@ -391,24 +394,99 @@
         let formData = new FormData();
         let api = this.$store.state.auth.getHttp()
         let self = this;
-        this.alignmentProcess = true;
+        //this.alignmentProcess = true;
+        let realign = this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0;
+        this._setAligningBlocks('audio_file');
         api.post(api_url, {
           start: this.blocksForAlignment.start._id,
           end: this.blocksForAlignment.end._id,
           audiofiles: this.selections,
-          realign: this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0
+          realign: realign
         }, {}).then(function(response){
           if (response.status===200) {
             self.$root.$emit('bookBlocksUpdates', response.data);
             self.$emit('alignmentFinished');
+            self.aligningBlocks = [];
           } else {
 
           }
-          self.alignmentProcess = false;
           self.setCurrentBookCounters();
         }).catch((err) => {
-          console.log('error: '+ err)
-          self.alignmentProcess = false;
+          console.log('error: '+ err);
+          if (err.response && err.response.status == 504) {
+            console.log(err.response.status)
+            self.checkAligningBlocks();
+          } else {
+            self.aligningBlocks = [];
+          }
+        });
+      },
+      checkAligningBlocks() {
+        this.$root.$off('blockChange');
+        var dbPath = superlogin.getDbUrl('ilm_content');
+        var db = new PouchDB(dbPath);
+        let keys = [];
+        this.aligningBlocks.forEach(b => keys.push(b._id));
+        db.allDocs({keys: keys})
+          .then(docs => {
+            //console.log(docs);
+            if (docs.rows) {
+              docs.rows.forEach(doc => {
+                let d = this.aligningBlocks.find(b => b._id == doc.id);
+                if (d && d._rev != doc.value.rev) {
+                  let i = this.aligningBlocks.indexOf(d);
+                  if (i !== -1) {
+                    this.aligningBlocks.splice(i, 1);
+                  }
+                }
+              })
+              if (this.aligningBlocks.length > 0) {
+                setTimeout(() => {
+                  this.checkAligningBlocks();
+                }, 5000);
+              }
+            }
+          })
+          .catch(err => {
+            console.log(err);
+          })
+      },
+      _setAligningBlocks(voicework) {
+        this.aligningBlocks = [];
+        let realign = this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0;
+        if (this.blocksForAlignment.blocks) {
+          this.blocksForAlignment.blocks.forEach(_b => {
+            if (voicework === 'audio_file') {
+              if (_b.voicework === 'audio_file' || (realign && _b.voicework === 'narration')) {
+                this.aligningBlocks.push({_id: _b._id, _rev: _b._rev});
+              }
+            } else if (voicework === 'tts') {
+              if (_b.voicework === 'tts') {
+                this.aligningBlocks.push({_id: _b._id, _rev: _b._rev});
+              } else {
+                if (_b.footnotes && _b.footnotes.length > 0) {
+                  let f = _b.footnotes.filter(_f => _f.voicework === 'tts');
+                  if (f && f.length > 0) {
+                    this.aligningBlocks.push({_id: _b._id, _rev: _b._rev});
+                  }
+                }
+              }
+            }
+          });
+        }
+        this.$root.$on('blockChange', (doc) => {
+          if (doc && doc._id) {
+            let d = this.aligningBlocks.find(b => b._id == doc._id);
+            if (d) {
+              let i = this.aligningBlocks.indexOf(d);
+              if (i !== -1) {
+                this.aligningBlocks.splice(i, 1);
+              }
+            }
+          }
+          if (this.aligningBlocks.length === 0) {
+            this.$root.$off('blockChange');
+          }
         });
       },
       cancelAlign(force = false) {
@@ -424,7 +502,7 @@
             } else {
 
             }
-            self.alignmentProcess = false;
+            self.aligningBlocks = [];
           }).catch((err) => {
             console.log('error: '+ err)
           });
@@ -434,7 +512,8 @@
         let api_url = this.API_URL + 'books/' + this.currentBookid + '/selection_alignment';
         let formData = new FormData();
         let api = this.$store.state.auth.getHttp()
-        this.alignmentProcess = true;
+        //this.alignmentProcess = true;
+        this._setAligningBlocks('tts');
         api.post(api_url, {
           start: this.blocksForAlignment.start._id,
           end: this.blocksForAlignment.end._id,
@@ -445,15 +524,20 @@
         }, {}).then((response)=>{
           if (response.status===200) {
             this.$root.$emit('bookBlocksUpdates', response.data);
+            this.$emit('alignmentFinished');
+            this.aligningBlocks = [];
           } else {
 
           }
-          this.alignmentProcess = false;
           this.setCurrentBookCounters();
         }).catch((err) => {
-          this.alignmentProcess = false;
-          this.alignmentProcessModal = false;
           console.log('error11: '+ err);
+          if (err.response && err.response.status == 504) {
+            console.log(err.response.status)
+            this.checkAligningBlocks();
+          } else {
+            this.aligningBlocks = [];
+          }
         });
       },
       scrollToBlock(id) {
@@ -611,6 +695,13 @@
       'ttsVoices': function (val) {
         this.pre_options = val;
       },
+      'aligningBlocks': function() {
+        if (this.aligningBlocks.length > 0) {
+          this.alignmentProcess = true;
+        } else {
+          this.alignmentProcess = false;
+        }
+      }
     }
   }
 </script>

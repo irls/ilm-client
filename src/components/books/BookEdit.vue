@@ -788,6 +788,7 @@ export default {
       this.watchBlocks({book_id: this.meta._id})
         .then(()=>{
           this.watchBlk.on('change', (change) => {
+              this.$root.$emit('blockChange', change.doc);
               this.refreshBlock(change);
           });
         });
