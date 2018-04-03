@@ -418,7 +418,6 @@
         }).catch((err) => {
           console.log('error: '+ err);
           if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
-            console.log(err.response.status)
             self.checkAligningBlocks();
           } else {
             self.aligningBlocks = [];
@@ -545,7 +544,6 @@
         }).catch((err) => {
           console.log('error11: '+ err);
           if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
-            console.log(err.response.status)
             this.checkAligningBlocks();
           } else {
             this.aligningBlocks = [];
