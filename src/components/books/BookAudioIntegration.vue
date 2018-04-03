@@ -402,13 +402,17 @@
           end: this.blocksForAlignment.end._id,
           audiofiles: this.selections,
           realign: realign
-        }, {}).then(function(response){
+        }, {
+          validateStatus: function (status) {
+            return status == 200 || status == 504;
+          }
+        }).then(function(response){
           if (response.status===200) {
             self.$root.$emit('bookBlocksUpdates', response.data);
             self.$emit('alignmentFinished');
             self.aligningBlocks = [];
-          } else {
-
+          } else if (response.status == 504) {
+            self.checkAligningBlocks();
           }
           self.setCurrentBookCounters();
         }).catch((err) => {
@@ -446,6 +450,7 @@
                 }, 5000);
               }
             }
+            this.setCurrentBookCounters();
           })
           .catch(err => {
             console.log(err);
