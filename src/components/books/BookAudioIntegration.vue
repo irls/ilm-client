@@ -417,7 +417,7 @@
           self.setCurrentBookCounters();
         }).catch((err) => {
           console.log('error: '+ err);
-          if (err.response && err.response.status == 504) {
+          if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
             console.log(err.response.status)
             self.checkAligningBlocks();
           } else {
@@ -431,13 +431,14 @@
         var db = new PouchDB(dbPath);
         let keys = [];
         this.aligningBlocks.forEach(b => keys.push(b._id));
-        db.allDocs({keys: keys})
+        db.allDocs({keys: keys, include_docs: true})
           .then(docs => {
             //console.log(docs);
             if (docs.rows) {
               docs.rows.forEach(doc => {
                 let d = this.aligningBlocks.find(b => b._id == doc.id);
                 if (d && d._rev != doc.value.rev) {
+                  this.$root.$emit('bookBlocksUpdates', {blocks: [doc.doc]});
                   let i = this.aligningBlocks.indexOf(d);
                   if (i !== -1) {
                     this.aligningBlocks.splice(i, 1);
@@ -448,6 +449,8 @@
                 setTimeout(() => {
                   this.checkAligningBlocks();
                 }, 5000);
+              } else {
+                this.$emit('alignmentFinished');
               }
             }
             this.setCurrentBookCounters();
@@ -526,18 +529,22 @@
           realign: false,/*this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0*/
           voicework: 'all_with_tts',
           voices: this.currentBookMeta.voices
-        }, {}).then((response)=>{
+        }, {
+          validateStatus: function (status) {
+            return status == 200 || status == 504;
+          }
+        }).then((response)=>{
           if (response.status===200) {
             this.$root.$emit('bookBlocksUpdates', response.data);
             this.$emit('alignmentFinished');
             this.aligningBlocks = [];
-          } else {
-
+          } else if (response.status == 504) {
+            self.checkAligningBlocks();
           }
           this.setCurrentBookCounters();
         }).catch((err) => {
           console.log('error11: '+ err);
-          if (err.response && err.response.status == 504) {
+          if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
             console.log(err.response.status)
             this.checkAligningBlocks();
           } else {
