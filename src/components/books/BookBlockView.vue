@@ -639,7 +639,7 @@ export default {
           return this.block.voicework;
         },
         set(val) {
-          if (val !== this.block.voicework) {
+          if (val && val !== this.block.voicework) {
             if (this._is('editor', true)) {
               this.voiceworkChange = val;
               if (!this.block.markedAsDone && this.tc_hasTask('content_cleanup')) {
@@ -2366,7 +2366,9 @@ export default {
         this.$emit('setRangeSelection', this.block, type, checked);
       },
       updateVoicework() {
-
+        if (!this.voiceworkChange) {
+          return false;
+        }
         this.voiceworkUpdating = true;
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/set_voicework';
         let api = this.$store.state.auth.getHttp();
