@@ -853,7 +853,8 @@ export default {
               if (this.block.voicework !== 'narration') {
                 canFlag = false;
               } else {
-                if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
+                if (this.block.status && this.block.status.stage === 'audio_mastering') canFlag = false;
+                else if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
                 else if (this._is('narrator', true)) canFlag = false;
               }
             } break;

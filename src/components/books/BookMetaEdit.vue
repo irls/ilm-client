@@ -542,7 +542,7 @@ export default {
     });
     this.$root.$on('from-bookblockview:voicework-type-changed', function() {
       self.setAllowSetMastered();
-      self.setCurrentBookCounters(['narration_blocks']);
+      self.setCurrentBookCounters(['narration_blocks', 'not_marked_blocks']);
     });
     this.setCurrentBookCounters();
   },
