@@ -480,8 +480,8 @@
       <div class="modal-body">
         <div>Apply "{{blockVoiceworks[voiceworkChange]}}" voicework type to</div>
         <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{block.type}}</label></div>
-        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all incomplete {{block.type}}s</label></div>
-        <div>This will also delete current audio from the {{block.type}}(s)</div>
+        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label></div>
+        <div>This will also delete current audio from the {{blockTypeLabel}}(s)</div>
       </div>
       <!-- custom buttons -->
       <div class="modal-footer">
@@ -640,8 +640,15 @@ export default {
         },
         set(val) {
           if (val !== this.block.voicework) {
-            this.voiceworkChange = val;
-            this.showModal('voicework-change');
+            if (this._is('editor', true)) {
+              this.voiceworkChange = val;
+              if (!this.block.markedAsDone && this.tc_hasTask('content_cleanup')) {
+                this.showModal('voicework-change');
+              } else {
+                this.voiceworkUpdateType = 'single';
+                this.updateVoicework();
+              }
+            }
           }
         }
       },
@@ -771,6 +778,11 @@ export default {
       allowEditing: {
         get() {
           return this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup');
+        }
+      },
+      blockTypeLabel: {
+        get() {
+          return this.block.type === 'par' ? 'paragraph' : this.block.type;
         }
       }
   },
