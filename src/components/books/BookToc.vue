@@ -44,7 +44,7 @@ export default {
     ...mapActions(['freeze', 'unfreeze', 'loadBookToc']),
 
     goToBlock(blockId, ev) {
-      console.log('goToBlock', blockId, this.$route.name);
+      //console.log('goToBlock', blockId, this.$route.name);
       this.$router.push({name: this.$route.name, params: {}});
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
     }

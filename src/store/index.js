@@ -1342,6 +1342,7 @@ export const store = new Vuex.Store({
       });
     },
 
+    // TODO: add search by current parlist
     getBlockByChainId({state, commit}, chainid) {
       commit('set_blocker', 'getBlockByChainId');
       let _query = 'filters_byBlockChainId/byBlockChainId';
