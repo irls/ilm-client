@@ -447,8 +447,24 @@ export default {
             if (oldBlock.partUpdate) {
               oldBlock._rev = change.doc._rev;
             } else {
-              this.parlist.set(change.doc._id, new BookBlock(change.doc));
-              this.refreshTmpl();
+              let ref = this.$refs.blocks.find(r => {
+                return r && r.block && r.block._id === change.doc._id;
+              });
+              let newBlock = new BookBlock(change.doc);
+              if (ref && (ref.isChanged || ref.isAudioChanged || ref.isIllustrationChanged)) {
+                if (oldBlock.status && newBlock.status && oldBlock.status.assignee === newBlock.status.assignee) {
+                  oldBlock._rev = change.doc._rev;
+                } else {
+                  ref.isChanged = false;
+                  ref.isAudioChanged = false;
+                  ref.isIllustrationChanged = false;
+                  this.parlist.set(change.doc._id, newBlock);
+                  //this.parlist[idx].isUpdated = true;
+                }
+              } else {
+                this.parlist.set(change.doc._id, new BookBlock(change.doc));
+                this.refreshTmpl();
+              }
             }
           }
         }
