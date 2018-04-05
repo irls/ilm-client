@@ -417,7 +417,8 @@
                 self.selection = {start: start, end: end}
               }
             });
-            $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>').after('<div id="context-position" class="context-position"></div>');
+            $('.waveform .selection').after('<div id="cursor-position" class="cursor-position"></div>').after('<div id="context-position" class="context-position"></div>');
+            $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>');
             self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
             
               limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
@@ -1044,7 +1045,7 @@
                 $(this).css('display', 'none');
             });
             if (this.$refs.waveformContext) {
-              this.$refs.waveformContext.open(e, {}, $('.waveform-playlist').offset().top);
+              this.$refs.waveformContext.open(e, {}, 0, e.layerY - 80);
             }
           }
         },
@@ -1257,8 +1258,9 @@
   @waveform-height: 80px;
   .waveform {
       max-height: @waveform-height;
-      .resize-selection {
-          width: 1px;
+  }
+  .resize-selection {
+          width: 2px;
           height: 100%;
           border: 1px solid green;
           cursor: ew-resize;
@@ -1267,9 +1269,9 @@
           display: none;
           background-color: green;
       }
-  }
   .waveform-playlist {
     background-color: #d9d9d9;
+    margin: 0px 5px;
   }
   .wf-playlist {
     min-height: 100px;
