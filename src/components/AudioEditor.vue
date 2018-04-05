@@ -1044,7 +1044,7 @@
                 $(this).css('display', 'none');
             });
             if (this.$refs.waveformContext) {
-              this.$refs.waveformContext.open(e, {}, $('.waveform-playlist').offset().top);
+              this.$refs.waveformContext.open(e, {}, 0, e.layerY - 80);
             }
           }
         },
