@@ -74,7 +74,12 @@
           </template>
         </div>
         <vue-tabs ref="panelTabs">
-          <vue-tab title="Audio Integration" :id="'audio-integration'">
+          <vue-tab title="TOC" id="book-toc">
+            <BookToc ref="bookToc"
+              :bookId="currentBook.bookid"
+            ></BookToc>
+          </vue-tab>
+          <vue-tab title="Audio Integration" id="audio-integration">
             <div class="t-box">
               <template v-if="currentBook.isMastered">
                 <div class="btn-switch" @click="toggleIsMastered()">
@@ -102,7 +107,7 @@
                 @alignmentFinished="loadAudiobook()"
               ></BookAudioIntegration>
           </vue-tab>
-          <vue-tab title="Book Content" :id="'book-content'">
+          <vue-tab title="Book Content" id="book-content">
             <fieldset>
               <legend>Book Metadata </legend>
               <table class='properties'>
@@ -350,6 +355,7 @@ import BookDownload from './BookDownload'
 import BookEditCoverModal from './BookEditCoverModal'
 import BookAudioIntegration from './BookAudioIntegration'
 import AudioImport from '../audio/AudioImport'
+import BookToc from './BookToc'
 import _ from 'lodash'
 import PouchDB from 'pouchdb'
 import axios from 'axios'
@@ -369,6 +375,7 @@ export default {
     BookDownload,
     BookEditCoverModal,
     AudioImport,
+    BookToc,
     BookAudioIntegration,
     'vue-tabs': VueTabs,
     'vue-tab': VTab,
@@ -828,7 +835,7 @@ export default {
         self.setAudiobook(audio);//
         //console.log(self.audiobook)
         self.setAllowSetMastered();
-        if (set_tab) {
+        if (false && set_tab) {
           if (self.audiobook.bookid) {
             self.$refs.panelTabs.findTabAndActivate('Audio Integration');
           } else {
@@ -1002,14 +1009,14 @@ export default {
   }
   /* Wrapper around entire side editor */
   .sidebar {
-    position: fixed;
-    width: 29%;
-
+    /*position: fixed;*/
+    width: 100%;
+    min-width: 426px;
     margin-top:0px;
     margin-left:0;
     padding-left:0;
     overflow-y: scroll;
-    height: 80%;
+    height: 92%;
   }
   .sidebar::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);

@@ -2,7 +2,7 @@
   <div :class="['ilm-global-style', metaStyles]">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
-    <div v-for="(block, blid) in parlist" :class="['ilm-block', 'ilm-display']">
+    <div v-for="(block, blockId) in parlist" :class="['ilm-block', 'ilm-display']">
       <div v-if="block.type == 'illustration'">
         <img :class="block.getClass()" :src="block.getIllustration()"/>
         <div class="description"
@@ -47,7 +47,7 @@
 
 <script>
 import BookDisplayHeader from './BookDisplayHeader'
-import BookTOC from './BookTOC'
+//import BookTOC from './BookTOC'
 import InfiniteLoading from 'vue-infinite-loading'
 import { mapGetters, mapState, mapActions } from 'vuex'
 import { BookBlock, setBlockParnum }    from '../../store/bookBlock'
@@ -63,7 +63,7 @@ export default {
     }
   },
   components: {
-    BookDisplayHeader, BookTOC, InfiniteLoading
+    BookDisplayHeader, InfiniteLoading,  /*BookTOC,*/
   },
   computed: {
       ...mapGetters({
@@ -105,7 +105,7 @@ export default {
         else if (this.meta.startBlock_id) first_id = this.meta.startBlock_id;
         this.loadBlocksChain({
             book_id: this.meta._id,
-            first_id: first_id,
+            startId: first_id,
             onpage: 20
         })
         .then((result)=>{
@@ -128,6 +128,7 @@ export default {
                     //'<sup data-idx="$1">[$1]</sup>'
                     this.parlist.push(newBlock);
                 });
+              console.log('result', result);
               if (result.finish) {
                 if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
               } else {

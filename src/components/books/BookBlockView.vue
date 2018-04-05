@@ -218,7 +218,7 @@
                 ref="blockContent"
                 v-html="block.content"
                 :class="[ block.getClass(), {
-                  'updated': block.isUpdated,
+                  'updated': isUpdated,
                   'playing': blockAudio.src,
                   'hide-archive': isHideArchFlags
                 }]"
@@ -418,7 +418,13 @@
                   <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
               </div>
               <div class="align-range -hidden -left" v-if="allowEditing">
-                Set block range: <label><input type="checkbox" v-on:change="setRangeSelection('start', $event)" class="set-range-start" :disabled="!allowSetStart"/>&nbsp;Start</label><label>&nbsp;&nbsp;<input type="checkbox" v-on:change="setRangeSelection('end', $event)" class="set-range-end" :disabled="!allowSetEnd"/>&nbsp;End</label>
+                Set block range: <label>
+                <input type="checkbox" v-on:change="setRangeSelection('start', $event)"
+                class="set-range-start" :disabled="!allowSetStart"
+                v-model="block.checkedStart"/>&nbsp;Start</label>
+                <label>&nbsp;&nbsp;
+                <input type="checkbox" v-on:change="setRangeSelection('end', $event)" class="set-range-end" :disabled="!allowSetEnd"
+                v-model="block.checkedEnd"/>&nbsp;End</label>
                 <template v-if="displaySelectionStart">
                   <a class="go-to-block" v-on:click="scrollToBlock(displaySelectionStart)">View start({{displaySelectionStart}})</a>
                 </template>
@@ -555,6 +561,7 @@ export default {
       styleSel: false,
       blockTypes: BlockTypes,
 
+      isUpdated: false,
       isChanged: false,
 
       isAudStarted: false,
@@ -596,7 +603,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'block_Idx', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -829,6 +836,7 @@ export default {
       }
 
       this.voiceworkSel = this.block.voicework;
+      this.isChanged = this.block.isChanged;
       //this.detectMissedFlags();
   },
   methods: {
@@ -1021,7 +1029,7 @@ export default {
       discardBlock: function(block_id, ev) {
         this.getBlock(this.block._id)
         .then((block)=>{
-          if (this.$refs.blockContent) this.$refs.blockContent.innerHTML = this.block.content;
+          if (this.$refs.blockContent) this.$refs.blockContent.innerHTML = block.content;
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
               this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
@@ -1031,16 +1039,15 @@ export default {
             }
           });
           this.isChanged = false;
-          this.updateFlagStatus(this.block._id);
-
-          if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
-            this.classSel = Object.keys(this.blockTypes[this.block.type])[0];
-          } else {
-            let blockClasses = Object.keys(this.block.classes);
-            if (blockClasses.length) {
-              this.classSel = blockClasses[0];
-            }
-          }
+          this.updateFlagStatus(block._id);
+//           if (Object.keys(this.blockTypes[block.type])[0] !== '') {
+//             this.classSel = Object.keys(this.blockTypes[block.type])[0];
+//           } else {
+//             let blockClasses = Object.keys(block.classes);
+//             if (blockClasses.length) {
+//               this.classSel = blockClasses[0];
+//             }
+//           }
 
           if (this.$refs.blockContent) this.$refs.blockContent.focus();
         });
@@ -1287,7 +1294,7 @@ export default {
             //this.setCurrentBookBlocksLeft(this.block.bookid);
             this.setCurrentBookCounters(['not_marked_blocks']);
             //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
-            this.getBloksUntil('unresolved', null, this.block_Idx)
+            this.getBloksUntil('unresolved', null, this.block._id)
           });
         }
       },
@@ -1327,7 +1334,7 @@ export default {
                 this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
               }
               //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
-              this.getBloksUntil('unresolved', true, this.block_Idx)
+              this.getBloksUntil('unresolved', true, this.block._id)
             }
           })
           .catch(err => {});
@@ -2027,16 +2034,16 @@ export default {
         this.startRecording();
       },
       insertBlockBefore() {
-        this.$emit('insertBefore', this.block, this.block_Idx);
+        this.$emit('insertBefore', this.block, this.blockId);
       },
       insertBlockAfter() {
-        this.$emit('insertAfter', this.block, this.block_Idx);
+        this.$emit('insertAfter', this.block, this.blockId);
       },
       deleteBlock() {
         if (!this.blockReindexProcess) {
           this.deletePending = false;
           this.hideModal('delete-block-message');
-          this.$emit('deleteBlock', this.block, this.block_Idx);
+          this.$emit('deleteBlock', this.block, this.blockId);
         } else {
           this.deletePending = true;
         }
@@ -2062,12 +2069,12 @@ export default {
         }
       },
       joinWithPrevious() {
-        this.joinBlocks(this.block, this.block_Idx, 'previous')
+        this.joinBlocks(this.block, this.blockId, 'previous')
         .then(()=>{})
         .catch(()=>{})
       },
       joinWithNext() {
-        this.joinBlocks(this.block, this.block_Idx, 'next')
+        this.joinBlocks(this.block, this.blockId, 'next')
         .then(()=>{})
         .catch(()=>{})
       },
@@ -2500,18 +2507,29 @@ export default {
       }
   },
   watch: {
-      'block.isUpdated' (newVal) {
-        if (newVal) setTimeout(() => {
+      'block.isUpdated' (newVal, oldVal) {
+        //console.log('block.isUpdated', newVal, oldVal);
+        if (newVal===true) {
+          this.isUpdated = true;
           this.block.isUpdated = false;
-        }, 2000);
+          setTimeout(() => {
+            this.isUpdated = false;
+          }, 2000);
+        }
       },
       'block._id' (newVal) {
         //this.isUpdated = false;
       },
       'block._rev' (newVal, oldVal) {
         //console.log('block._rev: ', this.block._rev, 'newVal: ', newVal, 'oldVal: ', oldVal);
-        if (newVal !== this.block._rev) {
-
+        if (oldVal) {
+          this.isUpdated = true;
+          setTimeout(() => {
+            this.isUpdated = false;
+          }, 2000);
+        }
+        if (newVal !== this.block._rev)
+        {
           if (this.block.illustration) {
             this.block.illustration = this.block.illustration.split('?').shift() + '?' + Date.now()
           }
@@ -2632,6 +2650,7 @@ export default {
           if (val === false) {
             this.flushChanges();
           }
+          this.block.isChanged = val;
         }
       },
       'isAudioChanged': {
@@ -2686,9 +2705,34 @@ export default {
         }
       }
   },
+  beforeDestroy: function () {
+//      console.log('beforeDestroy', this.block._id);
+//     console.log('this.isChanged', this.isChanged);
+    if (this.isChanged) {
+        switch (this.block.type) { // part from assembleBlock: function()
+          case 'illustration':
+            this.block.description = this.$refs.blockDescription.innerHTML;
+            this.block.voicework = 'no_audio';
+          case 'hr':
+            this.block.content = '';
+            this.block.voicework = 'no_audio';
+            break;
+          default:
+            this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+            this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+            if (this.block.footnotes && this.block.footnotes.length) {
+              this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+                this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
+              });
+            }
+            break;
+        }
+    }
+  },
   destroyed: function () {
     this.$root.$off('playBlockFootnote');
     this.$root.$off('playBlock');
+    this.destroyEditor();
   }
 }
 </script>
@@ -2697,11 +2741,14 @@ export default {
 @variable: 90px;
 .ilm-block {
     padding: 0;
+    .medium-editor-placeholder:after {
+      top: -6px;
+    }
     .content-wrap {
-      position: static;
+      position: relative;
       &.par {
-        min-height: 47px;
-        position: static;
+        min-height: 54px;
+        /*position: relative;*/
       }
       &.title {
         min-height: 77.5px;

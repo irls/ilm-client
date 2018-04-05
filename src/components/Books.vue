@@ -23,18 +23,11 @@
         </td>
       </tr>
       <tr>
-        <td class='maincontent scrollable'>
-          <router-view></router-view>
-
-        </td>
-<!--        <td v-if='hasBookSelected() && !metaVisible'
-            class='collapseEditBar'
-            @click='toggleMetaVisible'>
-
-          <div class="bar">
-            <i :class="['fa-chevron-left' , 'fa collapsebtn']" aria-hidden="true"></i>
+        <td class='maincontent'>
+          <div class="scroll-wrapper">
+            <router-view></router-view>
           </div>
-        </td>-->
+        </td>
       </tr>
     </table>
     <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}]" >
@@ -187,7 +180,7 @@ export default {
           })
       }
     },
-    
+
     showModal(params) {
       this.$modal.show('dialog', params);
     },
@@ -197,7 +190,7 @@ export default {
 
     ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices'])
   },
-  
+
   destroyed: function () {
     this.$root.$off('from-bookedit:set-selection');
   }
@@ -215,7 +208,8 @@ export default {
 #booksarea {
   margin: 0;
   padding:0;
-  margin-top: -10px;
+  height: 100%;
+  padding-top: 43px;
 
   .contentarea {
     margin-top:10px;
@@ -223,23 +217,37 @@ export default {
 
   #bodytable {
     width: 100%;
-    margin-top: -23px;
+    height: 100%;
     display: table;
+    table-layout: fixed;
+    background: #FFFFFF;
     tr {
       td {
-        /*vertical-align: top;*/
         &.toolbar-wrapper {
-          /*box-shadow: 0px 0px 3px 2px rgba(178, 191, 224, 0.53);*/
-          height: 3em;
-          width: 99.4%;
+
+          width: 100%;
+          height: 47px;
+
           &.meta-visible {
-            width: 69.4%;
+            width: 70%;
+          }
+
+          .toolbar {
+            height: 38px;
+            padding-top: 2px;
+            padding-left: 3px;
+            background: #FFFFFF;
+            width: 100%;
+            box-shadow: 0px 0px 2px 2px rgba(178, 191, 224, 0.53);
           }
         }
         &.maincontent {
-          overflow: hidden;
-          max-width: 500px;
-          padding-top: 2em;
+          /*padding-top: 5px;*/
+          height: 100%;
+          .scroll-wrapper {
+            height: 100%;
+            overflow: auto;
+          }
         }
         &.metaedit {
           width: 30%;

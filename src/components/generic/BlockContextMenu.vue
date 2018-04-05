@@ -35,8 +35,10 @@ import Vue from 'vue'
               x = window.innerWidth - $(this.$refs.menu).outerWidth() - 10;
             }
             this.left = x + 'px';
-            this.top = y + window.pageYOffset + 'px';
-            
+            this.top = y + 'px';
+            //this.top = y + window.pageYOffset + 'px';
+            //this.top = y - this.$refs.menu.offsetHeight + 'px';
+
         },
 
         getSelectionCoords: function() {
@@ -75,7 +77,6 @@ import Vue from 'vue'
         open: function(ev, range, offsetY = 0) {
             ev.preventDefault();
             this.$root.$emit('closeBlockContextMenu');
-
             let coords = {};
             if (range.collapsed == true) {
               coords = this.getSelectionCoords();
@@ -86,6 +87,7 @@ import Vue from 'vue'
                 y: ev.clientY - offsetY
               }
             }
+            coords.y = ev.layerY;
 
             this.viewMenu = true;
             this.setMenu(coords.x, coords.y, ev.target);

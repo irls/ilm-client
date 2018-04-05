@@ -133,14 +133,6 @@ export default {
 
 <style lang="less" scoped >
 
-.toolbar {
-  width:inherit;
-  position: fixed;
-  z-index: 9999;
-  margin-top: -20px;
-  background: #FFFFFF;
-}
-
 h3 {
   margin: 0;
   padding-top: 0;
@@ -166,11 +158,11 @@ h3 {
   }
 }
 
-select {
+/*select {
   margin-top: -.25em;
   width: 8em; padding:0;
   height: 2em;
-}
+}*/
 
 
 button:hover {

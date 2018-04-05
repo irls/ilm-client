@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="area-wrapper">
 
     <div class="table toolbar">
       <div class="tr">
@@ -40,9 +40,9 @@
 
     <alert v-show="passwordChanged" placement="top-right" duration="3000" type="success" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
-      
       <p>Password reset.</p>
     </alert>
+    <div class="users-form-wrapper">
     <form class="user-form">
       <div v-for="user in pagedUsers" class="user-form-box">
         <div class="t-box"><span><i class="fa fa-user"></i>{{user.name}}</span></div>
@@ -91,6 +91,9 @@
       :workHistory="workHistory"
     ></work-history-modal>
 
+    </div>
+    <!--users-form-wrapper-->
+
   </div>
 </template>
 
@@ -121,7 +124,7 @@ export default {
     Pagination,
     alert
   },
-  
+
   data () {
     return {
       users: [],
@@ -155,14 +158,14 @@ export default {
   },
   mounted () {
     var self = this
-    
+
     self.updateUsersList()
   },
 
   created () {
-    
+
   },
-  
+
   methods: {
     updateUser(user_id, field, new_value) {
       var self = this
@@ -173,7 +176,7 @@ export default {
         var request = {}
         request[field] = new_value
         axios.patch(API_ALLUSERS + '/' + user_id, request).then(response => {
-          
+
           if (response.data.ok === true) {
             user[field] = new_value
             //console.log('Update', user, self.users)
@@ -181,7 +184,7 @@ export default {
         })
       }
     },
-    
+
     updateUsersList() {
       var self = this
       axios.get(API_ALLUSERS)
@@ -199,23 +202,23 @@ export default {
         this.updateUsersList()
       }
     },
-    
+
     filterChange() {
       var tmp = this.filter
       this.filter = null
       this.filter = tmp// trick to force computed value reload since it does not observe object changes
     },
-    
+
     workHistoryModal(user_id) {
       this.workHistory = {'user_id': user_id}
       this.workHistoryModalActive = true
     },
-    
+
     workHistoryModalClose() {
       this.workHistory = {}
       this.workHistoryModalActive = false
     },
-    
+
     resetPassword(email) {
       //console.log({'email': email}, arguments)
       var self = this
@@ -230,68 +233,83 @@ export default {
       })
     }
   },
-  
+
   watch: {
-    
+
   }
 
 }
 </script>
 
 
-<style scoped>
-.toolbar {
-   width: 100%;
-   height: 4em;
-   position: relative;
-   padding-left: .25em;
-   padding-right: .25em;
-   box-shadow: 0px 0px 3px 2px rgba(178, 191, 224, 0.53);
-   margin-top: -10px;
- }
-.toolbar td {
-   text-align: left;
-   padding-top:0; margin-top:0;
- }
-.toolbar td.right {
-  text-align: right;
-  position: inline;
-  padding-top: 11px;
-  float: right;
-  padding-right: 10px;
-}
+<style lang="less" scoped>
 
-.table {
-  display: table;
-  /*border-spacing: 15px;*/
-  padding: 0;
-}
-.tr {
- display: table-row;
-}
-.td {
-  display: table-cell;
-  vertical-align: middle;
-  white-space: nowrap;
-  /*position: relative;
-  top: 50%;
-  transform: translateY(-50%);*/
-  padding: 5px;
-}
+.area-wrapper {
+  height: 100%;
+  padding-top: 43px;
+  overflow: hidden;
+  margin-bottom: -45px;
+  padding-bottom: 45px;
 
-.td input.form-control {display: inline-block !important;}
+  .users-form-wrapper {
+    height: 100%;
+    overflow: auto;
+    margin-top: 2px;
+  }
 
-.tr .td:nth-child(1) {padding-left:10px; width: 4em;}
+  .toolbar {
+    width: 100%;
+    height: 38px;
+    margin-top: 2px;
+    padding-left: 3px;
+    box-shadow: 0px 0px 2px 2px rgba(178, 191, 224, 0.53);
+  }
+  .toolbar td {
+    text-align: left;
+    padding-top:0; margin-top:0;
+  }
+  .toolbar td.right {
+    text-align: right;
+    /*position: inline;*/
+    padding-top: 11px;
+    float: right;
+    padding-right: 10px;
+  }
+
+  .table {
+    display: table;
+    /*border-spacing: 15px;*/
+    padding: 0;
+    margin-bottom: 0;
+  }
+  .tr {
+  display: table-row;
+  }
+  .td {
+    display: table-cell;
+    vertical-align: middle;
+    white-space: nowrap;
+    /*position: relative;
+    top: 50%;
+    transform: translateY(-50%);*/
+    /*padding: 5px;*/
+  }
+
+  .td input.form-control {display: inline-block !important;}
+
+  .tr .td:nth-child(1) {padding-left:10px; width: 4em;}
   .tr .td:nth-child(1) i {font-size: 24pt; color:#555;}
-.tr .td:nth-child(2) {width: 12em;}
+  .tr .td:nth-child(2) {width: 12em;}
   .tr .td:nth-child(2) h4 {font-size: 24px; padding-right: .5em;}
-.tr .td:nth-child(3) {font-size: 18px; width: 8em; line-height: 1.5em}
-.tr .td:nth-child(4) {width: auto; }
-.tr .td:nth-child(5) {width: 10em; text-align: right;}
-.tr .td:nth-child(6) {width: 12em;  }
-.tr .td:nth-child(7) {width: 8em; padding-right: 10px; }
+  .tr .td:nth-child(3) {font-size: 18px; width: 8em; line-height: 1.5em}
+  .tr .td:nth-child(4) {width: auto; }
+  .tr .td:nth-child(5) {width: 10em; text-align: right;}
+  .tr .td:nth-child(6) {width: 12em;  }
+  .tr .td:nth-child(7) {width: 8em; padding-right: 10px; }
 
-.user-form-box:nth-of-type(odd) {bakground-color: #f9f9f9}
+  .user-form-box:nth-of-type(odd) {bakground-color: #f9f9f9}
+
+}
 </style>
 
 <style lang="stylus">
@@ -332,8 +350,8 @@ export default {
   background: #fff
   display: block
   width: 100%
-  float: left
-  margin-top: 10px
+  /*float: left*/
+  margin-top: 20px
   .user-form-box
     float: left
     width: 100%

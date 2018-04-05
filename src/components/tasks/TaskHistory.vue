@@ -203,15 +203,8 @@ export default {
   }
 }
 </script>
-<style>
-.toolbar {
-   width: 100%;
-   position: relative;
-   padding-left: .25em;
-   padding-right: .25em;
-   box-shadow: 0px 0px 3px 2px rgba(178, 191, 224, 0.53);
-   padding: 5px;
- }
+<style lang="less" scoped>
+
 .toolbar td {
    text-align: left;
    padding-top:0; margin-top:0;

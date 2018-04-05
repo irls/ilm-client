@@ -1,4 +1,5 @@
 <template>
+  <div class="area-wrapper">
   <vue-tabs @tab-change="onTabChange" ref="tabs" :class="'libraries-tabs'">
     <vue-tab title="Administer libraries" v-if="isAdmin">
       <table class="libraries-list">
@@ -207,6 +208,8 @@
       </div>
     </vue-tab>
   </vue-tabs>
+  </div>
+  <!--<div class="area-wrapper">-->
 </template>
 
 <script>
@@ -373,7 +376,7 @@
         });
         return db.put(this.library)
           .then(doc => {
-            
+
           }).catch(err => {
 
           })
@@ -560,7 +563,7 @@
             if (!_l) {
               librarians.push(l);
             }
-            
+
           });
           return librarians;
         }
@@ -615,23 +618,32 @@
 <style lang="less">
   .libraries-tabs {
     .nav-tabs-wrapper {
-      position: fixed;
+      /*position: fixed;*/
       height: 3em;
-      z-index: 999;
+      /*z-index: 999;*/
       width: 100%;
       background-color: white;
     }
   }
 </style>
+
 <style scoped lang="less">
+  .area-wrapper {
+    height: 100%;
+    padding-top: 43px;
+    overflow: hidden;
+    margin-bottom: -45px;
+    padding-bottom: 45px;
+  }
+
   .libraries-list {
     width: 100%;
     .toolbar-container {
       height: 7em;
       .toolbar {
-        position: fixed;
-        margin-top: -4px;
-        z-index: 999;
+       /* position: fixed;*/
+        margin-top: -45px;
+        /*z-index: 999;*/
         background-color: white;
       }
     }

@@ -1,15 +1,13 @@
 <template>
-  <div>
-    <Grid id='books_grid'
-      :data="booksMeta"
-      :columns="headers"
-      :rowsPerPage="100"
-      @clickRow="rowClick"
-      :selected="selectedBooks"
-      :idField="idField"
-      :filter-key="''">
-    </Grid>
-  </div>
+  <Grid id='books_grid'
+    :data="booksMeta"
+    :columns="headers"
+    :rowsPerPage="100"
+    @clickRow="rowClick"
+    :selected="selectedBooks"
+    :idField="idField"
+    :filter-key="''">
+  </Grid>
 </template>
 
 <script>

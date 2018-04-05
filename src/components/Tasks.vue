@@ -1,4 +1,6 @@
 <template>
+  <div class="area-wrapper">
+
   <vue-tabs>
     <v-tab title="My Tasks" :beforeChange="onTabChange">
       <div class="table toolbar">
@@ -28,6 +30,9 @@
                   :importTask="import_audio_task"
                   :audiobook="task_audiobook"
                   :multiple="audio_import_multiple"/>
+
+      <div class="overflow-wrapper">
+
       <div class="table tasks-box">
       <section v-for="job in tasks.list"><!-- tc_userTasks -->
       <template v-if="job.total > 0">
@@ -66,14 +71,27 @@
       <!--<section v-for="job in tasks.list">-->
       </div>
       <!--<div class="table  tasks-box">-->
+
+      </div>
+      <!--<div class="overflow-wrapper">-->
     </v-tab>
     <v-tab title="Work History">
+    <div class="overflow-wrapper">
       <TaskHistory :_task_types="task_types" :current_user="true"></TaskHistory>
+    </div>
+    <!--<div class="overflow-wrapper">-->
     </v-tab>
     <v-tab v-if="isAdmin" title="Total work history">
+    <div class="overflow-wrapper">
       <TaskHistory :_task_types="task_types" :current_user="false"></TaskHistory>
+    </div>
+    <!--<div class="overflow-wrapper">-->
     </v-tab>
   </vue-tabs>
+
+
+  </div>
+  <!--<div class="area-wrapper">-->
 </template>
 
 <script>
@@ -273,7 +291,43 @@ export default {
 </script>
 
 
+<style lang="less">
+
+.area-wrapper {
+  height: 100%;
+  padding-top: 43px;
+  overflow: hidden;
+  margin-bottom: -45px;
+  padding-bottom: 45px;
+
+  .vue-tabs {
+    height: 100%;
+
+    .tab-content {
+      height: 100%;
+
+      .tab-container {
+        height: 100%;
+
+          .toolbar {
+            margin-bottom: 0;
+          }
+
+          .overflow-wrapper {
+            height: 93%;
+            overflow: auto;
+            margin-top: 2px;
+            margin-bottom: 45px;
+          }
+      }
+    }
+  }
+
+
+}
+</style>
 <style lang="less" scoped>
+
 .fa {
     margin-right: 8px;
     position: relative;

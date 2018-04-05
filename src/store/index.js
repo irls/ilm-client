@@ -27,6 +27,17 @@ const POUCH_CFG = {
 
 // const API_ALLBOOKS = '/static/books.json'
 
+function defer() {
+  var res, rej;
+  var promise = new Promise((resolve, reject) => {
+    res = resolve;
+    rej = reject;
+  });
+  promise.resolve = res;
+  promise.reject = rej;
+  return promise;
+}
+
 export const store = new Vuex.Store({
   state: {
     auth: superlogin,
@@ -66,6 +77,7 @@ export const store = new Vuex.Store({
     currentBookFiles: { coverimg: false },
     currentBookBlocksLeft: 0,
     currentBookBlocksLeftId: 'AAA',
+    currentBookToc: {bookId: '', data: []},
 
     bookFilters: {filter: '', language: '', importStatus: 'staging'},
     editMode: 'Editor',
@@ -90,7 +102,9 @@ export const store = new Vuex.Store({
 
     ttsVoices : [],
 
-    blockers: []
+    blockers: [],
+
+    parList:[], // global parlist
   },
 
   getters: {
@@ -176,7 +190,9 @@ export const store = new Vuex.Store({
     },
 
     isBlocked: state => state.blockers.length > 0,
-    blockers: state => state.blockers
+    blockers: state => state.blockers,
+
+    //parList: state => state.parList, // global parlist
   },
 
   mutations: {
@@ -682,6 +698,8 @@ export const store = new Vuex.Store({
           .catch((err)=>{
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
           })
+          console.log('currentBookMeta', state.currentBookMeta);
+          return Promise.resolve(meta);
         }).catch((err)=>{})
       } else {
         commit('SET_CURRENTBOOK_META', false);
@@ -704,6 +722,17 @@ export const store = new Vuex.Store({
                 })
             })
         }
+    },
+
+    loadBookToc({state, commit}, bookId) {
+      if (state.currentBookToc.bookId === bookId) return state.currentBookToc;
+      return axios.get(state.API_URL + `books/toc/${bookId}`)
+      .then((response) => {
+        state.currentBookToc.bookId = bookId;
+        state.currentBookToc.data = response.data;
+        return response;
+      })
+      .catch(err => err)
     },
 
     updateBookVersion({state, dispatch}, update) {
@@ -924,102 +953,114 @@ export const store = new Vuex.Store({
       let requests = [];
       let results = {rows: [], finish: false, blockId: false};
 
-      if (!params.query) {
-        params.query == false;
-        results.blockId = true;
-      }
-      if (params.task) {
-        if (['text-cleanup', 'master-audio'].indexOf(params.task) !== -1) {
-          delete params.task;
-        }
-      }
-
-      function defer() {
-        var res, rej;
-        var promise = new Promise((resolve, reject) => {
-          res = resolve;
-          rej = reject;
-        });
-        promise.resolve = res;
-        promise.reject = rej;
-        return promise;
-      }
-
       requests.push(defer());
 
       (function loop(i, block_id) {
 
-        if (i < params.onpage || !results.blockId) {
-
+        if (i < params.onpage && block_id) {
           dispatch('getBlock', block_id)
           .then((b)=>{
-            /*if (b.audiosrc) {
-              b.audiosrc = process.env.ILM_API + b.audiosrc;
-            }*/
-
-            /*if (b.footnotes) b.footnotes.forEach((f, fIdx)=>{
-              if (f.audiosrc) {
-                f.audiosrc = process.env.ILM_API + f.audiosrc +'?'+ (new Date()).toJSON();
-              }
-            })*/
-
-            results.rows.push(b);
-
-            if (params.query) switch(params.query) {
-              case 'unresolved': {
-                if (!results.blockId) {
-                  if (params.task) {
-                    if (state.tc_tasksByBlock && typeof state.tc_tasksByBlock[b._id] !== 'undefined') {
-                      if (params.task === true) {
-                        results.blockId = b._id;
-                      } else {
-                        let t = state.tc_tasksByBlock[b._id].find(_t =>  {
-                          return _t.type === params.task;
-                        })
-                        if (t) {
-                          results.blockId = b._id;
-                        }
-                      }
-                    } else {
-
-                    }
-
-                  } else {
-                    if (!b.markedAsDone && (!b.status || !b.status.proofed)) {
-                      results.blockId = b._id;
-                      i = params.onpage - 5;
-                    }
-                  }
-                }
-              } break;
-              default : {
-                if (!results.blockId && b._id === params.query) {
-                  results.blockId = b._id;
-                  i = params.onpage - 5;
-                }
-              } break;
-            };
-
-            loop(i+1, b.chainid);
+            if (b && b._id) {
+              results.rows.push(b);
+              loop(i+1, b.chainid);
+            } else requests[0].resolve();
           })
           .catch((err)=>{
-            console.log('catch', err);
+            //console.log('loop_BlocksChain Catch: ', err);
             results.finish = true;
             requests[0].resolve();
           })
         }
         else requests[0].resolve();
-      })(0, params.first_id);
+      })(0, params.startId); // start
 
       return Promise.all(requests)
       .then(() => {
         //console.log('loopBlocksChain results', results);
         return Promise.resolve(results);
       });
+
+//       let requests = [];
+//       let results = {rows: [], finish: false, blockId: false};
+//      console.log('loopBlocksChain', params);
+//
+//       if (!params.query) {
+//         params.query == false;
+//         results.blockId = params.startId;
+//       }
+//       if (params.task) {
+//         if (['text-cleanup', 'master-audio'].indexOf(params.task) !== -1) {
+//           delete params.task;
+//         }
+//       }
+//
+//       requests.push(defer());
+//
+//       (function loop(i, block_id) {
+//
+//         if (i < params.onpage || !results.blockId) {
+//
+//           dispatch('getBlock', block_id)
+//           .then((b)=>{
+//
+//             results.rows.push(b);
+//
+//             if (params.query) switch(params.query) {
+//               case 'unresolved': {
+//                 if (!results.blockId) {
+//                   if (params.task) {
+//                     if (state.tc_tasksByBlock && typeof state.tc_tasksByBlock[b._id] !== 'undefined') {
+//                       if (params.task === true) {
+//                         results.blockId = b._id;
+//                       } else {
+//                         let t = state.tc_tasksByBlock[b._id].find(_t =>  {
+//                           return _t.type === params.task;
+//                         })
+//                         if (t) {
+//                           results.blockId = b._id;
+//                         }
+//                       }
+//                     } else {
+//
+//                     }
+//
+//                   } else {
+//                     if (!b.markedAsDone && (!b.status || !b.status.proofed)) {
+//                       results.blockId = b._id;
+//                       i = params.onpage - 5;
+//                     }
+//                   }
+//                 }
+//               } break;
+//               default : {
+//                 if (!results.blockId && b._id === params.query) {
+//                   results.blockId = b._id;
+//                   i = params.onpage - 5;
+//                 }
+//               } break;
+//             };
+//
+//             loop(i+1, b.chainid);
+//           })
+//           .catch((err)=>{
+//             console.log('catch', err);
+//             results.finish = true;
+//             requests[0].resolve();
+//           })
+//         }
+//         else requests[0].resolve();
+//       })(0, params.first_id);
+//
+//       return Promise.all(requests)
+//       .then(() => {
+//         console.log('loopBlocksChain results', results);
+//         return Promise.resolve(results);
+//       });
     },
 
     loadBlocksChain ({commit, state, dispatch}, params) {
-      if (params.first_id) {
+      //console.log('load_BlocksChain', params);
+      if (params.startId) {
         return dispatch('loopBlocksChain', params);
       } else {
         return state.contentDB
@@ -1028,7 +1069,7 @@ export const store = new Vuex.Store({
           endkey: [params.book_id, 0],
           include_docs: true,
         }).then(function (res) {
-          params.first_id = res.rows[0].doc._id;
+          params.startId = res.rows[0].doc._id;
           return dispatch('loopBlocksChain', params).then((result) => {
             return result;
           });
@@ -1036,6 +1077,48 @@ export const store = new Vuex.Store({
         .catch(err => err);
       }
 
+    },
+
+    loopBlocksChainUp ({commit, state, dispatch}, params) {
+      //console.log('l00p_BlocksChainUp', params);
+      let requests = [];
+      let results = {rows: [], finish: false, blockId: false};
+
+      requests.push(defer());
+
+      (function loop(i, block_id) {
+
+        if (i < params.onpage && block_id) {
+          dispatch('getBlockByChainId', block_id)
+          .then((b)=>{
+            if (b && b._id) {
+              results.rows.push(b);
+              loop(i+1, b._id);
+            } else requests[0].resolve();
+          })
+          .catch((err)=>{
+            console.log('loopBlocksChainUp Catch: ', err);
+            results.finish = true;
+            requests[0].resolve();
+          })
+        }
+        else requests[0].resolve();
+      })(0, params.startId);
+
+      return Promise.all(requests)
+      .then(() => {
+        //console.log('loopBlocksChain results', results);
+        return Promise.resolve(results);
+      });
+    },
+
+    loadBlocksChainUp ({commit, state, dispatch}, params) {
+      //console.log('load_BlocksChainUp', params);
+      if (params.startId) {
+        return dispatch('loopBlocksChainUp', params);
+      } else {
+        return Promise.reject({ message: 'no start id'})
+      }
     },
 
     watchBlocks ({commit, state, dispatch}, params) {
@@ -1267,11 +1350,12 @@ export const store = new Vuex.Store({
       });
     },
 
+    // TODO: add search by current parlist
     getBlockByChainId({state, commit}, chainid) {
       commit('set_blocker', 'getBlockByChainId');
       let _query = 'filters_byBlockChainId/byBlockChainId';
       let _params = { key: chainid, include_docs: true };
-      console.log('getBlockByChainId', chainid);
+      //console.log('getBlockByChainId', chainid);
       return state.contentRemoteDB.query (_query, _params)
       .then(function (result) {
         commit('clear_blocker', 'getBlockByChainId');

@@ -54,3 +54,13 @@ export default {
   }
 }
 </script>
+
+<style lang="less">
+  html, body, #app {
+    height: 100%;
+    min-width: 1240px;
+  }
+  #app {
+   position: relative;
+  }
+</style>
