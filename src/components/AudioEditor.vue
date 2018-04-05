@@ -1,11 +1,17 @@
 <template>
   <div>
+    <cntx-menu
+          ref="waveformContext"
+          dir="bottom">
+        <li v-on:click="setSelectionStart(null, $event)">Selection Start</li>
+        <li v-on:click="setSelectionEnd(null, $event)">Selection End</li>
+      </cntx-menu>
     <div class="waveform-playlist">
       <div class="close-player-container pull-right">
         <span class="close-player" v-on:click="close()">&times;</span>
       </div>
-      <div class="waveform-wrapper">
-        <div id="playlist" class="wf-playlist"></div>
+      <div class="waveform-wrapper" @contextmenu.prevent="onContext">
+        <div id="playlist" class="wf-playlist" ref="playlist"></div>
       </div>
       <div class="player-controls">
         
@@ -24,13 +30,27 @@
           <div v-if="selection.start >= 0">
             <div>Selection Start</div>
             <div>
-              <input type="text" v-model="selectionStartH" disabled />:<input type="text" v-model="selectionStartM" disabled />:<input type="number" v-model="selectionStartS" class="sec" step="0.1" ref="selectionStartNum" />
+              <template v-if="mode == 'block'">
+                <input type="text" v-model="selectionStartH" disabled />:<input type="text" v-model="selectionStartM" disabled />:<input type="number" v-model="selectionStartS" class="sec" step="0.1" ref="selectionStartNum" />
+              </template>
+              <template v-else-if="mode == 'file'">
+                <input type="number" step="1" v-model="selectionStartH" />:
+                <input type="number" step="1" v-model="selectionStartM" />:
+                <input type="number" v-model="selectionStartS" class="sec" step="0.1" ref="selectionStartNum" />
+              </template>
             </div>
           </div>
           <div v-if="selection.end >= 0">
             <div>Selection End</div>
             <div>
-              <input type="text" v-model="selectionEndH" disabled />:<input type="text" v-model="selectionEndM" disabled />:<input type="number" v-model="selectionEndS" class="sec" step="0.1" ref="selectionEndNum" :disabled="isSinglePointSelection"/>
+              <template v-if="mode == 'block'">
+                <input type="text" v-model="selectionEndH" disabled />:<input type="text" v-model="selectionEndM" disabled />:<input type="number" v-model="selectionEndS" class="sec" step="0.1" ref="selectionEndNum" :disabled="isSinglePointSelection"/>
+              </template>
+              <template v-else-if="mode == 'file'">
+                <input type="number" step="1" v-model="selectionEndH" />:
+                <input type="number" step="1" v-model="selectionEndM" />:
+                <input type="number" v-model="selectionEndS" class="sec" step="0.1" ref="selectionEndNum" :disabled="isSinglePointSelection"/>
+              </template>
             </div>
           </div>
           <template v-if="mode == 'block'">
@@ -45,7 +65,7 @@
         </div>
         <div class="audio-controls" v-if="isModifiedComputed && mode == 'block'">
           <button class="btn btn-default" v-if="history.length" v-on:click="undo()">Undo</button>
-          <button class="btn btn-default" v-on:click="onDiscardMessage = true">Discard</button>
+          <button class="btn btn-default" v-on:click="showModal('onDiscardMessage')">Discard</button>
           <button class="btn btn-primary" v-on:click="save()">Save</button>
           <button class="btn btn-primary" v-on:click="saveAndRealign()">Save & Re-align</button>
         </div>
@@ -54,15 +74,36 @@
         </div>
       </div>
     </div>
-    <modal v-model="onDiscardMessage" effect="fade" title="" ok-text="Discard" cancel-text="Cancel" @ok="discard()">
-      <p>Discard unsaved audio changes?</p>
+    <modal name="onDiscardMessage" :resizeable="false" :clickToClose="false" height="auto">
+      <div class="modal-header"></div>
+      <div class="modal-body">
+        <p>Discard unsaved audio changes?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" v-on:click="hideModal('onDiscardMessage')">Cancel</button>
+        <button class="btn btn-primary" v-on:click="discard()">Discard</button>
+      </div>
     </modal>
-    <modal v-model="onExitMessage" effect="fade" title="" ok-text="Confirm" cancel-text="Cancel" @ok="discardAndExit()" @closed="checkExitState()">
-      <p v-if="mode == 'block'">Discard unsaved audio changes?</p>
-      <p v-if="mode == 'file'">Discard unsaved markers position?</p>
+    <modal name="onExitMessage" :resizeable="false" :clickToClose="false" height="auto">
+      <div class="modal-header"></div>
+      <div class="modal-body">
+        <p v-if="mode == 'block'">Discard unsaved audio changes?</p>
+        <p v-if="mode == 'file'">Discard unsaved markers position?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" v-on:click="checkExitState()">Cancel</button>
+        <button v-if="mode == 'block'" class="btn btn-primary" v-on:click="discardAndExit()">Confirm</button>
+        <button v-if="mode == 'file'" class="btn btn-primary" v-on:click="discardAndExit()">Discard</button>
+      </div>
     </modal>
-    <modal v-model="onWordRepositionMessage" effect="fade" title="" ok-text="OK" cancel-text="" @ok="onWordRepositionMessage = false" :class="['on-word-reposition']">
-      <p>Words repositioning will be lost on unmastered audio</p>
+    <modal name="onWordRepositionMessage" :class="['on-word-reposition']" :resizeable="false" :clickToClose="false" height="auto">
+      <div class="modal-header"></div>
+      <div class="modal-body">
+        <p>Words repositioning will be lost on unmastered audio</p>
+      </div>
+      <div class="modal-footer">
+         <button class="btn btn-primary" v-on:click="hideModal('onWordRepositionMessage')">OK</button>
+      </div>
     </modal>
   </div>
 </template>
@@ -70,16 +111,20 @@
   import Vue from 'vue'
   import api_config from '../mixins/api_config.js'
   import task_controls from '../mixins/task_controls.js'
-  import { modal } from 'vue-strap'
+  import BlockContextMenu from './generic/BlockContextMenu';
+  //import { modal } from 'vue-strap'
+  import v_modal from 'vue-js-modal';
   import {mapActions, mapGetters} from 'vuex'
   //import Peaks from 'peaks.js';
   var WaveformPlaylist = require('waveform-playlist');
   var WaveformData = require('waveform-data')
   var Draggable = require ('draggable')
+  Vue.use(v_modal, { dialog: true });
   export default {
       name: 'AudioEditor',
       components: {
-        'modal': modal
+        //'modal': modal,
+        'cntx-menu': BlockContextMenu
       },
       props: ['blocksForAlignment'],
       mixins: [api_config, task_controls],
@@ -90,6 +135,7 @@
           content: "",//'<w data-map="0,335">Either </w><w data-map="335,250">the </w><w data-map="585,60">well </w><w data-map="645,200">was </w><w data-map="845,255">very </w><w data-map="1100,360">deep, </w><w data-map="1460,165">or </w><w data-map="1625,165">she </w><w data-map="1790,310">fell </w><w data-map="2100,280">very </w><w data-map="2380,680">slowly, </w><w data-map="3060,20">for </w><w data-map="3080,270">she </w><w data-map="3350,500">had </w><w data-map="3850,395">plenty  </w><w data-map="4245,25">of </w><w data-map="4270,190">time </w><w data-map="4460,355">as </w><w data-map="4815,115">she </w><w data-map="4930,265">went </w><w data-map="5195,220">down </w><w data-map="5415,115">to </w><w data-map="5530,150">look </w><w data-map="5680,750">about </w><w data-map="6430,450">her. </w><w data-map="6880,435">First, </w><w data-map="7315,100">she </w><w data-map="7415,265">tried </w><w data-map="7680,10">to </w><w>look </w><w data-map="7690,10">down </w><w data-map="7700,50">and </w><w data-map="7750,230">make </w><w data-map="7980,190">out </w><w data-map="8170,160">what </w><w data-map="8330,110">she </w><w data-map="8440,225">was  </w><w data-map="8665,315">coming </w><w data-map="8980,260">to, </w><w data-map="9240,555">but </w><w data-map="9795,80">it </w><w data-map="9875,175">was </w><w data-map="10050,150">too </w><w data-map="10200,115">dark </w><w data-map="10315,145">to </w><w data-map="10460,380">see </w><w data-map="10840,600">anything; </w><w data-map="11440,585">then </w><w data-map="12025,125">she </w><w data-map="12150,550">looked </w><w data-map="12700,250">at </w><w data-map="12950,165">the  </w><w data-map="13115,185">sides </w><w data-map="13300,170">of </w><w data-map="13470,130">the </w><w>well, </w><w data-map="13600,70">and </w><w data-map="13670,315">noticed </w><w data-map="13985,95">that </w><w>they </w><w data-map="14080,120">were </w><w data-map="14200,475">filled </w><w data-map="14675,185">with </w><w data-map="14860,245">cupboards </w><w data-map="15105,370">and  </w><w data-map="15475,1045">book-shelves; </w><w data-map="16520,305">here </w><w data-map="16825,20">and </w><w data-map="16845,160">there </w><w data-map="17005,160">she </w><w data-map="17165,180">saw </w><w data-map="17345,300">maps </w><w data-map="17645,330">and </w><w data-map="17975,400">pictures </w><w data-map="18375,180">hung </w><w data-map="18555,305">upon </w><w data-map="18860,820">pegs. </w><w data-map="19680,325">She  </w><w data-map="20005,240">took </w><w data-map="20245,215">down </w><w data-map="20460,80">a </w><w data-map="20540,295">jar </w><w data-map="20835,195">from </w><w data-map="21030,50">one </w><w data-map="21080,75">of </w><w data-map="21155,5">the </w><w data-map="21160,380">shelves </w><w data-map="21540,225">as </w><w data-map="21765,190">she </w><w data-map="21955,1005">passed; </w><w>it </w><w data-map="22960,265">was </w><w data-map="23225,395">labelled  </w><w data-map="23620,530">‘ORANGE </w><w data-map="24150,1010">MARMALADE’, </w><w data-map="25160,160">but </w><w data-map="25320,245">to </w><w data-map="25565,60">her </w><w data-map="25625,155">great </w><w data-map="25780,1030">disappointment </w><w data-map="26810,105">it </w><w data-map="26915,240">was </w><w data-map="27155,765">empty: </w><w data-map="27920,150">she </w><w data-map="28070,145">did  </w><w data-map="28215,170">not </w><w data-map="28385,110">like </w><w data-map="28495,115">to </w><w data-map="28610,485">drop </w><w data-map="29095,120">the </w><w data-map="29215,405">jar, </w><w data-map="29620,405">so </w><w data-map="30025,135">she </w><w data-map="30160,410">managed </w><w data-map="30570,140">to </w><w data-map="30710,165">put  </w><w data-map="30875,115">it </w><w data-map="30990,235">into </w><w data-map="31225,10">one </w><w data-map="31235,10">of </w><w data-map="31245,225">the </w><w data-map="31470,380">cupboards </w><w data-map="31850,205">as </w><w data-map="32055,165">she </w><w data-map="32220,195">fell </w><w data-map="32415,405">past </w><w data-map="32820,1060">it.</w>',
           audiofile: "",//'http://localhost:3000/audiofiles/aaiw1_en/aaiw1_en_31/aaiw1_en_31.flac',
           blockId: null,
+          block: null,
           plEventEmitter: false,
           words: [],
           currentWord: null,
@@ -106,31 +152,41 @@
           isAudioModified: false,
           history: [],
           isHistoryFull: true,
-          onDiscardMessage: false,
-          onExitMessage: false,
           discardOnExit: false,
           mode: 'block',
           origFilePositions: {},
           cursorPosition: false,
           dragLeft: null,
           dragRight: null,
-          onWordRepositionMessage: false,
           playlistScrollPosition: 0,
           audiofileId: null,
-          blockMap: {}
+          blockMap: {},
+          blockSelectionEmit: false,
+          contextPosition: null,
+          pendingLoad: null
         }
       },
       mounted() {
         this.audioContext = new (window.AudioContext || window.webkitAudioContext);
         let self = this;
-        this.$root.$on('for-audioeditor:load-and-play', function(audio, text, blockId, autostart, mode) {
-          self.load(audio, text, blockId, autostart, mode);
+        this.$root.$on('for-audioeditor:load-and-play', function(audio, text, block, autostart, mode, reloadOnChange) {
+          self.load(audio, text, block, autostart, mode, reloadOnChange);
         });
         this.$root.$on('for-audioeditor:load', function(audio, text) {
           self.setAudio(audio, text);
         });
         this.$root.$on('for-audioeditor:reload-text', function(text) {
           self._setText(text);
+        });
+        this.$root.$on('for-audioeditor:select', (block_id, start, end) => {
+          if (this.blockId === block_id) {
+            this.blockSelectionEmit = true;
+            this.selection.start = start / 1000;
+            this.selection.end = end / 1000;
+            this._clearWordSelection();
+            this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            this._showSelectionBorders(true);
+          }
         });
       },
       beforeDestroy() {
@@ -141,7 +197,8 @@
         }
       },
       methods: {
-        load(audio, text, blockId, autostart = false, bookAudiofile = {}) {
+        load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
+          let blockId = block ? block._id : null;
           if (bookAudiofile && bookAudiofile.blockMap) {
             this.blockMap = bookAudiofile.blockMap;
           } else {
@@ -156,16 +213,31 @@
             this.audiofileId = bookAudiofile.id;
           }
           let changeZoomLevel = mode != this.mode;
-          if ((this.blockId && this.blockId != blockId) || mode == 'file' || mode != this.mode) {
+          if ((this.blockId && this.blockId != blockId) || (mode == 'file' && reloadOnChange) || mode != this.mode) {
+            if (this.isModifiedComputed) {
+              this.pendingLoad = arguments;
+              this.showModal('onExitMessage');
+              return;
+            }
             this.silenceLength = 0.1;
             this.cursorPosition = false;
             this.isModified = false;
             this.playlistScrollPosition = 0;
+            this.selection = {};
+            this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
+            this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
+            this._clearWordSelection();
             //this.isAudioModified = false;
             //this.contentHistory = [];
             //this.audioHistory = [];
-            //this.selection = {};
-            this.close();
+            //this.close();
+          }
+          this.pendingLoad = null;
+          if (this.audiosourceEditor) {
+            let emitter = this.audiosourceEditor.getEventEmitter();
+            if (emitter) {
+              emitter.emit('clear');
+            }
           }
           if (bookAudiofile) {
             if (bookAudiofile.positions) {
@@ -186,6 +258,7 @@
           
           this.audiofile = audio;
           this.blockId = blockId;
+          this.block = block;
           
           if (!this.audiosourceEditor) {
             if (!this.audioContext) {
@@ -247,8 +320,13 @@
           .then(() => {
             if (this.audiosourceEditor.tracks.length > 1) {
               this.audiosourceEditor.getEventEmitter().emit('clear');
-              this.load(audio, text, blockId, autostart, bookAudiofile);
+              this.load(audio, text, block, autostart, bookAudiofile);
               return;
+            }
+            if (this.blockId) {
+              this.$root.$emit('from-audioeditor:block-loaded', this.blockId);
+            } else if (bookAudiofile && bookAudiofile.id) {
+              this.$root.$emit('from-audioeditor:audio-loaded', bookAudiofile.id);
             }
             $('.playlist-tracks').scrollLeft(this.playlistScrollPosition);
             $('.playlist-tracks').on('scroll', () => {
@@ -306,7 +384,7 @@
                         (typeof self.selection.end != 'undefined' && Math.ceil(end) != Math.ceil(self.selection.end)))) {
                   self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
                   if (is_single_cursor) {
-                    self.cursorPosition = start;
+                    //self.cursorPosition = start;
                   }
                   return;
                 }
@@ -339,18 +417,26 @@
                 self.selection = {start: start, end: end}
               }
             });
-            $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>');
+            $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>').after('<div id="context-position" class="context-position"></div>');
             self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
             
               limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
               onDrag: function(element, x, y, event) {
+                if ($('[id="resize-selection-left"]').position().left >= x) {
+                  let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
+                  self.selection.start = start-1;
+                  self._setSelectionOnWaveform();
+                  return false;
+                }
                 let startX = 0;
                 if (self.selection && typeof self.selection.start !== 'undefined') {
                   startX = self.selection.start / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
                 } else {
                   startX = $('[id="resize-selection-left"]').position().left;
                 }
-                $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
+                if ($('.selection.segment').length > 0) {
+                  $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
+                }
                 self.audiosourceEditor.activeTrack.stateObj.startX = startX;
                 if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
                   self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
@@ -358,11 +444,18 @@
                   let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
                   self.plEventEmitter.emit('select', self.selection.start, startSec);
                 }
+                //self.cursorPosition = self.selection.start;
               }
             })
             self.dragLeft = new Draggable (document.getElementById('resize-selection-left'), {
               limit: {x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
               onDrag: function(element, x, y, event) {
+                if ($('[id="resize-selection-right"]').position().left <= x) {
+                  let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
+                  self.selection.end = start+1;
+                  self._setSelectionOnWaveform();
+                  return false;
+                }
                 $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
                 $('.selection.segment').css('left', x - 5)
                 let startX = 0;
@@ -378,9 +471,10 @@
                   let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
                   self.plEventEmitter.emit('select', startSec, self.selection.end);
                 }
+                //self.cursorPosition = self.selection.start;
               }
             })
-            this.onDiscardMessage = false;
+            this.hideModal('onDiscardMessage');
             if (this.mode == 'file') {
               if (!this._setBlocksSelection()) {
                 if (bookAudiofile && bookAudiofile.positions) {
@@ -400,6 +494,11 @@
             } else if (autostart) {
               this.play();
             }
+          })
+          .catch(err => {
+            //console.log(err)
+            this._setDefaults();
+            this.close();
           });
           $('#' + this.blockId).on('click', '#content-' + this.blockId + ' w', function() {
             let index = $('#content-' + self.blockId).find('w[data-map]').index($(this));
@@ -414,6 +513,7 @@
               self.scrollPlayerToAnnotation(index, 'middle');
             }
             if (show_selection) {
+              self.blockSelectionEmit = true;
               self._setWordSelection(index, true);
             } else {
               self._clearWordSelection();
@@ -421,12 +521,13 @@
           });
           $('.wf-playlist').on('click', '.annotations-boxes .annotation-box', function(e) {
             let index = $('.annotations-boxes .annotation-box').index($(this));
+            self.blockSelectionEmit = true;
             self._setWordSelection(index, true);
             ;
           });
           $('.wf-playlist').on('dragend', '.annotations-boxes .annotation-box .resize-handle', function(e) {
             if (!self._isAnnotationsEditable()) {
-              self.onWordRepositionMessage = true;
+              self.showModal('onWordRepositionMessage');
             }
             let map = [];
             self.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
@@ -449,10 +550,17 @@
             e.preventDefault();
           });
           if (self.mode == 'file') {
-            $('body').on('click', '.block-audio', function(e) {
-              self.cursorPosition = (e.offsetX) * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
-              $('.cursor').css('left', e.offsetX);
-            });
+            let eventsTimer = setInterval(() => {
+              let ref = this.$refs.playlist.querySelector('.block-audio');
+              $(ref).on('click', (e) => {
+                clearInterval(eventsTimer);
+                if (e && e.target && e.target.className && e.target.className.indexOf('resize-selection') !== -1) {
+                  return;
+                }
+                this.cursorPosition = (e.offsetX) * this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate;
+                $('.cursor').css('left', e.offsetX);
+              })
+            }, 500);
           }
         },
         setAudio(audio, text, saveToHistory) {
@@ -465,7 +573,7 @@
           if (saveToHistory && this.content && this.audiofile) {
             this._addHistory(this.content, this.audiofile);
           }
-          this.load(audio, text, this.blockId);
+          this.load(audio, text, this.block);
         },
         play(cursorPosition) {
           if (typeof cursorPosition === 'undefined' && this.cursorPosition !== false) {
@@ -587,7 +695,7 @@
         },
         close() {
           if (this.isModifiedComputed) {
-            this.onExitMessage = true;
+            this.showModal('onExitMessage');
           } else {
             if (this.plEventEmitter) {
               this.plEventEmitter.emit('automaticscroll', false);
@@ -595,8 +703,8 @@
               this._clearWordSelection();
             }
             this._setDefaults();
-            this.$root.$emit('from-audioeditor:closed', this.blockId);
-            this.$root.$emit('from-audioeditor:close');
+            this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
+            this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
           }
         },
         addSilence() {
@@ -639,18 +747,41 @@
         discard() {
           this.$root.$emit('from-audioeditor:discard', this.blockId);
           this._setDefaults();
+          this.hideModal('onDiscardMessage');
         },
         discardAndExit() {
-          this.discardOnExit = true;
-          this.onExitMessage = false;
+          //this.discardOnExit = true;
+          this.hideModal('onExitMessage');
           if (this.mode == 'file') {
-            //this.selection = this.origFilePositions;
-            //this.close();
+            this.selection = this.origFilePositions;
+          } else if (this.mode == 'block') {
+            this.isModified = false;
+          }
+          if (this.pendingLoad) {
+            if (this.plEventEmitter) {
+              this.plEventEmitter.emit('automaticscroll', false);
+              this._clearWordSelection();
+            }
+            this._setDefaults();
+            this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
+            this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
+            this.load(...this.pendingLoad);
+          } else {
+            this.close();
           }
         },
         checkExitState() {
+          this.hideModal('onExitMessage');
           if (this.discardOnExit) {
             this.discard();
+          } else {
+            /*if (this.pendingLoad) {
+              if (this.pendingLoad[3]) {
+                this.$root.$emit('from-audioeditor:closed', this.pendingLoad[3]);
+              } else {
+                this.$root.$emit('from-audioeditor:close');
+              }
+            }*/
           }
         },
         _setDefaults() {
@@ -664,10 +795,16 @@
           this.isPlaying = false;
           this.isPaused = false;
           this.origFilePositions = {};
-          this.onExitMessage = false;
+          this.hideModal('onExitMessage');
           if (this.plEventEmitter) {
             this.plEventEmitter.emit('clear');
           }
+        },
+        showModal(name) {
+          this.$modal.show(name);
+        },
+        hideModal(name) {
+          this.$modal.hide(name);
         },
         _numToTime(val) {
           let val_check = parseInt(val);
@@ -685,7 +822,7 @@
           setTimeout(() => {
             let selection = $('.selection.segment')[0];
             if (selection) {
-              $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth);
+              $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
               $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft);
             } else {
               $('[id="resize-selection-right"]').hide().css('left', 0);
@@ -710,7 +847,9 @@
               }, 50);
             } else if (this.hasSelection) {
               setTimeout(function () {
-                $('.playlist-tracks').scrollLeft($('#resize-selection-left').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+                if ($('#resize-selection-left').length > 0 && $('.playlist-tracks').length > 0) {
+                  $('.playlist-tracks').scrollLeft($('#resize-selection-left').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+                }
               }, 50);
             }
           }
@@ -779,9 +918,23 @@
           if (this.isSinglePointSelection) {
             new_selection.end = new_selection.start;
           }
-          if (new_selection.start >= 0 && new_selection.end <= this.audiosourceEditor.activeTrack.duration && new_selection.start <= new_selection.end) {
+          if (this._round(new_selection.start, 1) == this._round(new_selection.end, 1) && field == 's') {
+            switch (part) {
+              case 'start':
+                new_selection.end+= 0.1;
+                break;
+              case 'end':
+                new_selection.start-= 0.1;
+                break;
+            }
+            new_selection.end = this._round(new_selection.end, 1);
+            new_selection.start = this._round(new_selection.start, 1);
+          }
+          if (new_selection.start >= 0 && new_selection.end <= this.audiosourceEditor.activeTrack.duration && new_selection.start < new_selection.end) {
             this.selection = new_selection;
             this._setSelectionOnWaveform();
+            //this.cursorPosition = this.selection.start;
+            this._showSelectionBorders(true);
           }
         },
         _addHistory(text, audio) {
@@ -807,6 +960,9 @@
           let alignedWords = 0;
           this.words = [];
           this.contentContainer = $('#content-' + this.blockId);
+          if (this.contentContainer.length == 0) {
+            this.contentContainer = $('#' + this.blockId);//footnote
+          }
           $('<div>' + this.content + '</div>').find('w').each(function() {
             let map = $(this).attr('data-map');
             if (map) {
@@ -850,7 +1006,7 @@
             //self.audiosourceEditor.annotationList.renderResizeLeft(annotations.length - 1);
         },
         _isAnnotationsEditable() {
-          return this.currentBookMeta.isMastered;
+          return this.currentBookMeta.isMastered || (this.block && this.block.voicework === 'tts');
         },
         _setBlocksSelection() {
           if (this.blocksForAlignment && ((this.blocksForAlignment.start && this.blocksForAlignment.start._id) || (this.blocksForAlignment.end && this.blocksForAlignment.end._id)) && this.plEventEmitter) {
@@ -858,18 +1014,18 @@
             let end = false;
             if (this.blocksForAlignment.start && this.blocksForAlignment.start._id && this.blockMap[this.blocksForAlignment.start._id]) {
               start = parseInt(this.blockMap[this.blocksForAlignment.start._id][0])/1000;
-              if (!this.blocksForAlignment.end || !this.blocksForAlignment.end._id) {
+              if (!this.blocksForAlignment.end || !this.blocksForAlignment.end._id || !this.blockMap[this.blocksForAlignment.end._id]) {
                 end = parseInt(this.blockMap[this.blocksForAlignment.start._id][1])/1000;
               }
             }
             if (this.blocksForAlignment.end && this.blocksForAlignment.end._id && this.blockMap[this.blocksForAlignment.end._id]) {
               end = parseInt(this.blockMap[this.blocksForAlignment.end._id][1])/1000;
-              if (!this.blocksForAlignment.start || !this.blocksForAlignment.start._id) {
+              if (!this.blocksForAlignment.start || !this.blocksForAlignment.start._id || !this.blockMap[this.blocksForAlignment.start._id]) {
                 start = parseInt(this.blockMap[this.blocksForAlignment.end._id][0])/1000;
               }
             }
             
-            if (start !== false && end !== false && start <= end) {
+            if (start !== false && end !== false && start < end) {
               this.selection.start = start;
               this.selection.end = end;
               this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
@@ -880,6 +1036,56 @@
             }
           }
           return false;
+        },
+        onContext: function(e) {
+          if (this.mode == 'file') {
+            this.contextPosition = e.clientX;
+            $('.medium-editor-toolbar').each(function(){
+                $(this).css('display', 'none');
+            });
+            if (this.$refs.waveformContext) {
+              this.$refs.waveformContext.open(e, {}, $('.waveform-playlist').offset().top);
+            }
+          }
+        },
+        setSelectionStart(val, event) {
+          if (this.mode == 'file') {
+            if (this.audiosourceEditor) {
+              let start = val !== null ? val : (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+              if (start > this.selection.end) {
+                if (this.audiosourceEditor.activeTrack && this.audiosourceEditor.activeTrack.duration) {
+                  this.selection.end = this.audiosourceEditor.activeTrack.duration;
+                } else {
+                  return;
+                }
+              }
+              this.selection.start = start;
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              this._showSelectionBorders();
+              this.contextPosition = null;
+            } else {
+              return;
+            }
+          }
+          this.contextPosition = null;
+        },
+        setSelectionEnd(val, event) {
+          if (this.mode == 'file') {
+            if (this.audiosourceEditor) {
+              let end = val !== null ? val : (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+              if (end < this.selection.start) {
+                this.selection.start = 0;
+              }
+              this.selection.end = end;
+              //this.cursorPosition = this.selection.start;
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              this._showSelectionBorders();
+              this.contextPosition = null;
+            } else {
+              return;
+            }
+          }
+          this.contextPosition = null;
         }
       },
       computed: {
@@ -1019,6 +1225,30 @@
             this._setBlocksSelection();
           },
           deep: true
+        },
+        'selection': {
+          handler(val, oldVal) {
+            if (!this.blockSelectionEmit) {
+              if (typeof val.start !== 'undefined' && typeof val.end !== 'undefined') {
+                //console.log('ON SELECT ')
+                this._clearWordSelection();
+                this.$root.$emit('from-audioeditor:select', this.blockId, val.start, val.end);
+              }
+            } else {
+              this.blockSelectionEmit = false;
+            }
+          },
+          deep: true
+        },
+        'contextPosition': {
+          handler(val) {
+            if (val !== null) {
+              $('#context-position').css('left', val + $('.playlist-tracks').scrollLeft());
+              $('#context-position').show();
+            } else {
+              $('#context-position').hide();
+            }
+          }
         }
       }
   }
@@ -1035,6 +1265,7 @@
           position: absolute;
           z-index: 1001;
           display: none;
+          background-color: green;
       }
   }
   .waveform-playlist {
@@ -1208,6 +1439,14 @@
       height: 100%;
       border: 1px solid black;
       background-color: black;
+      position: absolute;
+      z-index: 1000;
+      display: none;
+  }
+  .context-position {
+      width: 1px;
+      height: 100%;
+      background-color: green;
       position: absolute;
       z-index: 1000;
       display: none;

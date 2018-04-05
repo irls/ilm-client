@@ -341,7 +341,6 @@
                     <li class="separator"></li>
                     <li @click="audPlayFromSelection()">Play from here</li>
                     <li @click="audPlaySelection()">Play selection</li>
-                    <li v-if="allowEditing && !isAudioEditing" @click="audDeleteSelection()">Delete audio in selection</li>
                   </template>
                   <template v-if="!range.collapsed && tc_showBlockNarrate(block._id) && allowEditing && !isAudioEditing">
                     <li class="separator"></li>
@@ -364,7 +363,7 @@
                     <template v-if="allowEditing">
                       <template v-if="tc_hasTask('content_cleanup')">
                         <label>Voicework:&nbsp;
-                        <select v-model='footnote.voicework' style="min-width: 100px;" ref="footnVoiceworkSel" @input="commitFootnote(ftnIdx, $event)">
+                        <select v-model='footnote.voicework' style="min-width: 100px;" ref="footnVoiceworkSel" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                           <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                         </select>
                         </label>
@@ -487,8 +486,8 @@
       <div class="modal-body">
         <div>Apply "{{blockVoiceworks[voiceworkChange]}}" voicework type to</div>
         <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{block.type}}</label></div>
-        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all incomplete {{block.type}}s</label></div>
-        <div>This will also delete current audio from the {{block.type}}(s)</div>
+        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label></div>
+        <div>This will also delete current audio from the {{blockTypeLabel}}(s)</div>
       </div>
       <!-- custom buttons -->
       <div class="modal-footer">
@@ -647,9 +646,16 @@ export default {
           return this.block.voicework;
         },
         set(val) {
-          if (val !== this.block.voicework) {
-            this.voiceworkChange = val;
-            this.showModal('voicework-change');
+          if (val && val !== this.block.voicework) {
+            if (this._is('editor', true)) {
+              this.voiceworkChange = val;
+              if (!this.block.markedAsDone && this.tc_hasTask('content_cleanup')) {
+                this.showModal('voicework-change');
+              } else {
+                this.voiceworkUpdateType = 'single';
+                this.updateVoicework();
+              }
+            }
           }
         }
       },
@@ -780,6 +786,11 @@ export default {
         get() {
           return this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup');
         }
+      },
+      blockTypeLabel: {
+        get() {
+          return this.block.type === 'par' ? 'paragraph' : this.block.type;
+        }
       }
   },
   beforeDestroy:  function() {
@@ -811,6 +822,7 @@ export default {
           this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
             flag.addEventListener('click', this.handleFlagClick);
           });
+          this.addContentListeners();
         }
       });
       this.updateFlagStatus(this.block._id);
@@ -849,7 +861,8 @@ export default {
               if (this.block.voicework !== 'narration') {
                 canFlag = false;
               } else {
-                if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
+                if (this.block.status && this.block.status.stage === 'audio_mastering') canFlag = false;
+                else if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
                 else if (this._is('narrator', true)) canFlag = false;
               }
             } break;
@@ -1018,9 +1031,12 @@ export default {
         .then((block)=>{
           if (this.$refs.blockContent) this.$refs.blockContent.innerHTML = block.content;
           Vue.nextTick(() => {
-            if (this.$refs.blockContent) this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-              flag.addEventListener('click', this.handleFlagClick);
-            });
+            if (this.$refs.blockContent) {
+              this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+                flag.addEventListener('click', this.handleFlagClick);
+              });
+              this.addContentListeners();
+            }
           });
           this.isChanged = false;
           this.updateFlagStatus(block._id);
@@ -1064,7 +1080,7 @@ export default {
 //           });
       },
 
-      discardAudioEdit: function(footnoteIdx = null) {
+      discardAudioEdit: function(footnoteIdx = null, reload = true) {
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
         if (footnoteIdx !== null) {
           api_url+= '/footnote/' + footnoteIdx;
@@ -1077,16 +1093,20 @@ export default {
                 this.block.content = response.data.content;
                 this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                 this.blockAudio.map = response.data.content;
-                this.block.audiosrc = this.blockAudio.src;
+                //this.block.audiosrc = this.blockAudio.src;
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
                 this.isAudioChanged = false;
-                this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
+                if (reload) {
+                  this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
+                }
               } else {
                 let resp_block = response.data;
                 let resp_f = resp_block.footnotes[footnoteIdx];
                 this.block.setContentFootnote(footnoteIdx, resp_f.content);
                 this.block.setAudiosrcFootnote(footnoteIdx, resp_f.audiosrc, resp_f.audiosrc_ver);
-                this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
+                if (reload) {
+                  this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
+                }
                 this.audioEditFootnote.isAudioChanged = false;
               }
             }
@@ -1543,10 +1563,13 @@ export default {
         });
         return pos;
       },
-      commitFootnote: function(pos, ev) {
+      commitFootnote: function(pos, ev, field = null) {
         //this.block.footnotes[pos] = ev.target.innerText.trim();
         this.isChanged = true;
         this.pushChange('footnotes');
+        if (field === 'voicework') {
+          this.block.setAudiosrcFootnote(pos, '');
+        }
       },
       commitDescription: function(ev) {
         //this.block.description = ev.target.innerText.trim();
@@ -1837,6 +1860,7 @@ export default {
                   self.block.setContent(response.data.content);
                   self.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                   self.blockAudio.src = self.block.getAudiosrc('m4a');
+                  self.blockAudio.map = self.block.content;
                   self.isAudioChanged = true;
                 }
                 self.reRecordPosition = false;
@@ -2077,14 +2101,20 @@ export default {
           }
         }
         let check_id = footnoteIdx !== null ? this.block._id + '_' + footnoteIdx : this.block._id;
-        $('nav.fixed-bottom').removeClass('hidden');
+        
         Vue.nextTick(() => {
 
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
           let text = footnote ? footnote.content : this.blockAudio.map;
-          this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, check_id);
+          let loadBlock = footnoteIdx !== null ? {_id: check_id, voicework: footnote ? footnote.voicework : 'tts'} : this.block;
+          this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
 
           let self = this;
+          this.$root.$on('from-audioeditor:block-loaded', function(blockId) {
+            if (blockId == check_id) {
+              $('nav.fixed-bottom').removeClass('hidden');
+            }
+          });
           this.$root.$on('from-audioeditor:word-realign', function(map, blockId) {
             if (blockId == check_id) {
               self.audStop();
@@ -2144,17 +2174,18 @@ export default {
             if (blockId == check_id) {
               self.isAudioEditing = false;
               if (self.isAudioChanged) {
-                self.discardAudioEdit(footnoteIdx);
+                self.discardAudioEdit(footnoteIdx, false);
               }
               $('nav.fixed-bottom').addClass('hidden');
-              self.$root.$off('from-audioeditor:insert-silence');
-              self.$root.$off('from-audioeditor:word-realign');
-              self.$root.$off('from-audioeditor:save');
-              self.$root.$off('from-audioeditor:save-and-realign');
-              self.$root.$off('from-audioeditor:cut');
-              self.$root.$off('from-audioeditor:undo');
-              self.$root.$off('from-audioeditor:discard');
-              self.$root.$off('from-audioeditor:closed');
+              //self.$root.$off('from-audioeditor:insert-silence');
+              //self.$root.$off('from-audioeditor:word-realign');
+              //self.$root.$off('from-audioeditor:save');
+              //self.$root.$off('from-audioeditor:save-and-realign');
+              //self.$root.$off('from-audioeditor:cut');
+              //self.$root.$off('from-audioeditor:undo');
+              //self.$root.$off('from-audioeditor:discard');
+              //self.$root.$off('from-audioeditor:closed');
+              //self.$root.$off('from-audioeditor:select');
               $('#' + self.block._id + ' .table-body.-content').removeClass('editing');
             }
           });
@@ -2189,6 +2220,45 @@ export default {
               self.discardAudioEdit(footnoteIdx);
             }
           });
+          this.$root.$on('from-audioeditor:select', (blockId, start, end) => {
+            if (check_id == blockId) {
+              //console.log(start, end)
+              let ref;
+              if (footnoteIdx !== null) {
+                ref = this.$refs['footnoteContent_' + footnoteIdx];
+                if (ref) {
+                  ref = ref[0];
+                }
+              } else {
+                if (this.$refs.blockContent) {
+                  ref = this.$refs.blockContent;
+                }
+              }
+              if (ref && ref.querySelectorAll) {
+                start = parseInt(start * 1000);
+                end = parseInt(end * 1000);
+                ref.querySelectorAll('w').forEach(e => {
+                  let map = $(e).attr('data-map');
+                  if(map) {
+                    map = map.split(',');
+                    if (map.length == 2) {
+                      map[0] = parseInt(map[0]);
+                      map[1] = map[0] + parseInt(map[1]);
+                      if ((map[0] >= start && map[0] < end) || 
+                              (map[0] < start && map[1] > start)) {
+                        //console.log(map[0], start, map[1], end)
+                        //console.log(e)
+                        $(e).addClass('selected');
+                      } else {
+                        //console.log('NOT', map, start, end, e)
+                        $(e).removeClass('selected');
+                      }
+                    }
+                  }
+                });
+              }
+            }
+          });
         });
       },
       _getParent(node, tag) {
@@ -2198,13 +2268,16 @@ export default {
         let parent = false;
         do {
           parent = parent === false ? node.parentElement : parent.parentElement;
-          if (parent.localName == tag) {
+          if (parent && parent.localName == tag) {
             return parent;
           }
         } while(parent);
         return null;
       },
       _getClosestAligned(node, direction) {
+        if (!node) {
+          return null;
+        }
         if (node.dataset && node.dataset.map) {
           let splitted = node.dataset.map.split(',');
           if (splitted.length == 2) {
@@ -2300,7 +2373,9 @@ export default {
         this.$emit('setRangeSelection', this.block, type, checked);
       },
       updateVoicework() {
-
+        if (!this.voiceworkChange) {
+          return false;
+        }
         this.voiceworkUpdating = true;
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/set_voicework';
         let api = this.$store.state.auth.getHttp();
@@ -2383,6 +2458,52 @@ export default {
         this.block.content = this.$refs['block-html' + this.block._id].value;
         this.isChanged = true;
         this.hideModal('block-html');
+      },
+      addContentListeners() {
+        let handler = (id, ref) => {
+          if (window.getSelection) {
+            //let content = this.range.extractContents();
+            let range = window.getSelection().getRangeAt(0).cloneRange();
+            //console.log(this.range, window.getSelection(), range)
+            let startElement = this._getParent(range.startContainer, 'w');
+            let endElement = this._getParent(range.endContainer, 'w');
+            let startRange = this._getClosestAligned(startElement, 1);
+            if (!startRange) {
+              startRange = [0, 0];
+            }
+            let endRange = this._getClosestAligned(endElement, 0);
+            if (!endRange) {
+              endRange = this._getClosestAligned(endElement, 1)
+            }
+            if (startRange && endRange) {
+              //console.log(startRange[0], endRange[0] + endRange[1])
+              this.$root.$emit('for-audioeditor:select', id, startRange[0], endRange[0] + endRange[1]);
+            }
+            //console.log(startElement, endElement, startRange, endRange)
+          }
+
+          ref.querySelectorAll('w').forEach(e => {
+            $(e).removeClass('selected');
+          });
+        }
+        if (this.$refs.blockContent) {
+          this.$refs.blockContent.addEventListener("mouseup", () => {
+            //console.log('Selection changed.'); 
+            handler(this.block._id, this.$refs.blockContent);
+          });
+        }
+        if (this.block.footnotes) {
+          for (let i in this.block.footnotes) {
+            let ref = this.$refs['footnoteContent_' + i];
+            if (ref) {
+              ref = ref[0];
+              ref.addEventListener("mouseup", () => {
+                //console.log('Selection changed.'); 
+                handler(this.block._id + '_' + i, ref);
+              });
+            }
+          }
+        }
       }
   },
   watch: {
@@ -2419,9 +2540,12 @@ export default {
             };
           }
           Vue.nextTick(() => {
-            if (this.$refs.blockContent) this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-              flag.addEventListener('click', this.handleFlagClick);
-            });
+            if (this.$refs.blockContent) {
+              this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+                flag.addEventListener('click', this.handleFlagClick);
+              });
+              this.addContentListeners();
+            }
           });
         } else {
           if (!this.blockAudio.src || !this.tc_showBlockNarrate(this.block._id)) {
@@ -2554,6 +2678,7 @@ export default {
               this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
                 flag.addEventListener('click', this.handleFlagClick);
               });
+              this.addContentListeners();
             }
           });
         }
@@ -2946,7 +3071,7 @@ export default {
         top: 5px;
     }
     .-audio {
-        width: 100px;
+        width: 130px;
         .fa {
             font-size: 18px;
         }

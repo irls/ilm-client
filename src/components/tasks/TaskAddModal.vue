@@ -313,7 +313,7 @@ export default {
         this.roles['editor']   = this.users['editor'][0]._id;
         this.roles['proofer']  = this.users['proofer'][0]._id;
         this.roles['narrator'] = this.users['narrator'][0]._id;
-        this.roles['engineer'] = this.users['engineer'][0]._id;
+        //this.roles['engineer'] = this.users['engineer'][0]._id;
       }
     },
     'name': {

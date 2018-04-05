@@ -231,7 +231,7 @@ export default {
         for (var role in self.users) {
           self.users[role] = []
           for (var i in users.data) {
-            if (users.data[i].roles.indexOf(role) != -1) {
+            if (users.data[i].roles.indexOf(role) != -1 && users.data[i].enable === true) {
               self.users[role].push(users.data[i])
             }
           }
