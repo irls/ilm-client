@@ -2101,7 +2101,7 @@ export default {
           }
         }
         let check_id = footnoteIdx !== null ? this.block._id + '_' + footnoteIdx : this.block._id;
-        
+
         Vue.nextTick(() => {
 
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
@@ -2244,7 +2244,7 @@ export default {
                     if (map.length == 2) {
                       map[0] = parseInt(map[0]);
                       map[1] = map[0] + parseInt(map[1]);
-                      if ((map[0] >= start && map[0] < end) || 
+                      if ((map[0] >= start && map[0] < end) ||
                               (map[0] < start && map[1] > start)) {
                         //console.log(map[0], start, map[1], end)
                         //console.log(e)
@@ -2488,7 +2488,7 @@ export default {
         }
         if (this.$refs.blockContent) {
           this.$refs.blockContent.addEventListener("mouseup", () => {
-            //console.log('Selection changed.'); 
+            //console.log('Selection changed.');
             handler(this.block._id, this.$refs.blockContent);
           });
         }
@@ -2498,7 +2498,7 @@ export default {
             if (ref) {
               ref = ref[0];
               ref.addEventListener("mouseup", () => {
-                //console.log('Selection changed.'); 
+                //console.log('Selection changed.');
                 handler(this.block._id + '_' + i, ref);
               });
             }
@@ -2745,7 +2745,7 @@ export default {
       top: -6px;
     }
     .content-wrap {
-      position: relative;
+      /*position: relative;*/
       &.par {
         min-height: 54px;
         /*position: relative;*/
