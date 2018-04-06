@@ -447,8 +447,24 @@ export default {
             if (oldBlock.partUpdate) {
               oldBlock._rev = change.doc._rev;
             } else {
-              this.parlist.set(change.doc._id, new BookBlock(change.doc));
-              this.refreshTmpl();
+              let ref = this.$refs.blocks.find(r => {
+                return r && r.block && r.block._id === change.doc._id;
+              });
+              let newBlock = new BookBlock(change.doc);
+              if (ref && (ref.isChanged || ref.isAudioChanged || ref.isIllustrationChanged)) {
+                if (oldBlock.status && newBlock.status && oldBlock.status.assignee === newBlock.status.assignee) {
+                  oldBlock._rev = change.doc._rev;
+                } else {
+                  ref.isChanged = false;
+                  ref.isAudioChanged = false;
+                  ref.isIllustrationChanged = false;
+                  this.parlist.set(change.doc._id, newBlock);
+                  //this.parlist[idx].isUpdated = true;
+                }
+              } else {
+                this.parlist.set(change.doc._id, new BookBlock(change.doc));
+                this.refreshTmpl();
+              }
             }
           }
         }
@@ -591,67 +607,56 @@ export default {
     },
 
     insertBlockBefore(block, block_Idx) {
-      //this.insertBlock(block._id, 'before');
       this.freeze('insertBlockBefore');
-      this.getBlockByChainId(block._id)
-      .then((blockBefore)=>{
-          //console.log('blockBefore', blockBefore);
-          let newBlock = this.createEmptyBlock(block.bookid, block._id);
-          //this.parlist.splice(block_Idx, 0, newBlock);
+      let newBlock = this.createEmptyBlock(block.bookid, block._id);
+      let api_url = this.API_URL + 'book/block';
+      let api = this.$store.state.auth.getHttp();
+      api.post(api_url, {
+        block_id: block._id,
+        direction: 'before',
+        block: newBlock
+      })
+        .then((response)=>{
+          let b_new = response.data.new_block;
+          let b_old = response.data.block;
           this.parlist.set(newBlock._id, newBlock);
+          this.refreshBlock({doc: b_new, deleted: false});
+          if (b_old) {
+            this.refreshBlock({doc: b_old, deleted: false});
+          }
+          this.unfreeze('insertBlockBefore');
           this.refreshTmpl();
-          this.putBlock(newBlock)
-          .then((createdBlock)=>{
-            if (blockBefore) {
-              blockBefore.chainid = newBlock._id;
-              this.putBlockPart({
-                block: new BookBlock(blockBefore),
-                field: 'chainid'
-              })
-              .then(()=>{});
-            } else {
-              this.setMetaData({ key: 'startBlock_id', value: newBlock._id})
-              .then(()=>{});
-            }
-            if (!this.tc_hasTask('content_cleanup')) {
-              this._createBlockSubtask(createdBlock.id, 'approve-new-block', 'editor')
-            }
-            this.unfreeze('insertBlockBefore');
-          })
-          /*.catch((err)=>{
-            this.unfreeze('insertBlockBefore');
-            return err;
-          })*/
-      })
-      .catch((err)=>{
-        this.unfreeze('insertBlockBefore');
-        return err;
-      })
+        })
+        .catch(err => {
+          this.unfreeze('insertBlockBefore');
+          return err;
+        });
     },
 
     insertBlockAfter(block, block_Idx) {
       //this.insertBlock(block_id, 'after');
       this.freeze('insertBlockAfter');
       let newBlock = this.createEmptyBlock(block.bookid, block.chainid);
-      this.parlist.set(newBlock._id, newBlock);
-      this.refreshTmpl();
-      this.putBlock(newBlock)
-      .then((createdBlock)=>{
-        block.chainid = newBlock._id;
-        if (!this.tc_hasTask('content_cleanup')) {
-          this._createBlockSubtask(createdBlock.id, 'approve-new-block', 'editor')
-        }
-        this.putBlockPart({
-          block: new BookBlock(block),
-          field: 'chainid'
-        }).then(()=>{
+      let api_url = this.API_URL + 'book/block';
+      let api = this.$store.state.auth.getHttp();
+      api.post(api_url, {
+        block_id: block._id,
+        direction: 'after',
+        block: newBlock
+      })
+        .then((response)=>{
+          let b_new = response.data.new_block;
+          let b_old = response.data.block;
+          this.parlist.set(newBlock._id, newBlock);
+          this.refreshBlock({doc: b_new, deleted: false});
+          this.refreshBlock({doc: b_old, deleted: false});
           this.unfreeze('insertBlockAfter');
+          this.refreshTmpl();
+        })
+        .catch(err => {
+          this.unfreeze('insertBlockAfter');
+          return err;
         });
-      })
-      .catch((err)=>{
-        this.unfreeze('insertBlockAfter');
-        return err;
-      })
     },
     blockUpdated(blockid) {
       if (this._is('editor', true) && !this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') && !this.tc_getBlockTask(blockid)) {

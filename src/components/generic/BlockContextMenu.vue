@@ -74,7 +74,7 @@ import Vue from 'vue'
             this.left = 0 + 'px';
         },
 
-        open: function(ev, range, offsetY = 0) {
+        open: function(ev, range, offsetX = 0, offsetY = 0) {
             ev.preventDefault();
             this.$root.$emit('closeBlockContextMenu');
             let coords = {};
@@ -83,11 +83,11 @@ import Vue from 'vue'
               coords.x = coords.x + coords.width;
             } else {
               coords = {
-                x: ev.clientX,
+                x: ev.clientX - offsetX,
                 y: ev.clientY - offsetY
               }
             }
-            coords.y = ev.layerY;
+            coords.y = ev.layerY - offsetY;
 
             this.viewMenu = true;
             this.setMenu(coords.x, coords.y, ev.target);

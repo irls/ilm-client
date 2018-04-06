@@ -1044,7 +1044,7 @@
                 $(this).css('display', 'none');
             });
             if (this.$refs.waveformContext) {
-              this.$refs.waveformContext.open(e, {}, $('.waveform-playlist').offset().top);
+              this.$refs.waveformContext.open(e, {}, 0, e.layerY - 80);
             }
           }
         },
@@ -1258,7 +1258,7 @@
   .waveform {
       max-height: @waveform-height;
       .resize-selection {
-          width: 1px;
+          width: 3px;
           height: 100%;
           border: 1px solid green;
           cursor: ew-resize;
