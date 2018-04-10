@@ -610,6 +610,10 @@
     watch: {
       'audiobook': {
         handler(val, oldVal) {
+          if (val && oldVal && val._id != oldVal._id) {
+            this.checkAllState = false;
+            return;
+          }
           //console.log('Audiobook changed');
           if (typeof val.importFiles !== 'undefined') {
             val.importFiles.forEach(_if => {
