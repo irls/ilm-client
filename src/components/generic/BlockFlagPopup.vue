@@ -56,38 +56,46 @@ import Vue from 'vue';
         }
      },
     methods: {
-        setMenu: function(x, y, target) {
+        setMenu: function(ev) {
 
             let dir = this.$refs.menu.getAttribute('dir') || 'top';
-            let rect = target.getBoundingClientRect();
+            //let rect = ev.target.getBoundingClientRect();
+            //console.log('ev.clientY', ev.clientY, 'ev.target.offsetTop', ev.target.offsetTop, 'this.$refs.menu.offsetHeight', this.$refs.menu.offsetHeight);
+            //console.log('ev.clientX', ev.clientX, 'ev.target.offsetLeft', ev.target.offsetLeft, 'this.$refs.menu.offsetWidth', this.$refs.menu.offsetWidth);
+            //console.log('ev.target', ev.target);
 
             switch(dir) {
               case 'top' :
               {
-                  if (rect.top < this.$refs.menu.offsetHeight) {
+                  let top = ev.layerY;
+                  if (ev.clientY - this.$refs.menu.offsetHeight < 0 + 120) {
                       this.under = false;
-                      this.top = rect.bottom + window.scrollY + 0 + 'px';
+                      //top = rect.bottom + window.scrollY + 0 + 'px';
+                      top = parseFloat(ev.target.offsetTop) + ev.target.offsetHeight;
+
                   } else {
                       this.under = true;
-                      this.top = rect.top + window.scrollY - this.$refs.menu.offsetHeight - 5 + 'px';
+                      //top = rect.top + window.scrollY - this.$refs.menu.offsetHeight - 5;
+                      top = parseFloat(ev.target.offsetTop) - this.$refs.menu.offsetHeight;
                   }
-                  let left = (target.offsetLeft - 120);
-                  if (left + $(this.$refs.menu).outerWidth() > window.innerWidth) {
-                    left = window.innerWidth - $(this.$refs.menu).outerWidth() - 20;
+
+                  let left = ev.target.offsetLeft - 115;//(target.offsetLeft - 120);
+                  if (left + this.$refs.menu.offsetWidth > window.innerWidth) {
+                    left = window.innerWidth - this.$refs.menu.offsetWidth - 20;
                   }
-                  if (left < 10) {
-                    left = 10;
+                  else if (left < 0) {
+                    left = 50;
                   }
+
+                  console.log('top', top, 'left', left);
+                  this.top = top + 'px';
                   this.left = left + 'px';
-              }
+
+               }
               break;
               default : // case bottom
               {
-                  if (window.innerHeight < y + this.$refs.menu.offsetHeight) {
-                      this.top = - this.$refs.menu.offsetHeight - 5 + 'px';
-                  } else {
-                      this.top = target.offsetHeight + 'px';
-                  }
+                  this.top = 0 + 'px';
                   this.left = 0 + 'px';
               }
               break;
@@ -110,20 +118,24 @@ import Vue from 'vue';
           this.lastEvent = ev;
           this.flagId = flagId;
           this.viewMenu = true;
-          this.setMenu(ev.clientX, ev.clientY, ev.target);
+          //this.setMenu(ev.clientX, ev.clientY, ev.target);
+          this.setMenu(ev);
 
           Vue.nextTick(function() {
-              this.setMenu(ev.clientX, ev.clientY, ev.target);
+            //this.setMenu(ev.clientX, ev.clientY, ev.target);
+            this.setMenu(ev);
           }.bind(this));
 
         },
 
         reset: function() {
           let ev = this.lastEvent;
-          this.setMenu(ev.clientX, ev.clientY, ev.target);
+          //this.setMenu(ev.clientX, ev.clientY, ev.target);
+          this.setMenu(ev);
 
           Vue.nextTick(function() {
-            this.setMenu(ev.clientX, ev.clientY, ev.target);
+           // this.setMenu(ev.clientX, ev.clientY, ev.target);
+            this.setMenu(ev);
           }.bind(this));
         },
 
