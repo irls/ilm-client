@@ -87,7 +87,7 @@ import Vue from 'vue';
                     left = 50;
                   }
 
-                  console.log('top', top, 'left', left);
+                  //console.log('top', top, 'left', left);
                   this.top = top + 'px';
                   this.left = left + 'px';
 
@@ -119,8 +119,8 @@ import Vue from 'vue';
           this.flagId = flagId;
           this.viewMenu = true;
           //this.setMenu(ev.clientX, ev.clientY, ev.target);
-          this.setMenu(ev);
-
+          //this.setMenu(ev);
+          //console.log('open');
           Vue.nextTick(function() {
             //this.setMenu(ev.clientX, ev.clientY, ev.target);
             this.setMenu(ev);
