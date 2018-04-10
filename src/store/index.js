@@ -649,7 +649,7 @@ export const store = new Vuex.Store({
     },
 
     updateBooksList ({state, commit, dispatch}) {
-      console.log('updateBooksList');
+      //console.log('updateBooksList');
       let ilmLibraryMeta = state.metaDB.hoodieApi()
       ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted')))
         .then(books => {

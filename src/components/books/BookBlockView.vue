@@ -813,18 +813,6 @@ export default {
         });
       }
 
-//       if (this.block._id == '1_en_2s') {
-//         console.log('this.FtnAudio11', this.FtnAudio);
-//       }
-
-      Vue.nextTick(() => {
-        if (this.$refs.blockContent) {
-          this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-            flag.addEventListener('click', this.handleFlagClick);
-          });
-          this.addContentListeners();
-        }
-      });
       this.updateFlagStatus(this.block._id);
       if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
         this.classSel = Object.keys(this.blockTypes[this.block.type])[0];
@@ -838,6 +826,16 @@ export default {
       this.voiceworkSel = this.block.voicework;
       this.isChanged = this.block.isChanged;
       //this.detectMissedFlags();
+
+        //console.log('mounted', this.block._id);
+        this.destroyEditor();
+        this.initEditor();
+        this.addContentListeners();
+
+
+//       Vue.nextTick(() => {
+//
+//       });
   },
   methods: {
       ...mapActions([
@@ -896,6 +894,8 @@ export default {
       },
 
       initEditor(force) {
+        force = force || false;
+
         if ((!this.editor || force === true) && this.block.needsText()) {
           let extensions = {};
           let toolbar = {buttons: []};
@@ -915,16 +915,16 @@ export default {
                   'quoteButton', 'suggestButton'
                 ]
               };
+            this.editor = new MediumEditor('.content-wrap', {
+                toolbar: toolbar,
+                buttonLabels: 'fontawesome',
+                quotesList: this.authors,
+                onQuoteSave: this.onQuoteSave,
+                suggestEl: this.suggestEl,
+                extensions: extensions,
+                disableEditing: !this.allowEditing
+            });
           }
-          this.editor = new MediumEditor('.content-wrap', {
-              toolbar: toolbar,
-              buttonLabels: 'fontawesome',
-              quotesList: this.authors,
-              onQuoteSave: this.onQuoteSave,
-              suggestEl: this.suggestEl,
-              extensions: extensions,
-              disableEditing: !this.allowEditing
-          });
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
     //       this.editor.subscribe('positionToolbar', ()=>{})
         }  else if (this.editor) this.editor.setup();
@@ -1032,9 +1032,6 @@ export default {
           if (this.$refs.blockContent) this.$refs.blockContent.innerHTML = block.content;
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
-              this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-                flag.addEventListener('click', this.handleFlagClick);
-              });
               this.addContentListeners();
             }
           });
@@ -1537,16 +1534,10 @@ export default {
         this.block.footnotes.splice(pos, 0, new FootNote({}));
         this.isChanged = true;
         this.pushChange('footnotes');
-
-        //if (this.editorFootn) {
-
-          //console.log(MediumEditor.getEditorFromElement('.content-wrap-footn'));
-          console.log('this.editorFootn', this.editorFootn);
-          Vue.nextTick(() => {
-            //this.destroyEditor();
-            this.initEditor();
-          });
-        //}
+        Vue.nextTick(() => {
+          //this.destroyEditor();
+          this.initEditor();
+        });
       },
       delFootnote: function(pos) {
         $('#'+this.block._id).find(`[data-idx='${pos+1}']`).remove();
@@ -2459,6 +2450,7 @@ export default {
         this.isChanged = true;
         this.hideModal('block-html');
       },
+
       addContentListeners() {
         let handler = (id, ref) => {
           if (window.getSelection) {
@@ -2490,6 +2482,9 @@ export default {
           this.$refs.blockContent.addEventListener("mouseup", () => {
             //console.log('Selection changed.');
             handler(this.block._id, this.$refs.blockContent);
+          });
+          this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+            flag.addEventListener('click', this.handleFlagClick);
           });
         }
         if (this.block.footnotes) {
@@ -2539,14 +2534,9 @@ export default {
               'map': this.block.content
             };
           }
-          Vue.nextTick(() => {
-            if (this.$refs.blockContent) {
-              this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-                flag.addEventListener('click', this.handleFlagClick);
-              });
-              this.addContentListeners();
-            }
-          });
+          if (this.$refs.blockContent) {
+            this.addContentListeners();
+          }
         } else {
           if (!this.blockAudio.src || !this.tc_showBlockNarrate(this.block._id)) {
             this.blockAudio = {
@@ -2557,7 +2547,6 @@ export default {
         }
       },
       'block.type' (newVal) {
-        //console.log('block.type', this.block._id, this.blockTypes);
         if (Object.keys(this.blockTypes[newVal])[0] !== '') {
           this.classSel = Object.keys(this.blockTypes[newVal])[0];
         }
@@ -2565,16 +2554,16 @@ export default {
         this.reCount();
       },
       'classSel' (newVal, oldVal) {
-        //if (this.block._id== "1_en_2s") console.log('classSel', this.block._id, ' newVal: ', newVal, ' oldVal: ', oldVal);
         let styleCurr = this.block.setClass(newVal);
         if (styleCurr) this.styleSel = styleCurr;
         else this.styleSel = '';
       },
       'styleSel' (newVal, oldVal) {
-        //console.log('styleSel', newVal, oldVal);
+        //console.log('styleSel');
         this.block.setClassStyle(this.classSel, newVal);
-        this.destroyEditor()
-        this.initEditor();
+        //this.addContentListeners();
+        //this.destroyEditor()
+        //this.initEditor();
       },
       'blockAudio.src' (newVal) {
         if (newVal) {
@@ -2675,9 +2664,6 @@ export default {
         handler(val) {
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
-              this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-                flag.addEventListener('click', this.handleFlagClick);
-              });
               this.addContentListeners();
             }
           });
@@ -2703,6 +2689,13 @@ export default {
             this.updateFlagStatus(this.block._id);
           }
         }
+      },
+      'allowEditing': {
+        handler(newVal, oldVal) {
+          // because after page loaded tasks may be late
+          if (newVal === true && !this.editor) this.initEditor();
+          else this.destroyEditor();
+        }
       }
   },
   beforeDestroy: function () {
@@ -2727,6 +2720,12 @@ export default {
             }
             break;
         }
+    }
+
+    if (this.$refs.blockContent) {
+      this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+        flag.removeEventListener('click', this.handleFlagClick);
+      });
     }
   },
   destroyed: function () {
