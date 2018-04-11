@@ -485,7 +485,7 @@
       </div>
       <div class="modal-body">
         <div>Apply "{{blockVoiceworks[voiceworkChange]}}" voicework type to</div>
-        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{block.type}}</label></div>
+        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label></div>
         <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label></div>
         <div>This will also delete current audio from the {{blockTypeLabel}}(s)</div>
       </div>
@@ -1198,13 +1198,16 @@ export default {
         if (this.blockAudio.map) {
           let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
           let api = this.$store.state.auth.getHttp();
-          return api.post(api_url, {}, {})
+          return api.post(api_url, {
+            content: this.blockAudio.map
+          }, {})
             .then(response => {
               if (response.status == 200 && response.data.audiosrc) {
-                this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
-                this.blockAudio.src = this.block.getAudiosrc('m4a');
+                //this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+                //this.blockAudio.src = this.block.getAudiosrc('m4a');
                 this.isAudioChanged = false;
-                return this.putBlock(this.block);
+                //return this.putBlock(this.block);
+                this.$root.$emit('bookBlocksUpdates', {blocks: [response.data.block]});
               }
             })
             .catch(err => {});
@@ -3074,7 +3077,7 @@ export default {
         top: 5px;
     }
     .-audio {
-        width: 130px;
+        width: 160px;
         .fa {
             font-size: 18px;
         }
