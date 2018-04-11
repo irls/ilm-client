@@ -1150,6 +1150,7 @@ export default {
             break;
         }
         this.block.classes = [this.block.classes];
+        let recount_marked = this.block.markedAsDone === true && this._is('editor', true);
         if (this.block.markedAsDone === true) {
           this.block.markedAsDone = false;
         }
@@ -1181,6 +1182,9 @@ export default {
             this.$refs.blockContent.dataset.has_suggestion = false;
           }
           this.reCount();
+          if (recount_marked) {
+            this.setCurrentBookCounters(['not_marked_blocks']);
+          }
         });
       },
 
