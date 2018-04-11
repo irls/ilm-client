@@ -16,7 +16,7 @@
       v-bind:style="{ 'top': screenTop + 'px' }"
       v-bind:id="'s-'+ parlistC.get(blockId)._id"
       v-bind:key="blockId">
-      <div class='col' v-if="parlist.has(blockId)"><!--v-if="block.isVisible"-->
+      <div class='col'><!--v-if="block.isVisible"-->
         <BookBlockView ref="blocks"
             :block="parlist.get(blockId)"
             :blockId = "blockId"
@@ -158,8 +158,6 @@ export default {
       },
 
       parlistC: function() {
-        console.log('parlistC this.parlist', this.parlist);
-        console.log('parlistC this.startId', this.startId);
         let result = new Map();
         if (this.startId && this.parlist.has(this.startId)) {
           let seqId = this.startId;
@@ -195,7 +193,6 @@ export default {
     },
 
     loadBookMeta() {
-      console.log('$route.params.bookid', this.$route.params.bookid);
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.freeze('loadBookMeta');
         return this.loadBook(this.$route.params.bookid)
@@ -257,13 +254,13 @@ export default {
     },
 
     loadBookDown(checkRoute = true, startId = false, onPage = 10) {
-      console.log('loadBookDown', checkRoute, startId, this.meta);
+
       //this.freeze('loadBookDown');
 
       if (checkRoute && this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
 //         if (this.$route.params.block == 'unresolved') {
           this.freeze('loadBookDown');
-          console.log('getBloksUntil', this.$route.params.block, this.$route.params.task_type);
+          //console.log('getBloksUntil', this.$route.params.block, this.$route.params.task_type);
           return this.getBloksUntil(this.$route.params.block, this.$route.params.task_type)
             .then(res=>{
             this.unfreeze('loadBookDown');
@@ -287,11 +284,12 @@ export default {
 
       } else {
         startId = startId || this.meta.startBlock_id;
-
         this.freeze('loadBookDown');
         return this.getBlocks(startId, onPage)
         .then(res=>{
-          if (this.startId === false) this.startId = startId; // first load
+          if (this.startId === false) {
+            this.startId = startId; // first load
+          }
           this.unfreeze('loadBookDown');
           this.lazyLoad();
           return Promise.resolve(res);
@@ -960,7 +958,10 @@ export default {
 //         }
 //       }
 //     },
-    scrollContent(ev) {
+    scrollContent(ev)
+    {
+      //this.screenTop -= ((ev.deltaY!==false) ? (ev.deltaY > 0 ? 47 : -47) : 0);
+      //if (true) return;
 
       let wrapHeight = this.$refs.contentScrollWrapRef.getBoundingClientRect().height;
 
@@ -972,7 +973,7 @@ export default {
       if (ev.deltaY < 0 && this.blockers.indexOf('loadBookUp') >-1) return;
       if (ev.deltaY > 0 && this.blockers.indexOf('loadBookDown') >-1) return;
 
-      let step = (ev.deltaY!==false) ? (ev.deltaY > 0 ? 42 : -42) : 0;
+      let step = (ev.deltaY!==false) ? (ev.deltaY > 0 ? 47 : -47) : 0;
 
       if (this.parlistC.size > 0) {
         let firstId, lastId;
@@ -1009,6 +1010,9 @@ export default {
           });
           if (prevBlockId) { // already loaded
             this.startId = prevBlockId;
+            this.$refs.blocks.forEach(($ref)=>{
+              $ref.addContentListeners();
+            })
             Vue.nextTick(()=>{
               let prevHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
               if (prevHeight) {
@@ -1026,6 +1030,9 @@ export default {
                 }
               });
               this.startId = prevBlockId;
+              this.$refs.blocks.forEach(($ref)=>{
+                $ref.addContentListeners();
+              })
               Vue.nextTick(()=>{
                 this.upScreenTop = false;
                 let prevHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
@@ -1058,6 +1065,9 @@ export default {
             });
             if (nextBlockId) { // already loaded
               this.startId = this.parlistC.get(firstId).chainid;
+              this.$refs.blocks.forEach(($ref)=>{
+                $ref.addContentListeners();
+              })
               Vue.nextTick(()=>{
                 this.screenTop = this.screenTop + firstHeight;
               });
@@ -1065,6 +1075,9 @@ export default {
               this.loadBookDown(false, this.parlistC.get(lastId).chainid, 5)
               .then(()=>{
                 this.startId = this.parlistC.get(firstId).chainid;
+                  this.$refs.blocks.forEach(($ref)=>{
+                  $ref.addContentListeners();
+                })
                 Vue.nextTick(()=>{
                   this.screenTop = this.screenTop + firstHeight;
                 });
@@ -1110,22 +1123,16 @@ export default {
   mounted: function() {
       //this.onScrollBookDown();
 
-      console.log('mounted', this.meta._id);
+      console.log('book mounted', this.meta._id);
 
       //this.upScreenTop = -85;
       //this.downScreenTop = this.$refs.contentScrollWrapRef.getBoundingClientRect().height;
 
       if (this.meta._id) {
-        this.loadBookDown()
+        this.loadBookDown();
       } else {
         /*setTimeout(()=>{*/
-          this.loadBookMeta()
-          .then(()=>{
-            if (this.parlist.length == 0) {
-              this.loadBookDown();
-              this.tc_loadBookTask();
-            }
-          })
+          this.loadBookMeta();
       }
 
       window.addEventListener('keydown', this.eventKeyDown);
@@ -1175,6 +1182,7 @@ export default {
       handler(newVal, oldVal) {
         console.log('meta._id', newVal, oldVal);
         if (newVal) {
+          this.tc_loadBookTask();
           this.loadBookDown();
         }
       }
