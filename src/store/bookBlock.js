@@ -104,9 +104,11 @@ class BookBlock {
     this.audiosrc_ver = init.audiosrc_ver || {};
 
     this.isUpdated = false;
-    this.isChanged = false;
-    this.checkedStart = false;
-    this.checkedEnd = false;
+    this.isChanged = init.isChanged || false;
+    this.isAudioChanged = init.isAudioChanged || false;
+    this.isIllustrationChanged = init.isIllustrationChanged || false;
+    this.checkedStart = init.checkedStart || false;
+    this.checkedEnd = init.checkedEnd || false;
 
     this.history = {};
   }
