@@ -502,43 +502,46 @@ export default {
           if (f.audiosrc) {
             f.audiosrc = process.env.ILM_API + f.audiosrc +'?'+ (new Date()).toJSON();
           }*/
-        let oldBlock = this.parlist.get(change.doc._id);
-        let updField = change.updField || false;
-        if (oldBlock) {
-          if (change.deleted === true) {
-            this.parlist.delete(change.doc._id);
+      let oldBlock = this.parlist.get(change.doc._id);
+      let updField = change.updField || false;
+      if (oldBlock) {
+        if (change.deleted === true) {
+          this.parlist.delete(change.doc._id);
+        } else {
+          if (oldBlock.partUpdate) {
+            oldBlock._rev = change.doc._rev;
+            this.parlist.set(change.doc._id, new BookBlock(oldBlock));
+            this.refreshTmpl();
+          } else if (updField) {
+            //console.log('updField', updField, change.doc[updField], oldBlock[updField]);
+            oldBlock[updField] = change.doc[updField];
+            oldBlock._rev = change.doc._rev;
+            this.parlist.set(change.doc._id, new BookBlock(oldBlock));
+            this.refreshTmpl();
           } else {
-            if (oldBlock.partUpdate) {
-              oldBlock._rev = change.doc._rev;
-              this.parlist.set(change.doc._id, new BookBlock(oldBlock));
-              this.refreshTmpl();
-            } else if (updField) {
-              //console.log('updField', updField, change.doc[updField], oldBlock[updField]);
-              oldBlock[updField] = change.doc[updField];
-              oldBlock._rev = change.doc._rev;
-              this.parlist.set(change.doc._id, new BookBlock(oldBlock));
-              this.refreshTmpl();
-            } else {
-              let ref = this.$refs.blocks.find(r => {
-                return r && r.block && r.block._id === change.doc._id;
-              });
-              let newBlock = new BookBlock(change.doc);
-              if (ref && (ref.isChanged || ref.isAudioChanged || ref.isIllustrationChanged)) {
-                if (oldBlock.status && newBlock.status && oldBlock.status.assignee === newBlock.status.assignee) {
-                  oldBlock._rev = change.doc._rev;
-                } else {
-                  ref.isChanged = false;
-                  ref.isAudioChanged = false;
-                  ref.isIllustrationChanged = false;
-                  this.parlist.set(change.doc._id, newBlock);
-                }
+            let ref = this.$refs.blocks.find(r => {
+              return r && r.block && r.block._id === change.doc._id;
+            });
+            let newBlock = new BookBlock(change.doc);
+            if (ref && (ref.isChanged || ref.isAudioChanged || ref.isIllustrationChanged)) {
+              if (oldBlock.status && newBlock.status && oldBlock.status.assignee === newBlock.status.assignee) {
+                oldBlock._rev = change.doc._rev;
               } else {
-                this.parlist.set(change.doc._id, new BookBlock(change.doc));
-                this.refreshTmpl();
+                ref.isChanged = false;
+                ref.isAudioChanged = false;
+                ref.isIllustrationChanged = false;
+                this.parlist.set(change.doc._id, newBlock);
               }
+            } else {
+              this.parlist.set(change.doc._id, new BookBlock(change.doc));
+              this.refreshTmpl();
             }
           }
         }
+      }
+      this.$refs.blocks.forEach(($ref)=>{
+        $ref.addContentListeners();
+      })
       this.initRecorder();
       this.reCountProxy();
     },
@@ -758,7 +761,7 @@ export default {
     },
 
     deleteBlock(block, block_Idx) {
-      console.log('deleteBlock', block._id);
+      //console.log('deleteBlock', block._id);
       this.freeze('deleteBlock');
       this.getBlockByChainId(block._id)
       .then((blockBefore)=>{
@@ -780,6 +783,7 @@ export default {
               return err;
             })
           } else {
+            this.startId = block.chainid;
             this.setMetaData({ key: 'startBlock_id', value: block.chainid})
             .then((response)=>{
               //this.blockReindexProcess = false
