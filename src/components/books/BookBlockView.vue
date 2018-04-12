@@ -133,7 +133,7 @@
                   </label><!-- &nbsp;&nbsp;{{block.getClass()}}-->
                     <template v-if="allowVoiceworkChange()">
                       <label>Voicework:&nbsp;
-                      <select v-model='voiceworkSel' style="min-width: 100px;" ref="voiceworkSel">
+                      <select v-model='voiceworkSel' style="min-width: 100px;">
                         <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
                       </label>
@@ -335,7 +335,7 @@
                     <li @click="addFootnote">Add footnote</li>
                     <li class="separator"></li>
                   </template>
-                  <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')">Flag for Editing</li>
+                  <li v-if="true || isCanFlag('editor')" @click="addFlag($event, 'editor')">Flag for Editing</li>
                   <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')">Flag for Narration</li>
                   <template v-if="!range.collapsed && blockAudio.src">
                     <li class="separator"></li>
@@ -363,7 +363,7 @@
                     <template v-if="allowEditing">
                       <template v-if="tc_hasTask('content_cleanup')">
                         <label>Voicework:&nbsp;
-                        <select v-model='footnote.voicework' style="min-width: 100px;" ref="footnVoiceworkSel" @input="commitFootnote(ftnIdx, $event, 'voicework')">
+                        <select v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                           <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                         </select>
                         </label>
@@ -646,6 +646,7 @@ export default {
           return this.block.voicework;
         },
         set(val) {
+          console.log('voiceworkSel set', val);
           if (val && val !== this.block.voicework) {
             if (this._is('editor', true)) {
               this.voiceworkChange = val;
@@ -823,14 +824,16 @@ export default {
         }
       }
 
-      this.voiceworkSel = this.block.voicework;
+      //this.voiceworkSel = this.block.voicework;
       this.isChanged = this.block.isChanged;
+      this.isAudioChanged = this.block.isAudioChanged;
+      this.isIllustrationChanged = this.block.isIllustrationChanged;
       //this.detectMissedFlags();
 
-        //console.log('mounted', this.block._id);
-        this.destroyEditor();
-        this.initEditor();
-        this.addContentListeners();
+      //console.log('mounted', this.block._id);
+      this.destroyEditor();
+      this.initEditor();
+      this.addContentListeners();
 
 
 //       Vue.nextTick(() => {
@@ -2385,6 +2388,7 @@ export default {
             this.voiceworkUpdating = false;
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
+              response.data.updField = 'voicework';
               this.$root.$emit('bookBlocksUpdates', response.data);
               //this.setCurrentBookBlocksLeft(this.block.bookid);
             }
@@ -2652,10 +2656,12 @@ export default {
       'isAudioChanged': {
         handler(val) {
           if (val) {
-            this.pushChange('audio');
+            this.pushChange('audio');  //TODO ask !
+            //this.voiceworkSel('audio');
           } else {
             this.unsetChange('audio');
           }
+          this.block.isAudioChanged = val;
         }
       },
       'isIllustrationChanged': {
@@ -2665,6 +2671,7 @@ export default {
           } else {
             this.unsetChange('illustration');
           }
+          this.block.isIllustrationChanged = val;
         }
       },
       'block.content': {
