@@ -522,17 +522,17 @@ export const store = new Vuex.Store({
             })
         });
 
-        state.contentDB.replicate.from(state.contentRemoteDB)
-        .on('complete', (info)=>{
-            state.contentDBcomplete = true;
-            state.contentDB.sync(state.contentRemoteDB, {live: true, retry: true})
-            .on('change', (change)=>{
-                //console.log('contentDB change', change);
-            })
-            .on('error', (err)=>{
-              // handle errors
-            })
-        });
+//         state.contentDB.replicate.from(state.contentRemoteDB)
+//         .on('complete', (info)=>{
+//             state.contentDBcomplete = true;
+//             state.contentDB.sync(state.contentRemoteDB, {live: true, retry: true})
+//             .on('change', (change)=>{
+//                 //console.log('contentDB change', change);
+//             })
+//             .on('error', (err)=>{
+//               // handle errors
+//             })
+//         });
 
         state.tasksDB.replicate.from(state.tasksRemoteDB)
         .on('complete', (info) => {

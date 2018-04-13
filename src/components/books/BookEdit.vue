@@ -209,6 +209,7 @@ export default {
 
     lazyLoad(firstId = false, lastId = false)
     {
+      console.log('lazyLoad');
       //console.log('parlist', Array.from(this.parlist.keys()));
       //console.log('lazyLoaderDir1', firstId, lastId);
 
@@ -273,34 +274,32 @@ export default {
       //this.freeze('loadBookDown');
 
       if (checkRoute && this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
-//         if (this.$route.params.block == 'unresolved') {
+          let routeBlockId = this.$route.params.block;
+
+          if (routeBlockId !== 'unresolved' && this.parlist.has(routeBlockId)) {
+            this.startId = routeBlockId;
+            this.screenTop = 0;
+            this.lazyLoad();
+            return Promise.resolve(routeBlockId);
+            //this.lazyLoad(false, lastId);
+          }
+
           this.freeze('loadBookDown');
-          console.log('loadBookDown getBloksUntil', this.$route.params.block, this.$route.params.task_type);
-          return this.getBloksUntil(this.$route.params.block, this.$route.params.task_type)
+          return this.getBloksUntil(routeBlockId, this.$route.params.task_type)
             .then(blockId=>{
-            console.log('this.getBloksUntil blockId', blockId);
-            if (this.$route.params.block == 'unresolved') {
+            if (routeBlockId == 'unresolved') {
               this.$router.push({name: this.$route.name, params:  {}});
             }
             this.unfreeze('loadBookDown');
             /*if (this.startId === false) */this.startId = blockId; // first load
             //let lastId = res.rows[res.rows.length-1]._id;
             //this.lazyLoad(this.startId, lastId);
-            return Promise.resolve(res);
+            this.lazyLoad();
+            return Promise.resolve(blockId);
           }).catch(err=>{
+            console.log('loadBookDown->getBloksUntil Error:', err);
             this.unfreeze('loadBookDown'); return err;
           });
-/*
-        } else {
-
-          this.freeze('loadBookDown');
-          this.getBlocks(false, this.$route.params.block)
-          .then(res=>{
-            this.unfreeze('loadBookDown'); return res;
-          }).catch(err=>{
-            this.unfreeze('loadBookDown'); return err;
-          });
-        }*/
 
       } else {
         startId = startId || this.meta.startBlock_id;
@@ -387,10 +386,11 @@ export default {
 
     getBloksUntil (startId, task_type = null)
     {
-      console.log('getBloksUntil', startId, task_type);
-      console.log('this.tc_tasksByBlock', this.tc_tasksByBlock);
+      //console.log('getBloksUntil', startId, task_type);
+      //console.log('this.tc_tasksByBlock', this.tc_tasksByBlock);
 
       return new Promise((resolve, reject)=>{
+
         if (task_type && task_type !== 'text-cleanup' && task_type !== 'master-audio') {
           if (!Object.keys(this.tc_tasksByBlock).length) {
             return reject();
@@ -405,15 +405,16 @@ export default {
         }
 
         let found = false;
+        let crossId = (startId === 'unresolved') ? this.startId : this.meta.startBlock_id;
 
-        let crossId = this.startId;
-        if (this.parlist.size) for (var idx=0; idx < this.parlist.size; idx++)
-        {
-          let block = this.parlist.get(crossId);
-          crossId = block.chainid;
-
-          switch(startId) {
-            case 'unresolved': {
+        switch(startId) {
+          case 'unresolved': {
+          if (this.parlist.size > 0) {
+            for (var idx=1; idx < this.parlist.size; idx++)
+            {
+              let block = this.parlist.get(crossId);
+              if (!block) break;
+              crossId = block.chainid;
               if (this.tc_hasTask('metadata_cleanup') || this.tc_hasTask('audio_mastering'))
               {
                 if (!found && !block.markedAsDone && (!block.status || !block.status.proofed))
@@ -427,16 +428,16 @@ export default {
                   found = block._id;
                 }
               }
-            } break;
-            default : {
-              if (!found && block._id === startId) found = block._id;
-            } break;
-          }
+              if (found) break;
+            };
+          };
 
-          if (found) break;
-        };
+          } break;
+          default : {
+            if (this.parlist.has(startId)) found = startId;
+          } break;
+        }
 
-        console.log('found', found);
         if (found) {
           return resolve(found);
         } else
@@ -465,7 +466,7 @@ export default {
                 }
 
                 this.getBlocks(result.blockId)
-                .then(res=>{
+                .then((res)=>{
                   let lastId = res.rows[res.rows.length-1]._id;
                   this.lazyLoad(this.startId || this.meta.startBlock_id, lastId);
                   return resolve(result.blockId);
@@ -479,9 +480,9 @@ export default {
             } break;
             default : {
               this.getBlocks(startId)
-              .then(res=>{
+              .then((res)=>{
                 return resolve(startId);
-              }).catch(err=>{
+              }).catch((err)=>{
                 return reject(err);
               });
             } break;
@@ -539,7 +540,7 @@ export default {
           }
         }
       }
-      this.$refs.blocks.forEach(($ref)=>{
+      if (this.$refs.blocks) this.$refs.blocks.forEach(($ref)=>{
         $ref.addContentListeners();
       })
       this.initRecorder();
@@ -1207,7 +1208,6 @@ export default {
 
       this.$root.$on('bookBlocksUpdates', (data) => {
         //this._updateBlocksFromResponse(data);
-        console.log('1');
         let updField = data.updField || false;
         if (Array.isArray(data.blocks)) data.blocks.forEach((res)=>{
           this.refreshBlock({doc: res, deleted: res.deleted || false, updField: updField});
@@ -1230,7 +1230,6 @@ export default {
         if (newVal) {
           this.tc_loadBookTask()
           .then(()=>{
-            //console.log('a3');
             this.loadBookDown(true);
           });
         }
@@ -1242,7 +1241,7 @@ export default {
       }
     },
     '$route' (toRoute, fromRoute) {
-      console.log('$route', toRoute, fromRoute);
+      //console.log('$route', toRoute, fromRoute);
       if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
         //this.getBloksUntil(this.$route.params.block, this.$route.params.task_type)
         this.loadBookDown(true)
