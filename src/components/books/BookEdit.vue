@@ -124,7 +124,6 @@ export default {
       downScreenTop: 0,
       screenTop: 0,
 
-      lazyLoader: null,
       lazyLoaderDir: 'up',
       isNeedUp: true,
       isNeedDown: true,
@@ -218,8 +217,7 @@ export default {
 
       //console.log('lazyLoaderDir2', this.lazyLoaderDir, this.isNeedUp, this.isNeedDown);
 
-      if (this.isBlocked && this.lazyLoader) clearTimeout(this.lazyLoader);
-      if (!this.isBlocked && (this.isNeedUp || this.isNeedDown)) this.lazyLoader = setTimeout(()=>{
+      if (!this.isBlocked && (this.isNeedUp || this.isNeedDown)) {
         switch(this.lazyLoaderDir) {
           case 'down' : {
             if (this.isNeedDown)
@@ -228,7 +226,7 @@ export default {
               this.getBlocks(lastId, 1)
               .then((result)=>{
                 if (this.isNeedUp) this.lazyLoaderDir = 'up';
-                this.isNeedDown = this.parlist.get(result.blockId).chainid;
+                if (this.isNeedDown) this.isNeedDown = this.parlist.get(result.blockId).chainid;
                 this.lazyLoad();
               }).catch(()=>{
                 if (this.isNeedUp) this.lazyLoaderDir = 'up';
@@ -251,7 +249,7 @@ export default {
               this.getBlocksUp(firstId, 1)
               .then((result)=>{
                 if (this.isNeedDown) this.lazyLoaderDir = 'down';
-                this.isNeedUp = result.blockId;
+                if (this.isNeedUp) this.isNeedUp = result.blockId;
                 this.lazyLoad();
               }).catch(()=>{
                 if (this.isNeedDown) this.lazyLoaderDir = 'down';
@@ -266,7 +264,7 @@ export default {
         };
 
         //this.lazyLoad();
-      }, 10);
+      };
     },
 
     loadBookDown(checkRoute = false, startId = false, onPage = 10) {
@@ -1205,7 +1203,6 @@ export default {
     this.setRangeSelection({}, 'end', false);
     this.isNeedUp = false;
     this.isNeedDown = false;
-    /*if (this.lazyLoader) */clearTimeout(this.lazyLoader);
     this.$root.$off('bookBlocksUpdates');
     this.$root.$off('for-bookedit:scroll-to-block');
     this.$root.$off('book-reimported');
