@@ -27,8 +27,8 @@
           <i :class="['fa', 'fa-search-minus', {'disabled': !allowZoomOut}]" v-on:click="zoomOut()"></i>
         </div>
         <div class="selection-controls">
-          <!-- {{origFilePositions}}
-          {{selection}} -->
+          <div class="hidden">{{origFilePositions}}
+            {{selection}}</div>
           <div v-if="selection.start >= 0">
             <div>Selection Start</div>
             <div>

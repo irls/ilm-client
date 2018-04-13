@@ -1267,6 +1267,9 @@ export default {
   }
   .recording-background {
       background-color: rgba(0,0,0,0.5);
+      div.completed {
+          background-color: inherit;
+      }
   }
   .recording-block {
       background-color: white;
