@@ -27,6 +27,8 @@
           <i :class="['fa', 'fa-search-minus', {'disabled': !allowZoomOut}]" v-on:click="zoomOut()"></i>
         </div>
         <div class="selection-controls">
+          <!-- {{origFilePositions}}
+          {{selection}} -->
           <div v-if="selection.start >= 0">
             <div>Selection Start</div>
             <div>
@@ -69,8 +71,18 @@
           <button class="btn btn-primary" v-on:click="save()">Save</button>
           <button class="btn btn-primary" v-on:click="saveAndRealign()">Save & Re-align</button>
         </div>
-        <div class="audio-controls" v-if="isModifiedComputed && mode == 'file'">
-          <button class="btn btn-primary" v-on:click="save()">Save</button>
+        <div class="audio-controls" v-if="mode == 'file'">
+          <button class="btn btn-default" :disabled="!isModifiedComputed" v-on:click="undo()">Undo</button>
+          <button class="btn btn-primary" v-on:click="save()" :disabled="!isModifiedComputed">Save</button>
+          <button class="btn btn-primary" :disabled="!allowAlignSelection" v-on:click="align()">Align</button>
+          <span v-if="!hasAlignSelection" class="red-message">Define block range</span>
+          <template v-else>
+            <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blocksForAlignment.start._id)">Start {{blocksForAlignment.start._id}}</a>
+            <span v-else class="red-message">Define Start</span>
+            <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blocksForAlignment.end._id)">End {{blocksForAlignment.end._id}}</a>
+            <span v-else class="red-message">Define End</span>
+            <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message">({{selectionBlocksToAlign}} blocks)</span>
+          </template>
         </div>
       </div>
     </div>
@@ -414,7 +426,7 @@
               } else if(end > self.audiosourceEditor.activeTrack.duration) {
                 self.plEventEmitter.emit('select', start, self.audiosourceEditor.activeTrack.duration);
               } else {
-                self.selection = {start: start, end: end}
+                self.selection = {start: self._round(start, 2), end: self._round(end, 2)}
               }
             });
             $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>').after('<div id="context-position" class="context-position"></div>');
@@ -476,13 +488,16 @@
             })
             this.hideModal('onDiscardMessage');
             if (this.mode == 'file') {
+              if (bookAudiofile && bookAudiofile.positions) {
+                this.origFilePositions = bookAudiofile.positions;
+              } else {
+                this.origFilePositions = {start: 0, end: parseInt(this.audiosourceEditor.duration)}
+              }
               if (!this._setBlocksSelection()) {
                 if (bookAudiofile && bookAudiofile.positions) {
-                  this.origFilePositions = bookAudiofile.positions;
                   this.plEventEmitter.emit('select', bookAudiofile.positions.start, bookAudiofile.positions.end);
                 } else {
                   this.plEventEmitter.emit('select', 0, parseInt(this.audiosourceEditor.duration));
-                  this.origFilePositions = {start: 0, end: parseInt(this.audiosourceEditor.duration)}
                 }
                 this._showSelectionBorders();
               }
@@ -724,6 +739,18 @@
             this.origFilePositions = this.selection;
           }
         },
+        align() {
+          if (this.mode === 'file') {
+            if (this.allowAlignSelection) {
+              let save_selection = null;
+              if (this.isModifiedComputed) {
+                this.origFilePositions = this.selection;
+                save_selection = this.selection;
+              }
+              this.$root.$emit('from-audioeditor:align', this.audiofileId, save_selection);
+            }
+          }
+        },
         saveAndRealign() {
           if (this.isModified) {
             this.$root.$emit('from-audioeditor:save-and-realign', this.blockId);
@@ -735,13 +762,21 @@
           this.isModified = true;
         },
         undo() {
-          let record = this._popHistory();
-          if (this.history.length === 0 && this.isHistoryFull) {
-            this.isModified = false;
-          }
-          if (record) {
-            this.setAudio(record.audio, record.text, false);
-            this.$root.$emit('from-audioeditor:undo', this.blockId, record.audio, record.text, this.isModified);
+          if (this.mode === 'block') {
+            let record = this._popHistory();
+            if (this.history.length === 0 && this.isHistoryFull) {
+              this.isModified = false;
+            }
+            if (record) {
+              this.setAudio(record.audio, record.text, false);
+              this.$root.$emit('from-audioeditor:undo', this.blockId, record.audio, record.text, this.isModified);
+            }
+          } else if (this.mode === 'file') {
+            if (this.origFilePositions) {
+              this.selection = this.origFilePositions;
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              this._showSelectionBorders();
+            }
           }
         },
         discard() {
@@ -1015,19 +1050,19 @@
             if (this.blocksForAlignment.start && this.blocksForAlignment.start._id && this.blockMap[this.blocksForAlignment.start._id]) {
               start = parseInt(this.blockMap[this.blocksForAlignment.start._id][0])/1000;
               if (!this.blocksForAlignment.end || !this.blocksForAlignment.end._id || !this.blockMap[this.blocksForAlignment.end._id]) {
-                end = parseInt(this.blockMap[this.blocksForAlignment.start._id][1])/1000;
+                end = this.selection.end;//parseInt(this.blockMap[this.blocksForAlignment.start._id][1])/1000;
               }
             }
             if (this.blocksForAlignment.end && this.blocksForAlignment.end._id && this.blockMap[this.blocksForAlignment.end._id]) {
               end = parseInt(this.blockMap[this.blocksForAlignment.end._id][1])/1000;
               if (!this.blocksForAlignment.start || !this.blocksForAlignment.start._id || !this.blockMap[this.blocksForAlignment.start._id]) {
-                start = parseInt(this.blockMap[this.blocksForAlignment.end._id][0])/1000;
+                start = this.selection.start;//parseInt(this.blockMap[this.blocksForAlignment.end._id][0])/1000;
               }
             }
             
             if (start !== false && end !== false && start < end) {
-              this.selection.start = start;
-              this.selection.end = end;
+              this.selection.start = this._round(start, 2);
+              this.selection.end = this._round(end, 2);
               this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
               this._showSelectionBorders(true);
               return true;
@@ -1059,7 +1094,7 @@
                   return;
                 }
               }
-              this.selection.start = start;
+              this.selection.start = this._round(start, 2);
               this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
               this._showSelectionBorders();
               this.contextPosition = null;
@@ -1076,7 +1111,7 @@
               if (end < this.selection.start) {
                 this.selection.start = 0;
               }
-              this.selection.end = end;
+              this.selection.end = this._round(end, 2);
               //this.cursorPosition = this.selection.start;
               this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
               this._showSelectionBorders();
@@ -1086,6 +1121,12 @@
             }
           }
           this.contextPosition = null;
+        },
+        goToBlock(blockId, ev) {
+          this.$root.$emit('for-bookedit:scroll-to-block', blockId);
+          //console.log('goToBlock', blockId, this.$route.name);
+          //this.$router.push({name: this.$route.name, params: {}});
+          //this.$router.push({name: this.$route.name, params:  { block: blockId }});
         }
       },
       computed: {
@@ -1183,6 +1224,38 @@
             } else if (this.mode == 'block') {
               return this.isModified;
             }
+          },
+        },
+        hasAlignSelection: {
+          get() {
+            return (this.blocksForAlignment.start && this.blocksForAlignment.start._id) || 
+                    (this.blocksForAlignment.end && this.blocksForAlignment.end._id)
+          }
+        },
+        hasAlignSelectionStart: {
+          get() {
+            return this.blocksForAlignment.start && this.blocksForAlignment.start._id;
+          }
+        },
+        hasAlignSelectionEnd: {
+          get() {
+            return this.blocksForAlignment.end && this.blocksForAlignment.end._id;
+          }
+        },
+        allowAlignSelection: {
+          get() {
+            return this.blocksForAlignment.start && this.blocksForAlignment.start._id && 
+                    this.blocksForAlignment.end && this.blocksForAlignment.end._id && 
+                    this.blocksForAlignment.count;
+          }
+        },
+        selectionBlocksToAlign: {
+          get() {
+            if (this.blocksForAlignment) {
+              let blocks = this.blocksForAlignment.count - this.blocksForAlignment.countTTS;
+              return blocks >=0 ? blocks : 0;
+            }
+            return 0;
           }
         },
         ...mapGetters(['currentBookMeta'])
@@ -1270,6 +1343,21 @@
   }
   .waveform-playlist {
     background-color: #d9d9d9;
+    .blue-message {
+        color: blue;
+        display: inline-block;
+        padding: 1px 3px;
+    }
+    a.blue-message {
+        font-weight: bold;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    .red-message {
+        color: red;
+        display: inline-block;
+        padding: 1px 3px;
+    }
   }
   .wf-playlist {
     min-height: 100px;

@@ -12,9 +12,14 @@
             <div class="delete-audio">
               <button class="btn btn-danger btn-small" :disabled="selectionLength == 0 || !_is('editor')" v-on:click="deleteAudio()">Delete<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
             </div>
-            <div class="unselect-audio">
-              <button class="btn btn-default btn-small" :disabled="selectionLength == 0" v-on:click="checkAll(null, false)">Unselect<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
-            </div>
+            <dropdown text="Mark" type="default" :disabled="selectionLength == 0" ref="allAudioDropdown" class="all-audio-dropdown">
+                <li>
+                  <span v-on:click="markSelected()" class="mark-done">Mark done</span>
+                </li>
+                <li>
+                  <span v-on:click="unmarkSelected()">Mark pending</span>
+                </li>
+            </dropdown>
 
             <div class="">
               <input type="checkbox" v-model="checkAllState"/>
@@ -29,7 +34,7 @@
                   </div>
                 </template>
                 <template v-else>
-                  <div :class="['audiofile-info', {'playing': playing == audiofile.id}]">
+                  <div :class="['audiofile-info', {'playing': playing == audiofile.id, done: audiofile.done}]">
                     <div class="audiofile-player-controls">
                       <i class="fa fa-play-circle-o" v-on:click="play(audiofile.id, true)"></i>
                       <!-- <i class="fa fa-play-circle-o red" v-on:click="play()" v-if="paused === audiofile.id"></i>
@@ -37,7 +42,9 @@
                       <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
                     </div>
                     <div class="audiofile-name">
-                      <span v-if="renaming !== audiofile.id" class="audiofile-name-edit" @click="play(audiofile.id, false)"  :title="audiofile.name">{{audiofile.name}}</span>
+                      <span v-if="renaming !== audiofile.id" 
+                            :class="['audiofile-name-edit']" 
+                            @click="play(audiofile.id, false)"  :title="audiofile.name">{{audiofile.name}}</span>
                       <input type="text" v-model="audiofile.name" class="audiofile-name-edit"
                            @focusout="saveAudiobook()"
                            v-else />
@@ -45,8 +52,18 @@
                     <div class="audiofile-duration"><span>({{ parseAudioLength(audiofile.duration) }})</span></div>
                   </div>
                   <div class="audiofile-options">
-                    <input type="checkbox" :name="audiofile.id" @change="addSelection(audiofile.id, $event)"/>
+                    <input type="checkbox" 
+                           :name="audiofile.id" 
+                           :checked="selections.indexOf(audiofile.id) !== -1"
+                           @click="addSelection(audiofile.id, $event)"
+                           />
                     <dropdown text="..." type="default">
+                      <li><i class="fa fa-check"></i>
+                        <a v-on:click="mark(audiofile.id)">Mark done</a>
+                      </li>
+                      <li><i class="fa fa-minus"></i>
+                        <a v-on:click="unmark(audiofile.id)">Mark pending</a>
+                      </li>
                       <li><i class="fa fa-pencil"></i>
                         <a v-on:click="renameAudiofile(audiofile.id)">Rename</a>
                       </li>
@@ -61,15 +78,7 @@
           </div>
         </div>
         <div>
-          <p v-if="hasBlocksForAlignment">
-            {{blocksForAlignment.count}} blocks in range: <a class="go-to-block" v-on:click="scrollToBlock(blocksForAlignment.start._id)">{{blocksForAlignment.start._id}}</a> - <a class="go-to-block" v-on:click="scrollToBlock(blocksForAlignment.end._id)">{{blocksForAlignment.end._id}}</a> need audio
-          </p>
-          <div class="pull-left" v-if="hasBlocksForAlignment && !enableAlignment">
-            <span class="red">Select audio</span>
-          </div>
-          <div class="pull-right align-process-start">
-            <button v-if="!alignmentProcess" class="btn btn-default" :disabled="!enableAlignment" v-on:click="align()">Align with text</button>
-          </div>
+          
         </div>
       </panel>
       <panel :is-open="false" :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
@@ -230,6 +239,24 @@
           self.saveAudiobook();
         }
       });
+      this.$root.$on('from-audioeditor:align', function(id, selections = null) {
+        
+        let record = self.audiobook.importFiles.find(_f => {
+          return _f.id == id;
+        });
+        if (record) {
+          if (selections) {
+            record.positions = selections;
+            self.saveAudiobook()
+              .then(() => {
+                self.align(id);
+              })
+              .catch(err => console.log(err));
+          } else {
+            self.align(id);
+          }
+        }
+      });
       this.$root.$on('from-audioeditor:discard', function() {
         let record = self.audiobook.importFiles.find(f => {
           return f.id == self.playing;
@@ -267,18 +294,20 @@
         formData.append('reorder', JSON.stringify(reorder));
         let api = this.$store.state.auth.getHttp()
         let self = this;
-        api.post(api_url, formData, {}).then(function(response){
+        return api.post(api_url, formData, {}).then(function(response){
           if (response.status===200) {
             self.$emit('audiobookUpdated', response.data);
           } else {
 
           }
+          return Promise.resolve();
         }).catch((err) => {
           console.log('error: '+ err)
+          return Promise.reject();
         });
       },
       addSelection(id, event, value) {
-
+        
         if (event && event.target) {
           value = event.target.checked;
         }
@@ -389,7 +418,7 @@
         }
         return l.join(':')
       },
-      align() {
+      align(id = null) {
         let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/selection_alignment';
         let formData = new FormData();
         let api = this.$store.state.auth.getHttp()
@@ -400,7 +429,7 @@
         api.post(api_url, {
           start: this.blocksForAlignment.start._id,
           end: this.blocksForAlignment.end._id,
-          audiofiles: this.selections,
+          audiofiles: id ? [id] : this.selections,
           realign: realign
         }, {
           validateStatus: function (status) {
@@ -564,11 +593,41 @@
           this.saveAudiobook([[info.oldIndex, info.newIndex]]);
         }
       },
+      markSelected() {
+        this._setDone(true);
+        this.$refs.allAudioDropdown.toggle();
+      },
+      unmarkSelected() {
+        this._setDone(false);
+        this.$refs.allAudioDropdown.toggle();
+      },
+      mark(id) {
+        this._setDone(true, [id]);
+      },
+      unmark(id) {
+        this._setDone(false, [id]);
+      },
+      _setDone(done, ids = []) {
+        if (!ids.length) {
+          ids = this.selections;
+        }
+        if (ids.length) {
+          ids.forEach(id => {
+            this.audiobook.importFiles.forEach((f, i) => {
+              if (f.id === id) {
+                this.audiobook.importFiles[i].done = done;
+              }
+            });
+          });
+          this.saveAudiobook();
+        }
+      },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
+      this.$root.$off('from-audioeditor:align');
     },
     computed: {
       selectionLength: {
@@ -611,7 +670,7 @@
       'audiobook': {
         handler(val, oldVal) {
           if (val && oldVal && val._id != oldVal._id) {
-            this.checkAllState = false;
+            //this.checkAllState = false;
             return;
           }
           //console.log('Audiobook changed');
@@ -798,6 +857,9 @@
               color: maroon;
             }
           }
+          &.done {
+              color: green;
+          }
         }
         .audiofile-options {
           display: inline-block;
@@ -807,9 +869,9 @@
             }
           }
           ul.dropdown-menu {
-              margin-left: -35px;
-              min-width: 80px;
-              max-width: 80px;
+              margin-left: -56px;
+              min-width: 97px;
+              max-width: 97px;
           }
         }
         button {
@@ -826,6 +888,9 @@
               &.fa-trash {
                   color: red;
               }
+              &.fa-check {
+                  color: green;
+              }
           }
           li {
               font-size: 12px;
@@ -841,6 +906,20 @@
         input[disabled] {
             background-color: inherit;
             border: none;
+        }
+      }
+    }
+    .all-audio-dropdown {
+      margin: 0px 10px;
+      ul {
+        span {
+          display: inline-block;
+          width: 100%;
+          padding: 2px 12px;
+          cursor: pointer;
+          &.mark-done {
+            color: green;
+          }
         }
       }
     }

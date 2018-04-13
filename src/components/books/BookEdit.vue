@@ -1134,24 +1134,8 @@ export default {
     },
 
     scrollToBlock(id, position = 'top') {
-      let domObj = document.getElementById(id);
-      if (domObj) {
-        this.scrollTop = 0;
-        Vue.nextTick(()=>{
-          let offset = document.getElementById(id).getBoundingClientRect().y;
-          let currTop = this.$refs.contentScrollRef.getBoundingClientRect().y;
-          //console.log('offset', offset, 'currTop', currTop, 'diff', offset - currTop);
-          currTop = offset - currTop;
-          switch (position) {
-          case 'middle': {
-              let wrapRect = this.$refs.contentScrollWrapRef.getBoundingClientRect();
-              currTop -= (wrapRect.height/2 - wrapRect.y);
-            } break;
-            default: {} break;
-          }
-          this.scrollTop = -(currTop);
-        });
-      }
+      this.screenTop = 0;
+      this.startId = id;
     }
 
   },
