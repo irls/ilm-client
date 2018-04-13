@@ -989,13 +989,16 @@ export default {
 
     },
     setBlockWatch() {
-      this.watchBlocks({book_id: this.meta._id})
+      //console.log('!!! setBlockWatch');
+      setTimeout(()=>{
+        this.watchBlocks({book_id: this.meta._id})
         .then(()=>{
           this.watchBlk.on('change', (change) => {
               this.$root.$emit('blockChange', change.doc);
               this.refreshBlock(change);
           });
         });
+      }, 1000);
     },
     scrollContent(ev)
     {
@@ -1151,14 +1154,17 @@ export default {
       //this.downScreenTop = this.$refs.contentScrollWrapRef.getBoundingClientRect().height;
 
       if (this.meta._id) {
-        this.loadBookDown(true);
+        this.loadBookDown(true)
+        .then(()=>{
+          this.setBlockWatch()
+        });
       } else {
         /*setTimeout(()=>{*/
           this.loadBookMeta();
       }
 
       window.addEventListener('keydown', this.eventKeyDown);
-      this.setBlockWatch();
+
       this.initRecorder();
       window.onscroll = function() {
         $('#narrateStartCountdown').css('top', document.scrollingElement.scrollTop + 'px');
@@ -1177,7 +1183,10 @@ export default {
           this.tc_loadBookTask()
           .then(()=>{
             this.startId = false;
-            this.loadBookDown(false, false, 10);
+            this.loadBookDown(false, false, 10)
+            .then(()=>{
+              this.setBlockWatch()
+            });
           });
         })
 
@@ -1214,7 +1223,10 @@ export default {
         if (newVal) {
           this.tc_loadBookTask()
           .then(()=>{
-            this.loadBookDown(true);
+            this.loadBookDown(true)
+            .then(()=>{
+              this.setBlockWatch()
+            });
           });
         }
       }
@@ -1230,7 +1242,7 @@ export default {
         //this.getBloksUntil(this.$route.params.block, this.$route.params.task_type)
         this.loadBookDown(true)
         .then((blockId)=>{
-          //this.scrollToBlock(blockId, 'middle');
+          this.setBlockWatch()
         });
       }
     },
