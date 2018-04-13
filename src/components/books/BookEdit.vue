@@ -1203,6 +1203,9 @@ export default {
     window.removeEventListener('keydown', this.eventKeyDown);
     this.setRangeSelection({}, 'start', false);
     this.setRangeSelection({}, 'end', false);
+    this.isNeedUp = false;
+    this.isNeedDown = false;
+    /*if (this.lazyLoader) */clearTimeout(this.lazyLoader);
     this.$root.$off('bookBlocksUpdates');
     this.$root.$off('for-bookedit:scroll-to-block');
     this.$root.$off('book-reimported');
