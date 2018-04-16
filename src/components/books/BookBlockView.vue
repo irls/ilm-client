@@ -699,9 +699,17 @@ export default {
         if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
           return true;
         }
+        let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
+        if (this.block.footnotes) {
+          this.block.footnotes.forEach(f => {
+            if (f.voicework === 'tts' && !f.audiosrc) {
+              disable_audio = true;
+            }
+          });
+        }
         return this.block.markedAsDone ||
                 (this.block.status && this.block.status.proofed === true) ||
-                !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
+                disable_audio;
       },
       isApproveDisabled: function () {
         if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
