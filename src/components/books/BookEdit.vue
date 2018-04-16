@@ -124,7 +124,6 @@ export default {
       downScreenTop: 0,
       screenTop: 0,
 
-      lazyLoader: null,
       lazyLoaderDir: 'up',
       isNeedUp: true,
       isNeedDown: true,
@@ -218,8 +217,7 @@ export default {
 
       //console.log('lazyLoaderDir2', this.lazyLoaderDir, this.isNeedUp, this.isNeedDown);
 
-      if (this.isBlocked && this.lazyLoader) clearTimeout(this.lazyLoader);
-      if (!this.isBlocked && (this.isNeedUp || this.isNeedDown)) this.lazyLoader = setTimeout(()=>{
+      if (!this.isBlocked && (this.isNeedUp || this.isNeedDown)) {
         switch(this.lazyLoaderDir) {
           case 'down' : {
             if (this.isNeedDown)
@@ -228,7 +226,7 @@ export default {
               this.getBlocks(lastId, 1)
               .then((result)=>{
                 if (this.isNeedUp) this.lazyLoaderDir = 'up';
-                this.isNeedDown = this.parlist.get(result.blockId).chainid;
+                if (this.isNeedDown) this.isNeedDown = this.parlist.get(result.blockId).chainid;
                 this.lazyLoad();
               }).catch(()=>{
                 if (this.isNeedUp) this.lazyLoaderDir = 'up';
@@ -251,7 +249,7 @@ export default {
               this.getBlocksUp(firstId, 1)
               .then((result)=>{
                 if (this.isNeedDown) this.lazyLoaderDir = 'down';
-                this.isNeedUp = result.blockId;
+                if (this.isNeedUp) this.isNeedUp = result.blockId;
                 this.lazyLoad();
               }).catch(()=>{
                 if (this.isNeedDown) this.lazyLoaderDir = 'down';
@@ -266,7 +264,7 @@ export default {
         };
 
         //this.lazyLoad();
-      }, 10);
+      };
     },
 
     loadBookDown(checkRoute = false, startId = false, onPage = 10) {
@@ -991,13 +989,16 @@ export default {
 
     },
     setBlockWatch() {
-      this.watchBlocks({book_id: this.meta._id})
+      //console.log('!!! setBlockWatch');
+      setTimeout(()=>{
+        this.watchBlocks({book_id: this.meta._id})
         .then(()=>{
           this.watchBlk.on('change', (change) => {
               this.$root.$emit('blockChange', change.doc);
               this.refreshBlock(change);
           });
         });
+      }, 1000);
     },
     scrollContent(ev)
     {
@@ -1153,14 +1154,17 @@ export default {
       //this.downScreenTop = this.$refs.contentScrollWrapRef.getBoundingClientRect().height;
 
       if (this.meta._id) {
-        this.loadBookDown(true);
+        this.loadBookDown(true)
+        .then(()=>{
+          this.setBlockWatch()
+        });
       } else {
         /*setTimeout(()=>{*/
           this.loadBookMeta();
       }
 
       window.addEventListener('keydown', this.eventKeyDown);
-      this.setBlockWatch();
+
       this.initRecorder();
       window.onscroll = function() {
         $('#narrateStartCountdown').css('top', document.scrollingElement.scrollTop + 'px');
@@ -1179,7 +1183,10 @@ export default {
           this.tc_loadBookTask()
           .then(()=>{
             this.startId = false;
-            this.loadBookDown(false, false, 10);
+            this.loadBookDown(false, false, 10)
+            .then(()=>{
+              this.setBlockWatch()
+            });
           });
         })
 
@@ -1203,6 +1210,8 @@ export default {
     window.removeEventListener('keydown', this.eventKeyDown);
     this.setRangeSelection({}, 'start', false);
     this.setRangeSelection({}, 'end', false);
+    this.isNeedUp = false;
+    this.isNeedDown = false;
     this.$root.$off('bookBlocksUpdates');
     this.$root.$off('for-bookedit:scroll-to-block');
     this.$root.$off('book-reimported');
@@ -1214,7 +1223,10 @@ export default {
         if (newVal) {
           this.tc_loadBookTask()
           .then(()=>{
-            this.loadBookDown(true);
+            this.loadBookDown(true)
+            .then(()=>{
+              this.setBlockWatch()
+            });
           });
         }
       }
@@ -1230,7 +1242,7 @@ export default {
         //this.getBloksUntil(this.$route.params.block, this.$route.params.task_type)
         this.loadBookDown(true)
         .then((blockId)=>{
-          //this.scrollToBlock(blockId, 'middle');
+          this.setBlockWatch()
         });
       }
     },

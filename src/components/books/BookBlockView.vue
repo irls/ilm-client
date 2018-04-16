@@ -335,7 +335,7 @@
                     <li @click="addFootnote">Add footnote</li>
                     <li class="separator"></li>
                   </template>
-                  <li v-if="true || isCanFlag('editor')" @click="addFlag($event, 'editor')">Flag for Editing</li>
+                  <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')">Flag for Editing</li>
                   <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')">Flag for Narration</li>
                   <template v-if="!range.collapsed && blockAudio.src">
                     <li class="separator"></li>
