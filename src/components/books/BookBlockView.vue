@@ -2458,8 +2458,9 @@ export default {
         }
       },
       setContent() {
-        //console.log(this.$refs['block-html' + this.block._id])
+        //console.log('value', this.$refs['block-html' + this.block._id].value)
         this.block.content = this.$refs['block-html' + this.block._id].value;
+        this.$refs.blockContent.innerHTML = this.block.content;
         this.isChanged = true;
         this.hideModal('block-html');
       },

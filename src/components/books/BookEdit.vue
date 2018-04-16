@@ -289,9 +289,7 @@ export default {
               this.$router.push({name: this.$route.name, params:  {}});
             }
             this.unfreeze('loadBookDown');
-            /*if (this.startId === false) */this.startId = blockId; // first load
-            //let lastId = res.rows[res.rows.length-1]._id;
-            //this.lazyLoad(this.startId, lastId);
+            this.startId = blockId;
             this.lazyLoad();
             return Promise.resolve(blockId);
           }).catch(err=>{
