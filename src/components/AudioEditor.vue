@@ -423,7 +423,7 @@
                 self.plEventEmitter.emit('select', from, to);
               } else if (start < 0) {
                 self.plEventEmitter.emit('select', 0, end);
-              } else if(end > self.audiosourceEditor.activeTrack.duration) {
+              } else if(self.audiosourceEditor.activeTrack && end > self.audiosourceEditor.activeTrack.duration) {
                 self.plEventEmitter.emit('select', start, self.audiosourceEditor.activeTrack.duration);
               } else {
                 self.selection = {start: self._round(start, 2), end: self._round(end, 2)}
