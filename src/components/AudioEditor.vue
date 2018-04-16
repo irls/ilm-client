@@ -226,7 +226,7 @@
           }
           let changeZoomLevel = mode != this.mode;
           if ((this.blockId && this.blockId != blockId) || (mode == 'file' && reloadOnChange) || mode != this.mode) {
-            if (this.isModifiedComputed) {
+            if (this.isModifiedComputed && this.mode === 'block') {
               this.pendingLoad = arguments;
               this.showModal('onExitMessage');
               return;
@@ -566,15 +566,17 @@
           });
           if (self.mode == 'file') {
             let eventsTimer = setInterval(() => {
-              let ref = this.$refs.playlist.querySelector('.block-audio');
-              $(ref).on('click', (e) => {
-                clearInterval(eventsTimer);
-                if (e && e.target && e.target.className && e.target.className.indexOf('resize-selection') !== -1) {
-                  return;
-                }
-                this.cursorPosition = (e.offsetX) * this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate;
-                $('.cursor').css('left', e.offsetX);
-              })
+              if (this.$refs.playlist) {
+                let ref = this.$refs.playlist.querySelector('.block-audio');
+                $(ref).on('click', (e) => {
+                  clearInterval(eventsTimer);
+                  if (e && e.target && e.target.className && e.target.className.indexOf('resize-selection') !== -1) {
+                    return;
+                  }
+                  this.cursorPosition = (e.offsetX) * this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate;
+                  $('.cursor').css('left', e.offsetX);
+                })
+              }
             }, 500);
           }
         },
@@ -709,7 +711,7 @@
           return !this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0;
         },
         close() {
-          if (this.isModifiedComputed) {
+          if (this.isModifiedComputed && this.mode === 'block') {
             this.showModal('onExitMessage');
           } else {
             if (this.plEventEmitter) {
@@ -1320,6 +1322,23 @@
               $('#context-position').show();
             } else {
               $('#context-position').hide();
+            }
+          }
+        },
+        '$route' () {
+          if (this.$route.params.hasOwnProperty('bookid') && this.mode === 'block') {
+            if (!this.currentBookMeta || this.$route.path.indexOf(this.currentBookMeta._id + '/edit' === -1)) {
+              this._setDefaults();
+              this.close();
+            }
+          }
+        },
+        'currentBookMeta._id': {
+          handler(val, oldVal) {
+            if (this.mode === 'file') {
+              if (oldVal) {
+                this.close();
+              }
             }
           }
         }

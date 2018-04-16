@@ -2146,7 +2146,7 @@ export default {
                   self.pushChange('content_footnote');
                 }
               } else {
-                if (self.$refs.blockContent.querySelectorAll) {
+                if (self.$refs.blockContent && self.$refs.blockContent.querySelectorAll) {
                   self.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
                     let _m = map.shift();
                     let w_map = _m.join()
