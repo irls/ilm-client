@@ -114,10 +114,10 @@
             </tr>
             <tr>
               <td>
+                <button class="btn btn-default" v-if="selectedBook.status == 'published' || selectedBook.status == 'modified'" v-on:click="showModal('on-unpublish-modal')">Unpublish</button>
+                <button class="btn btn-default" v-if="selectedBook.status == 'new' || selectedBook.status == 'unpublished'" v-on:click="publish">Publish</button>
                 <button class="btn btn-default" v-on:click="showModal('on-remove-modal')">Remove</button>
-                <button class="btn btn-default" v-if="selectedBook.status == 'published'" v-on:click="showModal('on-unpublish-modal')">Unpublish</button>
-                <button class="btn btn-default" v-if="selectedBook.status == 'unpublished'" v-on:click="publish">Publish minor version</button>
-                <button class="btn btn-default" v-if="selectedBook.status == 'new'" v-on:click="publish">Publish</button>
+                <button class="btn btn-default" :disabled="selectedBook.status != 'modified'" v-on:click="publish">Publish minor version</button>
               </td>
             </tr>
           </table>
@@ -177,7 +177,7 @@
               <tr>
                 <td>Status</td>
                 <td>
-                  {{selectedBook.status}}
+                  {{selectedBookStatusLabel}}
                 </td>
               </tr>
               <tr>
@@ -651,7 +651,7 @@
                       book.version = ver[0] + '.' + (parseInt(ver[1]) + 1);
                     }
                   }
-                  book['status'] = 'unpublished';
+                  book['status'] = 'modified';
                 }
                 let update = {books: library.books};
                 return api.update(this.selectedLibrary._id, update).then(doc => {
@@ -971,6 +971,12 @@
           }
           return categoriesList.filter((e, i, l) => i === l.indexOf(e));
         },
+        selectedBookStatusLabel() {
+          if (this.selectedBook.status == 'published') {
+            return 'Published';
+          }
+          return 'Unpublished';
+        },
         ...mapGetters(['libraries', 'isAdmin', 'user'])
       },
       watch: {
@@ -1056,7 +1062,7 @@
           handler(val) {
             setTimeout(function() {
               $('.library-books-grid tr').each(function() {
-                if ($(this).find('span.status-new, span.status-unpublished').length) {
+                if ($(this).find('span.status-new, span.status-unpublished, span.status-modified').length) {
                   $(this).find('td').addClass('grayed-out');
                 } else {
                   $(this).find('td').removeClass('grayed-out');
