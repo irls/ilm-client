@@ -1306,7 +1306,7 @@ export default {
     bottom: 0px;
     border: 1px solid black;
     border-radius: 0px;
-    height: 185px;
+    height: 174px;
     margin-bottom: 0px;
   }
   a.go-to-block {

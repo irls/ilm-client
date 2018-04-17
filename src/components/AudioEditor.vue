@@ -497,7 +497,7 @@
                 if (bookAudiofile && bookAudiofile.positions) {
                   this.plEventEmitter.emit('select', bookAudiofile.positions.start, bookAudiofile.positions.end);
                 } else {
-                  this.plEventEmitter.emit('select', 0, parseInt(this.audiosourceEditor.duration));
+                  this.plEventEmitter.emit('select', 0, parseFloat(this.audiosourceEditor.duration));
                 }
                 this._showSelectionBorders();
               }
