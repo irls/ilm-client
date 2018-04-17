@@ -1493,9 +1493,10 @@
   .player-controls {
     background-color: #d9d9d9;
     vertical-align: middle;
+    height: 62px;
     .play-controls {
       display: inline-block;
-      padding: 25px;
+      padding: 5px 25px;
       width: 200px;
       i {
         font-size: 29px;
@@ -1506,7 +1507,7 @@
     }
     .zoom-controls {
       display: inline-block;
-      padding: 14px;
+      padding: 5px 14px;
       width: 120px;
       i {
         font-size: 29px;

@@ -703,10 +703,9 @@
               if (file && fileOld) {
                 let map = file.blockMap;
                 let mapOld = fileOld.blockMap;
-                if (typeof map !== 'undefined') {
-                  if (typeof mapOld === 'undefined' || !_.isEqual(map, mapOld)) {
-                    this.play(this.playing);
-                  }
+                if ((typeof map !== 'undefined' && (typeof mapOld === 'undefined' || !_.isEqual(map, mapOld)) ||
+                        (typeof map === 'undefined' && typeof mapOld !== 'undefined'))) {
+                  this.play(this.playing);
                 }
               }
             }
