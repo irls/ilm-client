@@ -760,47 +760,55 @@ export default {
     deleteBlock(block, block_Idx) {
       //console.log('deleteBlock', block._id);
       this.freeze('deleteBlock');
-      this.getBlockByChainId(block._id)
-      .then((blockBefore)=>{
-          //this.blockReindexProcess = true;
-          this.parlist.delete(block._id);
-          this.refreshTmpl();
+//       this.getBlockByChainId(block._id)
+//       .then((blockBefore)=>{
 
-          if (blockBefore) {
-            blockBefore.chainid = block.chainid;
-            this.freeze('putBlockPart');
-            this.putBlockPart({
-              block: new BookBlock(blockBefore),
-              field: 'chainid'
-            }).then((response)=>{
-              //this.blockReindexProcess = false
-              this.unfreeze('putBlockPart');
-            }).catch((err)=>{
-              this.unfreeze('putBlockPart');
-              return err;
-            })
-          } else {
-            this.startId = block.chainid;
-            this.setMetaData({ key: 'startBlock_id', value: block.chainid})
-            .then((response)=>{
-              //this.blockReindexProcess = false
-            });
-          }
-          this.unfreeze('deleteBlock');
+
+
+//           if (blockBefore) {
+//             blockBefore.chainid = block.chainid;
+//             this.freeze('putBlockPart');
+//             this.putBlockPart({
+//               block: new BookBlock(blockBefore),
+//               field: 'chainid'
+//             }).then((response)=>{
+//               //this.blockReindexProcess = false
+//               this.unfreeze('putBlockPart');
+//             }).catch((err)=>{
+//               this.unfreeze('putBlockPart');
+//               return err;
+//             })
+//           } else {
+//             this.startId = block.chainid;
+//             this.setMetaData({ key: 'startBlock_id', value: block.chainid})
+//             .then((response)=>{
+//               //this.blockReindexProcess = false
+//             });
+//           }
+
+
           let api_url = this.API_URL + 'book/block/' + block._id;
           let api = this.$store.state.auth.getHttp();
           api.delete(api_url, {})
           .then((response)=>{
+            //console.log('api response', response);
+            if (this.startId == block._id) {
+              this.startId = block.chainid;
+            }
+            this.parlist.delete(block._id);
+            this.unfreeze('deleteBlock');
+            this.refreshTmpl();
           })
           .catch(err => {
+            this.unfreeze('deleteBlock');
             return err;
           });
-      })
-      .catch((err)=>{
-        this.unfreeze('deleteBlock');
-        console.log('deleteBlock Err', err);
-        return err;
-      })
+//       })
+//       .catch((err)=>{
+//         this.unfreeze('deleteBlock');
+//         console.log('deleteBlock Err', err);
+//         return err;
+//       })
     },
     joinBlocks(block, block_Idx, direction) {
       let api_url = this.API_URL + 'book/block_join/';
@@ -1174,6 +1182,9 @@ export default {
 //         this.$refs.blocks.forEach((block)=>{
 //           block._id = null;
 //         });
+        this.setRangeSelection({}, 'start', false);
+        this.setRangeSelection({}, 'end', false);
+
         Vue.set(this, 'parlist', new Map());  //TODO
         this.$router.push({name: this.$route.name, params: {}});
         this.loadBookMeta()
