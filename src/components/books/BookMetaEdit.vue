@@ -552,6 +552,9 @@ export default {
       self.setCurrentBookCounters(['narration_blocks', 'not_marked_blocks']);
     });
     this.setCurrentBookCounters();
+    this.$root.$on('book-reimported', () => {
+      this.loadAudiobook()
+    });
   },
 
   watch: {

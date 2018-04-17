@@ -703,8 +703,11 @@
               if (file && fileOld) {
                 let map = file.blockMap;
                 let mapOld = fileOld.blockMap;
-                if ((typeof map !== 'undefined' && (typeof mapOld === 'undefined' || !_.isEqual(map, mapOld)) ||
-                        (typeof map === 'undefined' && typeof mapOld !== 'undefined'))) {
+                let positions = file.positions;
+                let positionsOld = fileOld.positions;
+                if ((typeof map !== 'undefined' && (typeof mapOld === 'undefined' || !_.isEqual(map, mapOld))) ||
+                        (typeof map === 'undefined' && typeof mapOld !== 'undefined') || 
+                        !_.isEqual(positions, positionsOld)) {
                   this.play(this.playing);
                 }
               }
