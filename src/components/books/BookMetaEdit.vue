@@ -205,6 +205,7 @@
               <div v-if="allowPublishCurrentBook">
                 <button class="btn btn-primary" v-on:click="publish()">Publish</button>
               </div>
+              <button class="btn btn-primary hidden" v-on:click="publishContent()">Publish Content</button>
             </template>
 
             <!-- Publication Options -->
@@ -900,6 +901,9 @@ export default {
       .then(resp => {
         console.log(resp);
       });
+    },
+    publishContent() {
+      return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
     },
     goToUnresolved(with_task = false) {
       if (this.blocksToApproveCounter === 0) {
