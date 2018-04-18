@@ -2345,17 +2345,17 @@ export default {
           if (response.status===200) {
             // hide modal after one second
             self.$refs.illustrationInput.removeImage();
-            let offset = document.getElementById(self.block._id).getBoundingClientRect()
-            window.scrollTo(0, window.pageYOffset + offset.top);
-            self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
+            //let offset = document.getElementById(self.block._id).getBoundingClientRect()
+            //window.scrollTo(0, window.pageYOffset + offset.top);
+            self.isIllustrationChanged = false;
             self.isChanged = false;
+            self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
             //if (self.editor) {
               //self.editor.destroy();
             //}
             $('[id="' + self.block._id + '"] .illustration-block')
               .removeAttr('contenteditable')
               .removeAttr('data-placeholder');
-            self.isIllustrationChanged = false;
           } else {
 
           }
