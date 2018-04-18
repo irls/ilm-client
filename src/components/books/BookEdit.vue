@@ -208,7 +208,7 @@ export default {
 
     lazyLoad(firstId = false, lastId = false)
     {
-      console.log('lazyLoad');
+      //console.log('lazyLoad');
       //console.log('parlist', Array.from(this.parlist.keys()));
       //console.log('lazyLoaderDir1', firstId, lastId);
 
@@ -593,7 +593,7 @@ export default {
 
     reCountProxy: function () {
       this.parCounter = { pref: 0, prefCnt: 0, curr: 1 };
-      let crossId = this.startId;
+      let crossId = this.meta.startBlock_id;//this.startId;
       for (var idx=0; idx < this.parlist.size; idx++) {
         let block = this.parlist.get(crossId);
         if (block) {

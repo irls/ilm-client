@@ -967,6 +967,11 @@ export default {
           });
         } else if (this.editorDescr) this.editorDescr.setup();
 
+        this.initFtnEditor(force)
+
+        $('.medium-editor-toolbar.medium-editor-stalker-toolbar').css('display', '');
+      },
+      initFtnEditor(force) {
         if ((!this.editorFootn || force === true) && this.block.needsText()) {
           let extensions = {};
           let toolbar = {buttons: []};
@@ -997,8 +1002,6 @@ export default {
               disableEditing: !this.allowEditing
           });
         } else if (this.editorFootn) this.editorFootn.setup();
-
-        $('.medium-editor-toolbar.medium-editor-stalker-toolbar').css('display', '');
       },
       onQuoteSave: function() {
         this.putMetaAuthors(this.authors).then(()=>{
@@ -1542,25 +1545,25 @@ export default {
         return regexp.test(checkRange.toString());
       },
       addFootnote: function() {
-
-        this.destroyEditor();
-
+        //console.log('this.range', this.range);
         let el = document.createElement('SUP');
         el.setAttribute('data-idx', this.block.footnotes.length);
         this.range.insertNode(el);
         let pos = this.updFootnotes(this.block.footnotes.length);
         this.block.footnotes.splice(pos, 0, new FootNote({}));
+        this.isChanged = false; // to be shure to update view
         this.isChanged = true;
         this.pushChange('footnotes');
         Vue.nextTick(() => {
           //this.destroyEditor();
-          this.initEditor();
+          this.initFtnEditor(true);
         });
       },
       delFootnote: function(pos) {
         $('#'+this.block._id).find(`[data-idx='${pos+1}']`).remove();
         this.updFootnotes();
         this.block.footnotes.splice(pos, 1);
+        this.isChanged = false; // to be shure to update view
         this.isChanged = true;
         this.pushChange('footnotes');
       },
