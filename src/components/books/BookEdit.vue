@@ -1309,7 +1309,7 @@ export default {
     height: 180px;
     margin-bottom: 0px;
     &.-mode-block {
-        height: 200px;
+        height: 215px;
     }
   }
   a.go-to-block {
