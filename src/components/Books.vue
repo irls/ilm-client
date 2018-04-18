@@ -30,7 +30,7 @@
         </td>
       </tr>
     </table>
-    <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}]" >
+    <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}, audioeditorMode()]" >
       <AudioEditor ref="audioEditor"
         :blocksForAlignment="blocksForAlignment"></AudioEditor>
     </nav>
@@ -157,6 +157,9 @@ export default {
 
     showAudioeditor() {
       return this.$refs.audioEditor && !this.$refs.audioEditor.isEmpty();
+    },
+    audioeditorMode() {
+      return '-mode-' + (this.$refs.audioEditor ? this.$refs.audioEditor.mode : '');
     },
     getBlockSelectionInfo() {
       this.blocksForAlignment.count = 0;

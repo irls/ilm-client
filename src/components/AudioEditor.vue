@@ -221,11 +221,6 @@
             return false;//component was destroyed;
           }
           let mode = bookAudiofile.id ? 'file' : 'block';
-          if (mode === 'block') {
-            $('.fixed-bottom').addClass('-mode-block');
-          } else {
-            $('.fixed-bottom').removeClass('-mode-block');
-          }
           if (bookAudiofile.id) {
             this.audiofileId = bookAudiofile.id;
           }
