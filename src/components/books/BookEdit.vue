@@ -1306,8 +1306,11 @@ export default {
     bottom: 0px;
     border: 1px solid black;
     border-radius: 0px;
-    height: 174px;
+    height: 180px;
     margin-bottom: 0px;
+    &.-mode-block {
+        height: 200px;
+    }
   }
   a.go-to-block {
     cursor: pointer;
