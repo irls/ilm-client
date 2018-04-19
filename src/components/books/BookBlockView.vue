@@ -2140,6 +2140,7 @@ export default {
                   });
                   self.audioEditFootnote.footnote.content = ref.innerHTML;
                   self.isChanged = true;
+                  self.pushChange('footnotes');
                   self.pushChange('content_footnote');
                 }
               } else {

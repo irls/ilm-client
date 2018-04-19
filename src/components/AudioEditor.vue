@@ -783,9 +783,14 @@
             }
           } else if (this.mode === 'file') {
             if (this.origFilePositions) {
-              this.selection = this.origFilePositions;
-              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-              this._showSelectionBorders();
+              //this.selection = this.origFilePositions;
+              //this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              //this._showSelectionBorders();
+              if (this.origFilePositions.start == this.selection.end) {
+                this.setSelectionEnd(this.origFilePositions.end); 
+              }
+              this.setSelectionStart(this.origFilePositions.start);
+              this.setSelectionEnd(this.origFilePositions.end);
             }
           }
         },

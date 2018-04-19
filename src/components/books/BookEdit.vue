@@ -518,17 +518,19 @@ export default {
             this.parlist.set(change.doc._id, new BookBlock(oldBlock));
             this.refreshTmpl();
           } else {
-            let ref = this.$refs.blocks.find(r => {
-              return r && r.block && r.block._id === change.doc._id;
-            });
             let newBlock = new BookBlock(change.doc);
-            if (ref && (ref.isChanged || ref.isAudioChanged || ref.isIllustrationChanged)) {
+            if (oldBlock.isChanged || oldBlock.isAudioChanged || oldBlock.isIllustrationChanged) {
               if (oldBlock.status && newBlock.status && oldBlock.status.assignee === newBlock.status.assignee) {
                 oldBlock._rev = change.doc._rev;
+                if (oldBlock.voicework != newBlock.voicework) {
+                  oldBlock.voicework = newBlock.voicework;
+                  oldBlock.audiosrc = newBlock.audiosrc;
+                  oldBlock.audiosrc_ver = newBlock.audiosrc_ver;
+                }
               } else {
-                ref.isChanged = false;
-                ref.isAudioChanged = false;
-                ref.isIllustrationChanged = false;
+                //ref.isChanged = false;
+                //ref.isAudioChanged = false;
+                //ref.isIllustrationChanged = false;
                 this.parlist.set(change.doc._id, newBlock);
               }
             } else {
@@ -1342,7 +1344,7 @@ export default {
     bottom: 0px;
     border: 1px solid black;
     border-radius: 0px;
-    height: 180px;
+    height: 183px;
     margin-bottom: 0px;
     &.-mode-block {
         height: 215px;
