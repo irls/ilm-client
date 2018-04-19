@@ -420,10 +420,10 @@
               <div class="align-range -hidden -left" v-if="allowEditing">
                 Set block range: <label>
                 <input type="checkbox" v-on:change="setRangeSelection('start', $event)"
-                class="set-range-start" :disabled="!allowSetStart"
+                class="set-range-start" :disabled="!allowSetStart(block._id)"
                 v-model="block.checkedStart"/>&nbsp;Start</label>
                 <label>&nbsp;&nbsp;
-                <input type="checkbox" v-on:change="setRangeSelection('end', $event)" class="set-range-end" :disabled="!allowSetEnd"
+                <input type="checkbox" v-on:change="setRangeSelection('end', $event)" class="set-range-end" :disabled="!allowSetEnd(block._id)"
                 v-model="block.checkedEnd"/>&nbsp;End</label>
                 <template v-if="displaySelectionStart">
                   <a class="go-to-block" v-on:click="scrollToBlock(displaySelectionStart)">View start({{displaySelectionStart}})</a>
@@ -603,7 +603,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -755,12 +755,6 @@ export default {
             }
           }
           return this.tc_getBlockTask(this.block._id) ? false : true;
-      },
-      allowSetStart: function () {
-        return !this.$parent.selectionEnd._id || this.$parent.selectionEnd.index >= this.block.index;
-      },
-      allowSetEnd: function () {
-        return !this.$parent.selectionStart._id || this.$parent.selectionStart.index <= this.block.index;
       },
       displaySelectionStart() {
         return this.$parent.selectionEnd._id == this.block._id ? this.$parent.selectionStart._id : false;

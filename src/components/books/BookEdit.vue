@@ -27,6 +27,8 @@
             :recorder ="recorder"
             :blockReindexProcess="blockReindexProcess"
             :getBloksUntil="getBloksUntil"
+            :allowSetStart="allowSetStart"
+            :allowSetEnd="allowSetEnd"
             @stopRecordingAndNext="stopRecordingAndNext"
             @insertBefore="insertBlockBefore"
             @insertAfter="insertBlockAfter"
@@ -604,6 +606,40 @@ export default {
       //this.parlist.forEach((block, idx, arr)=>{
       //  block.parnum = setBlockParnum(block, this.parCounter);
       //})
+    },
+    
+    allowSetStart: function(block_id) {
+      if (!this.selectionEnd._id || block_id == this.selectionEnd._id) {
+        return true;
+      }
+      let crossId = block_id;
+      for (var idx=0; idx < this.parlist.size; idx++) {
+        let block = this.parlist.get(crossId);
+        if (block) {
+          if (block._id == this.selectionEnd._id) {
+            return true;
+          }
+          crossId = block.chainid;
+        } else break;
+      }
+      return false;
+    },
+    
+    allowSetEnd: function(block_id) {
+      if (!this.selectionStart._id || block_id == this.selectionStart._id) {
+        return true;
+      }
+      let crossId = block_id;
+      for (var idx=0; idx < this.parlist.size; idx++) {
+        let block = this.parlist.get(crossId);
+        if (block) {
+          if (block._id == this.selectionStart._id) {
+            return false;
+          }
+          crossId = block.chainid;
+        } else break;
+      }
+      return true;
     },
 
     eventKeyDown: function(key) {
