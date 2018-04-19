@@ -1344,10 +1344,10 @@ export default {
     bottom: 0px;
     border: 1px solid black;
     border-radius: 0px;
-    height: 183px;
+    height: 215px;
     margin-bottom: 0px;
-    &.-mode-block {
-        height: 215px;
+    &.-mode-file {
+        height: 183px;
     }
   }
   a.go-to-block {
