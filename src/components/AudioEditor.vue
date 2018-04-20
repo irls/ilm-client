@@ -576,6 +576,7 @@
               //console.log(this.mouseSelection.start, pos)
             }
             this._showSelectionBorders();
+            $('#cursor-position').show();
           });
           $('body').on('mousedown', '.playlist-overlay', (e) => {
             if (e.which !== 1) {
@@ -583,7 +584,7 @@
             }
             $('[id="resize-selection-right"]').hide().css('left', 0);
             $('[id="resize-selection-left"]').hide().css('left', 0);
-            $('#cursor-position').css('left', 0);
+            $('#cursor-position').hide();
             let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
             if (typeof this.selection.start !== 'undefined') {
               this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
