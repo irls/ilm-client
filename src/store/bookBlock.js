@@ -109,6 +109,7 @@ class BookBlock {
     this.isIllustrationChanged = init.isIllustrationChanged || false;
     this.checkedStart = init.checkedStart || false;
     this.checkedEnd = init.checkedEnd || false;
+    this.checked = init.checked || false;
 
     this.history = {};
   }

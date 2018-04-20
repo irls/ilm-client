@@ -609,7 +609,7 @@ export default {
       //  block.parnum = setBlockParnum(block, this.parCounter);
       //})
     },
-    
+
     allowSetStart: function(block_id) {
       if (!this.selectionEnd._id || block_id == this.selectionEnd._id) {
         return true;
@@ -626,7 +626,7 @@ export default {
       }
       return false;
     },
-    
+
     allowSetEnd: function(block_id) {
       if (!this.selectionStart._id || block_id == this.selectionStart._id) {
         return true;
@@ -1027,10 +1027,114 @@ export default {
               this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
             }
           break;
+        case 'byOne':
+          //console.log('byOne', status, block._id, 'start:', this.selectionStart._id, 'end:', this.selectionEnd._id);
+          if (status) {
+            if (this.selectionStart._id) {
+              let pBlock, currId = block._id, isFound = false;
+              while (pBlock = this.findPrevBlock(currId)) {
+                if (pBlock._id === this.selectionStart._id) {
+                  this.selectionEnd = block;
+                  isFound = true;
+                  break;
+                }
+                currId = pBlock._id;
+              }
+
+              if (!isFound) {
+                // selected blocks are not found before, so they are after
+                if (!this.selectionEnd._id) this.selectionEnd = this.selectionStart;
+                this.selectionStart = block;
+              }
+
+              this.setUnCheckedRange();
+              this.setCheckedRange(this.selectionStart._id, this.selectionEnd._id);
+              this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
+
+            } else  {
+              this.selectionStart = block;
+              this.selectionEnd = block;
+              this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
+            }
+          } else {
+            if (this.selectionStart._id && this.selectionEnd._id) {
+              if (this.selectionStart._id == block._id && block._id == this.selectionEnd._id) {
+                this.selectionStart = {};
+                this.selectionEnd = {};
+              } else if (block._id == this.selectionStart._id) {
+                this.selectionStart = this.parlist.get(block.chainid);
+              } else if (block._id == this.selectionEnd._id) {
+                this.selectionEnd = this.findPrevBlock(block._id);
+              } else {
+
+                let pBlock, beforeCount = 0, afterCount = 0;
+                let currId = block._id;
+                while (pBlock = this.findPrevBlock(currId)) {
+                  if (pBlock._id === this.selectionStart._id) {
+                    beforeCount++;
+                    break;
+                  }
+                  currId = pBlock._id;
+                }
+                currId = block.chainid
+                while (pBlock = this.parlist.get(currId)) {
+                  if (pBlock._id === this.selectionEnd._id) {
+                    afterCount++;
+                    break;
+                  }
+                  currId = pBlock.chainid;
+                }
+
+                if (afterCount > beforeCount) {
+                  this.selectionStart = block.chainid;
+                } else {
+                  this.selectionEnd = this.findPrevBlock(block._id);
+                }
+              }
+              this.setUnCheckedRange();
+              this.setCheckedRange(this.selectionStart._id, this.selectionEnd._id);
+              this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
+
+            } else {
+              this.selectionStart = {};
+              this.selectionEnd = {};
+              this.$root.$emit('from-bookedit:set-selection', {}, {});
+            }
+          }
+          break;
       }
     },
-    setEnd(block, status) {
-
+    findPrevBlock(blockId) {
+      let found, BreakException = {}; // a trick to stop forEach
+      try {
+        this.parlist.forEach((block, _id)=>{
+          if (block.chainid === blockId) {
+            found = block;
+            throw BreakException;
+          }
+        });
+      } catch (e) {
+        if (e !== BreakException) throw e;
+        else return found;
+      }
+      return false;
+    },
+    setCheckedRange(startId, endId) {
+      if (this.parlist.has(startId)) {
+        let pBlock, currId = startId;
+        do {
+          pBlock = this.parlist.get(currId);
+          if (pBlock) {
+            pBlock.checked = true;
+            currId = pBlock.chainid;
+          }
+        } while (pBlock && pBlock._id !== endId);
+      }
+    },
+    setUnCheckedRange(startId = false) {
+      this.parlist.forEach((pBlock)=>{
+        pBlock.checked = false;
+      });
     },
     setBlockWatch() {
       //console.log('!!! setBlockWatch');
