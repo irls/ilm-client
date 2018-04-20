@@ -1189,7 +1189,7 @@ export default {
         this.screenTop -= step;
 
         this.upScreenTop = false;
-        if (ev.deltaY < 0 && (this.screenTop > 200))
+        if (ev.deltaY < 0 && (this.screenTop > 10))
         { // first block moved down -> try to show previous
           let prevBlockId = false;
           this.parlist.forEach((block, _id)=>{
