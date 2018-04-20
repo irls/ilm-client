@@ -77,9 +77,9 @@
           <button class="btn btn-primary" :disabled="!allowAlignSelection" v-on:click="align()">Align</button>
           <span v-if="!hasAlignSelection" class="red-message">Define block range</span>
           <template v-else>
-            <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blocksForAlignment.start._id)">Start {{blocksForAlignment.start._id}}</a>
+            <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blocksForAlignment.start._id)">Start {{blocksForAlignment.start._id.split('_').pop()}}</a>
             <span v-else class="red-message">Define Start</span>
-            <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blocksForAlignment.end._id)">End {{blocksForAlignment.end._id}}</a>
+            <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blocksForAlignment.end._id)">End {{blocksForAlignment.end._id.split('_').pop()}}</a>
             <span v-else class="red-message">Define End</span>
             <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message">({{selectionBlocksToAlign}} blocks)</span>
           </template>
@@ -1557,11 +1557,12 @@
   .player-controls {
     background-color: #d9d9d9;
     vertical-align: middle;
-    height: 62px;
+    min-height: 62px;
+    height: auto;
     .play-controls {
       display: inline-block;
       padding: 5px 25px;
-      width: 200px;
+      /*width: 200px;*/
       i {
         font-size: 29px;
         color: #0089ff;
@@ -1572,7 +1573,7 @@
     .zoom-controls {
       display: inline-block;
       padding: 5px 14px;
-      width: 120px;
+      /*width: 120px;*/
       i {
         font-size: 29px;
         color: #0089ff;
@@ -1587,7 +1588,7 @@
     .selection-controls {
       display: inline-block;
       padding: 0px 20px;
-      width: 500px;
+      /*width: 500px;*/
       &>div {
         display: inline-block;
         padding: 5px 10px;
