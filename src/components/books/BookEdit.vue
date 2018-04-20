@@ -1344,7 +1344,7 @@ export default {
     bottom: 0px;
     border: 1px solid black;
     border-radius: 0px;
-    min-height: 215px;
+    min-height: 205px;
     height: auto;
     margin-bottom: 0px;
     &.-mode-file {
