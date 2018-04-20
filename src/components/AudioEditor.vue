@@ -56,12 +56,12 @@
             </div>
           </div>
           <template v-if="mode == 'block'">
-            <div v-if="hasSelection && !isSinglePointSelection">
-              <button class="btn btn-primary" v-on:click="cut()">Cut</button>
+            <div>
+              <button class="btn btn-primary" v-on:click="cut()"  :disabled="!hasSelection || isSinglePointSelection">Cut</button>
             </div>
-            <div v-if="hasSelection && isSinglePointSelection">
+            <div>
               <input type="number" step="0.1" v-model="silenceLength" />
-              <button class="btn btn-primary" v-on:click="addSilence()">Add Silence</button>
+              <button class="btn btn-primary" v-on:click="addSilence()" :disabled="cursorPosition === false">Add Silence</button>
             </div>
           </template>
         </div>
@@ -175,7 +175,11 @@
           blockMap: {},
           blockSelectionEmit: false,
           contextPosition: null,
-          pendingLoad: null
+          pendingLoad: null,
+          mouseSelection: {
+            start: null,
+            end: null
+          }
         }
       },
       mounted() {
@@ -344,6 +348,12 @@
             $('.playlist-tracks').on('scroll', () => {
               this.playlistScrollPosition = $('.playlist-tracks').scrollLeft();
             });
+            if (this.selection.end && this.selection.end > parseFloat(this.audiosourceEditor.duration)) {
+              this.selection.end = this._round(parseFloat(this.audiosourceEditor.duration), 1);
+              if (this.selection.start >= this.selection.end) {
+                this.selection.start = this.selection.end - 0.1;
+              }
+            }
             this._setSelectionOnWaveform();
             this.plEventEmitter = this.audiosourceEditor.getEventEmitter();
             if (!text) {
@@ -388,46 +398,24 @@
               self.isPaused = false;
             });
             this.plEventEmitter.on('select', function(start, end) {
+              start = self._round(start, 2);
+              end = self._round(end, 2);
               let is_single_cursor = end - start == 0;
-              
-              if (self.mode == 'file') {
-                if (is_single_cursor || 
-                        ((typeof self.selection.start != 'undefined' && Math.ceil(start) != Math.ceil(self.selection.start)) && 
-                        (typeof self.selection.end != 'undefined' && Math.ceil(end) != Math.ceil(self.selection.end)))) {
-                  self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
-                  if (is_single_cursor) {
-                    //self.cursorPosition = start;
-                  }
-                  return;
-                }
+              if (is_single_cursor && self.contextPosition && self.mode === 'file' && 
+                      typeof self.selection.start !== 'undefined' &&
+                      typeof self.selection.end !== 'undefined') {
+                self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
+                return;
               }
-              let is_second_click_ltr = self.selection && (self.selection.end == end && self.selection.end - self.selection.start > 0);
-              let is_second_click_rtl = self.selection && (self.selection.start == start && self.selection.end - self.selection.start > 0);
-              if (is_single_cursor && self.selection && ((
-                      self.selection.end - self.selection.start == 0 && 
-                      end != self.selection.end && 
-                      start != self.selection.start) || 
-                      is_second_click_ltr || is_second_click_rtl)) {
-                let from = 0;
-                let to = 0;
-                if (is_second_click_ltr){ 
-                  from = self.selection.start;
-                  to = end;
-                } else if (is_second_click_rtl) {
-                  from = self.selection.start;
-                  to = self.selection.end;
-                } else {
-                  from = self.selection.start < end ? self.selection.start : end;
-                  to = self.selection.start > end ? self.selection.start : end;
+              if (!is_single_cursor) {
+                if (start != self.selection.start) {
+                  //self.cursorPosition = start;
                 }
-                self.plEventEmitter.emit('select', from, to);
-              } else if (start < 0) {
-                self.plEventEmitter.emit('select', 0, end);
-              } else if(self.audiosourceEditor.activeTrack && end > self.audiosourceEditor.activeTrack.duration) {
-                self.plEventEmitter.emit('select', start, self.audiosourceEditor.activeTrack.duration);
-              } else {
-                self.selection = {start: self._round(start, 2), end: self._round(end, 2)}
-              }
+                self.selection = {start: start, end: end};
+              } //else {
+                //self.cursorPosition = start;
+              //}
+              return;
             });
             $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>').after('<div id="context-position" class="context-position"></div>');
             self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
@@ -561,6 +549,48 @@
           $('body').on('mouseup', '.playlist-overlay.state-select', function() {
             self._showSelectionBorders();
           });
+          $('body').on('click', '.playlist-overlay', (e) => {
+            let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+            let pos_r = this._round(pos, 1);
+            if (this.mouseSelection.start !== null && Math.abs(pos_r - this.mouseSelection.start) < 0.1) {
+              if (this.mode === 'block' && e.shiftKey && this.cursorPosition >= 0) {
+                if (this.cursorPosition > pos_r) {
+                  let end_pos = this.cursorPosition;
+                  this.setSelectionStart(pos);
+                  this.setSelectionEnd(end_pos);
+                } else {
+                  this.setSelectionStart(this.cursorPosition);
+                  this.setSelectionEnd(pos);
+                }
+              } else {
+                if (typeof this.selection.start !== 'undefined') {
+                  this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                }
+                this.cursorPosition = pos;
+                if (this.isPlaying) {
+                  this.stop().then(() => this.play(pos));
+                }
+              }
+            } else {
+              this.cursorPosition = this.selection.start;
+              //console.log(this.mouseSelection.start, pos)
+            }
+            this._showSelectionBorders();
+            $('#cursor-position').show();
+          });
+          $('body').on('mousedown', '.playlist-overlay', (e) => {
+            if (e.which !== 1) {
+              return;
+            }
+            $('[id="resize-selection-right"]').hide().css('left', 0);
+            $('[id="resize-selection-left"]').hide().css('left', 0);
+            $('#cursor-position').hide();
+            let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+            if (typeof this.selection.start !== 'undefined') {
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            }
+            this.mouseSelection = {start: this._round(pos, 1), end: null};
+          });
           $('.player-controls').keydown('input[type="number"]', function(e) {
             e.preventDefault();
           });
@@ -573,8 +603,8 @@
                   if (e && e.target && e.target.className && e.target.className.indexOf('resize-selection') !== -1) {
                     return;
                   }
-                  this.cursorPosition = (e.offsetX) * this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate;
-                  $('.cursor').css('left', e.offsetX);
+                  //this.cursorPosition = (e.offsetX) * this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate;
+                  //$('.cursor').css('left', e.offsetX);
                 })
               }
             }, 500);
@@ -733,8 +763,8 @@
           }
         },
         addSilence() {
-          if (this.silenceLength > 0 && this.isSinglePointSelection) {
-            this.$root.$emit('from-audioeditor:insert-silence', this.blockId, this._round(this.selection.start, 2), this.silenceLength);
+          if (this.silenceLength > 0 && this.cursorPosition >= 0) {
+            this.$root.$emit('from-audioeditor:insert-silence', this.blockId, this._round(this.cursorPosition, 2), this.silenceLength);
             this.isModified = true;
           }
         },
@@ -768,6 +798,7 @@
           }
         },
         cut() {
+          this.cursorPosition = this.selection.start;
           this.$root.$emit('from-audioeditor:cut', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
           this.isModified = true;
         },
@@ -1107,6 +1138,16 @@
         },
         onContext: function(e) {
           if (this.mode == 'file') {
+            if (this.mode === 'file' && 
+                    typeof this.selection.start !== 'undefined' &&
+                    typeof this.selection.end !== 'undefined') {
+              let t = setInterval(() => {
+                if ($('.selection.point').length > 0) {
+                  this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                  clearInterval(t);
+                }
+              }, 50);
+            }
             this.contextPosition = e.clientX;
             $('.medium-editor-toolbar').each(function(){
                 $(this).css('display', 'none');
@@ -1561,7 +1602,7 @@
     height: auto;
     .play-controls {
       display: inline-block;
-      padding: 5px 25px;
+      padding: 17px 25px;
       /*width: 200px;*/
       i {
         font-size: 29px;
