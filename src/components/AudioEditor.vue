@@ -1137,6 +1137,16 @@
         },
         onContext: function(e) {
           if (this.mode == 'file') {
+            if (this.mode === 'file' && 
+                    typeof this.selection.start !== 'undefined' &&
+                    typeof this.selection.end !== 'undefined') {
+              let t = setInterval(() => {
+                if ($('.selection.point').length > 0) {
+                  this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                  clearInterval(t);
+                }
+              }, 50);
+            }
             this.contextPosition = e.clientX;
             $('.medium-editor-toolbar').each(function(){
                 $(this).css('display', 'none');
