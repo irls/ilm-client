@@ -31,19 +31,28 @@
             </div>
         </div>
         <div class="table-row check-row" v-if="allowEditing">
-          <input type="checkbox"
+          <!--<input type="checkbox"
             v-on:change="setRangeSelection('byOne', $event)"
-            class="set-range -hidden"
-            v-model="block.checked"/>
+            class="set-range"
+            v-model="block.checked"/>-->
 
-          <template v-if="selectionStart && selectionStart !== selectionEnd">
-          <i v-if="selectionEnd && block._id == selectionStart"
-          class="fa fa-arrow-circle-down" aria-hidden="true"
-          v-on:click="scrollToBlock(selectionEnd)"></i>
-          <i v-if="selectionStart && block._id == selectionEnd"
-          class="fa fa-arrow-circle-up" aria-hidden="true"
-          v-on:click="scrollToBlock(selectionStart)"></i>
-          </template>
+          <div class="set-range">
+            <i class="fa fa-square-o -hidden" aria-hidden="true"
+            v-if="block.checked === false"
+            v-on:click="$event.target.checked = true; setRangeSelection('byOne', $event)"></i>
+            <i class="fa fa-check-square-o" aria-hidden="true"
+            v-if="block.checked === true"
+            v-on:click="setRangeSelection('byOne', false)"></i>
+
+            <template v-if="selectionStart && selectionStart !== selectionEnd">
+            <i v-if="selectionEnd && block._id == selectionStart"
+            class="fa fa-arrow-circle-down" aria-hidden="true"
+            v-on:click="scrollToBlock(selectionEnd)"></i>
+            <i v-if="selectionStart && block._id == selectionEnd"
+            class="fa fa-arrow-circle-up" aria-hidden="true"
+            v-on:click="scrollToBlock(selectionStart)"></i>
+            </template>
+          </div>
 
         </div>
     </div>
@@ -2399,7 +2408,10 @@ export default {
         }
       },
       setRangeSelection(type, event) {
-        let checked = event.target && event.target.checked;
+        let checked;
+        if (event === true || event === false) checked = event;
+        else checked = event.target && event.target.checked;
+        this.block.checked = checked;
         this.$emit('setRangeSelection', this.block, type, checked);
       },
       updateVoicework() {
@@ -2874,9 +2886,11 @@ export default {
         padding-left: 15px;
 
         &.-check-green {
-          border-left: 4px solid lightgreen;
-          padding-left: 11px;
-          width: 48px;
+          /*border-left: 6px solid darkgreen;*/
+          /*background-color: lightgreen;*/
+          background: linear-gradient(to right, lightgreen , white);
+          /*padding-left: 9px;
+          width: 48px;*/
         }
 
         .table-row.parnum-row {
@@ -2888,13 +2902,16 @@ export default {
           width: 17px;
 
          .set-range {
-            cursor: pointer;
-            margin: 5px 0 0 5px;
+            /*cursor: pointer;*/
+            margin: 5px 0 0 1px;
+            .fa {
+              font-size: 20px;
+            }
           }
 
           .fa {
             display: block;
-            margin: 5px 0 0 3px;
+            margin: 5px 0 0 2px;
             cursor: pointer;
           }
         }
