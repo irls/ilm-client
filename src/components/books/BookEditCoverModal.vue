@@ -4,22 +4,22 @@
 
     <div slot="modal-header" class="modal-header">
       <div class="header-title">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel">
-          <i class="fa fa-times-circle-o" aria-hidden="true"></i>
-        </button>
         <img src='/static/bookstack.svg' class='book-logo'> <h3 class="header-h">Book Cover</h3>
       </div>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel">
+        <i class="fa fa-times-circle-o" aria-hidden="true"></i>
+      </button>
     </div>
 
     <div slot="modal-body" class="modal-body">
 
       <!-- Selection tabs for Upload or Create forms -->
-      <div class="row tabs">
+      <!-- <div class="row tabs">
         <ul class="nav nav-tabs">
           <li :class="{active: uploadMode}"><a data-toggle="tab" href="#upload_pane" @click="uploadMode = !uploadMode">Upload</a></li>
           <li :class="{active: !uploadMode}"><a data-toggle="tab" href="#create_pane" @click="uploadMode = !uploadMode">Create New</a></li>
         </ul>
-      </div>
+      </div> -->
 
       <div class="tab-content">
         <!-- Selection tabs for Upload or Create forms -->
@@ -30,7 +30,8 @@
 
               <div class="col-sm-4">
                 <img :src="uploadImage" class="preview_upload" v-show="uploadImage.length>0" />
-                <img :src="uploadImageBlank" class="preview_upload" v-show="uploadImage.length<1" />
+                <!-- <img :src="uploadImageBlank" class="preview_upload" v-show="uploadImage.length<1" /> -->
+                <div class='coverimg-wrap' v-show="uploadImage.length<1"></div>
               </div>
 
               <div class="col-sm-8">
@@ -292,7 +293,7 @@ export default {
         doc._attachments.coverimg = {content_type: mime, data: urlData}
 
         return this.ilm_library_files.put(doc).then((doc)=>{
-          //return this.reloadBookMeta();
+          this.reloadBookMeta();
           return this.updateBookVersion({minor: true});
         }).catch(err => console.log(err))
       }).catch(err => {
