@@ -1,6 +1,6 @@
 <template>
 <div class="table-body -block" :id="block._id">
-    <div class="table-cell controls-left">
+    <div :class="['table-cell', 'controls-left', {'-check-green': block.checked==true}]">
         <div class="table-row parnum-row">
           <span v-if="block.type=='par' && block.parnum!==false" :class="['parnum']">{{block.parnum}}</span>
 
@@ -9,10 +9,9 @@
           <span v-if="block.type=='header' && block.secnum===''" :class="['parnum', '-hidden-hover', '-auto']">Auto</span>
 
           <input v-if="block.type=='header' && block.secnum!==false"
-            :class="['secnum', '-hidden']"
+            :class="['secnum', '-hidden-block']"
             v-model="block.secnum" @input="setSecnumVal"
             type="text" maxlength="3" size="3"/>
-
         </div>
         <div class="table-row">
             <div class='par-ctrl -hidden'>
@@ -30,6 +29,22 @@
                 <i class="glyphicon glyphicon-volume-up"></i>
                 <i class="glyphicon glyphicon-volume-off"></i>
             </div>
+        </div>
+        <div class="table-row check-row" v-if="allowEditing">
+          <input type="checkbox"
+            v-on:change="setRangeSelection('byOne', $event)"
+            class="set-range -hidden"
+            v-model="block.checked"/>
+
+          <template v-if="selectionStart && selectionStart !== selectionEnd">
+          <i v-if="selectionEnd && block._id == selectionStart"
+          class="fa fa-arrow-circle-down" aria-hidden="true"
+          v-on:click="scrollToBlock(selectionEnd)"></i>
+          <i v-if="selectionStart && block._id == selectionEnd"
+          class="fa fa-arrow-circle-up" aria-hidden="true"
+          v-on:click="scrollToBlock(selectionStart)"></i>
+          </template>
+
         </div>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
@@ -417,7 +432,7 @@
               @click="assembleBlockProxy">
                   <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
               </div>
-              <div class="align-range -hidden -left" v-if="allowEditing">
+              <div class="align-range -hidden -left" v-if="false && allowEditing">
                 Set block range: <label>
                 <input type="checkbox" v-on:change="setRangeSelection('start', $event)"
                 class="set-range-start" :disabled="!allowSetStart(block._id)"
@@ -426,10 +441,10 @@
                 <input type="checkbox" v-on:change="setRangeSelection('end', $event)" class="set-range-end" :disabled="!allowSetEnd(block._id)"
                 v-model="block.checkedEnd"/>&nbsp;End</label>
                 <template v-if="displaySelectionStart">
-                  <a class="go-to-block" v-on:click="scrollToBlock(displaySelectionStart)">View start({{displaySelectionStart}})</a>
+                  <a class="go-to-block" v-on:click="scrollToBlock(selectionStart)">View start({{displaySelectionStart}})</a>
                 </template>
                 <template v-if="displaySelectionEnd">
-                  <a class="go-to-block" v-on:click="scrollToBlock(displaySelectionEnd)">View end({{displaySelectionEnd}})</a>
+                  <a class="go-to-block" v-on:click="scrollToBlock(selectionEnd)">View end({{displaySelectionEnd}})</a>
                 </template>
               </div>
               <div class="par-ctrl -hidden -right">
@@ -761,6 +776,12 @@ export default {
       },
       displaySelectionEnd() {
         return this.$parent.selectionStart._id == this.block._id ? this.$parent.selectionEnd._id : false;
+      },
+      selectionStart() {
+        return this.$parent.selectionStart._id
+      },
+      selectionEnd() {
+        return this.$parent.selectionEnd._id
       },
       allowBlockFlag() {
         if (this.isCanFlag('narrator', false) || this.isCanFlag('editor', false)) {
@@ -2795,10 +2816,12 @@ export default {
     width: 100%;
 
     &.-block {
-        margin-bottom: 20px;
+
     }
 
     &.-content {
+        margin-bottom: 20px;
+
         .-hidden {
             visibility: hidden;
         }
@@ -2850,8 +2873,30 @@ export default {
         width: 50px;
         padding-left: 15px;
 
+        &.-check-green {
+          border-left: 4px solid lightgreen;
+          padding-left: 11px;
+          width: 48px;
+        }
+
         .table-row.parnum-row {
-          height: 5px;
+          height: 25px;
+        }
+
+        .table-row.check-row {
+          height: 25px;
+          width: 17px;
+
+         .set-range {
+            cursor: pointer;
+            margin: 5px 0 0 5px;
+          }
+
+          .fa {
+            display: block;
+            margin: 5px 0 0 3px;
+            cursor: pointer;
+          }
         }
 
         .-hidden {
@@ -2863,6 +2908,7 @@ export default {
                 visibility: visible;
             }
         }
+
         .-hidden-hover {
             display: block;
         }
@@ -2872,25 +2918,45 @@ export default {
                 display: none;
             }
         }
-        .parnum {
-            font-size: 1.1em;
-            font-family: serif;
-            &.-bold {
-              font-weight: bold;
-            }
-            &.-auto {
-              letter-spacing: -1px;
-              margin-left: -6px;
+
+        .-hidden-block {
+            display: none;
+        }
+
+        &:hover {
+            .-hidden-block {
+                display: block;
             }
         }
-        .secnum {
-            font-size: 15px;
-            font-family: serif;
-            padding: 0;
-            width: 38px;
-            height: 25px;
-            margin-left: -1px;
+
+        .parnum {
+          font-size: 1.1em;
+          font-family: serif;
+          margin-top: 1px;
+
+          &.-bold {
+            font-weight: bold;
           }
+          &.-auto {
+            letter-spacing: -1px;
+            margin-left: -6px;
+          }
+        }
+        .secnum {
+          font-size: 15px;
+          font-family: serif;
+          padding: 0;
+          width: 38px;
+
+          margin-left: -3px;
+          margin-top: -1px;
+/*          &.-hidden {
+            display: none;
+            &:hover {
+              display: block;
+            }
+          }*/
+        }
     }
 
     &.controls-right {

@@ -65,7 +65,22 @@ export default {
   },
 
   watch: {
-
+    '$route' () {
+      if (this.$route.params.hasOwnProperty('bookid')) {
+        if (this.bookId !== this.$route.params.bookid) {
+          this.freeze('loadBookToc');
+          this.loadBookToc(this.$route.params.bookid)
+          .then((res)=>{
+            this.tocs = res.data;
+            //console.log('this.tocs', this.tocs);
+            this.unfreeze('loadBookToc');
+          })
+          .catch((err)=>{
+            this.unfreeze('loadBookToc');
+          })
+        }
+      }
+    }
   },
 
   destroyed: function () {
