@@ -575,8 +575,8 @@
               this.cursorPosition = this.selection.start;
               //console.log(this.mouseSelection.start, pos)
             }
-            this._showSelectionBorders();
             $('#cursor-position').show();
+            this._showSelectionBorders();
           });
           $('body').on('mousedown', '.playlist-overlay', (e) => {
             if (e.which !== 1) {
@@ -636,16 +636,20 @@
           this.$root.$emit('from-audioeditor:play');
         },
         stop() {
-          this.cursorPosition = false;
-          return this.audiosourceEditor.stop()
-            .then(() => {
-              this.isPlaying = false;
-              this._clearWordSelection();
-              $('.playlist-tracks').scrollLeft(0);
-              this.$root.$emit('from-audioeditor:stop');
-              return Promise.resolve();
-            })
-            .catch(err => console.log(err));
+          if (this.isPlaying) {
+            this.cursorPosition = false;
+            return this.audiosourceEditor.stop()
+              .then(() => {
+                this.isPlaying = false;
+                this._clearWordSelection();
+                $('.playlist-tracks').scrollLeft(0);
+                this.$root.$emit('from-audioeditor:stop');
+                return Promise.resolve();
+              })
+              .catch(err => console.log(err));
+          } else {
+            return Promise.resolve();
+          }
         },
         pause() {
           return this.audiosourceEditor.pause()
