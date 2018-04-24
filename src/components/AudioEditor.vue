@@ -572,10 +572,14 @@
                 }
               }
             } else {
-              this.cursorPosition = this.selection.start;
+              if (this.isPlaying) {
+                this.cursorPosition = pos;
+              } else {
+                this.cursorPosition = this.selection.start;
+              }
               //console.log(this.mouseSelection.start, pos)
             }
-            $('#cursor-position').show();
+            //$('#cursor-position').show();
             this._showSelectionBorders();
           });
           $('body').on('mousedown', '.playlist-overlay', (e) => {
@@ -1385,8 +1389,10 @@
             
             if (val > 0) {
               if (this.isPlaying) {
-                this.stop();
-                this.play(val);
+                this.stop()
+                  .then(() => {
+                    this.play(val);
+                  });
               } else {
                 $('#cursor-position').show();
               }
