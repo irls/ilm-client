@@ -100,7 +100,7 @@ export const store = new Vuex.Store({
     currentLibraryId: false,
 
     user: {},
-    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0'},
+    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0'},
 
     ttsVoices : [],
 
@@ -1454,6 +1454,11 @@ export const store = new Vuex.Store({
       }
       if (counters.length == 0 || counters.indexOf('not_proofed_audio_blocks') !== -1) {
         dispatch('_setNotProofedAudioBlocksCounter');
+      }
+      if (counters.length == 0) {
+        //console.log('SET COUNTERS')
+        //commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_audio_in_range', value: '0'});
+        //commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_tts_in_range', value: '0'});
       }
     },
 

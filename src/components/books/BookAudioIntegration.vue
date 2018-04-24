@@ -418,13 +418,44 @@
         }
         return l.join(':')
       },
-      align(id = null) {
+      align(id = null, warn = true) {
+        if (warn && this.currentBookCounters.approved_audio_in_range > 0) {
+          this.$root.$emit('show-modal', {
+            title: 'Are you you sure you want to realign ' + this.currentBookCounters.approved_audio_in_range + ' approved block(s)?',
+            //text: 'Are you you sure you want to realign ' + this.currentBookCounters.approved_audio_in_range + ' approved block(s)?',
+            text: '',
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  //this.cancelAlign();
+                },
+              },
+              {
+                title: 'Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.align(id, false)
+                    }
+                  }, 50);
+                },
+                'class': 'btn btn-primary'
+              }
+            ],
+            class: ['align-modal']
+          });
+          return;
+        }
         let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/selection_alignment';
         let formData = new FormData();
         let api = this.$store.state.auth.getHttp()
         let self = this;
         //this.alignmentProcess = true;
-        let realign = this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0;
+        let realign = true;
         this._setAligningBlocks('audio_file');
         api.post(api_url, {
           start: this.blocksForAlignment.start._id,
@@ -544,7 +575,38 @@
           });
         }
       },
-      alignTts() {
+      alignTts(warn = true) {
+        if (warn && this.currentBookCounters.approved_tts_in_range > 0) {
+          this.$root.$emit('show-modal', {
+            title: 'Are you you sure you want to realign ' + this.currentBookCounters.approved_tts_in_range + ' approved block(s)?',
+            //text: 'Are you you sure you want to realign ' + this.currentBookCounters.approved_audio_in_range + ' approved block(s)?',
+            text: '',
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  //this.cancelAlign();
+                },
+              },
+              {
+                title: 'Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.alignTts(false)
+                    }
+                  }, 50);
+                },
+                'class': 'btn btn-primary'
+              }
+            ],
+            class: ['align-modal']
+          });
+          return;
+        }
         let api_url = this.API_URL + 'books/' + this.currentBookid + '/selection_alignment';
         let formData = new FormData();
         let api = this.$store.state.auth.getHttp()
@@ -554,7 +616,7 @@
           start: this.blocksForAlignment.start._id,
           end: this.blocksForAlignment.end._id,
           audiofiles: false,
-          realign: false,/*this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0*/
+          realign: true,
           voicework: 'all_with_tts',
           voices: this.currentBookMeta.voices
         }, {
