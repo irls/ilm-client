@@ -640,7 +640,7 @@
           this.$root.$emit('from-audioeditor:play');
         },
         stop() {
-          if (this.isPlaying) {
+          if (this.isPlaying || this.isPaused) {
             this.cursorPosition = false;
             return this.audiosourceEditor.stop()
               .then(() => {
