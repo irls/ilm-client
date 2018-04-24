@@ -29,6 +29,7 @@
             :getBloksUntil="getBloksUntil"
             :allowSetStart="allowSetStart"
             :allowSetEnd="allowSetEnd"
+            :_recountApprovedInRange="_recountApprovedInRange"
             @stopRecordingAndNext="stopRecordingAndNext"
             @insertBefore="insertBlockBefore"
             @insertAfter="insertBlockAfter"
@@ -545,6 +546,7 @@ export default {
       })
       this.initRecorder();
       this.reCountProxy();
+      this._recountApprovedInRange();
     },
 
     hasClass: function(block, cssclass) {
@@ -1123,6 +1125,35 @@ export default {
           }
           break;
       }
+      this._recountApprovedInRange();
+    },
+    _recountApprovedInRange() {
+      let approved = 0;
+      let approved_tts = 0;
+      if (this.selectionStart && this.selectionEnd && this.tc_hasTask('content_cleanup')) {
+        let crossId = this.selectionStart._id;
+        for (var idx=0; idx < this.parlist.size; idx++) {
+          let block = this.parlist.get(crossId);
+          if (block) {
+            if (block.markedAsDone) {
+              switch (block.voicework) {
+                case 'audio_file' :
+                  ++approved;
+                  break;
+                case 'tts':
+                  ++approved_tts;
+                  break;
+              }
+            }
+            if (block._id == this.selectionEnd._id) {
+              break;
+            }
+            crossId = block.chainid;
+          } else break;
+        }
+      }
+      this.$store.commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_audio_in_range', value: approved});
+      this.$store.commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_tts_in_range', value: approved_tts});
     },
     findPrevBlock(blockId) {
       let found, BreakException = {}; // a trick to stop forEach

@@ -377,9 +377,9 @@
     <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Complete" cancel-text="Close" title="" @ok="sharePrivateBook()">
       <div v-html="sharePrivateBookMessage"></div>
     </modal>
-    <modal v-model="unlinkCollectionWarning" effect="fade" ok-text="Remove" cancel-text="Cancel" @ok="updateCollection()" @cancel="cancelCollectionUpdate">
+    <!-- <modal v-model="unlinkCollectionWarning" effect="fade" ok-text="Remove" cancel-text="Cancel" @ok="updateCollection()" @cancel="cancelCollectionUpdate">
       <p>Remove book from collection?</p>
-    </modal>
+    </modal> -->
     <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="completeAudioMastering()">
       <p>Complete mastering?</p>
     </modal>
@@ -690,6 +690,34 @@ export default {
         this.setAllowSetMastered();
       },
       deep: true
+    },
+    'unlinkCollectionWarning': {
+      handler(val) {
+        if (val === true) {
+          this.$root.$emit('show-modal', {
+            title: 'Remove book from collection?',
+            text: '',
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.cancelCollectionUpdate();
+                },
+              },
+              {
+                title: 'Remove',
+                handler: () => {
+                  this.updateCollection();
+                },
+                'class': 'btn btn-primary'
+              }
+            ],
+            class: ['align-modal']
+          });
+        } else {
+          this.$root.$emit('hide-modal');
+        }
+      }
     }
 
   },
@@ -731,6 +759,7 @@ export default {
         let api = this.$store.state.auth.getHttp();
         let self = this;
         api.post(api_url, {books_ids: [this.currentBook._id]}, {}).then(function(response){
+          self.unlinkCollectionWarning = false;
           if (response.status===200) {
             self.$router.push('/books');
             self.visible = false;
@@ -738,7 +767,7 @@ export default {
 
           }
         }).catch((err) => {
-
+          self.unlinkCollectionWarning = false;
         });
       } else if (event) {
         this.unlinkCollectionWarning = true;
@@ -748,13 +777,14 @@ export default {
         let api = this.$store.state.auth.getHttp();
         let self = this;
         api.post(api_url, {books_ids: [this.currentBook._id]}, {}).then(function(response){
+          self.unlinkCollectionWarning = false;
           if (response.status===200) {
             self.$router.push('/collections/' + collection_id);
           } else {
 
           }
         }).catch((err) => {
-
+          self.unlinkCollectionWarning = false;
         });
       }
     },

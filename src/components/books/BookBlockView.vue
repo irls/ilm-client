@@ -627,7 +627,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', '_recountApprovedInRange'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -1321,6 +1321,7 @@ export default {
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
             this.setCurrentBookCounters(['not_marked_blocks']);
+            this._recountApprovedInRange();
           });
         }
       },
@@ -1335,6 +1336,7 @@ export default {
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
             this.setCurrentBookCounters(['not_marked_blocks']);
+            this._recountApprovedInRange();
             //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
             this.getBloksUntil('unresolved', null, this.block._id)
           });
