@@ -2,7 +2,12 @@
 <div class="toolbar">
 
   <h3 v-if="currentBook" class='title'>
-    <i :class="['fa fa-pencil', isBlocked ? '-blocked':'-free']"></i> {{currentBookMeta.title}}</h3>
+    <i class="fa fa-minus-square-o -smaller-uncheck" aria-hidden="true"
+      v-if="checked.start._id"
+      v-on:click="clearRangeSelection()"></i>
+    <i v-else :class="['fa fa-pencil', isBlocked ? '-blocked':'-free']"></i>
+    {{currentBookMeta.title}}
+  </h3>
 
   <div class="pull-right">
 
@@ -57,7 +62,11 @@ export default {
         //'JSON': 'JSON',
         'BookEditDisplay': 'Display'
       },
-      showBookReimport: false
+      showBookReimport: false,
+      checked: {
+        start: { _id: null },
+        end: { _id: null },
+      }
     }
   },
   mixins: [access, taskControls, apiConfig],
@@ -90,6 +99,9 @@ export default {
     },
     reimportBookClose() {
       this.showBookReimport = false;
+    },
+    clearRangeSelection() {
+      this.$root.$emit('from-bookedit:set-selection', {}, {});
     }
   },
   components: {
@@ -126,6 +138,16 @@ export default {
       return this.$store.state.currentBookMeta
     },
     ...mapGetters(['currentBookMeta', 'isBlocked'])
+  },
+  mounted() {
+    this.$root.$on('from-bookedit:set-selection', (start, end)=>{
+      //console.log('from-bookedit:set-selection', this.checked.start);
+      this.checked.start = (start && start._id) ? start : { _id: null };
+      this.checked.end = (end && end._id) ? end : { _id: null };
+    });
+  },
+  destroyed: function () {
+    this.$root.$off('from-bookedit:set-selection');
   }
 }
 </script>
@@ -178,12 +200,23 @@ h3.title i {
   font-size: 24pt;
 }
 
-.fa.fa-pencil {
-  &.-blocked {
-    color: red;
+.fa {
+  &.fa-pencil {
+    vertical-align: middle;
+    line-height: 27pt;
+
+    &.-blocked {
+      color: red;
+    }
+    &.-free {
+      color: green;
+    }
   }
-  &.-free {
-    color: green;
+  &.-smaller-uncheck {
+    vertical-align: middle;
+    line-height: 27pt;
+    padding-left: 2px;
+    width: 27px;
   }
 }
 
