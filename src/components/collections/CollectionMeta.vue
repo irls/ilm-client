@@ -200,6 +200,7 @@
     width: 29%;
     height: 80%;
     overflow-y: scroll;
+    padding-top: 38px;
     fieldset {
       border:1px solid #b9b6b6;
       position:relative;

@@ -38,6 +38,7 @@
     <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}]" >
       <AudioEditor ref="audioEditor"></AudioEditor>
     </nav>
+    <v-dialog :clickToClose="false"/>
   </div>
 </template>
 <script>
@@ -52,6 +53,9 @@
   import Vue from 'vue';
   import api_config from '../mixins/api_config.js'
   import task_controls from '../mixins/task_controls.js'
+  var modal = require('vue-js-modal');
+
+  Vue.use(modal, {dialog: true});
   export default {
       name: 'Collections',
       components: {
@@ -151,6 +155,14 @@
               })
           }
         },
+        showModal(params) {
+          //console.log('MODAL SHOW')
+          this.$modal.show('dialog', params);
+        },
+        hideModal() {
+          //console.log('MODAL HIDE')
+          this.$modal.hide('dialog');
+        },
         ...mapActions(['loadCollection', 'loadBook'])
       },
       mounted() {
@@ -171,6 +183,8 @@
         this.$root.$on('from-bookblockview:voicework-type-changed', function() {
           self.getBlockSelectionInfo();
         });
+        this.$root.$on('show-modal', (params) => {this.showModal(params)})
+        this.$root.$on('hide-modal', () => {this.hideModal()})
       },
       computed: {
         metaVisible: {
