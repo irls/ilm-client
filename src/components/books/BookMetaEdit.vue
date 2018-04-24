@@ -237,62 +237,120 @@
             </table> -->
           </fieldset>
         </vue-tab>
+
         <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!allowMetadataEdit">
-           <vue-tabs ref="stylesTabs">
+        <accordion :one-at-atime="true" ref="accordionStyles">
 
-            <vue-tab title="Styles" :id="'global-styles-switcher'">
-              <div>
-                <input type="radio" :id="'gs-default'" :value="''" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                <label :for="'gs-default'" class="style-label">ILM</label>
-              </div>
-              <div>
-                <input type="radio" :id="'gs-ocean'" :value="'global-ocean'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                <label :for="'gs-ocean'" class="style-label">Ocean</label>
-              </div>
-              <div>
-                <input type="radio" :id="'gs-ffa'" :value="'global-ffa'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                <label :for="'gs-ffa'" class="style-label">FFA</label>
-              </div>
-            </vue-tab>
+          <panel :is-open="true" header="Selected blocks styles"
+            v-bind:key="'block-styles'" ref="panelBlockStyles">
+            <div class="styles-catalogue">
 
-            <vue-tab title="Fonts" :id="'fonts-styles-switcher'">
-              <div>
-                <input type="radio" :id="'ft-default'" :value="''" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                <label :for="'ft-default'" class="style-label">default</label>
-              </div>
-              <div>
-                <input type="radio" :id="'ft-typewriter'" :value="'typewriter'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                <label :for="'ft-typewriter'" class="style-label">typewriter</label>
-              </div>
-              <div>
-                <input type="radio" :id="'ft-monospace'" :value="'monospace'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                <label :for="'ft-monospace'" class="style-label">monospace</label>
-              </div>
-              <div>
-                <input type="radio" :id="'ft-oldbook'" :value="'oldbook'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                <label :for="'ft-oldbook'" class="style-label">oldbook</label>
-              </div>
-            </vue-tab>
-            <vue-tab title="Align" :id="'align-styles-switcher'">
+              <vue-tabs ref="blockTypesTabs" class="block-style-tabs">
 
-              <div v-for="(align, key) in blockTypes.par['align']" >
-                <input type="radio" :id="'pt-'+align" :value="align" v-model="currentBook.styles.align" @change="update('styles.align', $event)">
-                <label :for="'pt-'+align" class="style-label">{{align.length ? align : 'default'}}</label>
-              </div>
-            </vue-tab>
-            <vue-tab title="Par" :id="'paragraphs-styles-switcher'">
-              <div v-for="(type, key) in blockTypes.par['paragraph type']" >
-                <input type="radio" :id="'pt-'+type" :value="type" v-model="currentBook.styles.parType" @change="update('styles.parType', $event)">
-                <label :for="'pt-'+type" class="style-label">{{type.length ? type : 'default'}}</label>
-              </div>
-            </vue-tab>
-            <vue-tab title="HR" :id="'hr-styles-switcher'">
-              <div v-for="(size, key) in blockTypes.hr['size']" >
-                <input type="radio" :id="'pt-'+size" :value="(size.length ?'global-hr-':'')+ size" v-model="currentBook.styles.hrSize" @change="update('styles.hrSize', $event)">
-                <label :for="'pt-'+size" class="style-label">{{size.length ? size : 'default'}}</label>
-              </div>
-            </vue-tab>
-          </vue-tabs>
+                <vue-tab :title="blockType" v-for="(val, blockType) in blockTypes"
+                  :id="'block-type-'+blockType" key="blockType">
+
+                  <template v-for="(valArr, key) in blockTypes[blockType]">
+
+                    <fieldset v-if="valArr.length" key="key" class="block-style-fieldset">
+                    <legend>{{key}}</legend>
+
+                      <label v-for="sVal in valArr" class="block-style-label">
+                        <input type="radio"
+                        :name="'block-type-value-'+key"
+                        v-model='styleSel' value="sVal"/>
+                        <span v-if="sVal.length">{{sVal}}</span>
+                        <span v-else>none</span>
+                      </label>
+
+                    </fieldset>
+
+                    <label v-else class="block-style-label">
+                      <input type="radio" :name="'block-type-value-'+key"
+                      v-model='classSel' value="key"/>
+                      <span v-if="key.length">{{key}}</span>
+                      <span v-else>none</span>
+                    </label>
+
+                    <div v-if="getRows >= 3" style="clear: both;"></div>
+
+                  </template>
+
+                </vue-tab>
+
+              </vue-tabs>
+
+            </div>
+            <!--<div class="styles-catalogue">-->
+          </panel>
+
+          <panel :is-open="false" header="Book styles"
+            v-bind:key="'book-styles'" ref="panelBookStyles">
+
+            <div class="styles-catalogue">
+
+              <vue-tabs ref="stylesTabs">
+
+                <vue-tab title="Styles" :id="'global-styles-switcher'">
+                  <div>
+                    <input type="radio" :id="'gs-default'" :value="''" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                    <label :for="'gs-default'" class="style-label">ILM</label>
+                  </div>
+                  <div>
+                    <input type="radio" :id="'gs-ocean'" :value="'global-ocean'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                    <label :for="'gs-ocean'" class="style-label">Ocean</label>
+                  </div>
+                  <div>
+                    <input type="radio" :id="'gs-ffa'" :value="'global-ffa'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                    <label :for="'gs-ffa'" class="style-label">FFA</label>
+                  </div>
+                </vue-tab>
+                <vue-tab title="Fonts" :id="'fonts-styles-switcher'">
+                  <div>
+                    <input type="radio" :id="'ft-default'" :value="''" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
+                    <label :for="'ft-default'" class="style-label">default</label>
+                  </div>
+                  <div>
+                    <input type="radio" :id="'ft-typewriter'" :value="'typewriter'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
+                    <label :for="'ft-typewriter'" class="style-label">typewriter</label>
+                  </div>
+                  <div>
+                    <input type="radio" :id="'ft-monospace'" :value="'monospace'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
+                    <label :for="'ft-monospace'" class="style-label">monospace</label>
+                  </div>
+                  <div>
+                    <input type="radio" :id="'ft-oldbook'" :value="'oldbook'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
+                    <label :for="'ft-oldbook'" class="style-label">oldbook</label>
+                  </div>
+                </vue-tab>
+                <vue-tab title="Align" :id="'align-styles-switcher'">
+
+                  <div v-for="(align, key) in blockTypes.par['align']" >
+                    <input type="radio" :id="'pt-'+align" :value="align" v-model="currentBook.styles.align" @change="update('styles.align', $event)">
+                    <label :for="'pt-'+align" class="style-label">{{align.length ? align : 'default'}}</label>
+                  </div>
+                </vue-tab>
+                <vue-tab title="Par" :id="'paragraphs-styles-switcher'">
+                  <div v-for="(type, key) in blockTypes.par['paragraph type']" >
+                    <input type="radio" :id="'pt-'+type" :value="type" v-model="currentBook.styles.parType" @change="update('styles.parType', $event)">
+                    <label :for="'pt-'+type" class="style-label">{{type.length ? type : 'default'}}</label>
+                  </div>
+                </vue-tab>
+                <vue-tab title="HR" :id="'hr-styles-switcher'">
+                  <div v-for="(size, key) in blockTypes.hr['size']" >
+                    <input type="radio" :id="'pt-'+size" :value="(size.length ?'global-hr-':'')+ size" v-model="currentBook.styles.hrSize" @change="update('styles.hrSize', $event)">
+                    <label :for="'pt-'+size" class="style-label">{{size.length ? size : 'default'}}</label>
+                  </div>
+                </vue-tab>
+
+            </vue-tabs>
+
+            </div>
+            <!--<div class="styles-catalogue">-->
+          </panel>
+
+        </accordion>
+
         </vue-tab>
       </vue-tabs>
       </div>
@@ -360,7 +418,7 @@ import BookToc from './BookToc'
 import _ from 'lodash'
 import PouchDB from 'pouchdb'
 import axios from 'axios'
-import { alert, modal } from 'vue-strap'
+import { alert, modal, accordion, panel } from 'vue-strap'
 import task_controls from '../../mixins/task_controls.js'
 import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
@@ -381,7 +439,9 @@ export default {
     'vue-tabs': VueTabs,
     'vue-tab': VTab,
     alert,
-    modal
+    modal,
+    accordion,
+    panel
   },
 
   data () {
@@ -420,7 +480,12 @@ export default {
       blockTypes: BlockTypes,
       audioMasteringProcess: false,
       generatingAudiofile: false,
-      audiobookChecker: false
+      audiobookChecker: false,
+
+      // set blocks properties
+      classSel: false,
+      styleSel: false,
+      rowCount: 0
     }
   },
 
@@ -529,7 +594,22 @@ export default {
           return this.tc_currentBookTasks.tasks.length;
         }
       }
-    }
+    },
+    getRows: {
+      get() {
+        this.rowCount++;
+        return this.rowCount;
+      }
+    }/*,
+    blockClasses: function () {
+      return this.blockTypes[this.block.type];
+    },
+    blockStyles: function () {
+      if (this.classSel && this.blockTypes[this.block.type][this.classSel] && this.blockTypes[this.block.type][this.classSel].length) {
+        return this.blockTypes[this.block.type][this.classSel];
+      }
+      return false;
+    }*/
   },
 
   mixins: [task_controls, api_config, access],
@@ -1213,6 +1293,36 @@ export default {
     }
     &.download-audiofile {
       text-align: center;
+    }
+  }
+
+  .block-style-tabs {
+    .block-style-fieldset {
+      float: left;
+      width: 32%;
+    }
+    .block-style-label {
+      display: block;
+      line-height: 12px;
+      input[type='radio'] {
+        margin-left: 0px;
+        margin-right: 5px;
+      }
+      span {
+        float: none;
+        width: auto;
+      }
+    }
+  }
+</style>
+
+<style lang="less">
+
+  .styles-catalogue {
+    li.tab {
+      span.title {
+        text-transform: capitalize;
+      }
     }
   }
 

@@ -2407,12 +2407,13 @@ export default {
           });
         }
       },
-      setRangeSelection(type, event) {
+      setRangeSelection(type, ev) {
         let checked;
-        if (event === true || event === false) checked = event;
-        else checked = event.target && event.target.checked;
+        if (ev === true || ev === false) checked = ev;
+        else checked = ev.target && ev.target.checked;
+        document.getSelection().removeAllRanges();
         this.block.checked = checked;
-        this.$emit('setRangeSelection', this.block, type, checked);
+        this.$emit('setRangeSelection', this.block, type, checked, ev.shiftKey||false);
       },
       updateVoicework() {
         if (!this.voiceworkChange) {

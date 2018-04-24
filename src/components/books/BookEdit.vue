@@ -990,8 +990,8 @@ export default {
         };
     },
 
-    setRangeSelection(block, type, status) {
-      //console.log('setRangeSelection', block, type, status);
+    setRangeSelection(block, type, status, shift = false) {
+      //console.log('setRangeSelection', block, type, status, shift);
       switch (type) {
         case 'start':
           if (status) {
@@ -1029,34 +1029,54 @@ export default {
           break;
         case 'byOne':
           //console.log('byOne', status, block._id, 'start:', this.selectionStart._id, 'end:', this.selectionEnd._id);
-          if (status) {
+          if (status) { // check
             if (this.selectionStart._id) {
-              let pBlock, currId = block._id, isFound = false;
-              while (pBlock = this.findPrevBlock(currId)) {
-                if (pBlock._id === this.selectionStart._id) {
-                  this.selectionEnd = block;
-                  isFound = true;
-                  break;
-                }
-                currId = pBlock._id;
-              }
-
-              if (!isFound) {
-                // selected blocks are not found before, so they are after
-                if (!this.selectionEnd._id) this.selectionEnd = this.selectionStart;
-                this.selectionStart = block;
-              }
 
               this.setUnCheckedRange();
-              this.setCheckedRange(this.selectionStart._id, this.selectionEnd._id);
+
+//               if (!status && this.selectionStart._id == this.selectionEnd._id) { // uncheck
+//                 block.checked = false;
+//                 this.selectionStart = {};
+//                 this.selectionEnd = {};
+//                 this.$root.$emit('from-bookedit:set-selection', {}, {});
+//                 break;
+//               }
+
+              if (shift) {
+                let pBlock, currId = block._id, isFound = false;
+                while (pBlock = this.findPrevBlock(currId)) {
+                  if (pBlock._id === this.selectionStart._id) {
+                    this.selectionEnd = block;
+                    isFound = true;
+                    break;
+                  }
+                  currId = pBlock._id;
+                }
+
+                if (!isFound) {
+                  // selected blocks are not found before, so they are after
+                  if (!this.selectionEnd._id) this.selectionEnd = this.selectionStart;
+                  this.selectionStart = block;
+                }
+
+                this.setCheckedRange(this.selectionStart._id, this.selectionEnd._id);
+
+              } else {
+                block.checked = true;
+                this.selectionStart = block;
+                this.selectionEnd = block;
+              }
+
               this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
 
             } else  {
+              this.setUnCheckedRange();
+              block.checked = true;
               this.selectionStart = block;
               this.selectionEnd = block;
               this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
             }
-          } else {
+          } else { // uncheck
             if (this.selectionStart._id && this.selectionEnd._id) {
               if (this.selectionStart._id == block._id && block._id == this.selectionEnd._id) {
                 this.selectionStart = {};
@@ -1067,29 +1087,29 @@ export default {
                 this.selectionEnd = this.findPrevBlock(block._id);
               } else {
 
-                let pBlock, beforeCount = 0, afterCount = 0;
-                let currId = block._id;
-                while (pBlock = this.findPrevBlock(currId)) {
-                  if (pBlock._id === this.selectionStart._id) {
-                    beforeCount++;
-                    break;
-                  }
-                  currId = pBlock._id;
-                }
-                currId = block.chainid
-                while (pBlock = this.parlist.get(currId)) {
-                  if (pBlock._id === this.selectionEnd._id) {
-                    afterCount++;
-                    break;
-                  }
-                  currId = pBlock.chainid;
-                }
-
-                if (afterCount > beforeCount) {
-                  this.selectionStart = block.chainid;
-                } else {
+//                 let pBlock, beforeCount = 0, afterCount = 0;
+//                 let currId = block._id;
+//                 while (pBlock = this.findPrevBlock(currId)) {
+//                   if (pBlock._id === this.selectionStart._id) {
+//                     beforeCount++;
+//                     break;
+//                   }
+//                   currId = pBlock._id;
+//                 }
+//                 currId = block.chainid
+//                 while (pBlock = this.parlist.get(currId)) {
+//                   if (pBlock._id === this.selectionEnd._id) {
+//                     afterCount++;
+//                     break;
+//                   }
+//                   currId = pBlock.chainid;
+//                 }
+//
+//                 if (afterCount > beforeCount) {
+//                   this.selectionStart = block.chainid;
+//                 } else {
                   this.selectionEnd = this.findPrevBlock(block._id);
-                }
+//                 }
               }
               this.setUnCheckedRange();
               this.setCheckedRange(this.selectionStart._id, this.selectionEnd._id);
@@ -1352,7 +1372,16 @@ export default {
 
       this.$root.$on('for-bookedit:scroll-to-block', (id)=>{
         this.scrollToBlock(id);
-      })
+      });
+
+      this.$root.$on('from-bookedit:set-selection', (start, end)=>{
+        // cleanup range emited from outside
+        if ((!start || !start._id) && (!end || !end._id)) {
+          this.selectionStart = {};
+          this.selectionEnd = {};
+          this.setUnCheckedRange();
+        }
+      });
 
       this.$root.$on('bookBlocksUpdates', (data) => {
         //this._updateBlocksFromResponse(data);
@@ -1372,6 +1401,7 @@ export default {
     this.$root.$off('bookBlocksUpdates');
     this.$root.$off('for-bookedit:scroll-to-block');
     this.$root.$off('book-reimported');
+    this.$root.$off('from-bookedit:set-selection');
   },
   watch: {
     'meta._id': {
