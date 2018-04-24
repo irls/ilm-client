@@ -1253,7 +1253,10 @@ export default {
               this.startId = prevBlockId;
               this.$refs.blocks.forEach(($ref)=>{
                 $ref.addContentListeners();
-              })
+              });
+              if (this.selectionStart._id && this.selectionEnd._id) {
+                this.setCheckedRange(this.selectionStart._id, this.selectionEnd._id);
+              }
               Vue.nextTick(()=>{
                 this.upScreenTop = false;
                 let prevHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
@@ -1299,6 +1302,9 @@ export default {
                   this.$refs.blocks.forEach(($ref)=>{
                   $ref.addContentListeners();
                 })
+                if (this.selectionStart._id && this.selectionEnd._id) {
+                  this.setCheckedRange(this.selectionStart._id, this.selectionEnd._id);
+                }
                 Vue.nextTick(()=>{
                   this.screenTop = this.screenTop + firstHeight;
                 });
