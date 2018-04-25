@@ -106,7 +106,7 @@ export const store = new Vuex.Store({
 
     blockers: [],
 
-    parList:[], // global parlist
+    storeList: new Map(), // global parlist
   },
 
   getters: {
@@ -194,7 +194,7 @@ export const store = new Vuex.Store({
     isBlocked: state => state.blockers.length > 0,
     blockers: state => state.blockers,
 
-    //parList: state => state.parList, // global parlist
+    storeList: state => state.storeList, // global parlist
   },
 
   mutations: {
@@ -480,6 +480,19 @@ export const store = new Vuex.Store({
       let idx = state.blockers.indexOf(bName);
       //console.log('clear_blocker', bName, idx, state.blockers);
       if (idx > -1) state.blockers.splice(idx, 1);
+    },
+
+    set_storeList (state, blockObj) {
+      if (state.storeList) {
+        let firstObj = state.storeList.values().next().value;
+        if (!(firstObj && firstObj.bookid == blockObj.bookid)) {
+          state.storeList = new Map();
+        }
+      } else {
+        state.storeList = new Map();
+      }
+
+      state.storeList.set(blockObj._id, blockObj);
     }
   },
 
