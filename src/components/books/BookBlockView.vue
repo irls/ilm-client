@@ -2389,6 +2389,8 @@ export default {
             //window.scrollTo(0, window.pageYOffset + offset.top);
             self.isIllustrationChanged = false;
             self.isChanged = false;
+            self.block.isIllustrationChanged = false;
+            self.block.isChanged = false;
             self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
             //if (self.editor) {
               //self.editor.destroy();
@@ -2542,10 +2544,12 @@ export default {
             }
             //console.log(startElement, endElement, startRange, endRange)
           }
-
-          ref.querySelectorAll('w').forEach(e => {
-            $(e).removeClass('selected');
-          });
+          
+          if (ref && ref.querySelectorAll) {
+            ref.querySelectorAll('w').forEach(e => {
+              $(e).removeClass('selected');
+            });
+          }
         }
         if (this.$refs.blockContent) {
           this.$refs.blockContent.addEventListener("mouseup", () => {
