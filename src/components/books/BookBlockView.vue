@@ -1,5 +1,14 @@
 <template>
 <div class="table-body -block" :id="block._id">
+    <!-- locked: {{isLocked()}} -->
+    <div v-if="isLocked()" style="width: 100%;
+    position: absolute;
+    height: 100%;
+    background: url(/static/preloader-snake-small.gif);
+    background-repeat: no-repeat;
+    text-align: center;
+    background-position: center;
+    background-color: #8080807d;"></div>
     <div :class="['table-cell', 'controls-left', {'-check-green': block.checked==true}]">
         <div class="table-row parnum-row">
           <span v-if="block.type=='par' && block.parnum!==false" :class="['parnum']">{{block.parnum}}</span>
@@ -2559,6 +2568,9 @@ export default {
             }
           }
         }
+      },
+      isLocked() {
+        return this.$store.getters.isBlockLocked(this.block._id);
       }
   },
   watch: {

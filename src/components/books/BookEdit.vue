@@ -182,7 +182,7 @@ export default {
       modal,
   },
   methods: {
-    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask']),
+    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock']),
 
     test() {
         window.scrollTo(0, document.body.scrollHeight-500);
@@ -896,6 +896,7 @@ export default {
                   return blockRef.blockId == blockBefore._id;
                 });
                 if (currBlockRef && prevBlockRef) {
+                  this.addBlockLock({block: blockBefore, watch: ['realigned']})
                   this.freeze('joinBlocks');
                   currBlockRef.assembleBlockProxy()
                   .then(()=>{
@@ -958,6 +959,7 @@ export default {
                 });
                 if (currBlockRef && nextBlockRef) {
                   this.freeze('joinBlocks');
+                  this.addBlockLock({block: block, watch: ['realigned']})
                   currBlockRef.assembleBlockProxy()
                   .then(()=>{
                     nextBlockRef.assembleBlockProxy()
