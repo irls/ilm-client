@@ -285,18 +285,18 @@
                 <vue-tab :title="blockType"
                   :disabled="!(styleTabs.has(blockType))"
                   v-for="(val, blockType) in blockTypes"
-                  :id="'block-type-'+blockType" key="blockType">
+                  :id="'block-type-'+blockType" :key="blockType">
 
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
-                    <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length" key="styleKey" class="block-style-fieldset">
+                    <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length" :key="styleKey" class="block-style-fieldset">
                     <legend>{{styleKey}}</legend>
 
                       <label v-for="sVal in styleArr"
                         @click="selectStyle(blockType, styleKey, sVal)"
                         class="block-style-label"
-                        :key="blockType + styleKey + sVal"
-                        :id="blockType + styleKey + sVal">
+                        :key="blockType + styleKey.replace(' ', '') + sVal"
+                        :id="blockType + styleKey.replace(' ', '') + sVal">
 
                         <template v-if="styleTabs.get(blockType).get(styleKey).size > 1">
                           <i class="fa fa-dot-circle-o"
