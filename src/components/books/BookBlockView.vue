@@ -31,10 +31,6 @@
             </div>
         </div>
         <div class="table-row check-row" v-if="allowEditing">
-          <!--<input type="checkbox"
-            v-on:change="setRangeSelection('byOne', $event)"
-            class="set-range"
-            v-model="block.checked"/>-->
 
           <div class="set-range">
             <i class="fa fa-square-o -hidden" aria-hidden="true"
@@ -1074,27 +1070,26 @@ export default {
         this.pushChange('content');
         el.target.focus();
       },
-      discardBlock: function(block_id, ev) {
+      discardBlock: function(ev) {
+
+        let checked = this.block.checked;
         this.getBlock(this.block._id)
         .then((block)=>{
-          if (this.$refs.blockContent) this.$refs.blockContent.innerHTML = block.content;
+
+          if (this.$refs.blockContent) {
+            this.$refs.blockContent.innerHTML = block.content;
+            this.$refs.blockContent.focus();
+          }
+
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
               this.addContentListeners();
             }
           });
+
           this.isChanged = false;
           this.updateFlagStatus(block._id);
-//           if (Object.keys(this.blockTypes[block.type])[0] !== '') {
-//             this.classSel = Object.keys(this.blockTypes[block.type])[0];
-//           } else {
-//             let blockClasses = Object.keys(block.classes);
-//             if (blockClasses.length) {
-//               this.classSel = blockClasses[0];
-//             }
-//           }
 
-          if (this.$refs.blockContent) this.$refs.blockContent.focus();
         });
       },
       discardAudio: function() {
@@ -2544,7 +2539,7 @@ export default {
             }
             //console.log(startElement, endElement, startRange, endRange)
           }
-          
+
           if (ref && ref.querySelectorAll) {
             ref.querySelectorAll('w').forEach(e => {
               $(e).removeClass('selected');
@@ -2576,7 +2571,6 @@ export default {
   },
   watch: {
       'block.isUpdated' (newVal, oldVal) {
-        //console.log('block.isUpdated', newVal, oldVal);
         if (newVal===true) {
           this.isUpdated = true;
           this.block.isUpdated = false;
@@ -2634,6 +2628,7 @@ export default {
       'styleSel' (newVal, oldVal) {
         //console.log('styleSel');
         this.block.setClassStyle(this.classSel, newVal);
+        this.$root.$emit('from-block-edit:set-style');
         //this.addContentListeners();
         //this.destroyEditor()
         //this.initEditor();
@@ -3088,11 +3083,11 @@ export default {
           padding: 10px;
           background: rgba(219, 232, 255, .3);
       }
-      /*&:focus {
+      &:focus {
           outline: none;
-          border-color: #9ecaed;
+          /*border-color: #9ecaed;*/
           box-shadow: 0 0 10px #9ecaed;
-      }*/
+      }
       &.checked {
           outline: none;
           border-color: #9ecaed;

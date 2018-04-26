@@ -493,6 +493,10 @@ export const store = new Vuex.Store({
       }
 
       state.storeList.set(blockObj._id, blockObj);
+    },
+
+    clear_storeList (state) {
+      state.storeList = new Map();
     }
   },
 

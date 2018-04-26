@@ -249,7 +249,7 @@
 
                 <vue-tab title="Styles" :id="'global-styles-switcher'">
                   <fieldset class="block-style-fieldset">
-                  <legend>Book styles</legend>
+                  <legend>Book styles{{styleTabs.size}}</legend>
                   <div>
                     <input type="radio" :id="'gs-default'" :value="''" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
                     <label :for="'gs-default'" class="style-label">ILM</label>
@@ -283,29 +283,44 @@
                 </vue-tab>
 
                 <vue-tab :title="blockType"
-                  :disabled="!(activeStyleTabs.has(blockType))"
+                  :disabled="!(styleTabs.has(blockType))"
                   v-for="(val, blockType) in blockTypes"
                   :id="'block-type-'+blockType" key="blockType">
 
-                  <template v-for="(valArr, key) in blockTypes[blockType]">
+                  <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
-                    <fieldset v-if="valArr.length" key="key" class="block-style-fieldset">
-                    <legend>{{key}}</legend>
+                    <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length" key="styleKey" class="block-style-fieldset">
+                    <legend>{{styleKey}}</legend>
 
-                      <label v-for="sVal in valArr" class="block-style-label">
-                        <input type="radio"
-                        :name="'block-type-value-'+key"
-                        v-model='styleSel' value="sVal"/>
-                        <span v-if="sVal.length">{{sVal}}</span>
-                        <span v-else>none</span>
+                      <label v-for="sVal in styleArr"
+                        @click="selectStyle(blockType, styleKey, sVal)"
+                        class="block-style-label"
+                        :key="blockType + styleKey + sVal"
+                        :id="blockType + styleKey + sVal">
+
+                        <template v-if="styleTabs.get(blockType).get(styleKey).size > 1">
+                          <i class="fa fa-dot-circle-o"
+                           v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
+                          ></i>
+                          <i v-else class="fa fa-circle-o"></i>
+                        </template>
+
+                        <template v-else>
+                          <i v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
+                          class="fa fa-check-circle-o"></i>
+                          <i v-else class="fa fa-circle-o"></i>
+                        </template>
+
+                        <template v-if="sVal.length">{{sVal}}</template>
+                        <template v-else>none</template>
                       </label>
 
                     </fieldset>
 
                     <label v-else class="block-style-label">
-                      <input type="radio" :name="'block-type-value-'+key"
-                      v-model='classSel' value="key"/>
-                      <span v-if="key.length">{{key}}</span>
+                      <input type="radio" :name="'block-type-value-'+styleKey"
+                      value="styleKey"/>
+                      <span v-if="styleKey.length">{{styleKey}}</span>
                       <span v-else>none</span>
                     </label>
 
@@ -520,9 +535,9 @@ export default {
       audiobookChecker: false,
 
       // set blocks properties
-      activeStyleTabs: new Map(),
-      classSel: false,
-      styleSel: false
+      styleTabs: new Map(),
+      start_id: false,
+      end_id: false
     }
   },
 
@@ -659,16 +674,25 @@ export default {
       this.loadAudiobook()
     });
     this.$root.$on('from-bookedit:set-selection', (start, end)=>{
-      console.log('book meta :set-selection', start._id, end._id);
+      //console.log('book meta :set-selection', start._id, end._id);
       this.collectCheckedStyles(start._id, end._id);
+      this.start_id = start._id;
+      this.end_id = end._id;
+
+    });
+    this.$root.$on('from-block-edit:set-style', ()=>{
+      if (this.start_id && this.end_id) {
+        this.collectCheckedStyles(this.start_id, this.end_id);
+      }
     });
   },
-  destroyed: function () {
+  beforeDestroy: function () {
     this.$root.$off('uploadAudio');
     this.$root.$off('audiobookUpdated');
     this.$root.$off('from-bookblockview:voicework-type-changed');
     this.$root.$off('book-reimported');
     this.$root.$off('from-bookedit:set-selection');
+    this.$root.$off('from-block-edit:set-style');
   },
 
   watch: {
@@ -1133,17 +1157,56 @@ export default {
         let pBlock, currId = startId;
         do {
           pBlock = this.storeList.get(currId);
-          if (pBlock) {
-            result.set(pBlock.type, {});
+          if (pBlock && pBlock.checked) {
+            if (!result.has(pBlock.type)) result.set(pBlock.type, new Map());
+
+            for (let styleKey in this.blockTypes[pBlock.type]) {
+              if (!result.get(pBlock.type).has(styleKey)) result.get(pBlock.type).set(styleKey, new Map());
+              if (pBlock.classes[styleKey]) {
+                result.get(pBlock.type).get(styleKey).set(pBlock.classes[styleKey], true);
+              } else {
+                result.get(pBlock.type).get(styleKey).set('none', true);
+              }
+            }
+
+            //console.log('1', pBlock.classes);
             currId = pBlock.chainid;
           }
         } while (pBlock && pBlock._id !== endId);
       }
-      this.activeStyleTabs = result;
-      console.log('result', result)
+      this.styleTabs = result;
+      //console.log('result', result)
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters'])
+    selectStyle(blockType, styleKey, styleVal) {
+      console.log(blockType, styleKey, styleVal);
+      if (this.start_id && this.end_id) {
+        if (this.storeList.has(this.start_id)) {
+          let pBlock, currId = this.start_id;
+          do {
+            pBlock = this.storeList.get(currId);
+            if (pBlock && pBlock.checked) {
+              if (pBlock.type == blockType) {
+                if (styleVal.length) pBlock.classes[styleKey] = styleVal;
+                else pBlock.classes[styleKey] = '';
+
+                if (pBlock.isChanged || pBlock.isAudioChanged) {
+                  pBlock.checked = false;
+                  pBlock.checked = true;
+                } else {
+                  pBlock.partUpdate = true;
+                  this.putBlock(pBlock);
+                }
+              }
+              currId = pBlock.chainid;
+            }
+          } while (pBlock && pBlock._id !== this.end_id);
+        }
+        this.collectCheckedStyles(this.start_id, this.end_id);
+      }
+    },
+
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock'])
   }
 }
 </script>
@@ -1393,6 +1456,7 @@ export default {
     .block-style-label {
       display: block;
       line-height: 12px;
+      font-weight: normal;
       input[type='radio'] {
         margin-left: 0px;
         margin-right: 5px;

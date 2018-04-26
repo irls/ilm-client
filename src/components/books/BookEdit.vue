@@ -522,6 +522,7 @@ export default {
             this.refreshTmpl();
           } else {
             let newBlock = new BookBlock(change.doc);
+
             if (oldBlock.isChanged || oldBlock.isAudioChanged || oldBlock.isIllustrationChanged) {
               if (oldBlock.status && newBlock.status && oldBlock.status.assignee === newBlock.status.assignee) {
                 oldBlock._rev = change.doc._rev;
@@ -590,10 +591,15 @@ export default {
     },
 
     getBlockProxy: function (block_id) {
+      let oldBlock = this.parlist.get(block_id);
       return this.getBlock(block_id)
       .then((res)=>{
         //this.parlist.set(res._id, new BookBlock(res));
+        if (oldBlock) {
+          res.checked = oldBlock.checked;
+        }
         this.$store.commit('set_storeList', new BookBlock(res));
+        this.$root.$emit('from-block-edit:set-style');
         this.refreshTmpl();
         return Promise.resolve(res);
       })
@@ -1384,14 +1390,15 @@ export default {
       }
 
       this.$root.$on('book-reimported', ()=>{
-        console.log("$on('book-reimported')", this.$refs.blocks);
+        //console.log("$on('book-reimported')", this.$refs.blocks);
 //         this.$refs.blocks.forEach((block)=>{
 //           block._id = null;
 //         });
         this.setRangeSelection({}, 'start', false);
         this.setRangeSelection({}, 'end', false);
 
-        Vue.set(this, 'parlist', new Map());  //TODO
+        this.$store.commit('clear_storeList');
+
         this.$router.push({name: this.$route.name, params: {}});
         this.loadBookMeta()
         .then(()=>{
@@ -1422,6 +1429,7 @@ export default {
       });
 
       this.$root.$on('bookBlocksUpdates', (data) => {
+        //console.log('bookBlocksUpdates');
         //this._updateBlocksFromResponse(data);
         let updField = data.updField || false;
         if (Array.isArray(data.blocks)) data.blocks.forEach((res)=>{
