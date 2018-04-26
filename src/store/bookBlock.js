@@ -24,7 +24,8 @@ let defBlock = [
   'voicework',
   'markedAsDone',
   'status',
-  'audiosrc_ver'
+  'audiosrc_ver',
+  'realigned'
 ]
 
 let BlockTypes = {

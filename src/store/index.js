@@ -493,24 +493,24 @@ export const store = new Vuex.Store({
     },
     add_block_lock(state, data) {
       if (data.block) {
-        console.log('SET', data.block._id, data.block)
         if (typeof localStorage !== 'undefined') {
-          /*let lock = state.lockedBlocks[data.block._id];
-          if (lock) {
-            lock = Object.assign(lock, data);
-          } else {
-            state.lockedBlocks[data.block._id] = data;
-          }*/
+          data.set_at = Date.now()
           let lock = localStorage.getItem('lock_' + data.block._id);
           if (lock) {
             try {
               lock = JSON.parse(lock);
+              if (lock.watch && data.watch) {
+                lock.watch.forEach(w => {
+                  if (data.watch.indexOf(w) === -1) {
+                    data.watch.push(w);
+                  }
+                });
+              }
             } catch(err) {
               lock = data;
             }
             lock = Object.assign(lock, data);
           } else {
-            data.set_at = Date.now()
             lock = data;
           }
           localStorage.setItem('lock_' + data.block._id, JSON.stringify(lock));
@@ -542,7 +542,7 @@ export const store = new Vuex.Store({
                 if (_.isEqual(lock.block[w], data.block[w])) {
                   watch.push(lock.watch[i]);
                 } else {
-                  console.log('DIFF', lock.block[w], data.block[w])
+                  
                 }
               });
               lock.watch = watch;
@@ -552,6 +552,9 @@ export const store = new Vuex.Store({
                 localStorage.setItem('lock_' + data.block._id, JSON.stringify(lock));
               }
             } else if (lock.block._rev !== data.block._rev) {
+              localStorage.removeItem('lock_' + data.block._id);
+            }
+            if (lock.set_at && Date.now() - lock.set_at > 30 * 60 * 1000) {
               localStorage.removeItem('lock_' + data.block._id);
             }
           }
@@ -1647,6 +1650,10 @@ export const store = new Vuex.Store({
     
     addBlockLock({commit}, data) {
       commit('add_block_lock', data);
+    },
+    
+    clearBlockLock({commit}, data) {
+      commit('clear_block_lock', data);
     }
   }
 })
