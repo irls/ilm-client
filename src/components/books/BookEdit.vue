@@ -103,7 +103,7 @@ export default {
   data () {
     return {
       page: 0,
-      parlist: new Map(),
+      //parlist: new Map(),
       //autoload: true,
       recorder: false,
       blockOrderChanged: false,
@@ -135,10 +135,6 @@ export default {
   },
   computed: {
       // --- From store --- //
-      ...mapState({
-          //bookBlock: 'bookBlock'
-          //parlist: 'parList'
-      }),
       ...mapGetters({
           book: 'currentBook',
           meta: 'currentBookMeta',
@@ -146,7 +142,8 @@ export default {
           allBooks: 'allBooks',
           tc_tasksByBlock: 'tc_tasksByBlock',
           isBlocked: 'isBlocked',
-          blockers: 'blockers'
+          blockers: 'blockers',
+          parlist: 'storeList'
       }),
       metaStyles: function () {
           let result = '';
@@ -346,7 +343,8 @@ export default {
           //console.log('getBlocksUp', result);
           result.rows.forEach((el, idx, arr)=>{
             let newBlock = new BookBlock(el);
-            this.parlist.set(newBlock._id, newBlock);
+            //this.parlist.set(newBlock._id, newBlock);
+            this.$store.commit('set_storeList', newBlock);
           });
         }
         result.blockId = result.rows[0]._id
@@ -370,7 +368,8 @@ export default {
           result.rows.forEach((el, idx, arr)=>{
             let newBlock = new BookBlock(el);
             //this.parlist.push(newBlock);
-            this.parlist.set(newBlock._id, newBlock);
+            //this.parlist.set(newBlock._id, newBlock);
+            this.$store.commit('set_storeList', newBlock);
           });
         } else this.hasScrollDown = false;
         result.blockId = result.rows[result.rows.length-1]._id;
@@ -460,7 +459,8 @@ export default {
                 {
                   result.rows.forEach((el, idx, arr)=>{
                     let newBlock = new BookBlock(el);
-                    this.parlist.set(newBlock._id, newBlock);
+                    //this.parlist.set(newBlock._id, newBlock);
+                    this.$store.commit('set_storeList', newBlock);
                   });
                 }
 
@@ -491,7 +491,7 @@ export default {
     },
 
     refreshBlock (change) {
-      //console.log('refreshBlock', change);
+      console.log('refreshBlock', change);
       //console.log('this.$refs.blocks', this.$refs.blocks);
       //console.log('blockers', this.blockers);
         /*if (change.doc.audiosrc) {
@@ -510,13 +510,15 @@ export default {
         } else {
           if (oldBlock.partUpdate) {
             oldBlock._rev = change.doc._rev;
-            this.parlist.set(change.doc._id, new BookBlock(oldBlock));
+            //this.parlist.set(change.doc._id, new BookBlock(oldBlock));
+            this.$store.commit('set_storeList', new BookBlock(oldBlock));
             this.refreshTmpl();
           } else if (updField) {
             //console.log('updField', updField, change.doc[updField], oldBlock[updField]);
             oldBlock[updField] = change.doc[updField];
             oldBlock._rev = change.doc._rev;
-            this.parlist.set(change.doc._id, new BookBlock(oldBlock));
+            //this.parlist.set(change.doc._id, new BookBlock(oldBlock));
+            this.$store.commit('set_storeList', new BookBlock(oldBlock));
             this.refreshTmpl();
           } else {
             let newBlock = new BookBlock(change.doc);
@@ -532,10 +534,12 @@ export default {
                 //ref.isChanged = false;
                 //ref.isAudioChanged = false;
                 //ref.isIllustrationChanged = false;
-                this.parlist.set(change.doc._id, newBlock);
+                //this.parlist.set(change.doc._id, newBlock);
+                this.$store.commit('set_storeList', newBlock);
               }
             } else {
-              this.parlist.set(change.doc._id, new BookBlock(change.doc));
+              //this.parlist.set(change.doc._id, new BookBlock(change.doc));
+              this.$store.commit('set_storeList', new BookBlock(change.doc));
               this.refreshTmpl();
             }
           }
@@ -588,7 +592,8 @@ export default {
     getBlockProxy: function (block_id) {
       return this.getBlock(block_id)
       .then((res)=>{
-        this.parlist.set(res._id, new BookBlock(res));
+        //this.parlist.set(res._id, new BookBlock(res));
+        this.$store.commit('set_storeList', new BookBlock(res));
         this.refreshTmpl();
         return Promise.resolve(res);
       })
@@ -738,7 +743,8 @@ export default {
         .then((response)=>{
           let b_new = response.data.new_block;
           let b_old = response.data.block;
-          this.parlist.set(newBlock._id, newBlock);
+          //this.parlist.set(newBlock._id, newBlock);
+          this.$store.commit('set_storeList', newBlock);
           this.refreshBlock({doc: b_new, deleted: false});
           if (b_old) {
             this.refreshBlock({doc: b_old, deleted: false});
@@ -766,7 +772,8 @@ export default {
         .then((response)=>{
           let b_new = response.data.new_block;
           let b_old = response.data.block;
-          this.parlist.set(newBlock._id, newBlock);
+          //this.parlist.set(newBlock._id, newBlock);
+          this.$store.commit('set_storeList', newBlock);
           this.refreshBlock({doc: b_new, deleted: false});
           this.refreshBlock({doc: b_old, deleted: false});
           this.unfreeze('insertBlockAfter');

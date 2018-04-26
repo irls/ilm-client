@@ -239,15 +239,52 @@
         </vue-tab>
 
         <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!allowMetadataEdit">
-        <accordion :one-at-atime="true" ref="accordionStyles">
+        <!--<accordion :one-at-atime="true" ref="accordionStyles">
 
           <panel :is-open="true" header="Selected blocks styles"
-            v-bind:key="'block-styles'" ref="panelBlockStyles">
+            v-bind:key="'block-styles'" ref="panelBlockStyles">-->
             <div class="styles-catalogue">
 
               <vue-tabs ref="blockTypesTabs" class="block-style-tabs">
 
-                <vue-tab :title="blockType" v-for="(val, blockType) in blockTypes"
+                <vue-tab title="Styles" :id="'global-styles-switcher'">
+                  <fieldset class="block-style-fieldset">
+                  <legend>Book styles</legend>
+                  <div>
+                    <input type="radio" :id="'gs-default'" :value="''" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                    <label :for="'gs-default'" class="style-label">ILM</label>
+                  </div>
+                  <div>
+                    <input type="radio" :id="'gs-ocean'" :value="'global-ocean'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                    <label :for="'gs-ocean'" class="style-label">Ocean</label>
+                  </div>
+                  <div>
+                    <input type="radio" :id="'gs-ffa'" :value="'global-ffa'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                    <label :for="'gs-ffa'" class="style-label">FFA</label>
+                  </div>
+                  </fieldset>
+
+                  <fieldset class="block-style-fieldset">
+                  <legend>Numeration</legend>
+                  <div>
+                    <input type="radio" :id="'gs-default'" :value="''" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                    <label :for="'gs-default'" class="style-label">x</label>
+                  </div>
+                  <div>
+                    <input type="radio" :id="'gs-ocean'" :value="'global-ocean'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                    <label :for="'gs-ocean'" class="style-label">x.x</label>
+                  </div>
+                  <div>
+                    <input type="radio" :id="'gs-ffa'" :value="'global-ffa'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
+                    <label :for="'gs-ffa'" class="style-label">Auto</label>
+                  </div>
+                  </fieldset>
+
+                </vue-tab>
+
+                <vue-tab :title="blockType"
+                  :disabled="!(activeStyleTabs.has(blockType))"
+                  v-for="(val, blockType) in blockTypes"
                   :id="'block-type-'+blockType" key="blockType">
 
                   <template v-for="(valArr, key) in blockTypes[blockType]">
@@ -272,7 +309,7 @@
                       <span v-else>none</span>
                     </label>
 
-                    <div v-if="getRows >= 3" style="clear: both;"></div>
+                    <span class="block-style-divider"></span>
 
                   </template>
 
@@ -282,7 +319,7 @@
 
             </div>
             <!--<div class="styles-catalogue">-->
-          </panel>
+          <!--</panel>
 
           <panel :is-open="false" header="Book styles"
             v-bind:key="'book-styles'" ref="panelBookStyles">
@@ -347,9 +384,9 @@
 
             </div>
             <!--<div class="styles-catalogue">-->
-          </panel>
+          <!--</panel>
 
-        </accordion>
+        </accordion>-->
 
         </vue-tab>
       </vue-tabs>
@@ -483,9 +520,9 @@ export default {
       audiobookChecker: false,
 
       // set blocks properties
+      activeStyleTabs: new Map(),
       classSel: false,
-      styleSel: false,
-      rowCount: 0
+      styleSel: false
     }
   },
 
@@ -495,7 +532,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks', 'storeList']),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -594,22 +631,7 @@ export default {
           return this.tc_currentBookTasks.tasks.length;
         }
       }
-    },
-    getRows: {
-      get() {
-        this.rowCount++;
-        return this.rowCount;
-      }
-    }/*,
-    blockClasses: function () {
-      return this.blockTypes[this.block.type];
-    },
-    blockStyles: function () {
-      if (this.classSel && this.blockTypes[this.block.type][this.classSel] && this.blockTypes[this.block.type][this.classSel].length) {
-        return this.blockTypes[this.block.type][this.classSel];
-      }
-      return false;
-    }*/
+    }
   },
 
   mixins: [task_controls, api_config, access],
@@ -636,6 +658,17 @@ export default {
     this.$root.$on('book-reimported', () => {
       this.loadAudiobook()
     });
+    this.$root.$on('from-bookedit:set-selection', (start, end)=>{
+      console.log('book meta :set-selection', start._id, end._id);
+      this.collectCheckedStyles(start._id, end._id);
+    });
+  },
+  destroyed: function () {
+    this.$root.$off('uploadAudio');
+    this.$root.$off('audiobookUpdated');
+    this.$root.$off('from-bookblockview:voicework-type-changed');
+    this.$root.$off('book-reimported');
+    this.$root.$off('from-bookedit:set-selection');
   },
 
   watch: {
@@ -751,7 +784,6 @@ export default {
 
         });*/
     },
-
     updateCollection(event) {
       if (event && event.target.value) {
         let collectionId = event.target.value;
@@ -1094,6 +1126,23 @@ export default {
         axios.delete(this.API_URL + 'books/' + this.currentBook.bookid)
       }
     },
+
+    collectCheckedStyles(startId, endId) {
+      let result = new Map();
+      if (this.storeList.has(startId)) {
+        let pBlock, currId = startId;
+        do {
+          pBlock = this.storeList.get(currId);
+          if (pBlock) {
+            result.set(pBlock.type, {});
+            currId = pBlock.chainid;
+          }
+        } while (pBlock && pBlock._id !== endId);
+      }
+      this.activeStyleTabs = result;
+      console.log('result', result)
+    },
+
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters'])
   }
 }
@@ -1330,6 +1379,16 @@ export default {
     .block-style-fieldset {
       float: left;
       width: 32%;
+    }
+    .block-style-divider {
+      float: none;
+      width: auto;
+      display: inline;
+    }
+    .block-style-divider:nth-child(3n+3) {
+      content: '';
+      display: block;
+      clear: both;
     }
     .block-style-label {
       display: block;

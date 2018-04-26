@@ -106,8 +106,8 @@ export const store = new Vuex.Store({
 
     blockers: [],
 
-    parList:[], // global parlist
-    lockedBlocks: {}
+    lockedBlocks: {},
+    storeList: new Map(), // global parlist
   },
 
   getters: {
@@ -202,9 +202,9 @@ export const store = new Vuex.Store({
       let lock = localStorage.getItem('lock_' + id)
       //console.log(lock, id)
       return lock ? true : false;
-    }
+    },
 
-    //parList: state => state.parList, // global parlist
+    storeList: state => state.storeList, // global parlist
   },
 
   mutations: {
@@ -557,6 +557,18 @@ export const store = new Vuex.Store({
           }
         }
       }
+    },
+    set_storeList (state, blockObj) {
+      if (state.storeList) {
+        let firstObj = state.storeList.values().next().value;
+        if (!(firstObj && firstObj.bookid == blockObj.bookid)) {
+          state.storeList = new Map();
+        }
+      } else {
+        state.storeList = new Map();
+      }
+
+      state.storeList.set(blockObj._id, blockObj);
     }
   },
 

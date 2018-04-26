@@ -9,7 +9,7 @@
     text-align: center;
     background-position: center;
     background-color: #8080807d;"></div>
-    <div :class="['table-cell', 'controls-left', {'-check-green': block.checked==true}]">
+    <div :class="['table-cell', 'controls-left', {'_-check-green': block.checked==true}]">
         <div class="table-row parnum-row">
           <span v-if="block.type=='par' && block.parnum!==false" :class="['parnum']">{{block.parnum}}</span>
 
@@ -215,9 +215,12 @@
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div>
             <div :class="['table-row ilm-block', block.markedAsDone ? '-marked':'']">
-                <hr v-if="block.type=='hr'" :class="[block.getClass()]"/>
+                <hr v-if="block.type=='hr'"
+                  :class="[block.getClass(), {'checked': block.checked}]"
+                  @click="onClick($event)"/>
 
-                <div v-else-if="block.type == 'illustration'" :class="['table-body illustration-block']">
+                <div v-else-if="block.type == 'illustration'" :class="['table-body illustration-block', {'checked': block.checked}]"
+                @click="onClick($event)">
                   <img v-if="block.illustration" :src="block.getIllustration()" :class="[block.getClass()]"/>
                   <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing">
                     <vue-picture-input
@@ -252,11 +255,13 @@
                 v-html="block.content"
                 :class="[ block.getClass(), {
                   'updated': isUpdated,
+                  'checked': block.checked,
                   'playing': blockAudio.src,
                   'hide-archive': isHideArchFlags
                 }]"
                 :data-audiosrc="blockAudio.src"
-                @click="onClick"
+                @click="onClick($event)"
+                @selectionchange.prevent="onSelect"
                 @input="onInput"
                 @mouseenter="onHover"
                 @contextmenu.prevent="onContext">
@@ -1049,10 +1054,15 @@ export default {
       onBlur: function() {
         if (this.$refs.blockCntx && this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
       },
-      onClick: function() {
-        $('.medium-editor-toolbar').each(function(){
-              $(this).css('display', 'inline-block');
-        });
+      onSelect: function($event) {
+        console.log('onSelect');
+      },
+      onClick: function($event) {
+//         $('.medium-editor-toolbar').each(function(){
+//           $(this).css('display', 'inline-block');
+//         });
+        $event.target.checked = true;
+        this.setRangeSelection('byOne', $event)
       },
       onContext: function(e) {
         $('.medium-editor-toolbar').each(function(){
@@ -2424,9 +2434,12 @@ export default {
         let checked;
         if (ev === true || ev === false) checked = ev;
         else checked = ev.target && ev.target.checked;
-        document.getSelection().removeAllRanges();
+
+        let shiftKey = ev.shiftKey||ev.ctrlKey||false;
+        if (ev.shiftKey) document.getSelection().removeAllRanges();
+
         this.block.checked = checked;
-        this.$emit('setRangeSelection', this.block, type, checked, ev.shiftKey||false);
+        this.$emit('setRangeSelection', this.block, type, checked, shiftKey);
       },
       updateVoicework() {
         if (!this.voiceworkChange) {
@@ -3087,7 +3100,12 @@ export default {
           padding: 10px;
           background: rgba(219, 232, 255, .3);
       }
-      &:focus {
+      /*&:focus {
+          outline: none;
+          border-color: #9ecaed;
+          box-shadow: 0 0 10px #9ecaed;
+      }*/
+      &.checked {
           outline: none;
           border-color: #9ecaed;
           box-shadow: 0 0 10px #9ecaed;
@@ -3098,6 +3116,12 @@ export default {
       }
 
     }
+
+    .hr.checked {
+          outline: none;
+          border-color: #9ecaed;
+          box-shadow: 0 0 10px #9ecaed;
+      }
 
     &.content-description {
         line-height: 24pt;
@@ -3160,6 +3184,11 @@ export default {
       .fa.fa-undo {
         margin-right: 7px;
         margin-left: 2px;
+      }
+      &.checked {
+        outline: none;
+        border-color: #9ecaed;
+        box-shadow: 0 0 10px #9ecaed;
       }
     }
 }
