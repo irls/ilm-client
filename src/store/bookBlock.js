@@ -24,7 +24,8 @@ let defBlock = [
   'voicework',
   'markedAsDone',
   'status',
-  'audiosrc_ver'
+  'audiosrc_ver',
+  'realigned'
 ]
 
 let BlockTypes = {
@@ -111,6 +112,7 @@ class BookBlock {
     this.checkedStart = init.checkedStart || false;
     this.checkedEnd = init.checkedEnd || false;
     this.checked = init.checked || false;
+    this.realigned = init.realigned || false;
 
     this.history = {};
   }

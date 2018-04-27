@@ -525,22 +525,27 @@
           this.blocksForAlignment.blocks.forEach(_b => {
             if (voicework === 'audio_file') {
               if (_b.voicework === 'audio_file' || (realign && _b.voicework === 'narration')) {
-                this.aligningBlocks.push({_id: _b._id, _rev: _b._rev});
+                this.aligningBlocks.push(_b);
+                //this.clearBlockLock({block: _b, watch: ['realigned']});
               }
             } else if (voicework === 'tts') {
               if (_b.voicework === 'tts') {
-                this.aligningBlocks.push({_id: _b._id, _rev: _b._rev});
+                this.aligningBlocks.push(_b);
               } else {
                 if (_b.footnotes && _b.footnotes.length > 0) {
                   let f = _b.footnotes.filter(_f => _f.voicework === 'tts');
                   if (f && f.length > 0) {
-                    this.aligningBlocks.push({_id: _b._id, _rev: _b._rev});
+                    this.aligningBlocks.push(_b);
                   }
                 }
               }
             }
           });
         }
+        this.aligningBlocks.forEach(b => {
+          this.addBlockLock({block: b, watch: ['realigned']});
+          this.$root.$emit('block-state-refresh-' + b._id);
+        });
         this.$root.$on('blockChange', (doc) => {
           if (doc && doc._id) {
             let d = this.aligningBlocks.find(b => b._id == doc._id);
@@ -548,6 +553,7 @@
               let i = this.aligningBlocks.indexOf(d);
               if (i !== -1) {
                 this.aligningBlocks.splice(i, 1);
+                this.clearBlockLock({block: d, force: true});
               }
             }
           }
@@ -685,7 +691,7 @@
         }
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
@@ -833,11 +839,11 @@
         this.pre_options = val;
       },
       'aligningBlocks': function() {
-        if (this.aligningBlocks.length > 0) {
+        /*if (this.aligningBlocks.length > 0) {
           this.alignmentProcess = true;
         } else {
           this.alignmentProcess = false;
-        }
+        }*/
       }
     }
   }

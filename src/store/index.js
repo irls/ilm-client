@@ -106,6 +106,7 @@ export const store = new Vuex.Store({
 
     blockers: [],
 
+    lockedBlocks: {},
     storeList: new Map(), // global parlist
   },
 
@@ -193,6 +194,15 @@ export const store = new Vuex.Store({
 
     isBlocked: state => state.blockers.length > 0,
     blockers: state => state.blockers,
+    isBlockLocked: (state) => (id) => {
+      if (typeof localStorage === 'undefined') {
+        return false;
+      }
+      
+      let lock = localStorage.getItem('lock_' + id)
+      //console.log(lock, id)
+      return lock ? true : false;
+    },
 
     storeList: state => state.storeList, // global parlist
   },
@@ -481,7 +491,76 @@ export const store = new Vuex.Store({
       //console.log('clear_blocker', bName, idx, state.blockers);
       if (idx > -1) state.blockers.splice(idx, 1);
     },
-
+    add_block_lock(state, data) {
+      if (data.block) {
+        if (typeof localStorage !== 'undefined') {
+          data.set_at = Date.now()
+          let lock = localStorage.getItem('lock_' + data.block._id);
+          if (lock) {
+            try {
+              lock = JSON.parse(lock);
+              if (lock.watch && data.watch) {
+                lock.watch.forEach(w => {
+                  if (data.watch.indexOf(w) === -1) {
+                    data.watch.push(w);
+                  }
+                });
+              }
+            } catch(err) {
+              lock = data;
+            }
+            lock = Object.assign(lock, data);
+          } else {
+            lock = data;
+          }
+          localStorage.setItem('lock_' + data.block._id, JSON.stringify(lock));
+        }
+      }
+    },
+    clear_block_lock(state, data) {
+      if (data.block._id) {
+        if (typeof localStorage !== 'undefined') {
+          /*let lock = state.blockLocks[data.block._id];
+          if (lock) {
+            if (lock.block._rev !== data.block._rev) {
+              delete state.blockLocks[data.block._id];
+            }
+          }*/
+          let lock = localStorage.getItem('lock_' + data.block._id);
+          if (lock) {
+            try {
+              lock = JSON.parse(lock);
+            } catch(err) {
+              localStorage.removeItem('lock_' + data.block._id);
+              return;
+            }
+            if (data.force) {
+              localStorage.removeItem('lock_' + data.block._id)
+            } else if (lock.watch && lock.watch.length) {
+              let watch = [];
+              lock.watch.forEach((w, i) => {
+                if (_.isEqual(lock.block[w], data.block[w])) {
+                  watch.push(lock.watch[i]);
+                } else {
+                  //console.log('WATCH CHANGED, OLD', lock.block[w], 'NEW', data.block[w])
+                }
+              });
+              lock.watch = watch;
+              if (lock.watch.length == 0) {
+                localStorage.removeItem('lock_' + data.block._id);
+              } else {
+                localStorage.setItem('lock_' + data.block._id, JSON.stringify(lock));
+              }
+            } else if (lock.block._rev !== data.block._rev) {
+              localStorage.removeItem('lock_' + data.block._id);
+            }
+            if (lock.set_at && Date.now() - lock.set_at > 30 * 60 * 1000) {
+              localStorage.removeItem('lock_' + data.block._id);
+            }
+          }
+        }
+      }
+    },
     set_storeList (state, blockObj) {
       if (state.storeList) {
         let firstObj = state.storeList.values().next().value;
@@ -931,7 +1010,8 @@ export const store = new Vuex.Store({
         .get(block_id)
         .then(res => {
           //commit('clear_blocker', 'getBlock');
-          return res
+          commit('clear_block_lock', {block: res});
+          return Promise.resolve(res)
         })
         .catch((err) => {
           if (err.status == 404) {
@@ -939,7 +1019,7 @@ export const store = new Vuex.Store({
             .get(block_id)
             .then(res => {
               //commit('clear_blocker', 'getBlock');
-              return res
+              return Promise.resolve(res)
             })
             .catch(err => {
               //commit('clear_blocker', 'getBlock');
@@ -1158,7 +1238,18 @@ export const store = new Vuex.Store({
         .on('complete', function(info) {
             //console.log('contentDBWatch Cancelled');
         }).on('error', function (err) {
-            console.log(err);
+            console.log('%ccontentDBWatch error', 'background: red; color: white', err);
+            if (!params.iteration) {
+              params.iteration = 0;
+            }
+            ++params.iteration;
+            if (params.iteration < 5) {
+              setTimeout(() => {
+                dispatch('watchBlocks', params)
+              }, 2000);
+            }
+        }).on('change', (doc) => {
+          commit('clear_block_lock', {block: doc.doc});
         });
         commit('set_contentDBWatch', contentDBWatch);
         return true;
@@ -1568,6 +1659,14 @@ export const store = new Vuex.Store({
 
     unfreeze({commit}, bName) {
       commit('clear_blocker', bName);
+    },
+    
+    addBlockLock({commit}, data) {
+      commit('add_block_lock', data);
+    },
+    
+    clearBlockLock({commit}, data) {
+      commit('clear_block_lock', data);
     }
   }
 })
