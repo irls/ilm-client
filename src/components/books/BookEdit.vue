@@ -30,6 +30,7 @@
             :allowSetStart="allowSetStart"
             :allowSetEnd="allowSetEnd"
             :_recountApprovedInRange="_recountApprovedInRange"
+            :prevId="getPrevId(blockId)"
             @stopRecordingAndNext="stopRecordingAndNext"
             @insertBefore="insertBlockBefore"
             @insertAfter="insertBlockAfter"
@@ -180,7 +181,7 @@ export default {
       modal,
   },
   methods: {
-    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask']),
+    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock']),
 
     test() {
         window.scrollTo(0, document.body.scrollHeight-500);
@@ -508,7 +509,9 @@ export default {
       if (oldBlock) {
         if (change.deleted === true) {
           this.parlist.delete(change.doc._id);
+          this.clearBlockLock({block: change.doc, force: true})
         } else {
+          this.clearBlockLock({block: change.doc});
           if (oldBlock.partUpdate) {
             oldBlock._rev = change.doc._rev;
             //this.parlist.set(change.doc._id, new BookBlock(oldBlock));
@@ -910,18 +913,20 @@ export default {
                   return blockRef.blockId == blockBefore._id;
                 });
                 if (currBlockRef && prevBlockRef) {
+                  this.addBlockLock({block: blockBefore, watch: ['realigned']})
                   this.freeze('joinBlocks');
                   currBlockRef.assembleBlockProxy()
                   .then(()=>{
                     prevBlockRef.assembleBlockProxy()
                     .then(()=>{
+                      this.doJoinBlocks.show = false;
+                      this.doJoinBlocks.block = {};
                       return api.post(api_url, {
                         resultBlock_id: blockBefore._id,
                         donorBlock_id: block._id
                       })
                       .then((response)=>{
-                        this.doJoinBlocks.show = false;
-                        this.doJoinBlocks.block = {};
+                        this.clearBlockLock({block: blockBefore, force: true});
                         if (response.data.ok && response.data.blocks) {
                           response.data.blocks.forEach((res)=>{
                             this.refreshBlock({doc: res, deleted: res.deleted});
@@ -931,8 +936,7 @@ export default {
                         return Promise.resolve();
                       })
                       .catch((err)=>{
-                        this.doJoinBlocks.show = false;
-                        this.doJoinBlocks.block = {};
+                        this.clearBlockLock({block: blockBefore, force: true});
                         this.unfreeze('joinBlocks');
                         return Promise.reject(err);
                       })
@@ -972,17 +976,19 @@ export default {
                 });
                 if (currBlockRef && nextBlockRef) {
                   this.freeze('joinBlocks');
+                  this.addBlockLock({block: block, watch: ['realigned']})
                   currBlockRef.assembleBlockProxy()
                   .then(()=>{
                     nextBlockRef.assembleBlockProxy()
                     .then(()=>{
+                      this.doJoinBlocks.show = false;
+                      this.doJoinBlocks.block = {};
                       return api.post(api_url, {
                         resultBlock_id: block._id,
                         donorBlock_id: blockAfter._id
                       })
                       .then((response)=>{
-                        this.doJoinBlocks.show = false;
-                        this.doJoinBlocks.block = {};
+                        this.clearBlockLock({block: block, force: true});
                         if (response.data.ok && response.data.blocks) {
                           response.data.blocks.forEach((res)=>{
                             this.refreshBlock({doc: res, deleted: res.deleted});
@@ -992,8 +998,7 @@ export default {
                         return Promise.resolve();
                       })
                       .catch((err)=>{
-                        this.doJoinBlocks.show = false;
-                        this.doJoinBlocks.block = {};
+                        this.clearBlockLock({block: block, force: true});
                         this.unfreeze('joinBlocks');
                         return Promise.reject(err);
                       })
@@ -1362,6 +1367,14 @@ export default {
     scrollToBlock(id, position = 'top') {
       this.screenTop = 0;
       this.startId = id;
+    },
+    getPrevId(id) {
+      for (let val of this.parlist.values()) {
+        if (val.chainid === id) {
+          return val._id;
+        }
+      }
+      return false;
     }
 
   },

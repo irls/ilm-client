@@ -1,5 +1,6 @@
 <template>
 <div class="table-body -block" :id="block._id">
+    <div v-if="isLocked()" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': block.checked==true}]">
         <div class="table-row parnum-row">
           <span v-if="block.type=='par' && block.parnum!==false" :class="['parnum']">{{block.parnum}}</span>
@@ -80,7 +81,7 @@
 
                       <li class="separator"></li>
                       <template v-if="allowEditing">
-                        <li v-if="!isBlocked" @click="insertBlockBefore()">
+                        <li v-if="!isLocked(prevId)" @click="insertBlockBefore()">
                           <i class="fa fa-angle-up" aria-hidden="true"></i>
                           Insert block before</li>
                         <li v-else class="disabled">
@@ -92,20 +93,20 @@
                         <li v-else class="disabled">
                           <i class="fa menu-preloader" aria-hidden="true"></i>
                           Insert block after</li>
-                        <li v-if="!isBlocked" @click="showModal('delete-block-message')">
+                        <li v-if="!isLocked(prevId)" @click="showModal('delete-block-message')">
                           <i class="fa fa-trash" aria-hidden="true"></i>
                           Delete block</li>
                         <li v-else class="disabled">
                           <i class="fa menu-preloader" aria-hidden="true"></i>
                           Delete block</li>
                         <!--<li>Split block</li>-->
-                        <li v-if="!isBlocked" @click="joinWithPrevious()">
+                        <li v-if="!isLocked() && !isLocked(prevId)" @click="joinWithPrevious()">
                           <i class="fa fa-angle-double-up" aria-hidden="true"></i>
                           Join with previous block</li>
                         <li v-else class="disabled">
                           <i class="fa menu-preloader" aria-hidden="true"></i>
                           Join with previous block</li>
-                        <li v-if="!isBlocked" @click="joinWithNext()">
+                        <li v-if="!isLocked() && !isLocked(block.chainid)" @click="joinWithNext()">
                           <i class="fa fa-angle-double-down" aria-hidden="true"></i>
                           Join with next block</li>
                         <li v-else class="disabled">
@@ -628,7 +629,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', '_recountApprovedInRange'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', '_recountApprovedInRange', 'prevId'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -818,7 +819,7 @@ export default {
       },
       allowEditing: {
         get() {
-          return this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup');
+          return this.block && (this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup'));
         }
       },
       blockTypeLabel: {
@@ -829,6 +830,7 @@ export default {
   },
   beforeDestroy:  function() {
     if (this.editor) this.editor.destroy();
+    this.$root.$off('block-state-refresh-' + this.block._id);
   },
   mounted: function() {
       //this.initEditor();
@@ -867,6 +869,10 @@ export default {
       this.destroyEditor();
       this.initEditor();
       this.addContentListeners();
+      
+      this.$root.$on('block-state-refresh-' + this.block._id, () => {
+        this.$forceUpdate();
+      });
 
 
 //       Vue.nextTick(() => {
@@ -878,7 +884,8 @@ export default {
         'putMetaAuthors',
         'tc_approveBookTask',
         'setCurrentBookBlocksLeft',
-        'setCurrentBookCounters'
+        'setCurrentBookCounters',
+        'addBlockLock'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -911,7 +918,7 @@ export default {
         if (this.editor) {
           //this.editor.removeElements();
           this.editor.destroy();
-          if (this.block.type === 'illustration') {
+          if (this.block && this.block.type === 'illustration') {
             Vue.nextTick(() => {
               $('[id="' + this.block._id + '"] .illustration-block')
               .removeAttr('contenteditable')
@@ -2380,6 +2387,7 @@ export default {
           if (response.status===200) {
             // hide modal after one second
             self.$refs.illustrationInput.removeImage();
+            self.$emit('blockUpdated', self.block._id);
             //let offset = document.getElementById(self.block._id).getBoundingClientRect()
             //window.scrollTo(0, window.pageYOffset + offset.top);
             self.isIllustrationChanged = false;
@@ -2558,7 +2566,7 @@ export default {
             flag.addEventListener('click', this.handleFlagClick);
           });
         }
-        if (this.block.footnotes) {
+        if (this.block && this.block.footnotes) {
           for (let i in this.block.footnotes) {
             let ref = this.$refs['footnoteContent_' + i];
             if (ref) {
@@ -2570,6 +2578,12 @@ export default {
             }
           }
         }
+      },
+      isLocked(id = false) {
+        if (!id) {
+          id = this.block._id;
+        }
+        return this.$store.getters.isBlockLocked(id);
       }
   },
   watch: {
@@ -2592,6 +2606,9 @@ export default {
           setTimeout(() => {
             this.isUpdated = false;
           }, 2000);
+        }
+        if (!this.block) {
+          return;
         }
         if (newVal !== this.block._rev)
         {
@@ -2617,10 +2634,12 @@ export default {
         }
       },
       'block.type' (newVal) {
-        if (Object.keys(this.blockTypes[newVal])[0] !== '') {
+        if (this.blockTypes[newVal] && Object.keys(this.blockTypes[newVal])[0] !== '') {
           this.classSel = Object.keys(this.blockTypes[newVal])[0];
         }
-        this.block.classes = {};
+        if (this.block) {
+          this.block.classes = {};
+        }
         this.reCount();
       },
       'classSel' (newVal, oldVal) {
@@ -2658,7 +2677,7 @@ export default {
       },
       'block.footnotes': {
         handler: function (val, oldVal) {
-          if (this.block.footnotes && this.block.footnotes.length) {
+          if (this.block && this.block.footnotes && this.block.footnotes.length) {
             this.block.footnotes.forEach((footnote, footnoteIdx)=>{
               if (footnote.audiosrc && !this.FtnAudio.player) {
                 this.initFootnotePlayer(this.FtnAudio);
@@ -2686,7 +2705,7 @@ export default {
       },
       'block.markedAsDone': {
         handler(val) {
-          if (val !== this.block.markedAsDone) {
+          if (this.block && val !== this.block.markedAsDone) {
             this.setCurrentBookCounters(['not_marked_blocks']);
           }
         }
@@ -3538,6 +3557,16 @@ export default {
       background-repeat: no-repeat;
       text-align: center;
       background-position: center;
+  }
+  .locked-block-cover {
+    width: 100%;
+    position: absolute;
+    height: 100%;
+    background: url(/static/preloader-snake-small.gif);
+    background-repeat: no-repeat;
+    text-align: center;
+    background-position: center;
+    background-color: #8080807d;
   }
 
 </style>
