@@ -508,7 +508,9 @@ export default {
       if (oldBlock) {
         if (change.deleted === true) {
           this.parlist.delete(change.doc._id);
+          this.clearBlockLock({block: change.doc, force: true})
         } else {
+          this.clearBlockLock({block: change.doc});
           if (oldBlock.partUpdate) {
             oldBlock._rev = change.doc._rev;
             //this.parlist.set(change.doc._id, new BookBlock(oldBlock));

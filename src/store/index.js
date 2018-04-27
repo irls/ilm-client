@@ -542,7 +542,7 @@ export const store = new Vuex.Store({
                 if (_.isEqual(lock.block[w], data.block[w])) {
                   watch.push(lock.watch[i]);
                 } else {
-                  
+                  //console.log('WATCH CHANGED, OLD', lock.block[w], 'NEW', data.block[w])
                 }
               });
               lock.watch = watch;
@@ -1234,7 +1234,16 @@ export const store = new Vuex.Store({
         .on('complete', function(info) {
             //console.log('contentDBWatch Cancelled');
         }).on('error', function (err) {
-            console.log(err);
+            console.log('%ccontentDBWatch error', 'background: red; color: white', err);
+            if (!params.iteration) {
+              params.iteration = 0;
+            }
+            ++params.iteration;
+            if (params.iteration < 5) {
+              setTimeout(() => {
+                dispatch('watchBlocks', params)
+              }, 2000);
+            }
         }).on('change', (doc) => {
           commit('clear_block_lock', {block: doc.doc});
         });

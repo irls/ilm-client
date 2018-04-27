@@ -823,7 +823,7 @@ export default {
       },
       allowEditing: {
         get() {
-          return this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup');
+          return this.block && (this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup'));
         }
       },
       blockTypeLabel: {
@@ -834,6 +834,7 @@ export default {
   },
   beforeDestroy:  function() {
     if (this.editor) this.editor.destroy();
+    this.$root.$off('block-state-refresh-' + this.block._id);
   },
   mounted: function() {
       //this.initEditor();
@@ -872,6 +873,10 @@ export default {
       this.destroyEditor();
       this.initEditor();
       this.addContentListeners();
+      
+      this.$root.$on('block-state-refresh-' + this.block._id, () => {
+        this.$forceUpdate();
+      });
 
 
 //       Vue.nextTick(() => {
@@ -917,7 +922,7 @@ export default {
         if (this.editor) {
           //this.editor.removeElements();
           this.editor.destroy();
-          if (this.block.type === 'illustration') {
+          if (this.block && this.block.type === 'illustration') {
             Vue.nextTick(() => {
               $('[id="' + this.block._id + '"] .illustration-block')
               .removeAttr('contenteditable')
@@ -2562,7 +2567,7 @@ export default {
             flag.addEventListener('click', this.handleFlagClick);
           });
         }
-        if (this.block.footnotes) {
+        if (this.block && this.block.footnotes) {
           for (let i in this.block.footnotes) {
             let ref = this.$refs['footnoteContent_' + i];
             if (ref) {
@@ -2604,6 +2609,9 @@ export default {
             this.isUpdated = false;
           }, 2000);
         }
+        if (!this.block) {
+          return;
+        }
         if (newVal !== this.block._rev)
         {
           if (this.block.illustration) {
@@ -2628,10 +2636,12 @@ export default {
         }
       },
       'block.type' (newVal) {
-        if (Object.keys(this.blockTypes[newVal])[0] !== '') {
+        if (this.blockTypes[newVal] && Object.keys(this.blockTypes[newVal])[0] !== '') {
           this.classSel = Object.keys(this.blockTypes[newVal])[0];
         }
-        this.block.classes = {};
+        if (this.block) {
+          this.block.classes = {};
+        }
         this.reCount();
       },
       'classSel' (newVal, oldVal) {
@@ -2668,7 +2678,7 @@ export default {
       },
       'block.footnotes': {
         handler: function (val, oldVal) {
-          if (this.block.footnotes && this.block.footnotes.length) {
+          if (this.block && this.block.footnotes && this.block.footnotes.length) {
             this.block.footnotes.forEach((footnote, footnoteIdx)=>{
               if (footnote.audiosrc && !this.FtnAudio.player) {
                 this.initFootnotePlayer(this.FtnAudio);
@@ -2696,7 +2706,7 @@ export default {
       },
       'block.markedAsDone': {
         handler(val) {
-          if (val !== this.block.markedAsDone) {
+          if (this.block && val !== this.block.markedAsDone) {
             this.setCurrentBookCounters(['not_marked_blocks']);
           }
         }
