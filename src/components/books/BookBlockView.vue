@@ -2387,6 +2387,7 @@ export default {
           if (response.status===200) {
             // hide modal after one second
             self.$refs.illustrationInput.removeImage();
+            self.$emit('blockUpdated', self.block._id);
             //let offset = document.getElementById(self.block._id).getBoundingClientRect()
             //window.scrollTo(0, window.pageYOffset + offset.top);
             self.isIllustrationChanged = false;
