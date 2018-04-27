@@ -1,5 +1,5 @@
 <template>
-<div v-on:wheel="scrollContent" ref="contentScrollWrapRef"
+<div v-on:wheel="debounceScrollContent" ref="contentScrollWrapRef"
   :class="['container-fluid content-scroll-wrapper ilm-global-style', metaStyles]">
 
   <!--<div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >-->
@@ -96,6 +96,7 @@ import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
 import { BookBlock, setBlockParnum }    from '../../store/bookBlock';
 import { modal }        from 'vue-strap';
+import _ from 'lodash';
 
 //import IlmCss from './css/ilm'
 
@@ -1212,6 +1213,11 @@ export default {
         });
       }, 1000);
     },
+
+    debounceScrollContent: _.throttle(function (ev) {
+      this.scrollContent(ev);
+    }, 30),
+
     scrollContent(ev)
     {
       //this.screenTop -= ((ev.deltaY!==false) ? (ev.deltaY > 0 ? 47 : -47) : 0);
