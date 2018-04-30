@@ -217,13 +217,6 @@
           self.playing = false;
         }
       })
-      this.$root.$on('from-bookedit:set-selection', (start, end) => {
-        var openAudio = this.$refs.panelAudiofile ? this.$refs.panelAudiofile.open : false;
-        var openTTS = this.$refs.panelTTS ? this.$refs.panelTTS.open : false;
-        if (!openAudio && openTTS) {
-          this.$root.$emit('from-bookedit:set-voice-test', start, end)
-        }
-      })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
         let record = self.audiobook.importFiles.find(_f => {
           return _f.id == id;
@@ -838,6 +831,16 @@
         } else {
           this.alignmentProcess = false;
         }*/
+      },
+      'blockSelection': {
+        handler(val) {
+          var openAudio = this.$refs.panelAudiofile ? this.$refs.panelAudiofile.open : false;
+          var openTTS = this.$refs.panelTTS ? this.$refs.panelTTS.open : false;
+          if (!openAudio && openTTS) {
+            this.$root.$emit('from-bookedit:set-voice-test', this.blockSelection.start, this.blockSelection.end)
+          }
+        },
+        deep: true
       }
     }
   }

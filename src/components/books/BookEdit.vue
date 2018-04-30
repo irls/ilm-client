@@ -527,7 +527,9 @@ export default {
             this.refreshTmpl();
           } else {
             let newBlock = new BookBlock(change.doc);
-
+            if (oldBlock.checked === true) {
+              newBlock.checked = true;
+            }
             if (oldBlock.isChanged || oldBlock.isAudioChanged || oldBlock.isIllustrationChanged) {
               if (oldBlock.status && newBlock.status && oldBlock.status.assignee === newBlock.status.assignee) {
                 oldBlock._rev = change.doc._rev;
@@ -545,7 +547,7 @@ export default {
               }
             } else {
               //this.parlist.set(change.doc._id, new BookBlock(change.doc));
-              this.$store.commit('set_storeList', new BookBlock(change.doc));
+              this.$store.commit('set_storeList', newBlock);
               this.refreshTmpl();
             }
           }
