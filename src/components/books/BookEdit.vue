@@ -1081,7 +1081,7 @@ export default {
                 if (!isFound) {
                   // selected blocks are not found before, so they are after
                   if (!this.blockSelection.end._id) newSelection.end = this.blockSelection.start;
-                  newSelection.end = block;
+                  newSelection.start = block;
                 }
 
                 this.setCheckedRange(newSelection.start._id, newSelection.end._id);
