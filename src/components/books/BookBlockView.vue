@@ -2431,8 +2431,11 @@ export default {
         else checked = ev.target && ev.target.checked;
 
         let shiftKey = ev.shiftKey||ev.ctrlKey||false;
-        if (ev.shiftKey) document.getSelection().removeAllRanges();
-
+        if (ev.shiftKey) {
+          if (this.selectionStart && this.selectionStart != this.block._id) {
+            document.getSelection().removeAllRanges();
+          }
+        }
         this.block.checked = checked;
         this.$emit('setRangeSelection', this.block, type, checked, shiftKey);
       },

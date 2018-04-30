@@ -248,34 +248,66 @@
 
                 <vue-tab title="Styles" :id="'global-styles-switcher'">
                   <fieldset class="block-style-fieldset">
-                  <legend>Book styles{{styleTabs.size}}</legend>
+                  <legend>Book styles</legend>
                   <div>
-                    <input type="radio" :id="'gs-default'" :value="''" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-default'" class="style-label">ILM</label>
+                    <label class="style-label"
+                      @click="$event.target.value = ''; update('styles.global', $event)">
+                      <i v-if="currentBook.styles.global === ''"
+                        class="fa fa-check-circle-o"></i>
+                      <i v-else class="fa fa-circle-o"></i>
+                    ILM</label>
                   </div>
                   <div>
-                    <input type="radio" :id="'gs-ocean'" :value="'global-ocean'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-ocean'" class="style-label">Ocean</label>
+                    <label class="style-label"
+                      @click="$event.target.value = 'global-ocean'; update('styles.global', $event)">
+                      <i v-if="currentBook.styles.global === 'global-ocean'"
+                        class="fa fa-check-circle-o"></i>
+                      <i v-else class="fa fa-circle-o"></i>
+                    Ocean</label>
                   </div>
                   <div>
-                    <input type="radio" :id="'gs-ffa'" :value="'global-ffa'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-ffa'" class="style-label">FFA</label>
+                    <label class="style-label"
+                      @click="$event.target.value = 'global-ffa'; update('styles.global', $event)">
+                      <i v-if="currentBook.styles.global === 'global-ffa'"
+                        class="fa fa-check-circle-o"></i>
+                      <i v-else class="fa fa-circle-o"></i>
+                      FFA</label>
                   </div>
                   </fieldset>
 
                   <fieldset class="block-style-fieldset">
                   <legend>Numeration</legend>
                   <div>
-                    <input type="radio" :id="'gs-default'" :value="''" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-default'" class="style-label">x</label>
+                    <label class="style-label"
+                      @click="liveUpdate('numeration', 'x')">
+                      <i v-if="currentBook.numeration === 'x'"
+                        class="fa fa-check-circle-o"></i>
+                      <i v-else class="fa fa-circle-o"></i>
+                    x</label>
                   </div>
                   <div>
-                    <input type="radio" :id="'gs-ocean'" :value="'global-ocean'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-ocean'" class="style-label">x.x</label>
+                    <label class="style-label"
+                      @click="liveUpdate('numeration', 'x_x')">
+                      <i v-if="currentBook.numeration === 'x_x'"
+                        class="fa fa-check-circle-o"></i>
+                      <i v-else class="fa fa-circle-o"></i>
+                    x.x</label>
                   </div>
                   <div>
-                    <input type="radio" :id="'gs-ffa'" :value="'global-ffa'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-ffa'" class="style-label">Auto</label>
+                    <label class="style-label"
+                      @click="liveUpdate('numeration', 'a')">
+                      <i v-if="currentBook.numeration === 'a'"
+                        class="fa fa-check-circle-o"></i>
+                      <i v-else class="fa fa-circle-o"></i>
+                      Autoincrement</label>
+                  </div>
+                  <div>
+                    <label class="style-label"
+                      @click="liveUpdate('numeration', 'none')">
+                      <i v-if="currentBook.numeration === 'none'"
+                        class="fa fa-check-circle-o"></i>
+                      <i v-else class="fa fa-circle-o"></i>
+                      Off</label>
                   </div>
                   </fieldset>
 
@@ -645,6 +677,12 @@ export default {
           return this.tc_currentBookTasks.tasks.length;
         }
       }
+    },
+    selectionStart() {
+      return this.$parent.selectionStart ? this.$parent.selectionStart._id : false;
+    },
+    selectionEnd() {
+      return this.$parent.selectionEnd ? this.$parent.selectionEnd._id : false;
     }
   },
 
@@ -684,14 +722,18 @@ export default {
         this.collectCheckedStyles(this.start_id, this.end_id);
       }
     });
+    console.log('4', this.$parent.selectionStart, this.selectionStart, this.selectionEnd);
+    if (this.selectionStart && this.selectionEnd) {
+      this.collectCheckedStyles(this.selectionStart, this.selectionEnd)
+    }
   },
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
     this.$root.$off('audiobookUpdated');
     this.$root.$off('from-bookblockview:voicework-type-changed');
     this.$root.$off('book-reimported');
-    this.$root.$off('from-bookedit:set-selection');
-    this.$root.$off('from-block-edit:set-style');
+    //this.$root.$off('from-bookedit:set-selection');
+    //this.$root.$off('from-block-edit:set-style');
   },
 
   watch: {
@@ -1174,7 +1216,16 @@ export default {
         } while (pBlock && pBlock._id !== endId);
       }
       this.styleTabs = result;
-      //console.log('result', result)
+
+      Vue.nextTick(()=>{
+
+        if (result.size == 0) {
+          $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
+        } else {
+
+        }
+
+      });
     },
 
     selectStyle(blockType, styleKey, styleVal) {
@@ -1354,6 +1405,10 @@ export default {
     font-weight: 400;
   }
 
+  .style-label {
+    cursor: pointer;
+  }
+
   .sidebar-bookmeta {
     width: 96%;
   }
@@ -1437,6 +1492,10 @@ export default {
     }
   }
 
+  .tab-container[role="tabpanel"] {
+    padding-top: 3px;
+  }
+
   .block-style-tabs {
     .block-style-fieldset {
       float: left;
@@ -1456,6 +1515,7 @@ export default {
       display: block;
       line-height: 12px;
       font-weight: normal;
+      cursor: pointer;
       input[type='radio'] {
         margin-left: 0px;
         margin-right: 5px;
@@ -1463,6 +1523,12 @@ export default {
       span {
         float: none;
         width: auto;
+      }
+      i.fa-check-circle-o {
+        color: #303030;
+      }
+      i.fa-dot-circle-o:hover, i.fa-circle-o:hover {
+        color: gray;
       }
     }
   }
