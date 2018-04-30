@@ -116,11 +116,7 @@ export default {
         }
 
         let self = this;
-        this.$root.$on('from-bookedit:set-selection', function(start, end) {
-          self.blocksForAlignment.start = start;
-          self.blocksForAlignment.end = end;
-          self.getBlockSelectionInfo();
-        });
+        this.$root.$on('from-bookedit:set-selection', this.listenRangeSelection);
         this.$root.$on('from-bookblockview:voicework-type-changed', function() {
           self.getBlockSelectionInfo();
         });
@@ -131,6 +127,11 @@ export default {
   },
 
   methods: {
+    listenRangeSelection (start, end) {
+      this.blocksForAlignment.start = start;
+      this.blocksForAlignment.end = end;
+      this.getBlockSelectionInfo();
+    },
     toggleMetaVisible () {
       let id = this.$store.state.currentBookid
       this.metaAvailable = id
@@ -195,7 +196,7 @@ export default {
   },
 
   destroyed: function () {
-    this.$root.$off('from-bookedit:set-selection');
+    this.$root.$off('from-bookedit:set-selection', this.listenRangeSelection);
   }
 }
 </script>

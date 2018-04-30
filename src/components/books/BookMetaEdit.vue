@@ -321,42 +321,34 @@
 
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
-                    <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length" :key="styleKey" class="block-style-fieldset">
-                    <legend>{{styleKey}}</legend>
+                      <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length" :key="styleKey" class="block-style-fieldset">
+                      <legend>{{styleKey}}</legend>
 
-                      <label v-for="sVal in styleArr"
-                        @click="selectStyle(blockType, styleKey, sVal)"
-                        class="block-style-label"
-                        :key="blockType + styleKey.replace(' ', '') + sVal"
-                        :id="blockType + styleKey.replace(' ', '') + sVal">
+                        <label v-for="sVal in styleArr"
+                          @click="selectStyle(blockType, styleKey, sVal)"
+                          class="block-style-label"
+                          :key="blockType + styleKey.replace(' ', '') + sVal"
+                          :id="blockType + styleKey.replace(' ', '') + sVal">
 
-                        <template v-if="styleTabs.get(blockType).get(styleKey).size > 1">
-                          <i class="fa fa-dot-circle-o"
-                           v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
-                          ></i>
-                          <i v-else class="fa fa-circle-o"></i>
-                        </template>
+                          <template v-if="styleTabs.get(blockType).get(styleKey).size > 1">
+                            <i class="fa fa-dot-circle-o"
+                            v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
+                            ></i>
+                            <i v-else class="fa fa-circle-o"></i>
+                          </template>
 
-                        <template v-else>
-                          <i v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
-                          class="fa fa-check-circle-o"></i>
-                          <i v-else class="fa fa-circle-o"></i>
-                        </template>
+                          <template v-else>
+                            <i v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
+                            class="fa fa-check-circle-o"></i>
+                            <i v-else class="fa fa-circle-o"></i>
+                          </template>
 
-                        <template v-if="sVal.length">{{sVal}}</template>
-                        <template v-else>none</template>
-                      </label>
+                          <template v-if="sVal.length">{{sVal}}</template>
+                          <template v-else>none</template>
+                        </label>
 
-                    </fieldset>
-
-                    <label v-else class="block-style-label">
-                      <input type="radio" :name="'block-type-value-'+styleKey"
-                      value="styleKey"/>
-                      <span v-if="styleKey.length">{{styleKey}}</span>
-                      <span v-else>none</span>
-                    </label>
-
-                    <span class="block-style-divider"></span>
+                      </fieldset>
+                      <span class="block-style-divider"></span>
 
                   </template>
 
@@ -697,6 +689,7 @@ export default {
     this.$refs.audioIntegration.$on('uploadAudio', function() {
       self.showModal_audio = true;
     })
+
     this.$refs.audioIntegration.$on('audiobookUpdated', function(response) {
       self.audiobook = {};
       Vue.nextTick(() => {
@@ -711,19 +704,9 @@ export default {
     this.$root.$on('book-reimported', () => {
       this.loadAudiobook()
     });
-    this.$root.$on('from-bookedit:set-selection', (start, end)=>{
-      //console.log('book meta :set-selection', start._id, end._id);
-      this.collectCheckedStyles(start._id, end._id);
-      this.start_id = start._id;
-      this.end_id = end._id;
+    this.$root.$on('from-bookedit:set-selection', this.listenRangeSelection);
+    this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
 
-    });
-    this.$root.$on('from-block-edit:set-style', ()=>{
-      if (this.start_id && this.end_id) {
-        this.collectCheckedStyles(this.start_id, this.end_id);
-      }
-    });
-    console.log('4', this.$parent.selectionStart, this.selectionStart, this.selectionEnd);
     if (this.selectionStart && this.selectionEnd) {
       this.collectCheckedStyles(this.selectionStart, this.selectionEnd)
     }
@@ -733,8 +716,8 @@ export default {
     this.$root.$off('audiobookUpdated');
     this.$root.$off('from-bookblockview:voicework-type-changed');
     this.$root.$off('book-reimported');
-    //this.$root.$off('from-bookedit:set-selection');
-    //this.$root.$off('from-block-edit:set-style');
+    this.$root.$off('from-bookedit:set-selection', this.listenRangeSelection);
+    this.$root.$off('from-block-edit:set-style', this.listenSetStyle);
   },
 
   watch: {
@@ -1210,8 +1193,6 @@ export default {
                 result.get(pBlock.type).get(styleKey).set('none', true);
               }
             }
-
-            //console.log('1', pBlock.classes);
             currId = pBlock.chainid;
           }
         } while (pBlock && pBlock._id !== endId);
@@ -1223,7 +1204,7 @@ export default {
         if (result.size == 0) {
           $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
         } else {
-
+          $(`a[aria-controls="#block-type-${result.keys().next().value}"]`).parent().trigger( "click" );
         }
 
       });
@@ -1253,6 +1234,19 @@ export default {
             }
           } while (pBlock && pBlock._id !== this.end_id);
         }
+        this.collectCheckedStyles(this.start_id, this.end_id);
+      }
+    },
+
+    listenRangeSelection (start, end){
+      //console.log('book meta :set-selection', start._id, end._id);
+      this.collectCheckedStyles(start._id, end._id);
+      this.start_id = start._id;
+      this.end_id = end._id;
+    },
+
+    listenSetStyle () {
+      if (this.start_id && this.end_id) {
         this.collectCheckedStyles(this.start_id, this.end_id);
       }
     },

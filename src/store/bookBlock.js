@@ -29,11 +29,14 @@ let defBlock = [
 ]
 
 let BlockTypes = {
+//   title: {
+//     '': [],
+//     subtitle: [],
+//     author: [],
+//     translator: []
+//   },
   title: {
-    '': [],
-    subtitle: [],
-    author: [],
-    translator: []
+    style: ['', 'subtitle', 'author', 'translator'],
   },
   header: {
     level: ['', 'h2', 'h3', 'h4', 'h5'],

@@ -1375,6 +1375,15 @@ export default {
         }
       }
       return false;
+    },
+
+    listenRangeSelection (start, end) {
+      // cleanup range emited from outside
+      if ((!start || !start._id) && (!end || !end._id)) {
+        this.selectionStart = {};
+        this.selectionEnd = {};
+        this.setUnCheckedRange();
+      }
     }
 
   },
@@ -1438,14 +1447,7 @@ export default {
         this.scrollToBlock(id);
       });
 
-      this.$root.$on('from-bookedit:set-selection', (start, end)=>{
-        // cleanup range emited from outside
-        if ((!start || !start._id) && (!end || !end._id)) {
-          this.selectionStart = {};
-          this.selectionEnd = {};
-          this.setUnCheckedRange();
-        }
-      });
+      this.$root.$on('from-bookedit:set-selection', this.listenRangeSelection);
 
       this.$root.$on('bookBlocksUpdates', (data) => {
         //console.log('bookBlocksUpdates');
@@ -1466,7 +1468,7 @@ export default {
     this.$root.$off('bookBlocksUpdates');
     this.$root.$off('for-bookedit:scroll-to-block');
     this.$root.$off('book-reimported');
-    this.$root.$off('from-bookedit:set-selection');
+    this.$root.$off('from-bookedit:set-selection', this.listenRangeSelection);
   },
   watch: {
     'meta._id': {

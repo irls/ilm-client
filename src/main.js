@@ -7,7 +7,8 @@ import VueResource from 'vue-resource'
 import * as directives from './directives'
 //import jQuery from 'jquery'
 //import 'expose-loader?jquery!jquery'
-import VueEvents from 'vue-events'
+
+import $ from 'jquery';
 
 // for debugging
 if (process.env.NODE_ENV === 'development') Vue.config.debug = true
@@ -30,4 +31,3 @@ new Vue({
 })
 
 Vue.use(VueResource);
-Vue.use(VueEvents)

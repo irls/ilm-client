@@ -102,6 +102,10 @@ export default {
     },
     clearRangeSelection() {
       this.$root.$emit('from-bookedit:set-selection', {}, {});
+    },
+    listenRangeSelection(start, end) {
+      this.checked.start = (start && start._id) ? start : { _id: null };
+      this.checked.end = (end && end._id) ? end : { _id: null };
     }
   },
   components: {
@@ -140,14 +144,11 @@ export default {
     ...mapGetters(['currentBookMeta', 'isBlocked'])
   },
   mounted() {
-    this.$root.$on('from-bookedit:set-selection', (start, end)=>{
-      //console.log('from-bookedit:set-selection', this.checked.start);
-      this.checked.start = (start && start._id) ? start : { _id: null };
-      this.checked.end = (end && end._id) ? end : { _id: null };
-    });
+    this.$root.$on('from-bookedit:set-selection', this.listenRangeSelection);
   },
   destroyed: function () {
-    this.$root.$off('from-bookedit:set-selection');
+  console.log('4');
+    this.$root.$off('from-bookedit:set-selection', this.listenRangeSelection);
   }
 }
 </script>
