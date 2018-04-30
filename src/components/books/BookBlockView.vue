@@ -886,7 +886,8 @@ export default {
         'tc_approveBookTask',
         'setCurrentBookBlocksLeft',
         'setCurrentBookCounters',
-        'addBlockLock'
+        'addBlockLock',
+        'getAlignCount'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -2454,6 +2455,7 @@ export default {
             this.voiceworkUpdating = false;
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
+              this.getAlignCount();
               response.data.updField = 'voicework';
               this.$root.$emit('bookBlocksUpdates', response.data);
               //this.setCurrentBookBlocksLeft(this.block.bookid);
