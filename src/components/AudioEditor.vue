@@ -77,9 +77,9 @@
           <button class="btn btn-primary" :disabled="!allowAlignSelection" v-on:click="align()">Align</button>
           <span v-if="!hasAlignSelection" class="red-message">Define block range</span>
           <template v-else>
-            <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blocksForAlignment.start._id)">Start {{blocksForAlignment.start._id.split('_').pop()}}</a>
+            <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)">Start {{blockSelection.start._id.split('_').pop()}}</a>
             <span v-else class="red-message">Define Start</span>
-            <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blocksForAlignment.end._id)">End {{blocksForAlignment.end._id.split('_').pop()}}</a>
+            <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)">End {{blockSelection.end._id.split('_').pop()}}</a>
             <span v-else class="red-message">Define End</span>
             <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message">({{selectionBlocksToAlign}} blocks)</span>
           </template>
@@ -138,7 +138,6 @@
         //'modal': modal,
         'cntx-menu': BlockContextMenu
       },
-      props: ['blocksForAlignment'],
       mixins: [api_config, task_controls],
       data() {
         return {
@@ -1114,19 +1113,19 @@
           return this.currentBookMeta.isMastered || (this.block && this.block.voicework === 'tts');
         },
         _setBlocksSelection() {
-          if (this.blocksForAlignment && ((this.blocksForAlignment.start && this.blocksForAlignment.start._id) || (this.blocksForAlignment.end && this.blocksForAlignment.end._id)) && this.plEventEmitter) {
+          if (this.blockSelection && ((this.blockSelection.start && this.blockSelection.start._id) || (this.blockSelection.end && this.blockSelection.end._id)) && this.plEventEmitter) {
             let start = false;
             let end = false;
-            if (this.blocksForAlignment.start && this.blocksForAlignment.start._id && this.blockMap[this.blocksForAlignment.start._id]) {
-              start = parseInt(this.blockMap[this.blocksForAlignment.start._id][0])/1000;
-              if (!this.blocksForAlignment.end || !this.blocksForAlignment.end._id || !this.blockMap[this.blocksForAlignment.end._id]) {
-                end = this.selection.end;//parseInt(this.blockMap[this.blocksForAlignment.start._id][1])/1000;
+            if (this.blockSelection.start && this.blockSelection.start._id && this.blockMap[this.blockSelection.start._id]) {
+              start = parseInt(this.blockMap[this.blockSelection.start._id][0])/1000;
+              if (!this.blockSelection.end || !this.blockSelection.end._id || !this.blockMap[this.blockSelection.end._id]) {
+                end = this.selection.end;//parseInt(this.blockMap[this.blockSelection.start._id][1])/1000;
               }
             }
-            if (this.blocksForAlignment.end && this.blocksForAlignment.end._id && this.blockMap[this.blocksForAlignment.end._id]) {
-              end = parseInt(this.blockMap[this.blocksForAlignment.end._id][1])/1000;
-              if (!this.blocksForAlignment.start || !this.blocksForAlignment.start._id || !this.blockMap[this.blocksForAlignment.start._id]) {
-                start = this.selection.start;//parseInt(this.blockMap[this.blocksForAlignment.end._id][0])/1000;
+            if (this.blockSelection.end && this.blockSelection.end._id && this.blockMap[this.blockSelection.end._id]) {
+              end = parseInt(this.blockMap[this.blockSelection.end._id][1])/1000;
+              if (!this.blockSelection.start || !this.blockSelection.start._id || !this.blockMap[this.blockSelection.start._id]) {
+                start = this.selection.start;//parseInt(this.blockMap[this.blockSelection.end._id][0])/1000;
               }
             }
             
@@ -1341,37 +1340,37 @@
         },
         hasAlignSelection: {
           get() {
-            return (this.blocksForAlignment.start && this.blocksForAlignment.start._id) || 
-                    (this.blocksForAlignment.end && this.blocksForAlignment.end._id)
+            return (this.blockSelection.start && this.blockSelection.start._id) || 
+                    (this.blockSelection.end && this.blockSelection.end._id)
           }
         },
         hasAlignSelectionStart: {
           get() {
-            return this.blocksForAlignment.start && this.blocksForAlignment.start._id;
+            return this.blockSelection.start && this.blockSelection.start._id;
           }
         },
         hasAlignSelectionEnd: {
           get() {
-            return this.blocksForAlignment.end && this.blocksForAlignment.end._id;
+            return this.blockSelection.end && this.blockSelection.end._id;
           }
         },
         allowAlignSelection: {
           get() {
-            return this.blocksForAlignment.start && this.blocksForAlignment.start._id && 
-                    this.blocksForAlignment.end && this.blocksForAlignment.end._id && 
-                    this.blocksForAlignment.count;
+            return this.blockSelection.start && this.blockSelection.start._id && 
+                    this.blockSelection.end && this.blockSelection.end._id && 
+                    this.alignCounter.count;
           }
         },
         selectionBlocksToAlign: {
           get() {
-            if (this.blocksForAlignment) {
-              let blocks = this.blocksForAlignment.count - this.blocksForAlignment.countTTS;
+            if (this.alignCounter) {
+              let blocks = this.alignCounter.count - this.alignCounter.countTTS;
               return blocks >=0 ? blocks : 0;
             }
             return 0;
           }
         },
-        ...mapGetters(['currentBookMeta'])
+        ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter'])
       },
       watch: {
         'cursorPosition': {
@@ -1409,9 +1408,9 @@
             }
           }
         },
-        'blocksForAlignment': {
+        'blockSelection': {
           handler(val) {
-            //console.log('blocksForAlignment CHANGED', val)
+            //console.log('blockSelection CHANGED', val)
             this._setBlocksSelection();
           },
           deep: true

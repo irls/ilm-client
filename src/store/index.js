@@ -108,6 +108,15 @@ export const store = new Vuex.Store({
 
     lockedBlocks: {},
     storeList: new Map(), // global parlist
+    blockSelection: {
+      start: {},//block
+      end: {},//block
+    },
+    alignCounter: {
+      count: 0,
+      countTTS: 0,
+      blocks: []
+    }
   },
 
   getters: {
@@ -205,6 +214,8 @@ export const store = new Vuex.Store({
     },
 
     storeList: state => state.storeList, // global parlist
+    blockSelection: state => state.blockSelection,
+    alignCounter: state => state.alignCounter,
   },
 
   mutations: {
@@ -576,6 +587,17 @@ export const store = new Vuex.Store({
 
     clear_storeList (state) {
       state.storeList = new Map();
+    },
+    
+    set_block_selection(state, selection) {
+      state.blockSelection.start = typeof selection.start !== 'undefined' ? selection.start : {};
+      state.blockSelection.end = typeof selection.end !== 'undefined' ? selection.end : {};
+    },
+    
+    set_align_counter(state, counter) {
+      state.alignCounter.count = typeof counter.count !== 'undefined' ? counter.count : 0;
+      state.alignCounter.countTTS = typeof counter.countTTS !== 'undefined' ? counter.countTTS : 0;
+      state.alignCounter.blocks = typeof counter.blocks !== 'undefined' ? counter.blocks : [];
     }
   },
 
@@ -1667,6 +1689,48 @@ export const store = new Vuex.Store({
     
     clearBlockLock({commit}, data) {
       commit('clear_block_lock', data);
+    },
+    
+    setBlockSelection({state, commit, dispatch}, selection) {
+      if (!_.isEqual(state.blockSelection, selection)) {
+        commit('set_block_selection', selection);
+        dispatch('getAlignCount', selection)
+      }
+    },
+    
+    getAlignCount({state, commit}, selection) {
+      if (!selection) {
+        selection = state.blockSelection;
+      }
+      if (selection.start && selection.start._id && 
+                selection.end && selection.end._id) {
+        let api_url = state.API_URL + 'books/' + state.currentBookid + '/selection_alignment';
+        let query = 'start=' + selection.start._id + '&end=' + selection.end._id;
+        let realign = state.tc_currentBookTasks.assignments && 
+                (state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1 || 
+                  (state.tc_currentBookTasks.assignments.indexOf('content_cleanup') !== -1 && state.currentBookCounters.not_marked_blocks === 0));
+        if (realign) {
+          query+='&voicework=all_audio&realign=true';
+        } else { // In case of normal task (with tts counter)
+          query+='&voicework=all_with_tts';
+        }
+        return axios.get(api_url + '?' + query, {})
+          .then(response => {
+            if (response.status == 200) {
+              commit('set_align_counter', {count: response.data.count, 
+                countTTS: response.data.countTTS,
+                blocks: response.data.blocks});
+            }
+            return Promise.resolve();
+          })
+          .catch(err => Promise.reject(err));
+      } else {
+        commit('set_align_counter', {
+          count: 0,
+          countTTS: 0,
+          blocks: []
+        });
+      }
     }
   }
 })

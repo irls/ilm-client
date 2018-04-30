@@ -18,8 +18,7 @@
 
         </td> <!--collapseEditBar visible-->
         <td class='metaedit' v-if='metaVisible' rowspan="2">
-          <book-meta-edit v-if='metaVisible'
-            :blocksForAlignment="blocksForAlignment"></book-meta-edit>
+          <book-meta-edit v-if='metaVisible'></book-meta-edit>
         </td>
       </tr>
       <tr>
@@ -31,8 +30,7 @@
       </tr>
     </table>
     <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}, audioeditorMode()]" >
-      <AudioEditor ref="audioEditor"
-        :blocksForAlignment="blocksForAlignment"></AudioEditor>
+      <AudioEditor ref="audioEditor"></AudioEditor>
     </nav>
     <v-dialog :clickToClose="false"/>
   </div>
@@ -120,6 +118,7 @@ export default {
           self.blocksForAlignment.start = start;
           self.blocksForAlignment.end = end;
           self.getBlockSelectionInfo();
+          self.setBlockSelection({start: start, end: end});
         });
         this.$root.$on('from-bookblockview:voicework-type-changed', function() {
           self.getBlockSelectionInfo();
@@ -191,7 +190,7 @@ export default {
       this.$modal.hide('dialog');
     },
 
-    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices'])
+    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection'])
   },
 
   destroyed: function () {

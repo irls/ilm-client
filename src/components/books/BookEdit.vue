@@ -145,7 +145,8 @@ export default {
           tc_tasksByBlock: 'tc_tasksByBlock',
           isBlocked: 'isBlocked',
           blockers: 'blockers',
-          parlist: 'storeList'
+          parlist: 'storeList',
+          blockSelection: 'blockSelection'
       }),
       metaStyles: function () {
           let result = '';
@@ -181,7 +182,7 @@ export default {
       modal,
   },
   methods: {
-    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock']),
+    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection']),
 
     test() {
         window.scrollTo(0, document.body.scrollHeight-500);
@@ -628,14 +629,14 @@ export default {
     },
 
     allowSetStart: function(block_id) {
-      if (!this.selectionEnd._id || block_id == this.selectionEnd._id) {
+      if (!this.blockSelection.end._id || block_id == this.blockSelection.end._id) {
         return true;
       }
       let crossId = block_id;
       for (var idx=0; idx < this.parlist.size; idx++) {
         let block = this.parlist.get(crossId);
         if (block) {
-          if (block._id == this.selectionEnd._id) {
+          if (block._id == this.blockSelection.end._id) {
             return true;
           }
           crossId = block.chainid;
@@ -645,14 +646,14 @@ export default {
     },
 
     allowSetEnd: function(block_id) {
-      if (!this.selectionStart._id || block_id == this.selectionStart._id) {
+      if (!this.blockSelection.start._id || block_id == this.blockSelection.start._id) {
         return true;
       }
       let crossId = block_id;
       for (var idx=0; idx < this.parlist.size; idx++) {
         let block = this.parlist.get(crossId);
         if (block) {
-          if (block._id == this.selectionStart._id) {
+          if (block._id == this.blockSelection.start._id) {
             return false;
           }
           crossId = block.chainid;
@@ -1013,6 +1014,7 @@ export default {
 
     setRangeSelection(block, type, status, shift = false) {
       //console.log('setRangeSelection', block, type, status, shift);
+      let newSelection = Object.assign({}, this.blockSelection);
       switch (type) {
         case 'start':
           if (status) {
@@ -1051,7 +1053,7 @@ export default {
         case 'byOne':
           //console.log('byOne', status, block._id, 'start:', this.selectionStart._id, 'end:', this.selectionEnd._id);
           if (status) { // check
-            if (this.selectionStart._id) {
+            if (this.blockSelection.start._id) {
 
               this.setUnCheckedRange();
 
@@ -1066,8 +1068,8 @@ export default {
               if (shift) {
                 let pBlock, currId = block._id, isFound = false;
                 while (pBlock = this.findPrevBlock(currId)) {
-                  if (pBlock._id === this.selectionStart._id) {
-                    this.selectionEnd = block;
+                  if (pBlock._id === this.blockSelection.start._id) {
+                    newSelection.end = block;
                     isFound = true;
                     break;
                   }
@@ -1076,36 +1078,39 @@ export default {
 
                 if (!isFound) {
                   // selected blocks are not found before, so they are after
-                  if (!this.selectionEnd._id) this.selectionEnd = this.selectionStart;
-                  this.selectionStart = block;
+                  if (!this.blockSelection.end._id) newSelection.end = this.blockSelection.start;
+                  newSelection.end = block;
                 }
 
-                this.setCheckedRange(this.selectionStart._id, this.selectionEnd._id);
+                this.setCheckedRange(newSelection.start._id, newSelection.end._id);
 
               } else {
                 block.checked = true;
-                this.selectionStart = block;
-                this.selectionEnd = block;
+                newSelection.start = block;
+                newSelection.end = block;
               }
 
-              this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
+              //this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
 
             } else  {
               this.setUnCheckedRange();
               block.checked = true;
-              this.selectionStart = block;
-              this.selectionEnd = block;
-              this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
+              newSelection.start = block;
+              newSelection.end = block;
+              //this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
             }
+            //this.selectionStart = newSelection.start;
+            //this.selectionEnd = newSelection.end;
+            this.setBlockSelection(newSelection)
+            //this.$root.$emit('from-bookedit:set-selection', newSelection.start, newSelection.end);
           } else { // uncheck
-            if (this.selectionStart._id && this.selectionEnd._id) {
-              if (this.selectionStart._id == block._id && block._id == this.selectionEnd._id) {
-                this.selectionStart = {};
-                this.selectionEnd = {};
-              } else if (block._id == this.selectionStart._id) {
-                this.selectionStart = this.parlist.get(block.chainid);
+            if (this.blockSelection.start._id && this.blockSelection.end._id) {
+              if (this.blockSelection.start._id == block._id && block._id == this.blockSelection.end._id) {
+                this.setBlockSelection({start: {}, end: {}});
+              } else if (block._id == this.blockSelection.start._id) {
+                this.setBlockSelection({start: this.parlist.get(block.chainid), end: this.blockSelection.end});
               } else if (block._id == this.selectionEnd._id) {
-                this.selectionEnd = this.findPrevBlock(block._id);
+                this.setBlockSelection({start: this.blockSelection.start, end: this.findPrevBlock(block._id)});
               } else {
 
 //                 let pBlock, beforeCount = 0, afterCount = 0;
@@ -1129,17 +1134,16 @@ export default {
 //                 if (afterCount > beforeCount) {
 //                   this.selectionStart = block.chainid;
 //                 } else {
-                  this.selectionEnd = this.findPrevBlock(block._id);
+                  this.setBlockSelection({start: this.blockSelection.start, end: this.findPrevBlock(block._id)});
 //                 }
               }
               this.setUnCheckedRange();
-              this.setCheckedRange(this.selectionStart._id, this.selectionEnd._id);
-              this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
+              this.setCheckedRange(this.blockSelection.start._id, this.blockSelection.end._id);
+              //this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
 
             } else {
-              this.selectionStart = {};
-              this.selectionEnd = {};
-              this.$root.$emit('from-bookedit:set-selection', {}, {});
+              //this.$root.$emit('from-bookedit:set-selection', {}, {});
+              this.setBlockSelection({start: {}, end: {}})
             }
           }
           break;
@@ -1149,8 +1153,8 @@ export default {
     _recountApprovedInRange() {
       let approved = 0;
       let approved_tts = 0;
-      if (this.selectionStart && this.selectionEnd && this.tc_hasTask('content_cleanup')) {
-        let crossId = this.selectionStart._id;
+      if (this.blockSelection.start._id && this.blockSelection.end._id && this.tc_hasTask('content_cleanup')) {
+        let crossId = this.blockSelection.start._id;
         for (var idx=0; idx < this.parlist.size; idx++) {
           let block = this.parlist.get(crossId);
           if (block) {
@@ -1164,7 +1168,7 @@ export default {
                   break;
               }
             }
-            if (block._id == this.selectionEnd._id) {
+            if (block._id == this.blockSelection.end._id) {
               break;
             }
             crossId = block.chainid;
@@ -1298,8 +1302,8 @@ export default {
               this.$refs.blocks.forEach(($ref)=>{
                 $ref.addContentListeners();
               });
-              if (this.selectionStart._id && this.selectionEnd._id) {
-                this.setCheckedRange(this.selectionStart._id, this.selectionEnd._id);
+              if (this.blockSelection.start._id && this.blockSelection.end._id) {
+                this.setCheckedRange(this.blockSelection.start._id, this.blockSelection.end._id);
               }
               Vue.nextTick(()=>{
                 this.upScreenTop = false;
@@ -1346,8 +1350,8 @@ export default {
                   this.$refs.blocks.forEach(($ref)=>{
                   $ref.addContentListeners();
                 })
-                if (this.selectionStart._id && this.selectionEnd._id) {
-                  this.setCheckedRange(this.selectionStart._id, this.selectionEnd._id);
+                if (this.blockSelection.start._id && this.blockSelection.end._id) {
+                  this.setCheckedRange(this.blockSelection.start._id, this.blockSelection.end._id);
                 }
                 Vue.nextTick(()=>{
                   this.screenTop = this.screenTop + firstHeight;
@@ -1436,15 +1440,6 @@ export default {
 
       this.$root.$on('for-bookedit:scroll-to-block', (id)=>{
         this.scrollToBlock(id);
-      });
-
-      this.$root.$on('from-bookedit:set-selection', (start, end)=>{
-        // cleanup range emited from outside
-        if ((!start || !start._id) && (!end || !end._id)) {
-          this.selectionStart = {};
-          this.selectionEnd = {};
-          this.setUnCheckedRange();
-        }
       });
 
       this.$root.$on('bookBlocksUpdates', (data) => {

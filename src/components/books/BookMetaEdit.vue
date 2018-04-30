@@ -102,7 +102,6 @@
             </div>
             <BookAudioIntegration ref="audioIntegration"
                 :audiobook="audiobook"
-                :blocksForAlignment="blocksForAlignment"
                 @onTtsSelect="ttsUpdate"
                 @alignmentFinished="loadAudiobook()"
               ></BookAudioIntegration>
@@ -542,7 +541,7 @@ export default {
   },
 
   props: [
-    'blocksForAlignment'
+    
   ],
 
   computed: {
