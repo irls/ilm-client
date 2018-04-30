@@ -1503,6 +1503,14 @@ export default {
 
         }
       }
+    },
+    'blockSelection': {
+      handler(val) {
+        if (!this.blockSelection.start._id && !this.blockSelection.end._id) {
+          this.setUnCheckedRange();
+        }
+      },
+      deep: true
     }
   }
 }

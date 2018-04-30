@@ -566,9 +566,7 @@ export default {
       audiobookChecker: false,
 
       // set blocks properties
-      styleTabs: new Map(),
-      start_id: false,
-      end_id: false
+      styleTabs: new Map()
     }
   },
 
@@ -578,7 +576,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks', 'storeList']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks', 'storeList', 'blockSelection']),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -679,10 +677,10 @@ export default {
       }
     },
     selectionStart() {
-      return this.$parent.selectionStart ? this.$parent.selectionStart._id : false;
+      return this.blockSelection.start._id ? this.blockSelection.start._id : false;
     },
     selectionEnd() {
-      return this.$parent.selectionEnd ? this.$parent.selectionEnd._id : false;
+      return this.blockSelection.end._id ? this.blockSelection.end._id : false;
     }
   },
 
@@ -710,16 +708,9 @@ export default {
     this.$root.$on('book-reimported', () => {
       this.loadAudiobook()
     });
-    this.$root.$on('from-bookedit:set-selection', (start, end)=>{
-      //console.log('book meta :set-selection', start._id, end._id);
-      this.collectCheckedStyles(start._id, end._id);
-      this.start_id = start._id;
-      this.end_id = end._id;
-
-    });
     this.$root.$on('from-block-edit:set-style', ()=>{
-      if (this.start_id && this.end_id) {
-        this.collectCheckedStyles(this.start_id, this.end_id);
+      if (this.blockSelection.start._id && this.blockSelection.end._id) {
+        this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
       }
     });
     console.log('4', this.$parent.selectionStart, this.selectionStart, this.selectionEnd);
@@ -816,6 +807,13 @@ export default {
           this.$root.$emit('hide-modal');
         }
       }
+    },
+    
+    'blockSelection': {
+      handler(val) {
+        this.collectCheckedStyles(val.start._id, val.end._id);
+      },
+      deep: true
     }
 
   },
@@ -1230,9 +1228,9 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal) {
       console.log(blockType, styleKey, styleVal);
-      if (this.start_id && this.end_id) {
-        if (this.storeList.has(this.start_id)) {
-          let pBlock, currId = this.start_id;
+      if (this.blockSelection.start._id && this.blockSelection.end._id) {
+        if (this.storeList.has(this.blockSelection.start._id)) {
+          let pBlock, currId = this.blockSelection.start._id;
           do {
             pBlock = this.storeList.get(currId);
             if (pBlock && pBlock.checked) {
@@ -1250,9 +1248,9 @@ export default {
               }
               currId = pBlock.chainid;
             }
-          } while (pBlock && pBlock._id !== this.end_id);
+          } while (pBlock && pBlock._id !== this.blockSelection.end._id);
         }
-        this.collectCheckedStyles(this.start_id, this.end_id);
+        this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
       }
     },
 
