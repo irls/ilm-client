@@ -97,7 +97,6 @@
               :pre_selected="currentBookMeta.voices.title"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
-              :blocksForAlignment="blocksForAlignment"
               @onSelect="onTtsSelect('title', $event)"
             ></select-tts-voice></td>
           </tr>
@@ -107,7 +106,6 @@
               :pre_selected="currentBookMeta.voices.header"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
-              :blocksForAlignment="blocksForAlignment"
               @onSelect="onTtsSelect('header', $event)"
             ></select-tts-voice></td>
           </tr>
@@ -117,7 +115,6 @@
               pre_selected=""
               :pre_volume="pre_volume"
               :pre_options="pre_options"
-              :blocksForAlignment="blocksForAlignment"
             ></select-tts-voice></td>
           </tr>-->
           <tr>
@@ -126,7 +123,6 @@
               :pre_selected="currentBookMeta.voices.paragraph"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
-              :blocksForAlignment="blocksForAlignment"
               @onSelect="onTtsSelect('paragraph', $event)"
             ></select-tts-voice></td>
           </tr>
@@ -136,14 +132,13 @@
               :pre_selected="currentBookMeta.voices.footnote"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
-              :blocksForAlignment="blocksForAlignment"
               @onSelect="onTtsSelect('footnote', $event)"
             ></select-tts-voice></td>
           </tr>
         </tbody>
         </table>
-        <p v-if="blocksForAlignment.start._id || blocksForAlignment.end._id">
-          <span v-if="hasBlocksForAlignment">{{blocksForAlignment.countTTS}}</span> blocks in range: <a class="go-to-block" v-on:click="scrollToBlock(blocksForAlignment.start._id)">{{blocksForAlignment.start._id}}</a> - <a class="go-to-block" v-on:click="scrollToBlock(blocksForAlignment.end._id)">{{blocksForAlignment.end._id}}</a><!-- need audio-->
+        <p v-if="blockSelection.start._id || blockSelection.end._id">
+          <span v-if="hasBlocksForAlignment">{{alignCounter.countTTS}}</span> blocks in range: <a class="go-to-block" v-on:click="scrollToBlock(blockSelection.start._id)">{{blockSelection.start._id}}</a> - <a class="go-to-block" v-on:click="scrollToBlock(blockSelection.end._id)">{{blockSelection.end._id}}</a><!-- need audio-->
         </p>
         <!--<div class="pull-left" v-if="hasBlocksForAlignment && !enableAlignment">
           <span class="red">Select audio</span>
@@ -185,8 +180,7 @@
 
     },
     props: {
-      'audiobook': Object,
-      'blocksForAlignment': Object
+      'audiobook': Object
     },
     data() {
       return {
@@ -221,13 +215,6 @@
       this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
         if (audiofileId && self.playing === audiofileId) {
           self.playing = false;
-        }
-      })
-      this.$root.$on('from-bookedit:set-selection', (start, end) => {
-        var openAudio = this.$refs.panelAudiofile ? this.$refs.panelAudiofile.open : false;
-        var openTTS = this.$refs.panelTTS ? this.$refs.panelTTS.open : false;
-        if (!openAudio && openTTS) {
-          this.$root.$emit('from-bookedit:set-voice-test', start, end)
         }
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
@@ -458,8 +445,8 @@
         let realign = true;
         this._setAligningBlocks('audio_file');
         api.post(api_url, {
-          start: this.blocksForAlignment.start._id,
-          end: this.blocksForAlignment.end._id,
+          start: this.blockSelection.start._id,
+          end: this.blockSelection.end._id,
           audiofiles: id ? [id] : this.selections,
           realign: realign
         }, {
@@ -521,8 +508,8 @@
       _setAligningBlocks(voicework) {
         this.aligningBlocks = [];
         let realign = this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0;
-        if (this.blocksForAlignment.blocks) {
-          this.blocksForAlignment.blocks.forEach(_b => {
+        if (this.alignCounter.blocks) {
+          this.alignCounter.blocks.forEach(_b => {
             if (voicework === 'audio_file') {
               if (_b.voicework === 'audio_file' || (realign && _b.voicework === 'narration')) {
                 this.aligningBlocks.push(_b);
@@ -619,8 +606,8 @@
         //this.alignmentProcess = true;
         this._setAligningBlocks('tts');
         api.post(api_url, {
-          start: this.blocksForAlignment.start._id,
-          end: this.blocksForAlignment.end._id,
+          start: this.blockSelection.start._id,
+          end: this.blockSelection.end._id,
           audiofiles: false,
           realign: true,
           voicework: 'all_with_tts',
@@ -724,15 +711,15 @@
           }
         }
         //console.log('enableTtsAlignment', voicesSelected, this.currentBookMeta.voices);
-        return this.hasBlocksForTTS && voicesSelected && this.blocksForAlignment.start._id && this.blocksForAlignment.end._id;
+        return this.hasBlocksForTTS && voicesSelected && this.blockSelection.start._id && this.blockSelection.end._id;
       },
       hasBlocksForAlignment: function() {
-        return this.blocksForAlignment.count > 0
+        return this.alignCounter.count > 0
       },
       hasBlocksForTTS: function() {
-        return this.blocksForAlignment.countTTS > 0
+        return this.alignCounter.countTTS > 0
       },
-      ...mapGetters(['currentBookCounters', 'ttsVoices', 'currentBookid', 'currentBookMeta'])
+      ...mapGetters(['currentBookCounters', 'ttsVoices', 'currentBookid', 'currentBookMeta', 'blockSelection', 'alignCounter'])
     },
     watch: {
       'audiobook': {
@@ -788,7 +775,7 @@
         handler(val) {
           if (val) {
             this.$root.$emit('show-modal', {
-              title: 'Aligning blocks ' + this.blocksForAlignment.start._id + ' - ' + this.blocksForAlignment.end._id + ' with audio',
+              title: 'Aligning blocks ' + this.blockSelection.start._id + ' - ' + this.blockSelection.end._id + ' with audio',
               text: '<div class="align-preloader"></div>',
               buttons: [
                 {
@@ -844,6 +831,16 @@
         } else {
           this.alignmentProcess = false;
         }*/
+      },
+      'blockSelection': {
+        handler(val) {
+          var openAudio = this.$refs.panelAudiofile ? this.$refs.panelAudiofile.open : false;
+          var openTTS = this.$refs.panelTTS ? this.$refs.panelTTS.open : false;
+          if (!openAudio && openTTS) {
+            this.$root.$emit('from-bookedit:set-voice-test', this.blockSelection.start, this.blockSelection.end)
+          }
+        },
+        deep: true
       }
     }
   }

@@ -35,7 +35,7 @@ export default {
   },
 
   props: [
-    'pre_selected', 'pre_options', 'pre_volume', 'blocksForAlignment'
+    'pre_selected', 'pre_options', 'pre_volume'
   ],
 //     data example:
 //       {
@@ -53,7 +53,7 @@ export default {
 //     }
 
   computed: {
-    ...mapGetters(['ttsVoices'])
+    ...mapGetters(['ttsVoices', 'blockSelection'])
   },
 
   methods: {
@@ -142,8 +142,8 @@ export default {
 
     if (this.pre_selected) {
       this.value = this.pre_selected;
-      if ((this.blocksForAlignment.start && this.blocksForAlignment.start._id) || (this.blocksForAlignment.end && this.blocksForAlignment.end._id)) {
-        this.setVoiceTest(this.blocksForAlignment.start, this.blocksForAlignment.end);
+      if ((this.blockSelection.start && this.blockSelection.start._id) || (this.blockSelection.end && this.blockSelection.end._id)) {
+        this.setVoiceTest(this.blockSelection.start, this.blockSelection.end);
       } else {
         this.applyAudio(this.value);
       }

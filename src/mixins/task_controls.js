@@ -48,7 +48,7 @@ export default {
           return false;
         }
         return this.$store.state.tc_tasksByBlock[block_id].find(t => {
-          return t.type === 'narrate-block';
+          return ['narrate-block', 'fix-block-narration'].indexOf(t.type) !== -1;
         });
       },
       tc_hasBlockTask(block_id, type) {

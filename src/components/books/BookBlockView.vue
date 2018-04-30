@@ -783,16 +783,16 @@ export default {
           return this.tc_getBlockTask(this.block._id) ? false : true;
       },
       displaySelectionStart() {
-        return this.$parent.selectionEnd._id == this.block._id ? this.$parent.selectionStart._id : false;
+        return this.blockSelection.end._id == this.block._id ? this.blockSelection.start._id : false;
       },
       displaySelectionEnd() {
-        return this.$parent.selectionStart._id == this.block._id ? this.$parent.selectionEnd._id : false;
+        return this.blockSelection.start._id == this.block._id ? this.blockSelection.end._id : false;
       },
       selectionStart() {
-        return this.$parent.selectionStart._id
+        return this.blockSelection.start._id
       },
       selectionEnd() {
-        return this.$parent.selectionEnd._id
+        return this.blockSelection.end._id
       },
       allowBlockFlag() {
         if (this.isCanFlag('narrator', false) || this.isCanFlag('editor', false)) {
@@ -812,7 +812,8 @@ export default {
           tc_currentBookTasks: 'tc_currentBookTasks',
           authors: 'authors',
           isEditor: 'isEditor',
-          isBlocked: 'isBlocked'
+          isBlocked: 'isBlocked',
+          blockSelection: 'blockSelection'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image

@@ -18,8 +18,7 @@
 
         </td> <!--collapseEditBar visible-->
         <td class='metaedit' v-if='metaVisible' rowspan="2">
-          <book-meta-edit v-if='metaVisible'
-            :blocksForAlignment="blocksForAlignment"></book-meta-edit>
+          <book-meta-edit v-if='metaVisible'></book-meta-edit>
         </td>
       </tr>
       <tr>
@@ -31,8 +30,7 @@
       </tr>
     </table>
     <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}, audioeditorMode()]" >
-      <AudioEditor ref="audioEditor"
-        :blocksForAlignment="blocksForAlignment"></AudioEditor>
+      <AudioEditor ref="audioEditor"></AudioEditor>
     </nav>
     <v-dialog :clickToClose="false"/>
   </div>
@@ -65,13 +63,7 @@ export default {
       metaVisible: false,
       metaAvailable: false,
       //colCount: 1,
-      currentBookid: this.$store.state.currentBookid,
-      blocksForAlignment: {
-        start: {},
-        end: {},
-        count: 0,
-        countTTS: 0
-      }
+      currentBookid: this.$store.state.currentBookid
     }
   },
 
@@ -115,11 +107,6 @@ export default {
           }
         }
 
-        let self = this;
-        this.$root.$on('from-bookedit:set-selection', this.listenRangeSelection);
-        this.$root.$on('from-bookblockview:voicework-type-changed', function() {
-          self.getBlockSelectionInfo();
-        });
         this.$root.$on('show-modal', (params) => {this.showModal(params)})
         this.$root.$on('hide-modal', () => {this.hideModal()})
 
@@ -127,11 +114,7 @@ export default {
   },
 
   methods: {
-    listenRangeSelection (start, end) {
-      this.blocksForAlignment.start = start;
-      this.blocksForAlignment.end = end;
-      this.getBlockSelectionInfo();
-    },
+
     toggleMetaVisible () {
       let id = this.$store.state.currentBookid
       this.metaAvailable = id
@@ -162,28 +145,6 @@ export default {
     audioeditorMode() {
       return '-mode-' + (this.$refs.audioEditor ? this.$refs.audioEditor.mode : '');
     },
-    getBlockSelectionInfo() {
-      this.blocksForAlignment.count = 0;
-      if (this.blocksForAlignment.start._id && this.blocksForAlignment.end._id) {
-        let api_url = this.API_URL + 'books/' + this.$store.state.currentBookid + '/selection_alignment';
-        let api = this.$store.state.auth.getHttp();
-        let query = 'start=' + this.blocksForAlignment.start._id + '&end=' + this.blocksForAlignment.end._id;
-        let realign = this.tc_hasTask('audio_mastering') || (this.tc_hasTask('content_cleanup') && this.currentBookCounters.not_marked_blocks === 0);
-        if (realign) {
-          query+='&voicework=all_audio&realign=true';
-        } else { // In case of normal task (with tts counter)
-          query+='&voicework=all_with_tts';
-        }
-        api.get(api_url + '?' + query, {})
-          .then(response => {
-            if (response.status == 200) {
-              this.blocksForAlignment.count = response.data.count;
-              this.blocksForAlignment.countTTS = response.data.countTTS;
-              this.blocksForAlignment.blocks = response.data.blocks;
-            }
-          })
-      }
-    },
 
     showModal(params) {
       this.$modal.show('dialog', params);
@@ -192,7 +153,7 @@ export default {
       this.$modal.hide('dialog');
     },
 
-    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices'])
+    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection'])
   },
 
   destroyed: function () {

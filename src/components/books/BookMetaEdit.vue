@@ -102,7 +102,6 @@
             </div>
             <BookAudioIntegration ref="audioIntegration"
                 :audiobook="audiobook"
-                :blocksForAlignment="blocksForAlignment"
                 @onTtsSelect="ttsUpdate"
                 @alignmentFinished="loadAudiobook()"
               ></BookAudioIntegration>
@@ -559,19 +558,17 @@ export default {
       audiobookChecker: false,
 
       // set blocks properties
-      styleTabs: new Map(),
-      start_id: false,
-      end_id: false
+      styleTabs: new Map()
     }
   },
 
   props: [
-    'blocksForAlignment'
+
   ],
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks', 'storeList']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks', 'storeList', 'blockSelection']),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -672,10 +669,10 @@ export default {
       }
     },
     selectionStart() {
-      return this.$parent.selectionStart ? this.$parent.selectionStart._id : false;
+      return this.blockSelection.start._id ? this.blockSelection.start._id : false;
     },
     selectionEnd() {
-      return this.$parent.selectionEnd ? this.$parent.selectionEnd._id : false;
+      return this.blockSelection.end._id ? this.blockSelection.end._id : false;
     }
   },
 
@@ -704,7 +701,6 @@ export default {
     this.$root.$on('book-reimported', () => {
       this.loadAudiobook()
     });
-    this.$root.$on('from-bookedit:set-selection', this.listenRangeSelection);
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
 
     if (this.selectionStart && this.selectionEnd) {
@@ -716,7 +712,6 @@ export default {
     this.$root.$off('audiobookUpdated');
     this.$root.$off('from-bookblockview:voicework-type-changed');
     this.$root.$off('book-reimported');
-    this.$root.$off('from-bookedit:set-selection', this.listenRangeSelection);
     this.$root.$off('from-block-edit:set-style', this.listenSetStyle);
   },
 
@@ -800,6 +795,13 @@ export default {
           this.$root.$emit('hide-modal');
         }
       }
+    },
+
+    'blockSelection': {
+      handler(val) {
+        this.collectCheckedStyles(val.start._id, val.end._id);
+      },
+      deep: true
     }
 
   },
@@ -1210,11 +1212,11 @@ export default {
       });
     },
 
-    selectStyle(blockType, styleKey, styleVal) {
-      console.log(blockType, styleKey, styleVal);
-      if (this.start_id && this.end_id) {
-        if (this.storeList.has(this.start_id)) {
-          let pBlock, currId = this.start_id;
+    selectStyle(blockType, styleKey, styleVal)
+    {
+      if (this.blockSelection.start._id && this.blockSelection.end._id) {
+        if (this.storeList.has(this.blockSelection.start._id)) {
+          let pBlock, currId = this.blockSelection.start._id;
           do {
             pBlock = this.storeList.get(currId);
             if (pBlock && pBlock.checked) {
@@ -1232,22 +1234,15 @@ export default {
               }
               currId = pBlock.chainid;
             }
-          } while (pBlock && pBlock._id !== this.end_id);
+          } while (pBlock && pBlock._id !== this.blockSelection.end._id);
         }
-        this.collectCheckedStyles(this.start_id, this.end_id);
+        this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
       }
     },
 
-    listenRangeSelection (start, end){
-      //console.log('book meta :set-selection', start._id, end._id);
-      this.collectCheckedStyles(start._id, end._id);
-      this.start_id = start._id;
-      this.end_id = end._id;
-    },
-
     listenSetStyle () {
-      if (this.start_id && this.end_id) {
-        this.collectCheckedStyles(this.start_id, this.end_id);
+      if (this.selectionStart && this.selectionEnd) {
+        this.collectCheckedStyles(this.selectionStart, this.selectionEnd);
       }
     },
 

@@ -3,7 +3,7 @@
 
   <h3 v-if="currentBook" class='title'>
     <i class="fa fa-minus-square-o -smaller-uncheck" aria-hidden="true"
-      v-if="checked.start._id"
+      v-if="blockSelection.start._id"
       v-on:click="clearRangeSelection()"></i>
     <i v-else :class="['fa fa-pencil', isBlocked ? '-blocked':'-free']"></i>
     {{currentBookMeta.title}}
@@ -51,7 +51,7 @@ import taskControls from '../../mixins/task_controls.js';
 import apiConfig from '../../mixins/api_config.js'
 import { dropdown } from 'vue-strap';
 import BookReimport from './BookReimport'
-import {mapGetters} from 'vuex';
+import {mapGetters, mapActions} from 'vuex';
 
 export default {
   data () {
@@ -62,11 +62,7 @@ export default {
         //'JSON': 'JSON',
         'BookEditDisplay': 'Display'
       },
-      showBookReimport: false,
-      checked: {
-        start: { _id: null },
-        end: { _id: null },
-      }
+      showBookReimport: false
     }
   },
   mixins: [access, taskControls, apiConfig],
@@ -101,12 +97,9 @@ export default {
       this.showBookReimport = false;
     },
     clearRangeSelection() {
-      this.$root.$emit('from-bookedit:set-selection', {}, {});
+      this.setBlockSelection({start: {}, end: {}});
     },
-    listenRangeSelection(start, end) {
-      this.checked.start = (start && start._id) ? start : { _id: null };
-      this.checked.end = (end && end._id) ? end : { _id: null };
-    }
+    ...mapActions(['setBlockSelection'])
   },
   components: {
     ButtonRadioGroup,
@@ -141,14 +134,13 @@ export default {
     currentBookMeta: function() {
       return this.$store.state.currentBookMeta
     },
-    ...mapGetters(['currentBookMeta', 'isBlocked'])
+    ...mapGetters(['currentBookMeta', 'isBlocked', 'blockSelection'])
   },
   mounted() {
-    this.$root.$on('from-bookedit:set-selection', this.listenRangeSelection);
+    
   },
   destroyed: function () {
-  console.log('4');
-    this.$root.$off('from-bookedit:set-selection', this.listenRangeSelection);
+    
   }
 }
 </script>
