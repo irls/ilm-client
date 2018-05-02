@@ -533,6 +533,7 @@ let setBlockParnum = function(block, parCounter, numMask = 'x_x') {
       }
       if (block.secnum.length === 0) {
         //this.parCounter.curr = 1;
+        parCounter.curr = 1;
         parCounter.prefCnt++;
         parCounter.pref = parCounter.prefCnt;
         result = parCounter.prefCnt;
