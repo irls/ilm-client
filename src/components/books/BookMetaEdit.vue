@@ -101,8 +101,8 @@
               </button>
             </div>
             <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
-              {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range 
-              <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - 
+              {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
+              <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
               <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
             </div>
             <div v-else class="t-box red-message">Define block range</div>
@@ -980,8 +980,8 @@ export default {
       return api.update(this.currentBookid, update)
       .then(doc => {
         if (key == 'numeration') {
+          this.unfreeze('updateBookMeta');
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
-          this.currentBook.numeration = value;
         }
         //console.log('success DB update: ', doc)
         return this.updateBookVersion({minor: true})
@@ -1364,7 +1364,7 @@ export default {
         this.collectCheckedStyles(this.selectionStart, this.selectionEnd);
       }
     },
-    
+
     goToBlock(id) {
       this.$root.$emit('for-bookedit:scroll-to-block', id);
     },
