@@ -17,8 +17,9 @@ let defBlock = [
   'flags',
   '_deleted',
   'parnum',
-  'section',
   'secnum',
+  'secVal',
+  'secHide',
   'illustration',
   'description',
   'voicework',
@@ -90,8 +91,11 @@ class BookBlock {
     if (Array.isArray(this.classes)) this.classes = {};
 
     this.parnum = typeof init.parnum !== 'undefined' ? init.parnum : false;
-    this.section = typeof init.section !== 'undefined' ? init.section : false;
-    this.secnum = typeof init.secnum !== 'undefined' ? init.secnum : this.section;
+    //this.section = typeof init.section !== 'undefined' ? init.section : false;
+
+    this.secVal  = typeof init.secVal  !== 'undefined' ? init.secVal  : false;
+    this.secnum  = typeof init.secnum  !== 'undefined' ? init.secnum  : this.secVal;
+    this.secHide = typeof init.secHide !== 'undefined' ? init.secHide : false;
 
     this.audiosrc = init.audiosrc || '';
     this.footnotes = init.footnotes || [];
@@ -517,10 +521,10 @@ class FootNote {
   }
 }
 
-let setBlockParnum = function(block, parCounter) {
+let setBlockParnum = function(block, parCounter, numMask = 'x_x') {
   let result = false;
   switch(block.type) {
-    case 'header' : {
+    case 'header' : case 'title' : {
       // this.parCounter.curr = 1;
 
       if (block.secnum === false) {
@@ -531,6 +535,7 @@ let setBlockParnum = function(block, parCounter) {
         //this.parCounter.curr = 1;
         parCounter.prefCnt++;
         parCounter.pref = parCounter.prefCnt;
+        result = parCounter.prefCnt;
         break;
       }
       if (!isNaN(block.secnum)) { // Number
@@ -550,7 +555,14 @@ let setBlockParnum = function(block, parCounter) {
         result = '';
         break;
       }
-      result = parCounter.pref+'.'+parCounter.curr;
+      switch(numMask) {
+        case 'x' : {
+          result = parCounter.curr;
+        } break;
+        case 'x_x' : {
+          result = parCounter.pref+'.'+parCounter.curr;
+        } break;
+      }
       parCounter.curr++;
     } break;
   };

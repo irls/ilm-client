@@ -295,8 +295,8 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numeration', 'a')">
-                      <i v-if="currentBook.numeration === 'a'"
+                      @click="liveUpdate('numeration', 'auto')">
+                      <i v-if="currentBook.numeration === 'auto'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                       Autoincrement</label>
@@ -317,6 +317,60 @@
                   :disabled="!(styleTabs.has(blockType))"
                   v-for="(val, blockType) in blockTypes"
                   :id="'block-type-'+blockType" :key="blockType">
+
+                  <fieldset class="block-style-fieldset block-num-fieldset"
+                  v-if="numProps.has(blockType) && ['title', 'header'].indexOf(blockType) > -1">
+                    <legend>numeration</legend>
+                    <label class="block-style-label"
+                      @click="selSecNum(blockType, 'secNum', numProps.get(blockType).get('secNum'))">
+                      <template v-if="numProps.get(blockType).get('secNum') == 'mixed'">
+                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                      </template>
+                      <template v-else>
+                        <i v-if="numProps.get(blockType).get('secNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                      </template>
+                      Numbered section header
+                    </label>
+                    <label class="block-style-label"
+                      @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
+                      <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
+                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                      </template>
+                      <template v-else>
+                        <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                      </template>
+                      Hide number from display
+                    </label>
+                  </fieldset>
+
+                  <fieldset class="block-style-fieldset block-num-fieldset"
+                  v-if="numProps.has(blockType) && ['par'].indexOf(blockType) > -1">
+                    <legend>numeration</legend>
+                    <label class="block-style-label"
+                      @click="selSecNum(blockType, 'parNum', numProps.get(blockType).get('parNum'))">
+                      <template v-if="numProps.get(blockType).get('parNum') == 'mixed'">
+                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                      </template>
+                      <template v-else>
+                        <i v-if="numProps.get(blockType).get('parNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                      </template>
+                      Numbered paragraph
+                    </label>
+                    <label class="block-style-label"
+                      @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
+                      <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
+                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                      </template>
+                      <template v-else>
+                        <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                      </template>
+                      Hide number from display
+                    </label>
+                  </fieldset>
 
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
@@ -558,7 +612,8 @@ export default {
       audiobookChecker: false,
 
       // set blocks properties
-      styleTabs: new Map()
+      styleTabs: new Map(),
+      numProps: new Map(),
     }
   },
 
@@ -915,19 +970,27 @@ export default {
       var db = new PouchDB(dbPath)
       var api = db.hoodieApi()
 
+      this.freeze('updateBookMeta');
       return api.update(this.currentBookid, update)
       .then(doc => {
+        if (key == 'numeration') {
+          this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
+          this.currentBook.numeration = value;
+        }
         //console.log('success DB update: ', doc)
         return this.updateBookVersion({minor: true})
           .then(() => {
+            //this.unfreeze('updateBookMeta');
             return BPromise.resolve(doc);
           })
           .catch(err => {
             //console.log(err);
+            this.unfreeze('updateBookMeta');
             return BPromise.reject(err);
           });
       }).catch(err => {
         //console.log('error DB pdate: ', err)
+        this.unfreeze('updateBookMeta');
         return BPromise.reject(err)
       })
     },
@@ -1178,8 +1241,9 @@ export default {
       }
     },
 
-    collectCheckedStyles(startId, endId) {
+    collectCheckedStyles(startId, endId, isSwitch = true) {
       let result = new Map();
+      let nums = new Map();
       if (this.storeList.has(startId)) {
         let pBlock, currId = startId;
         do {
@@ -1195,18 +1259,67 @@ export default {
                 result.get(pBlock.type).get(styleKey).set('none', true);
               }
             }
+
+            if (!nums.has(pBlock.type))
+              nums.set(pBlock.type, new Map([
+                ['secNum',  !(pBlock.secnum === false)],
+                ['secHide', !(pBlock.secHide === false)],
+                ['parNum',  !(pBlock.parnum === false)],
+                ['parHide', !(pBlock.parHide === false)],
+              ]));
+
+            //console.log('nums.get(pBlock.type)', nums.get(pBlock.type), !(pBlock.secnum === false));
+
+            if (nums.get(pBlock.type).get('secNum') !== 'mixed') {
+              if (pBlock.hasOwnProperty('secnum')) {
+                if (!(pBlock.secnum === false) !== nums.get(pBlock.type).get('secNum')) {
+                  nums.get(pBlock.type).set('secNum', 'mixed');
+                } else {
+                  nums.get(pBlock.type).set('secNum', !(pBlock.secnum === false));
+                }
+              } else {
+                nums.get(pBlock.type).set('secNum', false);
+              }
+            }
+            if (nums.get(pBlock.type).get('secHide') !== 'mixed') {
+              if (pBlock.hasOwnProperty('secHide')) {
+                if (!(pBlock.secHide === false) !== nums.get(pBlock.type).get('secHide')) {
+                  nums.get(pBlock.type).set('secHide', 'mixed');
+                } else {
+                  nums.get(pBlock.type).set('secHide', !(pBlock.secHide === false));
+                }
+              } else {
+                nums.get(pBlock.type).set('secHide', false);
+              }
+            }
+            if (nums.get(pBlock.type).get('parNum') !== 'mixed') {
+              if (pBlock.hasOwnProperty('parnum')) {
+                if (!(pBlock.parnum === false) !== nums.get(pBlock.type).get('parNum')) {
+                  nums.get(pBlock.type).set('parNum', 'mixed');
+                } else {
+                  nums.get(pBlock.type).set('parNum', !(pBlock.parnum === false));
+                }
+              } else {
+                nums.get(pBlock.type).set('parNum', false);
+              }
+            }
+
             currId = pBlock.chainid;
           }
         } while (pBlock && pBlock._id !== endId);
       }
       this.styleTabs = result;
+      this.numProps = nums;
+
+      //console.log('nums', nums);
 
       Vue.nextTick(()=>{
 
         if (result.size == 0) {
           $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
-        } else {
-          $(`a[aria-controls="#block-type-${result.keys().next().value}"]`).parent().trigger( "click" );
+        } else if (isSwitch) {
+          //$(`a[aria-controls="#block-type-${result.keys().next().value}"]`).parent().trigger( "click" );
+          $(`li#t-block-type-${result.keys().next().value}`).trigger( "click" );
         }
 
       });
@@ -1236,7 +1349,7 @@ export default {
             }
           } while (pBlock && pBlock._id !== this.blockSelection.end._id);
         }
-        this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
+        this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
     },
 
@@ -1246,7 +1359,70 @@ export default {
       }
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock'])
+    selSecNum (blockType, valKey, currVal) {
+      //console.log('selSecNum', blockType, valKey, currVal);
+
+      if (this.blockSelection.start._id && this.blockSelection.end._id) {
+        if (this.storeList.has(this.blockSelection.start._id)) {
+          let pBlock, currId = this.blockSelection.start._id;
+          do {
+            pBlock = this.storeList.get(currId);
+            if (pBlock && pBlock.checked) {
+              if (pBlock.type == blockType) {
+
+                switch(valKey) {
+                    case 'secNum' : {
+                      if (currVal == 'mixed' || currVal === false) {
+                        if (pBlock.secVal) pBlock.secnum = pBlock.secVal;
+                        else pBlock.secnum = '';
+                      } else {
+                        pBlock.secVal = pBlock.secnum;
+                        pBlock.secnum = false;
+                      }
+                    } break;
+                    case 'secHide' : {
+                      if (currVal == 'mixed' || currVal === false) {
+                        pBlock.secHide = true;
+                      } else {
+                        pBlock.secHide = false;
+                      }
+                    } break;
+                    case 'parNum' : {
+                      if (currVal == 'mixed' || currVal === false) {
+                        pBlock.parnum = '';
+                      } else {
+                        pBlock.parnum = false;
+                      }
+                    } break;
+                    case 'parHide' : {
+                      if (currVal == 'mixed' || currVal === false) {
+                        pBlock.parHide = true;
+                      } else {
+                        pBlock.parHide = false;
+                      }
+                    } break;
+                    default : {
+                    } break;
+                };
+
+                if (pBlock.isChanged || pBlock.isAudioChanged) {
+                  pBlock.checked = false;
+                  pBlock.checked = true;
+                } else {
+                  pBlock.partUpdate = true;
+                  this.putBlock(pBlock);
+                }
+              }
+              currId = pBlock.chainid;
+            }
+          } while (pBlock && pBlock._id !== this.blockSelection.end._id);
+        }
+        this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration);
+        this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+      }
+    },
+
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'freeze', 'unfreeze', 'blockers'])
   }
 }
 </script>
@@ -1490,13 +1666,38 @@ export default {
     .block-style-fieldset {
       float: left;
       width: 32%;
+
+      &.block-num-fieldset {
+
+        width: 97%;
+        clear: both;
+        display: block;
+
+        i.fa-check-square-o.-checked {
+          color: #303030;
+          &:hover {
+            color: #303030;
+          }
+        }
+
+        i.fa-square-o:hover,
+        i.fa-check-square-o:hover,
+        i.fa-plus-square-o:hover {
+          color: gray;
+        }
+
+        .block-style-label {
+          width: 50%;
+          float: left;
+        }
+      }
     }
     .block-style-divider {
       float: none;
       width: auto;
       display: inline;
     }
-    .block-style-divider:nth-child(3n+3) {
+    .block-style-divider:nth-child(3n+1) {
       content: '';
       display: block;
       clear: both;

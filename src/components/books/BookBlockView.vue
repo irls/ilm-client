@@ -3,25 +3,33 @@
     <div v-if="isLocked()" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': block.checked==true}]">
         <div class="table-row parnum-row">
-          <span v-if="block.type=='par' && block.parnum!==false" :class="['parnum']">{{block.parnum}}</span>
 
-          <span v-if="block.type=='header' && block.secnum!==false" :class="['parnum', '-hidden-hover']">{{block.secnum}}</span>
+          <template v-if="block.secnum!==false">
+            <span v-if="block.secHide===false" :class="['parnum', '-hidden-hover']">{{block.secnum.length?block.secnum:block.parnum}}</span>
+          </template>
 
-          <span v-if="block.type=='header' && block.secnum===''" :class="['parnum', '-hidden-hover', '-auto']">Auto</span>
+          <template v-else >
+            <span v-if="block.parnum && block.parnum!==false && block.secHide===false" :class="['parnum']">{{block.parnum}}</span>
+          </template>
 
-          <input v-if="block.type=='header' && block.secnum!==false"
+          <!--<template v-if="block.secHide===false">
+            <span v-if="block.secnum!==false" :class="['parnum', '-hidden-hover']">{{block.secnum}}</span>
+            <span v-if="block.secnum===''" :class="['parnum', '-hidden-hover', '-auto']">{{block.parnum}}</span>
+          </template>-->
+
+          <input v-if="block.secnum!==false"
             :class="['secnum', '-hidden-block']"
             v-model="block.secnum" @input="setSecnumVal"
             type="text" maxlength="3" size="3"/>
         </div>
         <div class="table-row">
             <div class='par-ctrl -hidden'>
-                <i v-if="block.type=='header'"
-                  class="fa fa-header"
-                  :class="{'-active': block.secnum!==false}"
-                  @click="setSecnum"></i>
+                <i v-if="block.secnum!==false"
+                  class="fa fa-paragraph"
+                  :class="{'-active': block.secHide===false}"
+                  @click="setSecnumHidden"></i>
 
-                <i v-if="block.type=='par'"
+                <i v-else
                   class="fa fa-paragraph"
                   :class="{'-active': block.parnum!==false}"
                   @click="setParnum"></i>
@@ -870,7 +878,7 @@ export default {
       this.destroyEditor();
       this.initEditor();
       this.addContentListeners();
-      
+
       this.$root.$on('block-state-refresh-' + this.block._id, () => {
         this.$forceUpdate();
       });
@@ -2108,10 +2116,17 @@ export default {
         this.$modal.hide(name + this.block._id);
       },
       setChanged(val, type = null) {
-        //console.log('setChanged', val);
+        console.log('setChanged', val);
         this.isChanged = val;
         if (val && type) {
           this.pushChange(type);
+          if (this.block) {
+            this.block.classes = {};
+            this.block.secnum = false;
+            this.block.parnum = false;
+          }
+          this.reCount();
+          this.$root.$emit('from-block-edit:set-style');
         }
       },
       setChangedByClass(val) {
@@ -2471,27 +2486,32 @@ export default {
 
       setSecnumVal: _.debounce(function(){
         this.reCount();
-        this.block.section = this.block.secnum;
-        this.putBlockPart({block: this.block, field: 'section'}).then(()=>{});
-      }, 800),
+        this.block.secVal = this.block.secnum;
+        this.block.partUpdate = true;
+        this.putBlock(this.block).then(()=>{});
+      }, 500),
 
       setSecnum() {
         if (this.block.secnum === false) {
-          this.block.secnum = this.block.section ? this.block.section : '';
+          this.block.secnum = this.block.secVal ? this.block.secVal : '';
         }
         else {
-          this.block.section = this.block.secnum;
+          this.block.secVal = this.block.secnum;
           this.block.secnum = false;
         }
         this.reCount();
-        this.putBlockPart({block: this.block, field: 'section'}).then(()=>{});
+        this.block.partUpdate = true;
+        this.putBlock(this.block).then(()=>{});
+      },
+      setSecnumHidden() {
+        this.block.secHide = !this.block.secHide;
+        this.putBlockPart({block: this.block, field: 'secHide'}).then(()=>{});
       },
       setParnum() {
         if (this.block.parnum === false) this.block.parnum = ''
         else this.block.parnum = false;
         this.reCount();
-        this.putBlockPart({block: this.block, field: 'parnum'}).then(()=>{
-        });
+        this.putBlockPart({block: this.block, field: 'parnum'}).then(()=>{});
       },
       allowVoiceworkChange() {
         if (this.block.type == 'illustration' || this.block.type == 'hr') {
@@ -2634,15 +2654,17 @@ export default {
           }
         }
       },
-      'block.type' (newVal) {
-        if (this.blockTypes[newVal] && Object.keys(this.blockTypes[newVal])[0] !== '') {
-          this.classSel = Object.keys(this.blockTypes[newVal])[0];
-        }
-        if (this.block) {
-          this.block.classes = {};
-        }
-        this.reCount();
-      },
+//       'block.type' (newVal) {
+//         console.log('block.type' , newVal);
+//         if (this.blockTypes[newVal] && Object.keys(this.blockTypes[newVal])[0] !== '') {
+//           this.classSel = Object.keys(this.blockTypes[newVal])[0];
+//         }
+//         if (this.block) {
+//           this.block.classes = {};
+//         }
+//         this.reCount();
+//         this.$root.$emit('from-block-edit:set-style');
+//       },
       'classSel' (newVal, oldVal) {
         let styleCurr = this.block.setClass(newVal);
         if (styleCurr) this.styleSel = styleCurr;
