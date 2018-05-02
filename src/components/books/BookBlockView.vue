@@ -2,7 +2,7 @@
 <div class="table-body -block" :id="block._id">
     <div v-if="isLocked()" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': block.checked==true}]">
-        <div class="table-row parnum-row">
+        <div class="table-row parnum-row" v-if="meta.numeration !== 'none'">
 
           <template v-if="block.secnum!==false">
             <span v-if="block.secHide===false" :class="['parnum', '-hidden-hover']">{{block.secnum.length?block.secnum:block.parnum}}</span>
@@ -21,8 +21,9 @@
             :class="['secnum', '-hidden-block']"
             v-model="block.secnum" @input="setSecnumVal"
             type="text" maxlength="3" size="3"/>
+
         </div>
-        <div class="table-row">
+        <div class="table-row" v-if="meta.numeration !== 'none'">
             <div class='par-ctrl -hidden'>
                 <i v-if="block.secnum!==false"
                   class="fa fa-paragraph"
