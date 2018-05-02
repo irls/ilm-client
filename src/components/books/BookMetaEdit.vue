@@ -100,6 +100,12 @@
                 Export Audio
               </button>
             </div>
+            <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
+              {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range 
+              <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - 
+              <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+            </div>
+            <div v-else class="t-box red-message">Define block range</div>
             <BookAudioIntegration ref="audioIntegration"
                 :audiobook="audiobook"
                 @onTtsSelect="ttsUpdate"
@@ -623,7 +629,7 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks', 'storeList', 'blockSelection']),
+    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks', 'storeList', 'blockSelection', 'alignCounter']),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -1358,6 +1364,10 @@ export default {
         this.collectCheckedStyles(this.selectionStart, this.selectionEnd);
       }
     },
+    
+    goToBlock(id) {
+      this.$root.$emit('for-bookedit:scroll-to-block', id);
+    },
 
     selSecNum (blockType, valKey, currVal) {
       //console.log('selSecNum', blockType, valKey, currVal);
@@ -1722,6 +1732,14 @@ export default {
         color: gray;
       }
     }
+  }
+  .block-selection {
+    a {
+        cursor: pointer;
+    }
+  }
+  .red-message {
+      color: red;
   }
 </style>
 

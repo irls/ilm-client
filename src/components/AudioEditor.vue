@@ -73,15 +73,12 @@
         </div>
         <div class="audio-controls" v-if="mode == 'file'">
           <button class="btn btn-default" :disabled="!isModifiedComputed" v-on:click="undo()">Undo</button>
-          <button class="btn btn-primary" v-on:click="save()" :disabled="!isModifiedComputed">Save</button>
           <button class="btn btn-primary" :disabled="!allowAlignSelection" v-on:click="align()">Align</button>
           <span v-if="!hasAlignSelection" class="red-message">Define block range</span>
           <template v-else>
-            <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)">Start {{blockSelection.start._id.split('_').pop()}}</a>
-            <span v-else class="red-message">Define Start</span>
-            <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)">End {{blockSelection.end._id.split('_').pop()}}</a>
-            <span v-else class="red-message">Define End</span>
-            <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message">({{selectionBlocksToAlign}} blocks)</span>
+            <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message">
+              {{selectionBlocksToAlign}} audio blocks in range <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+            </span>
           </template>
         </div>
       </div>
@@ -203,6 +200,7 @@
             this._showSelectionBorders(true);
           }
         });
+        this.$root.$on('for-audioeditor:close', this.close);
       },
       beforeDestroy() {
         if (this.audioContext) {
@@ -755,10 +753,13 @@
         isEmpty() {
           return !this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0;
         },
-        close() {
+        close(autosave = true) {
           if (this.isModifiedComputed && this.mode === 'block') {
             this.showModal('onExitMessage');
           } else {
+            if (autosave) {
+              this.save();
+            }
             if (this.plEventEmitter) {
               this.plEventEmitter.emit('automaticscroll', false);
               this.plEventEmitter.emit('clear');
@@ -1130,12 +1131,12 @@
             }
             
             if (start !== false && end !== false && start < end) {
-              //this.selection.start = this._round(start, 2);
-              //this.selection.end = this._round(end, 2);
-              //this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-              //this._showSelectionBorders(true);
-              this.setSelectionStart(start);
-              this.setSelectionEnd(end);
+              this.selection.start = this._round(start, 2);
+              this.selection.end = this._round(end, 2);
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              this._showSelectionBorders(true);
+              //this.setSelectionStart(start);
+              //this.setSelectionEnd(end);
               return true;
             } else {
               return false;
@@ -1364,8 +1365,7 @@
         selectionBlocksToAlign: {
           get() {
             if (this.alignCounter) {
-              let blocks = this.alignCounter.count - this.alignCounter.countTTS;
-              return blocks >=0 ? blocks : 0;
+              return this.alignCounter.countAudio;
             }
             return 0;
           }
@@ -1426,6 +1426,7 @@
             } else {
               this.blockSelectionEmit = false;
             }
+            this.$root.$emit('from-audioeditor:selection-change', this.blockId, val.start, val.end);
           },
           deep: true
         },
