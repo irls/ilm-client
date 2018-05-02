@@ -563,6 +563,9 @@ let setBlockParnum = function(block, parCounter, numMask = 'x_x') {
         case 'x_x' : {
           result = parCounter.pref+'.'+parCounter.curr;
         } break;
+        default : {
+          result = '';
+        } break;
       }
       parCounter.curr++;
     } break;

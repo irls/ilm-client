@@ -9,7 +9,7 @@
           </template>
 
           <template v-else >
-            <span v-if="block.parnum && block.parnum!==false && block.secHide===false" :class="['parnum']">{{block.parnum}}</span>
+            <span v-if="block.parnum && block.parnum!==false" :class="['parnum', {'-hidden': block.secHide===true }]">{{block.parnum}}</span>
           </template>
 
           <!--<template v-if="block.secHide===false">

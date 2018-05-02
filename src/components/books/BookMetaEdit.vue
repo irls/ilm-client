@@ -299,14 +299,14 @@
                       <i v-else class="fa fa-circle-o"></i>
                     x.x</label>
                   </div>
-                  <div>
+                  <!--<div>
                     <label class="style-label"
                       @click="liveUpdate('numeration', 'auto')">
                       <i v-if="currentBook.numeration === 'auto'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                       Autoincrement</label>
-                  </div>
+                  </div>-->
                   <div>
                     <label class="style-label"
                       @click="liveUpdate('numeration', 'none')">
