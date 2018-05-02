@@ -4,6 +4,9 @@
       <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile">
         <div class="file-catalogue">
           <div class="file-catalogue-buttons">
+            <div class="">
+              <input type="checkbox" v-model="checkAllState"/>
+            </div>
             <div v-if="_is('editor')" class="upload-audio">
               <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload btn-small">
                 Import Audio
@@ -20,14 +23,13 @@
                   <span v-on:click="unmarkSelected()">Mark pending</span>
                 </li>
             </dropdown>
-
-            <div class="">
-              <input type="checkbox" v-model="checkAllState"/>
+            <div class="align-audio">
+              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null, true)">Align&nbsp;<span v-if="alignCounter.count > 0">({{blocksForAlignment}})</span></button>
             </div>
           </div>
           <div class="file-catalogue-files-wrapper">
             <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
-              <div v-for="(audiofile, index) in audiobook.importFiles" class="audiofile">
+              <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': selections.indexOf(audiofile.id) !== -1}]">
                 <template v-if="audiofile.status == 'processing'">
                   <div class="audiofile-info">
                     <i>Processing, {{audiofile.name}}</i>
@@ -36,7 +38,7 @@
                 <template v-else>
                   <div :class="['audiofile-info', {'playing': playing == audiofile.id, done: audiofile.done}]">
                     <div class="audiofile-player-controls">
-                      <i class="fa fa-play-circle-o" v-on:click="play(audiofile.id, true)"></i>
+                      <i class="fa fa-play-circle-o" v-on:click="audiofileClick(audiofile.id, true, $event)"></i>
                       <!-- <i class="fa fa-play-circle-o red" v-on:click="play()" v-if="paused === audiofile.id"></i>
                       <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
                       <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
@@ -44,34 +46,14 @@
                     <div class="audiofile-name">
                       <span v-if="renaming !== audiofile.id" 
                             :class="['audiofile-name-edit']" 
-                            @click="play(audiofile.id, false)"  :title="audiofile.name">{{audiofile.name}}</span>
+                            @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.name}}</span>
                       <input type="text" v-model="audiofile.name" class="audiofile-name-edit"
                            @focusout="saveAudiobook()"
                            v-else />
                     </div>
                     <div class="audiofile-duration"><span>({{ parseAudioLength(audiofile.duration) }})</span></div>
                   </div>
-                  <div class="audiofile-options">
-                    <input type="checkbox" 
-                           :name="audiofile.id" 
-                           :checked="selections.indexOf(audiofile.id) !== -1"
-                           @click="addSelection(audiofile.id, $event)"
-                           />
-                    <dropdown text="..." type="default">
-                      <li><i class="fa fa-check"></i>
-                        <a v-on:click="mark(audiofile.id)">Mark done</a>
-                      </li>
-                      <li><i class="fa fa-minus"></i>
-                        <a v-on:click="unmark(audiofile.id)">Mark pending</a>
-                      </li>
-                      <li><i class="fa fa-pencil"></i>
-                        <a v-on:click="renameAudiofile(audiofile.id)">Rename</a>
-                      </li>
-                      <li><i class="fa fa-trash"></i>
-                        <a v-on:click="deleteAudio(audiofile.id)">Delete</a>
-                      </li>
-                    </dropdown>
-                  </div>
+                  
                 </template>
               </div>
             </draggable>
@@ -137,9 +119,7 @@
           </tr>
         </tbody>
         </table>
-        <p v-if="blockSelection.start._id || blockSelection.end._id">
-          <span v-if="hasBlocksForAlignment">{{alignCounter.countTTS}}</span> blocks in range: <a class="go-to-block" v-on:click="scrollToBlock(blockSelection.start._id)">{{blockSelection.start._id}}</a> - <a class="go-to-block" v-on:click="scrollToBlock(blockSelection.end._id)">{{blockSelection.end._id}}</a><!-- need audio-->
-        </p>
+        
         <!--<div class="pull-left" v-if="hasBlocksForAlignment && !enableAlignment">
           <span class="red">Select audio</span>
         </div>-->
@@ -195,7 +175,8 @@
         alignmentProcess: false,
         pre_options: false,
         pre_volume: 1.0,
-        aligningBlocks: []
+        aligningBlocks: [],
+        positions_tmp: {}
       }
     },
     mixins: [task_controls, api_config, access],
@@ -258,12 +239,20 @@
           this.playing = id;
         }
       });
+      this.$root.$on('from-audioeditor:selection-change', (id, start, end) => {
+        if (this.playing) {
+          //console.log('FOR ', af)
+          this.positions_tmp[this.playing] = {start: start, end: end};
+        }
+      });
 
       this.getTTSVoices(/*this.currentBookMeta.language*/)
       .then(()=>{
         this.pre_options = this.ttsVoices;
       })
       .catch(err=>err);
+      this._setCatalogueSize();
+      window.addEventListener('resize', this._setCatalogueSize, true);
     },
     methods: {
       uploadAudio() {
@@ -277,7 +266,15 @@
         this.renaming = false;
         let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/audiobooks/' + this.audiobook._id;
         let formData = new FormData();
-        formData.append('audiobook', JSON.stringify(this.audiobook));
+        let save_data = this.audiobook;
+        if (save_data.importFiles) {
+          save_data.importFiles.forEach(af => {
+            if (typeof this.positions_tmp[af.id] !== 'undefined') {
+              af.positions = this.positions_tmp[af.id];
+            }
+          });
+        }
+        formData.append('audiobook', JSON.stringify(save_data));
         formData.append('reorder', JSON.stringify(reorder));
         let api = this.$store.state.auth.getHttp()
         let self = this;
@@ -293,12 +290,8 @@
           return Promise.reject();
         });
       },
-      addSelection(id, event, value) {
+      addSelection(id, value) {
         
-        if (event && event.target) {
-          value = event.target.checked;
-        }
-
         if (value === true) {
           if (this.selections.indexOf(id) === -1) {
             this.selections.push(id)
@@ -307,15 +300,88 @@
           this.selections.splice(this.selections.indexOf(id), 1)
           $('input[name="' + id + '"]').prop('checked', false);
         }
+        if (this.selections.length > 1) {
+          this.$root.$emit('for-audioeditor:close');
+        }
+      },
+      audiofileClick(id, play, event) {
+        setTimeout(() => {// to prevent selection on doubleclick
+          let BreakException = {};
+          if(!this.renaming && event) {
+            if (event.shiftKey) {
+              if (this.selections.length > 0) {
+                if (this.selections.indexOf(id) === -1) {
+                  let select = false;
+                  this.addSelection(id, true);
+                  let clicked_passed = false;
+                  try {
+                    this.audiobook.importFiles.forEach(af => {
+                      if (!clicked_passed) {
+                        clicked_passed = af.id === id;
+                      }
+                      if (this.selections.indexOf(af.id) !== -1) {
+                        if (select === false || clicked_passed) {
+                          select = !select;
+                          if (select === false) {
+                            throw BreakException;
+                          }
+                        }
+                      }
+                      if (select) {
+                        this.addSelection(af.id, true)
+                      }
+                    });
+                  } catch (e) {
+                    if (e !== BreakException) {
+                      throw(e);
+                    }
+                  }
+                } else {
+                  let split = {before: [], after: []};
+                  let container = split.before;
+                  this.audiobook.importFiles.forEach(af => {
+                    if (this.selections.indexOf(af.id) !== -1) {
+                      if (af.id === id) {
+                        container = split.after;
+                      } else {
+                        container.push(af.id);
+                      }
+                    }
+                  });
+                  this.selections = [];
+                  this.addSelection(id, true);
+                  if (split.before.length < split.after.length || split.before.length === split.after.length) {
+                    split.before.forEach(_id => this.addSelection(_id, true));
+                  } else {
+                    split.after.forEach(_id => this.addSelection(_id, true));
+                  }
+                }
+              } else {
+                this.addSelection(id, true);
+                this.play(id, play);
+              }
+            } else if(event.ctrlKey) {
+              if (this.selections.indexOf(id) === -1) {
+                this.addSelection(id, true);
+              } else {
+                this.addSelection(id, false);
+              }
+            } else {
+              this.selections = [id];
+              this.play(id, play);
+            }
+          }
+        }, 500);
+        
       },
       checkAll(event, value) {
         if (event && event.target) {
           value = event.target.checked;
         }
-        $('.file-catalogue-files input[type="checkbox"]').prop('checked', value);
+        //$('.file-catalogue-files input[type="checkbox"]').prop('checked', value);
         if (this.audiobook.importFiles) {
           this.audiobook.importFiles.forEach(_f => {
-            this.addSelection(_f.id, null, value)
+            this.addSelection(_f.id, value)
           })
         }
       },
@@ -334,7 +400,7 @@
             if (this.selections.indexOf(_f.id) === -1) {
               files.push(_f);
             } else {
-              this.addSelection(_f.id, null, false);
+              this.addSelection(_f.id, false);
             }
           });
           this.audiobook.importFiles = files;
@@ -343,7 +409,7 @@
         } else {
           let files = [];
           if (this.selections.indexOf(this.deleting) !== -1) {
-            this.addSelection(this.deleting, null, false);
+            this.addSelection(this.deleting, false);
           }
           this.audiobook.importFiles.forEach((_f, i) => {
             if (_f.id !== this.deleting) {
@@ -443,12 +509,14 @@
         let self = this;
         //this.alignmentProcess = true;
         let realign = true;
+        this.saveAudiobook();
         this._setAligningBlocks('audio_file');
         api.post(api_url, {
           start: this.blockSelection.start._id,
           end: this.blockSelection.end._id,
           audiofiles: id ? [id] : this.selections,
-          realign: realign
+          realign: realign,
+          positions: this.positions_tmp
         }, {
           validateStatus: function (status) {
             return status == 200 || status == 504;
@@ -677,6 +745,10 @@
           this.saveAudiobook();
         }
       },
+      _setCatalogueSize() {
+        let file_catalogue_height = $(document).height() - 500;
+        $('.file-catalogue-files').css('max-height', file_catalogue_height + 'px');
+      },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock'])
     },
@@ -718,6 +790,10 @@
       },
       hasBlocksForTTS: function() {
         return this.alignCounter.countTTS > 0
+      },
+      blocksForAlignment: function() {
+        let blocks = this.alignCounter.count - this.alignCounter.countTTS;
+        return blocks >=0 ? blocks : 0;
       },
       ...mapGetters(['currentBookCounters', 'ttsVoices', 'currentBookid', 'currentBookMeta', 'blockSelection', 'alignCounter'])
     },
@@ -855,13 +931,13 @@
         display: inline-block;
         text-align: center;
         &.delete-audio, &.upload-audio, &.unselect-audio {
-          width: 100px;
+          /*width: 100px;*/
         }
       }
     }
     .file-catalogue-files-wrapper {
-        height: 220px;
-        max-height: 220px;
+        height: 100%;
+        /*max-height: 220px;*/
         overflow-y: scroll;
     }
     .file-catalogue-files-wrapper::-webkit-scrollbar-track {
@@ -886,6 +962,9 @@
       .audiofile {
         list-style-type: none;
         padding: 2px;
+        &.-selected {
+            background-color: #d0e9ff;
+        }
         i.fa {
           display: inline-block;
           padding: 0px 2px;
@@ -918,14 +997,14 @@
             display: inline-block;
             overflow: hidden;
           }
-          &.playing {
+          /*&.playing {
             color: maroon;
             i.fa {
               color: maroon;
             }
-          }
+          }*/
           &.done {
-              color: green;
+              color: gray;
           }
         }
         .audiofile-options {

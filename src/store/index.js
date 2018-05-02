@@ -114,6 +114,7 @@ export const store = new Vuex.Store({
     },
     alignCounter: {
       count: 0,
+      countAudio: 0,
       countTTS: 0,
       blocks: []
     }
@@ -592,12 +593,28 @@ export const store = new Vuex.Store({
     set_block_selection(state, selection) {
       state.blockSelection.start = typeof selection.start !== 'undefined' ? selection.start : {};
       state.blockSelection.end = typeof selection.end !== 'undefined' ? selection.end : {};
+      if (state.blockSelection.start._id) {
+        let _id_short = state.blockSelection.start._id.split('_').pop();
+        if (_id_short.length > 7) {
+          _id_short = _id_short.substr(0, 2) + '...' + _id_short.substr(_id_short.length - 3, 2);
+        }
+        state.blockSelection.start._id_short = _id_short;
+      }
+      if (state.blockSelection.end._id) {
+        let _id_short = state.blockSelection.end._id.split('_').pop();
+        if (_id_short.length > 7) {
+          _id_short = _id_short.substr(0, 2) + '...' + _id_short.substr(_id_short.length - 3, 2);
+        }
+        state.blockSelection.end._id_short = _id_short;
+      }
     },
     
     set_align_counter(state, counter) {
       state.alignCounter.count = typeof counter.count !== 'undefined' ? counter.count : 0;
       state.alignCounter.countTTS = typeof counter.countTTS !== 'undefined' ? counter.countTTS : 0;
       state.alignCounter.blocks = typeof counter.blocks !== 'undefined' ? counter.blocks : [];
+      let countAudio = state.alignCounter.count - state.alignCounter.countTTS;
+      state.alignCounter.countAudio = countAudio >= 0 ? countAudio : 0;
     }
   },
 
