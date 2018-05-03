@@ -208,7 +208,7 @@ export const store = new Vuex.Store({
       if (typeof localStorage === 'undefined') {
         return false;
       }
-      
+
       let lock = localStorage.getItem('lock_' + id)
       //console.log(lock, id)
       return lock ? true : false;
@@ -589,7 +589,7 @@ export const store = new Vuex.Store({
     clear_storeList (state) {
       state.storeList = new Map();
     },
-    
+
     set_block_selection(state, selection) {
       state.blockSelection.start = typeof selection.start !== 'undefined' ? selection.start : {};
       state.blockSelection.end = typeof selection.end !== 'undefined' ? selection.end : {};
@@ -608,7 +608,7 @@ export const store = new Vuex.Store({
         state.blockSelection.end._id_short = _id_short;
       }
     },
-    
+
     set_align_counter(state, counter) {
       state.alignCounter.count = typeof counter.count !== 'undefined' ? counter.count : 0;
       state.alignCounter.countTTS = typeof counter.countTTS !== 'undefined' ? counter.countTTS : 0;
@@ -650,7 +650,12 @@ export const store = new Vuex.Store({
             .on('change', (change)=>{
                 console.log('metaDB change', change);
                 dispatch('updateBooksList');
-                dispatch('reloadBookMeta');
+                // try to avoid meta glitches while update
+                if (state.blockers.indexOf('updateBookMeta') > -1) {
+                  commit('clear_blocker', 'updateBookMeta');
+                } else {
+                  dispatch('reloadBookMeta');
+                }
             })
             .on('error', (err)=>{
               // handle errors
@@ -1381,7 +1386,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
       } else {
-        return BPromise.resolve();
+        return Promise.resolve();
       }
     },
 
@@ -1699,32 +1704,32 @@ export const store = new Vuex.Store({
     unfreeze({commit}, bName) {
       commit('clear_blocker', bName);
     },
-    
+
     addBlockLock({commit}, data) {
       commit('add_block_lock', data);
     },
-    
+
     clearBlockLock({commit}, data) {
       commit('clear_block_lock', data);
     },
-    
+
     setBlockSelection({state, commit, dispatch}, selection) {
       if (!_.isEqual(state.blockSelection, selection)) {
         commit('set_block_selection', selection);
         dispatch('getAlignCount', selection)
       }
     },
-    
+
     getAlignCount({state, commit}, selection) {
       if (!selection) {
         selection = state.blockSelection;
       }
-      if (selection.start && selection.start._id && 
+      if (selection.start && selection.start._id &&
                 selection.end && selection.end._id) {
         let api_url = state.API_URL + 'books/' + state.currentBookid + '/selection_alignment';
         let query = 'start=' + selection.start._id + '&end=' + selection.end._id;
-        let realign = state.tc_currentBookTasks.assignments && 
-                (state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1 || 
+        let realign = state.tc_currentBookTasks.assignments &&
+                (state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1 ||
                   (state.tc_currentBookTasks.assignments.indexOf('content_cleanup') !== -1 && state.currentBookCounters.not_marked_blocks === 0));
         if (realign) {
           query+='&voicework=all_audio&realign=true';
@@ -1734,7 +1739,7 @@ export const store = new Vuex.Store({
         return axios.get(api_url + '?' + query, {})
           .then(response => {
             if (response.status == 200) {
-              commit('set_align_counter', {count: response.data.count, 
+              commit('set_align_counter', {count: response.data.count,
                 countTTS: response.data.countTTS,
                 blocks: response.data.blocks});
             }

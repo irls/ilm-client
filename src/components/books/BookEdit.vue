@@ -350,7 +350,8 @@ export default {
             this.$store.commit('set_storeList', newBlock);
           });
         }
-        result.blockId = result.rows[0]._id
+        result.blockId = result.rows[0]._id;
+        this.reCountProxy();
         return Promise.resolve(result);
       })
       .catch((err)=>{
@@ -376,6 +377,7 @@ export default {
           });
         } else this.hasScrollDown = false;
         result.blockId = result.rows[result.rows.length-1]._id;
+        this.reCountProxy();
         return Promise.resolve(result);
       })
       .catch((err)=>{
@@ -615,13 +617,14 @@ export default {
       })
     },
 
-    reCountProxy: function () {
+    reCountProxy: function (numMask = false) {
       this.parCounter = { pref: 0, prefCnt: 0, curr: 1 };
       let crossId = this.meta.startBlock_id;//this.startId;
+      numMask = numMask || this.meta.numeration || 'x_x';
       for (var idx=0; idx < this.parlist.size; idx++) {
         let block = this.parlist.get(crossId);
         if (block) {
-          block.parnum = setBlockParnum(block, this.parCounter);
+          block.parnum = setBlockParnum(block, this.parCounter, numMask);
           crossId = block.chainid;
         } else break;
       }
@@ -1381,6 +1384,11 @@ export default {
         }
       }
       return false;
+    },
+
+    listenSetNum(bookId, numMask) {
+      //console.log('listenSetNum', bookId, numMask);
+      this.reCountProxy(numMask);
     }
 
   },
@@ -1451,6 +1459,8 @@ export default {
           this.refreshBlock({doc: res, deleted: res.deleted || false, updField: updField});
         })
       });
+
+      this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
   },
 
   beforeDestroy:  function() {
@@ -1461,6 +1471,7 @@ export default {
     this.$root.$off('bookBlocksUpdates');
     this.$root.$off('for-bookedit:scroll-to-block');
     this.$root.$off('book-reimported');
+    this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
   },
   watch: {
     'meta._id': {
