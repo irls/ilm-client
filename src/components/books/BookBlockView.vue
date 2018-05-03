@@ -136,7 +136,7 @@
                   <template v-if="allowEditing">
                     <!-- Block Type selector -->
                     <label>type:&nbsp;
-                    <select v-model='block.type' style="min-width: 80px;" @input="setChanged(true, 'type')"><!--v-model='block.type'--><!--:value="type"-->
+                    <select v-model="block.type" style="min-width: 80px;" @input="setChanged(true, 'type', $event)"><!--v-model='block.type'--><!--:value="type"-->
                       <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                     </select>
                     </label>
@@ -940,7 +940,7 @@ export default {
 
       initEditor(force) {
         force = force || false;
-
+        
         if ((!this.editor || force === true) && this.block.needsText()) {
           let extensions = {};
           let toolbar = {buttons: []};
@@ -974,7 +974,7 @@ export default {
     //       this.editor.subscribe('positionToolbar', ()=>{})
         }  else if (this.editor) this.editor.setup();
 
-        if ((!this.editorDescr || force === true) && this.block.needsText()) {
+        if ((!this.editorDescr || force === true) && this.block.type == 'illustration') {
           let extensions = {};
           let toolbar = {buttons: []};
           if (this.allowEditing) {
@@ -991,7 +991,7 @@ export default {
                 ]
               };
           }
-          this.editorDescr = new MediumEditor('.content-wrap-desc', {
+          this.editorDescr = new MediumEditor('[id="' + this.block._id + '"] .content-wrap-desc', {
               toolbar: toolbar,
               buttonLabels: 'fontawesome',
               quotesList: this.authors,
@@ -2108,11 +2108,21 @@ export default {
       hideModal(name) {
         this.$modal.hide(name + this.block._id);
       },
-      setChanged(val, type = null) {
+      setChanged(val, type = null, event = null) {
         //console.log('setChanged', val);
         this.isChanged = val;
         if (val && type) {
           this.pushChange(type);
+          if (type === 'type' && event && event.target) {
+            if (event.target.value === 'illustration') {
+              let i = setInterval(() => {
+                if (document.querySelectorAll('[id="' + this.block._id + '"] .content-wrap-desc').length > 0) {
+                  this.initEditor();
+                  clearInterval(i);
+                }
+              }, 500);
+            }
+          }
         }
       },
       setChangedByClass(val) {
