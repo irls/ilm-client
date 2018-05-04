@@ -331,11 +331,11 @@
                     </template>
 
                     <template v-if="block.isNeedAlso(flagsSel._id)">
-                      <a v-if="isCanFlag('narrator') && part.type == 'editor'"
+                      <a v-if="isCanFlag('narrator', false) && part.type == 'editor'"
                       href="#" class="flag-control -right"
                       @click.prevent="addFlagPart(part.content, 'narrator')">
                       Flag for narration also</a>
-                      <a v-if="isCanFlag('editor') && part.type == 'narrator'"
+                      <a v-if="isCanFlag('editor', false) && part.type == 'narrator'"
                       href="#" class="flag-control -right"
                       @click.prevent="addFlagPart(part.content, 'editor')">
                       Flag for editing also</a>
