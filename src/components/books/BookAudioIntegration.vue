@@ -303,7 +303,7 @@
           this.selections.splice(this.selections.indexOf(id), 1)
           $('input[name="' + id + '"]').prop('checked', false);
         }
-        if (this.selections.length > 1) {
+        if (this.selections.length > 1 && this.playing) {
           this.$root.$emit('for-audioeditor:close');
         }
       },
@@ -968,6 +968,7 @@
       list-style-type: none;
       margin-left: 0px;
       padding-left: 0px;
+      min-height: 300px;
       max-height: 300px;
       .audiofile {
         list-style-type: none;
