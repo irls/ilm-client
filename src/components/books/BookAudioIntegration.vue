@@ -245,6 +245,9 @@
           this.positions_tmp[this.playing] = {start: start, end: end};
         }
       });
+      this.$root.$on('book-reimported', () => {
+        this.positions_tmp = {};
+      });
 
       this.getTTSVoices(/*this.currentBookMeta.language*/)
       .then(()=>{
@@ -300,7 +303,7 @@
           this.selections.splice(this.selections.indexOf(id), 1)
           $('input[name="' + id + '"]').prop('checked', false);
         }
-        if (this.selections.length > 1) {
+        if (this.selections.length > 1 && this.playing) {
           this.$root.$emit('for-audioeditor:close');
         }
       },
@@ -509,35 +512,42 @@
         let self = this;
         //this.alignmentProcess = true;
         let realign = true;
-        this.saveAudiobook();
+        let update = this.saveAudiobook()
+          .then((updated) => Promise.resolve(updated))
+          .catch((err) => Promise.resolve({error: true, err: err}));
         this._setAligningBlocks('audio_file');
-        api.post(api_url, {
-          start: this.blockSelection.start._id,
-          end: this.blockSelection.end._id,
-          audiofiles: id ? [id] : this.selections,
-          realign: realign,
-          positions: this.positions_tmp
-        }, {
-          validateStatus: function (status) {
-            return status == 200 || status == 504;
-          }
-        }).then(function(response){
-          if (response.status===200) {
-            self.$root.$emit('bookBlocksUpdates', response.data);
-            self.$emit('alignmentFinished');
-            self.aligningBlocks = [];
-          } else if (response.status == 504) {
-            self.checkAligningBlocks();
-          }
-          self.setCurrentBookCounters();
-        }).catch((err) => {
-          console.log('error: '+ err);
-          if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
-            self.checkAligningBlocks();
-          } else {
-            self.aligningBlocks = [];
-          }
-        });
+        Promise.all([update])
+          .then((updated) => {
+            //console.log(updated)
+            //console.log('START ALIGN');
+            api.post(api_url, {
+              start: this.blockSelection.start._id,
+              end: this.blockSelection.end._id,
+              audiofiles: id ? [id] : this.selections,
+              realign: realign,
+              positions: this.positions_tmp
+            }, {
+              validateStatus: function (status) {
+                return status == 200 || status == 504;
+              }
+            }).then(function(response){
+              if (response.status===200) {
+                self.$root.$emit('bookBlocksUpdates', response.data);
+                self.$emit('alignmentFinished');
+                self.aligningBlocks = [];
+              } else if (response.status == 504) {
+                self.checkAligningBlocks();
+              }
+              self.setCurrentBookCounters();
+            }).catch((err) => {
+              console.log('error: '+ err);
+              if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
+                self.checkAligningBlocks();
+              } else {
+                self.aligningBlocks = [];
+              }
+            });
+          });
       },
       checkAligningBlocks() {
         this.$root.$off('blockChange');
@@ -958,6 +968,7 @@
       list-style-type: none;
       margin-left: 0px;
       padding-left: 0px;
+      min-height: 300px;
       max-height: 300px;
       .audiofile {
         list-style-type: none;
