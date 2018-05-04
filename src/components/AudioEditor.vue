@@ -757,7 +757,7 @@
           if (this.isModifiedComputed && this.mode === 'block') {
             this.showModal('onExitMessage');
           } else {
-            if (autosave && this.isModifiedComputed) {
+            if (autosave && this.isModifiedComputed && this.mode === 'file') {
               this.save();
             }
             if (this.plEventEmitter) {
