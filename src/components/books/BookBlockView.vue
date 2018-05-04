@@ -1267,6 +1267,7 @@ export default {
                 //this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                 //this.blockAudio.src = this.block.getAudiosrc('m4a');
                 this.isAudioChanged = false;
+                this.block.isAudioChanged = false;
                 //return this.putBlock(this.block);
                 this.$root.$emit('bookBlocksUpdates', {blocks: [response.data.block]});
               }
