@@ -10,7 +10,7 @@
           <span :class="['toc-item-number', toc.level]">{{toc.secnum?toc.secnum:''}}</span>
           <span class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</span>
         </div>-->
-        <table class="toc-list-table">
+        <table class="toc-list-table table-striped">
           <tr :class="['toc-item', toc.level]" v-for="(toc, tocIdx) in tocs" v-bind:key="tocIdx">
             <!--<template v-if="!toc.level">
               <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
@@ -116,6 +116,10 @@ export default {
  fieldset.toc-items-list {
     padding-left: 5px;
 
+    .table-striped>tr:nth-of-type(odd) {
+      background-color: #f9f9f9;
+    }
+
     legend {
       width: auto;
       border-bottom: 0;
@@ -147,19 +151,6 @@ export default {
           text-align: center;
           font-size: 14px;
           font-weight: bold;
-
-/*          &.toc1 {
-            padding-left: 0px;
-          }
-          &.toc2 {
-            padding-left: 10px;
-          }
-          &.toc3 {
-            padding-left: 20px;
-          }
-          &.toc4 {
-            padding-left: 30px;
-          }*/
         }
         .toc-item-link {
           display: table-cell;

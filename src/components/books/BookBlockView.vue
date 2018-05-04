@@ -5,7 +5,7 @@
         <div class="table-row parnum-row" v-if="meta.numeration !== 'none'">
 
           <template v-if="block.secnum!==false">
-            <span v-if="block.secHide===false" :class="['parnum', '-hidden-hover']">{{block.secnum.length?block.secnum:block.parnum}}</span>
+            <span v-if="block.secHide===false" :class="['parnum', '-hidden-hover']">{{block.secnum.toString().length?block.secnum:block.parnum}}</span>
           </template>
 
           <template v-else >
@@ -747,7 +747,7 @@ export default {
                 disable_audio;
       },
       isApproveDisabled: function () {
-        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.isRecording || this.isUpdating) {
           return true;
         }
         let flags_summary = this.block.calcFlagsSummary();
@@ -949,7 +949,7 @@ export default {
 
       initEditor(force) {
         force = force || false;
-        
+
         if ((!this.editor || force === true) && this.block.needsText()) {
           let extensions = {};
           let toolbar = {buttons: []};
