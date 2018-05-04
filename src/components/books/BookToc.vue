@@ -1,15 +1,43 @@
 <template>
-  <fieldset>
+  <fieldset class="toc-items-list">
     <legend>Table of contents </legend>
     <template v-if="isBlocked && blockers.indexOf('loadBookToc') >-1">
       <div class="preloader-spinner"></div>
     </template>
     <template v-else>
-      <ul v-if="tocs.length > 0" class="toc-list">
-        <li class="toc-item" v-for="(toc, tocIdx) in tocs" v-bind:key="tocIdx">
+      <div v-if="tocs.length > 0" class="toc-list">
+        <!--<div :class="['toc-item', toc.level]" v-for="(toc, tocIdx) in tocs" v-bind:key="tocIdx">
+          <span :class="['toc-item-number', toc.level]">{{toc.secnum?toc.secnum:''}}</span>
           <span class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</span>
-        </li>
-      </ul>
+        </div>-->
+        <table class="toc-list-table">
+          <tr :class="['toc-item', toc.level]" v-for="(toc, tocIdx) in tocs" v-bind:key="tocIdx">
+            <!--<template v-if="!toc.level">
+              <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
+              <td colspan="4" class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
+            </template>-->
+            <template v-if="toc.level == 'toc1'">
+              <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
+              <td colspan="4" class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
+            </template>
+            <template v-if="toc.level == 'toc2'">
+              <td></td>
+              <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
+              <td colspan="3" class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
+            </template>
+            <template v-if="toc.level == 'toc3'">
+              <td></td><td></td>
+              <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
+              <td colspan="2" class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
+            </template>
+            <template v-if="toc.level == 'toc4'">
+              <td></td><td></td><td></td>
+              <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
+              <td class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
+            </template>
+          </tr>
+        </table>
+      </div>
       <div v-else class="empty-tocs">
         No Table of contents
       </div>
@@ -47,73 +75,99 @@ export default {
       //console.log('goToBlock', blockId, this.$route.name);
       this.$router.push({name: this.$route.name, params: {}});
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
+    },
+    loadBookTocProxy(isWait = false) {
+      if (!isWait) this.freeze('loadBookToc');
+      this.loadBookToc({bookId: this.bookId, isWait: isWait})
+      .then((res)=>{
+        this.tocs = res.data;
+        this.unfreeze('loadBookToc');
+      })
+      .catch((err)=>{
+        this.unfreeze('loadBookToc');
+      });
     }
   },
 
   mounted () {
-    console.log('mounted TOC', this.bookId);
-    this.freeze('loadBookToc');
-    this.loadBookToc(this.bookId)
-    .then((res)=>{
-      this.tocs = res.data;
-      //console.log('this.tocs', this.tocs);
-      this.unfreeze('loadBookToc');
-    })
-    .catch((err)=>{
-      this.unfreeze('loadBookToc');
-    })
+    //console.log('mounted TOC', this.bookId);
+    this.loadBookTocProxy();
+    this.$root.$on('from-book-meta:upd-toc', this.loadBookTocProxy)
   },
 
   watch: {
     '$route' () {
+      //console.log('$route', this.bookId, this.$route.params.bookid);
       if (this.$route.params.hasOwnProperty('bookid')) {
         if (this.bookId !== this.$route.params.bookid) {
-          this.freeze('loadBookToc');
-          this.loadBookToc(this.$route.params.bookid)
-          .then((res)=>{
-            this.tocs = res.data;
-            //console.log('this.tocs', this.tocs);
-            this.unfreeze('loadBookToc');
-          })
-          .catch((err)=>{
-            this.unfreeze('loadBookToc');
-          })
+          this.bookId = this.$route.params.bookid;
+          this.loadBookTocProxy();
         }
       }
     }
   },
 
   destroyed: function () {
-
+    this.$root.$off('from-book-meta:upd-toc', this.loadBookTocProxy)
   }
 }
 </script>
 <style lang="less">
-  legend {
-    width: auto;
-    border-bottom: 0;
-    font-size: 12px;
-    margin-bottom: 0;
-  }
-  .preloader-spinner {
-    width: 100%;
-    height: 100px;
-    background: url(/static/preloader-snake-small.gif);
+ fieldset.toc-items-list {
+    padding-left: 5px;
 
-    background-repeat: no-repeat;
-    text-align: center;
-    background-position: center center;
-    /*background-size: 83%;*/
-  }
-  .empty-tocs {
-    width: 100%;
-    height: 100px;
-  }
-  .toc-item {
-    .toc-item-link {
-      cursor: pointer;
-      text-decoration: underline;
-      color: #337ab7;
+    legend {
+      width: auto;
+      border-bottom: 0;
+      font-size: 12px;
+      margin-bottom: 0;
+    }
+    .preloader-spinner {
+      width: 100%;
+      height: 100px;
+      background: url(/static/preloader-snake-small.gif);
+
+      background-repeat: no-repeat;
+      text-align: center;
+      background-position: center center;
+      /*background-size: 83%;*/
+    }
+    .empty-tocs {
+      width: 100%;
+      height: 100px;
+    }
+    .toc-list {
+      display: table;
+      .toc-item {
+        display: table-row;
+
+        .toc-item-number {
+          display: table-cell;
+          padding-right: 5px;
+          text-align: center;
+          font-size: 14px;
+          font-weight: bold;
+
+/*          &.toc1 {
+            padding-left: 0px;
+          }
+          &.toc2 {
+            padding-left: 10px;
+          }
+          &.toc3 {
+            padding-left: 20px;
+          }
+          &.toc4 {
+            padding-left: 30px;
+          }*/
+        }
+        .toc-item-link {
+          display: table-cell;
+          cursor: pointer;
+          text-decoration: underline;
+          color: #337ab7;
+        }
+      }
     }
   }
 </style>

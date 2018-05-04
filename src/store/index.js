@@ -873,11 +873,11 @@ export const store = new Vuex.Store({
         }
     },
 
-    loadBookToc({state, commit}, bookId) {
-      if (state.currentBookToc.bookId === bookId) return state.currentBookToc;
-      return axios.get(state.API_URL + `books/toc/${bookId}`)
+    loadBookToc({state, commit}, params) {
+      if (state.currentBookToc.bookId === params.bookId && !params.isWait) return state.currentBookToc;
+      return axios.get(state.API_URL + `books/toc/${params.bookId}` + (params.isWait ? '/wait':''))
       .then((response) => {
-        state.currentBookToc.bookId = bookId;
+        state.currentBookToc.bookId = params.bookId;
         state.currentBookToc.data = response.data;
         return response;
       })

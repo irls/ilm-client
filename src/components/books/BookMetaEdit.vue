@@ -982,6 +982,7 @@ export default {
         if (key == 'numeration') {
           this.unfreeze('updateBookMeta');
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
+          this.$root.$emit('from-book-meta:upd-toc', true);
         }
         //console.log('success DB update: ', doc)
         return this.updateBookVersion({minor: true})
@@ -1348,7 +1349,11 @@ export default {
                   pBlock.checked = true;
                 } else {
                   pBlock.partUpdate = true;
-                  this.putBlock(pBlock);
+                  this.putBlock(pBlock).then(()=>{
+                    if (styleKey == 'table of contents') {
+                      this.$root.$emit('from-book-meta:upd-toc', true);
+                    }
+                  });
                 }
               }
               currId = pBlock.chainid;
@@ -1420,7 +1425,11 @@ export default {
                   pBlock.checked = true;
                 } else {
                   pBlock.partUpdate = true;
-                  this.putBlock(pBlock);
+                  this.putBlock(pBlock).then(()=>{
+                    if (valKey == 'secNum' || valKey == 'secHide') {
+                      this.$root.$emit('from-book-meta:upd-toc', true);
+                    }
+                  });
                 }
               }
               currId = pBlock.chainid;
