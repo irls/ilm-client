@@ -540,6 +540,9 @@ export default {
                   oldBlock.audiosrc = newBlock.audiosrc;
                   oldBlock.audiosrc_ver = newBlock.audiosrc_ver;
                 }
+                if (oldBlock.chainid !== newBlock.chainid) {// next block was removed
+                  oldBlock.chainid = newBlock.chainid;
+                }
               } else {
                 //ref.isChanged = false;
                 //ref.isAudioChanged = false;
