@@ -156,7 +156,8 @@
                       </label>
                     </template>
                     <template v-else>
-                      <label>Voicework:&nbsp;{{blockVoiceworks[block.voicework]}}
+                      <label>
+                        <i class="fa fa-volume-off"></i>&nbsp;<span>{{blockVoiceworks[block.voicework]}}</span>
                       </label>
                     </template>
                   </template>
@@ -3276,7 +3277,7 @@ export default {
         margin-right: 5px;
     }
     label {
-      select {
+      select, span {
           display: inline-block;
           vertical-align: super;
       }
