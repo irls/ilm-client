@@ -31,6 +31,7 @@
             :allowSetEnd="allowSetEnd"
             :_recountApprovedInRange="_recountApprovedInRange"
             :prevId="getPrevId(blockId)"
+            :mode="mode"
             @stopRecordingAndNext="stopRecordingAndNext"
             @insertBefore="insertBlockBefore"
             @insertAfter="insertBlockAfter"
@@ -135,6 +136,7 @@ export default {
 
     }
   },
+  props: ['mode'],
   computed: {
       // --- From store --- //
       ...mapGetters({

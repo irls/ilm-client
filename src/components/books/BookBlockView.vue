@@ -631,7 +631,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', '_recountApprovedInRange', 'prevId'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', '_recountApprovedInRange', 'prevId', 'mode'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -941,6 +941,9 @@ export default {
       },
 
       initEditor(force) {
+        if (this.mode === 'narrate') {
+          return;
+        }
         force = force || false;
 
         if ((!this.editor || force === true) && this.block.needsText()) {

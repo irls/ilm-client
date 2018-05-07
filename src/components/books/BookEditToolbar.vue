@@ -60,6 +60,7 @@ export default {
         'BookEdit': 'Edit' ,
         //'HTML': 'HTML',
         //'JSON': 'JSON',
+        'BookNarrate': 'Narrate',
         'BookEditDisplay': 'Display'
       },
       showBookReimport: false

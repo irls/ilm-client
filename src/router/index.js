@@ -43,6 +43,10 @@ export default new Router({
         {
           path: 'display/:block?', name: 'BookEditDisplay',
           component: BookEditDisplay, meta: { mode: 'edit' }
+        },
+        {
+          path: 'narrate', name: 'BookNarrate',
+          component: BookEdit, meta: { mode: 'edit' }, props: { mode: 'narrate' }
         }
       ]
     },
