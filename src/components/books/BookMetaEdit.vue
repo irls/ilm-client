@@ -252,7 +252,7 @@
 
               <vue-tabs ref="blockTypesTabs" class="block-style-tabs">
 
-                <vue-tab title="Styles" :id="'global-styles-switcher'">
+                <vue-tab title="Book" :id="'global-styles-switcher'">
                   <fieldset class="block-style-fieldset">
                   <legend>Book styles</legend>
                   <div>
@@ -336,9 +336,13 @@
                         <i v-if="numProps.get(blockType).get('secNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
                         <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
                       </template>
-                      Numbered section header
+                      Numbered section
                     </label>
-                    <label class="block-style-label"
+                    <label v-if="numProps.get(blockType).get('secNum') === false" class="block-style-label">
+                      <i class="fa fa-square-o"></i>
+                      Hide from display
+                    </label>
+                    <label v-else class="block-style-label"
                       @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
                       <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
                         <i class="fa fa-plus-square-o" aria-hidden="true"></i>
@@ -347,7 +351,7 @@
                         <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
                         <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
                       </template>
-                      Hide number from display
+                      Hide from display
                     </label>
                   </fieldset>
 
@@ -363,9 +367,13 @@
                         <i v-if="numProps.get(blockType).get('parNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
                         <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
                       </template>
-                      Numbered paragraph
+                      Numbered
                     </label>
-                    <label class="block-style-label"
+                    <label v-if="numProps.get(blockType).get('parNum') === false" class="block-style-label">
+                      <i class="fa fa-square-o"></i>
+                      Hide from display
+                    </label>
+                    <label v-else class="block-style-label"
                       @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
                       <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
                         <i class="fa fa-plus-square-o" aria-hidden="true"></i>
@@ -374,7 +382,7 @@
                         <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
                         <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
                       </template>
-                      Hide number from display
+                      Hide from display
                     </label>
                   </fieldset>
 

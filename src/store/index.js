@@ -294,6 +294,9 @@ export const store = new Vuex.Store({
             footnote: ''
           };
         }
+        if (!state.currentBookMeta.numeration) {
+          state.currentBookMeta.numeration = 'none';
+        }
       } else {
         state.currentBookMeta = {}
         state.currentBookid = ''

@@ -94,8 +94,8 @@ class BookBlock {
     //this.section = typeof init.section !== 'undefined' ? init.section : false;
 
     this.secVal  = typeof init.secVal  !== 'undefined' ? init.secVal  : false;
-    this.secnum  = typeof init.secnum  !== 'undefined' ? init.secnum  : this.secVal;
-    this.secHide = typeof init.secHide !== 'undefined' ? init.secHide : false;
+    this.secnum  = typeof init.secnum  !== 'undefined' ? init.secnum  : (this.type === 'header' ? '' : this.secVal);
+    this.secHide = typeof init.secHide !== 'undefined' ? init.secHide : (this.type === 'header' ? true: false);
 
     this.audiosrc = init.audiosrc || '';
     this.footnotes = init.footnotes || [];

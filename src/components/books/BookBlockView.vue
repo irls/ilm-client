@@ -24,7 +24,7 @@
 
         </div>
         <div class="table-row" v-if="meta.numeration !== 'none'">
-            <div class='par-ctrl -hidden'>
+            <!-- <div class='par-ctrl -hidden'>
                 <i v-if="block.secnum!==false"
                   class="fa fa-paragraph"
                   :class="{'-active': block.secHide===false}"
@@ -34,7 +34,7 @@
                   class="fa fa-paragraph"
                   :class="{'-active': block.parnum!==false}"
                   @click="setParnum"></i>
-            </div>
+            </div> -->
             <div v-if="false" class='par-ctrl -hidden'>
                 <i class="glyphicon glyphicon-volume-up"></i>
                 <i class="glyphicon glyphicon-volume-off"></i>
@@ -129,9 +129,6 @@
                         <li class="separator"></li>
                         </template>
                       </template>
-                      <li @click="discardBlock" v-if="allowEditing">
-                        <i class="fa fa-undo" aria-hidden="true"></i>
-                        Discard un-saved changes</li>
                       <li @click="discardAudio" v-if="allowEditing">
                         <i class="fa fa-cloud-download" aria-hidden="true"></i>
                         Revert to original audio</li>
@@ -144,25 +141,15 @@
                   <!--<label v-if="block.type=='header'">start:&nbsp;<input type="checkbox"/></label>&nbsp;-->
                   <template v-if="allowEditing">
                     <!-- Block Type selector -->
-                    <label>type:&nbsp;
-                    <select v-model="block.type" style="min-width: 80px;" @input="setChanged(true, 'type', $event)"><!--v-model='block.type'--><!--:value="type"-->
-                      <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
-                    </select>
+                    <label>
+                      <select v-model="block.type" style="min-width: 80px;" @input="setChanged(true, 'type', $event)"><!--v-model='block.type'--><!--:value="type"-->
+                        <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
+                      </select>
                     </label>
-                    <!-- Block Class selector -->
-                    <label>classes:&nbsp;
-                    <select v-model='classSel' style="min-width: 100px;" @input="setChangedByClass(true)"><!--v-model='block.classes'--><!--:value="style"-->
-                      <option v-for="(val, key) in blockClasses" :value="key">{{ key }}</option>
-                    </select>
-                    </label>
-                    <!-- Block Class selector -->
-                    <label v-if="blockStyles">style:&nbsp;
-                    <select v-model='styleSel' style="min-width: 110px;" @input="setChanged(true, 'style')"><!--v-model='block.classes'--><!--:value="style"-->
-                      <option v-for="(val, key) in blockStyles" :value="val">{{ val }}</option>
-                    </select>
-                  </label><!-- &nbsp;&nbsp;{{block.getClass()}}-->
+                    
                     <template v-if="allowVoiceworkChange()">
-                      <label>Voicework:&nbsp;
+                      <label>
+                        <i class="fa fa-volume-off"></i>&nbsp;
                       <select v-model='voiceworkSel' style="min-width: 100px;">
                         <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
@@ -447,10 +434,13 @@
             </div>
 
             <div class="table-row controls-bottom">
-              <div class="save-block -left"
-              v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-              @click="assembleBlockProxy">
-                  <i class="fa fa-save fa-lg"></i>&nbsp;&nbsp;save
+              <div class="-hidden -left">
+                <span>
+                  <i :class="['glyphicon', 'glyphicon-flag']"
+                    ref="blockFlagControl"
+                    @click="handleBlockFlagClick"
+                  ></i>
+                </span>
               </div>
               <div class="align-range -hidden -left" v-if="false && allowEditing">
                 Set block range: <label>
@@ -469,23 +459,26 @@
               </div>
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
-                  <span>
-                    <i :class="['glyphicon', 'glyphicon-flag']"
-                      ref="blockFlagControl"
-                      @click="handleBlockFlagClick"
-                    ></i>
-                  </span>
+                  <div class="save-block -right" @click="discardBlock" 
+                       v-bind:class="{'-disabled': !(allowEditing && (isChanged || isAudioChanged))}">
+                    Discard
+                  </div>
+                  <div class="save-block -right"
+                  v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+                  @click="assembleBlockProxy">
+                    Save
+                  </div>
                   <template v-if="!isCompleted">
-                  <span v-if="!enableMarkAsDone" :class="[{'-disabled': isNeedWorkDisabled}]"
+                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled}]"
                     @click.prevent="reworkBlock">
-                    <i class="fa fa-hand-o-left"></i>&nbsp;&nbsp;Need work</span>
-                  <span v-if="!enableMarkAsDone" :class="[{'-disabled': isApproveDisabled}]"
+                    Need work</div>
+                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled}]"
                     @click.prevent="approveBlock">
-                    <i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
+                    Approve</div>
 
-                  <span v-if="enableMarkAsDone" :class="[{'-disabled': markAsDoneButtonDisabled}]"
+                  <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
                     @click.prevent="markBlock">
-                    <i class="fa fa-thumbs-o-up"></i>&nbsp;&nbsp;Approve</span>
+                    Approve</div>
 
                   </template>
               </div>
@@ -3108,7 +3101,7 @@ export default {
           cursor: pointer;
           border: 1px solid silver;
           border-radius: 3px;
-          padding: 0 3px 1px 3px;
+          padding: 1px 5px;
           margin-right: 10px;
           background: rgba(204, 255, 217, 0.5);
           &:hover {
@@ -3120,7 +3113,8 @@ export default {
               &:hover {
                   background: rgba(100, 100, 100, 0.2);
               }*/
-              visibility: hidden;
+              /*visibility: hidden;*/
+              display: none;
           }
           .fa-save {
             color: green;
@@ -3276,6 +3270,16 @@ export default {
     }
     .fa.paused {
       color: red;
+    }
+    i.fa-volume-off {
+        font-size: 27px;
+        margin-right: 5px;
+    }
+    label {
+      select {
+          display: inline-block;
+          vertical-align: super;
+      }
     }
 }
 
