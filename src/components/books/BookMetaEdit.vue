@@ -858,11 +858,17 @@ export default {
       }
     },
 
-    'blockSelection': {
-      handler(val) {
-        this.collectCheckedStyles(val.start._id, val.end._id);
-      },
-      deep: true
+    'blockSelection.start._id': {
+      handler(val, oldVal) {
+        this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
+      }
+    },
+    'blockSelection.end._id': {
+      handler(val, oldVal) {
+        if (this.blockSelection.start._id && this.blockSelection.end._id && this.blockSelection.start._id !== this.blockSelection.end._id) {
+          this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
+        }
+      }
     }
 
   },
@@ -1366,7 +1372,7 @@ export default {
 
     listenSetStyle () {
       if (this.selectionStart && this.selectionEnd) {
-        this.collectCheckedStyles(this.selectionStart, this.selectionEnd);
+        this.collectCheckedStyles(this.selectionStart, this.selectionEnd, false);
       }
     },
 
