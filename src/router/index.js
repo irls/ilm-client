@@ -38,7 +38,7 @@ export default new Router({
         { path: '', component: BooksGrid },
         {
           path: 'edit/:block?/:task_type?', name: 'BookEdit',
-          component: BookEdit, meta: { mode: 'edit' }
+          component: BookEdit, meta: { mode: 'edit' }, props: { mode: 'edit' }
         },
         {
           path: 'display/:block?', name: 'BookEditDisplay',
@@ -46,7 +46,7 @@ export default new Router({
         },
         {
           path: 'narrate', name: 'BookNarrate',
-          component: BookEdit, meta: { mode: 'edit' }, props: { mode: 'narrate' }
+          component: BookEdit, meta: { mode: 'narrate' }, props: { mode: 'narrate' }
         }
       ]
     },

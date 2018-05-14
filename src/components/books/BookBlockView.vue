@@ -1,5 +1,5 @@
 <template>
-<div class="table-body -block" :id="block._id">
+<div class="table-body -block" v-bind:class="[ '-mode-' + mode]" :id="block._id">
     <div v-if="isLocked()" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': block.checked==true}]">
         <div class="table-row parnum-row" v-if="meta.numeration !== 'none'">
@@ -61,6 +61,36 @@
           </div>
 
         </div>
+        <template v-if="mode === 'narrate'">
+          <div class="table-row" v-if="blockAudio.src && tc_getBlockTask(block._id) && !isAudioChanged && !isRecording">
+            <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
+          </div>
+          <template v-if="player && blockAudio.src && !isRecording">
+            <div class="table-row" v-if="!isAudStarted">
+              <i class="fa fa-play-circle-o"
+                @click="audPlay(block._id, $event)"></i>
+            </div>
+            <template v-else>
+              <div class="table-row">
+                <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
+                  @click="audPause(block._id, $event)"></i>
+                <i class="fa fa-play-circle-o paused" v-else
+                  @click="audResume(block._id, $event)"></i>
+              </div>
+              <div class="table-row">
+                <i class="fa fa-stop-circle-o"
+                  @click="audStop(block._id, $event)"></i>
+              </div>
+            </template>
+          </template>
+          <div class="table-row" v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
+            <!-- <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i> -->
+            <!-- <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i> -->
+            <i class="fa fa-microphone" v-if="!isRecording" @click="startRecording($event)"></i>
+            <!-- <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i> -->
+            <!-- <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i> -->
+          </div>
+        </template>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}]"
@@ -129,7 +159,7 @@
                         <li class="separator"></li>
                         </template>
                       </template>
-                      <li @click="discardAudio" v-if="allowEditing">
+                      <li @click="discardAudio" v-if="allowAudioRevert">
                         <i class="fa fa-cloud-download" aria-hidden="true"></i>
                         Revert to original audio</li>
                     </block-menu>
@@ -163,8 +193,8 @@
               </div>
               <!--<div class="-hidden">-->
 
-              <div class="par-ctrl -audio -hidden -right">
-                  <template v-if="blockAudio.src && (tc_showBlockNarrate(block._id) || (isEditor && tc_isShowEdit(block._id))) && !isAudioChanged">
+              <div class="par-ctrl -audio -hidden -right" v-if="mode !== 'narrate'">
+                  <template v-if="blockAudio.src && tc_hasBlockTask(block._id) && !isAudioChanged">
                     <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
                   </template>
                   <template v-if="player && blockAudio.src && !isRecording">
@@ -183,13 +213,7 @@
                         <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
                       </template>
                   </template>
-                  <template v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
-                    <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i>
-                    <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i>
-                    <i class="fa fa-microphone" v-if="!isRecording" @click="startRecording($event)"></i>
-                    <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i>
-                    <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i>
-                  </template>
+                  
               </div>
               <!--<div class="-hidden">-->
 
@@ -236,7 +260,7 @@
                 <div v-else class="content-wrap"
                 :id="'content-'+block._id"
                 ref="blockContent"
-                v-html="block.content"
+                v-html="blockContent"
                 :class="[ block.getClass(), {
                   'updated': isUpdated,
                   'checked': block.checked,
@@ -375,7 +399,7 @@
             <!--<div class="table-row ilm-block">-->
 
             <div class="table-row content-footnotes"
-              v-if="block.footnotes.length > 0">
+              v-if="block.footnotes.length > 0 && mode !== 'narrate'">
               <div class="table-body footnote"
                 v-for="(footnote, ftnIdx) in block.footnotes">
 
@@ -456,6 +480,13 @@
                 <template v-if="displaySelectionEnd">
                   <a class="go-to-block" v-on:click="scrollToBlock(selectionEnd)">View end({{displaySelectionEnd}})</a>
                 </template>
+              </div>
+              <div v-if="isRecording" class="recording-hover-controls" >
+                <i class="fa fa-ban" v-if="isRecording" @click="cancelRecording()"></i>
+                <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i>
+                <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i>
+                <!-- <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i> -->
+                <!-- <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i> -->
               </div>
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
@@ -752,6 +783,7 @@ export default {
             }
           }
           if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
+          if (this._is('editor', true) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
           if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src)) return true;
           if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
           if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
@@ -822,13 +854,38 @@ export default {
       },
       allowEditing: {
         get() {
-          return this.block && (this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup'));
+          return this.block && (this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup')) && this.mode === 'edit';
         }
       },
       blockTypeLabel: {
         get() {
           return this.block.type === 'par' ? 'paragraph' : this.block.type;
         }
+      },
+      blockContent: {
+        get() {
+          if (this.mode === 'narrate') {
+            let content = '';
+            if ($('<div>' + this.block.content + '</div>').find('w').length > 0) {
+              content = this.block.content.replace(/(\.|\?|\!)([^<]*)<\/w>(.+?)/g, '$1$2</w><br/><br/>$3')
+            } else {
+              content = this.block.content.replace(/(\.|\?|\!)([^\.\?\!]+)/g, '$1<br/><br/>$2');
+              content = content.replace(/([A-z0-9'<>\/]+)/g, '<span>$1</span>')
+            }
+            return content;
+          } else {
+            return this.block.content;
+          }
+        }
+      },
+      allowAudioRevert() {
+        if (this.tc_hasBlockTask('fix-block-text') && this.block && this.block.audiosrc === 'audio_file') {
+          return true;
+        }
+        if (this.tc_hasBlockTask(this.block._id, 'fix-block-narration')) {
+          return true;
+        }
+        return false;
       }
   },
   beforeDestroy:  function() {
@@ -1107,17 +1164,25 @@ export default {
         });
       },
       discardAudio: function() {
-        this.blockAudio.src = this.block.getAudiosrc('m4a');
-        this.blockAudio.map = this.block.content;
-        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
-        let api = this.$store.state.auth.getHttp();
-        api.delete(api_url, {}, {})
-          .then(response => {
-
-          })
-          .catch(err => {
-
-          });
+        //this.blockAudio.src = this.block.getAudiosrc('m4a');
+        //this.blockAudio.map = this.block.content;
+        //let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
+        //let api = this.$store.state.auth.getHttp();
+        //api.delete(api_url, {}, {})
+          //.then(response => {
+          //
+          //})
+          //.catch(err => {
+          //
+          //});
+        if (this.tc_hasBlockTask(this.block._id, 'fix-block-narration')) {
+          let api = this.$store.state.auth.getHttp();
+          api.post(this.API_URL + 'book/block/' + this.block._id + '/audio/revert')
+            .then(response => {
+              this.$root.$emit('bookBlocksUpdates', {blocks: [response.data.block]});
+            })
+            .catch(err => console.log(err));
+        }
       },
 
       discardFtnAudio: function() {
@@ -1917,11 +1982,12 @@ export default {
                 self.isUpdating = false;
                 if (response.status == 200) {
                   //self.blockAudio.map = response.data.content;
-                  self.block.setContent(response.data.content);
-                  self.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
-                  self.blockAudio.src = self.block.getAudiosrc('m4a');
-                  self.blockAudio.map = self.block.content;
-                  self.isAudioChanged = true;
+                  self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
+                  //self.block.setContent(response.data.content);
+                  //self.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+                  //self.blockAudio.src = self.block.getAudiosrc('m4a');
+                  //self.blockAudio.map = self.block.content;
+                  //self.isAudioChanged = true;
                 }
                 self.reRecordPosition = false;
               })
@@ -1931,6 +1997,16 @@ export default {
               });
           });
         });
+      },
+      cancelRecording() {
+        if (this.recorder) {
+          this.unselectCurrentBlock();
+          this.isRecording = false;
+          this.isRecordingPaused = false;
+          this.recorder.stopRecording(() => {
+
+          });
+        }
       },
       doReAlign(footnoteIdx = null) {
         if (this.block.audiosrc) {
@@ -2615,6 +2691,17 @@ export default {
           id = this.block._id;
         }
         return this.$store.getters.isBlockLocked(id);
+      },
+      _handleSpacePress(e) {
+        if (e) {
+          if (e.charCode == 32 && this.isRecording) {
+            if (!this.isRecordingPaused) {
+              this.pauseRecording();
+            } else {
+              this.resumeRecording();
+            }
+          }
+        }
       }
   },
   watch: {
@@ -2646,22 +2733,15 @@ export default {
           if (this.block.illustration) {
             this.block.illustration = this.block.illustration.split('?').shift() + '?' + Date.now()
           }
-          if (!this.blockAudio.src || !this.tc_showBlockNarrate(this.block._id)) {
-            this.blockAudio = {
-              'src': this.block.getAudiosrc('m4a'),
-              'map': this.block.content
-            };
-          }
+          this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
           if (this.$refs.blockContent) {
             this.addContentListeners();
           }
         } else {
-          if (!this.blockAudio.src || !this.tc_showBlockNarrate(this.block._id)) {
-            this.blockAudio = {
-              'src': this.block.getAudiosrc('m4a'),
-              'map': this.block.content
-            };
-          }
+          this.blockAudio = {
+            'src': this.block.getAudiosrc('m4a'),
+            'map': this.block.content
+          };
         }
       },
 //       'block.type' (newVal) {
@@ -2721,16 +2801,19 @@ export default {
         },
         deep: true
       },
-      'blockAudio.map' (newVal) {
+      'blockAudio.map' (newVal, oldVal) {
         //console.log('Tmp audiomap', newVal);
+        if (!oldVal || !oldVal.length) {
+          return;
+        }
         if (this.tc_showBlockNarrate(this.block._id)) {
           let isChanged = this.block.content != newVal;
           if (!this.isAudioChanged && !this.isAudioEditing) {
             this.isAudioChanged = isChanged;
           }
-          if (this.$refs.blockContent) {
-            this.$refs.blockContent.innerHTML = newVal;
-          }
+          //if (this.$refs.blockContent) {
+            //this.$refs.blockContent.innerHTML = newVal;
+          //}
           if (isChanged) {
             this.infoMessage = 'Audio updated';
           }
@@ -2821,6 +2904,47 @@ export default {
           // because after page loaded tasks may be late
           if (newVal === true && !this.editor) this.initEditor();
           else this.destroyEditor();
+        }
+      },
+      'mode': {
+        handler(val, oldVal) {
+          if (val === 'narrate') {
+            this.destroyEditor();
+          } else if (oldVal === 'narrate') {
+            this.initEditor();
+          }
+        }
+      },
+      'isRecording': {
+        handler(val) {
+          if (val === true) {
+            if (this.$refs.blockContent) {
+              let i = setInterval(() => {
+                let w = this.$refs.blockContent.querySelectorAll('w');
+                let ctrl = $('#'+this.block._id).find('.recording-hover-controls')
+                if (ctrl.length > 0) {
+                  clearInterval(i);
+                  let ctrl_pos = ctrl.position();
+                  if (w.length === 0) {
+                    w = this.$refs.blockContent.querySelectorAll('span');
+                  }
+                  ctrl_pos.top+=parseInt(ctrl.css('margin-top'));
+                  if (w.length > 0) {
+                    w.forEach(_w => {
+                      let _w_pos = $(_w).position();
+                      if (_w_pos.left + _w.offsetWidth >= ctrl_pos.left && _w_pos.top + _w.offsetHeight >= ctrl_pos.top) {
+                        ctrl.css('margin-top', '-15px');
+                        return;
+                      }
+                    });
+                  }
+                }
+              }, 50)
+            }
+            $('body').on('keypress', this._handleSpacePress);
+          } else {
+            $('body').off('keypress', this._handleSpacePress);
+          }
         }
       }
   },
@@ -3057,6 +3181,14 @@ export default {
     }
 
 }
+.-mode-narrate {
+  .table-cell {
+    &.completed {
+      border: 1px solid #afacac;
+      /*border-radius: 7px;*/
+    }
+  }
+}
 
 .table-row {
     display: table-row;
@@ -3267,12 +3399,6 @@ export default {
         .fa {
             font-size: 18px;
         }
-    }
-    .fa.disabled {
-      color: #dddddd;
-    }
-    .fa.paused {
-      color: red;
     }
     i.fa-volume-off {
         font-size: 27px;
@@ -3611,6 +3737,31 @@ export default {
     text-align: center;
     background-position: center;
     background-color: #8080807d;
+  }
+  .recording-hover-controls {
+    position: absolute;
+    right: 30px;
+    margin-top: -35px;
+    i {
+      font-size: 27px;
+      margin: 0px 5px;
+      color: red;
+      &:hover {
+        color: #ff7a7a;
+      }
+    }
+  }
+  .fa.disabled {
+    color: #dddddd;
+  }
+  .fa.paused {
+    color: red;
+  }
+  .controls-left {
+    .fa {
+      font-size: 27px;
+      margin: 7px 0px;
+    }
   }
 
 </style>

@@ -767,6 +767,7 @@ export const store = new Vuex.Store({
         commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
         commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
+        state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": []};
 
         if (state.metaDB) state.metaDB.destroy()
         if (state.contentDB) state.contentDB.destroy()

@@ -1413,6 +1413,9 @@ export default {
         this.loadBookDown(true)
         .then(()=>{
           this.setBlockWatch()
+          if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
+            this.$router.push({name: 'BookEdit', params: {}});
+          }
         });
       } else {
         /*setTimeout(()=>{*/
@@ -1485,6 +1488,9 @@ export default {
         if (newVal) {
           this.tc_loadBookTask()
           .then(()=>{
+            if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
+              this.$router.push({name: 'BookEdit', params: {}});
+            }
             this.loadBookDown(true)
             .then(()=>{
               this.setBlockWatch()
