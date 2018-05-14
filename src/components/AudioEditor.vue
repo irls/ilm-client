@@ -26,10 +26,10 @@
           <i :class="['fa', 'fa-search-plus', {'disabled': !allowZoomIn}]" v-on:click="zoomIn()"></i>
           <i :class="['fa', 'fa-search-minus', {'disabled': !allowZoomOut}]" v-on:click="zoomOut()"></i>
         </div>
-        <div class="selection-controls">
+        <div class="selection-controls" v-bind:class="['-' + mode]">
           <div class="hidden">{{origFilePositions}}
             {{selection}}</div>
-          <div v-if="selection.start >= 0">
+          <div v-if="selection.start >= 0" class="selection-display">
             <div>Selection Start</div>
             <div>
               <template v-if="mode == 'block'">
@@ -42,7 +42,7 @@
               </template>
             </div>
           </div>
-          <div v-if="selection.end >= 0">
+          <div v-if="selection.end >= 0" class="selection-display">
             <div>Selection End</div>
             <div>
               <template v-if="mode == 'block'">
@@ -57,13 +57,14 @@
           </div>
           <template v-if="mode == 'block'">
             <div>
+              <button class="btn btn-default" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection">Clear</button>
               <button class="btn btn-primary" v-on:click="cut()"  :disabled="!hasSelection || isSinglePointSelection">Cut</button>
             </div>
-            <div>
-              <input type="number" step="0.1" v-model="silenceLength" />
-              <button class="btn btn-primary" v-on:click="addSilence()" :disabled="cursorPosition === false">Add Silence</button>
-            </div>
           </template>
+        </div>
+        <div class="selection-controls" v-if="mode == 'block'">
+          <input type="number" step="0.1" v-model="silenceLength" />
+          <button class="btn btn-primary" v-on:click="addSilence()" :disabled="cursorPosition === false">Add Silence</button>
         </div>
         <div class="audio-controls" v-if="isModifiedComputed && mode == 'block'">
           <button class="btn btn-default" v-if="history.length" v-on:click="undo()">Undo</button>
@@ -1326,7 +1327,7 @@
         },
         hasSelection: {
           get() {
-            return typeof this.selection.start != 'undefined';
+            return typeof this.selection.start != 'undefined' && this.selection.start >= 0;
           }
         },
         isModifiedComputed: {
@@ -1623,7 +1624,7 @@
     }
     .zoom-controls {
       display: inline-block;
-      padding: 5px 14px;
+      padding: 17px 14px;
       /*width: 120px;*/
       i {
         font-size: 29px;
@@ -1638,11 +1639,11 @@
     }
     .selection-controls {
       display: inline-block;
-      padding: 0px 20px;
+      padding: 21px 20px 9px 20px;
       /*width: 500px;*/
       &>div {
         display: inline-block;
-        padding: 5px 10px;
+        padding: 0px 10px;
       }
       input[type="number"] {
         width: 40px;
@@ -1653,9 +1654,18 @@
       input[type="text"] {
         width: 30px;
       }
+      .selection-display {
+        margin-top: -21px;
+      }
+      &.-file {
+        padding: 25px 20px 14px 20px;
+      }
     }
     .audio-controls {
       display: inline-block;
+    }
+    >div:not(.audio-controls) {
+      border-right: solid 2px #b1b1b1;
     }
   }
   .cursor-position {
