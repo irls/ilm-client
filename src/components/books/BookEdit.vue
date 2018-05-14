@@ -31,6 +31,7 @@
             :allowSetEnd="allowSetEnd"
             :_recountApprovedInRange="_recountApprovedInRange"
             :prevId="getPrevId(blockId)"
+            :mode="mode"
             @stopRecordingAndNext="stopRecordingAndNext"
             @insertBefore="insertBlockBefore"
             @insertAfter="insertBlockAfter"
@@ -135,6 +136,7 @@ export default {
 
     }
   },
+  props: ['mode'],
   computed: {
       // --- From store --- //
       ...mapGetters({
@@ -1411,6 +1413,9 @@ export default {
         this.loadBookDown(true)
         .then(()=>{
           this.setBlockWatch()
+          if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
+            this.$router.push({name: 'BookEdit', params: {}});
+          }
         });
       } else {
         /*setTimeout(()=>{*/
@@ -1483,6 +1488,9 @@ export default {
         if (newVal) {
           this.tc_loadBookTask()
           .then(()=>{
+            if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
+              this.$router.push({name: 'BookEdit', params: {}});
+            }
             this.loadBookDown(true)
             .then(()=>{
               this.setBlockWatch()

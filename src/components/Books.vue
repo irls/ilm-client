@@ -126,7 +126,7 @@ export default {
     },
     isEditMode () {
       return this.$route.matched.some(record => {
-        return record.meta.mode === 'edit'
+        return record.meta.mode === 'edit' || record.meta.mode === 'narrate'
       })
     },
 //     recountRows () {

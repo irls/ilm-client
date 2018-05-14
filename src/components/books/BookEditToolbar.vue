@@ -36,7 +36,7 @@
         :bookId="getBookid()" />
     </template>
 
-    <ButtonRadioGroup :values="editModes" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
+    <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
     <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Meta</button>
 
@@ -60,6 +60,7 @@ export default {
         'BookEdit': 'Edit' ,
         //'HTML': 'HTML',
         //'JSON': 'JSON',
+        'BookNarrate': 'Narrate',
         'BookEditDisplay': 'Display'
       },
       showBookReimport: false
@@ -134,7 +135,27 @@ export default {
     currentBookMeta: function() {
       return this.$store.state.currentBookMeta
     },
+    editModesAvailable: {
+      get() {
+        let modes = Object.assign({}, this.editModes);
+        if (!this.tc_hasTask('block_narrate')) {
+          delete modes['BookNarrate'];
+        }
+        return modes;
+      }
+    },
     ...mapGetters(['currentBookMeta', 'isBlocked', 'blockSelection'])
+  },
+  watch: {
+    '$route' (toRoute, fromRoute) {
+      if (toRoute && this.$refs.modesButton) {
+        for (let i in this.$refs.modesButton.values) {
+          if (toRoute.name === i && this.$refs.modesButton.selected !== toRoute.name) {
+            this.$refs.modesButton.selected = toRoute.name;
+          }
+        }
+      }
+    },
   },
   mounted() {
     
