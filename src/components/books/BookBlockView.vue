@@ -224,7 +224,7 @@
             <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div>
-            <div :class="['table-row ilm-block', block.markedAsDone ? '-marked':'']">
+            <div :class="['table-row ilm-block', block.markedAsDone && !hasChanges ? '-marked':'']">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(), {'checked': block.checked}]"
                   @click="onClick($event)"/>
@@ -493,7 +493,7 @@
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
                   <div class="save-block -right" @click="discardBlock" 
-                       v-bind:class="{'-disabled': !(allowEditing && (isChanged || isAudioChanged))}">
+                       v-bind:class="{'-disabled': !(allowEditing && hasChanges)}">
                     Discard
                   </div>
                   <div class="save-block -right"
@@ -840,6 +840,11 @@ export default {
         }
         return false;
       },
+      hasChanges: {
+        get() {
+          return this.isChanged || this.isIllustrationChanged || this.isAudioChanged;
+        }
+      },
       ...mapGetters({
           auth: 'auth',
           book: 'currentBook',
@@ -1162,6 +1167,15 @@ export default {
 
           this.isChanged = false;
           this.updateFlagStatus(block._id);
+          if (this.block.type === 'illustration') {
+            if (this.$refs.illustrationInput) {
+              this.$refs.illustrationInput.removeImage();
+            }
+            this.block.description = block.description;
+            if (this.$refs.blockDescription) {
+              this.$refs.blockDescription.innerHTML = block.description;
+            }
+          }
 
         });
       },
