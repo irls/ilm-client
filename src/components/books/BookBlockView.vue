@@ -199,6 +199,7 @@
                   </template>
                   <template v-if="player && blockAudio.src && !isRecording">
                       <template v-if="!isAudStarted">
+                        <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
                         <i class="fa fa-play-circle-o"
                           @click="audPlay(block._id, $event)"></i>
                         <i class="fa fa-stop-circle-o disabled"></i>
