@@ -274,7 +274,8 @@
                 @selectionchange.prevent="onSelect"
                 @input="onInput"
                 @mouseenter="onHover"
-                @contextmenu.prevent="onContext">
+                @contextmenu.prevent="onContext"
+                @focusout="onFocusout">
                 </div>
                 <!--<div class="content-wrap">-->
 
@@ -1153,8 +1154,10 @@ export default {
         this.isChanged = true;
         this.pushChange('content');
         el.target.focus();
-        //this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
-        //this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+      },
+      onFocusout: function(el) {
+        this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+        this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
       },
       discardBlock: function(ev) {
 

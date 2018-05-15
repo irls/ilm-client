@@ -1409,12 +1409,17 @@
             }
           }
         },
-        'blockSelection': {
+        'blockSelection.start._id': {
           handler(val) {
             //console.log('blockSelection CHANGED', val)
             this._setBlocksSelection();
           },
           deep: true
+        },
+        'blockSelection.end._id': {
+          handler(val) {
+            this._setBlocksSelection();
+          }
         },
         'selection': {
           handler(val, oldVal) {

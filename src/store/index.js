@@ -1772,8 +1772,8 @@ export const store = new Vuex.Store({
                       (block.voicework === 'tts' && data.voicework === 'tts')) {
                 wait_tasks.push(dispatch('putBlock', block)
                         .then(() => {
-                          //block.isChanged = false;
-                          //block.isAudioChanged = false;
+                          block.isChanged = false;
+                          block.isAudioChanged = false;
                           //commit('set_storeList', block);
                           return Promise.resolve(block);
                         }));
