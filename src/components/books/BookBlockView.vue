@@ -944,6 +944,7 @@ export default {
         this.isChanged = false;
         this.isAudioChanged = false;
         this.isIllustrationChanged = false;
+        this._recountApprovedInRange();
       });
 
 
@@ -1152,8 +1153,8 @@ export default {
         this.isChanged = true;
         this.pushChange('content');
         el.target.focus();
-        this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
-        this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+        //this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+        //this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
       },
       discardBlock: function(ev) {
 
