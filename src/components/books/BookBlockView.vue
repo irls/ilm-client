@@ -940,6 +940,11 @@ export default {
       this.$root.$on('block-state-refresh-' + this.block._id, () => {
         this.$forceUpdate();
       });
+      this.$root.$on('saved-block:' + this.block._id, () => {
+        this.isChanged = false;
+        this.isAudioChanged = false;
+        this.isIllustrationChanged = false;
+      });
 
 
 //       Vue.nextTick(() => {
@@ -1147,6 +1152,8 @@ export default {
         this.isChanged = true;
         this.pushChange('content');
         el.target.focus();
+        this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+        this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
       },
       discardBlock: function(ev) {
 
@@ -2997,6 +3004,7 @@ export default {
   destroyed: function () {
     this.$root.$off('playBlockFootnote');
     this.$root.$off('playBlock');
+    this.$root.$off('saved-block:' + this.block._id);
     this.destroyEditor();
   }
 }

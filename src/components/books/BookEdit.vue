@@ -545,6 +545,9 @@ export default {
                 if (oldBlock.chainid !== newBlock.chainid) {// next block was removed
                   oldBlock.chainid = newBlock.chainid;
                 }
+                if (oldBlock.realigned !== newBlock.realigned) {
+                  this.clearBlockLock({block: change.doc});
+                }
               } else {
                 //ref.isChanged = false;
                 //ref.isAudioChanged = false;
@@ -1163,6 +1166,8 @@ export default {
     _recountApprovedInRange() {
       let approved = 0;
       let approved_tts = 0;
+      let changed_in_range = 0;
+      let changed_in_range_tts = 0;
       if (this.blockSelection.start._id && this.blockSelection.end._id && this.tc_hasTask('content_cleanup')) {
         let crossId = this.blockSelection.start._id;
         for (var idx=0; idx < this.parlist.size; idx++) {
@@ -1178,6 +1183,14 @@ export default {
                   break;
               }
             }
+            if (block.isChanged || block.isAudioChanged) {
+              if (block.voicework === 'audio_file') {
+                ++changed_in_range;
+              }
+              if (block.voicework === 'tts') {
+                ++changed_in_range_tts;
+              }
+            }
             if (block._id == this.blockSelection.end._id) {
               break;
             }
@@ -1187,6 +1200,8 @@ export default {
       }
       this.$store.commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_audio_in_range', value: approved});
       this.$store.commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_tts_in_range', value: approved_tts});
+      this.$store.commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_audio', value: changed_in_range});
+      this.$store.commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_tts', value: changed_in_range_tts});
     },
     findPrevBlock(blockId) {
       let found, BreakException = {}; // a trick to stop forEach

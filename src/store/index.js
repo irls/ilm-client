@@ -100,7 +100,7 @@ export const store = new Vuex.Store({
     currentLibraryId: false,
 
     user: {},
-    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0'},
+    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0'},
 
     ttsVoices : [],
 
@@ -1732,14 +1732,14 @@ export const store = new Vuex.Store({
                 selection.end && selection.end._id) {
         let api_url = state.API_URL + 'books/' + state.currentBookid + '/selection_alignment';
         let query = 'start=' + selection.start._id + '&end=' + selection.end._id;
-        let realign = state.tc_currentBookTasks.assignments &&
+        let realign = /*state.tc_currentBookTasks.assignments &&
                 (state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1 ||
-                  (state.tc_currentBookTasks.assignments.indexOf('content_cleanup') !== -1 && state.currentBookCounters.not_marked_blocks === 0));
-        if (realign) {
-          query+='&voicework=all_audio&realign=true';
-        } else { // In case of normal task (with tts counter)
-          query+='&voicework=all_with_tts';
-        }
+                  (state.tc_currentBookTasks.assignments.indexOf('content_cleanup') !== -1 && state.currentBookCounters.not_marked_blocks === 0))*/true;
+        //if (realign) {
+          //query+='&voicework=all_audio&realign=true';
+        //} else { // In case of normal task (with tts counter)
+          query+='&voicework=all_with_tts&realign=true';
+        //}
         return axios.get(api_url + '?' + query, {})
           .then(response => {
             if (response.status == 200) {
@@ -1756,6 +1756,44 @@ export const store = new Vuex.Store({
           countTTS: 0,
           blocks: []
         });
+      }
+    },
+    
+    saveChangedBlocks({state, dispatch, commit}, data = {}) {
+      if (state.blockSelection.start._id && state.blockSelection.end._id) {
+        let wait_tasks = [];
+        let crossId = state.blockSelection.start._id;
+        let ids = [];
+        for (var idx=0; idx < state.storeList.size; idx++) {
+          let block = state.storeList.get(crossId);
+          if (block) {
+            if (block.isChanged || block.isAudioChanged) {
+              if ((block.voicework === 'audio_file' && data.voicework === 'audio_file') || 
+                      (block.voicework === 'tts' && data.voicework === 'tts')) {
+                wait_tasks.push(dispatch('putBlock', block)
+                        .then(() => {
+                          //block.isChanged = false;
+                          //block.isAudioChanged = false;
+                          //commit('set_storeList', block);
+                          return Promise.resolve(block);
+                        }));
+                ids.push(block._id);
+              }
+            }
+            if (block._id == state.blockSelection.end._id) {
+              break;
+            }
+            crossId = block.chainid;
+          } else break;
+        }
+        return Promise.all(wait_tasks)
+          .then((results) => {
+            return Promise.resolve(ids);
+          })
+          .catch(err => {
+            console.log(err);
+            return Promise.resolve(ids);
+          });
       }
     }
   }

@@ -474,8 +474,8 @@
         }
         return l.join(':')
       },
-      align(id = null, warn = true) {
-        if (warn && this.currentBookCounters.approved_audio_in_range > 0) {
+      align(id = null, warn = 2) {
+        if (warn >= 2 && this.currentBookCounters.approved_audio_in_range > 0) {
           this.$root.$emit('show-modal', {
             title: 'Are you you sure you want to realign ' + this.currentBookCounters.approved_audio_in_range + ' approved block(s)?',
             //text: 'Are you you sure you want to realign ' + this.currentBookCounters.approved_audio_in_range + ' approved block(s)?',
@@ -495,9 +495,48 @@
                   let i = setInterval(() => {
                     if ($('.align-modal').length == 0) {
                       clearInterval(i);
-                      this.align(id, false)
+                      this.align(id, 1)
                     }
                   }, 50);
+                },
+                'class': 'btn btn-primary'
+              }
+            ],
+            class: ['align-modal']
+          });
+          return;
+        }
+        if (warn >= 1 && this.currentBookCounters.changed_in_range_audio > 0) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved changes',
+            text: 'You have unsaved changes in selected block range.<br/>Save and align with audio?',
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  //this.cancelAlign();
+                },
+              },
+              {
+                title: 'Save&Align',
+                handler: () => {
+                  this.saveChangedBlocks({voicework: 'audio_file'})
+                    .then(ids => {
+                      if (ids && Array.isArray(ids)) {
+                        ids.forEach(id => {
+                          this.$root.$emit('saved-block:' + id);
+                        });
+                      }
+                      //console.log('saved ids', ids);
+                      this.$root.$emit('hide-modal');
+                      let i = setInterval(() => {
+                        if ($('.align-modal').length == 0) {
+                          clearInterval(i);
+                          this.align(id, false)
+                        }
+                      }, 50);
+                    });
                 },
                 'class': 'btn btn-primary'
               }
@@ -646,8 +685,8 @@
           });
         }
       },
-      alignTts(warn = true) {
-        if (warn && this.currentBookCounters.approved_tts_in_range > 0) {
+      alignTts(warn = 2) {
+        if (warn >= 2 && this.currentBookCounters.approved_tts_in_range > 0) {
           this.$root.$emit('show-modal', {
             title: 'Are you you sure you want to realign ' + this.currentBookCounters.approved_tts_in_range + ' approved block(s)?',
             //text: 'Are you you sure you want to realign ' + this.currentBookCounters.approved_audio_in_range + ' approved block(s)?',
@@ -667,9 +706,48 @@
                   let i = setInterval(() => {
                     if ($('.align-modal').length == 0) {
                       clearInterval(i);
-                      this.alignTts(false)
+                      this.alignTts(1)
                     }
                   }, 50);
+                },
+                'class': 'btn btn-primary'
+              }
+            ],
+            class: ['align-modal']
+          });
+          return;
+        }
+        if (warn >= 1 && this.currentBookCounters.changed_in_range_tts > 0) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved changes',
+            text: 'You have unsaved changes in selected block range.<br/>Save and align with audio?',
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  //this.cancelAlign();
+                },
+              },
+              {
+                title: 'Save&Align',
+                handler: () => {
+                  this.saveChangedBlocks({voicework: 'tts'})
+                    .then(ids => {
+                      if (ids && Array.isArray(ids)) {
+                        ids.forEach(id => {
+                          this.$root.$emit('saved-block:' + id);
+                        });
+                      }
+                      //console.log('saved ids', ids);
+                      this.$root.$emit('hide-modal');
+                      let i = setInterval(() => {
+                        if ($('.align-modal').length == 0) {
+                          clearInterval(i);
+                          this.alignTts(false)
+                        }
+                      }, 50);
+                    });
                 },
                 'class': 'btn btn-primary'
               }
@@ -760,7 +838,7 @@
         $('.file-catalogue-files').css('max-height', file_catalogue_height + 'px');
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
