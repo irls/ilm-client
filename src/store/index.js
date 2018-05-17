@@ -633,6 +633,8 @@ export const store = new Vuex.Store({
               //state.lockedBlocks = [];
               remove_lock();
             }
+          } else {
+            remove_lock();
           }
         }
       }
@@ -646,7 +648,7 @@ export const store = new Vuex.Store({
               item = JSON.parse(item);
               //state.lockedBlocks[data.block._id] = {type: item.type};
               let r = state.lockedBlocks.find(l => l._id === data.block._id);
-              if (r) {
+              if (!r) {
                 state.lockedBlocks.push({_id: data.block._id, type: item.type});
               }
             } catch(err) {
