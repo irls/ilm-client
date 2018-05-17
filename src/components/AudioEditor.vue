@@ -74,7 +74,8 @@
         </div>
         <div class="audio-controls" v-if="mode == 'file'">
           <button class="btn btn-default" :disabled="!isModifiedComputed" v-on:click="undo()">Undo</button>
-          <button class="btn btn-primary" :disabled="!allowAlignSelection" v-on:click="align()">Align</button>
+          <button class="btn btn-primary" :disabled="!allowAlignSelection" v-on:click="align()" v-if="!hasLocks('align')">Align</button>
+          <button class="btn btn-danger" v-else v-on:click="cancelAlign()">Cancel alignment</button>
           <span v-if="!hasAlignSelection" class="red-message">Define block range</span>
           <template v-else>
             <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message">
@@ -1241,6 +1242,9 @@
           //console.log('goToBlock', blockId, this.$route.name);
           //this.$router.push({name: this.$route.name, params: {}});
           //this.$router.push({name: this.$route.name, params:  { block: blockId }});
+        },
+        cancelAlign() {
+          this.$root.$emit('cancel-align');
         }
       },
       computed: {
@@ -1371,7 +1375,7 @@
             return 0;
           }
         },
-        ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter'])
+        ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'hasLocks'])
       },
       watch: {
         'cursorPosition': {
