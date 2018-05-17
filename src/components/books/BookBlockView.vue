@@ -1,6 +1,6 @@
 <template>
 <div class="table-body -block" v-bind:class="[ '-mode-' + mode]" :id="block._id">
-    <div v-if="isLocked()" class="locked-block-cover"></div>
+    <div v-if="isBlockLocked(block._id)" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': block.checked==true}]">
         <div class="table-row parnum-row" v-if="meta.numeration !== 'none'">
 
@@ -120,7 +120,7 @@
 
                       <li class="separator"></li>
                       <template v-if="allowEditing">
-                        <li v-if="!isLocked(prevId)" @click="insertBlockBefore()">
+                        <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
                           <i class="fa fa-angle-up" aria-hidden="true"></i>
                           Insert block before</li>
                         <li v-else class="disabled">
@@ -132,20 +132,20 @@
                         <li v-else class="disabled">
                           <i class="fa menu-preloader" aria-hidden="true"></i>
                           Insert block after</li>
-                        <li v-if="!isLocked(prevId)" @click="showModal('delete-block-message')">
+                        <li v-if="!isBlockLocked(prevId)" @click="showModal('delete-block-message')">
                           <i class="fa fa-trash" aria-hidden="true"></i>
                           Delete block</li>
                         <li v-else class="disabled">
                           <i class="fa menu-preloader" aria-hidden="true"></i>
                           Delete block</li>
                         <!--<li>Split block</li>-->
-                        <li v-if="!isLocked() && !isLocked(prevId)" @click="joinWithPrevious()">
+                        <li v-if="!isBlockLocked(block._id) && !isBlockLocked(prevId)" @click="joinWithPrevious()">
                           <i class="fa fa-angle-double-up" aria-hidden="true"></i>
                           Join with previous block</li>
                         <li v-else class="disabled">
                           <i class="fa menu-preloader" aria-hidden="true"></i>
                           Join with previous block</li>
-                        <li v-if="!isLocked() && !isLocked(block.chainid)" @click="joinWithNext()">
+                        <li v-if="!isBlockLocked(block._id) && !isBlockLocked(block.chainid)" @click="joinWithNext()">
                           <i class="fa fa-angle-double-down" aria-hidden="true"></i>
                           Join with next block</li>
                         <li v-else class="disabled">
@@ -665,7 +665,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', '_recountApprovedInRange', 'prevId', 'mode'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       blockClasses: function () {
@@ -855,7 +855,9 @@ export default {
           authors: 'authors',
           isEditor: 'isEditor',
           isBlocked: 'isBlocked',
-          blockSelection: 'blockSelection'
+          blockSelection: 'blockSelection',
+          isBlockLocked: 'isBlockLocked',
+          lockedBlocks: 'lockedBlocks'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
@@ -945,7 +947,7 @@ export default {
         this.isChanged = false;
         this.isAudioChanged = false;
         this.isIllustrationChanged = false;
-        this._recountApprovedInRange();
+        this.recountApprovedInRange();
       });
 
 
@@ -960,7 +962,8 @@ export default {
         'setCurrentBookBlocksLeft',
         'setCurrentBookCounters',
         'addBlockLock',
-        'getAlignCount'
+        'getAlignCount', 
+        'recountApprovedInRange'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1433,7 +1436,7 @@ export default {
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
             this.setCurrentBookCounters(['not_marked_blocks']);
-            this._recountApprovedInRange();
+            this.recountApprovedInRange();
           });
         }
       },
@@ -1448,7 +1451,7 @@ export default {
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
             this.setCurrentBookCounters(['not_marked_blocks']);
-            this._recountApprovedInRange();
+            this.recountApprovedInRange();
             //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
             this.getBloksUntil('unresolved', null, this.block._id)
           });
@@ -2713,12 +2716,6 @@ export default {
           }
         }
       },
-      isLocked(id = false) {
-        if (!id) {
-          id = this.block._id;
-        }
-        return this.$store.getters.isBlockLocked(id);
-      },
       _handleSpacePress(e) {
         if (e) {
           if (e.charCode == 32 && this.isRecording) {
@@ -2873,6 +2870,7 @@ export default {
             this.flushChanges();
           }
           this.block.isChanged = val;
+          this.recountApprovedInRange();
         }
       },
       'isAudioChanged': {

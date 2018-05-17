@@ -106,7 +106,7 @@ export const store = new Vuex.Store({
 
     blockers: [],
 
-    lockedBlocks: {},
+    lockedBlocks: [],
     storeList: new Map(), // global parlist
     blockSelection: {
       start: {},//block
@@ -204,19 +204,33 @@ export const store = new Vuex.Store({
 
     isBlocked: state => state.blockers.length > 0,
     blockers: state => state.blockers,
-    isBlockLocked: (state) => (id) => {
-      if (typeof localStorage === 'undefined') {
+    isBlockLocked: state => (id) => {
+      //if (typeof localStorage === 'undefined') {
+        //return false;
+      //}
+      if (state.lockedBlocks.length > 0) {
+        //let lock = localStorage.getItem('lock_' + id);
+        //console.log(lock, id)
+        let l = state.lockedBlocks.find(_l => _l._id === id);
+        return l ? true : false;
+      } else {
         return false;
       }
-
-      let lock = localStorage.getItem('lock_' + id)
-      //console.log(lock, id)
-      return lock ? true : false;
     },
 
     storeList: state => state.storeList, // global parlist
     blockSelection: state => state.blockSelection,
     alignCounter: state => state.alignCounter,
+    lockedBlocks: state => state.lockedBlocks,
+    hasLocks: state => (type) => {
+      //console.log(state.lockedBlocks, Object.keys(state.lockedBlocks).length)
+      if (state.lockedBlocks.length > 0) {
+        let l = state.lockedBlocks.filter(l => l.type === type)
+        return l && l.length > 0;
+      } else {
+        return false;
+      }
+    }
   },
 
   mutations: {
@@ -521,6 +535,9 @@ export const store = new Vuex.Store({
                   }
                 });
               }
+              if (lock.type && data.type && lock.type !== data.type) {
+                return;
+              }
             } catch(err) {
               lock = data;
             }
@@ -529,11 +546,21 @@ export const store = new Vuex.Store({
             lock = data;
           }
           localStorage.setItem('lock_' + data.block._id, JSON.stringify(lock));
+          let r = state.lockedBlocks.find(l => l._id === data.block._id);
+          if (!r) {
+            state.lockedBlocks.push({_id: data.block._id, type: lock.type});
+          }
         }
       }
     },
     clear_block_lock(state, data) {
       if (data.block._id) {
+        let remove_lock = () => {
+          let r = state.lockedBlocks.find(l => l._id === data.block._id);
+          if (r) {
+            state.lockedBlocks.splice(state.lockedBlocks.indexOf(r), 1);
+          }
+        };
         if (typeof localStorage !== 'undefined') {
           /*let lock = state.blockLocks[data.block._id];
           if (lock) {
@@ -547,10 +574,24 @@ export const store = new Vuex.Store({
               lock = JSON.parse(lock);
             } catch(err) {
               localStorage.removeItem('lock_' + data.block._id);
+              //if (typeof state.lockedBlocks[data.block._id] !== 'undefined') {
+                //delete state.lockedBlocks[data.block._id];
+              //}
+              //state.lockedBlocks = [];
+              //let r = state.lockedBlocks.find(l => l._id === data.block._id);
+              //if (r) {
+                //state.lockedBlocks.splice(state.lockedBlocks.indexOf(r), 1);
+              //}
+              remove_lock();
               return;
             }
             if (data.force) {
               localStorage.removeItem('lock_' + data.block._id)
+              //if (typeof state.lockedBlocks[data.block._id] !== 'undefined') {
+                //delete state.lockedBlocks[data.block._id];
+              //}
+              //state.lockedBlocks = [];
+              remove_lock();
             } else if (lock.watch && lock.watch.length) {
               let watch = [];
               lock.watch.forEach((w, i) => {
@@ -563,14 +604,53 @@ export const store = new Vuex.Store({
               lock.watch = watch;
               if (lock.watch.length == 0) {
                 localStorage.removeItem('lock_' + data.block._id);
+                //if (typeof state.lockedBlocks[data.block._id] !== 'undefined') {
+                  //delete state.lockedBlocks[data.block._id];
+                //}
+                //state.lockedBlocks = [];
+                remove_lock();
               } else {
                 localStorage.setItem('lock_' + data.block._id, JSON.stringify(lock));
+                //state.lockedBlocks[data.block._id] = {type: lock.type};
+                let r = state.lockedBlocks.find(l => l._id === data.block._id);
+                if (!r) {
+                  state.lockedBlocks.push({_id: data.block._id, type: lock.type});
+                }
               }
             } else if (lock.block._rev !== data.block._rev) {
               localStorage.removeItem('lock_' + data.block._id);
+              //if (typeof state.lockedBlocks[data.block._id] !== 'undefined') {
+                //delete state.lockedBlocks[data.block._id];
+              //}
+              //state.lockedBlocks = [];
+              remove_lock();
             }
             if (lock.set_at && Date.now() - lock.set_at > 30 * 60 * 1000) {
               localStorage.removeItem('lock_' + data.block._id);
+              //if (typeof state.lockedBlocks[data.block._id] !== 'undefined') {
+                //delete state.lockedBlocks[data.block._id];
+              //}
+              //state.lockedBlocks = [];
+              remove_lock();
+            }
+          }
+        }
+      }
+    },
+    check_block_lock (state, data) {
+      if (data.block && data.block._id) {
+        if (typeof localStorage !== 'undefined') {
+          if (localStorage.hasOwnProperty('lock_' + data.block._id)) {
+            try {
+              let item = localStorage.getItem('lock_' + data.block._id);
+              item = JSON.parse(item);
+              //state.lockedBlocks[data.block._id] = {type: item.type};
+              let r = state.lockedBlocks.find(l => l._id === data.block._id);
+              if (r) {
+                state.lockedBlocks.push({_id: data.block._id, type: item.type});
+              }
+            } catch(err) {
+              
             }
           }
         }
@@ -1059,6 +1139,7 @@ export const store = new Vuex.Store({
         .then(res => {
           //commit('clear_blocker', 'getBlock');
           commit('clear_block_lock', {block: res});
+          commit('check_block_lock', {block: res});
           return Promise.resolve(res)
         })
         .catch((err) => {
@@ -1720,7 +1801,8 @@ export const store = new Vuex.Store({
     setBlockSelection({state, commit, dispatch}, selection) {
       if (!_.isEqual(state.blockSelection, selection)) {
         commit('set_block_selection', selection);
-        dispatch('getAlignCount', selection)
+        dispatch('getAlignCount', selection);
+        dispatch('recountApprovedInRange', selection);
       }
     },
 
@@ -1794,6 +1876,59 @@ export const store = new Vuex.Store({
             console.log(err);
             return Promise.resolve(ids);
           });
+      }
+    },
+    recountApprovedInRange({state, commit}, selection = null) {
+      let approved = 0;
+      let approved_tts = 0;
+      let changed_in_range = 0;
+      let changed_in_range_tts = 0;
+      if (!selection) {
+        selection = state.blockSelection;
+      }
+      if (selection.start && selection.start._id && selection.end && selection.end._id) {
+        let crossId = selection.start._id;
+        for (var idx=0; idx < state.storeList.size; idx++) {
+          let block = state.storeList.get(crossId);
+          if (block) {
+            if (block.markedAsDone) {
+              switch (block.voicework) {
+                case 'audio_file' :
+                  ++approved;
+                  break;
+                case 'tts':
+                  ++approved_tts;
+                  break;
+              }
+            }
+            if (block.isChanged || block.isAudioChanged) {
+              if (block.voicework === 'audio_file') {
+                ++changed_in_range;
+              }
+              if (block.voicework === 'tts') {
+                ++changed_in_range_tts;
+              }
+            }
+            if (block._id == selection.end._id) {
+              break;
+            }
+            crossId = block.chainid;
+          } else break;
+        }
+      }
+      commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_audio_in_range', value: approved});
+      commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_tts_in_range', value: approved_tts});
+      commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_audio', value: changed_in_range});
+      commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_tts', value: changed_in_range_tts});
+    },
+    clearLocks({state, commit}, data) {
+      if (data.type) {
+        if (state.lockedBlocks.length > 0) {
+          let list = state.lockedBlocks.filter(r =>  r.type === data.type);
+          list.forEach(r =>  {
+            commit('clear_block_lock', {block: {_id: r._id}, force: true})
+          })
+        }
       }
     }
   }
