@@ -186,6 +186,7 @@
       width: 100%;
       height: 90%;
       resize: none;
+      font-size: 16px;
     }
     &.lang-fa {
       .lang-direction {
@@ -197,6 +198,7 @@
     }
     .align-result {
       margin: 20px;
+      font-size: 16px;
     }
     .audio-controls {
       margin: 30px 0px;
