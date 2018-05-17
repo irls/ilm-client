@@ -29,7 +29,6 @@
             :getBloksUntil="getBloksUntil"
             :allowSetStart="allowSetStart"
             :allowSetEnd="allowSetEnd"
-            :_recountApprovedInRange="_recountApprovedInRange"
             :prevId="getPrevId(blockId)"
             :mode="mode"
             @stopRecordingAndNext="stopRecordingAndNext"
@@ -184,7 +183,7 @@ export default {
       modal,
   },
   methods: {
-    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection']),
+    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange']),
 
     test() {
         window.scrollTo(0, document.body.scrollHeight-500);
@@ -568,7 +567,7 @@ export default {
       })
       this.initRecorder();
       this.reCountProxy();
-      this._recountApprovedInRange();
+      this.recountApprovedInRange();
     },
 
     hasClass: function(block, cssclass) {
@@ -927,7 +926,7 @@ export default {
                   return blockRef.blockId == blockBefore._id;
                 });
                 if (currBlockRef && prevBlockRef) {
-                  this.addBlockLock({block: blockBefore, watch: ['realigned']})
+                  this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
                   this.freeze('joinBlocks');
                   currBlockRef.assembleBlockProxy()
                   .then(()=>{
@@ -990,7 +989,7 @@ export default {
                 });
                 if (currBlockRef && nextBlockRef) {
                   this.freeze('joinBlocks');
-                  this.addBlockLock({block: block, watch: ['realigned']})
+                  this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
                   currBlockRef.assembleBlockProxy()
                   .then(()=>{
                     nextBlockRef.assembleBlockProxy()
@@ -1161,47 +1160,7 @@ export default {
           }
           break;
       }
-      this._recountApprovedInRange();
-    },
-    _recountApprovedInRange() {
-      let approved = 0;
-      let approved_tts = 0;
-      let changed_in_range = 0;
-      let changed_in_range_tts = 0;
-      if (this.blockSelection.start._id && this.blockSelection.end._id && this.tc_hasTask('content_cleanup')) {
-        let crossId = this.blockSelection.start._id;
-        for (var idx=0; idx < this.parlist.size; idx++) {
-          let block = this.parlist.get(crossId);
-          if (block) {
-            if (block.markedAsDone) {
-              switch (block.voicework) {
-                case 'audio_file' :
-                  ++approved;
-                  break;
-                case 'tts':
-                  ++approved_tts;
-                  break;
-              }
-            }
-            if (block.isChanged || block.isAudioChanged) {
-              if (block.voicework === 'audio_file') {
-                ++changed_in_range;
-              }
-              if (block.voicework === 'tts') {
-                ++changed_in_range_tts;
-              }
-            }
-            if (block._id == this.blockSelection.end._id) {
-              break;
-            }
-            crossId = block.chainid;
-          } else break;
-        }
-      }
-      this.$store.commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_audio_in_range', value: approved});
-      this.$store.commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_tts_in_range', value: approved_tts});
-      this.$store.commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_audio', value: changed_in_range});
-      this.$store.commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_tts', value: changed_in_range_tts});
+      //this.recountApprovedInRange();
     },
     findPrevBlock(blockId) {
       let found, BreakException = {}; // a trick to stop forEach

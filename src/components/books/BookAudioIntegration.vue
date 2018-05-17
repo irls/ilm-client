@@ -1,7 +1,7 @@
 <template>
   <div>
     <accordion :one-at-atime="true" ref="accordionAudio">
-      <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile">
+      <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue">
           <div class="file-catalogue-buttons">
             <div class="">
@@ -24,7 +24,8 @@
                 </li>
             </dropdown>
             <div class="align-audio">
-              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null, true)">Align&nbsp;<span v-if="alignCounter.count > 0">({{blocksForAlignment}})</span></button>
+              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null, true)" v-if="!hasLocks('align')">Align&nbsp;<span v-if="alignCounter.count > 0">({{blocksForAlignment}})</span></button>
+              <button v-else class="btn btn-danger btn-small" v-on:click="cancelAlign(true)">Cancel Alignment</button>
             </div>
           </div>
           <div class="file-catalogue-files-wrapper">
@@ -124,7 +125,8 @@
           <span class="red">Select audio</span>
         </div>-->
         <div class="pull-right align-process-start">
-          <button v-if="!alignmentProcess" class="btn btn-default" :disabled="!enableTtsAlignment" v-on:click="alignTts()">Convert text to speech &amp; Align with text</button>
+          <button class="btn btn-default" :disabled="!enableTtsAlignment" v-on:click="alignTts()" v-if="!hasLocks('align')">Convert text to speech &amp; Align with text</button>
+          <button v-else class="btn btn-danger" v-on:click="cancelAlign()">Cancel Alignment</button>
         </div>
       </panel>
     </accordion>
@@ -256,6 +258,7 @@
       .catch(err=>err);
       this._setCatalogueSize();
       window.addEventListener('resize', this._setCatalogueSize, true);
+      this.$root.$on('cancel-align', this.cancelAlign)
     },
     methods: {
       uploadAudio() {
@@ -647,7 +650,7 @@
           });
         }
         this.aligningBlocks.forEach(b => {
-          this.addBlockLock({block: b, watch: ['realigned']});
+          this.addBlockLock({block: b, watch: ['realigned'], type: 'align'});
           this.$root.$emit('block-state-refresh-' + b._id);
         });
         this.$root.$on('blockChange', (doc) => {
@@ -667,7 +670,7 @@
         });
       },
       cancelAlign(force = false) {
-        if (this.alignmentProcess || force) {
+        //if (this.alignmentProcess || force) {
           let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/selection_alignment';
 
           let api = this.$store.state.auth.getHttp()
@@ -680,10 +683,11 @@
 
             }
             self.aligningBlocks = [];
+            self.clearLocks({type: 'align'});
           }).catch((err) => {
             console.log('error: '+ err)
           });
-        }
+        //}
       },
       alignTts(warn = 2) {
         if (warn >= 2 && this.currentBookCounters.approved_tts_in_range > 0) {
@@ -838,11 +842,12 @@
         $('.file-catalogue-files').css('max-height', file_catalogue_height + 'px');
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks', 'clearLocks'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
       this.$root.$off('from-audioeditor:align');
+      this.$root.$off('cancel-align', this.cancelAlign);
     },
     computed: {
       selectionLength: {
@@ -883,7 +888,7 @@
         let blocks = this.alignCounter.count - this.alignCounter.countTTS;
         return blocks >=0 ? blocks : 0;
       },
-      ...mapGetters(['currentBookCounters', 'ttsVoices', 'currentBookid', 'currentBookMeta', 'blockSelection', 'alignCounter'])
+      ...mapGetters(['currentBookCounters', 'ttsVoices', 'currentBookid', 'currentBookMeta', 'blockSelection', 'alignCounter', 'hasLocks', 'lockedBlocks'])
     },
     watch: {
       'audiobook': {
@@ -1214,5 +1219,14 @@
         width: 280px;
       }
     }
+  }
+  .panel-audio-catalogue {
+      .panel-body {
+        padding-left: 9px;
+        padding-right: 9px;
+        .all-audio-dropdown {
+            margin: 0px;
+        }
+      }
   }
 </style>
