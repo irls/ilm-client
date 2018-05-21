@@ -37,14 +37,21 @@ let BlockTypes = {
 //     translator: []
 //   },
   title: {
-    style: ['', 'subtitle', 'author', 'translator'],
+    size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
+    style: ['', 'subtitle', 'author', 'translator', 'copyright'],
+    align: ['', 'left', 'center', 'right', 'justify'],
+    padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
+    'outsize-padding': ['', 'outpad-top', 'outpad-top-extra', 'outpad-bottom', 'outpad-bottom-extra'],
   },
   header: {
+    type: ['', 'subhead'],
     level: ['', 'h2', 'h3', 'h4', 'h5'],
     align: ['', 'left', 'center', 'right', 'justify'],
     'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4'],
+    size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
     style: ['', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline'],
-    type: ['', 'subhead']
+    padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
+    'outsize-padding': ['', 'outpad-top', 'outpad-top-extra', 'outpad-bottom', 'outpad-bottom-extra'],
   },
 //   subhead: {
 //     'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4'],
@@ -53,14 +60,15 @@ let BlockTypes = {
 //   },
   par: {
 //     font: ['', 'typewriter', 'monospace', 'oldbook', 'modern'],
-    size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
     padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
+    'outsize-padding': ['', 'outpad-top', 'outpad-top-extra', 'outpad-bottom', 'outpad-bottom-extra'],
+    size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
     width: ['', 'width-80', 'width-65', 'width-50', 'width-45', 'width-30'],
     style: ['', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline'/*, 'rulebelow', 'bookgraphic'*/],
     align: ['', 'left', 'center', 'right', 'justify'],
     whitespace: ['', 'verse', 'pre'],
     author: ['', 'bab', 'baha', 'abd', 'shoghi', 'sacred', 'bible', 'muhammad', 'quran', 'jesus', 'ali', 'tradition', 'husayn'],
-    'paragraph type': ['', 'dropcap', 'blockquote', 'centerquote', 'dedication', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer', 'list']
+    'paragraph type': ['', 'dropcap', 'blockquote', 'centerquote', 'dedication', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer', 'list'],
   },
   illustration: {
     size: ['', 'x-small', 'small', 'large', 'x-large'],
@@ -71,7 +79,9 @@ let BlockTypes = {
 //     fn: []
 //   },
   hr: {
-    size: ['', 'small', 'large']
+    size: ['', 'small', 'large'],
+    padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
+    'outsize-padding': ['', 'outpad-top', 'outpad-top-extra', 'outpad-bottom', 'outpad-bottom-extra'],
   }
 }
 

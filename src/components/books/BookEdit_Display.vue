@@ -2,7 +2,7 @@
   <div :class="['ilm-global-style', metaStyles]">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
-    <div v-for="(block, blockId) in parlist" :class="['ilm-block', 'ilm-display']">
+    <div v-for="(block, blockId) in parlist" :class="['ilm-block', 'ilm-display', blockOutPaddings(block)]">
       <div v-if="block.type == 'illustration'">
         <img :class="block.getClass()" :src="block.getIllustration()"/>
         <div class="description"
@@ -81,7 +81,7 @@ export default {
             result = result.join(' ');
           }
           return result;
-      }
+      },
   },
   methods: {
     ...mapActions(['loadBlocks', 'loadBlocksChain', 'loadBook']),
@@ -159,7 +159,12 @@ export default {
           this.$refs.footNotes[ev.target.dataset.idx].className = '';
         } else this.$refs.footNotes[ev.target.dataset.idx].className = '-hidden';
       }
-    }
+    },
+    blockOutPaddings: function (block) {
+//       let match = block.getClass().match(/out[^\s]*/ig);
+//       return (match && match.length) ? match.join(' ') : '';
+      return (block.classes && block.classes.hasOwnProperty('outsize-padding')) ? block.classes['outsize-padding'] : ''
+    },
   },
 }
 </script>
