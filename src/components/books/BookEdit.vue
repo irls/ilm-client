@@ -1631,6 +1631,11 @@ export default {
       border-radius: 50%;
     }
   }
+  sg[data-suggestion=""] {
+    w {
+        background: yellow !important;
+    }
+  }
 
 
 </style>

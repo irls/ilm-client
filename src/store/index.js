@@ -738,9 +738,9 @@ export const store = new Vuex.Store({
                 // try to avoid meta glitches while update
                 if (state.blockers.indexOf('updateBookMeta') > -1) {
                   commit('clear_blocker', 'updateBookMeta');
-                } else {
+                }// else {
                   dispatch('reloadBookMeta');
-                }
+                //}
             })
             .on('error', (err)=>{
               // handle errors
