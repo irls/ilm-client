@@ -8,7 +8,7 @@
       <ul class="navlist">
 
         <router-link to="/books" tag='li'
-        v-show="isAdmin || isEditor || isLibrarian"
+        v-show="isAdmin || isEditor || isLibrarian || isProofer || isNarrator"
         ><a>Books</a></router-link>
 
         <router-link to="/collections" tag="li">

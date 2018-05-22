@@ -18,6 +18,8 @@ export default {
   computed: {
     isAdmin: function() {return this.$store.state.auth.confirmRole('admin')},
     isEditor:  function() {return this.$store.state.auth.confirmRole('editor')},
+    isNarrator:  function() {return this.$store.state.auth.confirmRole('narrator')},
+    isProofer:  function() {return this.$store.state.auth.confirmRole('proofer')},
     isLibrarian: function() {return this.$store.state.auth.confirmRole('librarian')},
     isBookkeeper: function() {return this.$store.state.auth.confirmRole('bookkeeper')},
     isEngineer: function() {return this.$store.state.auth.confirmRole('engineer')},
