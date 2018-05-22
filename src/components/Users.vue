@@ -29,7 +29,7 @@
         </div>
         <div class='td'>
           <!-- <a href="#" @click="userAddModalActive = true"><i class="fa fa-user-plus"></i> New User</a> -->
-          <button @click='userAddModalActive = true' class='btn btn-default'>
+          <button @click='userAddModalActive = true' class='btn btn-default' v-show="$store.state.isAdmin || $store.state.isBookkeeper">
             <i class="fa fa-user-plus"></i>  New User
           </button>  &nbsp;
         </div>
@@ -50,24 +50,26 @@
         <div class="t-box">
           <select-roles
             :selected="user.roles"
+            :isDisabled="!$store.state.isAdmin"
             @select="updateUser(user._id, 'roles', $event)"
           ></select-roles>
         </div>
         <div class="t-box">
           <select-languages
             :selected="user.languages || []"
+            :isDisabled="!$store.state.isAdmin"
             @select="updateUser(user._id, 'languages', $event)"
           ></select-languages>
         </div>
         <div class="t-box"><a href="#" v-on:click="workHistoryModal(user._id)"><span><i class="fa fa-calendar-check-o"></i>Work History</span></a></div>
 
-        <div class="t-box"><a href="#" v-on:click="resetPassword(user.email)"><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
+        <div class="t-box" v-show="$store.state.isAdmin"><a href="#" v-on:click="resetPassword(user.email)"><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
 
         <!-- <button @click='' class='btn btn-default t-box'>
           <i class="fa fa-unlock"></i>  Reset Password
         </button>  &nbsp; -->
 
-        <div class="t-box" @click="updateUser(user._id, 'enable', !user.enable)">
+        <div class="t-box" @click="updateUser(user._id, 'enable', !user.enable)" v-show="$store.state.isAdmin">
           <template v-if="user.enable"><span>Active </span><i class="fa fa-toggle-on"></i></template>
           <template v-else><span>Disabled </span><i class="fa fa-toggle-off"></i></template>
         </div>

@@ -8,6 +8,7 @@
     :search="search"
     multiple
     :placeholder="'Editor Languages'"
+    :disabled="isDisabled"
   ></v-select>
 </template>
 <script>
@@ -32,7 +33,8 @@ export default {
   },
 
   props: [
-    'selected'
+    'selected',
+    'isDisabled'
   ],
 
   watch: {
