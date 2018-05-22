@@ -1,5 +1,5 @@
 <template>
-<div class="table-body -block" v-bind:class="[ '-mode-' + mode]" :id="block._id">
+<div class="table-body -block" v-bind:class="['-mode-' + mode, blockOutPaddings]" :id="block._id">
     <div v-if="isBlockLocked(block._id)" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': block.checked==true}]">
         <div class="table-row parnum-row" v-if="meta.numeration !== 'none'">
@@ -176,7 +176,7 @@
                         <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                       </select>
                     </label>
-                    
+
                     <template v-if="allowVoiceworkChange()">
                       <label>
                         <i class="fa fa-volume-off"></i>&nbsp;
@@ -215,7 +215,7 @@
                         <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
                       </template>
                   </template>
-                  
+
               </div>
               <!--<div class="-hidden">-->
 
@@ -493,7 +493,7 @@
               </div>
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
-                  <div class="save-block -right" @click="discardBlock" 
+                  <div class="save-block -right" @click="discardBlock"
                        v-bind:class="{'-disabled': !(allowEditing && hasChanges)}">
                     Discard
                   </div>
@@ -676,7 +676,13 @@ export default {
             return this.blockTypes[this.block.type][this.classSel];
           }
           return false;
-       },
+      },
+      blockOutPaddings: function () {
+//         if (!this.block.getClass) return '';
+//         let match = this.block.getClass().match(/out[^\s]*/ig);
+//         return (match && match.length) ? match.join(' ') : '';
+        return (this.block.classes && this.block.classes.hasOwnProperty('outsize-padding')) ? this.block.classes['outsize-padding'] : ''
+      },
       blockVoiceworks: function () {
         return {
           'audio_file': 'Audio file',
@@ -962,7 +968,7 @@ export default {
         'setCurrentBookBlocksLeft',
         'setCurrentBookCounters',
         'addBlockLock',
-        'getAlignCount', 
+        'getAlignCount',
         'recountApprovedInRange'
       ]),
       //-- Checkers -- { --//

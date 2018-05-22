@@ -1,19 +1,14 @@
 <template>
-  <div class="align-check col-md-12">
+  <div class="align-check col-md-12" v-bind:class="['lang-' + lang]">
     <div id="top" class="col-md-12">
       <div class="col-md-8 align-text">
-        <textarea v-model="text"></textarea>
+        <textarea v-model="text" class="lang-direction"></textarea>
       </div>
       <div class="col-md-4">
         <div class="col-md-6 pull-left">
           Language
           <select v-model="lang">
-            <option value="eng">English</option>
-            <option value="ara">Arabic</option>
-            <option value="cmn">Mandarin Chinese</option>
-            <option value="heb">Hebrew</option>
-            <option value="zho">Chinese</option>
-            <option value="fas">Persian</option>
+            <option v-for="ll in langList" :value="ll.code">{{ll.title}}</option>
           </select>
         </div>
         <div class="col-md-6 pull-right">
@@ -21,6 +16,7 @@
         </div>
         <div class="col-md-12">
           <fieldset v-if="!isUploading">
+            <legend>Audio file</legend>
             <form enctype="multipart/form-data" @submit.prevent>
               <div class="col-md-12">
                 <div class="col-md-12">
@@ -46,7 +42,7 @@
         <div 
           id="check-align"
           :data-audiosrc="audioSrc"
-          :class="['aligned-text', {'playing': isPlaying}]"
+          class="aligned-text playing lang-direction"
           v-html="alignedText"></div>
       </div>
       <div class="col-md-12 audio-controls" v-if="alignedText">
@@ -78,7 +74,17 @@
           file: {},
           audioSrc: '',
           player: false,
-          lang: ''
+          lang: '',
+          langList: [
+            {
+              code: 'en',
+              title: 'English'
+            },
+            {
+              code: 'fa',
+              title: 'Persian'
+            }
+          ]
         }
       },
       mounted() {
@@ -180,12 +186,19 @@
       width: 100%;
       height: 90%;
       resize: none;
+      font-size: 16px;
+    }
+    &.lang-fa {
+      .lang-direction {
+        direction: rtl;
+      }
     }
     .align-text {
       height: 100%;
     }
     .align-result {
       margin: 20px;
+      font-size: 16px;
     }
     .audio-controls {
       margin: 30px 0px;
@@ -286,5 +299,14 @@
     float: left;
     width: 100%;
     cursor: ns-resize;
+  }
+  fieldset {
+    legend {
+        font-size: 12px;
+        display: inline-block;
+        width: auto;
+        padding: 2px 4px;
+        border-bottom: none;
+    }
   }
 </style>

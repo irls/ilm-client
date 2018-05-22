@@ -40,6 +40,48 @@
 // paddings
 @normal_padding: 10px;
 @extra_padding: @normal_padding + 10;
+@extra_padding-vertical: @normal_padding + 30;
+@outer_padding-vertical: 80px;
+@outer_padding-vertical-extra: @outer_padding-vertical + 80;
+
+.table-body.-block { /*Outer paddings for edit mode*/
+  &.outpad-top {
+    margin-top: @outer_padding-vertical;
+  }
+
+  &.outpad-top-extra {
+    margin-top: @outer_padding-vertical-extra;
+  }
+
+  &.outpad-bottom {
+    margin-bottom: @outer_padding-vertical;
+  }
+
+  &.outpad-bottom-extra {
+    margin-bottom: @outer_padding-vertical-extra;
+  }
+}
+
+.ilm-block {
+  /* Specific for display mode */
+  &.ilm-display {
+    &.outpad-top {
+      margin-top: @outer_padding-vertical;
+    }
+
+    &.outpad-top-extra {
+      margin-top: @outer_padding-vertical-extra;
+    }
+
+    &.outpad-bottom {
+      margin-bottom: @outer_padding-vertical;
+    }
+
+    &.outpad-bottom-extra {
+      margin-bottom: @outer_padding-vertical-extra;
+    }
+  }
+}
 
 .ilm-block {
   font-family: GentiumPlus, serif;
@@ -225,10 +267,10 @@
     padding: @extra_padding ;
   }
   .extrapad-top {
-    padding-top: @extra_padding;
+    padding-top: @extra_padding-vertical;
   }
   .extrapad-bottom {
-    padding-bottom: @extra_padding;
+    padding-bottom: @extra_padding-vertical;
   }
 
   .content-wrap {
@@ -245,10 +287,10 @@
       padding: @extra_padding - 1;
     }
     &.extrapad-top:hover {
-      padding-top: @extra_padding - 1;
+      padding-top: @extra_padding-vertical - 1;
     }
     &.extrapad-bottom:hover {
-      padding-bottom: @extra_padding - 1;
+      padding-bottom: @extra_padding-vertical - 1;
     }
   }
 

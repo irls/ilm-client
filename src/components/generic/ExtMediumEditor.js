@@ -470,6 +470,7 @@ let SuggestButton = MediumEditor.Extension.extend({
   suggestForm: false,
   suggestFormInput: false,
   value: '',
+  hasProp: false,
 
   wrapNode: 'sg',
 
@@ -507,11 +508,13 @@ let SuggestButton = MediumEditor.Extension.extend({
       this.base.restoreSelection();
     }
     //-- } -- end --//
-    if (node.nodeName.toLowerCase() === this.wrapNode && node.dataset.suggestion) {
+    if (node.nodeName.toLowerCase() === this.wrapNode && node.dataset.hasOwnProperty('suggestion')) {
       this.value = node.dataset.suggestion;
+      this.hasProp = node.dataset.hasOwnProperty('suggestion');
       return true
     }
     this.value = '';
+    this.hasProp = false;
     return false;
   },
 
@@ -540,7 +543,7 @@ let SuggestButton = MediumEditor.Extension.extend({
     this.base.restoreSelection();
 
     let value = this.suggestFormInput.value.trim();
-    if (value.length) {
+//     if (value.length) {
       let node = document.createElement(this.wrapNode);
       node.dataset.suggestion = value;
       if (this.isActive()) this.doSuggestRemove();
@@ -568,7 +571,7 @@ let SuggestButton = MediumEditor.Extension.extend({
       this.triggerEvent(this.base.getFocusedElement(), 'input');
       this.base.restoreSelection();
       MediumEditor.util.getContainerEditorElement(this.base.getFocusedElement()).dataset.has_suggestion = true;
-    }
+//     }
     this.base.checkSelection();
   },
 
@@ -677,7 +680,7 @@ let SuggestButton = MediumEditor.Extension.extend({
       '</a>'
     );
 
-    if (this.value.length) {
+    if (this.value.length || this.hasProp) {
       template.push(
         '<a href="#" class="medium-editor-toolbar-remove">',
         this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-trash"></i>' : this.formCloseLabel,
@@ -730,7 +733,7 @@ let SuggestPreview = MediumEditor.extensions.anchorPreview.extend({
 
   handleEditableMouseover: function (event) {
     var target = MediumEditor.util.traverseUp(event.target, function (element) {
-      return element.dataset.suggestion;
+      return element.dataset.hasOwnProperty('suggestion');
     });
 
     if (false === target) {
@@ -769,8 +772,9 @@ let SuggestPreview = MediumEditor.extensions.anchorPreview.extend({
     }
 
     if (this.previewValueSelector) {
-        this.anchorPreview.querySelector(this.previewValueSelector).textContent = anchorEl.dataset.suggestion;
-        this.anchorPreview.querySelector(this.previewValueSelector).href = anchorEl.dataset.suggestion;
+        let val = anchorEl.dataset.suggestion ? anchorEl.dataset.suggestion : '"Empty suggestion"';
+        this.anchorPreview.querySelector(this.previewValueSelector).textContent = val;
+        this.anchorPreview.querySelector(this.previewValueSelector).href = val;
     }
 
     this.anchorPreview.classList.add('medium-toolbar-arrow-over');

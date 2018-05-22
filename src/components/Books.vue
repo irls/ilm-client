@@ -23,7 +23,7 @@
       </tr>
       <tr>
         <td class='maincontent'>
-          <div class="scroll-wrapper">
+          <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">
             <router-view></router-view>
           </div>
         </td>
@@ -268,5 +268,11 @@ export default {
       }
     }
   }
+}
+
+.-lang-fa {
+    .ilm-block {
+      direction: rtl;
+    }
 }
 </style>
