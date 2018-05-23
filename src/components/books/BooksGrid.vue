@@ -137,6 +137,12 @@ export default {
 
 
 <style>
+  #books_grid {
+    width: 100%;
+    overflow-y: auto;
+    padding-top: 4px;
+  }
+
   #books_grid tbody tr:hover {
     background-color: cornsilk  ;
   }

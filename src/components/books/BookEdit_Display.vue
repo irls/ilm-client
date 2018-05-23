@@ -1,5 +1,5 @@
 <template>
-  <div :class="['ilm-global-style', metaStyles]">
+  <div :class="['ilm-global-style container-fluid', metaStyles]">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
     <div v-for="(block, blockId) in parlist" :class="['ilm-block', 'ilm-display', blockOutPaddings(block)]">
@@ -168,3 +168,10 @@ export default {
   },
 }
 </script>
+
+<style lang="less" scoped>
+.container-fluid {
+  padding-top: 15px;
+  overflow-y: auto;
+}
+</style>

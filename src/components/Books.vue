@@ -1,37 +1,32 @@
 <template>
-  <div id='booksarea' v-cloak>
+  <div id='booksarea'><!-- v-cloak-->
+    <div :class="['content-meta-wrapper', metaVisible ? 'meta-visible' : '']">
 
-    <table id='bodytable'>
-      <tr>
-        <td :class="['toolbar-wrapper', metaVisible ? 'meta-visible' : '']">
+      <BookEditToolbar v-if="isEditMode()"
+      :toggleMetaVisible="toggleMetaVisible"
+      :hasBookSelected="hasBookSelected"
+      :metaVisible="metaVisible"/>
 
-            <BookEditToolbar v-if="isEditMode()"
-            :toggleMetaVisible="toggleMetaVisible"
-            :hasBookSelected="hasBookSelected"
-            :metaVisible="metaVisible"/>
+      <BooksToolbar v-else
+      @import_finished="bookImportFinished"
+      :toggleMetaVisible="toggleMetaVisible"
+      :hasBookSelected="hasBookSelected"
+      :metaVisible="metaVisible"/>
 
-            <BooksToolbar v-else
-            @import_finished="bookImportFinished"
-            :toggleMetaVisible="toggleMetaVisible"
-            :hasBookSelected="hasBookSelected"
-            :metaVisible="metaVisible"/>
+      <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">
+        <router-view></router-view>
+      </div>
 
-        </td> <!--collapseEditBar visible-->
-        <td class='metaedit' v-if='metaVisible' rowspan="2">
-          <book-meta-edit v-if='metaVisible'></book-meta-edit>
-        </td>
-      </tr>
-      <tr>
-        <td class='maincontent'>
-          <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">
-            <router-view></router-view>
-          </div>
-        </td>
-      </tr>
-    </table>
+    </div>
+
+    <div class='metaedit' v-if='metaVisible'>
+      <book-meta-edit v-if='metaVisible'></book-meta-edit>
+    </div>
+
     <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}, audioeditorMode()]" >
       <AudioEditor ref="audioEditor"></AudioEditor>
     </nav>
+
     <v-dialog :clickToClose="false"/>
   </div>
 </template>
@@ -173,14 +168,58 @@ export default {
 #booksarea {
   margin: 0;
   padding:0;
-  height: 100%;
-  padding-top: 43px;
+/*  height: 100%;
+  padding-top: 43px;*/
 
-  .contentarea {
-    margin-top:10px;
+  flex-grow: 2;
+  display:flex;
+  flex-direction: row;
+  overflow-y:auto;
+
+  .metaedit {
+    flex-grow: 1;
+    min-width: 440px;
+    max-width: 27%;
+    overflow-y: auto;
   }
 
-  #bodytable {
+  .content-meta-wrapper {
+    flex-grow: 2;
+    display:flex;
+    flex-direction: column;
+
+    &.meta-visible {
+      max-width: 73%;
+    }
+
+    .toolbar {
+      min-height: 36px;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0px 2px 3px 0px rgba(178, 191, 224, 0.53);
+      padding-left: 4px;
+    }
+
+    .scroll-wrapper {
+      flex-grow: 2;
+      display: flex;
+      flex-direction: row;
+      overflow-y: hidden;
+
+      .container-fluid {
+        width: 100%;
+      }
+    }
+  }
+
+
+/*  .contentarea {
+    margin-top:10px;
+  }*/
+
+  /*#bodytable {
     width: 100%;
     height: 100%;
     display: table;
@@ -208,7 +247,7 @@ export default {
         }
         &.maincontent {
           /*padding-top: 5px;*/
-          height: 100%;
+          /*height: 100%;
           .scroll-wrapper {
             height: 100%;
             overflow: auto;
@@ -226,21 +265,21 @@ export default {
           min-width: 40px;
           height: 100%;
           /*padding: 13px*/
-          padding-top: 23px;
+          /*padding-top: 23px;
           padding-left: 8px;
           cursor: pointer;
           /*position: relative;*/
 
-          .bar {
+          /*.bar {
             width: 100%;
             min-width: 2px;
             height: 100%;
             background-color: rgba(204, 212, 226, .25);
             /*position: relative;*/
 
-            .collapsebtn {
+            /*.collapsebtn {
               /*position: fixed;*/
-              background: white;
+              /*background: white;
               padding: 5px 5px 3px 8px;
               border: .5px solid rgb(204, 212, 226);
               border-radius: 25px;
@@ -267,7 +306,7 @@ export default {
         }
       }
     }
-  }
+  }*/
 }
 
 .-lang-fa {

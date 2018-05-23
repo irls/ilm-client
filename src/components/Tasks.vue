@@ -294,14 +294,10 @@ export default {
 <style lang="less">
 
 .area-wrapper {
-  height: 100%;
-  padding-top: 43px;
-  overflow: hidden;
-  margin-bottom: -45px;
-  padding-bottom: 45px;
 
   .vue-tabs {
     height: 100%;
+    width: 100%;
 
     .tab-content {
       height: 100%;

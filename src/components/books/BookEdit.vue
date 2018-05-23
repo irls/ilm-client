@@ -1,87 +1,91 @@
 <template>
-<div v-on:wheel="debounceScrollContent" ref="contentScrollWrapRef"
-  :class="['container-fluid content-scroll-wrapper ilm-global-style', metaStyles]">
+<div class="content-scroll-wrapper">
+  <div v-on:wheel="debounceScrollContent" ref="contentScrollWrapRef"
+    :class="['container-fluid ilm-global-style', metaStyles]">
 
-  <!--<div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >-->
+    <!--<div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >-->
 
-    <div v-show="upScreenTop"
-    class="infinite-loading-container -up"
-    v-bind:style="{ top: upScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookUp') >-1"-->
-      <div><i class="loading-default"></i></div>
-    </div>
-
-    <!--<template v-for="(sublist, page_Idx) in parlist">-->
-    <div class="row content-scroll-item"
-      v-for="blockId in Array.from(parlistC.keys())"
-      v-bind:style="{ 'top': screenTop + 'px' }"
-      v-bind:id="'s-'+ parlistC.get(blockId)._id"
-      v-bind:key="blockId">
-      <div class='col'><!--v-if="block.isVisible"-->
-        <BookBlockView ref="blocks"
-            :block="parlist.get(blockId)"
-            :blockId = "blockId"
-            :putBlock ="putBlockProxy"
-            :getBlock ="getBlockProxy"
-            :putBlockPart ="putBlockPartProxy"
-            :reCount  ="reCountProxy"
-            :recorder ="recorder"
-            :blockReindexProcess="blockReindexProcess"
-            :getBloksUntil="getBloksUntil"
-            :allowSetStart="allowSetStart"
-            :allowSetEnd="allowSetEnd"
-            :prevId="getPrevId(blockId)"
-            :mode="mode"
-            @stopRecordingAndNext="stopRecordingAndNext"
-            @insertBefore="insertBlockBefore"
-            @insertAfter="insertBlockAfter"
-            @deleteBlock="deleteBlock"
-            :joinBlocks="joinBlocks"
-            @setRangeSelection="setRangeSelection"
-            @blockUpdated="blockUpdated"
-        />
+      <div v-show="upScreenTop"
+      class="infinite-loading-container -up"
+      v-bind:style="{ top: upScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookUp') >-1"-->
+        <div><i class="loading-default"></i></div>
       </div>
-      <!--<div class='col'>-->
-    </div>
-    <!--<div class="row"--> <!--v-show="hasScrollDown"-->
-    <div v-show="downScreenTop"
-      class="infinite-loading-container -down"
-      v-bind:style="{ top: downScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookDown') >-1"-->
-      <div><i class="loading-default"></i></div>
-    </div>
-    <!--<div v-else class="infinite-loading-container -down">
-      <div>End of book</div>
-    </div>-->
-    <!--<infinite-loading ref="scrollBookDown" v-if="scrolledDown"></infinite-loading>-->
-  <!--</div>-->
-  <!--<div class="content-scroll"-->
-    <modal v-model="doJoinBlocks.show" effect="fade" cancel-text="Close" title="Join blocks saving">
-      <div slot="modal-body" class="modal-body">Save changes and join blocks?</div>
-      <div slot="modal-footer" class="modal-footer">
-        <button type="button" class="btn btn-default" @click="doJoinBlocks.show = false;">Cancel</button>
-        <button v-if="doJoinBlocks.direction == 'previous'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
-        <button v-if="doJoinBlocks.direction == 'next'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
+
+      <!--<template v-for="(sublist, page_Idx) in parlist">-->
+      <div class="row content-scroll-item"
+        v-for="blockId in Array.from(parlistC.keys())"
+        v-bind:style="{ 'top': screenTop + 'px' }"
+        v-bind:id="'s-'+ parlistC.get(blockId)._id"
+        v-bind:key="blockId">
+        <div class='col'><!--v-if="block.isVisible"-->
+          <BookBlockView ref="blocks"
+              :block="parlist.get(blockId)"
+              :blockId = "blockId"
+              :putBlock ="putBlockProxy"
+              :getBlock ="getBlockProxy"
+              :putBlockPart ="putBlockPartProxy"
+              :reCount  ="reCountProxy"
+              :recorder ="recorder"
+              :blockReindexProcess="blockReindexProcess"
+              :getBloksUntil="getBloksUntil"
+              :allowSetStart="allowSetStart"
+              :allowSetEnd="allowSetEnd"
+              :prevId="getPrevId(blockId)"
+              :mode="mode"
+              @stopRecordingAndNext="stopRecordingAndNext"
+              @insertBefore="insertBlockBefore"
+              @insertAfter="insertBlockAfter"
+              @deleteBlock="deleteBlock"
+              :joinBlocks="joinBlocks"
+              @setRangeSelection="setRangeSelection"
+              @blockUpdated="blockUpdated"
+          />
+        </div>
+        <!--<div class='col'>-->
       </div>
-    </modal>
-    <modal v-model="unableJoinMessage" effect="fade" cancel-text="Close" title="Join blocks error">
-      <div slot="modal-body" class="modal-body">Blocks with different types can't be joined</div>
-      <div slot="modal-footer" class="modal-footer">
-        <button type="button" class="btn btn-default" @click="unableJoinMessage = false">Close</button>
+      <!--<div class="row"--> <!--v-show="hasScrollDown"-->
+      <div v-show="downScreenTop"
+        class="infinite-loading-container -down"
+        v-bind:style="{ top: downScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookDown') >-1"-->
+        <div><i class="loading-default"></i></div>
       </div>
-    </modal>
+      <!--<div v-else class="infinite-loading-container -down">
+        <div>End of book</div>
+      </div>-->
+      <!--<infinite-loading ref="scrollBookDown" v-if="scrolledDown"></infinite-loading>-->
+    <!--</div>-->
+    <!--<div class="content-scroll"-->
+      <modal v-model="doJoinBlocks.show" effect="fade" cancel-text="Close" title="Join blocks saving">
+        <div slot="modal-body" class="modal-body">Save changes and join blocks?</div>
+        <div slot="modal-footer" class="modal-footer">
+          <button type="button" class="btn btn-default" @click="doJoinBlocks.show = false;">Cancel</button>
+          <button v-if="doJoinBlocks.direction == 'previous'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
+          <button v-if="doJoinBlocks.direction == 'next'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
+        </div>
+      </modal>
+      <modal v-model="unableJoinMessage" effect="fade" cancel-text="Close" title="Join blocks error">
+        <div slot="modal-body" class="modal-body">Blocks with different types can't be joined</div>
+        <div slot="modal-footer" class="modal-footer">
+          <button type="button" class="btn btn-default" @click="unableJoinMessage = false">Close</button>
+        </div>
+      </modal>
 
-    <!--</template>-->
+      <!--</template>-->
 
-    <!--<infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>-->
+      <!--<infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>-->
 
-    <div id="narrateStartCountdown" class="modal fade in">
-      <div>
-        <strong>3</strong>
+      <div id="narrateStartCountdown" class="modal fade in">
+        <div>
+          <strong>3</strong>
+        </div>
       </div>
-    </div>
 
 
+  </div>
+  <!--<div class="container-fluid">-->
+  <div v-on:wheel="debounceScrollContent" class="custom-scroll"></div>
 </div>
-<!--<div class="container">-->
+<!--<div class="content-scroll-wrapper">-->
 </template>
 
 <script>
@@ -1559,25 +1563,37 @@ export default {
   }
 
   .content-scroll-wrapper {
-    height: 100%;
+    flex-grow: 2;
+
+    display:flex;
+    flex-direction: row;
+
     position: relative;
-/*     overflow: hidden; */
     overflow-y: hidden;
     overflow-x: auto;
-    .content-scroll {
+
+    .container-fluid {
+      padding-top: 15px;
+    }
+/*    .content-scroll {
       position: relative;
       top: 0;
       width: 100%;
       margin-left: -30px;
       padding-left: 30px;
-    }
+    }*/
     .content-scroll-item {
       position: relative;
       width: 100%;
     }
   }
 
-
+  .custom-scroll {
+    min-width: 25px;
+    max-width: 25px;
+    background: AntiqueWhite;
+    border-bottom: solid 5px blue;
+  }
 
   .infinite-loading-container {
     width: 100%;

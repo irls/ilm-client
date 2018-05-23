@@ -1,37 +1,30 @@
 <template>
-  <div class="toolbar table">
-    <div class="tr">
-      <div class="td">
+  <div class="toolbar">
+
         <h3><img src='/static/bookstack_crop.svg' class='bookstack'/>
           {{ collectionCount() }} Collection{{ (collectionCount()<=1 ? '':'s')}}
         </h3>
-      </div>
 
 
-      <div class="td">
         <input type="text" @keyup="filterChange('title', $event)" class="form-control" placeholder="Search by author or title" v-model="collectionsFilter['title']"></input>
         <select @change="filterChange('language', $event)" v-model="collectionsFilter['language']">
           <option v-for="(name, code) in languages" :value="code">{{name}}</option>
         </select>
-      </div>
-      
-      <div class="td">
+
+
+
         <button v-if="allowBookEditMode" @click="editBook" class='btn btn-default'>
           <i class="fa fa-pencil fa-lg"></i>&nbsp;Edit Book
         </button>
-        
-      </div>
-      <div class="td">
+
+
         <button class="btn btn-primary" v-on:click="addCollection" v-if="allowCollectionsEdit">
           <i class="fa fa-plus"></i>&nbsp;Add Collection
         </button>
-      </div>
-      <div class="td">
+
         <button v-if='hasItemSelected' class='btn btn-default btn-meta' @click='toggleMetaVisible'>
           <i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>&nbsp;Meta
         </button>
-      </div>
-    </div>
 
   </div>
 </template>
@@ -62,7 +55,7 @@
       'hasItemSelected', 'metaVisible'
     ],
     mounted() {
-      
+
     },
     methods: {
       hasBookSelected() {
@@ -111,19 +104,12 @@
       }
     },
     computed: {
-      
+
       ...mapGetters(['bookCollections', 'collectionsFilter', 'allowCollectionsEdit', 'allowBookEditMode', 'currentBookMeta'])
     }
   }
 </script>
 <style lang="less" scoped>
-  .toolbar {
-    width:inherit;
-    position: fixed;
-    z-index: 9999;
-    margin-top: -20px;
-    background: #FFFFFF;
-  }
 
   h3 {
     margin: 0;

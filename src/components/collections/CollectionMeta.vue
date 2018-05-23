@@ -62,7 +62,7 @@
         <textarea v-model="collection.description" @input="update('description', $event)" :disabled="!allowCollectionsEdit"></textarea>
       </fieldset>
     </div>
-    
+
     <linkBook v-if="linkBookModal"
       @close_modal="linkBookModal = false"
       :languages="languages"></linkBook>
@@ -137,7 +137,7 @@
             .then(doc => {
               this.updateCollectionVersion({minor: true});
             }).catch(err => {
-              
+
             })
         },
         remove() {
@@ -163,7 +163,7 @@
           api.post(api_url, {}, {}).then(function(response){
             self.reloadCollection();
           }).catch((err) => {
-            
+
           });
         },
         changeCoverModal() {
@@ -196,11 +196,11 @@
 </script>
 <style lang="less">
   .collection-meta {
-    position: fixed;
-    width: 29%;
-    height: 80%;
-    overflow-y: scroll;
-    padding-top: 38px;
+    /*position: fixed;
+    width: 29%;*/
+    height: 100%;
+    overflow-y: auto;
+    /*padding-top: 38px;*/
     fieldset {
       border:1px solid #b9b6b6;
       position:relative;
@@ -227,7 +227,7 @@
     .coverimg {
       padding:0; margin: 5px; margin-right: 8px;
       float: left;
-      margin-left: 3px; 
+      margin-left: 3px;
       margin-top: 10px;
       background: white;
       box-shadow: inset 0px 0px 3px 3px rgba(0,0,0,0.06);
