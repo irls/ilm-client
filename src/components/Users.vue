@@ -45,7 +45,7 @@
     <div class="users-form-wrapper">
     <form class="user-form">
       <div v-for="user in pagedUsers" class="user-form-box">
-        <div class="t-box"><span><i class="fa fa-user"></i>{{user.name}}</span></div>
+        <div class="t-box"><span v-on:click="userEditModal(user)"><i class="fa fa-user"></i>{{user.name}}</span></div>
         <div class="t-box"><span>{{user.email}}</span></div>
         <div class="t-box">
           <select-roles
@@ -87,6 +87,11 @@
       :show="userAddModalActive"
       @closed="addUserModalClose"
     ></user-add-modal>
+    <user-edit-modal
+      :show="userEditModalActive"
+      :user="currentUser"
+      @closed="userEditModalClose"
+    ></user-edit-modal>
     <work-history-modal
       :show="workHistoryModalActive"
       @closed="workHistoryModalClose"
@@ -105,6 +110,7 @@ import axios from 'axios'
 import SelectRoles from './generic/SelectRoles'
 import SelectLanguages from './generic/SelectLanguages'
 import UserAddModal from './users/UserAddModal'
+import UserEditModal from './users/UserEditModal'
 import WorkHistoryModal from './users/WorkHistoryModal'
 import Pagination from './generic/Pagination'
 import { filteredData, pagedData } from '../filters'
@@ -120,6 +126,7 @@ export default {
 
   components: {
     UserAddModal,
+    UserEditModal,
     WorkHistoryModal,
     SelectRoles,
     SelectLanguages,
@@ -130,10 +137,12 @@ export default {
   data () {
     return {
       users: [],
+      currentUser: {},
       filterKey: '',
       currentPage: 0,
       rowsPerPage: 10,
       userAddModalActive: false,
+      userEditModalActive: false,
       passwordResetModalActive: false,
       workHistoryModalActive: false,
       filter: {
@@ -200,6 +209,19 @@ export default {
 
     addUserModalClose(result) {
       this.userAddModalActive = false
+      if (result === true) {
+        this.updateUsersList()
+      }
+    },
+
+    userEditModal(user) {
+      this.currentUser = Object.assign({}, user)
+      this.userEditModalActive = true
+      console.log(this.currentUser, user);
+    },
+
+    userEditModalClose(result) {
+      this.userEditModalActive = false
       if (result === true) {
         this.updateUsersList()
       }
