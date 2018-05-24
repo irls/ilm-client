@@ -749,7 +749,8 @@ export default {
 
   mounted() {
 
-    this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor || this.isAdmin
+    //this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor || this.isAdmin
+    this.allowMetadataEdit = this.isEditor || this.isAdmin
     let self = this;
     this.loadAudiobook(true)
     this.$refs.audioIntegration.$on('uploadAudio', function() {

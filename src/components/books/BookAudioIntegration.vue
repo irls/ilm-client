@@ -4,7 +4,7 @@
       <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue">
           <div class="file-catalogue-buttons">
-            <div class="">
+            <div class="" v-if="_is('admin') || _is('editor')">
               <input type="checkbox" v-model="checkAllState"/>
             </div>
             <div v-if="_is('editor')" class="upload-audio">
