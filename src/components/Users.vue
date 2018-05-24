@@ -45,7 +45,8 @@
     <div class="users-form-wrapper">
     <form class="user-form">
       <div v-for="user in pagedUsers" class="user-form-box">
-        <div class="t-box"><span v-on:click="userEditModal(user)"><i class="fa fa-user"></i>{{user.name}}</span></div>
+        <div class="t-box" v-show="$store.state.isAdmin"><span v-on:click="userEditModal(user)"><i class="fa fa-user"></i>{{user.name}}</span></div>
+        <div class="t-box" v-show="!$store.state.isAdmin"><span><i class="fa fa-user"></i>{{user.name}}</span></div>
         <div class="t-box"><span>{{user.email}}</span></div>
         <div class="t-box">
           <select-roles
