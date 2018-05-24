@@ -74,6 +74,12 @@
           <template v-if="user.enable"><span>Active </span><i class="fa fa-toggle-on"></i></template>
           <template v-else><span>Disabled </span><i class="fa fa-toggle-off"></i></template>
         </div>
+        <div class="t-box" v-show="!$store.state.isAdmin" >
+          <template v-if="user.enable"><span>Active </span></template>
+          <template v-else><span>Disabled </span></template>
+        </div>
+
+
       </div>
     </form>
 
