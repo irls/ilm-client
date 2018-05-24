@@ -8,12 +8,12 @@
     </div>
     <div class="modal-body">
       <div v-if="error" class="error-message" v-text="error"></div>
-      <div class="form-group"><span class="input-group-addon"></span>
-          <input type="text" class="form-control" placeholder="Real Name" v-model="name">
-      </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-user"></i></span>
           <input type="text" class="form-control" placeholder="Username" v-model="username">
           <div v-if="errors.username" v-for="err in errors.username" class="error-message" v-text="err"></div>
+      </div>
+      <div class="form-group"><span class="input-group-addon"></span>
+          <input type="text" class="form-control" placeholder="Real Name" v-model="name">
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
           <input type="text" class="form-control" placeholder="Email" name="email" v-model="email">
