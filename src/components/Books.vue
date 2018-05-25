@@ -270,7 +270,7 @@ export default {
   }
 }
 
-.-lang-fa {
+.-lang-fa, .-lang-ar {
     .ilm-block {
       direction: rtl;
     }
