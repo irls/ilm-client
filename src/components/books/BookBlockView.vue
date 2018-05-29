@@ -1040,7 +1040,7 @@ export default {
         if ((!this.editor || force === true) && this.block.needsText()) {
           let extensions = {};
           let toolbar = {buttons: []};
-          if (this.allowEditing) {
+          if (this.allowEditing && this.mode === 'edit') {
             extensions = {
                 'quoteButton': new QuoteButton(),
                 'quotePreview': new QuotePreview(),
@@ -1056,7 +1056,7 @@ export default {
                   'quoteButton', 'suggestButton'
                 ]
               };
-            this.editor = new MediumEditor('.content-wrap', {
+            this.editor = new MediumEditor('#content-' + this.block._id, {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
@@ -1065,7 +1065,7 @@ export default {
                 extensions: extensions,
                 disableEditing: !this.allowEditing
             });
-          } else if (this.tc_showBlockNarrate(this.block._id)) {
+          } else if (this.tc_showBlockNarrate(this.block._id) && this.mode === 'narrate') {
             extensions = {
                 'suggestButton': new SuggestButton(),
                 'suggestPreview': new SuggestPreview()
@@ -2953,11 +2953,11 @@ export default {
       },
       'mode': {
         handler(val, oldVal) {
-          if (val === 'narrate') {
-            this.destroyEditor();
-          } else if (oldVal === 'narrate') {
-            this.initEditor();
-          }
+          //if (val === 'narrate') {
+            //this.destroyEditor();
+          //} else if (oldVal === 'narrate') {
+            this.initEditor(true);
+          //}
         }
       },
       'isRecording': {
@@ -2990,11 +2990,6 @@ export default {
           } else {
             $('body').off('keypress', this._handleSpacePress);
           }
-        }
-      },
-      'mode': {
-        handler() {
-          this.initEditor();
         }
       }
   },
