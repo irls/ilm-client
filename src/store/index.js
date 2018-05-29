@@ -422,6 +422,7 @@ export const store = new Vuex.Store({
                 }
                 break;
               case 'narrate-block':
+              case 'fix-block-narration':
                 if (assignments.indexOf('block_narrate') === -1) {
                   assignments.push('block_narrate');
                 }
