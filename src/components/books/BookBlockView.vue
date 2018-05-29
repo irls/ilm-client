@@ -1054,6 +1054,23 @@ export default {
                 extensions: extensions,
                 disableEditing: !this.allowEditing
             });
+          } else if (this.tc_showBlockNarrate(this.block._id)) {
+            extensions = {
+                'suggestButton': new SuggestButton(),
+                'suggestPreview': new SuggestPreview()
+              };
+            toolbar = {
+                buttons: ['suggestButton']
+              };
+            this.editor = new MediumEditor('#content-' + this.block._id, {
+                toolbar: toolbar,
+                buttonLabels: 'fontawesome',
+                quotesList: [],
+                onQuoteSave: this.onQuoteSave,
+                suggestEl: this.suggestEl,
+                extensions: extensions,
+                disableEditing: true
+            });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
     //       this.editor.subscribe('positionToolbar', ()=>{})
@@ -2832,22 +2849,7 @@ export default {
         deep: true
       },
       'blockAudio.map' (newVal, oldVal) {
-        //console.log('Tmp audiomap', newVal);
-        if (!oldVal || !oldVal.length) {
-          return;
-        }
-        if (this.tc_showBlockNarrate(this.block._id)) {
-          let isChanged = this.block.content != newVal;
-          if (!this.isAudioChanged && !this.isAudioEditing) {
-            this.isAudioChanged = isChanged;
-          }
-          //if (this.$refs.blockContent) {
-            //this.$refs.blockContent.innerHTML = newVal;
-          //}
-          if (isChanged) {
-            this.infoMessage = 'Audio updated';
-          }
-        }
+        
       },
       'block.markedAsDone': {
         handler(val) {
