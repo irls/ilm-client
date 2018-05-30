@@ -655,15 +655,19 @@
           }
         },
         pause() {
-          return this.audiosourceEditor.pause()
-            .then(() => {
-              this.isPlaying = false;
-              this.isPaused = true;
-              this.cursorPosition = this.audiosourceEditor.playbackSeconds;
-              this.$root.$emit('from-audioeditor:pause');
-              return Promise.resolve();
-            })
-            .catch(err => console.log(err));
+          if (this.isPlaying) {
+            return this.audiosourceEditor.pause()
+              .then(() => {
+                this.isPlaying = false;
+                this.isPaused = true;
+                this.cursorPosition = this.audiosourceEditor.playbackSeconds;
+                this.$root.$emit('from-audioeditor:pause');
+                return Promise.resolve();
+              })
+              .catch(err => console.log(err));
+          } else {
+            return Promise.resolve();
+          }
         },
         zoomIn() {
           if (this.allowZoomIn) {
@@ -748,9 +752,16 @@
           }
         },
         clearSelection() {
-          this.plEventEmitter.emit('select', undefined, undefined);
-          $('[id="resize-selection-right"]').hide().css('left', 0);
-          $('[id="resize-selection-left"]').hide().css('left', 0);
+          let restart = this.isPlaying;
+          this.pause()
+            .then(() => {
+              this.plEventEmitter.emit('select', undefined, undefined);
+              $('[id="resize-selection-right"]').hide().css('left', 0);
+              $('[id="resize-selection-left"]').hide().css('left', 0);
+              if (restart) {
+                this.play();
+              }
+            })
         },
         isEmpty() {
           return !this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0;
