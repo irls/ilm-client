@@ -481,7 +481,7 @@
                 this.origFilePositions = {start: 0, end: parseInt(this.audiosourceEditor.duration)}
               }
               if (!this._setBlocksSelection()) {
-                if (bookAudiofile && bookAudiofile.positions) {
+                if (bookAudiofile && bookAudiofile.positions && typeof bookAudiofile.positions.start !== 'undefined' && typeof bookAudiofile.positions.end !== 'undefined') {
                   this.plEventEmitter.emit('select', bookAudiofile.positions.start, bookAudiofile.positions.end);
                 } else {
                   this.plEventEmitter.emit('select', 0, parseFloat(this.audiosourceEditor.duration));
