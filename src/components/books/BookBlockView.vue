@@ -1554,6 +1554,7 @@ export default {
       },
       audPlaySelection() {
         if (this.player) {
+          this.audStop(this.block._id);
           let startElement = this._getParent(this.range.startContainer, 'w');
           let endElement = this._getParent(this.range.endContainer, 'w');
           let startRange = this._getClosestAligned(startElement, 1);
@@ -1564,8 +1565,9 @@ export default {
           if (!endRange) {
             endRange = this._getClosestAligned(endElement, 1)
           }
-          this.isAudStarted = true;
+          
           this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]);
+          this.isAudStarted = true;
           this.$root.$emit('playBlock', this.block._id);
         }
       },
