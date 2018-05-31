@@ -69,6 +69,17 @@ export default {
         } else {
           return false;
         }
+      },
+      tc_showBlockAudioEdit(blockid) {
+        if (this.tc_hasTask('content_cleanup')) {
+          return true;
+        }
+        if (!this.$store.state.tc_tasksByBlock[blockid]) {
+          return false;
+        }
+        return this.$store.state.tc_tasksByBlock[blockid].find(t => {
+          return ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block'].indexOf(t.type) !== -1;
+        });
       }
     },
     computed: {

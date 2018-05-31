@@ -62,7 +62,7 @@
 
         </div>
         <template v-if="mode === 'narrate'">
-          <div class="table-row" v-if="blockAudio.src && tc_getBlockTask(block._id) && !isAudioChanged && !isRecording">
+          <div class="table-row" v-if="blockAudio.src && tc_showBlockAudioEdit(block._id) && !isAudioChanged && !isRecording">
             <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
           </div>
           <template v-if="player && blockAudio.src && !isRecording">
@@ -195,12 +195,9 @@
               <!--<div class="-hidden">-->
 
               <div class="par-ctrl -audio -hidden -right" v-if="mode !== 'narrate'">
-                  <template v-if="blockAudio.src && tc_hasBlockTask(block._id) && !isAudioChanged">
-                    <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
-                  </template>
                   <template v-if="player && blockAudio.src && !isRecording">
                       <template v-if="!isAudStarted">
-                        <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_hasBlockTask(block._id)"></i>
+                        <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id)"></i>
                         <i class="fa fa-play-circle-o"
                           @click="audPlay(block._id, $event)"></i>
                         <i class="fa fa-stop-circle-o disabled"></i>
