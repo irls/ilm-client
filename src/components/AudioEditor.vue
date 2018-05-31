@@ -267,7 +267,12 @@
           
           
           this.currentWord = null;
+          this.contextPosition = null;
           this.mode = mode;
+          
+          if (this.$refs.waveformContext) {
+            this.$refs.waveformContext.close();
+          }
           
           let self = this;
           
@@ -638,14 +643,20 @@
           this.isPlaying = true;
           this.$root.$emit('from-audioeditor:play');
         },
-        stop() {
+        stop(go_to_start = true) {
           if (this.isPlaying || this.isPaused) {
             this.cursorPosition = false;
             return this.audiosourceEditor.stop()
               .then(() => {
                 this.isPlaying = false;
                 this._clearWordSelection();
-                $('.playlist-tracks').scrollLeft(0);
+                if (go_to_start) {
+                  if (this.hasSelection) {
+                    this._scrollToCursor();
+                  } else {
+                    $('.playlist-tracks').scrollLeft(0);
+                  }
+                }
                 this.$root.$emit('from-audioeditor:stop');
                 return Promise.resolve();
               })
@@ -951,6 +962,7 @@
               setTimeout(function () {
                 if ($('#resize-selection-left').length > 0 && $('.playlist-tracks').length > 0) {
                   $('.playlist-tracks').scrollLeft($('#resize-selection-left').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+                  $('.cursor').css('left', $('#resize-selection-left').position().left + 'px');
                 }
               }, 50);
             }
@@ -1194,7 +1206,7 @@
                 }
               }
               let replay = this.isPlaying;
-              this.stop()
+              this.stop(false)
                   .then(() => {
                     this.selection.start = start;
                     this.cursorPosition = this.selection.start;
