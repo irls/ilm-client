@@ -48,6 +48,8 @@ export const store = new Vuex.Store({
     isBookkeeper: false,
     isEngineer: false,
     isReader: false,
+    isNarrator: false,
+    isProofer: false,
     allowCollectionsEdit: false,
     allowPublishCurrentBook: false,
     allRolls: [],
@@ -420,6 +422,7 @@ export const store = new Vuex.Store({
                 }
                 break;
               case 'narrate-block':
+              case 'fix-block-narration':
                 if (assignments.indexOf('block_narrate') === -1) {
                   assignments.push('block_narrate');
                 }
@@ -652,7 +655,7 @@ export const store = new Vuex.Store({
                 state.lockedBlocks.push({_id: data.block._id, type: item.type});
               }
             } catch(err) {
-              
+
             }
           }
         }
@@ -1842,7 +1845,7 @@ export const store = new Vuex.Store({
         });
       }
     },
-    
+
     saveChangedBlocks({state, dispatch, commit}, data = {}) {
       if (state.blockSelection.start._id && state.blockSelection.end._id) {
         let wait_tasks = [];
@@ -1852,7 +1855,7 @@ export const store = new Vuex.Store({
           let block = state.storeList.get(crossId);
           if (block) {
             if (block.isChanged || block.isAudioChanged) {
-              if ((block.voicework === 'audio_file' && data.voicework === 'audio_file') || 
+              if ((block.voicework === 'audio_file' && data.voicework === 'audio_file') ||
                       (block.voicework === 'tts' && data.voicework === 'tts')) {
                 wait_tasks.push(dispatch('putBlock', block)
                         .then(() => {

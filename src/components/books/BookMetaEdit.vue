@@ -136,9 +136,9 @@
                   <td>Author</td>
                   <td>
                     <template v-for="(author, i) in currentBook.author" >
-                      <input v-model='currentBook.author[i]' @input="update('author', $event)" :disabled="!allowMetadataEdit"><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}"><i class="fa fa-minus-circle" ></i></button>
+                      <input v-model='currentBook.author[i]' @input="update('author', $event)" :disabled="!allowMetadataEdit"><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
                     </template>
-                    <button v-on:click="addAuthor"><i class="fa fa-plus-circle"></i></button>
+                    <button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button>
                   </td>
                 </tr>
 
@@ -749,7 +749,8 @@ export default {
 
   mounted() {
 
-    this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor || this.isAdmin
+    //this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor || this.isAdmin
+    this.allowMetadataEdit = this.isEditor || this.isAdmin
     let self = this;
     this.loadAudiobook(true)
     this.$refs.audioIntegration.$on('uploadAudio', function() {

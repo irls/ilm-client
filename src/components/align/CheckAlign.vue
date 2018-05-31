@@ -83,6 +83,10 @@
             {
               code: 'fa',
               title: 'Persian'
+            },
+            {
+              code: 'ar',
+              title: 'Arabic'
             }
           ]
         }
@@ -188,7 +192,7 @@
       resize: none;
       font-size: 16px;
     }
-    &.lang-fa {
+    &.lang-fa, &.lang-ar {
       .lang-direction {
         direction: rtl;
       }

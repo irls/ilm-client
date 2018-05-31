@@ -62,7 +62,7 @@
 
         </div>
         <template v-if="mode === 'narrate'">
-          <div class="table-row" v-if="blockAudio.src && tc_getBlockTask(block._id) && !isAudioChanged && !isRecording">
+          <div class="table-row" v-if="blockAudio.src && tc_showBlockAudioEdit(block._id) && !isAudioChanged && !isRecording">
             <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
           </div>
           <template v-if="player && blockAudio.src && !isRecording">
@@ -83,12 +83,12 @@
               </div>
             </template>
           </template>
-          <div class="table-row" v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
+          <div class="table-row narrate-controls" v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
             <!-- <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i> -->
             <!-- <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i> -->
-            <i class="fa fa-microphone" v-if="!isRecording" @click="startRecording($event)"></i>
-            <!-- <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i> -->
-            <!-- <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i> -->
+            <i class="fa fa-microphone" v-if="!isRecording && !isChanged" @click="startRecording($event)"></i>
+            <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i>
+            <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i>
           </div>
         </template>
     </div>
@@ -195,12 +195,9 @@
               <!--<div class="-hidden">-->
 
               <div class="par-ctrl -audio -hidden -right" v-if="mode !== 'narrate'">
-                  <template v-if="blockAudio.src && tc_hasBlockTask(block._id) && !isAudioChanged">
-                    <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
-                  </template>
                   <template v-if="player && blockAudio.src && !isRecording">
                       <template v-if="!isAudStarted">
-                        <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
+                        <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id)"></i>
                         <i class="fa fa-play-circle-o"
                           @click="audPlay(block._id, $event)"></i>
                         <i class="fa fa-stop-circle-o disabled"></i>
@@ -885,11 +882,25 @@ export default {
         get() {
           if (this.mode === 'narrate') {
             let content = '';
-            if ($('<div>' + this.block.content + '</div>').find('w').length > 0) {
-              content = this.block.content.replace(/(\.|\?|\!)([^<]*)<\/w>(.+?)/g, '$1$2</w><br/><br/>$3')
+            /*if ($('<div>' + this.block.content + '</div>').find('w').length > 0) {
+              content = this.block.content.replace(/(\.|\?|\!)([^<]*)<\/w>(.+?)/g, '<div class="narrate-content">$1$2</w></div>$3')
+            } else if ($('<div>' + this.block.content + '</div>').find('*').length > 0) {
+              //content = this.block.content.replace(/(<[^>]+>)([^<]+)(<\/[^>]+>)/g, '<span>$1</span>$2')
+              content = this.block.content.replace(/([^\.|\?|\!]+)(\.|\?|\!)/g, '<div class="narrate-content">$1$2</div>');
+              content = content.replace(/(<\/div>)([^\.|\?|\!]+)$/g, '$1<div class="narrate-content">$2</div>');
             } else {
-              content = this.block.content.replace(/(\.|\?|\!)([^\.\?\!]+)/g, '$1<br/><br/>$2');
-              content = content.replace(/([A-z0-9'<>\/]+)/g, '<span>$1</span>')
+              content = this.block.content//.replace(/([A-z0-9']+)/g, '<span>$1</span>')
+              content = content.replace(/([^\.|\?|\!]+)(\.|\?|\!)/g, '<div class="narrate-content">$1$2</div>');
+              content = content.replace(/(<\/div>)([^\.|\?|\!]+)$/g, '$1<div class="narrate-content">$2</div>');
+            }*/
+            let split = '<br class="narrate-split"/><br class="narrate-split"/>';
+            if ($('<div>' + this.block.content + '</div>').find('w').length > 0) {
+              content = this.block.content.replace(/(\.|\?|\!)([^<]*)<\/w>(.+?)/g, '$1' + split + '$2</w>$3')
+            } else if ($('<div>' + this.block.content + '</div>').find('*').length > 0) {
+              content = this.block.content.replace(/(\.|\?|\!)([^\.\?\!]+)/g, '$1' + split + '$2');
+            } else {
+              content = this.block.content.replace(/([A-z0-9'<>\/]+)/g, '<span>$1</span>')
+              content = content.replace(/(\.|\?|\!)([^\.\?\!]+)/g, '$1' + split + '$2');
             }
             return content;
           } else {
@@ -1024,15 +1035,12 @@ export default {
       },
 
       initEditor(force) {
-        if (this.mode === 'narrate') {
-          return;
-        }
         force = force || false;
 
         if ((!this.editor || force === true) && this.block.needsText()) {
           let extensions = {};
           let toolbar = {buttons: []};
-          if (this.allowEditing) {
+          if (this.allowEditing && this.mode === 'edit') {
             extensions = {
                 'quoteButton': new QuoteButton(),
                 'quotePreview': new QuotePreview(),
@@ -1048,7 +1056,7 @@ export default {
                   'quoteButton', 'suggestButton'
                 ]
               };
-            this.editor = new MediumEditor('.content-wrap', {
+            this.editor = new MediumEditor('#content-' + this.block._id, {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
@@ -1056,6 +1064,23 @@ export default {
                 suggestEl: this.suggestEl,
                 extensions: extensions,
                 disableEditing: !this.allowEditing
+            });
+          } else if (this.tc_showBlockNarrate(this.block._id) && this.mode === 'narrate') {
+            extensions = {
+                'suggestButton': new SuggestButton(),
+                'suggestPreview': new SuggestPreview()
+              };
+            toolbar = {
+                buttons: ['suggestButton']
+              };
+            this.editor = new MediumEditor('#content-' + this.block._id, {
+                toolbar: toolbar,
+                buttonLabels: 'fontawesome',
+                quotesList: [],
+                onQuoteSave: this.onQuoteSave,
+                suggestEl: this.suggestEl,
+                extensions: extensions,
+                disableEditing: true
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
@@ -1300,6 +1325,7 @@ export default {
           default:
             this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
             this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+            this.block.content = this.block.content.replace(/<br class="narrate-split"[^>]*>/g, '')
             if (this.block.footnotes && this.block.footnotes.length) {
               this.block.footnotes.forEach((footnote, footnoteIdx)=>{
                 this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
@@ -1528,6 +1554,7 @@ export default {
       },
       audPlaySelection() {
         if (this.player) {
+          this.audStop(this.block._id);
           let startElement = this._getParent(this.range.startContainer, 'w');
           let endElement = this._getParent(this.range.endContainer, 'w');
           let startRange = this._getClosestAligned(startElement, 1);
@@ -1538,8 +1565,9 @@ export default {
           if (!endRange) {
             endRange = this._getClosestAligned(endElement, 1)
           }
-          this.isAudStarted = true;
+          
           this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]);
+          this.isAudStarted = true;
           this.$root.$emit('playBlock', this.block._id);
         }
       },
@@ -2734,6 +2762,13 @@ export default {
               this.resumeRecording();
             }
           }
+          if (e.charCode == 32 && this.isAudStarted) {
+            if (!this.isAudPaused) {
+              this.audPause();
+            } else {
+              this.audResume();
+            }
+          }
         }
       }
   },
@@ -2835,22 +2870,7 @@ export default {
         deep: true
       },
       'blockAudio.map' (newVal, oldVal) {
-        //console.log('Tmp audiomap', newVal);
-        if (!oldVal || !oldVal.length) {
-          return;
-        }
-        if (this.tc_showBlockNarrate(this.block._id)) {
-          let isChanged = this.block.content != newVal;
-          if (!this.isAudioChanged && !this.isAudioEditing) {
-            this.isAudioChanged = isChanged;
-          }
-          //if (this.$refs.blockContent) {
-            //this.$refs.blockContent.innerHTML = newVal;
-          //}
-          if (isChanged) {
-            this.infoMessage = 'Audio updated';
-          }
-        }
+        
       },
       'block.markedAsDone': {
         handler(val) {
@@ -2942,11 +2962,11 @@ export default {
       },
       'mode': {
         handler(val, oldVal) {
-          if (val === 'narrate') {
-            this.destroyEditor();
-          } else if (oldVal === 'narrate') {
-            this.initEditor();
-          }
+          //if (val === 'narrate') {
+            //this.destroyEditor();
+          //} else if (oldVal === 'narrate') {
+            this.initEditor(true);
+          //}
         }
       },
       'isRecording': {
@@ -2960,7 +2980,7 @@ export default {
                   clearInterval(i);
                   let ctrl_pos = ctrl.position();
                   if (w.length === 0) {
-                    w = this.$refs.blockContent.querySelectorAll('span');
+                    w = this.$refs.blockContent.querySelectorAll('*');
                   }
                   ctrl_pos.top+=parseInt(ctrl.css('margin-top'));
                   if (w.length > 0) {
@@ -2975,9 +2995,22 @@ export default {
                 }
               }, 50)
             }
+            $('body').off('keypress', this._handleSpacePress);
             $('body').on('keypress', this._handleSpacePress);
           } else {
             $('body').off('keypress', this._handleSpacePress);
+          }
+        }
+      },
+      'isAudStarted': {
+        handler(val) {
+          if (this.mode === 'narrate') {
+            if (val === true) {
+              $('body').off('keypress', this._handleSpacePress);
+              $('body').on('keypress', this._handleSpacePress);
+            } else {
+              $('body').off('keypress', this._handleSpacePress);
+            }
           }
         }
       }
@@ -3796,6 +3829,11 @@ export default {
     .fa {
       font-size: 27px;
       margin: 7px 0px;
+    }
+  }
+  .narrate-controls {
+    .fa-pause-circle-o {
+      color: red;
     }
   }
 

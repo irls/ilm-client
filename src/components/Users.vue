@@ -29,7 +29,7 @@
         </div>
         <div class='td'>
           <!-- <a href="#" @click="userAddModalActive = true"><i class="fa fa-user-plus"></i> New User</a> -->
-          <button @click='userAddModalActive = true' class='btn btn-default'>
+          <button @click='userAddModalActive = true' class='btn btn-default' v-show="$store.state.isAdmin || $store.state.isBookkeeper">
             <i class="fa fa-user-plus"></i>  New User
           </button>  &nbsp;
         </div>
@@ -45,32 +45,41 @@
     <div class="users-form-wrapper">
     <form class="user-form">
       <div v-for="user in pagedUsers" class="user-form-box">
-        <div class="t-box"><span><i class="fa fa-user"></i>{{user.name}}</span></div>
+        <div class="t-box" v-show="$store.state.isAdmin"><span v-on:click="userEditModal(user)"><i class="fa fa-user"></i>{{user.name}}</span></div>
+        <div class="t-box" v-show="!$store.state.isAdmin"><span><i class="fa fa-user"></i>{{user.name}}</span></div>
         <div class="t-box"><span>{{user.email}}</span></div>
         <div class="t-box">
           <select-roles
             :selected="user.roles"
+            :isDisabled="!$store.state.isAdmin"
             @select="updateUser(user._id, 'roles', $event)"
           ></select-roles>
         </div>
         <div class="t-box">
           <select-languages
             :selected="user.languages || []"
+            :isDisabled="!$store.state.isAdmin"
             @select="updateUser(user._id, 'languages', $event)"
           ></select-languages>
         </div>
         <div class="t-box"><a href="#" v-on:click="workHistoryModal(user._id)"><span><i class="fa fa-calendar-check-o"></i>Work History</span></a></div>
 
-        <div class="t-box"><a href="#" v-on:click="resetPassword(user.email)"><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
+        <div class="t-box" v-show="$store.state.isAdmin"><a href="#" v-on:click="resetPassword(user.email)"><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
 
         <!-- <button @click='' class='btn btn-default t-box'>
           <i class="fa fa-unlock"></i>  Reset Password
         </button>  &nbsp; -->
 
-        <div class="t-box" @click="updateUser(user._id, 'enable', !user.enable)">
+        <div class="t-box" @click="updateUser(user._id, 'enable', !user.enable)" v-show="$store.state.isAdmin">
           <template v-if="user.enable"><span>Active </span><i class="fa fa-toggle-on"></i></template>
           <template v-else><span>Disabled </span><i class="fa fa-toggle-off"></i></template>
         </div>
+        <div class="t-box" v-show="!$store.state.isAdmin" >
+          <template v-if="user.enable"><span>Active </span></template>
+          <template v-else><span>Disabled </span></template>
+        </div>
+
+
       </div>
     </form>
 
@@ -85,6 +94,11 @@
       :show="userAddModalActive"
       @closed="addUserModalClose"
     ></user-add-modal>
+    <user-edit-modal
+      :show="userEditModalActive"
+      :user="currentUser"
+      @closed="userEditModalClose"
+    ></user-edit-modal>
     <work-history-modal
       :show="workHistoryModalActive"
       @closed="workHistoryModalClose"
@@ -103,6 +117,7 @@ import axios from 'axios'
 import SelectRoles from './generic/SelectRoles'
 import SelectLanguages from './generic/SelectLanguages'
 import UserAddModal from './users/UserAddModal'
+import UserEditModal from './users/UserEditModal'
 import WorkHistoryModal from './users/WorkHistoryModal'
 import Pagination from './generic/Pagination'
 import { filteredData, pagedData } from '../filters'
@@ -118,6 +133,7 @@ export default {
 
   components: {
     UserAddModal,
+    UserEditModal,
     WorkHistoryModal,
     SelectRoles,
     SelectLanguages,
@@ -128,10 +144,12 @@ export default {
   data () {
     return {
       users: [],
+      currentUser: {},
       filterKey: '',
       currentPage: 0,
       rowsPerPage: 10,
       userAddModalActive: false,
+      userEditModalActive: false,
       passwordResetModalActive: false,
       workHistoryModalActive: false,
       filter: {
@@ -198,6 +216,19 @@ export default {
 
     addUserModalClose(result) {
       this.userAddModalActive = false
+      if (result === true) {
+        this.updateUsersList()
+      }
+    },
+
+    userEditModal(user) {
+      this.currentUser = Object.assign({}, user)
+      this.userEditModalActive = true
+      console.log(this.currentUser, user);
+    },
+
+    userEditModalClose(result) {
+      this.userEditModalActive = false
       if (result === true) {
         this.updateUsersList()
       }

@@ -267,7 +267,12 @@
           
           
           this.currentWord = null;
+          this.contextPosition = null;
           this.mode = mode;
+          
+          if (this.$refs.waveformContext) {
+            this.$refs.waveformContext.close();
+          }
           
           let self = this;
           
@@ -481,7 +486,7 @@
                 this.origFilePositions = {start: 0, end: parseInt(this.audiosourceEditor.duration)}
               }
               if (!this._setBlocksSelection()) {
-                if (bookAudiofile && bookAudiofile.positions) {
+                if (bookAudiofile && bookAudiofile.positions && typeof bookAudiofile.positions.start !== 'undefined' && typeof bookAudiofile.positions.end !== 'undefined') {
                   this.plEventEmitter.emit('select', bookAudiofile.positions.start, bookAudiofile.positions.end);
                 } else {
                   this.plEventEmitter.emit('select', 0, parseFloat(this.audiosourceEditor.duration));
@@ -638,14 +643,20 @@
           this.isPlaying = true;
           this.$root.$emit('from-audioeditor:play');
         },
-        stop() {
+        stop(go_to_start = true) {
           if (this.isPlaying || this.isPaused) {
             this.cursorPosition = false;
             return this.audiosourceEditor.stop()
               .then(() => {
                 this.isPlaying = false;
                 this._clearWordSelection();
-                $('.playlist-tracks').scrollLeft(0);
+                if (go_to_start) {
+                  if (this.hasSelection) {
+                    this._scrollToCursor();
+                  } else {
+                    $('.playlist-tracks').scrollLeft(0);
+                  }
+                }
                 this.$root.$emit('from-audioeditor:stop');
                 return Promise.resolve();
               })
@@ -655,15 +666,19 @@
           }
         },
         pause() {
-          return this.audiosourceEditor.pause()
-            .then(() => {
-              this.isPlaying = false;
-              this.isPaused = true;
-              this.cursorPosition = this.audiosourceEditor.playbackSeconds;
-              this.$root.$emit('from-audioeditor:pause');
-              return Promise.resolve();
-            })
-            .catch(err => console.log(err));
+          if (this.isPlaying) {
+            return this.audiosourceEditor.pause()
+              .then(() => {
+                this.isPlaying = false;
+                this.isPaused = true;
+                this.cursorPosition = this.audiosourceEditor.playbackSeconds;
+                this.$root.$emit('from-audioeditor:pause');
+                return Promise.resolve();
+              })
+              .catch(err => console.log(err));
+          } else {
+            return Promise.resolve();
+          }
         },
         zoomIn() {
           if (this.allowZoomIn) {
@@ -748,9 +763,16 @@
           }
         },
         clearSelection() {
-          this.plEventEmitter.emit('select', undefined, undefined);
-          $('[id="resize-selection-right"]').hide().css('left', 0);
-          $('[id="resize-selection-left"]').hide().css('left', 0);
+          let restart = this.isPlaying;
+          this.pause()
+            .then(() => {
+              this.plEventEmitter.emit('select', undefined, undefined);
+              $('[id="resize-selection-right"]').hide().css('left', 0);
+              $('[id="resize-selection-left"]').hide().css('left', 0);
+              if (restart) {
+                this.play();
+              }
+            })
         },
         isEmpty() {
           return !this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0;
@@ -940,6 +962,7 @@
               setTimeout(function () {
                 if ($('#resize-selection-left').length > 0 && $('.playlist-tracks').length > 0) {
                   $('.playlist-tracks').scrollLeft($('#resize-selection-left').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+                  $('.cursor').css('left', $('#resize-selection-left').position().left + 'px');
                 }
               }, 50);
             }
@@ -1183,7 +1206,7 @@
                 }
               }
               let replay = this.isPlaying;
-              this.stop()
+              this.stop(false)
                   .then(() => {
                     this.selection.start = start;
                     this.cursorPosition = this.selection.start;

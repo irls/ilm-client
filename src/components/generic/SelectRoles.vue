@@ -8,6 +8,7 @@
     :search="search"
     multiple
     :placeholder="'Select Roles'"
+    :disabled="isDisabled"
   ></v-select>
 </template>
 
@@ -33,7 +34,8 @@ export default {
   },
 
   props: [
-    'selected'
+    'selected',
+    'isDisabled'
   ],
 
 

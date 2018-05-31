@@ -1,42 +1,34 @@
 <template>
 
-  <modal id="userAddModal" effect="fade" @closed="closed" name="add-user-modal" :clickToClose="false" :resizeable="false" height="auto" width="400" >
+  <modal id="userEditModal" effect="fade" @closed="closed" name="edit-user-modal" :clickToClose="false" :resizeable="false" height="auto" width="400" >
     <section class="modal-js-dialog">
     <div class="modal-header">
-      <button type="button" class="close" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
-      <h4 class="modal-title"><i class="fa fa-user"></i>Add User</h4><i class="fa fa-user user-icon"></i></div>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
+      <h4 class="modal-title"><i class="fa fa-user"></i>Edit User</h4><i class="fa fa-user user-icon"></i></div>
     </div>
     <div class="modal-body">
       <div v-if="error" class="error-message" v-text="error"></div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-user"></i></span>
-          <input type="text" class="form-control" placeholder="Username" v-model="username">
+          <input type="text" class="form-control" placeholder="Username" v-model="user._id" disabled>
           <div v-if="errors.username" v-for="err in errors.username" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group"><span class="input-group-addon"></span>
-          <input type="text" class="form-control" placeholder="Real Name" v-model="name">
+          <input type="text" class="form-control" placeholder="Real Name" v-model="user.name">
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
-          <input type="text" class="form-control" placeholder="Email" name="email" v-model="email">
+          <input type="text" class="form-control" placeholder="Email" name="email" v-model="user.email">
           <div v-if="errors.email" v-for="err in errors.email" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group"><span class="input-group-addon"></span>
-          <input type="password" class="form-control" placeholder="Password" v-model="password">
-          <div v-if="errors.password" v-for="err in errors.password" class="error-message" v-text="err"></div>
-      </div>
-      <div class="form-group"><span class="input-group-addon"></span>
-          <input type="password" class="form-control" placeholder="Confirm Password" v-model="confirmPassword">
-          <div v-if="errors.confirmPassword" v-for="err in errors.confirmPassword" class="error-message" v-text="err"></div>
-      </div>
-      <div class="form-group"><span class="input-group-addon"></span>
         <select-roles
-          :selected="roles"
-          @select="val => { roles = val }"
+          :selected="user.roles"
+          @select="val => { user.roles = val }"
         ></select-roles>
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-globe"></i></span>
         <select-languages
-          :selected="languages"
-          @select="val => { languages = val }"
+          :selected="user.languages"
+          @select="val => { user.languages = val }"
         ></select-languages>
       </div>
     </div>
@@ -60,7 +52,7 @@ import modalMixin from './../../mixins/modal'
 
 export default {
 
-  name: 'UserAddModal',
+  name: 'UserEditModal',
 
   mixins: [modalMixin],
 
@@ -70,9 +62,10 @@ export default {
     SelectLanguages
   },
 
-  props: {
-    show: Boolean
-  },
+  props: [
+    'show',
+    'user'
+  ],
 
   data () {
     return {
@@ -93,17 +86,10 @@ export default {
   watch: {
     show (val) {
       if (val) {
-        this.name = ""
-        this.username = ""
-        this.email = ""
-        this.password = ""
-        this.confirmPassword = ""
-        this.roles = []
-        this.languages = []
         this.errors = {}
         this.error = ''
-        this.$modal.show('add-user-modal');
-      } else this.$modal.hide('add-user-modal');
+        this.$modal.show('edit-user-modal');
+      } else this.$modal.hide('edit-user-modal');
     }
   },
 
@@ -115,7 +101,8 @@ export default {
       let auth = this.$store.state.auth;
       let confirmed = auth.confirmRole('admin');
       let api = auth.getHttp();
-      let newUser = {
+
+      /* let newUser = {
         name: this.name,
         username: this.username,
         email: this.email,
@@ -123,8 +110,9 @@ export default {
         confirmPassword: this.confirmPassword,
         roles: this.roles,
         languages: this.languages,
-      };
-      api.post('/api/v1/users', newUser)
+      };*/
+
+      api.patch('/api/v1/users/'+this.user._id, this.user)
         .then(function(response){
           if (response.status == 200) {
             self.$emit('closed', true)
@@ -141,7 +129,6 @@ export default {
         });
     },
     cancel () {
-      //this.$modal.hide('add-user-modal');
       this.$emit('closed', false)
     }
   }
@@ -150,7 +137,7 @@ export default {
 </script>
 
 <style lang="stylus">
-#userAddModal
+#userEditModal
   i
     margin-right: 10px
 
