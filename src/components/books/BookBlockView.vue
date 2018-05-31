@@ -3001,11 +3001,13 @@ export default {
       },
       'isAudStarted': {
         handler(val) {
-          if (val === true) {
-            $('body').off('keypress', this._handleSpacePress);
-            $('body').on('keypress', this._handleSpacePress);
-          } else {
-            $('body').off('keypress', this._handleSpacePress);
+          if (this.mode === 'narrate') {
+            if (val === true) {
+              $('body').off('keypress', this._handleSpacePress);
+              $('body').on('keypress', this._handleSpacePress);
+            } else {
+              $('body').off('keypress', this._handleSpacePress);
+            }
           }
         }
       }
