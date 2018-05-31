@@ -1,7 +1,7 @@
 
 <template>
   <div
-    @click="calculateSize"
+    @click="onClick"
     :class="'vue-scrollbar__wrapper' + ( this.classes ? ' ' + this.classes : '' )"
     ref="scrollWrapper"
     :style="this.styles">
@@ -64,6 +64,9 @@
         default: 40
       },
       onChangePosition: Function,
+      onScrollBarClick: Function,
+      onStartDragEvent: Function,
+      onEndDragEvent: Function,
       onMaxScroll: Function,
     },
 
@@ -90,6 +93,11 @@
     },
 
     methods: {
+      onClick(e){
+        this.calculateSize();
+        if (this.onScrollBarClick) this.onScrollBarClick(this.top, this.left, e);
+      },
+
       scroll(e){
         // Make sure the content height is not changed
         this.calculateSize(() => {
@@ -123,10 +131,10 @@
         if (!this.allowBodyScroll) {
           e.preventDefault()
           e.stopPropagation()
-
-          let direction = e.deltaY < 0 ? 'up' : 'down';
-          if (this.onChangePosition) this.onChangePosition(this.top, this.left, direction, e);
         }
+
+        let direction = e.deltaY < 0 ? 'up' : 'down';
+        if (this.onChangePosition) this.onChangePosition(this.top, this.left, direction, this.allowBodyScroll);
       },
 
       // DRAG EVENT JUST FOR TOUCH DEVICE~
@@ -251,10 +259,8 @@
           if( orientation == 'horizontal' ) this.normalizeHorizontal( next * this.scrollAreaWidth )
         })
 
-        if (!this.allowBodyScroll) {
-          direction = direction > this.top ? 'up': 'down';
-          if (this.onChangePosition) this.onChangePosition(this.top, this.left, direction);
-        }
+        direction = direction > this.top ? 'up': 'down';
+        if (this.onChangePosition) this.onChangePosition(this.top, this.left, direction, this.allowBodyScroll);
 
       },
 
@@ -263,7 +269,8 @@
       },
 
       handleScrollbarStopDrag(){
-        this.dragging = false
+        this.dragging = false;
+        if (this.onEndDragEvent) this.onEndDragEvent(this.top, this.left);
       },
 
       getSize(){

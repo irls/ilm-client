@@ -11,7 +11,8 @@
         :class="'scrollbar' + ( dragging || draggingFromParent ? '' : ' vue-scrollbar-transition')"
         ref="scrollbar"
         @touchstart="startDrag"
-        @mousedown="startDrag "
+        @mousedown="startDrag"
+        @click="preventClick"
         :style="{
           height: height+'%',
           top: scrolling + '%'
@@ -56,6 +57,11 @@
     },
 
     methods: {
+
+      preventClick(e){
+        e.preventDefault()
+        e.stopPropagation()
+      },
 
       startDrag(e){
 

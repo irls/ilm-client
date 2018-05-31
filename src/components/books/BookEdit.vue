@@ -83,14 +83,15 @@
 
   </div>
   <!--<div class="container-fluid">   -->
-  <vue-scrollbar classes="custom-scroll" ref="scrollBarRef" :onChangePosition="scrollByBar">
+  <vue-scrollbar classes="custom-scroll" ref="scrollBarRef" :onChangePosition="scrollByBar"
+  :onEndDragEvent="endScrollDragging" :onScrollBarClick="scrollBarClick">
   <div class="scroll-me" ref="scrollBarWrapRef">
   <!--v-on:wheel="throttleScrollContent"<vue-slider ref="scrollSliderRef" direction="vertical" height="100%"
   :min="1" :max="scrollSliderMax" :interval="1" v-model="scrollSlider"
   :tooltip="false" :reverse="true" @callback="test1"></vue-slider>-->
   <!--:min="0.1" :max="1.0" :interval="0.1" v-model="scrollSlider" :data="scrollBarBlocks" :piecewise="true"-->
   <div v-for="(sBlockId, sBlockIdx) in scrollBarBlocks" :key="sBlockId" :id="'scroll-'+sBlockId" :data-id="sBlockId" ref="scrollBlocksRefs"
-  style="height: 50px;"></div>
+  :style="{height: scrollBarBlockHeight+'px'}"></div>
   <div class="clearfix"></div>
   </div>
   </vue-scrollbar>
@@ -113,9 +114,6 @@ import { BookBlock, setBlockParnum }    from '../../store/bookBlock';
 import { modal }        from 'vue-strap';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
-
-import vuescroll from 'vue-scroll'
-Vue.use(vuescroll); //, {throttle: 30}
 
 import VueHotkey from 'v-hotkey';
 Vue.use(VueHotkey);
@@ -155,8 +153,7 @@ export default {
 
       scrollBarBlocks: [],
       scrollBarTop: 0,
-      scrollBarBlockHeight: 0,
-      scrollBarTimer: false,
+      scrollBarBlockHeight: 100,
 
       lazyLoaderDir: 'up',
       isNeedUp: true,
@@ -1256,7 +1253,7 @@ export default {
       this.scrollContent(ev);
     }, 30),
 
-    scrollContent(ev, isUpdScroll = true, step = 50)
+    scrollContent(ev, step = 50)
     {
       //this.screenTop -= ((ev.deltaY!==false) ? (ev.deltaY > 0 ? 47 : -47) : 0);
       //if (true) return;
@@ -1390,17 +1387,6 @@ export default {
             }
         }
 
-        if (isUpdScroll) {
-          let currIdx = this.scrollBarBlocks.indexOf(this.startId);
-
-          this.scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
-          console.log('scrollToY3', this.startId, currIdx, this.scrollBarTop/this.scrollBarBlockHeight);
-          this.$refs.scrollBarRef.scrollToY(this.scrollBarTop);
-          //console.log('1', this.startId, this.scrollBarTop, this.screenTop);
-
-
-        }
-
       } else return;
 
         var editors = document.getElementsByClassName('medium-editor-toolbar-active');
@@ -1443,54 +1429,44 @@ export default {
       this.$refs.scrollBarRef.calculateSize();
     },
 
-    scrollByBar(top, left, direction, ev) {
-      console.log('scrollByBar', top, direction);
-      if (this.scrollBarTimer) clearTimeout(this.scrollBarTimer);
+    endScrollDragging(top, left) {
 
+      let currIdx = this.scrollBarBlocks.indexOf(this.startId);
 
-      if (this.scrollBarBlockHeight === 0) this.scrollBarBlockHeight = this.$refs.scrollBlocksRefs[0].getBoundingClientRect().height;
+      let scrollBarTop = 0;
+      try {
+        let firstHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
+        scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
+      } catch (err) {
+        scrollBarTop = currIdx * this.scrollBarBlockHeight;
+      }
 
+      this.$refs.scrollBarRef.scrollToY(scrollBarTop);
+    },
 
+    scrollByBar(top, left, direction, allowBodyScroll) {
+      //console.log('scrollByBar', top, direction, allowBodyScroll);
 
       let currIdx = Math.floor(top/this.scrollBarBlockHeight);
       let currId = this.scrollBarBlocks[currIdx];
 
-      //console.log('curr', this.startId, currId);
+      switch(direction) {
+        case 'up' : {
+          this.scrollContent({deltaY: -1}, 70);
+        } break;
+        case 'down' : {
+          if (!allowBodyScroll) this.scrollContent({deltaY: 1}, 70);
+          else if (top == 0) this.scrollContent({deltaY: -1}, 70);
+        } break;
+      };
+    },
 
-//       if (currId != this.startId) this.scrollToBlock(currId);
-//       else {
-        switch(direction) {
-            case 'up' : {
-              this.scrollContent({deltaY: -1}, false, 80);
-            } break;
-            case 'down' : {
-              this.scrollContent({deltaY: 1}, false, 80);
-            } break;
-        };
-//       }
+    scrollBarClick(top, left) {
+      let currIdx = Math.floor(top/this.scrollBarBlockHeight);
+      let currId = this.scrollBarBlocks[currIdx];
+      console.log('scrollBarClick', top, currId);
 
-//         this.scrollBarTimer = setTimeout(()=>{
-//           console.log('scrollBarTimer', currId);
-//           if (currId != this.startId) this.scrollToBlock(currId);
-//         }, 300)
-
-          this.scrollBarTimer = setTimeout(()=>{
-            //console.log('scrollBarTimer', newVal, this.startId);
-
-            let currIdx = this.scrollBarBlocks.indexOf(this.startId);
-            //console.log('currIdx', currIdx, newVal);
-
-//             try {
-              let firstHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
-              let scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
-//             } catch (err) {
-//               this.scrollBarTop = currIdx * this.scrollBarBlockHeight;
-//             }
-
-            console.log('scrollToY4', this.startId, currIdx, scrollBarTop/this.scrollBarBlockHeight);
-            this.$refs.scrollBarRef.scrollToY(scrollBarTop);
-
-          }, 300)
+      this.scrollToBlock(currId);
     }
 
   },
@@ -1632,52 +1608,25 @@ export default {
     },
     'startId': {
       handler(newVal, oldVal) {
-        //console.log('this.startId', '#scroll-'+newVal, oldVal);
-        console.log('2', this.$refs.scrollBarRef.dragging);
+        //console.log('this.startId', newVal);
 
-        if (this.scrollBarBlockHeight === 0) this.scrollBarBlockHeight = this.$refs.scrollBlocksRefs[0].getBoundingClientRect().height;
-
-        //if (this.scrollBarTimer) clearTimeout(this.scrollBarTimer);
-
-        if (!this.$refs.scrollBarRef.dragging) {
-        if (newVal && this.scrollBarBlocks.length) {
-
-
+        if (this.$refs.scrollBarRef && !this.$refs.scrollBarRef.dragging) {
+          if (newVal && this.scrollBarBlocks.length) {
 
             let currIdx = this.scrollBarBlocks.indexOf(newVal);
+            let scrollBarTop = 0;
 
             try {
               let firstHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
-              this.scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
+              scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
             } catch (err) {
-              this.scrollBarTop = currIdx * this.scrollBarBlockHeight;
-              return;
-        }
+              scrollBarTop = currIdx * this.scrollBarBlockHeight;
+            }
 
-            console.log('scrollToY1');
-            this.$refs.scrollBarRef.scrollToY(this.scrollBarTop);
+            console.log('scrollToY1', newVal, currIdx, scrollBarTop);
+            this.$refs.scrollBarRef.scrollToY(scrollBarTop);
 
-            //console.log('currIdx', currIdx, this.scrollBarBlockHeight);
           } else this.updateScrollSlider();
-        } else {
-//           this.scrollBarTimer = setTimeout(()=>{
-//             //console.log('scrollBarTimer', newVal, this.startId);
-//
-//             let currIdx = this.scrollBarBlocks.indexOf(this.startId);
-//             //console.log('currIdx', currIdx, newVal);
-//
-// //             try {
-//               let firstHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
-//               let scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
-// //             } catch (err) {
-// //               this.scrollBarTop = currIdx * this.scrollBarBlockHeight;
-// //             }
-//
-//             console.log('scrollToY2', this.startId, currIdx, scrollBarTop/this.scrollBarBlockHeight);
-//             this.$refs.scrollBarRef.scrollToY(scrollBarTop);
-//
-//           }, 100)
-
         }
 
       }
