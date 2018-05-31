@@ -229,9 +229,12 @@
                   :class="[block.getClass(), {'checked': block.checked}]"
                   @click="onClick($event)"/>
 
-                <div v-else-if="block.type == 'illustration'" :class="['table-body illustration-block', {'checked': block.checked}]"
+                <div v-else-if="block.type == 'illustration'"
+                :class="['table-body illustration-block', {'checked': block.checked}]"
                 @click="onClick($event)">
-                  <img v-if="block.illustration" :src="block.getIllustration()" :class="[block.getClass()]"/>
+                  <img v-if="block.illustration" :src="block.getIllustration()"
+                  :height="block.illustration_height"
+                  :class="[block.getClass()]"/>
                   <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing">
                     <vue-picture-input
                       @change="onIllustrationChange"

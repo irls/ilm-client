@@ -1,6 +1,6 @@
 <template>
-<div class="content-scroll-wrapper">
-  <div v-on:wheel="debounceScrollContent" ref="contentScrollWrapRef"
+<div class="content-scroll-wrapper" v-hotkey="keymap">
+  <div v-on:wheel="throttleScrollContent" ref="contentScrollWrapRef"
     :class="['container-fluid ilm-global-style', metaStyles]">
 
     <!--<div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >-->
@@ -82,8 +82,18 @@
 
 
   </div>
-  <!--<div class="container-fluid">-->
-  <div v-on:wheel="debounceScrollContent" class="custom-scroll"></div>
+  <!--<div class="container-fluid">   -->
+  <vue-scrollbar classes="custom-scroll" ref="scrollBarRef" :onChangePosition="scrollByBar">
+  <div class="scroll-me" ref="scrollBarWrapRef">
+  <!--v-on:wheel="throttleScrollContent"<vue-slider ref="scrollSliderRef" direction="vertical" height="100%"
+  :min="1" :max="scrollSliderMax" :interval="1" v-model="scrollSlider"
+  :tooltip="false" :reverse="true" @callback="test1"></vue-slider>-->
+  <!--:min="0.1" :max="1.0" :interval="0.1" v-model="scrollSlider" :data="scrollBarBlocks" :piecewise="true"-->
+  <div v-for="(sBlockId, sBlockIdx) in scrollBarBlocks" :key="sBlockId" :id="'scroll-'+sBlockId" :data-id="sBlockId" ref="scrollBlocksRefs"
+  style="height: 50px;"></div>
+  <div class="clearfix"></div>
+  </div>
+  </vue-scrollbar>
 </div>
 <!--<div class="content-scroll-wrapper">-->
 </template>
@@ -102,6 +112,16 @@ import axios from 'axios'
 import { BookBlock, setBlockParnum }    from '../../store/bookBlock';
 import { modal }        from 'vue-strap';
 import _ from 'lodash';
+import vueSlider from 'vue-slider-component';
+
+import vuescroll from 'vue-scroll'
+Vue.use(vuescroll); //, {throttle: 30}
+
+import VueHotkey from 'v-hotkey';
+Vue.use(VueHotkey);
+
+import VueScrollbar from '../generic/vue2-scrollbar/vue-scrollbar';
+require('../generic/vue2-scrollbar/vue2-scrollbar.css');
 
 //import IlmCss from './css/ilm'
 
@@ -132,6 +152,11 @@ export default {
       upScreenTop: -85,
       downScreenTop: 0,
       screenTop: 0,
+
+      scrollBarBlocks: [],
+      scrollBarTop: 0,
+      scrollBarBlockHeight: 0,
+      scrollBarTimer: false,
 
       lazyLoaderDir: 'up',
       isNeedUp: true,
@@ -177,14 +202,28 @@ export default {
             }
           }
         }
-        //console.log('parlistC result', Array.from(result.keys()));
         return result;
+      },
+      keymap: function() {
+        return {
+          // 'esc+ctrl' is OK.
+          'ctrl+home': ()=>{console.log('ctrl+home')},
+          'ctrl+end': ()=>{console.log('ctrl+end')},
+          'up': ()=>{console.log('up arrow')},
+          'down': ()=>{console.log('down arrow')},
+          'pgup': ()=>{console.log('page up')},
+          'pgdn': ()=>{console.log('page down')},
+//           'enter': {
+//             keydown: ()=>{console.log('enter+keydown')},
+//             keyup: ()=>{console.log('enter+keyup')}
+//           }
+        }
       }
   },
   mixins: [access, taskControls, api_config],
   components: {
       BookBlockView, InfiniteLoading,
-      modal,
+      modal, vueSlider, VueScrollbar
   },
   methods: {
     ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange']),
@@ -204,7 +243,7 @@ export default {
     loadBookMeta() {
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.freeze('loadBookMeta');
-        console.log('loadBookMeta', this.$route.params.bookid);
+        //console.log('loadBookMeta', this.$route.params.bookid);
         return this.loadBook(this.$route.params.bookid)
         .then(()=>{
           this.unfreeze('loadBookMeta');
@@ -353,6 +392,7 @@ export default {
             let newBlock = new BookBlock(el);
             //this.parlist.set(newBlock._id, newBlock);
             this.$store.commit('set_storeList', newBlock);
+            this.updateScrollSlider();
           });
         }
         result.blockId = result.rows[0]._id;
@@ -379,6 +419,7 @@ export default {
             //this.parlist.push(newBlock);
             //this.parlist.set(newBlock._id, newBlock);
             this.$store.commit('set_storeList', newBlock);
+            this.updateScrollSlider();
           });
         } else this.hasScrollDown = false;
         result.blockId = result.rows[result.rows.length-1]._id;
@@ -1211,11 +1252,11 @@ export default {
       }, 1000);
     },
 
-    debounceScrollContent: _.throttle(function (ev) {
+    throttleScrollContent: _.throttle(function (ev) {
       this.scrollContent(ev);
     }, 30),
 
-    scrollContent(ev)
+    scrollContent(ev, isUpdScroll = true, step = 50)
     {
       //this.screenTop -= ((ev.deltaY!==false) ? (ev.deltaY > 0 ? 47 : -47) : 0);
       //if (true) return;
@@ -1225,12 +1266,12 @@ export default {
       //console.log('currTop', currTop, 'dataHeight', dataHeight);
       //console.log('ev.deltaY', ev.deltaY);
       //console.log('ev', ev);
-      if (ev.deltaY !== false) ev.preventDefault();
+      if (ev.deltaY !== false && ev.hasOwnProperty('preventDefault')) ev.preventDefault();
 
       if (ev.deltaY < 0 && this.blockers.indexOf('loadBookUp') >-1) return;
       if (ev.deltaY > 0 && this.blockers.indexOf('loadBookDown') >-1) return;
 
-      let step = (ev.deltaY!==false) ? (ev.deltaY > 0 ? 47 : -47) : 0;
+      step = (ev.deltaY!==false) ? (ev.deltaY > 0 ? step : -1*step) : 0;
 
       if (this.parlistC.size > 0) {
         let firstId, lastId;
@@ -1290,7 +1331,7 @@ export default {
               this.$refs.blocks.forEach(($ref)=>{
                 $ref.addContentListeners();
               });
-              if (this.blockSelection.start._id && this.blockSelection.end._id) {
+              if (this.blockSelection.start._id && this.blockSelection.end._id) { // re-check blocks
                 this.setCheckedRange(this.blockSelection.start._id, this.blockSelection.end._id);
               }
               Vue.nextTick(()=>{
@@ -1338,7 +1379,8 @@ export default {
                   this.$refs.blocks.forEach(($ref)=>{
                   $ref.addContentListeners();
                 })
-                if (this.blockSelection.start._id && this.blockSelection.end._id) {
+                if (this.blockSelection.start._id && this.blockSelection.end._id)
+                { // re-check blocks
                   this.setCheckedRange(this.blockSelection.start._id, this.blockSelection.end._id);
                 }
                 Vue.nextTick(()=>{
@@ -1346,6 +1388,17 @@ export default {
                 });
               }).catch(err=>err);
             }
+        }
+
+        if (isUpdScroll) {
+          let currIdx = this.scrollBarBlocks.indexOf(this.startId);
+
+          this.scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
+          console.log('scrollToY3', this.startId, currIdx, this.scrollBarTop/this.scrollBarBlockHeight);
+          this.$refs.scrollBarRef.scrollToY(this.scrollBarTop);
+          //console.log('1', this.startId, this.scrollBarTop, this.screenTop);
+
+
         }
 
       } else return;
@@ -1360,6 +1413,7 @@ export default {
       this.screenTop = 0;
       this.startId = id;
     },
+
     getPrevId(id) {
       for (let val of this.parlist.values()) {
         if (val.chainid === id) {
@@ -1372,6 +1426,71 @@ export default {
     listenSetNum(bookId, numMask) {
       //console.log('listenSetNum', bookId, numMask);
       this.reCountProxy(numMask);
+    },
+
+    updateScrollSlider() {
+
+      let resultArr = [];
+      let crossId = this.meta.startBlock_id || this.startId;
+      if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
+        let block = this.parlist.get(crossId);
+        if (block) {
+          resultArr.push(crossId);
+          crossId = block.chainid;
+        } else break;
+      }
+      this.scrollBarBlocks = resultArr;
+      this.$refs.scrollBarRef.calculateSize();
+    },
+
+    scrollByBar(top, left, direction, ev) {
+      console.log('scrollByBar', top, direction);
+      if (this.scrollBarTimer) clearTimeout(this.scrollBarTimer);
+
+
+      if (this.scrollBarBlockHeight === 0) this.scrollBarBlockHeight = this.$refs.scrollBlocksRefs[0].getBoundingClientRect().height;
+
+
+
+      let currIdx = Math.floor(top/this.scrollBarBlockHeight);
+      let currId = this.scrollBarBlocks[currIdx];
+
+      //console.log('curr', this.startId, currId);
+
+//       if (currId != this.startId) this.scrollToBlock(currId);
+//       else {
+        switch(direction) {
+            case 'up' : {
+              this.scrollContent({deltaY: -1}, false, 80);
+            } break;
+            case 'down' : {
+              this.scrollContent({deltaY: 1}, false, 80);
+            } break;
+        };
+//       }
+
+//         this.scrollBarTimer = setTimeout(()=>{
+//           console.log('scrollBarTimer', currId);
+//           if (currId != this.startId) this.scrollToBlock(currId);
+//         }, 300)
+
+          this.scrollBarTimer = setTimeout(()=>{
+            //console.log('scrollBarTimer', newVal, this.startId);
+
+            let currIdx = this.scrollBarBlocks.indexOf(this.startId);
+            //console.log('currIdx', currIdx, newVal);
+
+//             try {
+              let firstHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
+              let scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
+//             } catch (err) {
+//               this.scrollBarTop = currIdx * this.scrollBarBlockHeight;
+//             }
+
+            console.log('scrollToY4', this.startId, currIdx, scrollBarTop/this.scrollBarBlockHeight);
+            this.$refs.scrollBarRef.scrollToY(scrollBarTop);
+
+          }, 300)
     }
 
   },
@@ -1510,7 +1629,59 @@ export default {
         }
       },
       deep: true
-    }
+    },
+    'startId': {
+      handler(newVal, oldVal) {
+        //console.log('this.startId', '#scroll-'+newVal, oldVal);
+        console.log('2', this.$refs.scrollBarRef.dragging);
+
+        if (this.scrollBarBlockHeight === 0) this.scrollBarBlockHeight = this.$refs.scrollBlocksRefs[0].getBoundingClientRect().height;
+
+        //if (this.scrollBarTimer) clearTimeout(this.scrollBarTimer);
+
+        if (!this.$refs.scrollBarRef.dragging) {
+        if (newVal && this.scrollBarBlocks.length) {
+
+
+
+            let currIdx = this.scrollBarBlocks.indexOf(newVal);
+
+            try {
+              let firstHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
+              this.scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
+            } catch (err) {
+              this.scrollBarTop = currIdx * this.scrollBarBlockHeight;
+              return;
+        }
+
+            console.log('scrollToY1');
+            this.$refs.scrollBarRef.scrollToY(this.scrollBarTop);
+
+            //console.log('currIdx', currIdx, this.scrollBarBlockHeight);
+          } else this.updateScrollSlider();
+        } else {
+//           this.scrollBarTimer = setTimeout(()=>{
+//             //console.log('scrollBarTimer', newVal, this.startId);
+//
+//             let currIdx = this.scrollBarBlocks.indexOf(this.startId);
+//             //console.log('currIdx', currIdx, newVal);
+//
+// //             try {
+//               let firstHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
+//               let scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
+// //             } catch (err) {
+// //               this.scrollBarTop = currIdx * this.scrollBarBlockHeight;
+// //             }
+//
+//             console.log('scrollToY2', this.startId, currIdx, scrollBarTop/this.scrollBarBlockHeight);
+//             this.$refs.scrollBarRef.scrollToY(scrollBarTop);
+//
+//           }, 100)
+
+        }
+
+      }
+    },
   }
 }
 </script>
@@ -1589,10 +1760,18 @@ export default {
   }
 
   .custom-scroll {
-    min-width: 25px;
-    max-width: 25px;
-    background: AntiqueWhite;
-    border-bottom: solid 5px blue;
+    min-width: 12px;
+    max-width: 12px;
+    /*background: AntiqueWhite;*/
+    /*border-top: solid 6px blue;
+    border-bottom: solid 6px blue;*/
+    overflow-y: auto;
+
+    .vue-slider-component {
+      .vue-slider-dot {
+        left: -3px;
+      }
+    }
   }
 
   .infinite-loading-container {

@@ -2,7 +2,8 @@
   <div :class="['ilm-global-style container-fluid', metaStyles]">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
-    <div v-for="(block, blockId) in parlist" :class="['ilm-block', 'ilm-display', blockOutPaddings(block)]">
+    <div v-for="(block, blockId) in parlist" :key="block._id"
+      :class="['ilm-block', 'ilm-display', blockOutPaddings(block)]">
       <div v-if="block.type == 'illustration'">
         <img :class="block.getClass()" :src="block.getIllustration()"/>
         <div class="description"
