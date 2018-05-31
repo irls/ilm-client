@@ -83,12 +83,12 @@
               </div>
             </template>
           </template>
-          <div class="table-row" v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
+          <div class="table-row narrate-controls" v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
             <!-- <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i> -->
             <!-- <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i> -->
             <i class="fa fa-microphone" v-if="!isRecording && !isChanged" @click="startRecording($event)"></i>
-            <!-- <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i> -->
-            <!-- <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i> -->
+            <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i>
+            <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i>
           </div>
         </template>
     </div>
@@ -200,7 +200,7 @@
                   </template>
                   <template v-if="player && blockAudio.src && !isRecording">
                       <template v-if="!isAudStarted">
-                        <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
+                        <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_hasBlockTask(block._id)"></i>
                         <i class="fa fa-play-circle-o"
                           @click="audPlay(block._id, $event)"></i>
                         <i class="fa fa-stop-circle-o disabled"></i>
@@ -2762,6 +2762,13 @@ export default {
               this.resumeRecording();
             }
           }
+          if (e.charCode == 32 && this.isAudStarted) {
+            if (!this.isAudPaused) {
+              this.audPause();
+            } else {
+              this.audResume();
+            }
+          }
         }
       }
   },
@@ -2988,6 +2995,17 @@ export default {
                 }
               }, 50)
             }
+            $('body').off('keypress', this._handleSpacePress);
+            $('body').on('keypress', this._handleSpacePress);
+          } else {
+            $('body').off('keypress', this._handleSpacePress);
+          }
+        }
+      },
+      'isAudStarted': {
+        handler(val) {
+          if (val === true) {
+            $('body').off('keypress', this._handleSpacePress);
             $('body').on('keypress', this._handleSpacePress);
           } else {
             $('body').off('keypress', this._handleSpacePress);
@@ -3809,6 +3827,11 @@ export default {
     .fa {
       font-size: 27px;
       margin: 7px 0px;
+    }
+  }
+  .narrate-controls {
+    .fa-pause-circle-o {
+      color: red;
     }
   }
 
