@@ -38,7 +38,7 @@ let BlockTypes = {
 //   },
   title: {
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
-    style: ['', 'subtitle', 'author', 'translator', 'copyright'],
+    style: ['', 'subtitle', 'author', 'translator', 'copyright', 'allcaps'],
     align: ['', 'left', 'center', 'right', 'justify'],
     padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
     'outsize-padding': ['', 'outpad-top', 'outpad-top-extra', 'outpad-bottom', 'outpad-bottom-extra'],
