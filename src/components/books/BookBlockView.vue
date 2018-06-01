@@ -893,10 +893,8 @@ export default {
             let split = '<br class="narrate-split"/><br class="narrate-split"/>';
             if ($('<div>' + this.block.content + '</div>').find('w').length > 0) {
               content = this.block.content.replace(/(\.|\?|\!)([^<]*)<\/w>(.+?)/g, '$1' + split + '$2</w>$3')
-            } else if ($('<div>' + this.block.content + '</div>').find('*').length > 0) {
-              content = this.block.content.replace(/(\.|\?|\!)([^\.\?\!]+)/g, '$1' + split + '$2');
             } else {
-              content = this.block.content.replace(/([A-z0-9'<>\/]+)/g, '<span>$1</span>')
+              content = this.block.content + '<span class="content-tail"></span>';
               content = content.replace(/(\.|\?|\!)([^\.\?\!]+)/g, '$1' + split + '$2');
             }
             return content;
@@ -1323,6 +1321,7 @@ export default {
             this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
             this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
             this.block.content = this.block.content.replace(/<br class="narrate-split"[^>]*>/g, '')
+            this.block.content = this.block.content.replace('<span class="content-tail"></span>', '');
             if (this.block.footnotes && this.block.footnotes.length) {
               this.block.footnotes.forEach((footnote, footnoteIdx)=>{
                 this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();

@@ -3,7 +3,7 @@
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
     <div v-for="(block, blockId) in parlist" :class="['ilm-block', 'ilm-display', blockOutPaddings(block)]">
-      <div v-if="block.type == 'illustration'">
+      <div v-if="block.type == 'illustration'" :class="block.getClass()">
         <img :class="block.getClass()" :src="block.getIllustration()"/>
         <div class="description"
         :class="['content-description', block.getClass()]"
