@@ -2,8 +2,8 @@
   <div :class="['ilm-global-style container-fluid', metaStyles]">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
-    <div v-for="(block, blockId) in parlist" :key="block._id"
-      :class="['ilm-block', 'ilm-display', blockOutPaddings(block)]">
+    <template v-for="(block, blockId) in parlist">
+    <div :key="block._id" :class="['ilm-block', 'ilm-display', blockOutPaddings(block)]">
       <div v-if="block.type == 'illustration'" :class="block.getClass()">
         <img :class="block.getClass()" :src="block.getIllustration()"/>
         <div class="description"
@@ -42,6 +42,8 @@
         </div>
       </div>
     </div>
+    <div class="clearfix"></div>
+    </template>
     <infinite-loading @infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
   </div>
 </template>
