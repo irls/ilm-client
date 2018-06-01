@@ -1426,7 +1426,9 @@ export default {
         } else break;
       }
       this.scrollBarBlocks = resultArr;
-      this.$refs.scrollBarRef.calculateSize();
+      Vue.nextTick(()=>{
+        if (this.$refs.scrollBarRef) this.$refs.scrollBarRef.calculateSize()
+      });
     },
 
     endScrollDragging(top, left) {
@@ -1609,7 +1611,6 @@ export default {
     'startId': {
       handler(newVal, oldVal) {
         //console.log('this.startId', newVal);
-
         if (this.$refs.scrollBarRef && !this.$refs.scrollBarRef.dragging) {
           if (newVal && this.scrollBarBlocks.length) {
 
@@ -1623,7 +1624,7 @@ export default {
               scrollBarTop = currIdx * this.scrollBarBlockHeight;
             }
 
-            console.log('scrollToY1', newVal, currIdx, scrollBarTop);
+            //console.log('scrollToY1', newVal, currIdx, scrollBarTop);
             this.$refs.scrollBarRef.scrollToY(scrollBarTop);
 
           } else this.updateScrollSlider();
