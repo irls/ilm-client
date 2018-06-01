@@ -132,6 +132,9 @@ class BookBlock {
     this.realigned = init.realigned || false;
 
     this.history = {};
+
+    this.illustration_width = init.illustration_width || false;
+    this.illustration_height = init.illustration_height || false;
   }
 
   clean() {

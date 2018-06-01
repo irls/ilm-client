@@ -58,9 +58,24 @@ export default {
 <style lang="less">
   html, body, #app {
     height: 100%;
-    min-width: 1240px;
+    min-width: 1060px;
   }
   #app {
-   position: relative;
+    display:flex;
+    flex-direction: column;
   }
+
+  .area-wrapper {
+    flex-grow: 2;
+
+/*    display:flex;
+    flex-direction: row;*/
+    overflow-y:auto;
+
+    padding-top: 0px;
+
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+  }
+
 </style>

@@ -1,40 +1,39 @@
 <template>
   <div id='booksarea' v-cloak>
-    <table id='bodytable'>
-      <tr>
-        <td :class="['toolbar-wrapper', metaVisible ? 'meta-visible' : '']">
-            <BookEditToolbar v-if="isEditMode()"
-            :toggleMetaVisible="toggleMetaVisible"
-            :hasBookSelected="hasBookSelected"
-            :metaVisible="metaVisible"/>
-            <CollectionsToolbar v-else
-              :hasItemSelected="hasItemSelected"
-              :metaVisible="metaVisible"
-              @collectionAdded="onCollectionAdded"
-              @toggleMetaVisible="toggleMetaVisible"/>
+    <div :class="['content-meta-wrapper', metaVisible ? 'meta-visible' : '']">
 
-        </td> <!--collapseEditBar visible-->
-        <td class='metaedit' v-if='metaVisible' rowspan="2">
-          <CollectionMeta v-if="collectionMetaVisible"
-            @collectionRemoved="collectionRemoved"></CollectionMeta>
-          <BookMetaEdit v-if="bookMetaVisible"
-            :blocksForAlignment="blocksForAlignment"></BookMetaEdit>
-        </td>
-      </tr>
-      <tr>
-        <td class='maincontent scrollable'>
+      <BookEditToolbar v-if="isEditMode()"
+      :toggleMetaVisible="toggleMetaVisible"
+      :hasBookSelected="hasBookSelected"
+      :metaVisible="metaVisible"/>
+      <CollectionsToolbar v-else
+      :hasItemSelected="hasItemSelected"
+      :metaVisible="metaVisible"
+      @collectionAdded="onCollectionAdded"
+      @toggleMetaVisible="toggleMetaVisible"/>
+
+
+      <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">
           <template v-if="isEditMode()">
             <BookEdit v-if="bookEditMode == 'Editor'" />
             <BookEditHtml v-else-if="bookEditMode == 'HTML'" />
             <BookEditJson v-else-if="bookEditMode == 'JSON'" />
             <BookEditDisplay v-else="bookEditMode == 'Display'" />
           </template>
-          <CollectionsGrid v-else 
+          <CollectionsGrid v-else
             @selectCollection="selectCollection"
             @selectBook="selectBook"/>
-        </td>
-      </tr>
-    </table>
+      </div>
+
+    </div>
+
+    <div class='metaedit' v-if='metaVisible'>
+      <CollectionMeta v-if="collectionMetaVisible"
+        @collectionRemoved="collectionRemoved"></CollectionMeta>
+      <BookMetaEdit v-if="bookMetaVisible"
+        :blocksForAlignment="blocksForAlignment"></BookMetaEdit>
+    </div>
+
     <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}]" >
       <AudioEditor ref="audioEditor"></AudioEditor>
     </nav>
@@ -172,7 +171,7 @@
         }
         if (this.$route.params.hasOwnProperty('bookid')) {
             this.loadBook(this.$route.params.bookid);
-            
+
         }
         let self = this;
         this.$root.$on('from-bookedit:set-selection', function(start, end) {

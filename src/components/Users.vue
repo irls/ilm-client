@@ -276,11 +276,6 @@ export default {
 <style lang="less" scoped>
 
 .area-wrapper {
-  height: 100%;
-  padding-top: 43px;
-  overflow: hidden;
-  margin-bottom: -45px;
-  padding-bottom: 45px;
 
   .users-form-wrapper {
     height: 100%;

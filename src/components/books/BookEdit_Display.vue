@@ -1,8 +1,9 @@
 <template>
-  <div :class="['ilm-global-style', metaStyles]">
+  <div :class="['ilm-global-style container-fluid', metaStyles]">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
-    <div v-for="(block, blockId) in parlist" :class="['ilm-block', 'ilm-display', blockOutPaddings(block)]">
+    <div v-for="(block, blockId) in parlist" :key="block._id"
+      :class="['ilm-block', 'ilm-display', blockOutPaddings(block)]">
       <div v-if="block.type == 'illustration'" :class="block.getClass()">
         <img :class="block.getClass()" :src="block.getIllustration()"/>
         <div class="description"
@@ -168,3 +169,10 @@ export default {
   },
 }
 </script>
+
+<style lang="less" scoped>
+.container-fluid {
+  padding-top: 15px;
+  overflow-y: auto;
+}
+</style>

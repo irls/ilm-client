@@ -1,87 +1,102 @@
 <template>
-<div v-on:wheel="debounceScrollContent" ref="contentScrollWrapRef"
-  :class="['container-fluid content-scroll-wrapper ilm-global-style', metaStyles]">
+<div class="content-scroll-wrapper" v-hotkey="keymap">
+  <div v-on:wheel="throttleScrollContent" ref="contentScrollWrapRef"
+    :class="['container-fluid ilm-global-style', metaStyles]">
 
-  <!--<div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >-->
+    <!--<div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >-->
 
-    <div v-show="upScreenTop"
-    class="infinite-loading-container -up"
-    v-bind:style="{ top: upScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookUp') >-1"-->
-      <div><i class="loading-default"></i></div>
-    </div>
-
-    <!--<template v-for="(sublist, page_Idx) in parlist">-->
-    <div class="row content-scroll-item"
-      v-for="blockId in Array.from(parlistC.keys())"
-      v-bind:style="{ 'top': screenTop + 'px' }"
-      v-bind:id="'s-'+ parlistC.get(blockId)._id"
-      v-bind:key="blockId">
-      <div class='col'><!--v-if="block.isVisible"-->
-        <BookBlockView ref="blocks"
-            :block="parlist.get(blockId)"
-            :blockId = "blockId"
-            :putBlock ="putBlockProxy"
-            :getBlock ="getBlockProxy"
-            :putBlockPart ="putBlockPartProxy"
-            :reCount  ="reCountProxy"
-            :recorder ="recorder"
-            :blockReindexProcess="blockReindexProcess"
-            :getBloksUntil="getBloksUntil"
-            :allowSetStart="allowSetStart"
-            :allowSetEnd="allowSetEnd"
-            :prevId="getPrevId(blockId)"
-            :mode="mode"
-            @stopRecordingAndNext="stopRecordingAndNext"
-            @insertBefore="insertBlockBefore"
-            @insertAfter="insertBlockAfter"
-            @deleteBlock="deleteBlock"
-            :joinBlocks="joinBlocks"
-            @setRangeSelection="setRangeSelection"
-            @blockUpdated="blockUpdated"
-        />
+      <div v-show="upScreenTop"
+      class="infinite-loading-container -up"
+      v-bind:style="{ top: upScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookUp') >-1"-->
+        <div><i class="loading-default"></i></div>
       </div>
-      <!--<div class='col'>-->
-    </div>
-    <!--<div class="row"--> <!--v-show="hasScrollDown"-->
-    <div v-show="downScreenTop"
-      class="infinite-loading-container -down"
-      v-bind:style="{ top: downScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookDown') >-1"-->
-      <div><i class="loading-default"></i></div>
-    </div>
-    <!--<div v-else class="infinite-loading-container -down">
-      <div>End of book</div>
-    </div>-->
-    <!--<infinite-loading ref="scrollBookDown" v-if="scrolledDown"></infinite-loading>-->
-  <!--</div>-->
-  <!--<div class="content-scroll"-->
-    <modal v-model="doJoinBlocks.show" effect="fade" cancel-text="Close" title="Join blocks saving">
-      <div slot="modal-body" class="modal-body">Save changes and join blocks?</div>
-      <div slot="modal-footer" class="modal-footer">
-        <button type="button" class="btn btn-default" @click="doJoinBlocks.show = false;">Cancel</button>
-        <button v-if="doJoinBlocks.direction == 'previous'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
-        <button v-if="doJoinBlocks.direction == 'next'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
+
+      <!--<template v-for="(sublist, page_Idx) in parlist">-->
+      <div class="row content-scroll-item"
+        v-for="blockId in Array.from(parlistC.keys())"
+        v-bind:style="{ 'top': screenTop + 'px' }"
+        v-bind:id="'s-'+ parlistC.get(blockId)._id"
+        v-bind:key="blockId">
+        <div class='col'><!--v-if="block.isVisible"-->
+          <BookBlockView ref="blocks"
+              :block="parlist.get(blockId)"
+              :blockId = "blockId"
+              :putBlock ="putBlockProxy"
+              :getBlock ="getBlockProxy"
+              :putBlockPart ="putBlockPartProxy"
+              :reCount  ="reCountProxy"
+              :recorder ="recorder"
+              :blockReindexProcess="blockReindexProcess"
+              :getBloksUntil="getBloksUntil"
+              :allowSetStart="allowSetStart"
+              :allowSetEnd="allowSetEnd"
+              :prevId="getPrevId(blockId)"
+              :mode="mode"
+              @stopRecordingAndNext="stopRecordingAndNext"
+              @insertBefore="insertBlockBefore"
+              @insertAfter="insertBlockAfter"
+              @deleteBlock="deleteBlock"
+              :joinBlocks="joinBlocks"
+              @setRangeSelection="setRangeSelection"
+              @blockUpdated="blockUpdated"
+          />
+        </div>
+        <!--<div class='col'>-->
       </div>
-    </modal>
-    <modal v-model="unableJoinMessage" effect="fade" cancel-text="Close" title="Join blocks error">
-      <div slot="modal-body" class="modal-body">Blocks with different types can't be joined</div>
-      <div slot="modal-footer" class="modal-footer">
-        <button type="button" class="btn btn-default" @click="unableJoinMessage = false">Close</button>
+      <!--<div class="row"--> <!--v-show="hasScrollDown"-->
+      <div v-show="downScreenTop"
+        class="infinite-loading-container -down"
+        v-bind:style="{ top: downScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookDown') >-1"-->
+        <div><i class="loading-default"></i></div>
       </div>
-    </modal>
+      <!--<div v-else class="infinite-loading-container -down">
+        <div>End of book</div>
+      </div>-->
+      <!--<infinite-loading ref="scrollBookDown" v-if="scrolledDown"></infinite-loading>-->
+    <!--</div>-->
+    <!--<div class="content-scroll"-->
+      <modal v-model="doJoinBlocks.show" effect="fade" cancel-text="Close" title="Join blocks saving">
+        <div slot="modal-body" class="modal-body">Save changes and join blocks?</div>
+        <div slot="modal-footer" class="modal-footer">
+          <button type="button" class="btn btn-default" @click="doJoinBlocks.show = false;">Cancel</button>
+          <button v-if="doJoinBlocks.direction == 'previous'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
+          <button v-if="doJoinBlocks.direction == 'next'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
+        </div>
+      </modal>
+      <modal v-model="unableJoinMessage" effect="fade" cancel-text="Close" title="Join blocks error">
+        <div slot="modal-body" class="modal-body">Blocks with different types can't be joined</div>
+        <div slot="modal-footer" class="modal-footer">
+          <button type="button" class="btn btn-default" @click="unableJoinMessage = false">Close</button>
+        </div>
+      </modal>
 
-    <!--</template>-->
+      <!--</template>-->
 
-    <!--<infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>-->
+      <!--<infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>-->
 
-    <div id="narrateStartCountdown" class="modal fade in">
-      <div>
-        <strong>3</strong>
+      <div id="narrateStartCountdown" class="modal fade in">
+        <div>
+          <strong>3</strong>
+        </div>
       </div>
-    </div>
 
 
+  </div>
+  <!--<div class="container-fluid">   -->
+  <vue-scrollbar classes="custom-scroll" ref="scrollBarRef" :onChangePosition="scrollByBar"
+  :onEndDragEvent="endScrollDragging" :onScrollBarClick="scrollBarClick">
+  <div class="scroll-me" ref="scrollBarWrapRef">
+  <!--v-on:wheel="throttleScrollContent"<vue-slider ref="scrollSliderRef" direction="vertical" height="100%"
+  :min="1" :max="scrollSliderMax" :interval="1" v-model="scrollSlider"
+  :tooltip="false" :reverse="true" @callback="test1"></vue-slider>-->
+  <!--:min="0.1" :max="1.0" :interval="0.1" v-model="scrollSlider" :data="scrollBarBlocks" :piecewise="true"-->
+  <div v-for="(sBlockId, sBlockIdx) in scrollBarBlocks" :key="sBlockId" :id="'scroll-'+sBlockId" :data-id="sBlockId" ref="scrollBlocksRefs"
+  :style="{height: scrollBarBlockHeight+'px'}"></div>
+  <div class="clearfix"></div>
+  </div>
+  </vue-scrollbar>
 </div>
-<!--<div class="container">-->
+<!--<div class="content-scroll-wrapper">-->
 </template>
 
 <script>
@@ -98,6 +113,13 @@ import axios from 'axios'
 import { BookBlock, setBlockParnum }    from '../../store/bookBlock';
 import { modal }        from 'vue-strap';
 import _ from 'lodash';
+import vueSlider from 'vue-slider-component';
+
+import VueHotkey from 'v-hotkey';
+Vue.use(VueHotkey);
+
+import VueScrollbar from '../generic/vue2-scrollbar/vue-scrollbar';
+require('../generic/vue2-scrollbar/vue2-scrollbar.css');
 
 //import IlmCss from './css/ilm'
 
@@ -128,6 +150,10 @@ export default {
       upScreenTop: -85,
       downScreenTop: 0,
       screenTop: 0,
+
+      scrollBarBlocks: [],
+      scrollBarTop: 0,
+      scrollBarBlockHeight: 100,
 
       lazyLoaderDir: 'up',
       isNeedUp: true,
@@ -173,14 +199,28 @@ export default {
             }
           }
         }
-        //console.log('parlistC result', Array.from(result.keys()));
         return result;
+      },
+      keymap: function() {
+        return {
+          // 'esc+ctrl' is OK.
+          'ctrl+home': ()=>{console.log('ctrl+home')},
+          'ctrl+end': ()=>{console.log('ctrl+end')},
+          'up': ()=>{console.log('up arrow')},
+          'down': ()=>{console.log('down arrow')},
+          'pgup': ()=>{console.log('page up')},
+          'pgdn': ()=>{console.log('page down')},
+//           'enter': {
+//             keydown: ()=>{console.log('enter+keydown')},
+//             keyup: ()=>{console.log('enter+keyup')}
+//           }
+        }
       }
   },
   mixins: [access, taskControls, api_config],
   components: {
       BookBlockView, InfiniteLoading,
-      modal,
+      modal, vueSlider, VueScrollbar
   },
   methods: {
     ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange']),
@@ -200,7 +240,7 @@ export default {
     loadBookMeta() {
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.freeze('loadBookMeta');
-        console.log('loadBookMeta', this.$route.params.bookid);
+        //console.log('loadBookMeta', this.$route.params.bookid);
         return this.loadBook(this.$route.params.bookid)
         .then(()=>{
           this.unfreeze('loadBookMeta');
@@ -349,6 +389,7 @@ export default {
             let newBlock = new BookBlock(el);
             //this.parlist.set(newBlock._id, newBlock);
             this.$store.commit('set_storeList', newBlock);
+            this.updateScrollSlider();
           });
         }
         result.blockId = result.rows[0]._id;
@@ -375,6 +416,7 @@ export default {
             //this.parlist.push(newBlock);
             //this.parlist.set(newBlock._id, newBlock);
             this.$store.commit('set_storeList', newBlock);
+            this.updateScrollSlider();
           });
         } else this.hasScrollDown = false;
         result.blockId = result.rows[result.rows.length-1]._id;
@@ -1207,11 +1249,11 @@ export default {
       }, 1000);
     },
 
-    debounceScrollContent: _.throttle(function (ev) {
+    throttleScrollContent: _.throttle(function (ev) {
       this.scrollContent(ev);
     }, 30),
 
-    scrollContent(ev)
+    scrollContent(ev, step = 50)
     {
       //this.screenTop -= ((ev.deltaY!==false) ? (ev.deltaY > 0 ? 47 : -47) : 0);
       //if (true) return;
@@ -1221,12 +1263,12 @@ export default {
       //console.log('currTop', currTop, 'dataHeight', dataHeight);
       //console.log('ev.deltaY', ev.deltaY);
       //console.log('ev', ev);
-      if (ev.deltaY !== false) ev.preventDefault();
+      if (ev.deltaY !== false && ev.hasOwnProperty('preventDefault')) ev.preventDefault();
 
       if (ev.deltaY < 0 && this.blockers.indexOf('loadBookUp') >-1) return;
       if (ev.deltaY > 0 && this.blockers.indexOf('loadBookDown') >-1) return;
 
-      let step = (ev.deltaY!==false) ? (ev.deltaY > 0 ? 47 : -47) : 0;
+      step = (ev.deltaY!==false) ? (ev.deltaY > 0 ? step : -1*step) : 0;
 
       if (this.parlistC.size > 0) {
         let firstId, lastId;
@@ -1286,7 +1328,7 @@ export default {
               this.$refs.blocks.forEach(($ref)=>{
                 $ref.addContentListeners();
               });
-              if (this.blockSelection.start._id && this.blockSelection.end._id) {
+              if (this.blockSelection.start._id && this.blockSelection.end._id) { // re-check blocks
                 this.setCheckedRange(this.blockSelection.start._id, this.blockSelection.end._id);
               }
               Vue.nextTick(()=>{
@@ -1334,7 +1376,8 @@ export default {
                   this.$refs.blocks.forEach(($ref)=>{
                   $ref.addContentListeners();
                 })
-                if (this.blockSelection.start._id && this.blockSelection.end._id) {
+                if (this.blockSelection.start._id && this.blockSelection.end._id)
+                { // re-check blocks
                   this.setCheckedRange(this.blockSelection.start._id, this.blockSelection.end._id);
                 }
                 Vue.nextTick(()=>{
@@ -1356,6 +1399,7 @@ export default {
       this.screenTop = 0;
       this.startId = id;
     },
+
     getPrevId(id) {
       for (let val of this.parlist.values()) {
         if (val.chainid === id) {
@@ -1368,6 +1412,63 @@ export default {
     listenSetNum(bookId, numMask) {
       //console.log('listenSetNum', bookId, numMask);
       this.reCountProxy(numMask);
+    },
+
+    updateScrollSlider() {
+
+      let resultArr = [];
+      let crossId = this.meta.startBlock_id || this.startId;
+      if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
+        let block = this.parlist.get(crossId);
+        if (block) {
+          resultArr.push(crossId);
+          crossId = block.chainid;
+        } else break;
+      }
+      this.scrollBarBlocks = resultArr;
+      Vue.nextTick(()=>{
+        if (this.$refs.scrollBarRef) this.$refs.scrollBarRef.calculateSize()
+      });
+    },
+
+    endScrollDragging(top, left) {
+
+      let currIdx = this.scrollBarBlocks.indexOf(this.startId);
+
+      let scrollBarTop = 0;
+      try {
+        let firstHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
+        scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
+      } catch (err) {
+        scrollBarTop = currIdx * this.scrollBarBlockHeight;
+      }
+
+      this.$refs.scrollBarRef.scrollToY(scrollBarTop);
+    },
+
+    scrollByBar(top, left, direction, allowBodyScroll) {
+      //console.log('scrollByBar', top, direction, allowBodyScroll);
+
+      let currIdx = Math.floor(top/this.scrollBarBlockHeight);
+      let currId = this.scrollBarBlocks[currIdx];
+
+      switch(direction) {
+        case 'up' : {
+          this.scrollContent({deltaY: -1}, 70);
+        } break;
+        case 'down' : {
+          if (!allowBodyScroll) this.scrollContent({deltaY: 1}, 70);
+          else if (top == 0) this.scrollContent({deltaY: -1}, 70);
+        } break;
+      };
+    },
+
+    scrollBarClick(top, left) {
+      let currIdx = Math.floor(top/this.scrollBarBlockHeight);
+      let currId = this.scrollBarBlocks[currIdx];
+      console.log('scrollBarClick', top, currId);
+
+      this.scrollToBlock(currId);
     }
 
   },
@@ -1506,7 +1607,31 @@ export default {
         }
       },
       deep: true
-    }
+    },
+    'startId': {
+      handler(newVal, oldVal) {
+        //console.log('this.startId', newVal);
+        if (this.$refs.scrollBarRef && !this.$refs.scrollBarRef.dragging) {
+          if (newVal && this.scrollBarBlocks.length) {
+
+            let currIdx = this.scrollBarBlocks.indexOf(newVal);
+            let scrollBarTop = 0;
+
+            try {
+              let firstHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
+              scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
+            } catch (err) {
+              scrollBarTop = currIdx * this.scrollBarBlockHeight;
+            }
+
+            //console.log('scrollToY1', newVal, currIdx, scrollBarTop);
+            this.$refs.scrollBarRef.scrollToY(scrollBarTop);
+
+          } else this.updateScrollSlider();
+        }
+
+      }
+    },
   }
 }
 </script>
@@ -1559,25 +1684,45 @@ export default {
   }
 
   .content-scroll-wrapper {
-    height: 100%;
+    flex-grow: 2;
+
+    display:flex;
+    flex-direction: row;
+
     position: relative;
-/*     overflow: hidden; */
     overflow-y: hidden;
     overflow-x: auto;
-    .content-scroll {
+
+    .container-fluid {
+      padding-top: 15px;
+    }
+/*    .content-scroll {
       position: relative;
       top: 0;
       width: 100%;
       margin-left: -30px;
       padding-left: 30px;
-    }
+    }*/
     .content-scroll-item {
       position: relative;
       width: 100%;
     }
   }
 
+  .custom-scroll {
+    min-width: 12px;
+    max-width: 12px;
+    /*background: AntiqueWhite;*/
+    /*border-top: solid 6px blue;
+    border-bottom: solid 6px blue;*/
+    overflow-y: auto;
 
+    .vue-slider-component {
+      .vue-slider-dot {
+        left: -3px;
+      }
+    }
+  }
 
   .infinite-loading-container {
     width: 100%;

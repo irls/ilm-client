@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed-wrapper">
+  <div class="top-menu-wrapper">
   <table class="navtable">
     <tr><td class='logo'>
       <router-link to="/"><img src="../assets/ilm-logo.svg"/></router-link>
@@ -71,18 +71,21 @@ export default {
 
 
 <style scoped>
-  .fixed-wrapper {
-    width: 100%;
+  .top-menu-wrapper {
+    /*width: 100%;
     height: 43px;
     position: absolute;
-    top: 0px; left: 0px;
+    top: 0px; left: 0px;*/
+    min-height: 45px;
+    height: 45px;
+    box-shadow: inset 0px -2px 3px 0px rgba(178, 191, 224, 0.53);
   }
 
   /* Navigation Menu Table (Oh yes I did!) */
   table.navtable {
     background: #FFFFFF;
     width: 100%;
-    height: 43px;
+    height: 41px;
   }
   .navtable tr {vertical-align: top; font-size: 1.2em; }
   .navtable td {vertical-align: top; text-align: left; /*padding-top: 5px;*/}

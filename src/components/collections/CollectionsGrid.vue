@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="books_grid">
     <!-- <Grid id='collections_grid'
       :data="bookCollections"
       :columns="headers"
@@ -40,11 +40,11 @@
   import Vue from 'vue';
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
-  
+
   export default {
       name: 'CollectionsGrid',
       props: {
-        
+
       },
       components: {
         Grid: Grid
@@ -108,12 +108,12 @@
           return collection.book_match || collection.books.indexOf(this.currentBookMeta._id) !== -1;
         },
         moveBook(collection, data) {
-          if (this.allowCollectionsEdit && 
-                  typeof data.from !== 'undefined' && 
-                  typeof data.to !== 'undefined' && 
+          if (this.allowCollectionsEdit &&
+                  typeof data.from !== 'undefined' &&
+                  typeof data.to !== 'undefined' &&
                   data.from != data.to) {
-            
-            
+
+
             var dbPath = superlogin.getDbUrl('ilm_collections');
             var db = new PouchDB(dbPath);
             return db.get(collection._id)
@@ -146,7 +146,7 @@
         }
       },
       mounted() {
-        
+
       },
       computed: {
         ...mapGetters([
@@ -162,7 +162,7 @@
           get() {
             let collections = this.bookCollections;
             collections.forEach(c => {
-              
+
               let books = [];
               c.books.forEach(b => {
                 let book = this.allBooks.find(_b => {
@@ -184,7 +184,7 @@
                       let match = item.title.toLowerCase().indexOf(filter) !== -1;
                       if (!match) {
                         item.books_list = item.books_list.filter(b => {
-                          return b.title.toLowerCase().indexOf(filter) !== -1 || 
+                          return b.title.toLowerCase().indexOf(filter) !== -1 ||
                                   (b.author && b.author.join('|').toLowerCase().indexOf(filter) !== -1);
                         });
                       }
@@ -218,7 +218,7 @@
         currentCollection: {
           handler(val, oldVal) {
             if(val._id && !oldVal._id) {
-              
+
             }
           }
         }
@@ -265,7 +265,7 @@
   div.collection-container {
     border: 1px solid #ddd;
     div.collection-books-grid {
-      margin: 10px 15px;
+      padding: 0px 15px;
     }
   }
 </style>
