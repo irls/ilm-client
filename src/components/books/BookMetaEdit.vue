@@ -1188,7 +1188,7 @@ export default {
         return;
       }
       if (this.$route.matched.some(record => {
-        return record.meta.mode === 'edit'
+        return record.meta.mode === 'edit' || record.meta.mode === 'narrate'
       })) {
         let params = { block: 'unresolved' };
         if (with_task) {
