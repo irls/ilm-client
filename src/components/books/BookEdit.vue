@@ -204,12 +204,60 @@ export default {
       keymap: function() {
         return {
           // 'esc+ctrl' is OK.
-          'ctrl+home': ()=>{console.log('ctrl+home')},
-          'ctrl+end': ()=>{console.log('ctrl+end')},
-          'up': ()=>{console.log('up arrow')},
-          'down': ()=>{console.log('down arrow')},
-          'pgup': ()=>{console.log('page up')},
-          'pgdn': ()=>{console.log('page down')},
+          'ctrl+home': (ev)=>{
+            //console.log('ctrl+home');
+            this.scrollToBlock(this.meta.startBlock_id);
+          },
+          'ctrl+end': (ev)=>{
+            //console.log('ctrl+end')
+            let currId, crossId = this.meta.startBlock_id || this.startId;
+            if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
+              let block = this.parlist.get(crossId);
+              if (block) {
+                currId = crossId;
+                crossId = block.chainid;
+              } else break;
+            }
+            if (currId) this.scrollToBlock(currId);
+          },
+          'ctrl+up': (ev)=>{
+            //console.log('ctrl+up arrow');
+            let jumpStep = Math.floor(this.parlist.size * 0.1);
+            let currId, crossId = this.startId;
+            if (crossId) for (var idx=0; idx < jumpStep; idx++) {
+              let block = this.findPrevBlock(crossId);
+              if (block) {
+                currId = block._id;
+                crossId = block._id;
+              } else break;
+            }
+            if (currId) this.scrollToBlock(currId);
+          },
+          'ctrl+down': (ev)=>{
+            //console.log('ctrl+down arrow');
+            let jumpStep = Math.floor(this.parlist.size * 0.1);
+            let currId, crossId = this.startId;
+            if (crossId) for (var idx=0; idx < jumpStep; idx++) {
+              let block = this.parlist.get(crossId);
+              if (block) {
+                currId = crossId;
+                crossId = block.chainid;
+              } else break;
+            }
+            if (currId) this.scrollToBlock(currId);
+          },
+          'pgup': (ev)=>{
+            //console.log('page up');
+            ev.preventDefault();
+            let pBlock = this.findPrevBlock(this.startId);
+            if (pBlock) this.scrollToBlock(pBlock._id);
+          },
+          'pgdn': (ev)=>{
+            //console.log('page down');
+            ev.preventDefault();
+            let nextId = this.parlist.get(this.startId).chainid;
+            if (this.parlist.has(nextId)) this.scrollToBlock(nextId);
+          },
 //           'enter': {
 //             keydown: ()=>{console.log('enter+keydown')},
 //             keyup: ()=>{console.log('enter+keyup')}
@@ -1466,8 +1514,7 @@ export default {
     scrollBarClick(top, left) {
       let currIdx = Math.floor(top/this.scrollBarBlockHeight);
       let currId = this.scrollBarBlocks[currIdx];
-      console.log('scrollBarClick', top, currId);
-
+      //console.log('scrollBarClick', top, currId);
       this.scrollToBlock(currId);
     }
 
