@@ -2012,12 +2012,12 @@ export default {
       },
       selectCurrentBlock() {
         //$('#booksarea').addClass('recording-background');
-        $('.maincontent').addClass('recording-background');
+        $('.content-scroll-wrapper').addClass('recording-background');
         $('[id="' + this.block._id + '"]' + ' div.table-body.-content').addClass('recording-block');
       },
       unselectCurrentBlock() {
         //$('#booksarea').removeClass('recording-background')
-        $('.maincontent').removeClass('recording-background')
+        $('.content-scroll-wrapper').removeClass('recording-background')
         $('[id="' + this.block._id + '"]' + ' div.table-body.-content').removeClass('recording-block');
       },
       stopRecording(start_next) {

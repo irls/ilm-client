@@ -45,7 +45,7 @@ export default new Router({
           component: BookEditDisplay, meta: { mode: 'edit' }
         },
         {
-          path: 'narrate', name: 'BookNarrate',
+          path: 'narrate/:block?/:task_type?', name: 'BookNarrate',
           component: BookEdit, meta: { mode: 'narrate' }, props: { mode: 'narrate' }
         }
       ]
