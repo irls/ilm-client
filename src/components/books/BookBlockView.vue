@@ -1981,11 +1981,11 @@ export default {
       },
 
       startRecording() {
+        this.$emit('recordingState', 'recording', this.block._id);
         this.recordTimer()
         .then(() => {
           this.recordStartCounter = 0;
           this.isRecording = true;
-          this.selectCurrentBlock();
           this.recorder.startRecording();
         })
       },
@@ -2010,22 +2010,11 @@ export default {
           }, 1000);
         });
       },
-      selectCurrentBlock() {
-        //$('#booksarea').addClass('recording-background');
-        $('.content-scroll-wrapper').addClass('recording-background');
-        $('[id="' + this.block._id + '"]' + ' div.table-body.-content').addClass('recording-block');
-      },
-      unselectCurrentBlock() {
-        //$('#booksarea').removeClass('recording-background')
-        $('.content-scroll-wrapper').removeClass('recording-background')
-        $('[id="' + this.block._id + '"]' + ' div.table-body.-content').removeClass('recording-block');
-      },
       stopRecording(start_next) {
         start_next = typeof start_next === 'undefined' ? false : start_next;
         if (!this.isRecording) {
           return false;
         }
-        this.unselectCurrentBlock();
         this.isRecording = false;
         this.isRecordingPaused = false;
 
@@ -2066,7 +2055,6 @@ export default {
       },
       cancelRecording() {
         if (this.recorder) {
-          this.unselectCurrentBlock();
           this.isRecording = false;
           this.isRecordingPaused = false;
           this.recorder.stopRecording(() => {
@@ -2970,6 +2958,7 @@ export default {
       },
       'isRecording': {
         handler(val) {
+          this.$emit('recordingState', val ? 'recording' : 'stopped', this.block._id);
           if (val === true) {
             if (this.$refs.blockContent) {
               let i = setInterval(() => {

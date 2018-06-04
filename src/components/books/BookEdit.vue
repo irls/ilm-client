@@ -1,5 +1,5 @@
 <template>
-<div class="content-scroll-wrapper" v-hotkey="keymap">
+<div class="content-scroll-wrapper" :class="[{'recording-background': recordingState == 'recording'}]" v-hotkey="keymap">
   <div v-on:wheel="throttleScrollContent" ref="contentScrollWrapRef"
     :class="['container-fluid ilm-global-style', metaStyles]">
 
@@ -10,9 +10,9 @@
       v-bind:style="{ top: upScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookUp') >-1"-->
         <div><i class="loading-default"></i></div>
       </div>
-
+      
       <!--<template v-for="(sublist, page_Idx) in parlist">-->
-      <div class="row content-scroll-item"
+      <div class="row content-scroll-item" :class="[{'recording-block': recordingBlockId == blockId}]"
         v-for="blockId in Array.from(parlistC.keys())"
         v-bind:style="{ 'top': screenTop + 'px' }"
         v-bind:id="'s-'+ parlistC.get(blockId)._id"
@@ -39,6 +39,7 @@
               :joinBlocks="joinBlocks"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="blockUpdated"
+              @recordingState="setRecordingState"
           />
         </div>
         <!--<div class='col'>-->
@@ -158,6 +159,8 @@ export default {
       lazyLoaderDir: 'up',
       isNeedUp: true,
       isNeedDown: true,
+      recordingState: '',
+      recordingBlockId: null
 
     }
   },
@@ -770,7 +773,8 @@ export default {
     onMediaSuccess_msr(stream) {
       this.recorder = new mediaStreamRecorder(stream, {
         recorderType: mediaStreamRecorder.MediaStreamRecorder,
-        mimeType: 'audio/ogg'
+        mimeType: 'audio/ogg',
+        disableLogs: true
       });
     },
     initRecorder() {
@@ -780,6 +784,15 @@ export default {
         }, this.onMediaSuccess_msr, function (e) {
           console.error('media error', e);
         });
+      }
+    },
+    setRecordingState(state, blockId) {
+      this.recordingState = state;
+      if (state == 'recording') {
+        this.recordingBlockId = blockId;
+        this.scrollToBlock(blockId);
+      } else {
+        this.recordingBlockId = null;
       }
     },
     stopRecordingAndNext(block) {
@@ -1303,6 +1316,9 @@ export default {
 
     scrollContent(ev, step = 50)
     {
+      if (this.recordingState == 'recording') {
+        return;
+      }
       //this.screenTop -= ((ev.deltaY!==false) ? (ev.deltaY > 0 ? 47 : -47) : 0);
       //if (true) return;
 
@@ -1679,6 +1695,11 @@ export default {
 
       }
     },
+    'mode': {
+      handler(val) {
+        this.recordingState == '';
+      }
+    }
   }
 }
 </script>
@@ -1705,8 +1726,14 @@ export default {
       }
   }
   .recording-block {
-      background-color: white;
-      border-radius: 5px;
+      .-content {
+        background-color: white;
+        border-radius: 5px;
+        .content-wrap {
+          overflow-y: scroll;
+          max-height: 80vh;
+        }
+      }
   }
   .infinite-status-prompt {
     margin-bottom: 175px;
