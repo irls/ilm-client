@@ -11,6 +11,8 @@
 @author2_color: #466446; //darkgreen;
 @author3_color: #294E66; //#294E66; //#5C7483;
 
+@color_title_ocean: #1a1a1a;
+
 // reading point
 @audio_highlight: rgba(255,230,0, .5);
 
@@ -43,6 +45,13 @@
 @extra_padding-vertical: @normal_padding + 30;
 @outer_padding-vertical: 80px;
 @outer_padding-vertical-extra: @outer_padding-vertical + 80;
+
+// Fonts sizes
+@font_title_normal: 50pt;
+@font_title_subtitle: 27pt;
+@font_title_author: 27pt;
+@font_title_copyright: 15pt;
+@font_title_translator: 27pt;
 
 .table-body.-block { /*Outer paddings for edit mode*/
   &.outpad-top {
@@ -641,6 +650,12 @@
           text-transform: uppercase;
         }
 
+        .title {
+          margin-bottom: 0px;
+        }
+        .header {
+          margin-bottom: 0px;
+        }
       }
 
     .par {
@@ -676,15 +691,94 @@
 
     .title {
       font-family: GoudyHandtooled;
-      color: #1a1a1a;
-      text-transform: uppercase;
-      font-size: 50pt;
-      line-height: 50pt;
+      color: @color_title_ocean;
+      font-size: @font_title_normal;
+      line-height: @font_title_normal;
+
+      &.allcaps {
+        text-transform: uppercase;
+      }
+
+      &.xx-small { font-size: @font_title_normal*0.6; }
+      &.x-small { font-size: @font_title_normal*0.7; }
+      &.small { font-size: @font_title_normal*0.8; }
+      &.medium { font-size: @font_title_normal*0.9; }
+      &.large { font-size: @font_title_normal*1.1; }
+      &.x-large { font-size: @font_title_normal*1.2; }
+      &.xx-large { font-size: @font_title_normal*1.3; }
 
       &.subtitle {
         font-family: Garamond1689;
-        font-size: 40pt;
+        font-variant: small-caps;
+        font-weight: normal;
+        font-size: @font_title_subtitle;
         color: @secondary_color;
+        &.xx-small { font-size: @font_title_subtitle*0.6; }
+        &.x-small { font-size: @font_title_subtitle*0.7; }
+        &.small { font-size: @font_title_subtitle*0.8; }
+        &.medium { font-size: @font_title_subtitle*0.9; }
+        &.large { font-size: @font_title_subtitle*1.1; }
+        &.x-large { font-size: @font_title_subtitle*1.2; }
+        &.xx-large { font-size: @font_title_subtitle*1.3; }
+      }
+
+      &.author {
+        font-family: GoudyHandtooled;
+        font-size: @font_title_author;
+        color: @secondary_color;
+        &.xx-small { font-size: @font_title_author*0.6; }
+        &.x-small { font-size: @font_title_author*0.7; }
+        &.small { font-size: @font_title_author*0.8; }
+        &.medium { font-size: @font_title_author*0.9; }
+        &.large { font-size: @font_title_author*1.1; }
+        &.x-large { font-size: @font_title_author*1.2; }
+        &.xx-large { font-size: @font_title_author*1.3; }
+      }
+
+      &.translator {
+        font-family: GoudyHandtooled;
+        font-size: @font_title_translator;
+        color: @main_text_color;
+        &.xx-small { font-size: @font_title_translator*0.6; }
+        &.x-small { font-size: @font_title_translator*0.7; }
+        &.small { font-size: @font_title_translator*0.8; }
+        &.medium { font-size: @font_title_translator*0.9; }
+        &.large { font-size: @font_title_translator*1.1; }
+        &.x-large { font-size: @font_title_translator*1.2; }
+        &.xx-large { font-size: @font_title_translator*1.3; }
+      }
+
+      &.copyright {
+        font-family: GentiumPlus,"Georgia","serif";
+        font-size: @font_title_copyright;
+        line-height: @font_title_copyright;
+        color: @grayed_color;
+        &:before {
+          display: inline-block;
+          content: "©";
+          font-size: @font_title_copyright;
+        }
+        &.xx-small { font-size: @font_title_copyright*0.6;
+          &:before { font-size: @font_title_copyright*0.6; }
+        }
+        &.x-small { font-size: @font_title_copyright*0.7;
+          &:before { font-size: @font_title_copyright*0.5; }
+        }
+        &.small { font-size: @font_title_copyright*0.8;
+          &:before { font-size: @font_title_copyright*0.8; }
+        }
+        &.medium { font-size: @font_title_copyright*0.9;
+          &:before { font-size: @font_title_copyright*0.9; }
+        }
+        &.large { font-size: @font_title_copyright*1.1;
+          &:before { font-size: @font_title_copyright*1.1; }
+        }
+        &.x-large { font-size: @font_title_copyright*1.2;
+          &:before { font-size: @font_title_copyright*1.2; }
+        }
+        &.xx-large { font-size: @font_title_copyright*1.3;
+          &:before { font-size: @font_title_copyright*1.3; }
+        }
       }
     }
 
