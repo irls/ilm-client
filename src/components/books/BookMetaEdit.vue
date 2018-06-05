@@ -415,7 +415,6 @@
                         </label>
 
                       </fieldset>
-                      <span class="block-style-divider"></span>
 
                   </template>
 
@@ -1726,16 +1725,14 @@ export default {
         }
       }
     }
-    .block-style-divider {
-      float: none;
-      width: auto;
-      display: inline;
+
+    .tab-container {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      flex-wrap: wrap;
     }
-    .block-style-divider:nth-child(3n+1) {
-      content: '';
-      display: block;
-      clear: both;
-    }
+
     .block-style-label {
       display: block;
       line-height: 12px;
