@@ -84,6 +84,7 @@ export default {
     superlogin.on('logout', (message) => {
       console.log('logout?');
       this.disconnectDB();
+      location.href = '/';
     })
   },
 
