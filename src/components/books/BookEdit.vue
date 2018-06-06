@@ -1,6 +1,6 @@
 <template>
-<div class="content-scroll-wrapper" :class="[{'recording-background': recordingState == 'recording'}]" v-hotkey="keymap">
-  <div v-on:wheel="throttleScrollContent" ref="contentScrollWrapRef"
+<div class="content-scroll-wrapper" :class="[{'recording-background': recordingState == 'recording'}]" v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="handleScroll">
+  <div v-on:wheel="throttleScrollContent"
     :class="['container-fluid ilm-global-style', metaStyles]">
 
     <!--<div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >-->
@@ -10,11 +10,11 @@
       v-bind:style="{ top: upScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookUp') >-1"-->
         <div><i class="loading-default"></i></div>
       </div>
-      
+
       <!--<template v-for="(sublist, page_Idx) in parlist">-->
       <div class="row content-scroll-item" :class="[{'recording-block': recordingBlockId == blockId}]"
         v-for="blockId in Array.from(parlistC.keys())"
-        v-bind:style="{ 'top': screenTop + 'px' }"
+        v-bind:style="{ top: screenTop + 'px' }"
         v-bind:id="'s-'+ parlistC.get(blockId)._id"
         v-bind:key="blockId">
         <div class='col'><!--v-if="block.isVisible"-->
@@ -1532,6 +1532,11 @@ export default {
       let currId = this.scrollBarBlocks[currIdx];
       //console.log('scrollBarClick', top, currId);
       this.scrollToBlock(currId);
+    },
+
+    handleScroll(ev) {
+      //console.log('handleScroll');
+      this.$refs.contentScrollWrapRef.scrollTo(0,0);
     }
 
   },
