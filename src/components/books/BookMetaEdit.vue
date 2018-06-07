@@ -258,7 +258,7 @@
                   <div>
                     <label class="style-label"
                       @click="$event.target.value = ''; update('styles.global', $event)">
-                      <i v-if="currentBook.styles.global === ''"
+                      <i v-if="!currentBook.styles.global || currentBook.styles.global === ''"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                     ILM</label>
