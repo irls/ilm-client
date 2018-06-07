@@ -286,6 +286,7 @@ export default {
       let startId = this.startId;
       this.startId = false;
       this.startId = startId;
+      this.updateScrollSlider();
     },
 
     loadBookMeta() {
@@ -1049,6 +1050,7 @@ export default {
                           });
                         }
                         this.unfreeze('joinBlocks');
+                        this.updateScrollSlider();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
@@ -1111,6 +1113,7 @@ export default {
                           });
                         }
                         this.unfreeze('joinBlocks');
+                        this.updateScrollSlider();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
@@ -1478,10 +1481,11 @@ export default {
       this.reCountProxy(numMask);
     },
 
-    updateScrollSlider() {
-
+    updateScrollSlider()
+    {
       let resultArr = [];
       let crossId = this.meta.startBlock_id || this.startId;
+      //console.log('crossId', crossId);
       if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
         let block = this.parlist.get(crossId);
         if (block) {
@@ -1491,7 +1495,8 @@ export default {
       }
       this.scrollBarBlocks = resultArr;
       Vue.nextTick(()=>{
-        if (this.$refs.scrollBarRef) this.$refs.scrollBarRef.calculateSize()
+        if (this.$refs.scrollBarRef) this.$refs.scrollBarRef.calculateSize();
+        this.scrollBarUpdatePosition(this.startId);
       });
     },
 
@@ -1532,6 +1537,24 @@ export default {
       let currId = this.scrollBarBlocks[currIdx];
       //console.log('scrollBarClick', top, currId);
       this.scrollToBlock(currId);
+    },
+
+    scrollBarUpdatePosition(startId)
+    {
+      let currIdx = this.scrollBarBlocks.indexOf(startId);
+      if (currIdx > -1) {
+        let scrollBarTop = 0;
+
+        try {
+          let firstHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
+          scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
+        } catch (err) {
+          scrollBarTop = currIdx * this.scrollBarBlockHeight;
+        }
+
+        //console.log('scrollToY1', startId, currIdx, scrollBarTop, this.scrollBarBlocks.length);
+        this.$refs.scrollBarRef.scrollToY(scrollBarTop);
+      }
     },
 
     handleScroll(ev) {
@@ -1681,20 +1704,7 @@ export default {
         //console.log('this.startId', newVal);
         if (this.$refs.scrollBarRef && !this.$refs.scrollBarRef.dragging) {
           if (newVal && this.scrollBarBlocks.length) {
-
-            let currIdx = this.scrollBarBlocks.indexOf(newVal);
-            let scrollBarTop = 0;
-
-            try {
-              let firstHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
-              scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
-            } catch (err) {
-              scrollBarTop = currIdx * this.scrollBarBlockHeight;
-            }
-
-            //console.log('scrollToY1', newVal, currIdx, scrollBarTop);
-            this.$refs.scrollBarRef.scrollToY(scrollBarTop);
-
+            this.scrollBarUpdatePosition(newVal);
           } else this.updateScrollSlider();
         }
 
