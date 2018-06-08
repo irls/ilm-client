@@ -311,7 +311,7 @@ export const store = new Vuex.Store({
           };
         }
         if (!state.currentBookMeta.numeration) {
-          state.currentBookMeta.numeration = 'none';
+          state.currentBookMeta.numeration = 'x_x';
         }
       } else {
         state.currentBookMeta = {}

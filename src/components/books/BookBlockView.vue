@@ -1564,7 +1564,7 @@ export default {
           if (!endRange) {
             endRange = this._getClosestAligned(endElement, 1)
           }
-          
+
           this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]);
           this.isAudStarted = true;
           this.$root.$emit('playBlock', this.block._id);
@@ -2857,7 +2857,7 @@ export default {
         deep: true
       },
       'blockAudio.map' (newVal, oldVal) {
-        
+
       },
       'block.markedAsDone': {
         handler(val) {
@@ -2958,7 +2958,7 @@ export default {
       },
       'isRecording': {
         handler(val) {
-          this.$emit('recordingState', val ? 'recording' : 'stopped', this.block._id); 
+          this.$emit('recordingState', val ? 'recording' : 'stopped', this.block._id);
           if (val === true) {
             if (this.$refs.blockContent) {
               let i = setInterval(() => {
@@ -3049,11 +3049,9 @@ export default {
     .medium-editor-placeholder:after {
       top: -6px;
     }
-    .content-wrap {
-      /*position: relative;*/
+/*    .content-wrap {
       &.par {
         min-height: 54px;
-        /*position: relative;*/
       }
       &.title {
         min-height: 77.5px;
@@ -3064,7 +3062,7 @@ export default {
       &.subhead {
         min-height: 54.5px;
       }
-    }
+    }*/
     hr {
       position: static;
     }

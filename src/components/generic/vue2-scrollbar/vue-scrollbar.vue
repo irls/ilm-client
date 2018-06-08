@@ -21,7 +21,7 @@
         <slot></slot>
 
         <vertical-scrollbar
-          v-if="ready"
+          v-if="ready && direction === 'vertical'"
           :area="{ height: scrollAreaHeight }"
           :wrapper="{ height: scrollWrapperHeight }"
           :scrolling="vMovement"
@@ -32,7 +32,7 @@
         </vertical-scrollbar>
 
         <horizontal-scrollbar
-          v-if="ready"
+          v-if="ready && direction === 'horizontal'"
           :area="{ width: scrollAreaWidth }"
           :wrapper="{ width: scrollWrapperWidth }"
           :scrolling="hMovement"
@@ -59,6 +59,7 @@
     props: {
       classes: String,
       styles: Object,
+      direction: String,
       speed: {
         type: Number,
         default: 40
