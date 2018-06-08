@@ -84,7 +84,7 @@
 
   </div>
   <!--<div class="container-fluid">   -->
-  <vue-scrollbar classes="custom-scroll" ref="scrollBarRef" :onChangePosition="scrollByBar"
+  <vue-scrollbar classes="custom-scroll" ref="scrollBarRef" :onChangePosition="scrollByBar" direction="vertical"
   :onEndDragEvent="endScrollDragging" :onScrollBarClick="scrollBarClick">
   <div class="scroll-me" ref="scrollBarWrapRef">
   <!--v-on:wheel="throttleScrollContent"<vue-slider ref="scrollSliderRef" direction="vertical" height="100%"
@@ -286,7 +286,8 @@ export default {
       let startId = this.startId;
       this.startId = false;
       this.startId = startId;
-      this.updateScrollSlider(); console.log('refreshTmpl');
+      //this.$forceUpdate();
+      this.updateScrollSlider();
     },
 
     loadBookMeta() {
@@ -451,7 +452,7 @@ export default {
       })
       .catch((err)=>{
         console.log('BlocksUp Error: ', err.message);
-        this.updateScrollSlider();
+        this.refreshTmpl();
         return Promise.reject(err);
       });
     },
@@ -479,7 +480,7 @@ export default {
       })
       .catch((err)=>{
         console.log('BlocksDown Error: ', err.message);
-        this.updateScrollSlider();
+        this.refreshTmpl();
         this.hasScrollDown = false;
         return Promise.reject(err);
       });
@@ -723,8 +724,9 @@ export default {
 
     reCountProxy: function (numMask = false) {
       this.parCounter = { pref: 0, prefCnt: 0, curr: 1 };
-      let crossId = this.meta.startBlock_id;//this.startId;
-      numMask = numMask || this.meta.numeration || 'x_x';
+      let crossId = (this.isNeedUp && this.isNeedUp!==true) ? this.isNeedUp : this.meta.startBlock_id;//this.startId;
+      //console.log(numMask, this.meta.numeration);
+      numMask = numMask || this.meta.numeration;
       for (var idx=0; idx < this.parlist.size; idx++) {
         let block = this.parlist.get(crossId);
         if (block) {
@@ -1486,7 +1488,7 @@ export default {
 
     throttleScrollUpdate: _.throttle(function () {
       if (this.$refs.scrollBarRef) {
-        //this.$refs.scrollBarRef.calculateSize();
+        this.$refs.scrollBarRef.calculateSize();
         this.scrollBarUpdatePosition(this.startId);
       }
     }, 400),
@@ -1515,12 +1517,14 @@ export default {
 
     scrollBarUpdatePosition(startId)
     {
+      startId = startId || this.startId;
       let currIdx = this.scrollBarBlocks.indexOf(startId);
+      //console.log('scrollBarUpdatePosition', currIdx, this.scrollBarBlocks.length);
       if (currIdx > -1) {
         let scrollBarTop = 0;
 
         try {
-          let firstHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
+          let firstHeight = document.getElementById('s-'+ startId).getBoundingClientRect().height;
           scrollBarTop = (currIdx * this.scrollBarBlockHeight) + Math.floor(Math.abs(this.screenTop) * this.scrollBarBlockHeight / firstHeight);
         } catch (err) {
           scrollBarTop = currIdx * this.scrollBarBlockHeight;
