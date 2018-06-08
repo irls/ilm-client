@@ -279,7 +279,7 @@ export default {
 
   .users-form-wrapper {
     height: 100%;
-    overflow: auto;
+    /*overflow: auto;*/
     margin-top: 2px;
   }
 
