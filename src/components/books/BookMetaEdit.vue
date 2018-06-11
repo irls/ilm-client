@@ -241,6 +241,9 @@
               </template>
             </table> -->
           </fieldset>
+          <template v-if="isAdmin || isLibrarian || _is('editor', true)">
+            <a v-if="currentBook.published && currentBook.demo" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()" -->
+          </template>
         </vue-tab>
 
         <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!allowMetadataEdit">
@@ -1454,6 +1457,10 @@ export default {
         this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration);
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
+    },
+    
+    downloadDemo() {
+        return this.SERVER_URL + this.currentBook.demo
     },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'freeze', 'unfreeze', 'blockers'])
