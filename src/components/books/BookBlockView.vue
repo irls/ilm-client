@@ -705,7 +705,7 @@ export default {
       },
       footnVoiceworks: function () {
         return {
-          'tts': 'Text to Speach',
+          'tts': 'Text to Speech',
           'no_audio': 'No audio'
         }
       },
