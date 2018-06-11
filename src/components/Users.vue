@@ -195,9 +195,9 @@ export default {
         request[field] = new_value
         axios.patch(API_ALLUSERS + '/' + user_id, request).then(response => {
 
-          if (response.data.ok === true) {
+          //if (response.data.ok === true) {
+          if (response.status === 200) {
             user[field] = new_value
-            //console.log('Update', user, self.users)
           }
         })
       }
@@ -279,7 +279,7 @@ export default {
 
   .users-form-wrapper {
     height: 100%;
-    overflow: auto;
+    /*overflow: auto;*/
     margin-top: 2px;
   }
 

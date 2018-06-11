@@ -261,7 +261,7 @@
                   <div>
                     <label class="style-label"
                       @click="$event.target.value = ''; update('styles.global', $event)">
-                      <i v-if="currentBook.styles.global === ''"
+                      <i v-if="!currentBook.styles.global || currentBook.styles.global === ''"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                     ILM</label>
@@ -392,7 +392,7 @@
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
                       <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length" :key="styleKey" class="block-style-fieldset">
-                      <legend>{{styleKey}}</legend>
+                      <legend>{{styleCaption(blockType, styleKey)}}</legend>
 
                         <label v-for="sVal in styleArr"
                           @click="selectStyle(blockType, styleKey, sVal)"
@@ -418,7 +418,6 @@
                         </label>
 
                       </fieldset>
-                      <span class="block-style-divider"></span>
 
                   </template>
 
@@ -598,8 +597,10 @@ export default {
       subjectCategories: [
         'Stories', 'Verse', 'History', 'Ideas', 'Science'
       ],
+      styleTitles: {
+        'title_style': 'type'
+      },
       languages: Languages,
-      numberingOptions: ['x', 'x.x', 'x.x.x'],
       dirty: {
       },
       visible: true,
@@ -1463,6 +1464,14 @@ export default {
         return this.SERVER_URL + this.currentBook.demo
     },
 
+    styleCaption(type, key) {
+      if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {
+        let caption = this.styleTitles[`${type}_${key}`];
+        return caption.charAt(0).toUpperCase() + caption.slice(1);
+      }
+      return key.charAt(0).toUpperCase() + key.slice(1);
+    },
+
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'freeze', 'unfreeze', 'blockers'])
   }
 }
@@ -1733,16 +1742,14 @@ export default {
         }
       }
     }
-    .block-style-divider {
-      float: none;
-      width: auto;
-      display: inline;
+
+    .tab-container {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      flex-wrap: wrap;
     }
-    .block-style-divider:nth-child(3n+1) {
-      content: '';
-      display: block;
-      clear: both;
-    }
+
     .block-style-label {
       display: block;
       line-height: 12px;
@@ -1782,6 +1789,12 @@ export default {
         text-transform: capitalize;
       }
     }
+
+    /*.block-style-fieldset {
+      legend {
+        text-transform: capitalize;
+      }
+    }*/
   }
 
 </style>
