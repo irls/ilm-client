@@ -686,7 +686,7 @@ export default {
       blockVoiceworks: function () {
         return {
           'audio_file': 'Audio file',
-          'tts': 'Text to Speach',
+          'tts': 'Text to Speech',
           'narration': 'Narration',
           'no_audio': 'No audio'
         }
