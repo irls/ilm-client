@@ -1461,7 +1461,7 @@ export default {
     },
     
     downloadDemo() {
-        return this.SERVER_URL + this.currentBook.demo
+        return this.API_URL + 'books/' + this.currentBook._id + '/demo';
     },
 
     styleCaption(type, key) {
