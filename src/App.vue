@@ -63,6 +63,7 @@ export default {
   #app {
     display:flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
   .area-wrapper {

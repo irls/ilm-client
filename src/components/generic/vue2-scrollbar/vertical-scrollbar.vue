@@ -184,3 +184,15 @@
   }
 
 </script>
+
+<style lang="less">
+.custom-scroll {
+
+  .vue-scrollbar__scrollbar-vertical {
+    width: 15px;
+    .scrollbar {
+      width: 15px;
+    }
+  }
+}
+</style>

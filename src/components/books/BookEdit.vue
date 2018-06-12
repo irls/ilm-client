@@ -213,15 +213,21 @@ export default {
           },
           'ctrl+end': (ev)=>{
             //console.log('ctrl+end')
-            let currId, crossId = this.meta.startBlock_id || this.startId;
-            if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
-              let block = this.parlist.get(crossId);
-              if (block) {
-                currId = crossId;
-                crossId = block.chainid;
-              } else break;
+            if (this.meta.endBlock_id) {
+              this.scrollToBlock(this.meta.endBlock_id)
             }
-            if (currId) this.scrollToBlock(currId);
+              else
+            {
+              let currId, crossId = this.meta.startBlock_id || this.startId;
+              if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
+                let block = this.parlist.get(crossId);
+                if (block) {
+                  currId = crossId;
+                  crossId = block.chainid;
+                } else break;
+              }
+              if (currId) this.scrollToBlock(currId);
+            }
           },
           'ctrl+up': (ev)=>{
             //console.log('ctrl+up arrow');
@@ -312,7 +318,7 @@ export default {
       this.isNeedUp = firstId || this.isNeedUp;
       this.isNeedDown = lastId || this.isNeedDown;
 
-      //console.log('lazyLoaderDir2', this.lazyLoaderDir, this.isNeedUp, this.isNeedDown);
+      //console.log('lazyLoader',this.isNeedUp, this.isNeedDown);
 
       if (!this.isBlocked && (this.isNeedUp || this.isNeedDown)) {
         switch(this.lazyLoaderDir) {
@@ -1630,7 +1636,8 @@ export default {
             this.startId = false;
             this.loadBookDown(false, false, 10)
             .then(()=>{
-              this.setBlockWatch()
+              this.setBlockWatch();
+              this.$root.$emit('from-book-meta:upd-toc', true);
             });
           });
         })
@@ -1816,8 +1823,8 @@ export default {
   }
 
   .custom-scroll {
-    min-width: 12px;
-    max-width: 12px;
+    min-width: 15px;
+    max-width: 15px;
     /*background: AntiqueWhite;*/
     /*border-top: solid 6px blue;
     border-bottom: solid 6px blue;*/
