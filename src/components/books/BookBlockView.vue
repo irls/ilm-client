@@ -197,7 +197,7 @@
               <div class="par-ctrl -audio -hidden -right" v-if="mode !== 'narrate'">
                   <template v-if="player && blockAudio.src && !isRecording">
                       <template v-if="!isAudStarted">
-                        <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id)"></i>
+                        <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating"></i>
                         <i class="fa fa-play-circle-o"
                           @click="audPlay(block._id, $event)"></i>
                         <i class="fa fa-stop-circle-o disabled"></i>
@@ -262,7 +262,7 @@
                 <div v-else class="content-wrap"
                 :id="'content-'+block._id"
                 ref="blockContent"
-                v-html="blockContent"
+                v-html="mode === 'narration' ? blockContent : block.content"
                 :class="[ block.getClass(), {
                   'updated': isUpdated,
                   'checked': block.checked,
@@ -1326,6 +1326,8 @@ export default {
             this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
             this.block.content = this.block.content.replace(/<br class="narrate-split"[^>]*>/g, '')
             this.block.content = this.block.content.replace('<span class="content-tail"></span>', '');
+            this.block.content = this.block.content.replace(/&nbsp;/g, ' ')
+            this.block.content = this.block.content.replace(/^<p[^>]*>(.*)<\/p>$/g, '$1')
             if (this.block.footnotes && this.block.footnotes.length) {
               this.block.footnotes.forEach((footnote, footnoteIdx)=>{
                 this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
@@ -1349,6 +1351,7 @@ export default {
           if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1)) {
             this.$emit('blockUpdated', this.block._id);
           }
+          let is_content_changed = this.hasChange('content');
           this.isChanged = false;
           if (this.blockAudio.map) {
             this.blockAudio.map = this.block.content;
@@ -1356,7 +1359,9 @@ export default {
           if (this.isAudioEditing) {
             this.$root.$emit('for-audioeditor:reload-text', this.block.content);
           }
-          if (this.$refs.blockContent) {
+          if (is_content_changed && this.block.audiosrc) {
+            this.doReAlign();
+          } else if (this.$refs.blockContent) {
             if (this.$refs.blockContent.dataset.has_suggestion) {
               if (this.$refs.blockContent.dataset.has_suggestion === 'true') {
                 //console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
@@ -2339,7 +2344,7 @@ export default {
                     $(_w).attr('data-map', w_map)
                   });
                   self.audioEditFootnote.footnote.content = ref.innerHTML;
-                  self.isChanged = true;
+                  //self.isChanged = true;
                   self.pushChange('footnotes');
                   self.pushChange('content_footnote');
                 }
@@ -2352,7 +2357,7 @@ export default {
                   });
                   self.block.content = self.$refs.blockContent.innerHTML;
                   self.blockAudio.map = self.block.content;
-                  self.isChanged = true;
+                  //self.isChanged = true;
                   self.pushChange('content');
                 }
               }
@@ -2670,6 +2675,9 @@ export default {
       },
       flushChanges() {
         this.changes = [];
+      },
+      hasChange(change) {
+        return this.changes && this.changes.indexOf(change) !== -1;
       },
       unsetChange(change) {
         let index = this.changes.indexOf(change);

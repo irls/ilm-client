@@ -702,6 +702,8 @@
             self.clearLocks({type: 'align'});
           }).catch((err) => {
             console.log('error: '+ err)
+            self.aligningBlocks = [];
+            self.clearLocks({type: 'align'});
           });
         //}
       },
