@@ -1197,7 +1197,7 @@ export const store = new Vuex.Store({
 
       (function loop(i, block_id) {
 
-        if (i < params.onpage && block_id) {
+        if ((typeof params.onpage === 'undefined' || i < params.onpage) && block_id) {
           dispatch('getBlock', block_id)
           .then((b)=>{
             if (b && b._id) {
