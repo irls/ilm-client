@@ -115,20 +115,33 @@ export default {
     },
     user_passwordreset (email) {
       var self = this
-      axios.post(process.env.ILM_API + '/api/v1/new-password', {'email': email}).then(function(response){
-        console.log(response)
-        if (response.data.ok === true) {
-          self.active = 'login'
-        } else {
-
-        }
-      })
-      .catch(function(e){
-        //console.log(e.response.data.message)
+      if (email.length == 0){
         self.hasPasswordResetError = true
-        self.passwordResetError = e.response.data.message
+        self.passwordResetError = 'Please enter email to send you a password reset link'
         setTimeout(function(){self.hasPasswordResetError = false}, 5000)
-      })
+      } else {
+        if (!/\S+@\S+\.\S+/.test(email)) {
+          self.hasPasswordResetError = true
+          self.passwordResetError = 'Incorrect email format'
+          setTimeout(function(){self.hasPasswordResetError = false}, 5000)
+        } else {
+          axios.post(process.env.ILM_API + '/api/v1/new-password', {'email': email}).then(function(response){
+            console.log(response)
+            if (response.data.ok === true) {
+              self.active = 'login'
+            } else {
+
+            }
+          })
+          .catch(function(e){
+            //console.log(e.response.data.message)
+            self.hasPasswordResetError = true
+            self.passwordResetError = e.response.data.message
+            //self.passwordResetError = 'ILM account for this email is not found'
+            setTimeout(function(){self.hasPasswordResetError = false}, 5000)
+          })
+        }
+      }
     },
     keycheck (event) {
       if (event.key === 'Enter') this.user_login()
