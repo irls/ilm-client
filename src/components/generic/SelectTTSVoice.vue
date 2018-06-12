@@ -28,7 +28,7 @@ export default {
       text: false,
       audio64: '',
       config: {
-        allowClear: true,
+        allowClear: false,
         placeholder: 'Please select a voice'
       }
     }
