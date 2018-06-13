@@ -1321,15 +1321,10 @@ export default {
             this.block.voicework = 'no_audio';
             break;
           default:
-            this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
-            this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
-            this.block.content = this.block.content.replace(/<br class="narrate-split"[^>]*>/g, '')
-            this.block.content = this.block.content.replace('<span class="content-tail"></span>', '');
-            this.block.content = this.block.content.replace(/&nbsp;/g, ' ')
-            this.block.content = this.block.content.replace(/^<p[^>]*>(.*)<\/p>$/g, '$1')
+            this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
             if (this.block.footnotes && this.block.footnotes.length) {
               this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-                this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
+                this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
               });
             }
             break;
@@ -1374,6 +1369,19 @@ export default {
             this.setCurrentBookCounters(['not_marked_blocks']);
           }
         });
+      },
+      clearBlockContent: function(content) {
+        //console.log(content)
+        content = content.replace(/(<[^>]+)(selected)/g, '$1');
+        content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+        content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
+        content = content.replace('<span class="content-tail"></span>', '');
+        content = content.replace(/&nbsp;/gm, ' ')
+        content = content.replace(/<p[^>]*>([\s\S]*?)<\/p>/gm, '<br/>$1')
+        content = content.replace(/<p[^>]*><\/p>/gm, '')
+        content = content.replace(/^<br[\/]?>/gm, '')
+        content = content.replace(/<span[^>]*>([\s\S]*?)<\/span>/gm, '$1')
+        return content;
       },
 
       checkBlockContentFlags: function() {
