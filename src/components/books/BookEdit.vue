@@ -84,18 +84,33 @@
 
   </div>
   <!--<div class="container-fluid">   -->
-  <vue-scrollbar classes="custom-scroll" ref="scrollBarRef" :onChangePosition="scrollByBar" direction="vertical"
+  <div class="custom-scroll">
+  <div class="vue-scrollbar__up"
+    @click.prevent="()=>{return true;}"
+    @touchstart="scrollByBarStart('up')"
+    @mousedown="scrollByBarStart('up')"
+    @touchend="scrollByBarEnd()"
+    @mouseup="scrollByBarEnd()">
+    <i aria-hidden="true" class="fa fa-angle-up"></i>
+  </div>
+  <vue-scrollbar classes="" ref="scrollBarRef" :onChangePosition="scrollByBar" direction="vertical"
   :onEndDragEvent="endScrollDragging" :onScrollBarClick="scrollBarClick">
   <div class="scroll-me" ref="scrollBarWrapRef">
-  <!--v-on:wheel="throttleScrollContent"<vue-slider ref="scrollSliderRef" direction="vertical" height="100%"
-  :min="1" :max="scrollSliderMax" :interval="1" v-model="scrollSlider"
-  :tooltip="false" :reverse="true" @callback="test1"></vue-slider>-->
-  <!--:min="0.1" :max="1.0" :interval="0.1" v-model="scrollSlider" :data="scrollBarBlocks" :piecewise="true"-->
   <div v-for="(sBlockId, sBlockIdx) in scrollBarBlocks" :key="sBlockId" :id="'scroll-'+sBlockId" :data-id="sBlockId" ref="scrollBlocksRefs"
   :style="{height: scrollBarBlockHeight+'px'}"></div>
   <div class="clearfix"></div>
   </div>
   </vue-scrollbar>
+  <div class="vue-scrollbar__down"
+    @click.prevent="()=>{return true;}"
+    @touchstart="scrollByBarStart('down')"
+    @mousedown="scrollByBarStart('down')"
+    @touchend="scrollByBarEnd()"
+    @mouseup="scrollByBarEnd()">
+    <i aria-hidden="true" class="fa fa-angle-down"></i>
+  </div>
+  </div>
+  <!--<div class="custom-scroll">-->
 </div>
 <!--<div class="content-scroll-wrapper">-->
 </template>
@@ -155,6 +170,7 @@ export default {
       scrollBarBlocks: [],
       scrollBarTop: 0,
       scrollBarBlockHeight: 100,
+      scrollBarBlockTimer: null,
 
       lazyLoaderDir: 'up',
       isNeedUp: true,
@@ -1556,13 +1572,13 @@ export default {
       this.$refs.scrollBarRef.scrollToY(scrollBarTop);
     },
 
-    scrollByBar(top, left, direction, allowBodyScroll) {
+    scrollByBar(top, left, dir, allowBodyScroll) {
       //console.log('scrollByBar', top, direction, allowBodyScroll);
 
-      let currIdx = Math.floor(top/this.scrollBarBlockHeight);
-      let currId = this.scrollBarBlocks[currIdx];
+      //let currIdx = Math.floor(top/this.scrollBarBlockHeight);
+      //let currId = this.scrollBarBlocks[currIdx];
 
-      switch(direction) {
+      switch(dir) {
         case 'up' : {
           this.scrollContent({deltaY: -1}, 70);
         } break;
@@ -1571,6 +1587,29 @@ export default {
           else if (top == 0) this.scrollContent({deltaY: -1}, 70);
         } break;
       };
+    },
+
+    scrollByBarButton(dir = 'up') {
+      switch(dir) {
+        case 'up' : {
+          this.scrollContent({deltaY: -1}, 70);
+        } break;
+        case 'down' : {
+          this.scrollContent({deltaY: 1}, 70);
+        } break;
+      };
+    },
+
+    scrollByBarStart(dir = 'up') {
+      if (this.scrollBarBlockTimer) clearInterval(this.scrollBarBlockTimer);
+      this.scrollByBarButton(dir);
+      this.scrollBarBlockTimer = window.setInterval(()=>{
+        this.scrollByBarButton(dir);
+      }, 100);
+    },
+
+    scrollByBarEnd() {
+      if (this.scrollBarBlockTimer) clearInterval(this.scrollBarBlockTimer);
     },
 
     scrollBarClick(top, left) {
@@ -1809,31 +1848,9 @@ export default {
     .container-fluid {
       padding-top: 15px;
     }
-/*    .content-scroll {
-      position: relative;
-      top: 0;
-      width: 100%;
-      margin-left: -30px;
-      padding-left: 30px;
-    }*/
     .content-scroll-item {
       position: relative;
       width: 100%;
-    }
-  }
-
-  .custom-scroll {
-    min-width: 15px;
-    max-width: 15px;
-    /*background: AntiqueWhite;*/
-    /*border-top: solid 6px blue;
-    border-bottom: solid 6px blue;*/
-    overflow-y: auto;
-
-    .vue-slider-component {
-      .vue-slider-dot {
-        left: -3px;
-      }
     }
   }
 

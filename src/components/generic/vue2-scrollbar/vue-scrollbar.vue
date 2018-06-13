@@ -43,16 +43,6 @@
         </horizontal-scrollbar>
 
     </div>
-
-    <template v-if="ready && direction === 'vertical'">
-      <div class="vue-scrollbar__up"></div>
-      <div class="vue-scrollbar__down"></div>
-    </template>
-
-    <template v-if="ready && direction === 'horizontal'">
-
-    </template>
-
   </div>
 
 </template>
@@ -357,20 +347,49 @@
   margin-bottom: 20px;*/
 }
 
-.vue-scrollbar__wrapper {
+.custom-scroll {
+  min-width: 15px;
+  max-width: 15px;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+
+  .vue-scrollbar__wrapper {
+    margin: 0;
+    flex-grow: 2;
+  }
+
   .vue-scrollbar__up {
-    position: absolute;
-    top: -20px;
-    width: 15px;
-    height: 20px;
-    /*background: red;*/
+    min-height: 20px;
+    max-height: 20px;
+    transition: all 0.5s ease;
+    .fa {
+      display: block;
+      width: 15px;
+      height: 20px;
+      padding-top: 1px;
+      text-align: center;
+    }
   }
   .vue-scrollbar__down {
-    position: absolute;
-    bottom: -20px;
-    width: 15px;
-    height: 20px;
-    /*background: red;*/
+    min-height: 20px;
+    max-height: 20px;
+    transition: all 0.5s ease;
+    .fa {
+      display: block;
+      width: 15px;
+      height: 20px;
+      padding-top: 1px;
+      text-align: center;
+    }
+  }
+
+  &:hover {
+    .vue-scrollbar__up, .vue-scrollbar__down {
+      background: rgba(0, 0, 0, 0.2);
+    }
   }
 }
 </style>
