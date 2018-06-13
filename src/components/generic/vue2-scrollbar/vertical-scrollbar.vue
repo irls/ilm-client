@@ -5,7 +5,10 @@
       v-if="height < 100"
       class="vue-scrollbar__scrollbar-vertical"
       ref="container"
-      @click="jump">
+      @click="jump"
+      :style="{
+        'padding-bottom': padding+'px'
+      }">
 
       <div
         :class="'scrollbar' + ( dragging || draggingFromParent ? '' : ' vue-scrollbar-transition')"
@@ -40,11 +43,11 @@
     data () {
       return  {
         height: 0,
+        padding: 0,
         dragging: false,
         start: 0
       }
     },
-
 
     watch: {
       'wrapper.height' (val, old) {
@@ -89,6 +92,8 @@
 
           let yMovement = e.clientY - this.start
           let yMovementPercentage = yMovement / this.wrapper.height * 100
+
+          //console.log(yMovement, yMovementPercentage);
 
           // Update the last e.clientY
           this.start = e.clientY
@@ -139,6 +144,8 @@
 
       calculateSize(source){
         // Scrollbar Height
+        this.padding = source.wrapper.height * source.wrapper.height / source.area.height;
+
         let height = source.wrapper.height / source.area.height * 100;
         this.height = height > 5 ? height : 5;
       },
