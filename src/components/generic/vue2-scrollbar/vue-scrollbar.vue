@@ -44,6 +44,15 @@
 
     </div>
 
+    <template v-if="ready && direction === 'vertical'">
+      <div class="vue-scrollbar__up"></div>
+      <div class="vue-scrollbar__down"></div>
+    </template>
+
+    <template v-if="ready && direction === 'horizontal'">
+
+    </template>
+
   </div>
 
 </template>
@@ -200,6 +209,7 @@
 
         // Vertical Scrolling
         const lowerEnd = elementSize.scrollAreaHeight - elementSize.scrollWrapperHeight
+        //console.log('elementSize.scrollWrapperHeight', elementSize.scrollWrapperHeight);
 
         // Max Scroll Down
         const maxBottom = next > lowerEnd
@@ -288,6 +298,8 @@
           // Scroll Wrapper Height and Width
           scrollWrapperHeight: $scrollWrapper.clientHeight,
           scrollWrapperWidth: $scrollWrapper.clientWidth,
+
+
         }
         return elementSize
       },
@@ -338,3 +350,27 @@
   }
 
 </script>
+
+<style lang="less">
+.custom-scroll.vue-scrollbar__wrapper {
+/*  margin-top: 20px;
+  margin-bottom: 20px;*/
+}
+
+.vue-scrollbar__wrapper {
+  .vue-scrollbar__up {
+    position: absolute;
+    top: -20px;
+    width: 15px;
+    height: 20px;
+    /*background: red;*/
+  }
+  .vue-scrollbar__down {
+    position: absolute;
+    bottom: -20px;
+    width: 15px;
+    height: 20px;
+    /*background: red;*/
+  }
+}
+</style>

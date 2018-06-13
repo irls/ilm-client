@@ -55,7 +55,8 @@ export default {
 
   data () {
     return {
-      tocs: []
+      tocs: [],
+      currBookId: this.bookId
     }
   },
 
@@ -78,7 +79,7 @@ export default {
     },
     loadBookTocProxy(isWait = false) {
       if (!isWait) this.freeze('loadBookToc');
-      this.loadBookToc({bookId: this.bookId, isWait: isWait})
+      this.loadBookToc({bookId: this.currBookId, isWait: isWait})
       .then((res)=>{
         this.tocs = res.data;
         this.unfreeze('loadBookToc');
@@ -90,17 +91,17 @@ export default {
   },
 
   mounted () {
-    //console.log('mounted TOC', this.bookId);
+    //console.log('mounted TOC', this.currBookId);
     this.loadBookTocProxy();
     this.$root.$on('from-book-meta:upd-toc', this.loadBookTocProxy)
   },
 
   watch: {
     '$route' () {
-      //console.log('$route', this.bookId, this.$route.params.bookid);
+      //console.log('$route', this.currBookId, this.$route.params.bookid);
       if (this.$route.params.hasOwnProperty('bookid')) {
-        if (this.bookId !== this.$route.params.bookid) {
-          this.bookId = this.$route.params.bookid;
+        if (this.currBookId !== this.$route.params.bookid) {
+          this.currBookId = this.$route.params.bookid;
           this.loadBookTocProxy();
         }
       }
