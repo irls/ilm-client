@@ -20,15 +20,18 @@
         <h3 class='title'>Request Forgot Password Link</h3>
         <div class="error-message" v-text="passwordError"></div>
         <input type="text" name="email" placeholder="Email" v-model="passwordEmail">
-        <input type="submit" :class="{'disabled': !passwordEmail}" @click="user_passwordreset(passwordEmail)" value='Email Login Link'>
+        <input type="submit" :class="{'disabled': !passwordEmail || hasPasswordResetSuccess}" :disabled="hasPasswordResetSuccess" @click="user_passwordreset(passwordEmail)" value='Send Login Link'>
         <div class="links"><a @click="active = 'login'"> <i class="fa fa-arrow-left"></i> Back to Login</a></div>
       </div>
     </div>
   </div>
   <alert v-show="hasPasswordResetError" placement="top" duration="" type="danger" width="400px">
     <span class="icon-info-circled alert-icon-float-left"></span>
-
     <p>{{passwordResetError}}</p>
+  </alert>
+  <alert v-show="hasPasswordResetSuccess" placement="top" duration="" type="success" width="400px">
+    <span class="icon-info-circled alert-icon-float-left"></span>
+    <p>{{passwordResetSuccess}}</p>
   </alert>
 </div>
 </template>
@@ -54,7 +57,9 @@ export default {
       loginError: '',
       passwordError: '',
       hasPasswordResetError: false,
-      passwordResetError: ''
+      hasPasswordResetSuccess: false,
+      passwordResetError: '',
+      passwordResetSuccess: ''
     }
   },
 
@@ -115,20 +120,34 @@ export default {
     },
     user_passwordreset (email) {
       var self = this
-      axios.post(process.env.ILM_API + '/api/v1/new-password', {'email': email}).then(function(response){
-        console.log(response)
-        if (response.data.ok === true) {
-          self.active = 'login'
-        } else {
-
-        }
-      })
-      .catch(function(e){
-        //console.log(e.response.data.message)
+      if (email.length == 0){
         self.hasPasswordResetError = true
-        self.passwordResetError = e.response.data.message
+        self.passwordResetError = 'Please enter email to send you a password reset link'
         setTimeout(function(){self.hasPasswordResetError = false}, 5000)
-      })
+      } else {
+        if (!/\S+@\S+\.\S+/.test(email)) {
+          self.hasPasswordResetError = true
+          self.passwordResetError = 'Incorrect email format'
+          setTimeout(function(){self.hasPasswordResetError = false}, 5000)
+        } else {
+          axios.post(process.env.ILM_API + '/api/v1/new-password', {'email': email}).then(function(response){
+            console.log(response)
+            if (response.data.ok === true) {
+              //self.active = 'login'
+              self.hasPasswordResetSuccess = true
+              self.passwordResetSuccess = 'Link to reset password has been sent to your email'
+              setTimeout(function(){self.hasPasswordResetSuccess = false}, 5000)
+            } else {
+            }
+          })
+          .catch(function(e){
+            self.hasPasswordResetError = true
+            //self.passwordResetError = e.response.data.message
+            self.passwordResetError = 'ILM account for this email is not found'
+            setTimeout(function(){self.hasPasswordResetError = false}, 5000)
+          })
+        }
+      }
     },
     keycheck (event) {
       if (event.key === 'Enter') this.user_login()

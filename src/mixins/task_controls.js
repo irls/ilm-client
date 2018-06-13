@@ -71,7 +71,7 @@ export default {
         }
       },
       tc_showBlockAudioEdit(blockid) {
-        if (this.tc_hasTask('content_cleanup')) {
+        if (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering')) {
           return true;
         }
         if (!this.$store.state.tc_tasksByBlock[blockid]) {
