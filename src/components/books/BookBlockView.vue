@@ -262,7 +262,7 @@
                 <div v-else class="content-wrap"
                 :id="'content-'+block._id"
                 ref="blockContent"
-                v-html="mode === 'narration' ? blockContent : block.content"
+                v-html="mode === 'narrate' ? blockContent : block.content"
                 :class="[ block.getClass(), {
                   'updated': isUpdated,
                   'checked': block.checked,
