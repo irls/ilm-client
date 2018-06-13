@@ -1173,9 +1173,8 @@ export default {
         this.setRangeSelection('byOne', $event)
       },
       onContext: function(e) {
-        $('.medium-editor-toolbar').each(function(){
-            $(this).css('display', 'none');
-        });
+        e.preventDefault();
+        e.stopPropagation();
         this.range = window.getSelection().getRangeAt(0).cloneRange();
         if (this.$refs.blockCntx) {
           this.$refs.blockCntx.open(e, this.range);

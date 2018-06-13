@@ -72,6 +72,9 @@ import Vue from 'vue'
             this.viewMenu = false;
             this.top = 0 + 'px';
             this.left = 0 + 'px';
+            $('.medium-editor-toolbar').each(function(){
+                $(this).css('visibility', '');
+            });
         },
 
         open: function(ev, range, offsetX = 0, offsetY = 0) {
@@ -94,19 +97,24 @@ import Vue from 'vue'
             //this.$refs.menu.focus();
             Vue.nextTick(function() {
                 this.setMenu(coords.x, coords.y, ev.target);
+                let slots = this.$refs.menu.querySelector(`li`);
+                if (slots) $('.medium-editor-toolbar-active').each(
+                function(){
+                  $(this).css('visibility', 'hidden');
+                });
                 //this.$refs.menu.focus();
             }.bind(this));
         }
     },
     mounted: function() {
       this.$root.$on('closeBlockContextMenu', ()=>{
-        this.close();
+        if(this.viewMenu) this.close();
       });
       this.$root.$on('closeBlockMenu', ()=>{
-        this.close();
+        if(this.viewMenu) this.close();
       });
       this.$root.$on('closeFlagPopup', ()=>{
-        this.close();
+        if(this.viewMenu) this.close();
       });
     }
   }
