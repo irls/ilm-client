@@ -144,10 +144,9 @@
 
       calculateSize(source){
         // Scrollbar Height
-        this.padding = source.wrapper.height * source.wrapper.height / source.area.height;
-
         let height = source.wrapper.height / source.area.height * 100;
         this.height = height > 5 ? height : 5;
+        this.padding = source.wrapper.height * (this.height / 1.5) / 100;
       },
 
       getSize(){
