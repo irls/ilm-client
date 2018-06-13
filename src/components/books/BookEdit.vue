@@ -1491,9 +1491,19 @@ export default {
         }
     },
 
-    scrollToBlock(id, position = 'top') {
-      this.screenTop = 0;
-      this.startId = id;
+    scrollToBlock(id, position = 'top')
+    {
+      if (this.parlist.has(id)) {
+        this.screenTop = 0;
+        this.startId = id;
+      } else {
+        this.loadBookDown(false, id)
+        .then((blockId)=>{
+          this.setBlockWatch();
+          this.screenTop = 0;
+          this.startId = id;
+        });
+      }
     },
 
     getPrevId(id) {
