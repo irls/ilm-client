@@ -90,7 +90,8 @@
     @touchstart="scrollByBarStart('up')"
     @mousedown="scrollByBarStart('up')"
     @touchend="scrollByBarEnd()"
-    @mouseup="scrollByBarEnd()">
+    @mouseup="scrollByBarEnd()"
+    @mouseout="scrollByBarEnd()">
     <i aria-hidden="true" class="fa fa-angle-up"></i>
   </div>
   <vue-scrollbar classes="" ref="scrollBarRef" :onChangePosition="scrollByBar" direction="vertical"
@@ -106,7 +107,8 @@
     @touchstart="scrollByBarStart('down')"
     @mousedown="scrollByBarStart('down')"
     @touchend="scrollByBarEnd()"
-    @mouseup="scrollByBarEnd()">
+    @mouseup="scrollByBarEnd()"
+    @mouseout="scrollByBarEnd()">
     <i aria-hidden="true" class="fa fa-angle-down"></i>
   </div>
   </div>
