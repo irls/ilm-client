@@ -1500,6 +1500,7 @@ export default {
         this.loadBookDown(false, id)
         .then((blockId)=>{
           this.setBlockWatch();
+          this.lazyLoad(id);
           this.screenTop = 0;
           this.startId = id;
         });
