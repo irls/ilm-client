@@ -700,9 +700,10 @@ export const store = new Vuex.Store({
     set_align_counter(state, counter) {
       state.alignCounter.count = typeof counter.count !== 'undefined' ? counter.count : 0;
       state.alignCounter.countTTS = typeof counter.countTTS !== 'undefined' ? counter.countTTS : 0;
+      state.alignCounter.countAudio = typeof counter.countAudio !== 'undefined' ? counter.countAudio : 0;
       state.alignCounter.blocks = typeof counter.blocks !== 'undefined' ? counter.blocks : [];
-      let countAudio = state.alignCounter.count - state.alignCounter.countTTS;
-      state.alignCounter.countAudio = countAudio >= 0 ? countAudio : 0;
+      //let countAudio = state.alignCounter.count - state.alignCounter.countTTS;
+      //state.alignCounter.countAudio = countAudio >= 0 ? countAudio : 0;
     }
   },
 
@@ -1830,9 +1831,12 @@ export const store = new Vuex.Store({
         return axios.get(api_url + '?' + query, {})
           .then(response => {
             if (response.status == 200) {
-              commit('set_align_counter', {count: response.data.count,
+              commit('set_align_counter', {
+                count: response.data.count,
                 countTTS: response.data.countTTS,
-                blocks: response.data.blocks});
+                countAudio: response.data.countAudio,
+                blocks: response.data.blocks
+              });
             }
             return Promise.resolve();
           })

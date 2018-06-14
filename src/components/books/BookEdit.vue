@@ -171,7 +171,7 @@ export default {
 
       scrollBarBlocks: [],
       scrollBarTop: 0,
-      scrollBarBlockHeight: 100,
+      scrollBarBlockHeight: 150,
       scrollBarBlockTimer: null,
 
       lazyLoaderDir: 'up',

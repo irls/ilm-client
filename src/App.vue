@@ -59,11 +59,11 @@ export default {
   html, body, #app {
     height: 100%;
     min-width: 1060px;
+    overflow: hidden;
   }
   #app {
     display:flex;
     flex-direction: column;
-    overflow: hidden;
   }
 
   .area-wrapper {
