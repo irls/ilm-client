@@ -281,6 +281,9 @@ export default {
     height: 100%;
     /*overflow: auto;*/
     margin-top: 2px;
+    .row {
+      margin: 0;
+    }
   }
 
   .toolbar {
