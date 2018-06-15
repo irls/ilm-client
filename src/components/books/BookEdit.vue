@@ -1530,23 +1530,25 @@ export default {
 
     updateScrollSlider(startId = false)
     {
-      let resultArr = [];
-      let crossId = startId || this.meta.startBlock_id;
-      //console.log('startId', startId, 'crossId', crossId);
-      if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
-        let block = this.parlist.get(crossId);
-        if (block) {
-          resultArr.push(crossId);
-          crossId = block.chainid;
-        } else break;
-      }
-      if (resultArr.length) {
-        this.scrollBarBlocks = resultArr;
-        if (this.$refs.scrollBarRef) this.$refs.scrollBarRef.calculateSize();
+      if (!this.$refs.scrollBarRef.dragging) {
+        let resultArr = [];
+        let crossId = startId || this.meta.startBlock_id;
+        //console.log('startId', startId, 'crossId', crossId);
+        if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
+          let block = this.parlist.get(crossId);
+          if (block) {
+            resultArr.push(crossId);
+            crossId = block.chainid;
+          } else break;
+        }
+        if (resultArr.length) {
+          this.scrollBarBlocks = resultArr;
+          if (this.$refs.scrollBarRef) this.$refs.scrollBarRef.calculateSize();
 
-        Vue.nextTick(()=>{
-          this.throttleScrollUpdate();
-        });
+          Vue.nextTick(()=>{
+            this.throttleScrollUpdate();
+          });
+        }
       }
     },
 
