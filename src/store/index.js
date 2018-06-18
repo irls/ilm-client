@@ -934,7 +934,7 @@ export const store = new Vuex.Store({
           .catch((err)=>{
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
           })
-          console.log('currentBookMeta', state.currentBookMeta);
+          //console.log('currentBookMeta', state.currentBookMeta);
           return Promise.resolve(meta);
         }).catch((err)=>{
           console.log('metaDB.get Error: ', err);

@@ -311,7 +311,7 @@ export default {
       this.startId = false;
       this.startId = startId;
       //this.$forceUpdate();
-      this.updateScrollSlider();
+      //this.updateScrollSlider();
     },
 
     loadBookMeta() {
@@ -321,6 +321,7 @@ export default {
         return this.loadBook(this.$route.params.bookid)
         .then(()=>{
           this.unfreeze('loadBookMeta');
+          if (this.meta.blocks) this.scrollBarBlocks = this.meta.blocks;
         }).catch((err)=>{
           this.unfreeze('loadBookMeta');
         });
@@ -453,8 +454,8 @@ export default {
       } else return Promise.reject();
     },
 
-    getBlocksUp(startId, onPage = 5) {
-      //console.log('getBlocksUp', startId, onPage, this.meta._id);
+    getBlocksUp(startId, onPage = 5)
+    {
       return this.loadBlocksChainUp({
         book_id: this.meta._id,
         startId: startId,
@@ -462,12 +463,10 @@ export default {
       })
       .then((result)=>{
         if (result.rows.length > 0) {
-          //console.log('getBlocksUp', result);
           result.rows.forEach((el, idx, arr)=>{
             let newBlock = new BookBlock(el);
-            //this.parlist.set(newBlock._id, newBlock);
             this.$store.commit('set_storeList', newBlock);
-            this.updateScrollSlider(this.isNeedUp);
+            this.updateScrollSlider(false, this.isNeedUp);
           });
         }
         result.blockId = result.rows[0]._id;
@@ -476,13 +475,13 @@ export default {
       })
       .catch((err)=>{
         console.log('BlocksUp Error: ', err.message);
+        this.updateScrollSlider(false, this.isNeedUp);
         this.refreshTmpl();
         return Promise.reject(err);
       });
     },
 
     getBlocks(startId, onPage = 10) {
-      //console.log('getBlocks->meta', startId, this.meta);
       return this.loadBlocksChain({
         book_id: this.meta._id,
         startId: startId,
@@ -492,10 +491,8 @@ export default {
         if (result.rows.length > 0) {
           result.rows.forEach((el, idx, arr)=>{
             let newBlock = new BookBlock(el);
-            //this.parlist.push(newBlock);
-            //this.parlist.set(newBlock._id, newBlock);
             this.$store.commit('set_storeList', newBlock);
-            this.updateScrollSlider();
+            this.updateScrollSlider(false);
           });
         } else this.hasScrollDown = false;
         result.blockId = result.rows[result.rows.length-1]._id;
@@ -504,6 +501,7 @@ export default {
       })
       .catch((err)=>{
         console.log('BlocksDown Error: ', err.message);
+        this.updateScrollSlider(false);
         this.refreshTmpl();
         this.hasScrollDown = false;
         return Promise.reject(err);
@@ -906,6 +904,7 @@ export default {
             this.refreshBlock({doc: b_old, deleted: false});
           }
           this.unfreeze('insertBlockBefore');
+          this.updateScrollSlider();
           this.refreshTmpl();
         })
         .catch(err => {
@@ -933,6 +932,7 @@ export default {
           this.refreshBlock({doc: b_new, deleted: false});
           this.refreshBlock({doc: b_old, deleted: false});
           this.unfreeze('insertBlockAfter');
+          this.updateScrollSlider();
           this.refreshTmpl();
         })
         .catch(err => {
@@ -1000,6 +1000,7 @@ export default {
             }
             this.parlist.delete(block._id);
             this.unfreeze('deleteBlock');
+            this.updateScrollSlider();
             this.refreshTmpl();
           })
           .catch(err => {
@@ -1528,26 +1529,44 @@ export default {
       }
     }, 400),
 
-    updateScrollSlider(startId = false)
+    updateScrollSlider(force = true, startId = false)
     {
+      //console.log('updateScrollSlider', new Date().getTime());
       if (!this.$refs.scrollBarRef.dragging) {
-        let resultArr = [];
-        let crossId = startId || this.meta.startBlock_id;
-        //console.log('startId', startId, 'crossId', crossId);
-        if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
-          let block = this.parlist.get(crossId);
-          if (block) {
-            resultArr.push(crossId);
-            crossId = block.chainid;
-          } else break;
-        }
-        if (resultArr.length) {
-          this.scrollBarBlocks = resultArr;
-          if (this.$refs.scrollBarRef) this.$refs.scrollBarRef.calculateSize();
+        if (force || this.scrollBarBlocks.length < this.parlist.size) /* ? */ {
+          //console.log('updateScrollSlider condition', this.scrollBarBlocks.length);
+          let resultArr = [], isUpdate = false;
+          let crossId = startId || this.meta.startBlock_id;
+          //console.log('startId', startId, 'crossId', crossId);
+          if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
+            let block = this.parlist.get(crossId);
+            if (block) {
+              resultArr.push(crossId);
+              if (this.scrollBarBlocks.indexOf(crossId) == -1) isUpdate = true;
+              crossId = block.chainid;
+            } else break;
+          }
+          //console.log('this.meta.blocks', this.meta.blocks && this.meta.blocks.length, 'resultArr.length', resultArr.length, 'this.scrollBarBlocks', this.scrollBarBlocks.length);
+          if (resultArr.length && isUpdate) {
+            this.scrollBarBlocks = resultArr;
+            //if (this.$refs.scrollBarRef) this.$refs.scrollBarRef.calculateSize();
 
-          Vue.nextTick(()=>{
-            this.throttleScrollUpdate();
-          });
+            //Vue.nextTick(()=>{
+              //this.throttleScrollUpdate();
+              if (this.$refs.scrollBarRef) {
+                this.$refs.scrollBarRef.calculateSize();
+                this.scrollBarUpdatePosition(this.startId);
+              }
+            //});
+          }
+        } else {
+//           Vue.nextTick(()=>{
+//             this.throttleScrollUpdate();
+//           });
+              if (this.$refs.scrollBarRef) {
+                this.$refs.scrollBarRef.calculateSize();
+                this.scrollBarUpdatePosition(this.startId);
+              }
         }
       }
     },
@@ -1653,6 +1672,7 @@ export default {
       //this.downScreenTop = this.$refs.contentScrollWrapRef.getBoundingClientRect().height;
 
       if (this.meta._id) {
+        if (this.meta.blocks) this.scrollBarBlocks = this.meta.blocks;
         this.loadBookDown(true)
         .then(()=>{
           this.setBlockWatch()
@@ -1704,8 +1724,6 @@ export default {
       });
 
       this.$root.$on('bookBlocksUpdates', (data) => {
-        //console.log('bookBlocksUpdates');
-        //this._updateBlocksFromResponse(data);
         let updField = data.updField || false;
         if (Array.isArray(data.blocks)) data.blocks.forEach((res)=>{
           this.refreshBlock({doc: res, deleted: res.deleted || false, updField: updField});
@@ -1728,7 +1746,7 @@ export default {
   watch: {
     'meta._id': {
       handler(newVal, oldVal) {
-        console.log('watch meta._id', newVal, oldVal);
+        //console.log('watch meta._id', newVal, oldVal);
         if (newVal) {
           this.tc_loadBookTask()
           .then(()=>{
