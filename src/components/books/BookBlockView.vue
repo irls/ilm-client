@@ -1191,8 +1191,8 @@ export default {
         el.target.focus();
       },
       onFocusout: function(el) {
-        this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
-        this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+        /*let blockContent = this.$refs.blockContent.innerHTML;
+        this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
       },
       discardBlock: function(ev) {
 
@@ -1355,7 +1355,7 @@ export default {
           }
           if (is_content_changed && this.block.audiosrc) {
             this.doReAlign();
-          } else if (this.$refs.blockContent) {
+          } else if (this.$refs.blockContent && this.block.audiosrc) {
             if (this.$refs.blockContent.dataset.has_suggestion) {
               if (this.$refs.blockContent.dataset.has_suggestion === 'true') {
                 //console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);

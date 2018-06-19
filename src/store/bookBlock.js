@@ -176,7 +176,12 @@ class BookBlock {
       tmp = tmp.textContent || tmp.innerText || "";
       return 'data-'+$1+'="'+_.escape(tmp)+'"';
     })
-    return _.pick(this, defBlock);
+    this.content = this.content
+    .replace(/(<[^>]+)(selected)/g, '$1')
+    .replace(/(<[^>]+)(audio-highlight)/g, '$1')
+    .replace(/(<sg\s*data-suggestion="[^"]*"[^>]*>\s*<\/sg>)/ig, '') // remove suggestions without text
+    .replace(/(<qq\s*data-author="[^"]*"[^>]*>\s*<\/qq>)/ig, ''); // remove quotes without text
+    return _.pick(this, defBlock); //<(qq*)\s*[^\/>]*>\s*<\/\1>
   }
 
   cleanField(fieldName) {

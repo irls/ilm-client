@@ -552,7 +552,6 @@ let SuggestButton = MediumEditor.Extension.extend({
         let sel = window.getSelection();
         if (sel.rangeCount) {
           let range = sel.getRangeAt(0);
-          //let node = range.startContainer;
           node.appendChild(range.extractContents());
           range.insertNode(node);
           let prev = node.previousSibling;
