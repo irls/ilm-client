@@ -169,6 +169,9 @@ export default {
     filteredUsers: {
       //cache: false,
       get() {
+        if (this.filterKey != ''){
+          this.currentPage = 0;
+        }
         return filteredData(this.users, this.filterKey, this.filter)
       }
     },

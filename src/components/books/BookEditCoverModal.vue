@@ -42,6 +42,8 @@
 
                  <br> &nbsp;&nbsp;&nbsp;  or <br><br>
 
+                
+                <p v-if="errorCoverFileType" ><span class="alert alert-warning">Please select image file for cover</span></p>
                 <label class='btn btn-default' type="file">
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
                   <input name="coverFile" type="file" v-show="false" accept="image/*"  @change="onFilesChange($event)"><br>
@@ -158,6 +160,7 @@ export default {
     return {
       ilm_library_files: this.$store.state.filesRemoteDB,
       bookcovers: BOOKCOVERS,
+      errorCoverFileType: false,
       uploadMode: true,
       uploadImage: '',
       uploadImageBlank: 'https://dl.dropboxusercontent.com/u/382588/share/book_blank_sm.png',
@@ -262,10 +265,16 @@ export default {
     },
 
     onFilesChange (e) {
+      this.errorCoverFileType = false
       var files = e.target.files || e.dataTransfer.files
       // console.log('*** onFilesChange', files)
+
       if (!files.length) return
-      this.createImage(files[0])
+      if (files[0].type.substr(0,5) == 'image') {
+        this.createImage(files[0])
+      } else {
+        this.errorCoverFileType = true;
+      }
     },
 
     createImage (file) {
