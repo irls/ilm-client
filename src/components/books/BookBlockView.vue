@@ -2374,6 +2374,7 @@ export default {
             if (blockId == check_id) {
               self.audStop();
               self.assembleBlockAudioEdit(footnoteIdx);
+              self.flushChanges();
             }
           });
           this.$root.$on('from-audioeditor:save-and-realign', function(blockId) {
@@ -2382,6 +2383,7 @@ export default {
               self.doReAlign()
                 .then(() => {
                   self.assembleBlockAudioEdit(footnoteIdx);
+                  self.flushChanges();
                 });
             }
           })
