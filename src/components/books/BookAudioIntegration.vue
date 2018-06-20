@@ -2,7 +2,7 @@
   <div>
     <accordion :one-at-atime="true" ref="accordionAudio">
       <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
-        <div class="file-catalogue">
+        <div class="file-catalogue" id="file-catalogue">
           <div class="file-catalogue-buttons">
             <div class="" v-if="_is('admin') || _is('editor')">
               <input type="checkbox" v-model="checkAllState"/>
@@ -28,6 +28,7 @@
               <button v-else class="btn btn-danger btn-small" v-on:click="cancelAlign(true)">Cancel Alignment</button>
             </div>
           </div>
+          <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
           <div class="file-catalogue-files-wrapper">
             <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
               <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': selections.indexOf(audiofile.id) !== -1}]">
@@ -60,8 +61,13 @@
             </draggable>
           </div>
         </div>
-        <div>
-          
+        <div :class="['audio-import-errors', 'errors-' + (audiobook.importErrors ? audiobook.importErrors.length : 0)]" id="audio-import-errors">
+          <div style="overflow-y: scroll; min-height: 80px; height: 100%;">
+            <div>Unable to import file(s):<span class="hide-errors" v-on:click="clearErrors()">&times;</span></div>
+            <div v-for="ierr in audiobook.importErrors" class="audio-import-error">
+              <a :href="ierr.link">{{ierr.file}}: {{ierr.error}}</a>
+            </div>
+          </div>
         </div>
       </panel>
       <panel :is-open="false" :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
@@ -146,6 +152,7 @@
   import draggable from 'vuedraggable';
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
+  import Split from 'split.js';
   //var d3 = require('d3')
   export default {
     name: 'BookAudioIntegration',
@@ -183,6 +190,40 @@
     },
     mixins: [task_controls, api_config, access],
     mounted() {
+      //console.log('MOUNTED')
+      let parentHeight = false;
+      let minSize = false;
+      let maxSize = false;
+      Split(['#file-catalogue', '#audio-import-errors'], {
+        direction: 'vertical',
+        //minSize: [80, 80],
+        sizes: [70, 30],
+        elementStyle: (dimension, size, gutterSize) => {
+          let resizeWrapper = true;
+          if (!parentHeight) {
+            parentHeight = parseInt($('#file-catalogue').parent().css('height'));
+            resizeWrapper = false;
+            if (parentHeight) {
+              minSize = parentHeight / 100 * 30;
+              $('#audio-import-errors').css('height', minSize + 'px');
+              maxSize = parentHeight - minSize;
+            }
+          }
+          //console.log(dimension, size, gutterSize)
+          let height = parentHeight / 100 * size - gutterSize;
+          //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
+          if (resizeWrapper) {
+            $('.file-catalogue-files-wrapper').css('height', parseInt($('#file-catalogue').css('height')) - parseInt($('.file-catalogue-buttons').css('height')) + 'px')
+          }
+          if (height < minSize && resizeWrapper) {
+            height = minSize;
+          }
+          if (height > maxSize && resizeWrapper) {
+            height = maxSize;
+          }
+          return {'height': height + 'px'};
+        }
+      });
       /*let ac = new (window.AudioContext || window.webkitAudioContext);
       this.player = WaveformPlaylist.init({
         ac: ac,
@@ -283,26 +324,39 @@
       renameAudiofile(id) {
         this.renaming = id;
       },
-      saveAudiobook(reorder) {
-        reorder = reorder || [];
-        this.renaming = false;
+      saveAudiobook(reorder = [], removeFiles = []) {
         let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/audiobooks/' + this.audiobook._id;
         let formData = new FormData();
-        let save_data = this.audiobook;
-        if (save_data.importFiles) {
-          save_data.importFiles.forEach(af => {
-            if (typeof this.positions_tmp[af.id] !== 'undefined') {
-              af.positions = this.positions_tmp[af.id];
-            }
-          });
-        }
-        formData.append('audiobook', JSON.stringify(save_data));
+        //let save_data = this.audiobook;
+        //if (save_data.importFiles) {
+          //save_data.importFiles.forEach(af => {
+            //if (typeof this.positions_tmp[af.id] !== 'undefined') {
+              //af.positions = this.positions_tmp[af.id];
+            //}
+          //});
+        //}
+        //formData.append('audiobook', JSON.stringify(save_data));
         formData.append('reorder', JSON.stringify(reorder));
+        formData.append('removeFiles', JSON.stringify(removeFiles));
+        if (this.renaming) {
+          let rename = this.audiobook.importFiles.find(aif => aif.id == this.renaming);
+          if (rename) {
+            formData.append('rename', JSON.stringify([
+              {
+                id: rename.id,
+                name: rename.name
+              }
+            ]));
+          }
+        }
+        this.renaming = false;
         let api = this.$store.state.auth.getHttp()
         let self = this;
         return api.post(api_url, formData, {}).then(function(response){
           if (response.status===200) {
-            self.$emit('audiobookUpdated', response.data);
+            if (response.data && response.data.audio) {
+              self.$emit('audiobookUpdated', response.data.audio);
+            }
           } else {
 
           }
@@ -417,17 +471,19 @@
           if (!this.selections.length) {
             return false;
           }
-          let files = [];
-          this.audiobook.importFiles.forEach((_f, i) => {
-            if (this.selections.indexOf(_f.id) === -1) {
-              files.push(_f);
-            } else {
-              this.addSelection(_f.id, false);
-            }
-          });
-          this.audiobook.importFiles = files;
+          //let files = [];
+          //this.audiobook.importFiles.forEach((_f, i) => {
+            //if (this.selections.indexOf(_f.id) === -1) {
+              //files.push(_f);
+            //} else {
+              //this.addSelection(_f.id, false);
+            //}
+          //});
+          //this.audiobook.importFiles = files;
+          let toDelete = this.selections;
+          this.selections = [];
           this.checkAllState = false;
-          this.saveAudiobook();
+          this.saveAudiobook([], toDelete);
         } else {
           let files = [];
           if (this.selections.indexOf(this.deleting) !== -1) {
@@ -859,6 +915,17 @@
         let file_catalogue_height = $(document).height() - 500;
         $('.file-catalogue-files').css('max-height', file_catalogue_height + 'px');
       },
+      
+      clearErrors() {
+        let url = this.API_URL + 'books/' + this.currentBookid + '/audiobooks/' + this.audiobook._id + '/clear_errors';
+        this.$store.state.auth.getHttp().post(url)
+          .then(resp => {
+            this.$emit('audiobookUpdated', resp.data);
+          })
+          .catch(err => {
+            console.log(err)
+          })
+      },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks', 'clearLocks'])
     },
@@ -1028,6 +1095,20 @@
           }
         },
         deep: true
+      },
+      'audiobook.importErrors': {
+        handler(val) {
+          //console.log('IMPORT ERRORS CHANGED')
+          //console.log($('#file-catalogue'), $('#audio-import-errors'))
+          //let i = setInterval(() => {
+            //if ($('#audio-import-errors').length > 0) {
+              //clearInterval(i)
+              //Split(['#file-catalogue', '#audio-import-errors'], {
+              //direction: 'vertical'
+            //});
+            //}
+          //}, 500)
+        }
       }
     }
   }
@@ -1246,5 +1327,36 @@
             margin: 0px;
         }
       }
+  }
+  .audio-import-errors {
+    border: solid 1px red;
+    border-radius: 8px;
+    padding: 8px 5px 5px 5px;
+    background-color: #ffd3d3;
+    margin-top: 10px;
+    height: 95px;
+    color: red;
+    /*overflow-y: scroll;*/
+    &.errors-0 {
+      display: none;
+    }
+    .audio-import-error {
+      padding: 2px;
+      /*width: 80%;*/
+      word-break: break-all;
+      a {
+        font-weight: bolder;
+      }
+      &:nth-child(even) {
+        background-color: #fcebeb;
+      }
+    }
+    .hide-errors {
+      display: inline-block;
+      float: right;
+      cursor: pointer;
+      padding: 0px 3px;
+      color: black;
+    }
   }
 </style>

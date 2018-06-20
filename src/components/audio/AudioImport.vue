@@ -55,7 +55,7 @@
                   <div class="col-sm-7">
                     <div class="input-group">
                       <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                      <input type="text" class="form-control" placeholder="URL" v-model="file_name_audio" />
+                      <input type="text" class="form-control" placeholder="URL" v-model="audioURL" />
                     </div>
                   </div>
                   <div class="col-sm-5">
@@ -89,8 +89,12 @@
           <div id='uploadingMsg' v-show='isUploading'>
              <h2> {{uploadProgress}}&nbsp;
                <i v-if='!uploadFinished' class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i>
-               <i v-else class="fa fa-check"></i>
+               <!-- <i v-else class="fa fa-check"></i> -->
              </h2>
+            <div v-for="err in uploadErrors" class="upload-error">{{err.error}}</div>
+            <div v-if="uploadFinished">
+              <button class="btn btn-default" v-on:click="$emit('close')">OK</button>
+            </div>
           </div>
 
 
@@ -139,7 +143,8 @@ export default {
       uploadFinished: false,
       formData: new FormData(),
       uploadFilesDuplicates: [],
-      confirmedDuplicates: []
+      confirmedDuplicates: [],
+      uploadErrors: []
     }
   },
   components: {
@@ -173,7 +178,7 @@ export default {
       return this.$store.getters.currentBook
     },
     saveDisabled: function() {
-      return (this.uploadFiles === 0)
+      return (this.uploadFiles === 0 && this.audioURL.length == 0)
     },
     showDuplicateFilesWarning: {
       get() {
@@ -203,7 +208,7 @@ export default {
       }
       for(let file of fileList) {
           let exist = false;
-          if (this.audiobook._id) {
+          if (this.audiobook._id && this.audiobook.importFiles) {
             exist = this.audiobook.importFiles.find(_f => {
               return _f.origName == file.name || _f.group_id === file.name;
             });
@@ -235,12 +240,15 @@ export default {
     },
 
     onFormSubmit () {
+      if (this.saveDisabled) {
+        return '';
+      }
       // console.log(this.book, this.currentBook)
       let vm = this
       vm.uploadFinished = false
       let api_url = vm.API_URL + 'books/' + this.book.bookid + '/audiobooks';
       let api = this.$store.state.auth.getHttp()
-      if (!this.audioURL.length) this.formData.append('audioURL', this.audioURL);
+      if (this.audioURL.length) this.formData.append('audioURL', this.audioURL);
 
       var config = {
         onUploadProgress: function(progressEvent) {
@@ -248,26 +256,36 @@ export default {
           vm.uploadProgress = "Uploading Files... " + percentCompleted + "%";
         }
       }
-
+      
       this.isUploading = true
       if (!this.audiobook._id) {
         // first upload by editor
         api.post(api_url, this.formData, config).then(function(response){
           if (response.status===200) {
             // hide modal after one second
-            vm.uploadProgress = "Upload Successful"
+            //vm.uploadProgress = "Upload Successful"
             vm.uploadFinished = true
-            vm.$emit('audiofilesUploaded', response.data);
-            if (vm.importTask._id && response.data && typeof response.data._id !== 'undefined') {
+            vm.uploadProgress = ''
+            vm.uploadErrors = [];
+            if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
+              vm.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
+              vm.$emit('audiofilesUploaded', response.data.audio);
+            }
+            if (response.data.errors) {
+              if (Array.isArray(response.data.errors)) {
+                vm.uploadErrors = response.data.errors;
+              }
+            }
+            if (vm.importTask._id && response.data.audio && typeof response.data.audio._id !== 'undefined') {
               api.put(vm.API_URL + 'task/' + vm.importTask._id + '/audio_imported', {})
                 .then((link_response) => {
-                  vm.closeForm(response)
+                  //vm.closeForm(response)
                 })
                 .catch((err) => {
-                  vm.closeForm(response)
+                  //vm.closeForm(response)
                 })
             } else {
-              vm.closeForm(response)
+              //vm.closeForm(response)
             }
           } else {
             // not sure what we should be doing here
@@ -281,23 +299,32 @@ export default {
       } else {
         // upload updated file by engineer or another file by editor
         //vm.audiobook.importFiles = [];
-        this.formData.append('audiobook', JSON.stringify(vm.audiobook));
+        //this.formData.append('audiobook', JSON.stringify(vm.audiobook));
         api.post(api_url + '/' + vm.audiobook._id, this.formData, config).then(function(response){
           if (response.status===200) {
             // hide modal after one second
-            vm.uploadProgress = vm.audioFiles.length + " Audiofiles  uploaded"
             vm.uploadFinished = true
-            vm.$emit('audiofilesUploaded', response.data);
-            if (vm.importTask._id && response.data && typeof response.data._id !== 'undefined') {
-              api.put(vm.API_URL + 'task/' + vm.importTask._id + '/audio_imported', {})
-                .then((link_response) => {
-                  
-                })
-                .catch((err) => {
-                  
-                })
-            } else {
-              
+            vm.uploadProgress = ''
+            vm.uploadErrors = []
+            if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
+              vm.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
+              vm.$emit('audiofilesUploaded', response.data.audio);
+              if (vm.importTask._id) {
+                api.put(vm.API_URL + 'task/' + vm.importTask._id + '/audio_imported', {})
+                  .then((link_response) => {
+
+                  })
+                  .catch((err) => {
+
+                  })
+              } else {
+
+              }
+            }
+            if (response.data.errors) {
+              if (Array.isArray(response.data.errors)) {
+                vm.uploadErrors = response.data.errors;
+              }
             }
           } else {
             // not sure what we should be doing here
@@ -535,6 +562,11 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
 #audioFiles {
   max-height: 80px;
   overflow-y: scroll;
+}
+
+.upload-error {
+    font-size: 20px;
+    color: red;
 }
 
 </style>
