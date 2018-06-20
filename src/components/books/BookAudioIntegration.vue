@@ -15,7 +15,7 @@
             <div class="delete-audio">
               <button class="btn btn-danger btn-small" :disabled="selectionLength == 0 || !_is('editor')" v-on:click="deleteAudio()">Delete<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
             </div>
-            <dropdown text="Mark" type="default" :disabled="selectionLength == 0" ref="allAudioDropdown" class="all-audio-dropdown">
+            <dropdown text="Mark" type="default" :disabled="selectionLength == 0 || isNarrator || isProofer || isLibrarian" ref="allAudioDropdown" class="all-audio-dropdown">
                 <li>
                   <span v-on:click="markSelected()" class="mark-done">Mark done</span>
                 </li>
