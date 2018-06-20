@@ -354,7 +354,6 @@
         let self = this;
         return api.post(api_url, formData, {}).then(function(response){
           if (response.status===200) {
-            console.log(response.data)
             if (response.data && response.data.audio) {
               self.$emit('audiobookUpdated', response.data.audio);
             }
@@ -921,7 +920,6 @@
         let url = this.API_URL + 'books/' + this.currentBookid + '/audiobooks/' + this.audiobook._id + '/clear_errors';
         this.$store.state.auth.getHttp().post(url)
           .then(resp => {
-            console.log(resp)
             this.$emit('audiobookUpdated', resp.data);
           })
           .catch(err => {
@@ -980,12 +978,6 @@
     watch: {
       'audiobook': {
         handler(val, oldVal) {
-          if (val && (!oldVal || val._id !== oldVal._id)) {
-            console.log($('#file-catalogue'), $('#audio-import-errors'))
-            //Split(['#file-catalogue', '#audio-import-errors'], {
-              //direction: 'vertical'
-            //});
-          }
           if (val && oldVal && val._id != oldVal._id) {
             //this.checkAllState = false;
             return;
