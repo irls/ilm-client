@@ -190,6 +190,7 @@
     },
     mixins: [task_controls, api_config, access],
     mounted() {
+      //console.log('MOUNTED')
       let parentHeight = false;
       let minSize = false;
       let maxSize = false;
@@ -221,7 +222,6 @@
             height = maxSize;
           }
           return {'height': height + 'px'};
-          return { 'flex-basis': 'calc(' + size + '% - ' + gutterSize + 'px)' }
         }
       });
       /*let ac = new (window.AudioContext || window.webkitAudioContext);

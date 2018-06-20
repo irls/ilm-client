@@ -73,7 +73,7 @@
             </div>
           </template>
         </div>
-        <vue-tabs ref="panelTabs">
+        <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
               :bookId="currentBook.bookid"
@@ -106,10 +106,12 @@
               <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
             </div>
             <div v-else class="t-box red-message">Define block range</div>
-            <BookAudioIntegration ref="audioIntegration"
+            <BookAudioIntegration v-if="activeTabIndex == 1" ref="audioIntegration"
                 :audiobook="audiobook"
                 @onTtsSelect="ttsUpdate"
                 @alignmentFinished="loadAudiobook()"
+                @uploadAudio="showModal_audio = true"
+                @audiobookUpdated="onAudiobookUpdate"
               ></BookAudioIntegration>
           </vue-tab>
           <vue-tab title="Book Content" id="book-content">
@@ -632,6 +634,7 @@ export default {
       // set blocks properties
       styleTabs: new Map(),
       numProps: new Map(),
+      activeTabIndex: 0
     }
   },
 
@@ -752,21 +755,10 @@ export default {
   mixins: [task_controls, api_config, access],
 
   mounted() {
-
     //this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor || this.isAdmin
     this.allowMetadataEdit = this.isEditor || this.isAdmin
     let self = this;
     this.loadAudiobook(true)
-    this.$refs.audioIntegration.$on('uploadAudio', function() {
-      self.showModal_audio = true;
-    })
-
-    this.$refs.audioIntegration.$on('audiobookUpdated', function(response) {
-      self.audiobook = {};
-      Vue.nextTick(() => {
-        self.audiobook = response;
-      })
-    });
     this.$root.$on('from-bookblockview:voicework-type-changed', function() {
       self.setAllowSetMastered();
       self.setCurrentBookCounters(['narration_blocks', 'not_marked_blocks']);
@@ -780,6 +772,9 @@ export default {
     if (this.selectionStart && this.selectionEnd) {
       this.collectCheckedStyles(this.selectionStart, this.selectionEnd)
     }
+    $('body').on('click', '.vue-tabs.meta-edit-tabs li.tab', () => {
+      this.activeTabIndex = this.$refs.panelTabs ? this.$refs.panelTabs.activeTabIndex : null;
+    });
   },
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
@@ -1167,6 +1162,12 @@ export default {
         }
       }
       this.audiobook = audiobook;
+    },
+    onAudiobookUpdate(audio) {
+      this.audiobook = {};
+      Vue.nextTick(() => {
+        this.audiobook = audio;
+      })
     },
     addAuthor() {
       this.currentBook.author.push('');
