@@ -15,7 +15,7 @@
             <div class="delete-audio">
               <button class="btn btn-danger btn-small" :disabled="selectionLength == 0 || !_is('editor')" v-on:click="deleteAudio()">Delete<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
             </div>
-            <dropdown text="Mark" type="default" :disabled="selectionLength == 0 || isNarrator || isProofer || isLibrarian" ref="allAudioDropdown" class="all-audio-dropdown">
+            <dropdown text="Mark" type="default" :disabled="selectionLength == 0 || !_is('editor', true)" ref="allAudioDropdown" class="all-audio-dropdown">
                 <li>
                   <span v-on:click="markSelected()" class="mark-done">Mark done</span>
                 </li>
@@ -293,7 +293,7 @@
       renameAudiofile(id) {
         this.renaming = id;
       },
-      saveAudiobook(reorder = [], removeFiles = []) {
+      saveAudiobook(reorder = [], removeFiles = [], done = []) {
         let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/audiobooks/' + this.audiobook._id;
         let formData = new FormData();
         //let save_data = this.audiobook;
@@ -324,6 +324,9 @@
             }
           });
         }
+        done.forEach(d => {
+          rename.push(d);
+        });
         formData.append('rename', JSON.stringify(rename));
         this.renaming = false;
         let api = this.$store.state.auth.getHttp()
@@ -877,14 +880,15 @@
           ids = this.selections;
         }
         if (ids.length) {
+          let doneUpdates = [];
           ids.forEach(id => {
             this.audiobook.importFiles.forEach((f, i) => {
               if (f.id === id) {
-                this.audiobook.importFiles[i].done = done;
+                doneUpdates.push({id: id, done: done});
               }
             });
           });
-          this.saveAudiobook();
+          this.saveAudiobook([], [], doneUpdates);
         }
       },
       _setCatalogueSize() {
