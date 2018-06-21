@@ -141,6 +141,11 @@ export const store = new Vuex.Store({
       } else {
         let books = [];
         //console.log(state.tc_userTasks);
+        for (let i in state.books_meta){
+          if (state.books_meta[i].editor == state.user._id){
+            books.push(state.books_meta[i]);
+          }
+        }
         if (state.tc_userTasks && state.tc_userTasks.list) {
           for (let t_id in state.tc_userTasks.list) {
             if (state.tc_userTasks.list[t_id].tasks && state.tc_userTasks.list[t_id].tasks.length > 0) {
