@@ -169,7 +169,8 @@
 
     },
     props: {
-      'audiobook': Object
+      'audiobook': Object,
+      'isActive': Boolean
     },
     data() {
       return {
@@ -191,39 +192,7 @@
     mixins: [task_controls, api_config, access],
     mounted() {
       //console.log('MOUNTED')
-      let parentHeight = false;
-      let minSize = false;
-      let maxSize = false;
-      Split(['#file-catalogue', '#audio-import-errors'], {
-        direction: 'vertical',
-        //minSize: [80, 80],
-        sizes: [70, 30],
-        elementStyle: (dimension, size, gutterSize) => {
-          let resizeWrapper = true;
-          if (!parentHeight) {
-            parentHeight = parseInt($('#file-catalogue').parent().css('height'));
-            resizeWrapper = false;
-            if (parentHeight) {
-              minSize = parentHeight / 100 * 30;
-              $('#audio-import-errors').css('height', minSize + 'px');
-              maxSize = parentHeight - minSize;
-            }
-          }
-          //console.log(dimension, size, gutterSize)
-          let height = parentHeight / 100 * size - gutterSize;
-          //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
-          if (resizeWrapper) {
-            $('.file-catalogue-files-wrapper').css('height', parseInt($('#file-catalogue').css('height')) - parseInt($('.file-catalogue-buttons').css('height')) + 'px')
-          }
-          if (height < minSize && resizeWrapper) {
-            height = minSize;
-          }
-          if (height > maxSize && resizeWrapper) {
-            height = maxSize;
-          }
-          return {'height': height + 'px'};
-        }
-      });
+      
       /*let ac = new (window.AudioContext || window.webkitAudioContext);
       this.player = WaveformPlaylist.init({
         ac: ac,
@@ -1096,18 +1065,44 @@
         },
         deep: true
       },
-      'audiobook.importErrors': {
+      'isActive': {
         handler(val) {
-          //console.log('IMPORT ERRORS CHANGED')
-          //console.log($('#file-catalogue'), $('#audio-import-errors'))
-          //let i = setInterval(() => {
-            //if ($('#audio-import-errors').length > 0) {
-              //clearInterval(i)
-              //Split(['#file-catalogue', '#audio-import-errors'], {
-              //direction: 'vertical'
-            //});
-            //}
-          //}, 500)
+          if (val && $('.gutter.gutter-vertical').length == 0) {
+            let parentHeight = false;
+            let minSize = false;
+            let maxSize = false;
+            let split = Split(['#file-catalogue', '#audio-import-errors'], {
+              direction: 'vertical',
+              //minSize: [80, 80],
+              sizes: [70, 30],
+              elementStyle: (dimension, size, gutterSize) => {
+                let resizeWrapper = true;
+                if (!parentHeight) {
+                  parentHeight = parseInt($('#file-catalogue').parent().css('height'));
+                  resizeWrapper = false;
+                  if (parentHeight) {
+                    minSize = parentHeight / 100 * 30;
+                    $('#audio-import-errors').css('height', minSize + 'px');
+                    maxSize = parentHeight - minSize;
+                  }
+                }
+                //console.log(dimension, size, gutterSize)
+                let height = parentHeight / 100 * size - gutterSize;
+                //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
+                if (resizeWrapper) {
+                  $('.file-catalogue-files-wrapper').css('height', parseInt($('#file-catalogue').css('height')) - parseInt($('.file-catalogue-buttons').css('height')) + 'px')
+                }
+                if (height < minSize && resizeWrapper) {
+                  height = minSize;
+                }
+                if (height > maxSize && resizeWrapper) {
+                  height = maxSize;
+                }
+                return {'height': height + 'px'};
+              }
+            });
+            //console.log(split)
+          }
         }
       }
     }
