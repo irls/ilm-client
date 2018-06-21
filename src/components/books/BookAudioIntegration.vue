@@ -24,7 +24,7 @@
                 </li>
             </dropdown>
             <div class="align-audio">
-              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null, true)" v-if="!hasLocks('align')">Align&nbsp;<span v-if="alignCounter.count > 0">({{blocksForAlignment}})</span></button>
+              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)" v-if="!hasLocks('align')">Align&nbsp;<span v-if="alignCounter.count > 0">({{blocksForAlignment}})</span></button>
               <button v-else class="btn btn-danger btn-small" v-on:click="cancelAlign(true)">Cancel Alignment</button>
             </div>
           </div>
