@@ -307,17 +307,24 @@
         //formData.append('audiobook', JSON.stringify(save_data));
         formData.append('reorder', JSON.stringify(reorder));
         formData.append('removeFiles', JSON.stringify(removeFiles));
+        let rename = [];
         if (this.renaming) {
-          let rename = this.audiobook.importFiles.find(aif => aif.id == this.renaming);
-          if (rename) {
-            formData.append('rename', JSON.stringify([
-              {
-                id: rename.id,
-                name: rename.name
-              }
-            ]));
+          let renaming = this.audiobook.importFiles.find(aif => aif.id == this.renaming);
+          if (renaming) {
+            rename.push({
+                id: renaming.id,
+                name: renaming.name
+              });
           }
         }
+        if (this.audiobook.importFiles) {
+          this.audiobook.importFiles.forEach(af => {
+            if (typeof this.positions_tmp[af.id] !== 'undefined') {
+              rename.push({id: af.id, positions: this.positions_tmp[af.id]});
+            }
+          });
+        }
+        formData.append('rename', JSON.stringify(rename));
         this.renaming = false;
         let api = this.$store.state.auth.getHttp()
         let self = this;
