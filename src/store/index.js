@@ -1826,7 +1826,7 @@ export const store = new Vuex.Store({
         //if (realign) {
           //query+='&voicework=all_audio&realign=true';
         //} else { // In case of normal task (with tts counter)
-          query+='&voicework=all_with_tts&realign=true';
+          query+='&voicework=all_audio&realign=true';
         //}
         return axios.get(api_url + '?' + query, {})
           .then(response => {

@@ -625,7 +625,7 @@
         let api = this.$store.state.auth.getHttp()
         let self = this;
         //this.alignmentProcess = true;
-        let realign = true;
+        let realign = this.tc_hasTask('audio_mastering');
         let update = this.saveAudiobook()
           .then((updated) => Promise.resolve(updated))
           .catch((err) => Promise.resolve({error: true, err: err}));
