@@ -142,7 +142,7 @@ export const store = new Vuex.Store({
         let books = [];
         //console.log(state.tc_userTasks);
         for (let i in state.books_meta){
-          if (state.books_meta[i].editor == state.user._id){
+          if (state.books_meta[i].editor == state.user._id && state.books_meta[i].published == true){
             books.push(state.books_meta[i]);
           }
         }
