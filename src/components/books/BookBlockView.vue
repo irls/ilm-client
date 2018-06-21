@@ -2347,8 +2347,10 @@ export default {
                 if (ref && ref.querySelectorAll) {
                   ref.querySelectorAll('[data-map]').forEach(_w => {
                     let _m = map.shift();
-                    let w_map = _m.join()
-                    $(_w).attr('data-map', w_map)
+                    if (_m) {
+                      let w_map = _m.join()
+                      $(_w).attr('data-map', w_map)
+                    }
                   });
                   self.audioEditFootnote.footnote.content = ref.innerHTML;
                   //self.isChanged = true;
@@ -2359,8 +2361,10 @@ export default {
                 if (self.$refs.blockContent && self.$refs.blockContent.querySelectorAll) {
                   self.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
                     let _m = map.shift();
-                    let w_map = _m.join()
-                    $(_w).attr('data-map', w_map)
+                    if (_m) {
+                      let w_map = _m.join()
+                      $(_w).attr('data-map', w_map)
+                    }
                   });
                   self.block.content = self.$refs.blockContent.innerHTML;
                   self.blockAudio.map = self.block.content;

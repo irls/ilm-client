@@ -1831,7 +1831,7 @@ export const store = new Vuex.Store({
         //if (realign) {
           //query+='&voicework=all_audio&realign=true';
         //} else { // In case of normal task (with tts counter)
-          query+='&voicework=all_with_tts&realign=true';
+          query+='&voicework=all_audio&realign=true';
         //}
         return axios.get(api_url + '?' + query, {})
           .then(response => {
@@ -1895,8 +1895,10 @@ export const store = new Vuex.Store({
     recountApprovedInRange({state, commit}, selection = null) {
       let approved = 0;
       let approved_tts = 0;
+      let approved_narration = 0;
       let changed_in_range = 0;
       let changed_in_range_tts = 0;
+      let changed_in_range_narration = 0;
       if (!selection) {
         selection = state.blockSelection;
       }
@@ -1913,6 +1915,9 @@ export const store = new Vuex.Store({
                 case 'tts':
                   ++approved_tts;
                   break;
+                case 'narration':
+                  ++approved_narration;
+                  break;
               }
             }
             if (block.isChanged || block.isAudioChanged) {
@@ -1922,6 +1927,9 @@ export const store = new Vuex.Store({
               if (block.voicework === 'tts') {
                 ++changed_in_range_tts;
               }
+              if (block.voicework === 'narration') {
+                ++changed_in_range_narration;
+              }
             }
             if (block._id == selection.end._id) {
               break;
@@ -1929,6 +1937,11 @@ export const store = new Vuex.Store({
             crossId = block.chainid;
           } else break;
         }
+      }
+      let audio_mastering = state.tc_currentBookTasks.assignments && state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1;
+      if (audio_mastering) {
+        approved+= approved_narration;
+        changed_in_range+=changed_in_range_narration;
       }
       commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_audio_in_range', value: approved});
       commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_tts_in_range', value: approved_tts});
