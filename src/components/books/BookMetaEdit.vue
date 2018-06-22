@@ -106,8 +106,9 @@
               <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
             </div>
             <div v-else class="t-box red-message">Define block range</div>
-            <BookAudioIntegration v-if="activeTabIndex == 1" ref="audioIntegration"
+            <BookAudioIntegration ref="audioIntegration"
                 :audiobook="audiobook"
+                :isActive="activeTabIndex == 1" 
                 @onTtsSelect="ttsUpdate"
                 @alignmentFinished="loadAudiobook()"
                 @uploadAudio="showModal_audio = true"

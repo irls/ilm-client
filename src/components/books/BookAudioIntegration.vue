@@ -15,7 +15,7 @@
             <div class="delete-audio">
               <button class="btn btn-danger btn-small" :disabled="selectionLength == 0 || !_is('editor')" v-on:click="deleteAudio()">Delete<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
             </div>
-            <dropdown text="Mark" type="default" :disabled="selectionLength == 0 || isNarrator || isProofer || isLibrarian" ref="allAudioDropdown" class="all-audio-dropdown">
+            <dropdown text="Mark" type="default" :disabled="selectionLength == 0 || !_is('editor', true)" ref="allAudioDropdown" class="all-audio-dropdown">
                 <li>
                   <span v-on:click="markSelected()" class="mark-done">Mark done</span>
                 </li>
@@ -24,7 +24,7 @@
                 </li>
             </dropdown>
             <div class="align-audio">
-              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null, true)" v-if="!hasLocks('align')">Align&nbsp;<span v-if="alignCounter.count > 0">({{blocksForAlignment}})</span></button>
+              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)" v-if="!hasLocks('align')">Align&nbsp;<span v-if="alignCounter.count > 0">({{blocksForAlignment}})</span></button>
               <button v-else class="btn btn-danger btn-small" v-on:click="cancelAlign(true)">Cancel Alignment</button>
             </div>
           </div>
@@ -169,7 +169,8 @@
 
     },
     props: {
-      'audiobook': Object
+      'audiobook': Object,
+      'isActive': Boolean
     },
     data() {
       return {
@@ -191,39 +192,7 @@
     mixins: [task_controls, api_config, access],
     mounted() {
       //console.log('MOUNTED')
-      let parentHeight = false;
-      let minSize = false;
-      let maxSize = false;
-      Split(['#file-catalogue', '#audio-import-errors'], {
-        direction: 'vertical',
-        //minSize: [80, 80],
-        sizes: [70, 30],
-        elementStyle: (dimension, size, gutterSize) => {
-          let resizeWrapper = true;
-          if (!parentHeight) {
-            parentHeight = parseInt($('#file-catalogue').parent().css('height'));
-            resizeWrapper = false;
-            if (parentHeight) {
-              minSize = parentHeight / 100 * 30;
-              $('#audio-import-errors').css('height', minSize + 'px');
-              maxSize = parentHeight - minSize;
-            }
-          }
-          //console.log(dimension, size, gutterSize)
-          let height = parentHeight / 100 * size - gutterSize;
-          //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
-          if (resizeWrapper) {
-            $('.file-catalogue-files-wrapper').css('height', parseInt($('#file-catalogue').css('height')) - parseInt($('.file-catalogue-buttons').css('height')) + 'px')
-          }
-          if (height < minSize && resizeWrapper) {
-            height = minSize;
-          }
-          if (height > maxSize && resizeWrapper) {
-            height = maxSize;
-          }
-          return {'height': height + 'px'};
-        }
-      });
+      
       /*let ac = new (window.AudioContext || window.webkitAudioContext);
       this.player = WaveformPlaylist.init({
         ac: ac,
@@ -324,7 +293,7 @@
       renameAudiofile(id) {
         this.renaming = id;
       },
-      saveAudiobook(reorder = [], removeFiles = []) {
+      saveAudiobook(reorder = [], removeFiles = [], done = []) {
         let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/audiobooks/' + this.audiobook._id;
         let formData = new FormData();
         //let save_data = this.audiobook;
@@ -338,17 +307,27 @@
         //formData.append('audiobook', JSON.stringify(save_data));
         formData.append('reorder', JSON.stringify(reorder));
         formData.append('removeFiles', JSON.stringify(removeFiles));
+        let rename = [];
         if (this.renaming) {
-          let rename = this.audiobook.importFiles.find(aif => aif.id == this.renaming);
-          if (rename) {
-            formData.append('rename', JSON.stringify([
-              {
-                id: rename.id,
-                name: rename.name
-              }
-            ]));
+          let renaming = this.audiobook.importFiles.find(aif => aif.id == this.renaming);
+          if (renaming) {
+            rename.push({
+                id: renaming.id,
+                name: renaming.name
+              });
           }
         }
+        if (this.audiobook.importFiles) {
+          this.audiobook.importFiles.forEach(af => {
+            if (typeof this.positions_tmp[af.id] !== 'undefined') {
+              rename.push({id: af.id, positions: this.positions_tmp[af.id]});
+            }
+          });
+        }
+        done.forEach(d => {
+          rename.push(d);
+        });
+        formData.append('rename', JSON.stringify(rename));
         this.renaming = false;
         let api = this.$store.state.auth.getHttp()
         let self = this;
@@ -625,7 +604,7 @@
         let api = this.$store.state.auth.getHttp()
         let self = this;
         //this.alignmentProcess = true;
-        let realign = true;
+        let realign = this.tc_hasTask('audio_mastering');
         let update = this.saveAudiobook()
           .then((updated) => Promise.resolve(updated))
           .catch((err) => Promise.resolve({error: true, err: err}));
@@ -901,14 +880,15 @@
           ids = this.selections;
         }
         if (ids.length) {
+          let doneUpdates = [];
           ids.forEach(id => {
             this.audiobook.importFiles.forEach((f, i) => {
               if (f.id === id) {
-                this.audiobook.importFiles[i].done = done;
+                doneUpdates.push({id: id, done: done});
               }
             });
           });
-          this.saveAudiobook();
+          this.saveAudiobook([], [], doneUpdates);
         }
       },
       _setCatalogueSize() {
@@ -1096,18 +1076,44 @@
         },
         deep: true
       },
-      'audiobook.importErrors': {
+      'isActive': {
         handler(val) {
-          //console.log('IMPORT ERRORS CHANGED')
-          //console.log($('#file-catalogue'), $('#audio-import-errors'))
-          //let i = setInterval(() => {
-            //if ($('#audio-import-errors').length > 0) {
-              //clearInterval(i)
-              //Split(['#file-catalogue', '#audio-import-errors'], {
-              //direction: 'vertical'
-            //});
-            //}
-          //}, 500)
+          if (val && $('.gutter.gutter-vertical').length == 0) {
+            let parentHeight = false;
+            let minSize = false;
+            let maxSize = false;
+            let split = Split(['#file-catalogue', '#audio-import-errors'], {
+              direction: 'vertical',
+              //minSize: [80, 80],
+              sizes: [70, 30],
+              elementStyle: (dimension, size, gutterSize) => {
+                let resizeWrapper = true;
+                if (!parentHeight) {
+                  parentHeight = parseInt($('#file-catalogue').parent().css('height'));
+                  resizeWrapper = false;
+                  if (parentHeight) {
+                    minSize = parentHeight / 100 * 30;
+                    $('#audio-import-errors').css('height', minSize + 'px');
+                    maxSize = parentHeight - minSize;
+                  }
+                }
+                //console.log(dimension, size, gutterSize)
+                let height = parentHeight / 100 * size - gutterSize;
+                //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
+                if (resizeWrapper) {
+                  $('.file-catalogue-files-wrapper').css('height', parseInt($('#file-catalogue').css('height')) - parseInt($('.file-catalogue-buttons').css('height')) + 'px')
+                }
+                if (height < minSize && resizeWrapper) {
+                  height = minSize;
+                }
+                if (height > maxSize && resizeWrapper) {
+                  height = maxSize;
+                }
+                return {'height': height + 'px'};
+              }
+            });
+            //console.log(split)
+          }
         }
       }
     }
