@@ -655,7 +655,13 @@ export default {
       voiceworkUpdating: false,
       changes: [],
       deletePending: false,
-      audioEditFootnote: {footnote: {}, isAudioChanged: false}
+      audioEditFootnote: {footnote: {}, isAudioChanged: false},
+      check_id: null,
+      footnoteIdx: null,
+      audioSelectPos: {
+        start: Number,
+        end: Number
+      }
     }
   },
   components: {
@@ -2258,7 +2264,7 @@ export default {
         this.$modal.hide(name + this.block._id);
       },
       setChanged(val, type = null, event = null) {
-        console.log('setChanged', val);
+        //console.log('setChanged', val);
         this.isChanged = val;
         if (val && type) {
           this.pushChange(type);
@@ -2320,170 +2326,203 @@ export default {
             this.discardAudio();
           }
         }
-        let check_id = footnoteIdx !== null ? this.block._id + '_' + footnoteIdx : this.block._id;
+        this.footnoteIdx = footnoteIdx;
+        this.check_id = footnoteIdx !== null ? this.block._id + '_' + footnoteIdx : this.block._id;
+
+        this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
+        this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
+        this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
+        this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
+        this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
+        this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
+        this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
+        this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
+        this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
+        this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
         Vue.nextTick(() => {
-
+          console.log('open');
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
           let text = footnote ? footnote.content : this.blockAudio.map;
-          let loadBlock = footnoteIdx !== null ? {_id: check_id, voicework: footnote ? footnote.voicework : 'tts'} : this.block;
+          let loadBlock = footnoteIdx !== null ? {_id: this.check_id, voicework: footnote ? footnote.voicework : 'tts'} : this.block;
           this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
 
           let self = this;
-          this.$root.$on('from-audioeditor:block-loaded', function(blockId) {
-            if (blockId == check_id) {
-              $('nav.fixed-bottom').removeClass('hidden');
-            }
-          });
-          this.$root.$on('from-audioeditor:word-realign', function(map, blockId) {
-            if (blockId == check_id) {
-              self.audStop();
-              //console.log(self.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
-              if (footnoteIdx !== null) {
-                let ref = self.$refs['footnoteContent_' + footnoteIdx];
-                if (ref) {
-                  ref = ref[0];
-                }
-                if (ref && ref.querySelectorAll) {
-                  ref.querySelectorAll('[data-map]').forEach(_w => {
-                    let _m = map.shift();
-                    let w_map = _m.join()
-                    $(_w).attr('data-map', w_map)
-                  });
-                  self.audioEditFootnote.footnote.content = ref.innerHTML;
-                  //self.isChanged = true;
-                  self.pushChange('footnotes');
-                  self.pushChange('content_footnote');
-                }
-              } else {
-                if (self.$refs.blockContent && self.$refs.blockContent.querySelectorAll) {
-                  self.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
-                    let _m = map.shift();
-                    let w_map = _m.join()
-                    $(_w).attr('data-map', w_map)
-                  });
-                  self.block.content = self.$refs.blockContent.innerHTML;
-                  self.blockAudio.map = self.block.content;
-                  //self.isChanged = true;
-                  self.pushChange('content');
-                }
-              }
-            }
-          });
-          this.$root.$on('from-audioeditor:save', function(blockId) {
-            if (blockId == check_id) {
-              self.audStop();
-              self.assembleBlockAudioEdit(footnoteIdx);
-              self.flushChanges();
-            }
-          });
-          this.$root.$on('from-audioeditor:save-and-realign', function(blockId) {
-            if (blockId == check_id) {
-              self.audStop();
-              self.doReAlign()
-                .then(() => {
-                  self.assembleBlockAudioEdit(footnoteIdx);
-                  self.flushChanges();
-                });
-            }
-          })
-          this.$root.$on('from-audioeditor:cut', function(blockId, start, end) {
-            if (blockId == check_id) {
-              self.audStop();
-              self._audDeletePart(start, end, footnoteIdx);
-            }
-          });
-          this.$root.$on('from-audioeditor:closed', function(blockId) {
-            if (blockId == check_id) {
-              self.isAudioEditing = false;
-              if (self.isAudioChanged) {
-                self.discardAudioEdit(footnoteIdx, false);
-              }
-              $('nav.fixed-bottom').addClass('hidden');
-              //self.$root.$off('from-audioeditor:insert-silence');
-              //self.$root.$off('from-audioeditor:word-realign');
-              //self.$root.$off('from-audioeditor:save');
-              //self.$root.$off('from-audioeditor:save-and-realign');
-              //self.$root.$off('from-audioeditor:cut');
-              //self.$root.$off('from-audioeditor:undo');
-              //self.$root.$off('from-audioeditor:discard');
-              //self.$root.$off('from-audioeditor:closed');
-              //self.$root.$off('from-audioeditor:select');
-              $('#' + self.block._id + ' .table-body.-content').removeClass('editing');
-            }
-          });
-          this.$root.$on('from-audioeditor:insert-silence', function(blockId, position, length) {
-            if (blockId == check_id) {
-              self.audStop();
-              self.insertSilence(position, length, footnoteIdx);
-            }
-          });
-          this.$root.$on('from-audioeditor:undo', function(blockId, audio, text, isModified) {
-            if (check_id == blockId) {
-              self.audStop();
-              if (footnoteIdx === null) {
-                self.block.undoContent();
-                self.block.undoAudiosrc();
-                self.blockAudio.map = self.block.content;
-                self.blockAudio.src = self.block.getAudiosrc('m4a');
-                self.isAudioChanged = isModified;
-              } else {
-                //self.audioEditFootnote.footnote.content = text;
-                //self.block.setAudiosrcFootnote(footnoteIdx, audio);
-                //self.audioEditFootnote.isAudioChanged = isModified;
-                self.block.undoContentFootnote(footnoteIdx);
-                self.block.undoAudiosrcFootnote(footnoteIdx);
-                this.$root.$emit('for-audioeditor:load', self.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), self.audioEditFootnote.footnote.content);
-              }
-            }
-          });
-          this.$root.$on('from-audioeditor:discard', function(blockId) {
-            if (check_id == blockId) {
-              self.audStop();
-              self.discardAudioEdit(footnoteIdx);
-            }
-          });
-          this.$root.$on('from-audioeditor:select', (blockId, start, end) => {
-            if (check_id == blockId) {
-              //console.log(start, end)
-              let ref;
-              if (footnoteIdx !== null) {
-                ref = this.$refs['footnoteContent_' + footnoteIdx];
-                if (ref) {
-                  ref = ref[0];
-                }
-              } else {
-                if (this.$refs.blockContent) {
-                  ref = this.$refs.blockContent;
-                }
-              }
-              if (ref && ref.querySelectorAll) {
-                start = parseInt(start * 1000);
-                end = parseInt(end * 1000);
-                ref.querySelectorAll('w').forEach(e => {
-                  let map = $(e).attr('data-map');
-                  if(map) {
-                    map = map.split(',');
-                    if (map.length == 2) {
-                      map[0] = parseInt(map[0]);
-                      map[1] = map[0] + parseInt(map[1]);
-                      if ((map[0] >= start && map[0] < end) ||
-                              (map[0] < start && map[1] > start)) {
-                        //console.log(map[0], start, map[1], end)
-                        //console.log(e)
-                        $(e).addClass('selected');
-                      } else {
-                        //console.log('NOT', map, start, end, e)
-                        $(e).removeClass('selected');
-                      }
-                    }
-                  }
-                });
-              }
-            }
-          });
+          this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
+          this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
+          this.$root.$on('from-audioeditor:save', this.evFromAudioeditorSave);
+          this.$root.$on('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
+          this.$root.$on('from-audioeditor:cut', this.evFromAudioeditorCut);
+          this.$root.$on('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
+          this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
+          this.$root.$on('from-audioeditor:discard', this.evFromAudioeditorDiscard);
+          this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
+
+          this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
         });
       },
+
+      //-- Events -- { --//
+      evFromAudioeditorClosed(blockId) {
+      console.log('closed:', 'blockId', blockId, 'this.check_id', this.check_id);
+        if (blockId === this.check_id) {
+          this.isAudioEditing = false;
+          if (this.isAudioChanged) {
+            this.discardAudioEdit(this.footnoteIdx, false);
+          }
+          $('nav.fixed-bottom').addClass('hidden');
+
+          $('#' + this.block._id + ' .table-body.-content').removeClass('editing');
+          //this.check_id = null;
+        } else {
+          console.log('stop events', this.block._id);
+          this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
+          this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
+          this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
+          this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
+          this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
+          this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
+          this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
+          this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
+          this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
+          this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+        }
+
+      },
+      evFromAudioeditorBlockLoaded(blockId) {
+        if (blockId == this.check_id) {
+          $('nav.fixed-bottom').removeClass('hidden');
+        }
+      },
+      evFromAudioeditorWordRealign(map, blockId) {
+        if (blockId == this.check_id) {
+          this.audStop();
+          console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
+          if (this.footnoteIdx !== null) {
+            let ref = this.$refs['footnoteContent_' + this.footnoteIdx];
+            if (ref) {
+              ref = ref[0];
+            }
+            if (ref && ref.querySelectorAll) {
+              ref.querySelectorAll('[data-map]').forEach(_w => {
+                let _m = map.shift();
+                let w_map = _m.join()
+                $(_w).attr('data-map', w_map)
+              });
+              this.audioEditFootnote.footnote.content = ref.innerHTML;
+              this.pushChange('footnotes');
+              this.pushChange('content_footnote');
+            }
+          } else {
+            if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
+              this.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
+                let _m = map.shift();
+                let w_map = _m.join()
+                $(_w).attr('data-map', w_map)
+              });
+              this.block.content = this.$refs.blockContent.innerHTML;
+              this.blockAudio.map = this.block.content;
+              this.pushChange('content');
+            }
+          }
+        }
+      },
+      evFromAudioeditorSaveAndRealign (blockId) {
+        if (blockId == this.check_id) {
+          this.audStop();
+          this.doReAlign()
+            .then(() => {
+              this.assembleBlockAudioEdit(this.footnoteIdx);
+              this.flushChanges();
+            });
+        }
+      },
+      evFromAudioeditorCut (blockId, start, end) {
+        if (blockId == this.check_id) {
+          this.audStop();
+          this._audDeletePart(start, end, this.footnoteIdx);
+        }
+      },
+      evFromAudioeditorSave (blockId) {
+        if (blockId == this.check_id) {
+          this.audStop();
+          this.assembleBlockAudioEdit(this.footnoteIdx);
+          this.flushChanges();
+        }
+      },
+      evFromAudioeditorInsertSilence (blockId, position, length) {
+        if (blockId == this.check_id) {
+          this.audStop();
+          this.insertSilence(position, length, this.footnoteIdx);
+        }
+      },
+      evFromAudioeditorUndo (blockId, audio, text, isModified) {
+        if (blockId == this.check_id) {
+          this.audStop();
+          if (this.footnoteIdx === null) {
+            this.block.undoContent();
+            this.block.undoAudiosrc();
+            this.blockAudio.map = this.block.content;
+            this.blockAudio.src = this.block.getAudiosrc('m4a');
+            this.isAudioChanged = isModified;
+          } else {
+            //this.audioEditFootnote.footnote.content = text;
+            //this.block.setAudiosrcFootnote(footnoteIdx, audio);
+            //this.audioEditFootnote.isAudioChanged = isModified;
+            this.block.undoContentFootnote(this.footnoteIdx);
+            this.block.undoAudiosrcFootnote(this.footnoteIdx);
+            this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(this.footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
+          }
+        }
+      },
+      evFromAudioeditorDiscard (blockId) {
+        if (blockId == this.check_id) {
+          this.audStop();
+          this.discardAudioEdit(this.footnoteIdx);
+        }
+      },
+      evFromAudioeditorSelect (blockId, start, end) {
+        if (blockId == this.check_id) {
+          if (start !== this.audioSelectPos.start || end !== this.audioSelectPos.end) {
+            let ref;
+            if (this.footnoteIdx !== null) {
+              ref = this.$refs['footnoteContent_' + this.footnoteIdx];
+              if (ref) {
+                ref = ref[0];
+              }
+            } else {
+              if (this.$refs.blockContent) {
+                ref = this.$refs.blockContent;
+              }
+            }
+            if (ref && ref.querySelectorAll) {
+              let startInt = parseInt(start * 1000);
+              let endInt = parseInt(end * 1000);
+              //console.log('evFromAudioeditorSelect', startInt, endInt);
+              ref.querySelectorAll('w').forEach(e => {
+                let map = $(e).attr('data-map');
+                if(map) {
+                  map = map.split(',');
+                  if (map.length == 2) {
+                    map[0] = parseInt(map[0]);
+                    map[1] = map[0] + parseInt(map[1]);
+                    if ((map[0] >= startInt && map[0] < endInt) ||
+                            (map[0] < startInt && map[1] > startInt)) {
+                       $(e).addClass('selected');
+                    } else {
+                      $(e).removeClass('selected');
+                    }
+                  }
+                }
+              });
+            }
+            this.audioSelectPos.start = start;
+            this.audioSelectPos.end = end;
+          }
+        }
+      },
+      //-- } -- end -- Events --//
+
       _getParent(node, tag) {
         if (node.localName == tag) {
           return node;
@@ -3055,6 +3094,12 @@ export default {
     this.$root.$off('playBlockFootnote');
     this.$root.$off('playBlock');
     this.$root.$off('saved-block:' + this.block._id);
+
+    console.log('bookBlockDestroyed');
+    this.evFromAudioeditorClosed(null);
+    this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+
+
     this.destroyEditor();
   }
 }

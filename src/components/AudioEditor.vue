@@ -14,7 +14,7 @@
         <div id="playlist" class="wf-playlist" ref="playlist"></div>
       </div>
       <div class="player-controls">
-        
+
         <div :class="['play-controls', '-' + mode]">
           <i class="fa fa-play-circle-o" v-if="!isPlaying" v-on:click="play()"></i>
           <i class="fa fa-pause-circle-o" v-if="isPlaying" v-on:click="pause()"></i>
@@ -126,11 +126,13 @@
   //import { modal } from 'vue-strap'
   import v_modal from 'vue-js-modal';
   import {mapActions, mapGetters} from 'vuex'
+  import _ from 'lodash';
   //import Peaks from 'peaks.js';
   var WaveformPlaylist = require('waveform-playlist');
   var WaveformData = require('waveform-data')
   var Draggable = require ('draggable')
   Vue.use(v_modal, { dialog: true });
+
   export default {
       name: 'AudioEditor',
       components: {
@@ -182,26 +184,10 @@
       },
       mounted() {
         this.audioContext = new (window.AudioContext || window.webkitAudioContext);
-        let self = this;
-        this.$root.$on('for-audioeditor:load-and-play', function(audio, text, block, autostart, mode, reloadOnChange) {
-          self.load(audio, text, block, autostart, mode, reloadOnChange);
-        });
-        this.$root.$on('for-audioeditor:load', function(audio, text) {
-          self.setAudio(audio, text);
-        });
-        this.$root.$on('for-audioeditor:reload-text', function(text) {
-          self._setText(text);
-        });
-        this.$root.$on('for-audioeditor:select', (block_id, start, end) => {
-          if (this.blockId === block_id) {
-            this.blockSelectionEmit = true;
-            this.selection.start = start / 1000;
-            this.selection.end = end / 1000;
-            this._clearWordSelection();
-            this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-            this._showSelectionBorders(true);
-          }
-        });
+        this.$root.$on('for-audioeditor:load-and-play', this.load);
+        this.$root.$on('for-audioeditor:load', this.setAudio);
+        this.$root.$on('for-audioeditor:reload-text', this._setText);
+        this.$root.$on('for-audioeditor:select', this.select);
         this.$root.$on('for-audioeditor:close', this.close);
       },
       beforeDestroy() {
@@ -210,9 +196,25 @@
           //this.audioContext = null;
           this.audiosourceEditor = null;
         }
+        this.$root.$off('for-audioeditor:close', this.close);
+        this.$root.$off('for-audioeditor:load-and-play', this.load);
+        this.$root.$off('for-audioeditor:load', this.setAudio);
+        this.$root.$off('for-audioeditor:reload-text', this._setText);
+        this.$root.$off('for-audioeditor:select', this.select);
       },
       methods: {
+        select (block_id, start, end) {
+          if (this.blockId === block_id) {
+            this.blockSelectionEmit = true;
+            this.selection.start = start / 1000;
+            this.selection.end = end / 1000;
+            this._clearWordSelection();
+            this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            this._showSelectionBorders(true);
+          }
+        },
         load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
+          //console.log('load', audio, text, block, autostart, bookAudiofile, reloadOnChange);
           let blockId = block ? block._id : null;
           if (bookAudiofile && bookAudiofile.blockMap) {
             this.blockMap = bookAudiofile.blockMap;
@@ -264,22 +266,22 @@
               }
             }
           }
-          
-          
+
+
           this.currentWord = null;
           this.contextPosition = null;
           this.mode = mode;
-          
+
           if (this.$refs.waveformContext) {
             this.$refs.waveformContext.close();
           }
-          
+
           let self = this;
-          
+
           this.audiofile = audio;
           this.blockId = blockId;
           this.block = block;
-          
+
           if (!this.audiosourceEditor) {
             if (!this.audioContext) {
               this.audioContext = new (window.AudioContext || window.webkitAudioContext);
@@ -388,7 +390,7 @@
                   let waveform_position = $('.playlist-tracks')[0].scrollLeft;
                   let waveform_width = $('.playlist-tracks')[0].offsetWidth;
                   if (cursor_position > 0 && (
-                          cursor_position < waveform_position || 
+                          cursor_position < waveform_position ||
                           cursor_position > waveform_position + waveform_width)) {
                       let scrollPosition = cursor_position > waveform_position + waveform_width ? waveform_position + waveform_width / 2 : cursor_position;
                       $('.playlist-tracks').scrollLeft(scrollPosition);
@@ -405,7 +407,7 @@
               start = self._round(start, 2);
               end = self._round(end, 2);
               let is_single_cursor = end - start == 0;
-              if (is_single_cursor && self.contextPosition && self.mode === 'file' && 
+              if (is_single_cursor && self.contextPosition && self.mode === 'file' &&
                       typeof self.selection.start !== 'undefined' &&
                       typeof self.selection.end !== 'undefined') {
                 self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
@@ -423,7 +425,7 @@
             });
             $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>').after('<div id="context-position" class="context-position"></div>');
             self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
-            
+
               limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
               onDrag: function(element, x, y, event) {
                 if ($('[id="resize-selection-left"]').position().left >= x) {
@@ -441,12 +443,15 @@
                 if ($('.selection.segment').length > 0) {
                   $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
                 }
-                self.audiosourceEditor.activeTrack.stateObj.startX = startX;
-                if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
-                  self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
-                } else {
-                  let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
-                  self.plEventEmitter.emit('select', self.selection.start, startSec);
+
+                if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
+                  self.audiosourceEditor.activeTrack.stateObj.startX = startX;
+                  if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
+                    self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
+                  } else {
+                    let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
+                    self.plEventEmitter.emit('select', self.selection.start, startSec);
+                  }
                 }
                 //self.cursorPosition = self.selection.start;
               }
@@ -468,12 +473,14 @@
                 } else {
                   startX = $('[id="resize-selection-right"]').position().left;
                 }
-                self.audiosourceEditor.activeTrack.stateObj.startX = startX;
-                if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
-                  self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
-                } else {
-                  let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
-                  self.plEventEmitter.emit('select', startSec, self.selection.end);
+                if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
+                  self.audiosourceEditor.activeTrack.stateObj.startX = startX;
+                  if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
+                    self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
+                  } else {
+                    let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
+                    self.plEventEmitter.emit('select', startSec, self.selection.end);
+                  }
                 }
                 self.cursorPosition = self.selection.start;
               }
@@ -554,37 +561,39 @@
             self._showSelectionBorders();
           });
           $('body').on('click', '.playlist-overlay', (e) => {
-            let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
-            let pos_r = this._round(pos, 1);
-            if (this.mouseSelection.start !== null && Math.abs(pos_r - this.mouseSelection.start) < 0.1) {
-              if (this.mode === 'block' && e.shiftKey && this.cursorPosition >= 0) {
-                if (this.cursorPosition > pos_r) {
-                  let end_pos = this.cursorPosition;
-                  this.setSelectionStart(pos);
-                  this.setSelectionEnd(end_pos);
+            if (typeof this.audiosourceEditor !== 'undefined') {
+              let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+              let pos_r = this._round(pos, 1);
+              if (this.mouseSelection.start !== null && Math.abs(pos_r - this.mouseSelection.start) < 0.1) {
+                if (this.mode === 'block' && e.shiftKey && this.cursorPosition >= 0) {
+                  if (this.cursorPosition > pos_r) {
+                    let end_pos = this.cursorPosition;
+                    this.setSelectionStart(pos);
+                    this.setSelectionEnd(end_pos);
+                  } else {
+                    this.setSelectionStart(this.cursorPosition);
+                    this.setSelectionEnd(pos);
+                  }
                 } else {
-                  this.setSelectionStart(this.cursorPosition);
-                  this.setSelectionEnd(pos);
+                  if (typeof this.selection.start !== 'undefined') {
+                    this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                  }
+                  this.cursorPosition = pos;
+                  if (this.isPlaying) {
+                    this.stop().then(() => this.play(pos));
+                  }
                 }
               } else {
-                if (typeof this.selection.start !== 'undefined') {
-                  this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                }
-                this.cursorPosition = pos;
                 if (this.isPlaying) {
-                  this.stop().then(() => this.play(pos));
+                  this.cursorPosition = pos;
+                } else {
+                  this.cursorPosition = this.selection.start;
                 }
+                //console.log(this.mouseSelection.start, pos)
               }
-            } else {
-              if (this.isPlaying) {
-                this.cursorPosition = pos;
-              } else {
-                this.cursorPosition = this.selection.start;
-              }
-              //console.log(this.mouseSelection.start, pos)
+              //$('#cursor-position').show();
+              this._showSelectionBorders();
             }
-            //$('#cursor-position').show();
-            this._showSelectionBorders();
           });
           $('body').on('mousedown', '.playlist-overlay', (e) => {
             if (e.which !== 1) {
@@ -593,11 +602,13 @@
             $('[id="resize-selection-right"]').hide().css('left', 0);
             $('[id="resize-selection-left"]').hide().css('left', 0);
             $('#cursor-position').hide();
-            let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
-            if (typeof this.selection.start !== 'undefined') {
-              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            if (typeof this.audiosourceEditor.samplesPerPixel !== 'undefined') {
+              let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+              if (typeof this.selection.start !== 'undefined') {
+                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              }
+              this.mouseSelection = {start: this._round(pos, 1), end: null};
             }
-            this.mouseSelection = {start: this._round(pos, 1), end: null};
           });
           $('.player-controls').keydown('input[type="number"]', function(e) {
             e.preventDefault();
@@ -850,7 +861,7 @@
               //this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
               //this._showSelectionBorders();
               if (this.origFilePositions.start == this.selection.end) {
-                this.setSelectionEnd(this.origFilePositions.end); 
+                this.setSelectionEnd(this.origFilePositions.end);
               }
               this.setSelectionStart(this.origFilePositions.start);
               this.setSelectionEnd(this.origFilePositions.end);
@@ -1056,7 +1067,7 @@
           if (new_selection.start >= 0 && new_selection.start < new_selection.end) {
             //this._setSelectionOnWaveform();
             if (this.selection.end == new_selection.start) {
-              this.setSelectionEnd(new_selection.end); 
+              this.setSelectionEnd(new_selection.end);
             }
             if (this.selection.start != new_selection.start) {
               this.setSelectionStart(new_selection.start);
@@ -1101,11 +1112,11 @@
                 position[0] = parseInt(position[0]) / 1000;
                 position[1] = parseInt(position[1]) / 1000;
                 annotations.push({
-                  "begin": position[0], 
-                  "children": [], 
-                  "end": self._round(position[1] + position[0], 3), 
-                  "id": $(this).text(), 
-                  "language": "eng", 
+                  "begin": position[0],
+                  "children": [],
+                  "end": self._round(position[1] + position[0], 3),
+                  "id": $(this).text(),
+                  "language": "eng",
                   "lines": []
                 });
                 self.words.push({start: position[0], end: self._round(position[0] + position[1], 3), index: self.words.length, alignedIndex: alignedWords++});
@@ -1154,7 +1165,7 @@
                 start = this.selection.start;//parseInt(this.blockMap[this.blockSelection.end._id][0])/1000;
               }
             }
-            
+
             if (start !== false && end !== false && start < end) {
               this.selection.start = this._round(start, 2);
               this.selection.end = this._round(end, 2);
@@ -1171,7 +1182,7 @@
         },
         onContext: function(e) {
           if (this.mode == 'file') {
-            if (this.mode === 'file' && 
+            if (this.mode === 'file' &&
                     typeof this.selection.start !== 'undefined' &&
                     typeof this.selection.end !== 'undefined') {
               let t = setInterval(() => {
@@ -1268,7 +1279,20 @@
         },
         cancelAlign() {
           this.$root.$emit('cancel-align');
-        }
+        },
+        throttleSelection: _.debounce(function (val, oldVal) {
+          if (!this.blockSelectionEmit) {
+            if (typeof val.start !== 'undefined' && typeof val.end !== 'undefined') {
+              if (val.start !== oldVal.start || val.end !== oldVal.end) {
+                this._clearWordSelection();
+                this.$root.$emit('from-audioeditor:select', this.blockId, val.start, val.end);
+              }
+            }
+          } else {
+            this.blockSelectionEmit = false;
+          }
+          this.$root.$emit('from-audioeditor:selection-change', this.blockId, val.start, val.end);
+        }, 30),
       },
       computed: {
         selectionStartH: {
@@ -1369,7 +1393,7 @@
         },
         hasAlignSelection: {
           get() {
-            return (this.blockSelection.start && this.blockSelection.start._id) || 
+            return (this.blockSelection.start && this.blockSelection.start._id) ||
                     (this.blockSelection.end && this.blockSelection.end._id)
           }
         },
@@ -1385,8 +1409,8 @@
         },
         allowAlignSelection: {
           get() {
-            return this.blockSelection.start && this.blockSelection.start._id && 
-                    this.blockSelection.end && this.blockSelection.end._id && 
+            return this.blockSelection.start && this.blockSelection.start._id &&
+                    this.blockSelection.end && this.blockSelection.end._id &&
                     this.alignCounter.count;
           }
         },
@@ -1413,7 +1437,7 @@
                 $('.cursor').css('left', pos);
               }
             }
-            
+
             if (val > 0) {
               if (this.isPlaying) {
                 this.stop()
@@ -1450,16 +1474,7 @@
         },
         'selection': {
           handler(val, oldVal) {
-            if (!this.blockSelectionEmit) {
-              if (typeof val.start !== 'undefined' && typeof val.end !== 'undefined') {
-                //console.log('ON SELECT ')
-                this._clearWordSelection();
-                this.$root.$emit('from-audioeditor:select', this.blockId, val.start, val.end);
-              }
-            } else {
-              this.blockSelectionEmit = false;
-            }
-            this.$root.$emit('from-audioeditor:selection-change', this.blockId, val.start, val.end);
+            this.throttleSelection(val, oldVal);
           },
           deep: true
         },
@@ -1718,7 +1733,7 @@
       display: none;
   }
   .playlist-tracks {
-    
+
   }
   .playlist-tracks::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
