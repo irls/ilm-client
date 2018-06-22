@@ -2364,8 +2364,8 @@ export default {
 
       //-- Events -- { --//
       evFromAudioeditorClosed(blockId) {
-      console.log('closed:', 'blockId', blockId, 'this.check_id', this.check_id);
-        if (blockId === this.check_id) {
+
+        if (blockId === this.block._id || blockId === this.block._id + '_' + this.footnoteIdx) {
           this.isAudioEditing = false;
           if (this.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false);
@@ -2374,19 +2374,19 @@ export default {
 
           $('#' + this.block._id + ' .table-body.-content').removeClass('editing');
           //this.check_id = null;
-        } else {
-          console.log('stop events', this.block._id);
-          this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
-          this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-          this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
-          this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
-          this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
-          this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-          this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
-          this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
-          this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
-          this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
         }
+
+        console.log('stop events', this.block._id);
+        this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
+        this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
+        this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
+        this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
+        this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
+        this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
+        this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
+        this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
+        this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
+        this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
       },
       evFromAudioeditorBlockLoaded(blockId) {
@@ -3099,10 +3099,10 @@ export default {
     this.$root.$off('playBlock');
     this.$root.$off('saved-block:' + this.block._id);
 
-    console.log('bookBlockDestroyed');
-    this.evFromAudioeditorClosed(null);
+    if (this.check_id || this.footnoteIdx) {
+      this.evFromAudioeditorClosed(this.check_id || this.block._id);
+    }
     this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
-
 
     this.destroyEditor();
   }
