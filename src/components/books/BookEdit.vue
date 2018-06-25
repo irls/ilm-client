@@ -87,12 +87,12 @@
   <div class="custom-scroll">
   <div class="vue-scrollbar__up"
     @click.prevent="()=>{return true;}"
-    @touchstart="scrollByBarStart('up')"
     @mousedown="scrollByBarStart('up')"
-    @touchend="scrollByBarEnd()"
     @mouseup="scrollByBarEnd()"
     @mouseout="scrollByBarEnd()">
     <i aria-hidden="true" class="fa fa-angle-up"></i>
+    <!--@touchstart="scrollByBarStart('up')"
+    @touchend="scrollByBarEnd()"-->
   </div>
   <vue-scrollbar classes="" ref="scrollBarRef" :onChangePosition="scrollByBar" direction="vertical"
   :onEndDragEvent="endScrollDragging" :onScrollBarClick="scrollBarClick">
@@ -104,12 +104,12 @@
   </vue-scrollbar>
   <div class="vue-scrollbar__down"
     @click.prevent="()=>{return true;}"
-    @touchstart="scrollByBarStart('down')"
     @mousedown="scrollByBarStart('down')"
-    @touchend="scrollByBarEnd()"
     @mouseup="scrollByBarEnd()"
     @mouseout="scrollByBarEnd()">
     <i aria-hidden="true" class="fa fa-angle-down"></i>
+    <!--@touchstart="scrollByBarStart('down')"
+    @touchend="scrollByBarEnd()"-->
   </div>
   </div>
   <!--<div class="custom-scroll">-->

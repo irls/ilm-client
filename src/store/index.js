@@ -925,7 +925,7 @@ export const store = new Vuex.Store({
         // save old state
       }
       if (book_id) {
-        console.log('state.metaDBcomplete', state.metaDBcomplete);
+        //console.log('state.metaDBcomplete', state.metaDBcomplete);
         let metaDB = state.metaDBcomplete ? state.metaDB : state.metaRemoteDB;
         return metaDB.get(book_id).then(meta => {
           commit('SET_CURRENTBOOK_META', meta)
@@ -1371,7 +1371,7 @@ export const store = new Vuex.Store({
                 return doc.bookid === params.book_id;
             }
         }
-        console.log('state.contentDBcomplete', state.contentDBcomplete);
+        //console.log('state.contentDBcomplete', state.contentDBcomplete);
         let contentDBWatch = state.contentDBcomplete ? state.contentDB.changes(config) : state.contentRemoteDB.changes(config);
         contentDBWatch.removeAllListeners('change');
         contentDBWatch
