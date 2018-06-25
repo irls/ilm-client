@@ -462,14 +462,16 @@ export default {
         onpage: onPage
       })
       .then((result)=>{
-        if (result.rows.length > 0) {
+        if (result.rows && result.rows.length > 0) {
           result.rows.forEach((el, idx, arr)=>{
             let newBlock = new BookBlock(el);
             this.$store.commit('set_storeList', newBlock);
             this.updateScrollSlider(false, this.isNeedUp);
           });
+          result.blockId = result.rows[0]._id;
+        } else {
+          return Promise.reject();
         }
-        result.blockId = result.rows[0]._id;
         this.reCountProxy();
         return Promise.resolve(result);
       })
@@ -488,14 +490,17 @@ export default {
         onpage: onPage
       })
       .then((result)=>{
-        if (result.rows.length > 0) {
+        if (result.rows && result.rows.length > 0) {
           result.rows.forEach((el, idx, arr)=>{
             let newBlock = new BookBlock(el);
             this.$store.commit('set_storeList', newBlock);
             this.updateScrollSlider(false);
           });
-        } else this.hasScrollDown = false;
-        result.blockId = result.rows[result.rows.length-1]._id;
+          result.blockId = result.rows[result.rows.length-1]._id;
+        } else {
+          this.hasScrollDown = false;
+          return Promise.reject();
+        }
         this.reCountProxy();
         return Promise.resolve(result);
       })
