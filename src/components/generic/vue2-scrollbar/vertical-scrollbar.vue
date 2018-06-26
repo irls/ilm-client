@@ -13,7 +13,6 @@
       <div
         :class="'scrollbar' + ( dragging || draggingFromParent ? '' : ' vue-scrollbar-transition')"
         ref="scrollbar"
-        @touchstart="startDrag"
         @mousedown="startDrag"
         @click="preventClick"
         :style="{
@@ -21,7 +20,7 @@
           top: scrolling + '%'
         }">
       </div>
-
+      <!--@touchstart="startDrag"-->
     </div>
   </div>
 </template>

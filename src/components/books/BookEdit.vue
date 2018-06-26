@@ -87,12 +87,12 @@
   <div class="custom-scroll">
   <div class="vue-scrollbar__up"
     @click.prevent="()=>{return true;}"
-    @touchstart="scrollByBarStart('up')"
     @mousedown="scrollByBarStart('up')"
-    @touchend="scrollByBarEnd()"
     @mouseup="scrollByBarEnd()"
     @mouseout="scrollByBarEnd()">
     <i aria-hidden="true" class="fa fa-angle-up"></i>
+    <!--@touchstart="scrollByBarStart('up')"
+    @touchend="scrollByBarEnd()"-->
   </div>
   <vue-scrollbar classes="" ref="scrollBarRef" :onChangePosition="scrollByBar" direction="vertical"
   :onEndDragEvent="endScrollDragging" :onScrollBarClick="scrollBarClick">
@@ -104,12 +104,12 @@
   </vue-scrollbar>
   <div class="vue-scrollbar__down"
     @click.prevent="()=>{return true;}"
-    @touchstart="scrollByBarStart('down')"
     @mousedown="scrollByBarStart('down')"
-    @touchend="scrollByBarEnd()"
     @mouseup="scrollByBarEnd()"
     @mouseout="scrollByBarEnd()">
     <i aria-hidden="true" class="fa fa-angle-down"></i>
+    <!--@touchstart="scrollByBarStart('down')"
+    @touchend="scrollByBarEnd()"-->
   </div>
   </div>
   <!--<div class="custom-scroll">-->
@@ -462,14 +462,16 @@ export default {
         onpage: onPage
       })
       .then((result)=>{
-        if (result.rows.length > 0) {
+        if (result.rows && result.rows.length > 0) {
           result.rows.forEach((el, idx, arr)=>{
             let newBlock = new BookBlock(el);
             this.$store.commit('set_storeList', newBlock);
             this.updateScrollSlider(false, this.isNeedUp);
           });
+          result.blockId = result.rows[0]._id;
+        } else {
+          return Promise.reject();
         }
-        result.blockId = result.rows[0]._id;
         this.reCountProxy();
         return Promise.resolve(result);
       })
@@ -488,14 +490,17 @@ export default {
         onpage: onPage
       })
       .then((result)=>{
-        if (result.rows.length > 0) {
+        if (result.rows && result.rows.length > 0) {
           result.rows.forEach((el, idx, arr)=>{
             let newBlock = new BookBlock(el);
             this.$store.commit('set_storeList', newBlock);
             this.updateScrollSlider(false);
           });
-        } else this.hasScrollDown = false;
-        result.blockId = result.rows[result.rows.length-1]._id;
+          result.blockId = result.rows[result.rows.length-1]._id;
+        } else {
+          this.hasScrollDown = false;
+          return Promise.reject();
+        }
         this.reCountProxy();
         return Promise.resolve(result);
       })

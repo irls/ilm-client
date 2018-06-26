@@ -245,7 +245,7 @@
             </table> -->
           </fieldset>
           <template v-if="isAdmin || isLibrarian || _is('editor', true)">
-            <a v-if="currentBook.published && currentBook.demo" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()" -->
+            <a v-if="currentBook.published" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()" -->
           </template>
         </vue-tab>
 

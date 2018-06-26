@@ -925,7 +925,7 @@ export const store = new Vuex.Store({
         // save old state
       }
       if (book_id) {
-        console.log('state.metaDBcomplete', state.metaDBcomplete);
+        //console.log('state.metaDBcomplete', state.metaDBcomplete);
         let metaDB = state.metaDBcomplete ? state.metaDB : state.metaRemoteDB;
         return metaDB.get(book_id).then(meta => {
           commit('SET_CURRENTBOOK_META', meta)
@@ -999,6 +999,7 @@ export const store = new Vuex.Store({
                 meta['pubType'] = 'Unpublished';
                 meta['published'] = false;
                 meta['status'] = 'staging';
+                meta['demo'] = false;
                 state.metaRemoteDB.put(meta)
                   .then(() => {
                     //dispatch('reloadBookMeta');
@@ -1006,6 +1007,7 @@ export const store = new Vuex.Store({
                     state.currentBookMeta.pubType = meta['pubType'];
                     state.currentBookMeta.published = meta['published'];
                     state.currentBookMeta.status = meta['status'];
+                    state.currentBookMeta.demo = meta['demo'];
                     if (meta.collection_id) {
                       dispatch('updateCollectionVersion', Object.assign({id: meta.collection_id}, update));
                     }
@@ -1371,7 +1373,7 @@ export const store = new Vuex.Store({
                 return doc.bookid === params.book_id;
             }
         }
-        console.log('state.contentDBcomplete', state.contentDBcomplete);
+        //console.log('state.contentDBcomplete', state.contentDBcomplete);
         let contentDBWatch = state.contentDBcomplete ? state.contentDB.changes(config) : state.contentRemoteDB.changes(config);
         contentDBWatch.removeAllListeners('change');
         contentDBWatch
@@ -1907,7 +1909,11 @@ export const store = new Vuex.Store({
         for (var idx=0; idx < state.storeList.size; idx++) {
           let block = state.storeList.get(crossId);
           if (block) {
-            if (block.markedAsDone) {
+            let hasAssignment = state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1 || state.tc_currentBookTasks.assignments.indexOf('content_cleanup') !== -1;
+            let hasTask = state.tc_currentBookTasks.tasks.find((t) => {
+              return t.blockid == block._id;
+            })
+            if (block.markedAsDone || (!hasAssignment && !hasTask)) {
               switch (block.voicework) {
                 case 'audio_file' :
                   ++approved;

@@ -10,14 +10,13 @@
       :class="'vue-scrollbar__area' + ( this.dragging ? ' ' : ' vue-scrollbar-transition')"
       ref="scrollArea"
       @wheel="scroll"
-      @touchstart="startDrag"
-      @touchmove="onDrag"
-      @touchend="stopDrag"
       :style="{
         marginTop: this.top * -1 +'px',
         marginLeft: this.left * -1 +'px'
       }">
-
+      <!--@touchstart="startDrag"
+      @touchmove="onDrag"
+      @touchend="stopDrag"-->
         <slot></slot>
 
         <vertical-scrollbar
