@@ -119,7 +119,8 @@ export const store = new Vuex.Store({
       countAudio: 0,
       countTTS: 0,
       blocks: []
-    }
+    },
+    alignWatch: null
   },
 
   getters: {
@@ -666,6 +667,12 @@ export const store = new Vuex.Store({
         }
       }
     },
+    set_block_locks(state, blocks) {
+      state.lockedBlocks = [];
+      blocks.forEach(b => {
+        state.lockedBlocks.push({_id: b._id, type: 'align'});
+      });
+    },
     set_storeList (state, blockObj) {
       if (state.storeList) {
         let firstObj = state.storeList.values().next().value;
@@ -932,6 +939,7 @@ export const store = new Vuex.Store({
           commit('TASK_LIST_LOADED')
           dispatch('getTotalBookTasks');
           dispatch('setCurrentBookCounters');
+          dispatch('startAlignWatch');
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
@@ -1149,8 +1157,8 @@ export const store = new Vuex.Store({
         .get(block_id)
         .then(res => {
           //commit('clear_blocker', 'getBlock');
-          commit('clear_block_lock', {block: res});
-          commit('check_block_lock', {block: res});
+          //commit('clear_block_lock', {block: res});
+          //commit('check_block_lock', {block: res});
           return Promise.resolve(res)
         })
         .catch((err) => {
@@ -1956,6 +1964,30 @@ export const store = new Vuex.Store({
             commit('clear_block_lock', {block: {_id: r._id}, force: true})
           })
         }
+      }
+    },
+    startAlignWatch({state, commit, dispatch}) {
+      if (state.currentBookid) {
+        if (state.alignWatch) {
+          clearInterval(state.alignWatch);
+        }
+        dispatch('getBookAlign');
+        state.alignWatch = setInterval(() => {
+          dispatch('getBookAlign');
+        }, 10000);
+      }
+    },
+    getBookAlign({state, commit}) {
+      if (state.currentBookid) {
+        let api_url = state.API_URL + 'align_queue/' + state.currentBookid;
+        axios.get(api_url, {})
+          .then(response => {
+            if (response.status == 200) {
+              commit('set_block_locks', response.data);
+            }
+            return Promise.resolve();
+          })
+          .catch(err => Promise.reject(err));
       }
     }
   }

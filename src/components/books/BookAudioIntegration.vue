@@ -24,8 +24,8 @@
                 </li>
             </dropdown>
             <div class="align-audio">
-              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)" v-if="!hasLocks('align')">Align&nbsp;<span v-if="alignCounter.count > 0">({{blocksForAlignment}})</span></button>
-              <button v-else class="btn btn-danger btn-small" v-on:click="cancelAlign(true)">Cancel Alignment</button>
+              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)">Align&nbsp;<span v-if="alignCounter.count > 0">({{blocksForAlignment}})</span></button>
+              <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign(true)" title="Cancel aligning"><i class="fa fa-ban"></i></button>
             </div>
           </div>
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
@@ -131,8 +131,8 @@
           <span class="red">Select audio</span>
         </div>-->
         <div class="pull-right align-process-start">
-          <button class="btn btn-default" :disabled="!enableTtsAlignment" v-on:click="alignTts()" v-if="!hasLocks('align')">Convert text to speech &amp; Align with text</button>
-          <button v-else class="btn btn-danger" v-on:click="cancelAlign()">Cancel Alignment</button>
+          <button class="btn btn-default" :disabled="!enableTtsAlignment" v-on:click="alignTts()">Convert text to speech &amp; Align with text</button>
+          <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
         </div>
       </panel>
     </accordion>
@@ -608,7 +608,7 @@
         let update = this.saveAudiobook()
           .then((updated) => Promise.resolve(updated))
           .catch((err) => Promise.resolve({error: true, err: err}));
-        this._setAligningBlocks('audio_file');
+        //this._setAligningBlocks('audio_file');
         Promise.all([update])
           .then((updated) => {
             //console.log(updated)
@@ -624,20 +624,22 @@
                 return status == 200 || status == 504;
               }
             }).then(function(response){
+              self.getBookAlign();
               if (response.status===200) {
                 self.$root.$emit('bookBlocksUpdates', response.data);
                 self.$emit('alignmentFinished');
                 self.aligningBlocks = [];
               } else if (response.status == 504) {
-                self.checkAligningBlocks();
+                //self.checkAligningBlocks();
               }
               self.setCurrentBookCounters();
             }).catch((err) => {
+              self.getBookAlign();
               console.log('error: '+ err);
               if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
-                self.checkAligningBlocks();
+                //self.checkAligningBlocks();
               } else {
-                self.aligningBlocks = [];
+                //self.aligningBlocks = [];
               }
             });
           });
@@ -677,6 +679,7 @@
           })
       },
       _setAligningBlocks(voicework) {
+        return false;
         this.aligningBlocks = [];
         let realign = this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0;
         if (this.alignCounter.blocks) {
@@ -721,26 +724,15 @@
         });
       },
       cancelAlign(force = false) {
-        //if (this.alignmentProcess || force) {
-          let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/selection_alignment';
+        let api_url = this.API_URL + 'align_queue/' + this.audiobook.bookid;
 
-          let api = this.$store.state.auth.getHttp()
-          let self = this;
+        let api = this.$store.state.auth.getHttp()
 
-          api.delete(api_url, {}, {}).then(function(response){
-            if (response.status===200) {
-
-            } else {
-
-            }
-            self.aligningBlocks = [];
-            self.clearLocks({type: 'align'});
-          }).catch((err) => {
-            console.log('error: '+ err)
-            self.aligningBlocks = [];
-            self.clearLocks({type: 'align'});
-          });
-        //}
+        api.delete(api_url, {}, {}).then((response) => {
+          this.getBookAlign();
+        }).catch((err) => {
+          this.getBookAlign();
+        });
       },
       alignTts(warn = 2) {
         if (warn >= 2 && this.currentBookCounters.approved_tts_in_range > 0) {
@@ -830,20 +822,22 @@
             return status == 200 || status == 504;
           }
         }).then((response)=>{
+          this.getBookAlign();
           if (response.status===200) {
             this.$root.$emit('bookBlocksUpdates', response.data);
             this.$emit('alignmentFinished');
-            this.aligningBlocks = [];
+            //this.aligningBlocks = [];
           } else if (response.status == 504) {
-            self.checkAligningBlocks();
+            //self.checkAligningBlocks();
           }
           this.setCurrentBookCounters();
         }).catch((err) => {
+          this.getBookAlign();
           console.log('error11: '+ err);
           if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
-            this.checkAligningBlocks();
+            //this.checkAligningBlocks();
           } else {
-            this.aligningBlocks = [];
+            //this.aligningBlocks = [];
           }
         });
       },
@@ -907,7 +901,7 @@
           })
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks', 'clearLocks'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks', 'clearLocks', 'getBookAlign'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');

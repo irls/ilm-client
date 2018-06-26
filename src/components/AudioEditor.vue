@@ -74,8 +74,8 @@
         </div>
         <div class="audio-controls" v-if="mode == 'file'">
           <button class="btn btn-default" :disabled="!isModifiedComputed" v-on:click="undo()">Undo</button>
-          <button class="btn btn-primary" :disabled="!allowAlignSelection" v-on:click="align()" v-if="!hasLocks('align')">Align</button>
-          <button class="btn btn-danger" v-else v-on:click="cancelAlign()">Cancel alignment</button>
+          <button class="btn btn-primary" :disabled="!allowAlignSelection" v-on:click="align()">Align</button>
+          <button class="cancel-align" v-if="hasLocks('align')" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
           <span v-if="!hasAlignSelection" class="red-message">Define block range</span>
           <template v-else>
             <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message">
