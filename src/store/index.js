@@ -1909,7 +1909,11 @@ export const store = new Vuex.Store({
         for (var idx=0; idx < state.storeList.size; idx++) {
           let block = state.storeList.get(crossId);
           if (block) {
-            if (block.markedAsDone) {
+            let hasAssignment = state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1 || state.tc_currentBookTasks.assignments.indexOf('content_cleanup') !== -1;
+            let hasTask = state.tc_currentBookTasks.tasks.find((t) => {
+              return t.blockid == block._id;
+            })
+            if (block.markedAsDone || (!hasAssignment && !hasTask)) {
               switch (block.voicework) {
                 case 'audio_file' :
                   ++approved;
