@@ -59,7 +59,7 @@
                     <i class="fa fa-file-audio-o"></i>Import audio
                   </button>
                 </div>
-                <a v-else :href="'/books/' + job.bookid + '/edit/unresolved/' + task.type">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
+                <a v-else :href="bookUrl(job.bookid, task)">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
               </div>
             </div>
           </div>
@@ -281,6 +281,18 @@ export default {
     },
     onTabChange() {
       return true
+    },
+
+    bookUrl (bookId, task) {
+      console.log('task', task);
+      switch(task.type) {
+        case 'master-audio' : {
+          return '/books/' + bookId + '/edit';
+        } break;
+        default : {
+          return '/books/' + bookId + '/edit/unresolved/' + task.type;
+        } break;
+      };
     },
 
     ...mapActions([
