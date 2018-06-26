@@ -900,9 +900,9 @@ export default {
         block: newBlock
       })
         .then((response)=>{
+          this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
-          //this.parlist.set(newBlock._id, newBlock);
           this.$store.commit('set_storeList', newBlock);
           this.refreshBlock({doc: b_new, deleted: false});
           if (b_old) {
@@ -930,9 +930,9 @@ export default {
         block: newBlock
       })
         .then((response)=>{
+          this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
-          //this.parlist.set(newBlock._id, newBlock);
           this.$store.commit('set_storeList', newBlock);
           this.refreshBlock({doc: b_new, deleted: false});
           this.refreshBlock({doc: b_old, deleted: false});
@@ -999,6 +999,7 @@ export default {
           let api = this.$store.state.auth.getHttp();
           api.delete(api_url, {})
           .then((response)=>{
+            this.setBlockSelection({start: {}, end: {}});
             //console.log('api response', response);
             if (this.startId == block._id) {
               this.startId = block.chainid;
@@ -1078,6 +1079,7 @@ export default {
                         donorBlock_id: block._id
                       })
                       .then((response)=>{
+                        this.setBlockSelection({start: {}, end: {}});
                         this.clearBlockLock({block: blockBefore, force: true});
                         if (response.data.ok && response.data.blocks) {
                           response.data.blocks.forEach((res)=>{
@@ -1141,6 +1143,7 @@ export default {
                         donorBlock_id: blockAfter._id
                       })
                       .then((response)=>{
+                        this.setBlockSelection({start: {}, end: {}});
                         this.clearBlockLock({block: block, force: true});
                         if (response.data.ok && response.data.blocks) {
                           response.data.blocks.forEach((res)=>{
