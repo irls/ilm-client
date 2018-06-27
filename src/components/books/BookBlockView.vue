@@ -1327,9 +1327,7 @@ export default {
             this.block.voicework = 'no_audio';
             break;
           default:
-            let clearedText = this.clearBlockContent(this.$refs.blockContent.innerHTML);
-            //this.block.content = clearedText;
-            this.$refs.blockContent.innerHTML = clearedText
+            this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
             if (this.block.footnotes && this.block.footnotes.length) {
               this.block.footnotes.forEach((footnote, footnoteIdx)=>{
                 this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
