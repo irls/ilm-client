@@ -2399,7 +2399,7 @@ export default {
       evFromAudioeditorWordRealign(map, blockId) {
         if (blockId == this.check_id) {
           this.audStop();
-          console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
+          //console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
           if (this.footnoteIdx !== null) {
             let ref = this.$refs['footnoteContent_' + this.footnoteIdx];
             if (ref) {

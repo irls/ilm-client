@@ -539,24 +539,10 @@
             self._setWordSelection(index, true);
             ;
           });
-          $('.wf-playlist').on('dragend', '.annotations-boxes .annotation-box .resize-handle', function(e) {
-            if (!self._isAnnotationsEditable()) {
-              self.showModal('onWordRepositionMessage');
-            }
-            let map = [];
-            self.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
-              map.push([Math.round(al.start * 1000), Math.round((al.end - al.start) * 1000)]);
-              let w = self.words.find(_w => {
-                return _w.alignedIndex == i;
-              });
-              if (w) {
-                w.start = al.start;
-                w.end = al.end;
-              }
-            });
-            self.$root.$emit('from-audioeditor:word-realign', map, self.blockId);
-            self.isModified = true;
+          $('.wf-playlist').on('dragend', '.annotations-boxes .annotation-box .resize-handle', (ev)=>{
+            this.smoothDrag(ev);
           });
+
           $('body').on('mouseup', '.playlist-overlay.state-select', function() {
             self._showSelectionBorders();
           });
@@ -1293,6 +1279,26 @@
           }
           this.$root.$emit('from-audioeditor:selection-change', this.blockId, val.start, val.end);
         }, 30),
+
+        smoothDrag:_.debounce(function (ev) {
+          if (!this._isAnnotationsEditable()) {
+            this.showModal('onWordRepositionMessage');
+          }
+          let map = [];
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+            map.push([Math.round(al.start * 1000), Math.round((al.end - al.start) * 1000)]);
+            let w = this.words.find(_w => {
+              return _w.alignedIndex == i;
+            });
+            if (w) {
+              w.start = al.start;
+              w.end = al.end;
+            }
+          });
+          this.$root.$emit('from-audioeditor:word-realign', map, this.blockId);
+          this.isModified = true;
+        }, 30),
+
       },
       computed: {
         selectionStartH: {
