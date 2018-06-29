@@ -669,9 +669,9 @@ export default {
                 if (oldBlock.chainid !== newBlock.chainid) {// next block was removed
                   oldBlock.chainid = newBlock.chainid;
                 }
-                if (oldBlock.realigned !== newBlock.realigned) {
-                  this.clearBlockLock({block: change.doc});
-                }
+                //if (oldBlock.realigned !== newBlock.realigned) {
+                  //this.clearBlockLock({block: change.doc});
+                //}
               } else {
                 //ref.isChanged = false;
                 //ref.isAudioChanged = false;
@@ -1951,6 +1951,17 @@ export default {
     w {
         background: yellow !important;
     }
+  }
+  
+  .cancel-align {
+      border: 1px solid red;
+      border-radius: 8px;
+      background-color: white;
+      i.fa {
+          color: red;
+      }
+      font-size: 12px;
+      padding: 6px 12px;
   }
 
 

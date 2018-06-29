@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 import superlogin from 'superlogin-client'
 import hoodie from 'pouchdb-hoodie-api'
 import PouchDB from 'pouchdb'
+import {BookBlock} from './bookBlock'
 const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
@@ -109,6 +110,7 @@ export const store = new Vuex.Store({
     blockers: [],
 
     lockedBlocks: [],
+    aligningBlocks: [],
     storeList: new Map(), // global parlist
     blockSelection: {
       start: {},//block
@@ -119,7 +121,8 @@ export const store = new Vuex.Store({
       countAudio: 0,
       countTTS: 0,
       blocks: []
-    }
+    },
+    alignWatch: null
   },
 
   getters: {
@@ -215,14 +218,18 @@ export const store = new Vuex.Store({
       //if (typeof localStorage === 'undefined') {
         //return false;
       //}
+      let locked = false;
       if (state.lockedBlocks.length > 0) {
         //let lock = localStorage.getItem('lock_' + id);
         //console.log(lock, id)
         let l = state.lockedBlocks.find(_l => _l._id === id);
-        return l ? true : false;
-      } else {
-        return false;
+        locked = l ? true : false;
       }
+      if (!locked && state.aligningBlocks.length > 0) {
+        let l = state.aligningBlocks.find(_l => _l._id === id);
+        locked = l ? true : false;
+      }
+      return locked;
     },
 
     storeList: state => state.storeList, // global parlist
@@ -231,13 +238,16 @@ export const store = new Vuex.Store({
     lockedBlocks: state => state.lockedBlocks,
     hasLocks: state => (type) => {
       //console.log(state.lockedBlocks, Object.keys(state.lockedBlocks).length)
-      if (state.lockedBlocks.length > 0) {
+      if (type === 'align') {
+        return state.aligningBlocks.length > 0;
+      } else if (state.lockedBlocks.length > 0) {
         let l = state.lockedBlocks.filter(l => l.type === type)
         return l && l.length > 0;
       } else {
         return false;
       }
-    }
+    },
+    aligningBlocks: state => state.aligningBlocks
   },
 
   mutations: {
@@ -666,6 +676,12 @@ export const store = new Vuex.Store({
         }
       }
     },
+    set_aligning_blocks(state, blocks) {
+      state.aligningBlocks = [];
+      blocks.forEach(b => {
+        state.aligningBlocks.push({_id: b._id});
+      });
+    },
     set_storeList (state, blockObj) {
       if (state.storeList) {
         let firstObj = state.storeList.values().next().value;
@@ -932,6 +948,7 @@ export const store = new Vuex.Store({
           commit('TASK_LIST_LOADED')
           dispatch('getTotalBookTasks');
           dispatch('setCurrentBookCounters');
+          dispatch('startAlignWatch');
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
@@ -1151,8 +1168,8 @@ export const store = new Vuex.Store({
         .get(block_id)
         .then(res => {
           //commit('clear_blocker', 'getBlock');
-          commit('clear_block_lock', {block: res});
-          commit('check_block_lock', {block: res});
+          //commit('clear_block_lock', {block: res});
+          //commit('check_block_lock', {block: res});
           return Promise.resolve(res)
         })
         .catch((err) => {
@@ -1962,6 +1979,58 @@ export const store = new Vuex.Store({
             commit('clear_block_lock', {block: {_id: r._id}, force: true})
           })
         }
+      }
+    },
+    startAlignWatch({state, commit, dispatch}) {
+      if (state.currentBookid) {
+        if (state.alignWatch) {
+          clearInterval(state.alignWatch);
+        }
+        dispatch('getBookAlign');
+        state.alignWatch = setInterval(() => {
+          dispatch('getBookAlign');
+        }, 10000);
+      }
+    },
+    getBookAlign({state, commit, dispatch}) {
+      if (state.currentBookid) {
+        let api_url = state.API_URL + 'align_queue/' + state.currentBookid;
+        axios.get(api_url, {})
+          .then(response => {
+            if (response.status == 200) {
+              let oldBlocks = state.aligningBlocks;
+              let blocks = response.data;
+              let checks = [];
+              if (oldBlocks.length > 0) {
+                oldBlocks.forEach(b => {
+                  let _b = blocks.find(bb => bb._id == b._id);
+                  if (!_b) {
+                    let blockStore = state.storeList.get(b._id);
+                    if (blockStore) {
+                      //blockStore.content+=' realigned';
+                      checks.push(dispatch('getBlock', b._id)
+                        .then(block => {
+                          blockStore.content = block.content;
+                          blockStore.setAudiosrc(block.audiosrc, block.audiosrc_ver);
+                          return Promise.resolve();
+                        })
+                        .catch(err => {
+                          console.log(err);
+                          return Promise.resolve();
+                        })
+                      );
+                    }
+                  }
+                });
+              }
+              Promise.all(checks)
+                .then(() => {
+                  commit('set_aligning_blocks', response.data);
+                })
+            }
+            return Promise.resolve();
+          })
+          .catch(err => Promise.reject(err));
       }
     }
   }
