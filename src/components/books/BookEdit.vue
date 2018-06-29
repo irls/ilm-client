@@ -664,9 +664,9 @@ export default {
                 if (oldBlock.chainid !== newBlock.chainid) {// next block was removed
                   oldBlock.chainid = newBlock.chainid;
                 }
-                if (oldBlock.realigned !== newBlock.realigned) {
-                  this.clearBlockLock({block: change.doc});
-                }
+                //if (oldBlock.realigned !== newBlock.realigned) {
+                  //this.clearBlockLock({block: change.doc});
+                //}
               } else {
                 //ref.isChanged = false;
                 //ref.isAudioChanged = false;

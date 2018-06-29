@@ -74,7 +74,8 @@
         </div>
         <div class="audio-controls" v-if="mode == 'file'">
           <button class="btn btn-default" :disabled="!isModifiedComputed" v-on:click="undo()">Undo</button>
-          <button class="btn btn-primary" :disabled="!allowAlignSelection" v-on:click="align()">Align</button>
+          <button class="btn btn-primary" :disabled="!allowAlignSelection" v-on:click="align()" v-if="!alignProcess">Align</button>
+          <span v-else class="align-preloader -small"></span>
           <button class="cancel-align" v-if="hasLocks('align')" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
           <span v-if="!hasAlignSelection" class="red-message">Define block range</span>
           <template v-else>
@@ -179,7 +180,8 @@
           mouseSelection: {
             start: null,
             end: null
-          }
+          },
+          alignProcess: false
         }
       },
       mounted() {
@@ -189,6 +191,12 @@
         this.$root.$on('for-audioeditor:reload-text', this._setText);
         this.$root.$on('for-audioeditor:select', this.select);
         this.$root.$on('for-audioeditor:close', this.close);
+        this.$root.$on('start-align', () => {
+          this.alignProcess = true;
+        })
+        this.$root.$on('stop-align', () => {
+          this.alignProcess = false;
+        })
       },
       beforeDestroy() {
         if (this.audioContext) {

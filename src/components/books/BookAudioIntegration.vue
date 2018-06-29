@@ -24,7 +24,8 @@
                 </li>
             </dropdown>
             <div class="align-audio">
-              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)">Align&nbsp;<span v-if="alignCounter.count > 0">({{blocksForAlignment}})</span></button>
+              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)" v-if="!alignProcess">Align&nbsp;<span v-if="alignCounter.count > 0">({{blocksForAlignment}})</span></button>
+              <span v-else class="align-preloader -small"></span>
               <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign(true)" title="Cancel aligning"><i class="fa fa-ban"></i></button>
             </div>
           </div>
@@ -131,7 +132,8 @@
           <span class="red">Select audio</span>
         </div>-->
         <div class="pull-right align-process-start">
-          <button class="btn btn-default" :disabled="!enableTtsAlignment" v-on:click="alignTts()">Convert text to speech &amp; Align with text</button>
+          <button class="btn btn-default" :disabled="!enableTtsAlignment" v-on:click="alignTts()" v-if="!alignProcess">Convert text to speech &amp; Align with text</button>
+          <span v-else class="align-preloader -big"></span>
           <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
         </div>
       </panel>
@@ -186,7 +188,8 @@
         pre_options: false,
         pre_volume: 1.0,
         aligningBlocks: [],
-        positions_tmp: {}
+        positions_tmp: {},
+        alignProcess: false
       }
     },
     mixins: [task_controls, api_config, access],
@@ -285,6 +288,12 @@
       this._setCatalogueSize();
       window.addEventListener('resize', this._setCatalogueSize, true);
       this.$root.$on('cancel-align', this.cancelAlign)
+      this.$root.$on('start-align', () => {
+        this.alignProcess = true;
+      })
+      this.$root.$on('stop-align', () => {
+        this.alignProcess = false;
+      })
     },
     methods: {
       uploadAudio() {
@@ -608,11 +617,9 @@
         let update = this.saveAudiobook()
           .then((updated) => Promise.resolve(updated))
           .catch((err) => Promise.resolve({error: true, err: err}));
-        //this._setAligningBlocks('audio_file');
         Promise.all([update])
           .then((updated) => {
-            //console.log(updated)
-            //console.log('START ALIGN');
+            this.$root.$emit('start-align');
             api.post(api_url, {
               start: this.blockSelection.start._id,
               end: this.blockSelection.end._id,
@@ -625,8 +632,9 @@
               }
             }).then(function(response){
               self.getBookAlign();
+              self.$root.$emit('stop-align');
               if (response.status===200) {
-                self.$root.$emit('bookBlocksUpdates', response.data);
+                //self.$root.$emit('bookBlocksUpdates', response.data);
                 self.$emit('alignmentFinished');
                 self.aligningBlocks = [];
               } else if (response.status == 504) {
@@ -635,6 +643,7 @@
               self.setCurrentBookCounters();
             }).catch((err) => {
               self.getBookAlign();
+              self.$root.$emit('stop-align');
               console.log('error: '+ err);
               if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
                 //self.checkAligningBlocks();
@@ -677,51 +686,6 @@
           .catch(err => {
             console.log(err);
           })
-      },
-      _setAligningBlocks(voicework) {
-        return false;
-        this.aligningBlocks = [];
-        let realign = this.tc_hasTask('audio_mastering') || this.currentBookCounters.not_marked_blocks === 0;
-        if (this.alignCounter.blocks) {
-          this.alignCounter.blocks.forEach(_b => {
-            if (voicework === 'audio_file') {
-              if (_b.voicework === 'audio_file' || (realign && _b.voicework === 'narration')) {
-                this.aligningBlocks.push(_b);
-                //this.clearBlockLock({block: _b, watch: ['realigned']});
-              }
-            } else if (voicework === 'tts') {
-              if (_b.voicework === 'tts') {
-                this.aligningBlocks.push(_b);
-              } else {
-                if (_b.footnotes && _b.footnotes.length > 0) {
-                  let f = _b.footnotes.filter(_f => _f.voicework === 'tts');
-                  if (f && f.length > 0) {
-                    this.aligningBlocks.push(_b);
-                  }
-                }
-              }
-            }
-          });
-        }
-        this.aligningBlocks.forEach(b => {
-          this.addBlockLock({block: b, watch: ['realigned'], type: 'align'});
-          this.$root.$emit('block-state-refresh-' + b._id);
-        });
-        this.$root.$on('blockChange', (doc) => {
-          if (doc && doc._id) {
-            let d = this.aligningBlocks.find(b => b._id == doc._id);
-            if (d) {
-              let i = this.aligningBlocks.indexOf(d);
-              if (i !== -1) {
-                this.aligningBlocks.splice(i, 1);
-                this.clearBlockLock({block: d, force: true});
-              }
-            }
-          }
-          if (this.aligningBlocks.length === 0) {
-            this.$root.$off('blockChange');
-          }
-        });
       },
       cancelAlign(force = false) {
         let api_url = this.API_URL + 'align_queue/' + this.audiobook.bookid;
@@ -808,8 +772,7 @@
         let api_url = this.API_URL + 'books/' + this.currentBookid + '/selection_alignment';
         let formData = new FormData();
         let api = this.$store.state.auth.getHttp()
-        //this.alignmentProcess = true;
-        this._setAligningBlocks('tts');
+        this.$root.$emit('start-align');
         api.post(api_url, {
           start: this.blockSelection.start._id,
           end: this.blockSelection.end._id,
@@ -823,8 +786,9 @@
           }
         }).then((response)=>{
           this.getBookAlign();
+          this.$root.$emit('stop-align');
           if (response.status===200) {
-            this.$root.$emit('bookBlocksUpdates', response.data);
+            //this.$root.$emit('bookBlocksUpdates', response.data);
             this.$emit('alignmentFinished');
             //this.aligningBlocks = [];
           } else if (response.status == 504) {
@@ -833,6 +797,7 @@
           this.setCurrentBookCounters();
         }).catch((err) => {
           this.getBookAlign();
+          this.$root.$emit('stop-align');
           console.log('error11: '+ err);
           if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
             //this.checkAligningBlocks();
@@ -1358,5 +1323,20 @@
       padding: 0px 3px;
       color: black;
     }
+  }
+  .align-preloader {
+      background: url(/static/preloader-horizontal.gif);
+      display: inline-block;
+      background-repeat: no-repeat;
+      vertical-align: middle;
+      background-position: center;
+      &.-small {
+        background-size: 70px auto;
+        width: 70px;
+      }
+      &.-big {
+          background-size: 100px auto;
+          width: 100px;
+      }
   }
 </style>
