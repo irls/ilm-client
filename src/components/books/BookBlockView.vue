@@ -1,6 +1,6 @@
 <template>
 <div class="table-body -block" v-bind:class="['-mode-' + mode, blockOutPaddings]" :id="block._id">
-    <div v-if="isBlockLocked(block._id)" class="locked-block-cover"></div>
+    <div v-if="isLocked" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': block.checked==true}]">
         <div class="table-row parnum-row" v-if="meta.numeration !== 'none'">
 
@@ -674,6 +674,9 @@ export default {
   props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode'],
   mixins: [taskControls, apiConfig, access],
   computed: {
+      isLocked: function () {
+        return this.isBlockLocked(this.block._id);
+      },
       blockClasses: function () {
           return this.blockTypes[this.block.type];
       },
@@ -2821,6 +2824,14 @@ export default {
       }
   },
   watch: {
+      'isLocked': {
+        handler(val) {
+          //console.log('IS LOCKED', val, this.block)
+          if (this.block.audiosrc) {
+            this.blockAudio.src = this.block.getAudiosrc('m4a');
+          }
+        }
+      },
       'block.isUpdated' (newVal, oldVal) {
         if (newVal===true) {
           this.isUpdated = true;
