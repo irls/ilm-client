@@ -3078,7 +3078,7 @@ export default {
   beforeDestroy: function () {
 //      console.log('beforeDestroy', this.block._id);
 //     console.log('this.isChanged', this.isChanged);
-    if (this.isChanged) {
+    if (this.block && this.isChanged) {
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
@@ -3108,12 +3108,17 @@ export default {
   destroyed: function () {
     this.$root.$off('playBlockFootnote');
     this.$root.$off('playBlock');
-    this.$root.$off('saved-block:' + this.block._id);
 
-    if (this.check_id || this.footnoteIdx) {
-      this.evFromAudioeditorClosed(this.check_id || this.block._id);
+    if(this.block) {
+
+      this.$root.$off('saved-block:' + this.block._id);
+
+      if (this.check_id || this.footnoteIdx) {
+        this.evFromAudioeditorClosed(this.check_id || this.block._id);
+      }
+      this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+
     }
-    this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
     this.destroyEditor();
   }

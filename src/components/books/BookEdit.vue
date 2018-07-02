@@ -164,6 +164,7 @@ export default {
       blockReindexProcess: false,
 
       startId: false,
+      parlistC: new Map(),
 
       upScreenTop: -85,
       downScreenTop: 0,
@@ -209,19 +210,19 @@ export default {
           return result;
       },
 
-      parlistC: function() {
-        let result = new Map();
-        if (this.startId && this.parlist.has(this.startId)) {
-          let seqId = this.startId;
-          for (var i=0; i<=9; i++) {
-            if (this.parlist.get(seqId)) {
-              result.set(seqId, this.parlist.get(seqId));
-              seqId = this.parlist.get(seqId).chainid;
-            }
-          }
-        }
-        return result;
-      },
+//       parlistC: function() {
+//         let result = new Map();
+//         if (this.startId && this.parlist.has(this.startId)) {
+//           let seqId = this.startId;
+//           for (var i=0; i<=9; i++) {
+//             if (this.parlist.get(seqId)) {
+//               result.set(seqId, this.parlist.get(seqId));
+//               seqId = this.parlist.get(seqId).chainid;
+//             }
+//           }
+//         }
+//         return result;
+//       },
       keymap: function() {
         return {
           // 'esc+ctrl' is OK.
@@ -307,11 +308,25 @@ export default {
     refreshTmpl() {
       // a hack to update template
       //Vue.set(this, 'screenTop', this.screenTop + 0.1);
-      let startId = this.startId;
+      /*let startId = this.startId;
       this.startId = false;
-      this.startId = startId;
+      this.startId = startId;*/
       //this.$forceUpdate();
       //this.updateScrollSlider();
+
+
+      let result = new Map();
+      if (this.startId && this.parlist.has(this.startId)) {
+        let seqId = this.startId;
+        for (var i=0; i<=9; i++) {
+          if (this.parlist.get(seqId)) {
+            result.set(seqId, this.parlist.get(seqId));
+            seqId = this.parlist.get(seqId).chainid;
+          }
+        }
+      }
+      this.parlistC = result;
+
     },
 
     loadBookMeta() {
@@ -1086,11 +1101,13 @@ export default {
                             this.refreshBlock({doc: res, deleted: res.deleted});
                           });
                         }
+                        this.refreshTmpl();
                         this.unfreeze('joinBlocks');
                         this.updateScrollSlider();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
+                        this.refreshTmpl();
                         this.clearBlockLock({block: blockBefore, force: true});
                         this.unfreeze('joinBlocks');
                         return Promise.reject(err);
@@ -1150,11 +1167,13 @@ export default {
                             this.refreshBlock({doc: res, deleted: res.deleted});
                           });
                         }
+                        this.refreshTmpl();
                         this.unfreeze('joinBlocks');
                         this.updateScrollSlider();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
+                        this.refreshTmpl();
                         this.clearBlockLock({block: block, force: true});
                         this.unfreeze('joinBlocks');
                         return Promise.reject(err);
@@ -1806,6 +1825,7 @@ export default {
     'startId': {
       handler(newVal, oldVal) {
         //console.log('this.startId', newVal);
+        this.refreshTmpl();
         if (this.$refs.scrollBarRef && !this.$refs.scrollBarRef.dragging) {
           if (newVal && this.scrollBarBlocks.length) {
             this.scrollBarUpdatePosition(newVal);
@@ -1952,7 +1972,7 @@ export default {
         background: yellow !important;
     }
   }
-  
+
   .cancel-align {
       border: 1px solid red;
       border-radius: 8px;
