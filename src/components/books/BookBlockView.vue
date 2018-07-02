@@ -494,7 +494,7 @@
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
                   <div class="save-block -right" @click="discardBlock"
-                       v-bind:class="{'-disabled': !(allowEditing && hasChanges)}">
+                       v-bind:class="{'-disabled': !(allowEditing && hasChanges) || isAudioEditing}">
                     Discard
                   </div>
                   <div class="save-block -right"
@@ -1194,10 +1194,11 @@ export default {
         //this.isChanged = true;
         //Vue.set(this, 'isChanged', true);
       },
-      onInput: function(el) {
+      onInput: function(ev) {
         this.isChanged = true;
         this.pushChange('content');
-        el.target.focus();
+        $(ev.target).find("span[style]").contents().unwrap();
+        ev.target.focus();
       },
       onFocusout: function(el) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
@@ -1362,16 +1363,15 @@ export default {
           if (this.isAudioEditing) {
             this.$root.$emit('for-audioeditor:reload-text', this.block.content);
           }
-          if (is_content_changed && this.block.audiosrc) {
+          let has_suggestion = this.$refs.blockContent && this.block.audiosrc
+            && this.$refs.blockContent.dataset.has_suggestion
+            && this.$refs.blockContent.dataset.has_suggestion === 'true';
+          if (has_suggestion) {
+            //console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
             this.doReAlign();
-          } else if (this.$refs.blockContent && this.block.audiosrc) {
-            if (this.$refs.blockContent.dataset.has_suggestion) {
-              if (this.$refs.blockContent.dataset.has_suggestion === 'true') {
-                //console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
-                this.doReAlign();
-              }
-            }
             this.$refs.blockContent.dataset.has_suggestion = false;
+          } else if (is_content_changed && this.block.audiosrc) {
+            this.doReAlign();
           }
           this.reCount();
           if (recount_marked) {
