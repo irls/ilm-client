@@ -1194,10 +1194,11 @@ export default {
         //this.isChanged = true;
         //Vue.set(this, 'isChanged', true);
       },
-      onInput: function(el) {
+      onInput: function(ev) {
         this.isChanged = true;
         this.pushChange('content');
-        el.target.focus();
+        $(ev.target).find("span[style]").contents().unwrap();
+        ev.target.focus();
       },
       onFocusout: function(el) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
