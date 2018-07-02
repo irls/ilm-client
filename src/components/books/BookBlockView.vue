@@ -494,7 +494,7 @@
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
                   <div class="save-block -right" @click="discardBlock"
-                       v-bind:class="{'-disabled': !(allowEditing && hasChanges)}">
+                       v-bind:class="{'-disabled': !(allowEditing && hasChanges) || isAudioEditing}">
                     Discard
                   </div>
                   <div class="save-block -right"
