@@ -1362,16 +1362,15 @@ export default {
           if (this.isAudioEditing) {
             this.$root.$emit('for-audioeditor:reload-text', this.block.content);
           }
-          if (is_content_changed && this.block.audiosrc) {
+          let has_suggestion = this.$refs.blockContent && this.block.audiosrc
+            && this.$refs.blockContent.dataset.has_suggestion
+            && this.$refs.blockContent.dataset.has_suggestion === 'true';
+          if (has_suggestion) {
+            //console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
             this.doReAlign();
-          } else if (this.$refs.blockContent && this.block.audiosrc) {
-            if (this.$refs.blockContent.dataset.has_suggestion) {
-              if (this.$refs.blockContent.dataset.has_suggestion === 'true') {
-                //console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
-                this.doReAlign();
-              }
-            }
             this.$refs.blockContent.dataset.has_suggestion = false;
+          } else if (is_content_changed && this.block.audiosrc) {
+            this.doReAlign();
           }
           this.reCount();
           if (recount_marked) {
