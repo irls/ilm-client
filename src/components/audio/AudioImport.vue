@@ -1,9 +1,7 @@
 <template>
-  <transition name="modal">
-    <div class="modal-mask" @click="$emit('close')" >
-      <div class="modal-wrapper">
-        <div class="modal-container" @click="$event.stopPropagation()">
-
+  <div>
+  <modal name="import-audio" :resizeable="false" :clickToClose="false" height="auto">
+    
           <div class="modal-header">
 
             <slot name="header">
@@ -11,12 +9,13 @@
                 <label class="header-h"><img src='/static/audiostack.png' class='audio-logo'></label>
                 <h3 class="header-h">Import New Audiobook</h3></div>
 
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close')">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close')" v-if="!isUploading">
                 <i class="fa fa-times-circle-o" aria-hidden="true"></i>
                 </button>
 
             </slot>
           </div>
+          <div class="modal-body">
 
           <form id="audio_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent>
 
@@ -85,7 +84,6 @@
           </div>
 
           </form>
-
           <div id='uploadingMsg' v-show='isUploading'>
              <h2> {{uploadProgress}}&nbsp;
                <i v-if='!uploadFinished' class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i>
@@ -96,25 +94,22 @@
               <button class="btn btn-default" v-on:click="$emit('close')">OK</button>
             </div>
           </div>
-
-
-
-        </div>
-      </div>
-      <modal v-model="showDuplicateFilesWarning" effect="fade">
+          </div>
+  </modal>
+    <modal name="duplicate-files-warning" :resizeable="false" :clickToClose="false" height="auto">
+        <div class="modal-header"></div>
         <div class="modal-body">
           <div v-if="uploadFilesDuplicates[0]">
             {{uploadFilesDuplicates[0].name}} already exists. Do you want to replace it?
           </div>
         </div>
         <!-- custom buttons -->
-        <div slot="modal-footer" class="modal-footer">
+        <div class="modal-footer">
           <button type="button" class="btn btn-default" @click="cancelDuplicateAudio()">Cancel</button>
           <button type="button" class="btn btn-confirm" @click="replaceDuplicateAudio()">Replace</button>
         </div>
       </modal>
-    </div>
-  </transition>
+  </div>
 
 </template>
 
@@ -123,7 +118,8 @@
 import Vue from 'vue'
 import api_config from '../../mixins/api_config.js'
 import {dateFormat} from '../../filters';
-import {modal} from 'vue-strap';
+import v_modal from 'vue-js-modal';
+Vue.use(v_modal, { dialog: true });
 
 export default {
   data() {
@@ -147,8 +143,11 @@ export default {
       uploadErrors: []
     }
   },
+  mounted: function () {
+    this.showModal('import-audio');
+  },
   components: {
-    Vue, modal
+    Vue, 
   },
   mixins: [api_config],
   props: {
@@ -179,14 +178,6 @@ export default {
     },
     saveDisabled: function() {
       return (this.uploadFiles === 0 && this.audioURL.length == 0)
-    },
-    showDuplicateFilesWarning: {
-      get() {
-        return this.uploadFilesDuplicates.length > 0;
-      },
-      set() {
-        
-      }
     }
   },
   methods: {
@@ -395,9 +386,26 @@ export default {
     },
     replaceDuplicateAudio() {
       this.addFileToUpload(this.uploadFilesDuplicates.shift());
+    },
+    showModal(name) {
+      this.$modal.show(name);
+    },
+    hideModal(name) {
+      this.$modal.hide(name);
     }
 
   },
+  watch: {
+    'uploadFilesDuplicates.length': {
+      handler(val, oldVal) {
+        if (val !== 0 && oldVal === 0) {
+          this.showModal('duplicate-files-warning');
+        } else if (val === 0 && oldVal !== 0) {
+          this.hideModal('duplicate-files-warning');
+        }
+      }
+    }
+  }
 }
 </script>
 
