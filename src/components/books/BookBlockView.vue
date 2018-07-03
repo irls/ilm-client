@@ -675,7 +675,7 @@ export default {
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
-        return this.isBlockLocked(this.block._id);
+        return this.block ? this.isBlockLocked(this.block._id) : false;
       },
       blockClasses: function () {
           return this.blockTypes[this.block.type];
@@ -2829,6 +2829,9 @@ export default {
           //console.log('IS LOCKED', val, this.block)
           if (this.block.audiosrc) {
             this.blockAudio.src = this.block.getAudiosrc('m4a');
+          }
+          if (val === false) {
+            this.$parent.refreshTmpl();
           }
         }
       },
