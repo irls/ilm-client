@@ -270,7 +270,9 @@ export default {
       // console.log('*** onFilesChange', files)
 
       if (!files.length) return
-      if (files[0].type.substr(0,5) == 'image') {
+      console.log(files[0].type);
+      //if (files[0].type.substr(0,5) == 'image') {
+      if (files[0].type == 'image/jpg' || files[0].type == 'image/jpeg' || files[0].type == 'image/png' || files[0].type == 'image/gif') {
         this.createImage(files[0])
       } else {
         this.errorCoverFileType = true;
