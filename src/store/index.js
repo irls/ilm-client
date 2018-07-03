@@ -678,11 +678,12 @@ export const store = new Vuex.Store({
     },
     set_aligning_blocks(state, blocks) {
       state.aligningBlocks = [];
-      blocks.forEach(b => {
+      if (blocks.length) blocks.forEach(b => {
         state.aligningBlocks.push({_id: b._id});
       });
     },
     set_storeList (state, blockObj) {
+      //console.log('set_storeList', Date.now());
       if (state.storeList) {
         let firstObj = state.storeList.values().next().value;
         if (!(firstObj && firstObj.bookid == blockObj.bookid)) {
@@ -1257,58 +1258,75 @@ export const store = new Vuex.Store({
       let audio_mastering = state.tc_currentBookTasks.assignments && state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1;
       //console.log('searchBlocksChain 1', task_type, params);
       //console.log('searchBlocksChain 2', metadata_cleanup, audio_mastering);
-      (function loop(block_id) {
 
-          dispatch('getBlock', block_id)
-          .then((block)=>{
-            if (block && block._id) {
-              results.rows.push(block);
+      return axios.post(state.API_URL + 'books/' + params.book_id + '/unresolved',
+      {
+        'bookId': params.book_id || false,
+        'startId': params.startId || false,
+        'taskType': params.search.task_type || false,
+        'metadataCleanup': metadata_cleanup,
+        'audioMastering': audio_mastering,
+        'onpage': 10
+      })
+      .then((result) => {
+        return Promise.resolve(result.data);
+      })
+      .catch(err => {
+        return Promise.reject(err);
+      })
 
-              if (metadata_cleanup || audio_mastering)
-              {
-                if (!block.markedAsDone && (!block.status || !block.status.proofed))
-                {
-                  results.blockId = block._id;
-                  results.finish = true;
-                  requests[0].resolve();
-                }
-                else loop(block.chainid);
-
-              } else {
-                let task = state.tc_currentBookTasks.tasks.find((t) => {
-                  return t.blockid == block._id;
-                });
-                //console.log('searchBlocksChain 3', task, task_type, block.markedAsDone);
-                if (task && (task_type === true || task.type === task_type))
-                {
-                  results.blockId = block._id;
-                  results.finish = true;
-                  requests[0].resolve();
-                } else if (!block.markedAsDone) {
-                  results.blockId = block._id;
-                  results.finish = true;
-                  requests[0].resolve();
-                }
-              }
-
-              if (!results.finish) loop(block.chainid);
-
-            } else requests[0].resolve();
-          })
-          .catch((err)=>{
-            //console.log('loop_BlocksChain Catch: ', err);
-            results.blockId = results.length ? results.rows[0]._id : null;
-            results.finish = true;
-            requests[0].resolve();
-          })
-
-      })(params.startId); // start
-
-      return Promise.all(requests)
-      .then(() => {
-        //console.log('searchBlocksChain results', results);
-        return Promise.resolve(results);
-      });
+//       (function loop(block_id) {
+//
+//           dispatch('getBlock', block_id)
+//           .then((block)=>{
+//             if (block && block._id) {
+//               results.rows.push(block);
+//
+//               if (metadata_cleanup || audio_mastering)
+//               {
+//                 if (!block.markedAsDone && (!block.status || !block.status.proofed))
+//                 {
+//                   results.blockId = block._id;
+//                   results.finish = true;
+//                   requests[0].resolve();
+//                 }
+//                 else loop(block.chainid);
+//
+//               } else {
+//                 let task = state.tc_currentBookTasks.tasks.find((t) => {
+//                   return t.blockid == block._id;
+//                 });
+//                 //console.log('searchBlocksChain 3', task, task_type, block.markedAsDone);
+//                 if (task && (task_type === true || task.type === task_type))
+//                 {
+//                   results.blockId = block._id;
+//                   results.finish = true;
+//                   requests[0].resolve();
+//                 } else if (!block.markedAsDone) {
+//                   results.blockId = block._id;
+//                   results.finish = true;
+//                   requests[0].resolve();
+//                 }
+//               }
+//
+//               if (!results.finish) loop(block.chainid);
+//
+//             } else requests[0].resolve();
+//           })
+//           .catch((err)=>{
+//             //console.log('loop_BlocksChain Catch: ', err);
+//             results.blockId = results.length ? results.rows[0]._id : null;
+//             results.finish = true;
+//             requests[0].resolve();
+//           })
+//
+//       })(params.startId); // start
+//
+//       return Promise.all(requests)
+//       .then(() => {
+//         //console.log('searchBlocksChain results', results);
+//         return Promise.resolve(results);
+//       });
     },
 
     loadBlocksChain ({commit, state, dispatch}, params) {
@@ -1587,7 +1605,7 @@ export const store = new Vuex.Store({
         dispatch('tc_loadBookTask');
         return Promise.resolve(list);
       })
-      .catch((err) => {})
+      .catch(err => err)
     },
 
     getTotalBookTasks({state, commit}) {

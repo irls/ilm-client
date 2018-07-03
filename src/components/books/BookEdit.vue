@@ -520,7 +520,7 @@ export default {
         return Promise.resolve(result);
       })
       .catch((err)=>{
-        console.log('BlocksDown Error: ', err.message);
+        console.log('BlocksDown Error: ', err);
         this.updateScrollSlider(false);
         this.refreshTmpl();
         this.hasScrollDown = false;
@@ -587,13 +587,6 @@ export default {
         } else
         { // if there is no such blocks already in parlist
 
-          if (task_type === 'true') {
-            task_type = true;
-          }
-          if (!task_type && !this._is('editor')) {
-            task_type = true;
-          }
-
           switch(startId) {
             case 'unresolved': {
               this.loadBlocksChain({
@@ -608,16 +601,20 @@ export default {
                     //this.parlist.set(newBlock._id, newBlock);
                     this.$store.commit('set_storeList', newBlock);
                   });
-                }
-
-                this.getBlocks(result.blockId)
-                .then((res)=>{
-                  let lastId = res.rows[res.rows.length-1]._id;
-                  this.lazyLoad(this.startId || this.meta.startBlock_id, lastId);
+                  let lastId = result.rows[result.rows.length-1]._id;
+                  this.lazyLoad(result.blockId || this.meta.startBlock_id, lastId);
                   return resolve(result.blockId);
-                }).catch(err=>{
-                  return reject(err);
-                });
+                }
+                else {
+                  this.getBlocks(result.blockId)
+                  .then((res)=>{
+                    let lastId = res.rows[res.rows.length-1]._id;
+                    this.lazyLoad(this.startId || this.meta.startBlock_id, lastId);
+                    return resolve(result.blockId);
+                  }).catch(err=>{
+                    return reject(err);
+                  });
+                }
 
               }).catch(err=>{
                 return reject(err);
@@ -1796,7 +1793,7 @@ export default {
     '$route' (toRoute, fromRoute) {
       //console.log('$route', toRoute, fromRoute);
       if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
-        //this.getBloksUntil(this.$route.params.block, this.$route.params.task_type)
+        //this.f(this.$route.params.block, this.$route.params.task_type)
         this.loadBookDown(true)
         .then((blockId)=>{
           this.setBlockWatch()
