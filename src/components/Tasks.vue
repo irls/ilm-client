@@ -59,7 +59,7 @@
                     <i class="fa fa-file-audio-o"></i>Import audio
                   </button>
                 </div>
-                <a v-else :href="bookUrl(job.bookid, task)">{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a>
+                <router-link v-else :to="bookUrl(job.bookid, task)"><a>{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a></router-link>
               </div>
             </div>
           </div>
@@ -284,7 +284,7 @@ export default {
     },
 
     bookUrl (bookId, task) {
-      console.log('task', task);
+      //console.log('task', task);
       switch(task.type) {
         case 'master-audio' : {
           return '/books/' + bookId + '/edit';

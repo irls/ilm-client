@@ -1802,8 +1802,13 @@ export default {
     },
     'tc_tasksByBlock': {
       handler(val, oldVal) {
+        //console.log('tc_tasksByBlock', val, oldVal);
         if (Object.keys(val).length && !Object.keys(oldVal).length) {
-          if (this.$route.params.hasOwnProperty('block') && this.$route.params.block && !this.parlist.length) {
+          if (
+            this.$route.params.hasOwnProperty('block') &&
+            this.$route.params.block !== 'unresolved' &&
+            !this.parlist.length
+          ) {
             this.getBloksUntil(this.$route.params.block, this.$route.params.task_type);
           }
         } else {
