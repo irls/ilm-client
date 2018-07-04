@@ -1223,58 +1223,47 @@ export default {
             }
           break;
         case 'byOne':
-          //console.log('byOne', status, block._id, 'start:', this.selectionStart._id, 'end:', this.selectionEnd._id);
+          //console.log('byOne', status, block._id, 'start:', this.blockSelection.start._id, 'end:', this.blockSelection.end._id);
+          let blockSel = _.pick(block, ['_id', 'chainid']);
           if (status) { // check
             if (this.blockSelection.start._id) {
 
               this.setUnCheckedRange();
-
-//               if (!status && this.selectionStart._id == this.selectionEnd._id) { // uncheck
-//                 block.checked = false;
-//                 this.selectionStart = {};
-//                 this.selectionEnd = {};
-//                 this.$root.$emit('from-bookedit:set-selection', {}, {});
-//                 break;
-//               }
-
+              // this.blockSelection - from store
               if (shift) {
                 let pBlock, currId = block._id, isFound = false;
                 while (pBlock = this.findPrevBlock(currId)) {
                   if (pBlock._id === this.blockSelection.start._id) {
-                    newSelection.end = block;
+                    newSelection.end = blockSel;
                     isFound = true;
                     break;
                   }
                   currId = pBlock._id;
                 }
-
+                //console.log('isFound', isFound);
                 if (!isFound) {
                   // selected blocks are not found before, so they are after
                   if (!this.blockSelection.end._id) newSelection.end = this.blockSelection.start;
-                  newSelection.start = block;
+                  newSelection.start = blockSel;
                 }
 
                 this.setCheckedRange(newSelection.start._id, newSelection.end._id);
 
               } else {
                 block.checked = true;
-                newSelection.start = block;
-                newSelection.end = block;
+                newSelection.start = blockSel;
+                newSelection.end = blockSel;
               }
-
-              //this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
 
             } else  {
               this.setUnCheckedRange();
               block.checked = true;
-              newSelection.start = block;
-              newSelection.end = block;
-              //this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
+              newSelection.start = blockSel;
+              newSelection.end = blockSel;
             }
-            //this.selectionStart = newSelection.start;
-            //this.selectionEnd = newSelection.end;
-            this.setBlockSelection(newSelection)
-            //this.$root.$emit('from-bookedit:set-selection', newSelection.start, newSelection.end);
+
+            this.setBlockSelection(newSelection);
+
           } else { // uncheck
             if (this.blockSelection.start._id && this.blockSelection.end._id) {
               if (this.blockSelection.start._id == block._id && block._id == this.blockSelection.end._id) {
@@ -1284,34 +1273,11 @@ export default {
               } else if (block._id == this.selectionEnd._id) {
                 this.setBlockSelection({start: this.blockSelection.start, end: this.findPrevBlock(block._id)});
               } else {
-
-//                 let pBlock, beforeCount = 0, afterCount = 0;
-//                 let currId = block._id;
-//                 while (pBlock = this.findPrevBlock(currId)) {
-//                   if (pBlock._id === this.selectionStart._id) {
-//                     beforeCount++;
-//                     break;
-//                   }
-//                   currId = pBlock._id;
-//                 }
-//                 currId = block.chainid
-//                 while (pBlock = this.parlist.get(currId)) {
-//                   if (pBlock._id === this.selectionEnd._id) {
-//                     afterCount++;
-//                     break;
-//                   }
-//                   currId = pBlock.chainid;
-//                 }
-//
-//                 if (afterCount > beforeCount) {
-//                   this.selectionStart = block.chainid;
-//                 } else {
                   this.setBlockSelection({start: this.blockSelection.start, end: this.findPrevBlock(block._id)});
-//                 }
               }
               this.setUnCheckedRange();
               this.setCheckedRange(this.blockSelection.start._id, this.blockSelection.end._id);
-              //this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
+
 
             } else {
               //this.$root.$emit('from-bookedit:set-selection', {}, {});
@@ -1323,19 +1289,26 @@ export default {
       //this.recountApprovedInRange();
     },
     findPrevBlock(blockId) {
-      let found, BreakException = {}; // a trick to stop forEach
-      try {
-        this.parlist.forEach((block, _id)=>{
-          if (block.chainid === blockId) {
+//       let found, BreakException = {}; // a trick to stop forEach
+//       try {
+//         this.parlist.forEach((block, _id)=>{
+//           if (block.chainid === blockId) {
+//             found = block;
+//             throw BreakException;
+//           }
+//         });
+//       } catch (e) {
+//         if (e !== BreakException) throw e;
+//         else return found;
+//       }
+//       return false;
+      let found = false;
+      for (let block of this.parlist.values()) {
+        if (block.chainid === blockId) {
             found = block;
-            throw BreakException;
-          }
-        });
-      } catch (e) {
-        if (e !== BreakException) throw e;
-        else return found;
+        }
       }
-      return false;
+      return found;
     },
     setCheckedRange(startId, endId) {
       if (this.parlist.has(startId)) {
@@ -1818,6 +1791,7 @@ export default {
     },
     'blockSelection': {
       handler(val) {
+        //console.log('blockSelection', 'start:', val.start, 'end:', val.end);
         if (!this.blockSelection.start._id && !this.blockSelection.end._id) {
           this.setUnCheckedRange();
         }
