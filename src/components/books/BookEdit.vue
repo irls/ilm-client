@@ -479,9 +479,11 @@ export default {
       .then((result)=>{
         if (result.rows && result.rows.length > 0) {
           result.rows.forEach((el, idx, arr)=>{
-            let newBlock = new BookBlock(el);
-            this.$store.commit('set_storeList', newBlock);
-            this.updateScrollSlider(false, this.isNeedUp);
+            if (!this.parlist.has(el._id)) {
+              let newBlock = new BookBlock(el);
+              this.$store.commit('set_storeList', newBlock);
+              this.updateScrollSlider(false, this.isNeedUp);
+            }
           });
           result.blockId = result.rows[0]._id;
         } else {
@@ -507,9 +509,11 @@ export default {
       .then((result)=>{
         if (result.rows && result.rows.length > 0) {
           result.rows.forEach((el, idx, arr)=>{
-            let newBlock = new BookBlock(el);
-            this.$store.commit('set_storeList', newBlock);
-            this.updateScrollSlider(false);
+            if (!this.parlist.has(el._id)) {
+              let newBlock = new BookBlock(el);
+              this.$store.commit('set_storeList', newBlock);
+              this.updateScrollSlider(false);
+            }
           });
           result.blockId = result.rows[result.rows.length-1]._id;
         } else {
