@@ -444,7 +444,7 @@ export default {
             this.startId = startId; // first load
           }
           this.unfreeze('loadBookDown');
-          let lastId = res.rows[res.rows.length-1]._id;
+          let lastId = res.rows.length ? res.rows[res.rows.length-1]._id : false;
           this.lazyLoad(false, lastId);
           return Promise.resolve(res);
         }).catch(err=>{
@@ -554,7 +554,7 @@ export default {
         switch(startId) {
           case 'unresolved': {
           if (this.parlist.size > 0) {
-            for (var idx=1; idx < this.parlist.size; idx++)
+            for (var idx=0; idx < this.parlist.size; idx++)
             {
               let block = this.parlist.get(crossId);
               if (!block) break;
@@ -606,9 +606,10 @@ export default {
                   return resolve(result.blockId);
                 }
                 else {
+                  if (this.parlist.has(result.blockId)) return resolve(result.blockId);
                   this.getBlocks(result.blockId)
                   .then((res)=>{
-                    let lastId = res.rows[res.rows.length-1]._id;
+                    let lastId = res.rows.length ? res.rows[res.rows.length-1]._id : false;
                     this.lazyLoad(this.startId || this.meta.startBlock_id, lastId);
                     return resolve(result.blockId);
                   }).catch(err=>{
@@ -1289,26 +1290,19 @@ export default {
       //this.recountApprovedInRange();
     },
     findPrevBlock(blockId) {
-//       let found, BreakException = {}; // a trick to stop forEach
-//       try {
-//         this.parlist.forEach((block, _id)=>{
-//           if (block.chainid === blockId) {
-//             found = block;
-//             throw BreakException;
-//           }
-//         });
-//       } catch (e) {
-//         if (e !== BreakException) throw e;
-//         else return found;
-//       }
-//       return false;
-      let found = false;
-      for (let block of this.parlist.values()) {
-        if (block.chainid === blockId) {
+      let found, BreakException = {}; // a trick to stop forEach
+      try {
+        this.parlist.forEach((block, _id)=>{
+          if (block.chainid === blockId) {
             found = block;
-        }
+            throw BreakException;
+          }
+        });
+      } catch (e) {
+        if (e !== BreakException) throw e;
+        else return found;
       }
-      return found;
+      return false;
     },
     setCheckedRange(startId, endId) {
       if (this.parlist.has(startId)) {
