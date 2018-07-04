@@ -267,22 +267,6 @@
       this.getTTSVoices(/*this.currentBookMeta.language*/)
       .then(()=>{
         this.pre_options = this.ttsVoices;
-        if (this.currentBookMeta.language == 'en') {
-          let default_voice = null;
-          this.pre_options.forEach(group => {
-            if (!default_voice && group.children) {
-              default_voice = group.children.find(ch => ch.id == 'Brian');
-            }
-          });
-          //console.log(default_voice);
-          if (default_voice && Object.keys(this.currentBookMeta.voices).length > 0) {
-            for (let type in this.currentBookMeta.voices) {
-              if (!this.currentBookMeta.voices[type]) {
-                this.currentBookMeta.voices[type] = default_voice.id
-              }
-            }
-          }
-        }
       })
       .catch(err=>err);
       this._setCatalogueSize();
