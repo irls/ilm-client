@@ -694,7 +694,7 @@ export const store = new Vuex.Store({
     set_aligning_blocks(state, blocks) {
       state.aligningBlocks = [];
       if (blocks.length) blocks.forEach(b => {
-        state.aligningBlocks.push({_id: b._id});
+        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id});
       });
     },
     set_storeList (state, blockObj) {
