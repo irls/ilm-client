@@ -325,6 +325,21 @@ export const store = new Vuex.Store({
             footnote: ''
           };
         }
+        if (state.currentBookMeta.language == 'en') {
+          let default_voice = null;
+          state.ttsVoices.forEach(group => {
+            if (!default_voice && group.children) {
+              default_voice = group.children.find(ch => ch.id == 'Brian');
+            }
+          });
+          if (default_voice && Object.keys(state.currentBookMeta.voices).length > 0) {
+            for (let type in state.currentBookMeta.voices) {
+              if (!state.currentBookMeta.voices[type]) {
+                state.currentBookMeta.voices[type] = default_voice.id
+              }
+            }
+          }
+        }
         if (!state.currentBookMeta.numeration) {
           state.currentBookMeta.numeration = 'x_x';
         }
