@@ -47,8 +47,8 @@
                       <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
                     </div>
                     <div class="audiofile-name">
-                      <span v-if="renaming !== audiofile.id" 
-                            :class="['audiofile-name-edit']" 
+                      <span v-if="renaming !== audiofile.id"
+                            :class="['audiofile-name-edit']"
                             @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.name}}</span>
                       <input type="text" v-model="audiofile.name" class="audiofile-name-edit"
                            @focusout="saveAudiobook()"
@@ -56,7 +56,7 @@
                     </div>
                     <div class="audiofile-duration"><span>({{ parseAudioLength(audiofile.duration) }})</span></div>
                   </div>
-                  
+
                 </template>
               </div>
             </draggable>
@@ -127,7 +127,7 @@
           </tr>
         </tbody>
         </table>
-        
+
         <!--<div class="pull-left" v-if="hasBlocksForAlignment && !enableAlignment">
           <span class="red">Select audio</span>
         </div>-->
@@ -155,6 +155,7 @@
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
   import Split from 'split.js';
+  import _ from 'lodash';
   //var d3 = require('d3')
   export default {
     name: 'BookAudioIntegration',
@@ -195,7 +196,7 @@
     mixins: [task_controls, api_config, access],
     mounted() {
       //console.log('MOUNTED')
-      
+
       /*let ac = new (window.AudioContext || window.webkitAudioContext);
       this.player = WaveformPlaylist.init({
         ac: ac,
@@ -223,7 +224,7 @@
         }
       });
       this.$root.$on('from-audioeditor:align', function(id, selections = null) {
-        
+
         let record = self.audiobook.importFiles.find(_f => {
           return _f.id == id;
         });
@@ -339,7 +340,7 @@
         });
       },
       addSelection(id, value) {
-        
+
         if (value === true) {
           if (this.selections.indexOf(id) === -1) {
             this.selections.push(id)
@@ -352,76 +353,74 @@
           this.$root.$emit('for-audioeditor:close');
         }
       },
-      audiofileClick(id, play, event) {
-        setTimeout(() => {// to prevent selection on doubleclick
-          let BreakException = {};
-          if(!this.renaming && event) {
-            if (event.shiftKey) {
-              if (this.selections.length > 0) {
-                if (this.selections.indexOf(id) === -1) {
-                  let select = false;
-                  this.addSelection(id, true);
-                  let clicked_passed = false;
-                  try {
-                    this.audiobook.importFiles.forEach(af => {
-                      if (!clicked_passed) {
-                        clicked_passed = af.id === id;
-                      }
-                      if (this.selections.indexOf(af.id) !== -1) {
-                        if (select === false || clicked_passed) {
-                          select = !select;
-                          if (select === false) {
-                            throw BreakException;
-                          }
+      audiofileClick:_.debounce(function(id, play, event) {
+        console.log('audiofileClick');
+        let BreakException = {};
+        if(!this.renaming && event) {
+          if (event.shiftKey) {
+            if (this.selections.length > 0) {
+              if (this.selections.indexOf(id) === -1) {
+                let select = false;
+                this.addSelection(id, true);
+                let clicked_passed = false;
+                try {
+                  this.audiobook.importFiles.forEach(af => {
+                    if (!clicked_passed) {
+                      clicked_passed = af.id === id;
+                    }
+                    if (this.selections.indexOf(af.id) !== -1) {
+                      if (select === false || clicked_passed) {
+                        select = !select;
+                        if (select === false) {
+                          throw BreakException;
                         }
                       }
-                      if (select) {
-                        this.addSelection(af.id, true)
-                      }
-                    });
-                  } catch (e) {
-                    if (e !== BreakException) {
-                      throw(e);
                     }
-                  }
-                } else {
-                  let split = {before: [], after: []};
-                  let container = split.before;
-                  this.audiobook.importFiles.forEach(af => {
-                    if (this.selections.indexOf(af.id) !== -1) {
-                      if (af.id === id) {
-                        container = split.after;
-                      } else {
-                        container.push(af.id);
-                      }
+                    if (select) {
+                      this.addSelection(af.id, true)
                     }
                   });
-                  this.selections = [];
-                  this.addSelection(id, true);
-                  if (split.before.length < split.after.length || split.before.length === split.after.length) {
-                    split.before.forEach(_id => this.addSelection(_id, true));
-                  } else {
-                    split.after.forEach(_id => this.addSelection(_id, true));
+                } catch (e) {
+                  if (e !== BreakException) {
+                    throw(e);
                   }
                 }
               } else {
+                let split = {before: [], after: []};
+                let container = split.before;
+                this.audiobook.importFiles.forEach(af => {
+                  if (this.selections.indexOf(af.id) !== -1) {
+                    if (af.id === id) {
+                      container = split.after;
+                    } else {
+                      container.push(af.id);
+                    }
+                  }
+                });
+                this.selections = [];
                 this.addSelection(id, true);
-                this.play(id, play);
-              }
-            } else if(event.ctrlKey) {
-              if (this.selections.indexOf(id) === -1) {
-                this.addSelection(id, true);
-              } else {
-                this.addSelection(id, false);
+                if (split.before.length < split.after.length || split.before.length === split.after.length) {
+                  split.before.forEach(_id => this.addSelection(_id, true));
+                } else {
+                  split.after.forEach(_id => this.addSelection(_id, true));
+                }
               }
             } else {
-              this.selections = [id];
+              this.addSelection(id, true);
               this.play(id, play);
             }
+          } else if(event.ctrlKey) {
+            if (this.selections.indexOf(id) === -1) {
+              this.addSelection(id, true);
+            } else {
+              this.addSelection(id, false);
+            }
+          } else {
+            this.selections = [id];
+            this.play(id, play);
           }
-        }, 500);
-        
-      },
+        }
+      }, 500),
       checkAll(event, value) {
         if (event && event.target) {
           value = event.target.checked;
@@ -838,7 +837,7 @@
         let file_catalogue_height = $(document).height() - 500;
         $('.file-catalogue-files').css('max-height', file_catalogue_height + 'px');
       },
-      
+
       clearErrors() {
         let url = this.API_URL + 'books/' + this.currentBookid + '/audiobooks/' + this.audiobook._id + '/clear_errors';
         this.$store.state.auth.getHttp().post(url)
@@ -928,7 +927,7 @@
                 $('input[name="' + s + '"]').prop('checked', true);
               });
             })
-            if (this.playing && val.importFiles && Array.isArray(val.importFiles) && 
+            if (this.playing && val.importFiles && Array.isArray(val.importFiles) &&
                     oldVal.importFiles && Array.isArray(oldVal.importFiles)) {
               let file = val.importFiles.find(f => f.id == this.playing);
               let fileOld = oldVal.importFiles.find(f => f.id == this.playing);
@@ -938,7 +937,7 @@
                 let positions = file.positions;
                 let positionsOld = fileOld.positions;
                 if ((typeof map !== 'undefined' && (typeof mapOld === 'undefined' || !_.isEqual(map, mapOld))) ||
-                        (typeof map === 'undefined' && typeof mapOld !== 'undefined') || 
+                        (typeof map === 'undefined' && typeof mapOld !== 'undefined') ||
                         !_.isEqual(positions, positionsOld)) {
                   this.play(this.playing);
                 }

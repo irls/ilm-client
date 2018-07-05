@@ -1696,6 +1696,7 @@ export default {
         this.setBlockSelection({start: {}, end: {}});
 
         this.$store.commit('clear_storeList');
+        this.refreshTmpl();
 
         this.$router.push({name: this.$route.name, params: {}});
         this.loadBookMeta()
