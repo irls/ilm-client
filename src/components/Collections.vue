@@ -12,10 +12,10 @@
       @collectionAdded="onCollectionAdded"
       @toggleMetaVisible="toggleMetaVisible"/>
 
-
+      
       <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">
           <template v-if="isEditMode()">
-            <BookEdit v-if="bookEditMode == 'Editor'" />
+            <BookEdit v-if="bookEditMode == 'Editor'" :mode="mode"/>
             <BookEditHtml v-else-if="bookEditMode == 'HTML'" />
             <BookEditJson v-else-if="bookEditMode == 'JSON'" />
             <BookEditDisplay v-else="bookEditMode == 'Display'" />
@@ -79,6 +79,7 @@
           currentBook: {}
         }
       },
+      props: ['mode'],
       methods: {
         hasBookSelected () {
           return !!this.currentBookMeta._id;
