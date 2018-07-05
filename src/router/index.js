@@ -15,6 +15,7 @@ import Contact from '../components/Contact'
 import Align from '../components/Align'
 import AudioEditor from '../components/AudioEditor'
 import Collections from '../components/Collections'
+import CollectionsGrid from '../components/collections/CollectionsGrid';
 
 Vue.use(Router)
 
@@ -93,19 +94,25 @@ export default new Router({
     },
     {
       path: '/collections',
-      component: Collections
+      component: Collections,
+      props: { mode: 'edit1' }
     },
     {
       path: '/collections/:collectionid',
-      component: Collections
+      component: Collections,
+    },
+    {path: '/collections/:collectionid/:bookid', component: Collections},
+    {
+      path: '/collections/:collectionid/:bookid/edit/:block?/:task_type?', name: 'CollectionBookEdit',
+      component: Collections, meta: { mode: 'edit' }, props: { mode: 'edit' }
     },
     {
-      path: '/collections/:collectionid/:bookid',
-      component: Collections
+      path: '/collections/:collectionid/display/:block?', name: 'CollectionBookEditDisplay',
+      component: Collections, meta: { mode: 'edit' }
     },
     {
-      path: '/collections/:collectionid/:bookid/edit',
-      component: Collections
+      path: '/collections/:collectionid/narrate/:block?/:task_type?', name: 'CollectionBookNarrate',
+      component: Collections, meta: { mode: 'narrate' }, props: { mode: 'narrate' }
     },
     { path: '*', redirect: '/books' }
   ]
