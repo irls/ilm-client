@@ -915,7 +915,7 @@
     watch: {
       'audiobook': {
         handler(val, oldVal) {
-          if (val && oldVal && val._id != oldVal._id) {
+          if (val && oldVal && val._id && oldVal._id && val._id != oldVal._id) {
             //console.log('AUDIOBOOK CHANGED')
             //this.checkAllState = false;
             this.selections = [];
