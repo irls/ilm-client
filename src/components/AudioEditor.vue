@@ -257,12 +257,19 @@
             //this.close();
           }
           this.pendingLoad = null;
+          let clear = [];
           if (this.audiosourceEditor) {
-            let emitter = this.audiosourceEditor.getEventEmitter();
-            if (emitter) {
-              emitter.emit('clear');
-            }
+            this.audiosourceEditor.tracks.forEach(t => {
+              //console.log(t.playout);
+              delete t.playout.buffer;
+            });
+            //console.log('CLEAR');
+            clear.push(this.audiosourceEditor.clear());
           }
+          Promise.all(clear)
+            .then(() => {
+              
+            
           if (bookAudiofile) {
             if (bookAudiofile.positions) {
               if (bookAudiofile.positions.start) {
@@ -520,6 +527,7 @@
             //console.log(err)
             this._setDefaults();
             this.close();
+          });
           });
           $('#' + this.blockId).on('click', '#content-' + this.blockId + ' w', function() {
             let index = $('#content-' + self.blockId).find('w[data-map]').index($(this));
