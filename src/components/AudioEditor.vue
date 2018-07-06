@@ -257,6 +257,8 @@
             //this.close();
           }
           this.pendingLoad = null;
+          this.isPlaying = false;
+          this.isPaused = false;
           let clear = [];
           if (this.audiosourceEditor) {
             this.audiosourceEditor.tracks.forEach(t => {

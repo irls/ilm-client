@@ -354,7 +354,6 @@
         }
       },
       audiofileClick:_.debounce(function(id, play, event) {
-        console.log('audiofileClick');
         let BreakException = {};
         if(!this.renaming && event) {
           if (event.shiftKey) {
@@ -482,6 +481,9 @@
       },
       play(id, autostart) {
         if (!this._is('editor')) {
+          return;
+        }
+        if (id === this.playing) {
           return;
         }
         if (id) {
