@@ -911,7 +911,12 @@
       'audiobook': {
         handler(val, oldVal) {
           if (val && oldVal && val._id != oldVal._id) {
+            //console.log('AUDIOBOOK CHANGED')
             //this.checkAllState = false;
+            this.selections = [];
+            this.playing = false;
+            this.renaming = false;
+            this.audioOpening = false;
             return;
           }
           //console.log('Audiobook changed');
