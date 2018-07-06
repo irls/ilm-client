@@ -41,7 +41,8 @@
                 <template v-else>
                   <div :class="['audiofile-info', {'playing': playing == audiofile.id, done: audiofile.done}]">
                     <div class="audiofile-player-controls">
-                      <i class="fa fa-play-circle-o" v-on:click="audiofileClick(audiofile.id, true, $event)"></i>
+                      <span class="audio-opening" v-if="audioOpening === audiofile.id"></span>
+                      <i v-else class="fa fa-play-circle-o" v-on:click="audiofileClick(audiofile.id, true, $event)"></i>
                       <!-- <i class="fa fa-play-circle-o red" v-on:click="play()" v-if="paused === audiofile.id"></i>
                       <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
                       <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
@@ -190,7 +191,8 @@
         pre_volume: 1.0,
         aligningBlocks: [],
         positions_tmp: {},
-        alignProcess: false
+        alignProcess: false,
+        audioOpening: false
       }
     },
     mixins: [task_controls, api_config, access],
@@ -250,6 +252,7 @@
         }
       });
       this.$root.$on('from-audioeditor:audio-loaded', (id) => {
+        this.audioOpening = false;
         let record = this.audiobook.importFiles.find(f => f.id === id);
         if (record) {
           this.playing = id;
@@ -354,6 +357,11 @@
         }
       },
       audiofileClick:_.debounce(function(id, play, event) {
+        if (!this.audioOpening && !event.shiftKey && !event.ctrlKey) {
+          this.audioOpening = id;
+        } else if (!event.shiftKey && !event.ctrlKey) {
+          return;
+        }
         let BreakException = {};
         if(!this.renaming && event) {
           if (event.shiftKey) {
@@ -1323,5 +1331,14 @@
           background-size: 100px auto;
           width: 100px;
       }
+  }
+  .audio-opening {
+    background: url(/static/preloader-snake-transparent-tiny.gif);
+    display: inline-block;
+    width: 19px;
+    height: 19px;
+    background-size: 19px;
+    background-repeat: no-repeat;
+    background-position: center;
   }
 </style>
