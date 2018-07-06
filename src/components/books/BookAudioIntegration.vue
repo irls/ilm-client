@@ -357,6 +357,9 @@
         }
       },
       audiofileClick:_.debounce(function(id, play, event) {
+        if (id === this.playing) {
+          return false;
+        }
         if (!this.audioOpening && !event.shiftKey && !event.ctrlKey) {
           this.audioOpening = id;
         } else if (!event.shiftKey && !event.ctrlKey) {
