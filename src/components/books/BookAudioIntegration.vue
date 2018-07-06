@@ -51,7 +51,7 @@
                       <span v-if="renaming !== audiofile.id"
                             :class="['audiofile-name-edit']"
                             @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.name}}</span>
-                      <input type="text" v-model="audiofile.name" class="audiofile-name-edit"
+                      <input id="rename-input" type="text" v-model="audiofile.name" class="audiofile-name-edit"
                            @focusout="saveAudiobook()"
                            v-else />
                     </div>
@@ -361,7 +361,9 @@
           return false;
         }
         if (!this.audioOpening && !event.shiftKey && !event.ctrlKey) {
-          this.audioOpening = id;
+          if (!this.renaming) {
+            this.audioOpening = id;
+          }
         } else if (!event.shiftKey && !event.ctrlKey) {
           return;
         }
@@ -1073,6 +1075,18 @@
               }
             });
             //console.log(split)
+          }
+        }
+      },
+      'renaming': {
+        handler(val) {
+          if (val !== false) {
+            var i = setInterval(() => {
+              if ($('#rename-input').length > 0) {
+                $('#rename-input').focus();
+                clearInterval(i);
+              }
+            }, 100)
           }
         }
       }
