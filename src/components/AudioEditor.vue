@@ -560,8 +560,8 @@
             this.smoothDrag(ev);
           });
 
-          $('body').on('mouseup', '.playlist-overlay.state-select', function() {
-            self._showSelectionBorders();
+          $('body').on('mouseup', '.playlist-overlay.state-select', () => {
+            this._showSelectionBorders();
           });
           $('body').on('click', '.playlist-overlay', (e) => {
             if (typeof this.audiosourceEditor !== 'undefined') {
