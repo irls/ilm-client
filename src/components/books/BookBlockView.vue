@@ -563,6 +563,7 @@
       </div>
     </modal>
     <modal :name="'block-html' + block._id" height="auto" width="90%" class="block-html-modal" :clickToClose="false" @opened="setHtml">
+    <div v-on:wheel.stop="">
       <div class="modal-header">
         <h4 class="modal-title">
           Block: {{block._id}}
@@ -576,6 +577,7 @@
           <button class="btn btn-default" v-on:click="hideModal('block-html')">Cancel</button>
           <button class="btn btn-primary" v-on:click="setContent()">Apply</button>
       </div>
+    </div>
     </modal>
 </div>
 </template>
