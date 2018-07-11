@@ -1038,6 +1038,10 @@ export default {
 //       })
     },
     joinBlocks(block, block_Idx, direction) {
+
+      this.setBlockSelection({start: {}, end: {}});
+      //this.setUnCheckedRange();
+
       let api_url = this.API_URL + 'book/block_join/';
       let api = this.$store.state.auth.getHttp();
 
