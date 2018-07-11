@@ -1,6 +1,6 @@
 <template>
 <div class="content-scroll-wrapper" :class="[{'recording-background': recordingState == 'recording'}]" v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="handleScroll">
-  <div v-on:wheel="throttleScrollContent"
+  <div v-on:wheel.prevent="smoothScrollContent"
     :class="['container-fluid ilm-global-style', metaStyles]">
 
     <!--<div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >-->
@@ -1338,9 +1338,9 @@ export default {
       }, 1000);
     },
 
-    throttleScrollContent: _.throttle(function (ev) {
+    smoothScrollContent: _.throttle(function (ev) {
       this.scrollContent(ev);
-    }, 30),
+    }, 50),
 
     scrollContent(ev, step = 50)
     {
