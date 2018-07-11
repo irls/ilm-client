@@ -686,7 +686,7 @@
           })
       },
       cancelAlign(force = false) {
-        let api_url = this.API_URL + 'align_queue/' + this.audiobook.bookid;
+        let api_url = this.API_URL + 'align_queue/' + this.currentBookid;
 
         let api = this.$store.state.auth.getHttp()
 
