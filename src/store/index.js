@@ -2043,8 +2043,18 @@ export const store = new Vuex.Store({
                       //blockStore.content+=' realigned';
                       checks.push(dispatch('getBlock', b._id)
                         .then(block => {
+                          blockStore._rev = block._rev;
                           blockStore.content = block.content;
                           blockStore.setAudiosrc(block.audiosrc, block.audiosrc_ver);
+                          if (blockStore.footnotes && blockStore.footnotes.length > 0 && 
+                                  block.footnotes && block.footnotes.length > 0) {
+                            block.footnotes.forEach((f, idx) => {
+                              if (f.audiosrc && blockStore.footnotes[idx]) {
+                                blockStore.setAudiosrcFootnote(idx, f.audiosrc, f.audiosrc_ver);
+                                blockStore.setContentFootnote(idx, f.content);
+                              }
+                            });
+                          }
                           return Promise.resolve();
                         })
                         .catch(err => {
