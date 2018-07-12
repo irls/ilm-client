@@ -1191,7 +1191,7 @@ export default {
     },
     goToUnresolved(with_task = false) {
       if (this.blocksToApproveCounter === 0) {
-        return;
+        return `${this.$route.path}`;
       }
       if (this.$route.matched.some(record => {
         return record.meta.mode === 'edit' || record.meta.mode === 'narrate'
@@ -1205,6 +1205,7 @@ export default {
         //this.$router.push({name: this.$route.name, params:  params});
         return path;
       }
+      return `${this.$route.path}`;
     },
     toggleIsMastered() {
       if (this.isAllowSetMastered) {
