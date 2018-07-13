@@ -211,7 +211,8 @@
               </div>
               <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
               <div v-if="allowPublishCurrentBook">
-                <button class="btn btn-primary" v-on:click="publish()">Publish</button>
+                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishing">Publish</button>
+                <span v-else class="align-preloader -small"></span>
               </div>
               <button class="btn btn-primary hidden" v-on:click="publishContent()">Publish Content</button>
             </template>
@@ -635,7 +636,8 @@ export default {
       // set blocks properties
       styleTabs: new Map(),
       numProps: new Map(),
-      activeTabIndex: 0
+      activeTabIndex: 0,
+      isPublishing: false
     }
   },
 
@@ -877,6 +879,11 @@ export default {
         if (this.blockSelection.start._id && this.blockSelection.end._id && this.blockSelection.start._id !== this.blockSelection.end._id) {
           this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
         }
+      }
+    },
+    'currentBook.published': {
+      handler(val) {
+        this.isPublishing = false;
       }
     }
 
@@ -1181,6 +1188,7 @@ export default {
       }
     },
     publish() {
+      this.isPublishing = true;
       return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish')
       .then(resp => {
         console.log(resp);
