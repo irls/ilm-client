@@ -292,7 +292,7 @@
             this.$refs.waveformContext.close();
           }
 
-          let self = this;
+          var self = this;
 
           this.audiofile = audio;
           this.blockId = blockId;
@@ -531,6 +531,7 @@
             this.close();
           });
           });
+          var self = this;
           $('#' + this.blockId).on('click', '#content-' + this.blockId + ' w', function() {
             let index = $('#content-' + self.blockId).find('w[data-map]').index($(this));
             let show_selection = true;
