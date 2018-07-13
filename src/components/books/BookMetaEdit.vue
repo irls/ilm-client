@@ -40,8 +40,8 @@
             <template v-if="tc_hasTask('metadata_cleanup')">
               <div v-if="!textCleanupProcess" class="editing-wrapper">
                 <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Editing complete</button>
-                <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
-                  <span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval
+                <div class="col-sm-8 blocks-counter">
+                  <router-link :to="goToUnresolved()"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
                 </div>
               </div>
               <div v-else class="preloader-small"></div>
@@ -57,8 +57,8 @@
               <template v-else>
                 <div v-if="!audioMasteringProcess" class="editing-wrapper">
                   <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Mastering complete</button>
-                  <div class="col-sm-8 blocks-counter" @click="goToUnresolved()">
-                    <span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval
+                  <div class="col-sm-8 blocks-counter">
+                    <router-link :to="goToUnresolved()"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
                   </div>
                 </div>
                 <div v-else class="preloader-small"></div>
@@ -67,8 +67,8 @@
           </template>
           <template v-else>
             <div class="editing-wrapper">
-              <div class="col-sm-8 blocks-counter" @click="goToUnresolved(true)">
-                <span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval
+              <div class="col-sm-8 blocks-counter">
+                <router-link :to="goToUnresolved(true)"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
               </div>
             </div>
           </template>
@@ -108,7 +108,7 @@
             <div v-else class="t-box red-message">Define block range</div>
             <BookAudioIntegration ref="audioIntegration"
                 :audiobook="audiobook"
-                :isActive="activeTabIndex == 1" 
+                :isActive="activeTabIndex == 1"
                 @onTtsSelect="ttsUpdate"
                 @alignmentFinished="loadAudiobook()"
                 @uploadAudio="showModal_audio = true"
@@ -1199,18 +1199,21 @@ export default {
     },
     goToUnresolved(with_task = false) {
       if (this.blocksToApproveCounter === 0) {
-        return;
+        return `${this.$route.path}`;
       }
       if (this.$route.matched.some(record => {
         return record.meta.mode === 'edit' || record.meta.mode === 'narrate'
       })) {
         let params = { block: 'unresolved' };
+        let path = `${this.$route.path}/${params.block}`;
         if (with_task) {
-          params['task_type'] = true
+          params['task_type'] = true;
+          path += `/${params.task_type}`;
         }
-        this.$router.push({name: this.$route.name, params:  params});
-        //this.$router.push({name: this.$route.name, params: { block: '1_en_2v' } });
+        //this.$router.push({name: this.$route.name, params:  params});
+        return path;
       }
+      return `${this.$route.path}`;
     },
     toggleIsMastered() {
       if (this.isAllowSetMastered) {
@@ -1469,7 +1472,7 @@ export default {
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
     },
-    
+
     downloadDemo() {
         return this.API_URL + 'books/' + this.currentBook._id + '/demo';
     },

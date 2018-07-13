@@ -422,12 +422,13 @@ export default {
 
           this.freeze('loadBookDown');
           return this.getBloksUntil(routeBlockId, this.$route.params.task_type)
-            .then(blockId=>{
+          .then(blockId=>{
             if (routeBlockId == 'unresolved') {
               this.$router.push({name: this.$route.name, params:  {}});
             }
             this.unfreeze('loadBookDown');
-            this.startId = blockId;
+            //this.startId = blockId;
+            this.scrollToBlock(blockId);
             this.lazyLoad();
             return Promise.resolve(blockId);
           }).catch(err=>{
@@ -553,8 +554,7 @@ export default {
         }
 
         let found = false;
-        let crossId = (startId === 'unresolved') ? this.startId : this.meta.startBlock_id;
-
+        let crossId = /*(startId === 'unresolved') ? this.startId :*/ this.meta.startBlock_id;
         switch(startId) {
           case 'unresolved': {
           if (this.parlist.size > 0) {
@@ -585,7 +585,6 @@ export default {
             if (this.parlist.has(startId)) found = startId;
           } break;
         }
-
         if (found) {
           return resolve(found);
         } else

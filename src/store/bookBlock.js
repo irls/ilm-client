@@ -21,12 +21,14 @@ let defBlock = [
   'secVal',
   'secHide',
   'illustration',
+  'illustration_width',
+  'illustration_height',
   'description',
   'voicework',
   'markedAsDone',
   'status',
   'audiosrc_ver',
-  'realigned'
+  'realigned',
 ]
 
 let BlockTypes = {
@@ -113,6 +115,8 @@ class BookBlock {
 
     this.deleted = init.deleted || false;
     this.illustration = init.illustration;
+    this.illustration_width = init.illustration_width;
+    this.illustration_height = init.illustration_height;
     this.description = init.description || '<p></p>';
     this.voicework = init.voicework;
     this.partUpdate = false;
