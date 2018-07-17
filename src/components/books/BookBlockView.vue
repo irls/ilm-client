@@ -725,7 +725,7 @@ export default {
           return this.block.voicework;
         },
         set(val) {
-          console.log('voiceworkSel set', val);
+          //console.log('voiceworkSel set', val);
           if (val && val !== this.block.voicework) {
             if (this._is('editor', true)) {
               this.voiceworkChange = val;
@@ -2938,7 +2938,7 @@ export default {
       },
       'block.markedAsDone': {
         handler(val) {
-          if (this.block && val !== this.block.markedAsDone) {
+          if (this.block) {
             this.setCurrentBookCounters(['not_marked_blocks']);
           }
         }
