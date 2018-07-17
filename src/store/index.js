@@ -1780,7 +1780,6 @@ export const store = new Vuex.Store({
     },
 
     _setNotMarkedAsDoneBlocksCounter({state, commit}) {
-      commit('SET_CURRENTBOOK_COUNTER', {name: 'not_marked_blocks', value: '0'})
       if (state.currentBookid) {
         let bookid = state.currentBookid;
         state.contentRemoteDB.query('filters_notMarkedAsDone/notMarkedAsDone', {
@@ -1791,7 +1790,12 @@ export const store = new Vuex.Store({
               .then(response => {
                 commit('SET_CURRENTBOOK_COUNTER', {name: 'not_marked_blocks', value: typeof response.rows[0] === 'undefined' ? 0 : response.rows[0].value});
               })
-              .catch(err => console.log(err));
+              .catch(err => {
+                commit('SET_CURRENTBOOK_COUNTER', {name: 'not_marked_blocks', value: '0'})
+                console.log(err)
+              });
+      } else {
+        commit('SET_CURRENTBOOK_COUNTER', {name: 'not_marked_blocks', value: '0'})
       }
     },
     _setNotProofedAudioBlocksCounter({state, commit}) {
@@ -2069,6 +2073,9 @@ export const store = new Vuex.Store({
               Promise.all(checks)
                 .then(() => {
                   commit('set_aligning_blocks', response.data);
+                  if (checks.length > 0) {
+                    dispatch('_setNotMarkedAsDoneBlocksCounter');
+                  }
                 })
             }
             return Promise.resolve();

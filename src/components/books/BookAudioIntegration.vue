@@ -549,8 +549,8 @@
       align(id = null, warn = 2) {
         if (warn >= 2 && this.currentBookCounters.approved_audio_in_range > 0) {
           this.$root.$emit('show-modal', {
-            title: 'Are you you sure you want to realign ' + this.currentBookCounters.approved_audio_in_range + ' approved block(s)?',
-            //text: 'Are you you sure you want to realign ' + this.currentBookCounters.approved_audio_in_range + ' approved block(s)?',
+            title: 'Are you sure you want to realign ' + this.currentBookCounters.approved_audio_in_range + ' approved block(s)?',
+            //text: 'Are you sure you want to realign ' + this.currentBookCounters.approved_audio_in_range + ' approved block(s)?',
             text: '',
             buttons: [
               {
@@ -710,8 +710,8 @@
       alignTts(warn = 2) {
         if (warn >= 2 && this.currentBookCounters.approved_tts_in_range > 0) {
           this.$root.$emit('show-modal', {
-            title: 'Are you you sure you want to realign ' + this.currentBookCounters.approved_tts_in_range + ' approved block(s)?',
-            //text: 'Are you you sure you want to realign ' + this.currentBookCounters.approved_audio_in_range + ' approved block(s)?',
+            title: 'Are you sure you want to realign ' + this.currentBookCounters.approved_tts_in_range + ' approved block(s)?',
+            //text: 'Are you sure you want to realign ' + this.currentBookCounters.approved_audio_in_range + ' approved block(s)?',
             text: '',
             buttons: [
               {
