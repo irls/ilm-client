@@ -1,6 +1,6 @@
 <template>
   <div>
-    <accordion :one-at-atime="true" ref="accordionAudio">
+    <accordion :one-at-atime="true" ref="accordionAudio" class="audio-integration-accordion">
       <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
           <div class="file-catalogue-buttons">
@@ -192,7 +192,8 @@
         aligningBlocks: [],
         positions_tmp: {},
         alignProcess: false,
-        audioOpening: false
+        audioOpening: false,
+        activeTabIndex: 0
       }
     },
     mixins: [task_controls, api_config, access],
@@ -282,6 +283,16 @@
       this.$root.$on('stop-align', () => {
         this.alignProcess = false;
       })
+      $('body').on('click', '.audio-integration-accordion .panel', () => {
+        this.activeTabIndex = null;
+        if (this.$refs.accordionAudio && this.$refs.accordionAudio.$children) {
+          this.$refs.accordionAudio.$children.forEach((ch, i) => {
+            if (ch.open === true) {
+              this.activeTabIndex = i;
+            }
+          });
+        }
+      });
     },
     methods: {
       uploadAudio() {
@@ -863,6 +874,45 @@
             console.log(err)
           })
       },
+      
+      initSplit() {
+        if (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0) {
+          let parentHeight = false;
+          let minSize = false;
+          let maxSize = false;
+          let split = Split(['#file-catalogue', '#audio-import-errors'], {
+            direction: 'vertical',
+            //minSize: [80, 80],
+            sizes: [70, 30],
+            elementStyle: (dimension, size, gutterSize) => {
+              let resizeWrapper = true;
+              if (!parentHeight) {
+                parentHeight = parseInt($('#file-catalogue').parent().css('height'));
+                resizeWrapper = false;
+                if (parentHeight) {
+                  minSize = parentHeight / 100 * 30;
+                  $('#audio-import-errors').css('height', minSize + 'px');
+                  maxSize = parentHeight - minSize;
+                }
+              }
+              //console.log(dimension, size, gutterSize)
+              let height = parentHeight / 100 * size - gutterSize;
+              //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
+              if (resizeWrapper) {
+                $('.file-catalogue-files-wrapper').css('height', parseInt($('#file-catalogue').css('height')) - parseInt($('.file-catalogue-buttons').css('height')) + 'px')
+              }
+              if (height < minSize && resizeWrapper) {
+                height = minSize;
+              }
+              if (height > maxSize && resizeWrapper) {
+                height = maxSize;
+              }
+              return {'height': height + 'px'};
+            }
+          });
+          //console.log(split)
+        }
+      },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks', 'clearLocks', 'getBookAlign'])
     },
@@ -1040,42 +1090,12 @@
       },
       'isActive': {
         handler(val) {
-          if (val && $('.gutter.gutter-vertical').length == 0) {
-            let parentHeight = false;
-            let minSize = false;
-            let maxSize = false;
-            let split = Split(['#file-catalogue', '#audio-import-errors'], {
-              direction: 'vertical',
-              //minSize: [80, 80],
-              sizes: [70, 30],
-              elementStyle: (dimension, size, gutterSize) => {
-                let resizeWrapper = true;
-                if (!parentHeight) {
-                  parentHeight = parseInt($('#file-catalogue').parent().css('height'));
-                  resizeWrapper = false;
-                  if (parentHeight) {
-                    minSize = parentHeight / 100 * 30;
-                    $('#audio-import-errors').css('height', minSize + 'px');
-                    maxSize = parentHeight - minSize;
-                  }
-                }
-                //console.log(dimension, size, gutterSize)
-                let height = parentHeight / 100 * size - gutterSize;
-                //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
-                if (resizeWrapper) {
-                  $('.file-catalogue-files-wrapper').css('height', parseInt($('#file-catalogue').css('height')) - parseInt($('.file-catalogue-buttons').css('height')) + 'px')
-                }
-                if (height < minSize && resizeWrapper) {
-                  height = minSize;
-                }
-                if (height > maxSize && resizeWrapper) {
-                  height = maxSize;
-                }
-                return {'height': height + 'px'};
-              }
-            });
-            //console.log(split)
-          }
+          this.initSplit();
+        }
+      },
+      'activeTabIndex': {
+        handler(val) {
+          this.initSplit();
         }
       },
       'renaming': {
