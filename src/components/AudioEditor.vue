@@ -1,11 +1,11 @@
 <template>
   <div>
     <cntx-menu
-          ref="waveformContext"
-          dir="bottom">
-        <li v-on:click="setSelectionStart(null, $event)">Selection Start</li>
-        <li v-on:click="setSelectionEnd(null, $event)">Selection End</li>
-      </cntx-menu>
+      ref="waveformContext"
+      dir="bottom">
+      <li v-on:click="setSelectionStart(null, $event)">Selection Start</li>
+      <li v-on:click="setSelectionEnd(null, $event)">Selection End</li>
+    </cntx-menu>
     <div class="waveform-playlist">
       <div class="close-player-container pull-right">
         <span class="close-player" v-on:click="close()">&times;</span>
@@ -270,8 +270,8 @@
           }
           Promise.all(clear)
             .then(() => {
-              
-            
+
+
           if (bookAudiofile) {
             if (bookAudiofile.positions) {
               if (bookAudiofile.positions.start) {
@@ -564,11 +564,14 @@
           $('body').on('mouseup', '.playlist-overlay.state-select', () => {
             this._showSelectionBorders();
           });
+
           $('body').on('click', '.playlist-overlay', (e) => {
             if (typeof this.audiosourceEditor !== 'undefined') {
               let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
               let pos_r = this._round(pos, 1);
+              //console.log('click', Math.abs(pos_r - this.mouseSelection.start));
               if (this.mouseSelection.start !== null && Math.abs(pos_r - this.mouseSelection.start) < 0.1) {
+                //console.log('2', this.cursorPosition, pos_r);
                 if (this.mode === 'block' && e.shiftKey && this.cursorPosition >= 0) {
                   if (this.cursorPosition > pos_r) {
                     let end_pos = this.cursorPosition;
@@ -596,13 +599,17 @@
                 //console.log(this.mouseSelection.start, pos)
               }
               //$('#cursor-position').show();
+
               this._showSelectionBorders();
             }
           });
+
           $('body').on('mousedown', '.playlist-overlay', (e) => {
+            //console.log('this.mouseSelection', e.which, this.mouseSelection.start, this.mouseSelection.end);
             if (e.which !== 1) {
               return;
             }
+
             $('[id="resize-selection-right"]').hide().css('left', 0);
             $('[id="resize-selection-left"]').hide().css('left', 0);
             $('#cursor-position').hide();
@@ -613,7 +620,9 @@
               }
               this.mouseSelection = {start: this._round(pos, 1), end: null};
             }
+            //console.log("$('body').on('mousedown', '.playlist-overlay'");
           });
+
           $('.player-controls').keydown('input[type="number"]', function(e) {
             e.preventDefault();
           });
@@ -1202,6 +1211,7 @@
             });
             if (this.$refs.waveformContext) {
               this.$refs.waveformContext.open(e, {}, 0, e.layerY - 80);
+              $('body').one('click', this.$refs.waveformContext.close);
             }
           }
         },
