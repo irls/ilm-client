@@ -59,12 +59,21 @@
                   </div>
                   <div class="col-sm-5">
                     or &nbsp;&nbsp;&nbsp;
-                    <label class='btn btn-default' type="file">
-                      <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
-                      <input name="audio_import" type="file" class="file_open" accept="audio/*" @change="onAudioFileChange" :multiple="multiple" />
-                    </label>
+                    <dropzone id="audio-dropzone" ref="uploadDropzone" 
+                      :options="dropzoneOptions" 
+                      @vdropzone-file-added="onAudioFileChange"
+                      @vdropzone-total-upload-progress="onUploadProgress"
+                      @vdropzone-success="onUploadSuccess"
+                      @vdropzone-complete="onUploadComplete"
+                      @vdropzone-error="onUploadError"
+                      @vdropzone-queue-complete="onUploadFinished">
+                      Browse
+                  </dropzone>
                   </div>
                   <span class="help-block"> &nbsp; &nbsp; Audio file, ZIP files or playlist </span>
+                  <span v-if="$refs.upload">
+                  {{$refs.upload.uploaded}}
+                  </span>
                 </div>
 
                 <br><br><br><br>
@@ -85,10 +94,12 @@
 
           </form>
           <div id='uploadingMsg' v-show='isUploading'>
-             <h2> {{uploadProgress}}&nbsp;
-               <i v-if='!uploadFinished' class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i>
-               <!-- <i v-else class="fa fa-check"></i> -->
-             </h2>
+             <h2>{{uploadProgress}}&nbsp;<i v-if='!uploadFinished' class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i></h2>
+             <ul id="audioFiles" v-if="!uploadFinished">
+                <li v-for="file in audioFiles">
+                  {{ file.name }} - {{ file.progress ? file.progress : 0 }}%
+                </li>
+             </ul>
             <div v-for="err in uploadErrors" class="upload-error">{{err.error}}</div>
             <div v-if="uploadFinished">
               <button class="btn btn-default" v-on:click="$emit('close')">OK</button>
@@ -119,6 +130,7 @@ import Vue from 'vue'
 import api_config from '../../mixins/api_config.js'
 import {dateFormat} from '../../filters';
 import v_modal from 'vue-js-modal';
+import dropzone from 'vue2-dropzone';
 Vue.use(v_modal, { dialog: true });
 
 export default {
@@ -140,14 +152,28 @@ export default {
       formData: new FormData(),
       uploadFilesDuplicates: [],
       confirmedDuplicates: [],
-      uploadErrors: []
+      uploadErrors: [],
+      dropzoneOptions: {
+        url: this.API_URL + 'books/' + this.book.bookid + '/audiobooks/chunk', 
+        chunking: true, 
+        chunkSize: 1024 * 1024, 
+        autoProcessQueue: false, 
+        createImageThumbnails: false, 
+        headers: {'Authorization': 'Bearer ' + this.$store.getters.auth.getSession().token + ':' + this.$store.getters.auth.getSession().password}, 
+        dictDefaultMessage: '<label class="btn btn-default" for="start-file-choose"><i class="fa fa-folder-open-o" aria-hidden=\"true\" id=\"start-file-choose\"></i>&nbsp;Browse&hellip;</label>',
+        forceChunking: true,
+        maxFilesize: 1024 * 1024 * 10
+      },
+      choosingFile: false
     }
   },
   mounted: function () {
+    this.dropzoneOptions.url = this.API_URL + 'books/' + this.book.bookid + '/audiobooks/chunk';
+    this.dropzoneOptions.headers = {'Authorization': 'Bearer ' + this.$store.getters.auth.getSession().token + ':' + this.$store.getters.auth.getSession().password};
     this.showModal('import-audio');
   },
   components: {
-    Vue, 
+    Vue, dropzone
   },
   mixins: [api_config],
   props: {
@@ -190,9 +216,11 @@ export default {
       this.uploadFiles = 0
     },
 
-    onAudioFileChange (e) {
+    onAudioFileChange (file) {
+      //console.log(arguments);
+      //return;
       //let fieldName = e.target.name
-      let fileList = e.target.files || e.dataTransfer.files
+      let fileList = [file];//e.target.files || e.dataTransfer.files//e.file
       if (!this.multiple) {
         this.audioFiles = [];
         this.formData = new FormData();
@@ -234,129 +262,13 @@ export default {
       if (this.saveDisabled) {
         return '';
       }
-      // console.log(this.book, this.currentBook)
-      let vm = this
-      vm.uploadFinished = false
-      let api_url = vm.API_URL + 'books/' + this.book.bookid + '/audiobooks';
-      let api = this.$store.state.auth.getHttp()
-      if (this.audioURL.length) this.formData.append('audioURL', this.audioURL);
-
-      var config = {
-        onUploadProgress: function(progressEvent) {
-          var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total );
-          vm.uploadProgress = "Uploading Files... " + percentCompleted + "%";
-        }
-      }
-      
-      this.isUploading = true
-      if (!this.audiobook._id) {
-        // first upload by editor
-        api.post(api_url, this.formData, config).then(function(response){
-          if (response.status===200) {
-            // hide modal after one second
-            //vm.uploadProgress = "Upload Successful"
-            vm.uploadFinished = true
-            vm.uploadProgress = ''
-            vm.uploadErrors = [];
-            if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
-              vm.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
-              vm.$emit('audiofilesUploaded', response.data.audio);
-            }
-            if (response.data.errors) {
-              if (Array.isArray(response.data.errors)) {
-                vm.uploadErrors = response.data.errors;
-              }
-            }
-            if (vm.importTask._id && response.data.audio && typeof response.data.audio._id !== 'undefined') {
-              api.put(vm.API_URL + 'task/' + vm.importTask._id + '/audio_imported', {})
-                .then((link_response) => {
-                  //vm.closeForm(response)
-                })
-                .catch((err) => {
-                  //vm.closeForm(response)
-                })
-            } else {
-              //vm.closeForm(response)
-            }
-          } else {
-            // not sure what we should be doing here
-            vm.formReset()
-          }
-        }).catch((err) => {
-          console.log('error: '+ err)
-          vm.formReset()
-          setTimeout(function(){ vm.$emit('close') }, 1000)
-        });
+      this.uploadFinished = false;
+      this.isUploading = true;
+      if (this.audioFiles.length === 0 && this.audioURL) {
+        this.onUploadFinished();
       } else {
-        // upload updated file by engineer or another file by editor
-        //vm.audiobook.importFiles = [];
-        //this.formData.append('audiobook', JSON.stringify(vm.audiobook));
-        api.post(api_url + '/' + vm.audiobook._id, this.formData, config).then(function(response){
-          if (response.status===200) {
-            // hide modal after one second
-            vm.uploadFinished = true
-            vm.uploadProgress = ''
-            vm.uploadErrors = []
-            if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
-              vm.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
-              vm.$emit('audiofilesUploaded', response.data.audio);
-              if (vm.importTask._id) {
-                api.put(vm.API_URL + 'task/' + vm.importTask._id + '/audio_imported', {})
-                  .then((link_response) => {
-
-                  })
-                  .catch((err) => {
-
-                  })
-              } else {
-
-              }
-            }
-            if (response.data.errors) {
-              if (Array.isArray(response.data.errors)) {
-                vm.uploadErrors = response.data.errors;
-              }
-            }
-          } else {
-            // not sure what we should be doing here
-            vm.formReset()
-          }
-        }).catch((err) => {
-          console.log('error: '+ err)
-          vm.formReset()
-          setTimeout(function(){ vm.$emit('close') }, 1000)
-        });
+        this.$refs.uploadDropzone.processQueue();
       }
-
-
-
-
-      //
-      //
-      // var author = 'Bearer ' + this.auth._session.token + ':' + this.auth._session.password;
-      // Vue.http.headers.common['Authorization'] = author;
-      //
-      // if (this.flag_book_browse) {
-      //   if (this.flag_audio_browse) {
-      //     // file browser of book, audio
-      //     this.$http.post(url, { 'book': dataBook, 'audio': dataAudio, 'type_book': this.type_book }).then((response) => {
-      //       // result
-      //       alert(response.toString());
-      //
-      //     });
-      //   } else {
-      //     // file browser of book, url of audio
-      //   }
-      // } else {
-      //   if (this.flag_audio_browse) {
-      //     // url of book, file browser of audio
-      //   } else {
-      //     // url of book, audio
-      //   }
-      // }
-
-      // close
-      //this.$emit('close');
 
     },
     humanFileSize(bytes, si) {
@@ -382,7 +294,10 @@ export default {
       return dateFormat(date, format)
     },
     cancelDuplicateAudio() {
-      this.uploadFilesDuplicates.shift();
+      let file = this.uploadFilesDuplicates.shift();
+      //console.log(file, this.$refs.uploadDropzone.getQueuedFiles(), this.$refs.uploadDropzone)
+      this.$refs.uploadDropzone.removeFile(file);
+      //console.log(this.$refs.uploadDropzone.getQueuedFiles());
     },
     replaceDuplicateAudio() {
       this.addFileToUpload(this.uploadFilesDuplicates.shift());
@@ -392,6 +307,140 @@ export default {
     },
     hideModal(name) {
       this.$modal.hide(name);
+    },
+    onUploadProgress() {
+      //console.log(arguments)
+      let total = 0;
+      this.$refs.uploadDropzone.getUploadingFiles().forEach(f => {
+        let processed = 0;
+        f.upload.chunks.forEach(c => {
+          if (c.status === 'success') {
+            processed++;
+          }
+        });
+        processed = Math.round(processed * 100 / f.upload.totalChunkCount);
+        //console.log(f.name + ' ' + f.upload.progress, f.status, processed, f);
+        let af = this.audioFiles.find(_af => _af.name === f.name);
+        if (af) {
+          af.progress = processed;
+          af.uuid = f.upload.uuid;
+          total+= processed;
+        } else {
+          
+        }
+      });
+      this.audioFiles.forEach(af => {
+        if (af.progress === 100) {
+          total+=100;
+        }
+      });
+      this.uploadProgress = Math.round(total / this.audioFiles.length) + '%';
+    },
+    onUploadFinished() {
+      //console.log(arguments)
+      //this.uploadFinished = true;
+      //this.isUploading = false;
+      let toUpload = {
+        files: []
+      };
+      this.audioFiles.forEach(af => {
+        if (af.ready === true) {
+          toUpload.files.push(af);
+        }
+      });
+      let api_url = this.API_URL + 'books/' + this.book.bookid + '/audiobooks/chunks';
+      let api = this.$store.state.auth.getHttp()
+      if (this.audioURL.length) toUpload.url = this.audioURL;
+
+      //this.isUploading = true
+      if (!this.audiobook._id) {
+        // first upload by editor
+        api.post(api_url, toUpload, {}).then((response) => {
+          if (response.status===200) {
+            this.uploadFinished = true
+            this.uploadProgress = ''
+            this.uploadErrors = [];
+            if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
+              this.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
+              this.$emit('audiofilesUploaded', response.data.audio);
+            }
+            if (response.data.errors) {
+              if (Array.isArray(response.data.errors)) {
+                this.uploadErrors = response.data.errors;
+              }
+            }
+            if (this.importTask._id && response.data.audio && typeof response.data.audio._id !== 'undefined') {
+              api.put(this.API_URL + 'task/' + this.importTask._id + '/audio_imported', {})
+                .then((link_response) => {
+                  //vm.closeForm(response)
+                })
+                .catch((err) => {
+                  //vm.closeForm(response)
+                })
+            } else {
+              //vm.closeForm(response)
+            }
+          } else {
+            // not sure what we should be doing here
+            this.formReset()
+          }
+        }).catch((err) => {
+          console.log('error: '+ err)
+          this.formReset()
+          setTimeout(() => { this.$emit('close') }, 1000)
+        });
+      } else {
+        // upload updated file by engineer or another file by editor
+        //vm.audiobook.importFiles = [];
+        //this.formData.append('audiobook', JSON.stringify(vm.audiobook));
+        api.post(api_url + '/' + this.audiobook._id, toUpload, {}).then((response) => {
+          if (response.status===200) {
+            // hide modal after one second
+            this.uploadFinished = true
+            this.uploadProgress = ''
+            this.uploadErrors = []
+            if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
+              this.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
+              this.$emit('audiofilesUploaded', response.data.audio);
+              if (this.importTask._id) {
+                api.put(this.API_URL + 'task/' + this.importTask._id + '/audio_imported', {})
+                  .then((link_response) => {
+
+                  })
+                  .catch((err) => {
+
+                  })
+              } else {
+
+              }
+            }
+            if (response.data.errors) {
+              if (Array.isArray(response.data.errors)) {
+                this.uploadErrors = response.data.errors;
+              }
+            }
+          } else {
+            // not sure what we should be doing here
+            this.formReset()
+          }
+        }).catch((err) => {
+          console.log('error: '+ err)
+          this.formReset()
+          setTimeout(() => { this.$emit('close') }, 1000)
+        });
+      }
+    },
+    onUploadSuccess() {
+    },
+    onUploadComplete(file) {
+      let f = this.audioFiles.find(af => af.name === file.name);
+      if (f) {
+        f.ready = file.status === 'success';
+        f.progress = 100;
+      }
+    },
+    onUploadError() {
+      console.log(arguments);
     }
 
   },
@@ -577,4 +626,12 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
     color: red;
 }
 
+</style>
+<style>
+.dz-preview.dz-file-preview {
+  display: none;
+}
+.vue-dropzone.dropzone.dz-clickable {
+    display: inline-block;
+}
 </style>
