@@ -33,11 +33,11 @@
                     <label class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
-                      <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip" :multiple="multiple" @change="onFilesChange($event)">
+                      <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip,.docx" :multiple="multiple" @change="onFilesChange($event)">
 
                     </label>
                   </div>
-                  <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
+                  <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images or Docx with text </span>
                 </div>
 
                 <br><br><br>
@@ -112,14 +112,14 @@
           <label class='btn btn-default' type="file">
             <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
-            <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip"
+            <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip,.docx"
                    :multiple="multiple"
                    @change="onFilesChange($event)"
                    v-bind:value="fileValue">
 
           </label>
         </div>
-        <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
+        <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images or Docx with text  </span>
         <ul id="selectedBooks">
           <li class="book-import-list" v-for="book in selectedBooks">
             <i class="fa fa-remove" v-on:click="formReset()"></i>{{ book.name }} - {{ humanFileSize(book.size, true) }}
