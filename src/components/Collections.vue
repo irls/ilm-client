@@ -85,7 +85,9 @@
           return !!this.currentBookMeta._id;
         },
         isEditMode () {
-          return this.$store.state.route.path.indexOf('/edit') > -1
+          return this.$route.matched.some(record => {
+            return record.meta.mode === 'edit' || record.meta.mode === 'narrate'
+          })
         },
         onCollectionAdded(id) {
           //let current = this.bookCollections.find(bk => bk._id == id);

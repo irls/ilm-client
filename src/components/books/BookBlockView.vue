@@ -907,10 +907,12 @@ export default {
             }*/
             let split = '<br class="narrate-split"/><br class="narrate-split"/>';
             if ($('<div>' + this.block.content + '</div>').find('w').length > 0) {
-              content = this.block.content.replace(/(\.|\?|\!)([^<]*)<\/w>(.+?)/g, '$1' + split + '$2</w>$3')
+              let rg = new RegExp('(<[^>]+>[^<]*?)((?<!St|Mr|Mrs)\\.|\\?|\\![\'\"\‘\”\“\’]*)([^<]*?<\\/[^>]+>.+?)', 'gm')
+              content = this.block.content.replace(rg, '$1$2' + split + '$3')
             } else {
               content = this.block.content + '<span class="content-tail"></span>';
-              content = content.replace(/(\.|\?|\!)([^\.\?\!]+)/g, '$1' + split + '$2');
+              let rg = new RegExp('((?<!St|Mr|Mrs)[\\.\\?\\!]+[\'\"\‘\”\“\’]*)([^\\.\\?\\!\'\"\‘\”\“\’]+)', 'mig');
+              content = content.replace(rg, '$1' + split + '$2');
             }
             return content;
           } else {
