@@ -371,11 +371,11 @@
         if (id === this.playing) {
           return false;
         }
-        if (!this.audioOpening && !event.shiftKey && !event.ctrlKey) {
+        if (!this.audioOpening && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
           if (!this.renaming) {
             this.audioOpening = id;
           }
-        } else if (!event.shiftKey && !event.ctrlKey) {
+        } else if (!event.shiftKey && !event.ctrlKey && !event.metaKey) {
           return;
         }
         let BreakException = {};
@@ -432,7 +432,7 @@
               this.addSelection(id, true);
               this.play(id, play);
             }
-          } else if(event.ctrlKey) {
+          } else if(event.ctrlKey || event.metaKey) {
             if (this.selections.indexOf(id) === -1) {
               this.addSelection(id, true);
             } else {
