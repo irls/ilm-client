@@ -146,7 +146,7 @@ export default {
                     //'<sup data-idx="$1">[$1]</sup>'
                     this.parlist.push(newBlock);
                 });
-              console.log('result', result);
+              //console.log('result', result);
               if (result.finish) {
                 if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
               } else {
