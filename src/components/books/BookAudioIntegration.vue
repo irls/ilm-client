@@ -1203,9 +1203,9 @@
         }
         .audiofile-info {
           display: inline-block;
-          width: 305px;
+          width: 90%;
           white-space: nowrap;
-          max-width: 80%;
+          /*max-width: 80%;*/
           overflow: hidden;
           .audiofile-player-controls {
             width: 19px;
@@ -1218,6 +1218,7 @@
             max-width: 65%;
             overflow: hidden;
             vertical-align: sub;
+            min-width: 65%;
           }
           .audiofile-duration {
             display: inline-block;
