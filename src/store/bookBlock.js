@@ -90,6 +90,13 @@ let BlockTypes = {
 class BookBlock {
   constructor(init) {
 
+    // OrientDB properties
+//     this.rid = init.rid || '';
+//     this.in = init.in || '';
+//     this.out = init.out || '';
+//     this.blockid = init.blockid || '';
+
+    // CouchDB properties
     this._id = init._id || '';
     this._rev = init._rev || '';
     this.bookid = init.bookid || '';

@@ -945,6 +945,15 @@ export const store = new Vuex.Store({
       // clear currentBookid
     },
 
+    loadBookBlocks({commit, state, dispatch}, book_id) {
+      //console.log('loadBookBlocks', book_id);
+      return axios.get(state.API_URL + `books/blocks/${book_id}`)
+      .then((response) => {
+        return response.data;
+      })
+      .catch(err => err)
+    },
+
     loadBook ({commit, state, dispatch}, book_id) {
       //console.log('loading currentBook: ', book_id)
       // if (!book_id) return  // if no currentbookid, exit
@@ -972,7 +981,6 @@ export const store = new Vuex.Store({
           .catch((err)=>{
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
           })
-          //console.log('currentBookMeta', state.currentBookMeta);
           return Promise.resolve(meta);
         }).catch((err)=>{
           console.log('metaDB.get Error: ', err);
@@ -982,8 +990,6 @@ export const store = new Vuex.Store({
         commit('SET_CURRENTBOOK_META', false);
         return Promise.resolve()
       }
-
-
     },
 
     reloadBookMeta ({commit, state, dispatch}) {
@@ -2050,7 +2056,7 @@ export const store = new Vuex.Store({
                           blockStore._rev = block._rev;
                           blockStore.content = block.content;
                           blockStore.setAudiosrc(block.audiosrc, block.audiosrc_ver);
-                          if (blockStore.footnotes && blockStore.footnotes.length > 0 && 
+                          if (blockStore.footnotes && blockStore.footnotes.length > 0 &&
                                   block.footnotes && block.footnotes.length > 0) {
                             block.footnotes.forEach((f, idx) => {
                               if (f.audiosrc && blockStore.footnotes[idx]) {
