@@ -35,7 +35,7 @@
               <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': selections.indexOf(audiofile.id) !== -1}]">
                 <template v-if="audiofile.status == 'processing'">
                   <div class="audiofile-info">
-                    <i>Processing, {{audiofile.name}}</i>
+                    <i>Processing, {{audiofile.title}}</i>
                   </div>
                 </template>
                 <template v-else>
@@ -50,8 +50,8 @@
                     <div class="audiofile-name">
                       <span v-if="renaming !== audiofile.id"
                             :class="['audiofile-name-edit']"
-                            @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.name}}</span>
-                      <input id="rename-input" type="text" v-model="audiofile.name" class="audiofile-name-edit"
+                            @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.title ? audiofile.title : audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
+                      <input id="rename-input" type="text" v-model="audiofile.title" class="audiofile-name-edit"
                            @focusout="saveAudiobook()"
                            v-else />
                     </div>
