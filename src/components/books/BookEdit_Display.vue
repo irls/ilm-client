@@ -116,22 +116,37 @@ export default {
                 result.rows.forEach((el, idx, arr)=>{
                     let newBlock = new BookBlock(el);
                     newBlock.content = newBlock.content.replace(
-                      /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/gm,
+                      /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/mig,
                       '<span data-pg="$1"></span>'
                     );
+                    //<sup class="service-info" data-pg="xxiii"><w class="service-info" data-sugg="">pg </w><w class="service-info" data-sugg="">xxiii</w></sup>
+                    newBlock.content = newBlock.content.replace(
+                      /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-pg=['"]{1}(.*?)['"]{1}[^>]*>.*?<\/sup>/mig,
+                      '<span class="service-info" data-pg="$1"></span>'
+                    );
+
                     let ftnIdx = 0;
                     newBlock.content = newBlock.content.replace(
-                      /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/gm,
+                      /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
                       (idx)=>{
                         newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
                         ftnIdx++;
                         return `<sup data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
                       }
                     );
+                    //<sup class="service-info" data-idx="2"><w class="service-info" data-sugg="">2</w></sup>
+                    newBlock.content = newBlock.content.replace(
+                      /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
+                      (idx)=>{
+                        newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+                        ftnIdx++;
+                        return `<sup class="service-info" data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
+                      }
+                    );
                     //'<sup data-idx="$1">[$1]</sup>'
                     this.parlist.push(newBlock);
                 });
-              console.log('result', result);
+              //console.log('result', result);
               if (result.finish) {
                 if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
               } else {
