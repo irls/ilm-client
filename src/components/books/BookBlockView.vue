@@ -979,6 +979,7 @@ export default {
         this.isIllustrationChanged = false;
         this.recountApprovedInRange();
       });
+      this.$root.$on('prepare-alignment', this._saveContent);
 
 
 //       Vue.nextTick(() => {
@@ -2823,6 +2824,17 @@ export default {
             }
           }
         }
+      },
+      _saveContent() {
+        if (this.$refs.blockContent) {
+          this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+          this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+          if (this.block.footnotes && this.block.footnotes.length) {
+            this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+              this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
+            });
+          }
+        }
       }
   },
   watch: {
@@ -3093,13 +3105,7 @@ export default {
             this.block.voicework = 'no_audio';
             break;
           default:
-            this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
-            this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
-            if (this.block.footnotes && this.block.footnotes.length) {
-              this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-                this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
-              });
-            }
+            this._saveContent();
             break;
         }
     }
@@ -3126,6 +3132,7 @@ export default {
     }
 
     this.destroyEditor();
+    this.$root.$off('prepare-alignment', this._saveContent);
   }
 }
 </script>

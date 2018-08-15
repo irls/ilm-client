@@ -172,7 +172,6 @@
           dragRight: null,
           playlistScrollPosition: 0,
           audiofileId: null,
-          blockMap: {},
           blockSelectionEmit: false,
           contextPosition: null,
           pendingLoad: null,
@@ -223,11 +222,11 @@
         load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
           //console.log('load', audio, text, block, autostart, bookAudiofile, reloadOnChange);
           let blockId = block ? block._id : null;
-          if (bookAudiofile && bookAudiofile.blockMap) {
-            this.blockMap = bookAudiofile.blockMap;
-          } else {
-            this.blockMap = {};
-          }
+          //if (bookAudiofile && bookAudiofile.blockMap) {
+            //this.blockMap = bookAudiofile.blockMap;
+          //} else {
+            //this.blockMap = {};
+          //}
           $('.playlist-tracks').off('scroll');
           if (this.audioContext && this.audioContext.state === 'closed') {
             return false;//component was destroyed;
@@ -1456,7 +1455,16 @@
             return 0;
           }
         },
-        ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'hasLocks'])
+        blockMap: {
+          get() {
+            if (!this.currentAudiobook._id || !this.currentAudiobook.importFiles || !this.audiofileId) {
+              return {};
+            }
+            let audio = this.currentAudiobook.importFiles.find(_if => _if.id === this.audiofileId);
+            return audio && audio.blockMap ? audio.blockMap : {};
+          }
+        },
+        ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'hasLocks', 'currentAudiobook'])
       },
       watch: {
         'cursorPosition': {

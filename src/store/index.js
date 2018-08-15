@@ -60,7 +60,6 @@ export const store = new Vuex.Store({
     contentDB: false,
     contentDBcomplete: false,
     contentDBWatch: false,
-    audiobookWatch: false,
     tasksDB: false,
     collectionsDB: false,
     librariesDB: false,
@@ -83,6 +82,7 @@ export const store = new Vuex.Store({
     currentBookBlocksLeft: 0,
     currentBookBlocksLeftId: 'AAA',
     currentBookToc: {bookId: '', data: []},
+    currentAudiobook: {},
 
     bookFilters: {filter: '', language: '', importStatus: 'staging'},
     editMode: 'Editor',
@@ -122,7 +122,8 @@ export const store = new Vuex.Store({
       countTTS: 0,
       blocks: []
     },
-    alignWatch: null
+    alignWatch: null,
+    audiobookWatch: null
   },
 
   getters: {
@@ -247,7 +248,8 @@ export const store = new Vuex.Store({
         return false;
       }
     },
-    aligningBlocks: state => state.aligningBlocks
+    aligningBlocks: state => state.aligningBlocks,
+    currentAudiobook: state => state.currentAudiobook
   },
 
   mutations: {
@@ -274,16 +276,10 @@ export const store = new Vuex.Store({
             state.contentDBWatch = false;
         }
     },
-
-    set_audiobookWatch (state, syncPointer) {
-        state.audiobookWatch = syncPointer;
-    },
-
-    stop_audiobookWatch (state) {
-        if (state.audiobookWatch) {
-            state.audiobookWatch.cancel();
-            state.audiobookWatch = false;
-        }
+    
+    set_currentAudiobook (state, audiobook) {
+      state.currentAudiobook = audiobook;
+      //console.log('CURRENT AUDIOBOOK', state.currentAudiobook)
     },
 
     SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
@@ -965,6 +961,7 @@ export const store = new Vuex.Store({
           dispatch('getTotalBookTasks');
           dispatch('setCurrentBookCounters');
           dispatch('startAlignWatch');
+          dispatch('startAudiobookWatch');
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
@@ -1447,27 +1444,6 @@ export const store = new Vuex.Store({
         return true;
     },
 
-    startWatchAudiobook ({commit, state, dispatch}, id) {
-        commit('stop_audiobookWatch');
-        let contentDBWatch = state.contentRemoteDB.changes({
-            since: 'now',
-            live: true,
-            include_docs: true,
-            filter: function (doc) {
-                return doc._id === id;
-            }
-        });
-        contentDBWatch.removeAllListeners('change');
-        contentDBWatch
-        .on('complete', function(info) {
-            //console.log('contentDBWatch Cancelled');
-        }).on('error', function (err) {
-            console.log(err);
-        });
-        commit('set_audiobookWatch', contentDBWatch);
-        return true;
-    },
-
     _putBlock ({state}, block) {
       console.log('_putBlock block', block);
       return state.contentRemoteDB
@@ -1551,16 +1527,25 @@ export const store = new Vuex.Store({
       });
     },
 
-    getAudioBook ({state}, bookid) {
+    getAudioBook ({state, commit}, bookid) {
+      if (!bookid) {
+        bookid = state.currentBookid;
+      }
+      if (!bookid) {
+        return;
+      }
       return axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
         .then(audio => {
           if (audio.data) {
+            commit('set_currentAudiobook', audio.data);
             return audio.data;
           } else {
+            commit('set_currentAudiobook', {});
             return {};
           }
         })
         .catch(error => {
+          commit('set_currentAudiobook', {});
           return {};
         });
     },
@@ -2072,6 +2057,9 @@ export const store = new Vuex.Store({
               }
               Promise.all(checks)
                 .then(() => {
+                  if (oldBlocks.length != blocks.length) {
+                    dispatch('getAudioBook');
+                  }
                   commit('set_aligning_blocks', response.data);
                   if (checks.length > 0) {
                     dispatch('_setNotMarkedAsDoneBlocksCounter');
@@ -2082,6 +2070,14 @@ export const store = new Vuex.Store({
           })
           .catch(err => Promise.reject(err));
       }
+    },
+    startAudiobookWatch({state, dispatch}) {
+      if (state.audiobookWatch) {
+        clearInterval(state.audiobookWatch);
+      }
+      setInterval(() => {
+        dispatch('getAudioBook')
+      }, 10000);
     }
   }
 })

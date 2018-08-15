@@ -173,7 +173,6 @@
 
     },
     props: {
-      'audiobook': Object,
       'isActive': Boolean
     },
     data() {
@@ -342,7 +341,7 @@
         return api.post(api_url, formData, {}).then(function(response){
           if (response.status===200) {
             if (response.data && response.data.audio) {
-              self.$emit('audiobookUpdated', response.data.audio);
+              self.getAudioBook();
             }
           } else {
 
@@ -579,6 +578,7 @@
           return;
         }
         if (warn >= 1 && this.currentBookCounters.changed_in_range_audio > 0) {
+          this.$root.$emit('prepare-alignment');
           this.$root.$emit('show-modal', {
             title: 'Unsaved changes',
             text: 'You have unsaved changes in selected block range.<br/>Save and align with audio?',
@@ -740,6 +740,7 @@
           return;
         }
         if (warn >= 1 && this.currentBookCounters.changed_in_range_tts > 0) {
+          this.$root.$emit('prepare-alignment');
           this.$root.$emit('show-modal', {
             title: 'Unsaved changes',
             text: 'You have unsaved changes in selected block range.<br/>Save and align with audio?',
@@ -868,7 +869,7 @@
         let url = this.API_URL + 'books/' + this.currentBookid + '/audiobooks/' + this.audiobook._id + '/clear_errors';
         this.$store.state.auth.getHttp().post(url)
           .then(resp => {
-            this.$emit('audiobookUpdated', resp.data);
+            this.getAudiobook();
           })
           .catch(err => {
             console.log(err)
@@ -914,7 +915,7 @@
         }
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks', 'clearLocks', 'getBookAlign'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
@@ -960,7 +961,16 @@
         let blocks = this.alignCounter.count - this.alignCounter.countTTS;
         return blocks >=0 ? blocks : 0;
       },
-      ...mapGetters(['currentBookCounters', 'ttsVoices', 'currentBookid', 'currentBookMeta', 'blockSelection', 'alignCounter', 'hasLocks', 'lockedBlocks'])
+      ...mapGetters({
+        currentBookCounters: 'currentBookCounters', 
+        ttsVoices: 'ttsVoices', 
+        currentBookid: 'currentBookid', 
+        currentBookMeta: 'currentBookMeta', 
+        blockSelection: 'blockSelection', 
+        alignCounter: 'alignCounter', 
+        hasLocks: 'hasLocks', 
+        lockedBlocks: 'lockedBlocks', 
+        audiobook: 'currentAudiobook'})
     },
     watch: {
       'audiobook': {
@@ -997,22 +1007,6 @@
                 $('input[name="' + s + '"]').prop('checked', true);
               });
             })
-            if (this.playing && val.importFiles && Array.isArray(val.importFiles) &&
-                    oldVal.importFiles && Array.isArray(oldVal.importFiles)) {
-              let file = val.importFiles.find(f => f.id == this.playing);
-              let fileOld = oldVal.importFiles.find(f => f.id == this.playing);
-              if (file && fileOld) {
-                let map = file.blockMap;
-                let mapOld = fileOld.blockMap;
-                let positions = file.positions;
-                let positionsOld = fileOld.positions;
-                if ((typeof map !== 'undefined' && (typeof mapOld === 'undefined' || !_.isEqual(map, mapOld))) ||
-                        (typeof map === 'undefined' && typeof mapOld !== 'undefined') ||
-                        !_.isEqual(positions, positionsOld)) {
-                  this.play(this.playing);
-                }
-              }
-            }
           }
         },
         deep: true

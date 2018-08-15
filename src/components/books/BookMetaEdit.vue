@@ -28,10 +28,9 @@
 
       <BookDownload v-if="showModal" @close="showModal = false" />
       <AudioImport v-if="showModal_audio" @close="showModal_audio = false"
-        @audiofilesUploaded="setAudiobook"
+        @audiofilesUploaded="getAudioBook"
         :book="currentBook"
         :importTask="importTask"
-        :audiobook="audiobook"
         :allowDownload="false" />
 
       <div class="book-listing">
@@ -107,12 +106,9 @@
             </div>
             <div v-else class="t-box red-message">Define block range</div>
             <BookAudioIntegration ref="audioIntegration"
-                :audiobook="audiobook"
                 :isActive="activeTabIndex == 1"
                 @onTtsSelect="ttsUpdate"
-                @alignmentFinished="loadAudiobook()"
                 @uploadAudio="showModal_audio = true"
-                @audiobookUpdated="onAudiobookUpdate"
               ></BookAudioIntegration>
           </vue-tab>
           <vue-tab title="Book Content" id="book-content">
@@ -626,7 +622,7 @@ export default {
       showAudioMasteringModal: false,
       allowMetadataEdit: false,
       textCleanupProcess: false,
-      audiobook: {},
+      //audiobook: {},
       unlinkCollectionWarning: false,
       blockTypes: BlockTypes,
       audioMasteringProcess: false,
@@ -647,7 +643,24 @@ export default {
 
   computed: {
 
-    ...mapGetters(['currentBookid', 'currentBookMeta', 'currentBookFiles', 'isLibrarian', 'isEditor', 'isAdmin', 'bookCollections', 'allowPublishCurrentBook', 'currentBookBlocksLeft', 'currentBookBlocksLeftId', 'currentBookAudioExportAllowed', 'currentBookCounters', 'tc_currentBookTasks', 'storeList', 'blockSelection', 'alignCounter']),
+    ...mapGetters({
+      currentBookid: 'currentBookid', 
+      currentBookMeta: 'currentBookMeta', 
+      currentBookFiles: 'currentBookFiles', 
+      isLibrarian: 'isLibrarian', 
+      isEditor: 'isEditor', 
+      isAdmin: 'isAdmin', 
+      bookCollections: 'bookCollections', 
+      allowPublishCurrentBook: 'allowPublishCurrentBook', 
+      currentBookBlocksLeft: 'currentBookBlocksLeft', 
+      currentBookBlocksLeftId: 'currentBookBlocksLeftId', 
+      currentBookAudioExportAllowed: 'currentBookAudioExportAllowed', 
+      currentBookCounters: 'currentBookCounters', 
+      tc_currentBookTasks: 'tc_currentBookTasks', 
+      storeList: 'storeList', 
+      blockSelection: 'blockSelection', 
+      alignCounter: 'alignCounter', 
+      audiobook: 'currentAudiobook'}),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -761,14 +774,20 @@ export default {
     //this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor || this.isAdmin
     this.allowMetadataEdit = this.isEditor || this.isAdmin
     let self = this;
-    this.loadAudiobook(true)
+    //this.loadAudiobook(true)
+    this.getAudioBook(this.currentBookid)
+      .then(() => {
+        if (this.currentAudiobook) {
+          
+        }
+      });
     this.$root.$on('from-bookblockview:voicework-type-changed', function() {
       self.setAllowSetMastered();
       self.setCurrentBookCounters(['narration_blocks', 'not_marked_blocks']);
     });
     this.setCurrentBookCounters();
     this.$root.$on('book-reimported', () => {
-      this.loadAudiobook()
+      //this.loadAudiobook()
     });
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
 
@@ -912,7 +931,7 @@ export default {
       if (this.currentBook.author && !Array.isArray(this.currentBook.author)) {
         this.currentBook.author = [this.currentBook.author];
       }
-      this.loadAudiobook();
+      //this.loadAudiobook();
       /*this.setCurrentBookBlocksLeft(this.currentBook._id)
         .then(() => {
 
@@ -1118,7 +1137,7 @@ export default {
           self.audioMasteringProcess = false;
         })
     },
-    loadAudiobook(set_tab = false) {
+    /*loadAudiobook(set_tab = false) {
       let self = this;
       this.getAudioBook(this.currentBookMeta.bookid).then(audio => {
         self.setAudiobook(audio);//
@@ -1151,18 +1170,6 @@ export default {
               })
               .catch(err => console.log(err))
           }, 20000);
-        /*if (!this.audiobookWatch) {
-          this.startWatchAudiobook(audiobook._id)
-            .then(() => {
-              this.audiobookWatch.on('change', (change) => {
-                console.log('AUDIOBOOK CHANGE', change)
-                if (change && change.doc) {
-                  this.setAudiobook(change.doc);
-                }
-              });
-            })
-            .catch(err => err);
-        }*/
       }
       if (!audiobook._id) {
         if (this.audiobookChecker) {
@@ -1176,7 +1183,7 @@ export default {
       Vue.nextTick(() => {
         this.audiobook = audio;
       })
-    },
+    },*/
     addAuthor() {
       this.currentBook.author.push('');
       this.liveUpdate('author', this.currentBook.author);
