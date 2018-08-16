@@ -107,11 +107,11 @@ export default new Router({
       component: Collections, meta: { mode: 'edit' }, props: { mode: 'edit' }
     },
     {
-      path: '/collections/:collectionid/display/:block?', name: 'CollectionBookEditDisplay',
+      path: '/collections/:collectionid/:bookid/display/:block?', name: 'CollectionBookEditDisplay',
       component: Collections, meta: { mode: 'edit' }
     },
     {
-      path: '/collections/:collectionid/narrate/:block?/:task_type?', name: 'CollectionBookNarrate',
+      path: '/collections/:collectionid/:bookid/narrate/:block?/:task_type?', name: 'CollectionBookNarrate',
       component: Collections, meta: { mode: 'narrate' }, props: { mode: 'narrate' }
     },
     { path: '*', redirect: '/books' }

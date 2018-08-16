@@ -137,9 +137,25 @@ export default {
     },
     editModesAvailable: {
       get() {
-        let modes = Object.assign({}, this.editModes);
-        if (!this.tc_hasTask('block_narrate')) {
-          delete modes['BookNarrate'];
+        let modes;
+        if (this.$route.path.indexOf('/collections') === 0) {
+          modes = {
+            'CollectionBookEdit': 'Edit',
+            'CollectionBookNarrate': 'Narrate',
+            'CollectionBookEditDisplay': 'Display'
+          }
+          if (!this.tc_hasTask('block_narrate')) {
+            delete modes['CollectionBookNarrate']
+          }
+        } else {
+          modes = {
+            'BookEdit': 'Edit' ,
+            'BookNarrate': 'Narrate',
+            'BookEditDisplay': 'Display'
+          }
+          if (!this.tc_hasTask('block_narrate')) {
+            delete modes['BookNarrate']
+          }
         }
         return modes;
       }
