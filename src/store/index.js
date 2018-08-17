@@ -1534,18 +1534,25 @@ export const store = new Vuex.Store({
       if (!bookid) {
         return;
       }
+      let set = bookid === state.currentBookid;
       return axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
         .then(audio => {
           if (audio.data) {
-            commit('set_currentAudiobook', audio.data);
+            if (set) {
+              commit('set_currentAudiobook', audio.data);
+            }
             return audio.data;
           } else {
-            commit('set_currentAudiobook', {});
+            if (set) {
+              commit('set_currentAudiobook', {});
+            }
             return {};
           }
         })
         .catch(error => {
-          commit('set_currentAudiobook', {});
+          if (set) {
+            commit('set_currentAudiobook', {});
+          }
           return {};
         });
     },
