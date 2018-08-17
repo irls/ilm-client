@@ -104,7 +104,7 @@ class BookBlock {
     this.index = typeof init.index !== 'undefined' ? init.index : '';
 
     this.tag = init.tag || '';
-    this.content = typeof init.content !== 'undefined' ? init.content : '<p></p>';
+    this.content = typeof init.content !== 'undefined' ? init.content : '<p><br></p>';
     this.type = init.type || 'par';
     this.classes = init.classes || {};
     if (Array.isArray(this.classes)) this.classes = {};

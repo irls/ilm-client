@@ -884,7 +884,7 @@ export default {
         tag: 'p',
         type: 'par',
         parnum: '',
-        content: '',
+        //content: '',
         voicework: 'no_audio',
         status: {
           assignee: 'editor',

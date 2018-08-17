@@ -131,6 +131,7 @@ import api_config from '../../mixins/api_config.js'
 import {dateFormat} from '../../filters';
 import v_modal from 'vue-js-modal';
 import dropzone from 'vue2-dropzone';
+import {mapGetters, mapActions} from 'vuex';
 Vue.use(v_modal, { dialog: true });
 
 export default {
@@ -189,10 +190,6 @@ export default {
       type: Object,
       default: () => {return {}}
     },
-    'audiobook': {
-      type: Object,
-      default: () => {return {}}
-    },
     'allowDownload': {
       type: Boolean,
       default: true
@@ -204,7 +201,10 @@ export default {
     },
     saveDisabled: function() {
       return (this.uploadFiles === 0 && this.audioURL.length == 0)
-    }
+    },
+    ...mapGetters({
+      audiobook: 'currentAudiobook'
+    })
   },
   methods: {
     formReset(){
@@ -362,7 +362,7 @@ export default {
             this.uploadErrors = [];
             if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
               this.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
-              this.$emit('audiofilesUploaded', response.data.audio);
+              this.$emit('audiofilesUploaded');
             }
             if (response.data.errors) {
               if (Array.isArray(response.data.errors)) {
@@ -401,7 +401,8 @@ export default {
             this.uploadErrors = []
             if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
               this.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
-              this.$emit('audiofilesUploaded', response.data.audio);
+              //this.$emit('audiofilesUploaded', response.data.audio);
+              this.getAudioBook();
               if (this.importTask._id) {
                 api.put(this.API_URL + 'task/' + this.importTask._id + '/audio_imported', {})
                   .then((link_response) => {
@@ -441,7 +442,8 @@ export default {
     },
     onUploadError() {
       console.log(arguments);
-    }
+    },
+    ...mapActions(['getAudioBook'])
 
   },
   watch: {

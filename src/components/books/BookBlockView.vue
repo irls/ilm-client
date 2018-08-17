@@ -907,10 +907,12 @@ export default {
             }*/
             let split = '<br class="narrate-split"/><br class="narrate-split"/>';
             if ($('<div>' + this.block.content + '</div>').find('w').length > 0) {
-              content = this.block.content.replace(/(\.|\?|\!)([^<]*)<\/w>(.+?)/g, '$1' + split + '$2</w>$3')
+              let rg = new RegExp('(<[^>]+>[^<]*?)((?<!St|Mr|Mrs|Dr|[^\\w][\\w]{1})[\\.|\\?|\\!]+[\'\"\‘\”\“\’]*)([^<]*?<\\/[^>]+>.+?)', 'gmi')
+              content = this.block.content.replace(rg, '$1$2' + split + '$3')
             } else {
               content = this.block.content + '<span class="content-tail"></span>';
-              content = content.replace(/(\.|\?|\!)([^\.\?\!]+)/g, '$1' + split + '$2');
+              let rg = new RegExp('((?<!St|Mr|Mrs|Dr|[^\\w][\\w]{1})[\\.\\?\\!]+[\'\"\‘\”\“\’]*)([^\\.\\?\\!\'\"\‘\”\“\’]+)', 'mig');
+              content = content.replace(rg, '$1' + split + '$2');
             }
             return content;
           } else {
@@ -979,6 +981,7 @@ export default {
         this.isIllustrationChanged = false;
         this.recountApprovedInRange();
       });
+      this.$root.$on('prepare-alignment', this._saveContent);
 
 
 //       Vue.nextTick(() => {
@@ -2823,6 +2826,17 @@ export default {
             }
           }
         }
+      },
+      _saveContent() {
+        if (this.$refs.blockContent) {
+          this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+          this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+          if (this.block.footnotes && this.block.footnotes.length) {
+            this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+              this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
+            });
+          }
+        }
       }
   },
   watch: {
@@ -3093,13 +3107,7 @@ export default {
             this.block.voicework = 'no_audio';
             break;
           default:
-            this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
-            this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
-            if (this.block.footnotes && this.block.footnotes.length) {
-              this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-                this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
-              });
-            }
+            this._saveContent();
             break;
         }
     }
@@ -3126,6 +3134,7 @@ export default {
     }
 
     this.destroyEditor();
+    this.$root.$off('prepare-alignment', this._saveContent);
   }
 }
 </script>
