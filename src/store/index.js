@@ -764,25 +764,25 @@ export const store = new Vuex.Store({
         commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
 
 
-//         state.metaDB.replicate.from(state.metaRemoteDB)
-//         .on('complete', (info)=>{
-//             state.metaDBcomplete = true;
-//             dispatch('updateBooksList');
-//             state.metaDB.sync(state.metaRemoteDB, {live: true, retry: true})
-//             .on('change', (change)=>{
-//                 console.log('metaDB change', change);
-//                 dispatch('updateBooksList');
-//                 // try to avoid meta glitches while update
-//                 if (state.blockers.indexOf('updateBookMeta') > -1) {
-//                   commit('clear_blocker', 'updateBookMeta');
-//                 }// else {
-//                   dispatch('reloadBookMeta');
-//                 //}
-//             })
-//             .on('error', (err)=>{
-//               // handle errors
-//             })
-//         });
+        state.metaDB.replicate.from(state.metaRemoteDB)
+        .on('complete', (info)=>{
+            state.metaDBcomplete = true;
+            dispatch('updateBooksList');
+            state.metaDB.sync(state.metaRemoteDB, {live: true, retry: true})
+            .on('change', (change)=>{
+                console.log('metaDB change', change);
+                dispatch('updateBooksList');
+                // try to avoid meta glitches while update
+                if (state.blockers.indexOf('updateBookMeta') > -1) {
+                  commit('clear_blocker', 'updateBookMeta');
+                }// else {
+                  dispatch('reloadBookMeta');
+                //}
+            })
+            .on('error', (err)=>{
+              // handle errors
+            })
+        });
 
 //         state.contentDB.replicate.from(state.contentRemoteDB)
 //         .on('complete', (info)=>{
@@ -951,13 +951,13 @@ export const store = new Vuex.Store({
 
     loadPartOfBookBlocks({commit, state, dispatch}, params) {
       console.log('loadPartOfBookBlocks params:', params);
-      params.onPage = 20;
+      params.onPage = 11;
       let req = state.API_URL + `books/blocks/${params.bookId}/${params.onPage}`;
-      if (params.blockId) {
-        if (params.blockId === 'unresolved' && params.taskType) {
+      if (params.block) {
+        if (params.block === 'unresolved' && params.taskType) {
           req += `/search/${params.taskType}`
         } else {
-          req += `/from/${params.blockId}`
+          req += `/from/${params.block}`
         }
       }
       return axios.get(req)
