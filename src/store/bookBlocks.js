@@ -34,8 +34,8 @@ class BookBlocks {
           if (seqId == this.meta.rid) return this.listIdsCache.listIds;
         }
       }
+      window.localStorage.setItem("startRId", this.startRId);
     }
-    window.localStorage.setItem("startRId", this.startRId);
     return this.listIdsCache.listIds;
   }
 

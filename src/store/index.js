@@ -75,8 +75,8 @@ export const store = new Vuex.Store({
     currentBookid: '',
     currentBook: {},
     currentBookMeta: {},
-    currentBook_dirty: false,
-    currentBookMeta_dirty: false,
+//     currentBook_dirty: false,
+//     currentBookMeta_dirty: false,
     currentEditingBlockId: '',
     currentBookFiles: { coverimg: false },
     currentBookBlocksLeft: 0,
@@ -276,7 +276,7 @@ export const store = new Vuex.Store({
             state.contentDBWatch = false;
         }
     },
-    
+
     set_currentAudiobook (state, audiobook) {
       state.currentAudiobook = audiobook;
       //console.log('CURRENT AUDIOBOOK', state.currentAudiobook)
@@ -302,8 +302,8 @@ export const store = new Vuex.Store({
     SET_CURRENTBOOK_META (state, meta) {
       // state.currentBookid = meta._id
       // state.currentBook = book
-      state.currentBook_dirty = false
-      state.currentBookMeta_dirty = false
+//       state.currentBook_dirty = false
+//       state.currentBookMeta_dirty = false
       if (meta) {
         state.currentBookMeta = meta
         state.currentBookid = meta._id
@@ -764,25 +764,25 @@ export const store = new Vuex.Store({
         commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
 
 
-        state.metaDB.replicate.from(state.metaRemoteDB)
-        .on('complete', (info)=>{
-            state.metaDBcomplete = true;
-            dispatch('updateBooksList');
-            state.metaDB.sync(state.metaRemoteDB, {live: true, retry: true})
-            .on('change', (change)=>{
-                console.log('metaDB change', change);
-                dispatch('updateBooksList');
-                // try to avoid meta glitches while update
-                if (state.blockers.indexOf('updateBookMeta') > -1) {
-                  commit('clear_blocker', 'updateBookMeta');
-                }// else {
-                  dispatch('reloadBookMeta');
-                //}
-            })
-            .on('error', (err)=>{
-              // handle errors
-            })
-        });
+//         state.metaDB.replicate.from(state.metaRemoteDB)
+//         .on('complete', (info)=>{
+//             state.metaDBcomplete = true;
+//             dispatch('updateBooksList');
+//             state.metaDB.sync(state.metaRemoteDB, {live: true, retry: true})
+//             .on('change', (change)=>{
+//                 console.log('metaDB change', change);
+//                 dispatch('updateBooksList');
+//                 // try to avoid meta glitches while update
+//                 if (state.blockers.indexOf('updateBookMeta') > -1) {
+//                   commit('clear_blocker', 'updateBookMeta');
+//                 }// else {
+//                   dispatch('reloadBookMeta');
+//                 //}
+//             })
+//             .on('error', (err)=>{
+//               // handle errors
+//             })
+//         });
 
 //         state.contentDB.replicate.from(state.contentRemoteDB)
 //         .on('complete', (info)=>{
@@ -941,9 +941,26 @@ export const store = new Vuex.Store({
       // clear currentBookid
     },
 
-    loadBookBlocks({commit, state, dispatch}, book_id) {
-      //console.log('loadBookBlocks', book_id);
-      return axios.get(state.API_URL + `books/blocks/${book_id}`)
+    loadBookBlocks({commit, state, dispatch}, bookId) {
+      return axios.get(state.API_URL + `books/blocks/${bookId}`)
+      .then((response) => {
+        return response.data;
+      })
+      .catch(err => err)
+    },
+
+    loadPartOfBookBlocks({commit, state, dispatch}, params) {
+      console.log('loadPartOfBookBlocks params:', params);
+      params.onPage = 20;
+      let req = state.API_URL + `books/blocks/${params.bookId}/${params.onPage}`;
+      if (params.blockId) {
+        if (params.blockId === 'unresolved' && params.taskType) {
+          req += `/search/${params.taskType}`
+        } else {
+          req += `/from/${params.blockId}`
+        }
+      }
+      return axios.get(req)
       .then((response) => {
         return response.data;
       })
@@ -958,12 +975,14 @@ export const store = new Vuex.Store({
       // if currentbook exists, check if currrent book needs saving
       let oldBook = (state.currentBook && state.currentBook._id)
 
-      if (oldBook && state.currentBook_dirty || state.currentBookMeta_dirty) {
-        // save old state
-      }
+//       if (oldBook && state.currentBook_dirty || state.currentBookMeta_dirty) {
+//         // save old state
+//       }
+      if (book_id && book_id === state.currentBook._id) return Promise.resolve(state.currentBook);
+
       if (book_id) {
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
-        let metaDB = state.metaDBcomplete ? state.metaDB : state.metaRemoteDB;
+        let metaDB = state.metaRemoteDB;
         return metaDB.get(book_id).then(meta => {
           commit('SET_CURRENTBOOK_META', meta)
           commit('TASK_LIST_LOADED')
@@ -1292,59 +1311,6 @@ export const store = new Vuex.Store({
       .catch(err => {
         return Promise.reject(err);
       })
-
-//       (function loop(block_id) {
-//
-//           dispatch('getBlock', block_id)
-//           .then((block)=>{
-//             if (block && block._id) {
-//               results.rows.push(block);
-//
-//               if (metadata_cleanup || audio_mastering)
-//               {
-//                 if (!block.markedAsDone && (!block.status || !block.status.proofed))
-//                 {
-//                   results.blockId = block._id;
-//                   results.finish = true;
-//                   requests[0].resolve();
-//                 }
-//                 else loop(block.chainid);
-//
-//               } else {
-//                 let task = state.tc_currentBookTasks.tasks.find((t) => {
-//                   return t.blockid == block._id;
-//                 });
-//                 //console.log('searchBlocksChain 3', task, task_type, block.markedAsDone);
-//                 if (task && (task_type === true || task.type === task_type))
-//                 {
-//                   results.blockId = block._id;
-//                   results.finish = true;
-//                   requests[0].resolve();
-//                 } else if (!block.markedAsDone) {
-//                   results.blockId = block._id;
-//                   results.finish = true;
-//                   requests[0].resolve();
-//                 }
-//               }
-//
-//               if (!results.finish) loop(block.chainid);
-//
-//             } else requests[0].resolve();
-//           })
-//           .catch((err)=>{
-//             //console.log('loop_BlocksChain Catch: ', err);
-//             results.blockId = results.length ? results.rows[0]._id : null;
-//             results.finish = true;
-//             requests[0].resolve();
-//           })
-//
-//       })(params.startId); // start
-//
-//       return Promise.all(requests)
-//       .then(() => {
-//         //console.log('searchBlocksChain results', results);
-//         return Promise.resolve(results);
-//       });
     },
 
     loadBlocksChain ({commit, state, dispatch}, params) {
