@@ -35,14 +35,22 @@
               <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': selections.indexOf(audiofile.id) !== -1}]">
                 <template v-if="audiofile.status == 'processing'">
                   <div class="audiofile-info">
-                    <i>Processing, {{audiofile.name}}</i>
+                    <i>Processing, {{audiofile.title}}</i>
                   </div>
                 </template>
                 <template v-else>
+                  <div v-if="_is('editor', true) || _is('admin')"
+                           class="audiofile-options">
+                    <input type="checkbox" :checked="selections.indexOf(audiofile.id) !== -1"
+                           v-on:click="addSelection(audiofile.id, selections.indexOf(audiofile.id) === -1)"/>
+                  </div>
                   <div :class="['audiofile-info', {'playing': playing == audiofile.id, done: audiofile.done}]">
                     <div class="audiofile-player-controls">
                       <span class="audio-opening" v-if="audioOpening === audiofile.id"></span>
-                      <i v-else class="fa fa-play-circle-o" v-on:click="audiofileClick(audiofile.id, true, $event)"></i>
+                      <!-- <i v-else class="fa fa-play-circle-o" v-on:click="audiofileClick(audiofile.id, true, $event)"></i> -->
+                      <template v-else>
+                        <i v-if="audiofile.preview && audiofile.preview.start" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'start', $event)"></i>
+                      </template>
                       <!-- <i class="fa fa-play-circle-o red" v-on:click="play()" v-if="paused === audiofile.id"></i>
                       <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
                       <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
@@ -50,10 +58,13 @@
                     <div class="audiofile-name">
                       <span v-if="renaming !== audiofile.id"
                             :class="['audiofile-name-edit']"
-                            @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.name}}</span>
-                      <input id="rename-input" type="text" v-model="audiofile.name" class="audiofile-name-edit"
+                            @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.title ? audiofile.title : audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
+                      <input id="rename-input" type="text" v-model="audiofile.title" class="audiofile-name-edit"
                            @focusout="saveAudiobook()"
                            v-else />
+                    </div>
+                    <div class="audiofile-player-controls">
+                      <i v-if="audiofile.preview && audiofile.preview.end" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'end')"></i>
                     </div>
                     <div class="audiofile-duration"><span>({{ parseAudioLength(audiofile.duration) }})</span></div>
                   </div>
@@ -192,7 +203,8 @@
         positions_tmp: {},
         alignProcess: false,
         audioOpening: false,
-        activeTabIndex: 0
+        activeTabIndex: 0,
+        audio_element: false
       }
     },
     mixins: [task_controls, api_config, access],
@@ -320,7 +332,7 @@
           if (renaming) {
             rename.push({
                 id: renaming.id,
-                name: renaming.name
+                title: renaming.title
               });
           }
         }
@@ -443,6 +455,26 @@
           }
         }
       }, 500),
+      playPreview(id, preview) {
+        if (!this._is('editor', true) && !this._is('admin')) {
+          return;
+        }
+        if (id === this.playing) {
+          return;
+        }
+        if (id) {let record = this.audiobook.importFiles.find(f => {
+            return f.id == id;
+          })
+          if (record && record.preview && record.preview[preview]) {
+            if (!this.audio_element) {
+              this.audio_element = document.createElement('audio')
+            }
+            this.audio_element.src = process.env.ILM_API + this.audiobook.importUrl + record.preview[preview];
+            this.audio_element.play();
+          }
+        }
+        this.paused = false;
+      },
       checkAll(event, value) {
         if (event && event.target) {
           value = event.target.checked;
@@ -1165,9 +1197,9 @@
         }
         .audiofile-info {
           display: inline-block;
-          width: 305px;
+          width: 90%;
           white-space: nowrap;
-          max-width: 80%;
+          /*max-width: 80%;*/
           overflow: hidden;
           .audiofile-player-controls {
             width: 19px;
@@ -1179,10 +1211,13 @@
             white-space: nowrap;
             max-width: 65%;
             overflow: hidden;
+            vertical-align: sub;
+            min-width: 65%;
           }
           .audiofile-duration {
             display: inline-block;
             overflow: hidden;
+            vertical-align: sub;
           }
           /*&.playing {
             color: maroon;
@@ -1196,6 +1231,7 @@
         }
         .audiofile-options {
           display: inline-block;
+          vertical-align: super;
           .btn-group {
             .dropdown-toggle {
                 padding: 6px;
