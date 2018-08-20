@@ -2438,6 +2438,7 @@ export default {
             }
           }
         }
+        this.isAudioChanged = true;
       },
       evFromAudioeditorSaveAndRealign (blockId) {
         if (blockId == this.check_id) {
