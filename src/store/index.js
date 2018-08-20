@@ -941,8 +941,10 @@ export const store = new Vuex.Store({
       // clear currentBookid
     },
 
-    loadBookBlocks({commit, state, dispatch}, bookId) {
-      return axios.get(state.API_URL + `books/blocks/${bookId}`)
+    loadBookBlocks({commit, state, dispatch}, params) {
+      let skip = params.skip ? `/${params.skip}` : '';
+      let url = state.API_URL + `books/blocks/${params.bookId}`;
+      return axios.get(url)
       .then((response) => {
         return response.data;
       })
@@ -950,9 +952,7 @@ export const store = new Vuex.Store({
     },
 
     loadPartOfBookBlocks({commit, state, dispatch}, params) {
-      console.log('loadPartOfBookBlocks params:', params);
-      params.onPage = 11;
-      let req = state.API_URL + `books/blocks/${params.bookId}/${params.onPage}`;
+      let req = state.API_URL + `books/blocks/${params.bookId}/onpage/${params.onPage}`;
       if (params.block) {
         if (params.block === 'unresolved' && params.taskType) {
           req += `/search/${params.taskType}`
@@ -1282,6 +1282,35 @@ export const store = new Vuex.Store({
         //console.log('loopBlocksChain results', results);
         return Promise.resolve(results);
       });
+    },
+
+    loopPreparedBlocksChain ({commit, state, dispatch}, params) {
+      let results = {rows: [], finish: false, blockId: false};
+      return new Promise ((resolve, reject)=>{
+
+        (function loop(i, block_id) {
+
+          if (i <= params.ids.length && block_id) {
+            dispatch('getBlock', block_id)
+            .then((b)=>{
+              if (b && b._id) {
+                results.rows.push(b);
+                loop(i+1, params.ids[i]);
+              } else resolve(results);
+            })
+            .catch((err)=>{
+              results.finish = true;
+              resolve(results);
+            })
+          }
+          else {
+            results.finish = true;
+            resolve(results);
+          }
+        })(0, params.ids[0]); // start
+
+      })
+
     },
 
     searchBlocksChain ({commit, state, dispatch}, params) {
@@ -2054,9 +2083,9 @@ export const store = new Vuex.Store({
       if (state.audiobookWatch) {
         clearInterval(state.audiobookWatch);
       }
-      setInterval(() => {
-        dispatch('getAudioBook')
-      }, 10000);
+//       setInterval(() => {
+//         dispatch('getAudioBook')
+//       }, 10000);
     }
   }
 })

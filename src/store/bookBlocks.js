@@ -43,17 +43,37 @@ class BookBlocks {
     return this.listIds;
   }
 
-  isFirst() {
+  checkFirst() {
+    let firstRId = this.getFirstRid();
+    if (firstRId && this.lookupList[firstRId].loaded) return true;
     if (this.startRId) {
       return this.lookupList[this.startRId].in == this.meta.rid;
     }
     return false;
   }
 
-  isLast() {
+  checkLast() {
+    let lastRId = this.getLastRid();
+    if (lastRId && this.lookupList[lastRId].loaded) return true;
     if (this.startRId) {
       let idsViewArray = this.idsViewArray();
       let rid = this.getRIdById(idsViewArray[idsViewArray.length-1]);
+      return this.lookupList[rid].out == this.meta.rid;
+    }
+    return false;
+  }
+
+  isFirst(blockId) {
+    let rid = this.getRIdById(blockId);
+    if (rid) {
+      return this.lookupList[rid].in == this.meta.rid;
+    }
+    return false;
+  }
+
+  isLast(blockId) {
+    let rid = this.getRIdById(blockId);
+    if (rid) {
       return this.lookupList[rid].out == this.meta.rid;
     }
     return false;
@@ -100,16 +120,91 @@ class BookBlocks {
       this.lookupList[block.rid] = block;
       //this.blocksList[block.blockid] = new BookBlock(block);
     })
-       //console.log('setLookupsList2', this.lookupList);
+  }
+
+  appendLookupsList(bookId, bookList) {
+    if (Array.isArray(bookList.blocks)) bookList.blocks.forEach((block)=>{
+      this.listIds.push(block.blockid);
+      this.listRIds.push(block.rid);
+      block.in = block.in[0];
+      block.out = block.out[0];
+      block.loaded = false;
+      block.checked = false;
+      this.lookupList[block.rid] = block;
+      //this.blocksList[block.blockid] = new BookBlock(block);
+    })
+  }
+
+  getFirstRid(){
+    if (this.lookupList[this.listRIds[0]] && this.lookupList[this.listRIds[0]].in == this.meta.rid) {
+      return this.lookupList[this.listRIds[0]].rid;
+    }
+    for (var key in this.lookupList) {
+      if (this.lookupList[key].in == this.meta.rid) return this.lookupList[key].rid;
+    }
+    return false;
+  }
+
+  getLastRid(){
+    let lastRid = this.listRIds[this.listRIds.length-1];
+    if (this.lookupList[lastRid] && this.lookupList[lastRid].out == this.meta.rid) {
+      return this.lookupList[lastRid].rid;
+    }
+    for (var key in this.lookupList) {
+      if (this.lookupList[key].out == this.meta.rid) return this.lookupList[key].rid;
+    }
+    return false;
   }
 
   getRIdById(blockId){
-    let result = false;
     for (var key in this.lookupList) {
-      if (this.lookupList[key].blockid == blockId) result = this.lookupList[key].rid;
+      if (this.lookupList[key].blockid == blockId) return this.lookupList[key].rid;
     }
-    return result;
+    return false;
   }
+
+  getBlock(blockId){
+    for (var key in this.lookupList) {
+      if (this.lookupList[key].blockid == blockId) return this.lookupList[key];
+    }
+    return false;
+  }
+
+  setLoaded(blockId) {
+    let blockRId = this.getRIdById(blockId);
+    if (blockRId) this.lookupList[blockRId].loaded = true;
+  }
+
+  getPrevIds(blockId, count) {
+    let resultArr = [];
+    if (blockId) {
+      let seqId = this.getRIdById(blockId);
+      for (var i=0; i<=count-1; i++) {
+        if (this.lookupList.hasOwnProperty(seqId)) {
+          resultArr.push(this.lookupList[seqId].blockid);
+          seqId = this.lookupList[seqId].in;
+          if (seqId == this.meta.rid) return resultArr;
+        }
+      }
+    }
+    return resultArr;
+  }
+
+  getNextIds(blockId, count) {
+    let resultArr = [];
+    if (blockId) {
+      let seqId = this.getRIdById(blockId);
+      for (var i=0; i<=count-1; i++) {
+        if (this.lookupList.hasOwnProperty(seqId)) {
+          resultArr.push(this.lookupList[seqId].blockid);
+          seqId = this.lookupList[seqId].out;
+          if (seqId == this.meta.rid) return resultArr;
+        }
+      }
+    }
+    return resultArr;
+  }
+
 }
 
 export {
