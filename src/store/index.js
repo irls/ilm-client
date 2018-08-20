@@ -2083,9 +2083,9 @@ export const store = new Vuex.Store({
       if (state.audiobookWatch) {
         clearInterval(state.audiobookWatch);
       }
-//       setInterval(() => {
-//         dispatch('getAudioBook')
-//       }, 10000);
+      setInterval(() => {
+        dispatch('getAudioBook')
+      }, 10000);
     }
   }
 })
