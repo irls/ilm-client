@@ -947,6 +947,7 @@ export const store = new Vuex.Store({
       // if (book_id === context.state.currentBookid) return // skip if already loaded
 
       // if currentbook exists, check if currrent book needs saving
+      commit('set_currentAudiobook', {});
       let oldBook = (state.currentBook && state.currentBook._id)
 
       if (oldBook && state.currentBook_dirty || state.currentBookMeta_dirty) {
