@@ -94,7 +94,7 @@
 
   </div>
   <!--<div class="container-fluid">   -->
-  <div class="custom-scroll">
+  <div class="custom-scroll" v-if="scrollBarBlocks.length > 0">
   <div class="vue-scrollbar__up"
     @click.prevent="()=>{return true;}"
     @mousedown="scrollByBarStart('up')"
@@ -420,7 +420,7 @@ export default {
     },
 
     loadPreparedBookDown(idsArray) { // mostly first page load
-      console.log('loadPreparedBookDown idsArray', idsArray);
+
       let startId = idsArray[0] || this.meta.startBlock_id;
       this.freeze('loadBook');
       return this.loopPreparedBlocksChain({ids: idsArray})
@@ -528,7 +528,7 @@ export default {
             if (!this.parlist.has(el._id)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
-              this.updateScrollSlider(false, this.isNeedUp);
+              //this.updateScrollSlider(false, this.isNeedUp);
             }
           });
           result.blockId = result.rows[0]._id;
@@ -540,7 +540,7 @@ export default {
       })
       .catch((err)=>{
         console.log('BlocksUp Error: ', err.message);
-        this.updateScrollSlider(false, this.isNeedUp);
+        //this.updateScrollSlider(false, this.isNeedUp);
         this.refreshTmpl();
         return Promise.reject(err);
       });
@@ -558,7 +558,7 @@ export default {
             if (!this.parlist.has(el._id)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
-              this.updateScrollSlider(false);
+              //this.updateScrollSlider(false);
             }
           });
           result.blockId = result.rows[result.rows.length-1]._id;
@@ -571,7 +571,7 @@ export default {
       })
       .catch((err)=>{
         console.log('BlocksDown Error: ', err);
-        this.updateScrollSlider(false);
+        //this.updateScrollSlider(false);
         this.refreshTmpl();
         this.hasScrollDown = false;
         return Promise.reject(err);
@@ -961,7 +961,7 @@ export default {
         block: newBlock
       })
         .then((response)=>{
-          this.setBlockSelection({start: {}, end: {}});
+          //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
           this.$store.commit('set_storeList', newBlock);
@@ -969,9 +969,18 @@ export default {
           if (b_old) {
             this.refreshBlock({doc: b_old, deleted: false});
           }
+          if (response.data.blockO) {
+            let blockO = response.data.blockO;
+            this.parlistO.addBlock(blockO);
+            this.scrollBarBlocks = this.parlistO.idsArray();
+            if (!this.parlistO.getInId(blockO.blockid)) {
+              this.startId = blockO.blockid;
+            }
+            //this.updateScrollSlider();
+          }
           this.unfreeze('insertBlockBefore');
-          this.updateScrollSlider();
-          this.refreshTmpl();
+          //this.updateScrollSlider();
+          //this.refreshTmpl();
         })
         .catch(err => {
           this.unfreeze('insertBlockBefore');
@@ -991,15 +1000,24 @@ export default {
         block: newBlock
       })
         .then((response)=>{
-          this.setBlockSelection({start: {}, end: {}});
+          //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
           this.$store.commit('set_storeList', newBlock);
           this.refreshBlock({doc: b_new, deleted: false});
           this.refreshBlock({doc: b_old, deleted: false});
+          if (response.data.blockO) {
+            let blockO = response.data.blockO;
+            this.parlistO.addBlock(blockO);
+            this.scrollBarBlocks = this.parlistO.idsArray();
+            if (!this.parlistO.getOutId(blockO.blockid)) {
+              this.startId = blockO.blockid;
+            }
+            //this.updateScrollSlider();
+          }
           this.unfreeze('insertBlockAfter');
-          this.updateScrollSlider();
-          this.refreshTmpl();
+          //this.updateScrollSlider();
+          //this.refreshTmpl();
         })
         .catch(err => {
           this.unfreeze('insertBlockAfter');
@@ -1029,57 +1047,30 @@ export default {
     deleteBlock(block, block_Idx) {
       //console.log('deleteBlock', block._id);
       this.freeze('deleteBlock');
-//       this.getBlockByChainId(block._id)
-//       .then((blockBefore)=>{
+      let api_url = this.API_URL + 'book/block/' + block._id;
+      let api = this.$store.state.auth.getHttp();
+      api.delete(api_url, {})
+      .then((response)=>{
+        //this.setBlockSelection({start: {}, end: {}});
+//         if (this.startId == block._id) {
+//           this.startId = block.chainid;
+//         }
+        this.parlist.delete(block._id);
+        if (response.data) {
+          this.parlistO.delBlock(response.data);
+          this.scrollBarBlocks = this.parlistO.idsArray();
+          console.log('this.scrollBarBlocks', this.scrollBarBlocks);
+          this.updateScrollSlider();
+        }
+        this.unfreeze('deleteBlock');
+        //this.updateScrollSlider();
+        //this.refreshTmpl();
+      })
+      .catch(err => {
+        this.unfreeze('deleteBlock');
+        return err;
+      });
 
-
-
-//           if (blockBefore) {
-//             blockBefore.chainid = block.chainid;
-//             this.freeze('putBlockPart');
-//             this.putBlockPart({
-//               block: new BookBlock(blockBefore),
-//               field: 'chainid'
-//             }).then((response)=>{
-//               //this.blockReindexProcess = false
-//               this.unfreeze('putBlockPart');
-//             }).catch((err)=>{
-//               this.unfreeze('putBlockPart');
-//               return err;
-//             })
-//           } else {
-//             this.startId = block.chainid;
-//             this.setMetaData({ key: 'startBlock_id', value: block.chainid})
-//             .then((response)=>{
-//               //this.blockReindexProcess = false
-//             });
-//           }
-
-
-          let api_url = this.API_URL + 'book/block/' + block._id;
-          let api = this.$store.state.auth.getHttp();
-          api.delete(api_url, {})
-          .then((response)=>{
-            this.setBlockSelection({start: {}, end: {}});
-            //console.log('api response', response);
-            if (this.startId == block._id) {
-              this.startId = block.chainid;
-            }
-            this.parlist.delete(block._id);
-            this.unfreeze('deleteBlock');
-            this.updateScrollSlider();
-            this.refreshTmpl();
-          })
-          .catch(err => {
-            this.unfreeze('deleteBlock');
-            return err;
-          });
-//       })
-//       .catch((err)=>{
-//         this.unfreeze('deleteBlock');
-//         console.log('deleteBlock Err', err);
-//         return err;
-//       })
     },
     joinBlocks(block, block_Idx, direction) {
 
@@ -1100,7 +1091,7 @@ export default {
 
         switch(direction) {
           case 'previous' : {
-            return this.getBlockByChainId(block._id)
+            return this.getBlock(this.parlistO.getInId(block._id))
             .then((blockBefore)=>{
               //if (!checkArr.includes(block.type) || !checkArr.includes(blockBefore.type)) {
               if (block.type !== blockBefore.type) {
@@ -1111,8 +1102,8 @@ export default {
                 this.unableJoinMessage = true;
                 return Promise.reject('type');
               }
-              
-              
+
+
               let elBlock = this.$children.find(c => {
                 return c.$el.id == block._id;
               });
@@ -1128,10 +1119,10 @@ export default {
                 this.doJoinBlocks.block = block;
                 this.doJoinBlocks.direction = direction;
                 this.doJoinBlocks.show = true;
-              } else if (!this.doJoinBlocks.showAudio && 
-                      (this.parlist.get(block._id).isAudioChanged || 
+              } else if (!this.doJoinBlocks.showAudio &&
+                      (this.parlist.get(block._id).isAudioChanged ||
                       this.parlist.get(blockBefore._id).isAudioChanged ||
-                      (elBlock && elBlock.audioEditFootnote.isAudioChanged) || 
+                      (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
                       (elNext && elNext.audioEditFootnote.isAudioChanged))) {
                 this.doJoinBlocks.block = block;
                 this.doJoinBlocks.direction = direction;
@@ -1176,16 +1167,21 @@ export default {
                         donorBlock_id: block._id
                       })
                       .then((response)=>{
-                        this.setBlockSelection({start: {}, end: {}});
+                        //this.setBlockSelection({start: {}, end: {}});
                         this.clearBlockLock({block: blockBefore, force: true});
                         if (response.data.ok && response.data.blocks) {
                           response.data.blocks.forEach((res)=>{
                             this.refreshBlock({doc: res, deleted: res.deleted});
                           });
                         }
+                        if (response.data.blocks && response.data.blocks[2]) {
+                          this.parlistO.delBlock(response.data.blocks[2]);
+                          this.scrollBarBlocks = this.parlistO.idsArray();
+                          this.updateScrollSlider();
+                        }
                         this.refreshTmpl();
                         this.unfreeze('joinBlocks');
-                        this.updateScrollSlider();
+                        //this.updateScrollSlider();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
@@ -1224,10 +1220,10 @@ export default {
                 this.doJoinBlocks.direction = direction;
                 this.doJoinBlocks.show = true;
 
-              } else if (!this.doJoinBlocks.showAudio && 
-                      (this.parlist.get(block._id).isAudioChanged || 
-                      this.parlist.get(block.chainid).isAudioChanged || 
-                      (elBlock && elBlock.audioEditFootnote.isAudioChanged) || 
+              } else if (!this.doJoinBlocks.showAudio &&
+                      (this.parlist.get(block._id).isAudioChanged ||
+                      this.parlist.get(block.chainid).isAudioChanged ||
+                      (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
                       (elNext && elNext.audioEditFootnote.isAudioChanged))) {
                 this.doJoinBlocks.block = block;
                 this.doJoinBlocks.direction = direction;
@@ -1272,16 +1268,21 @@ export default {
                         donorBlock_id: blockAfter._id
                       })
                       .then((response)=>{
-                        this.setBlockSelection({start: {}, end: {}});
+                        //this.setBlockSelection({start: {}, end: {}});
                         this.clearBlockLock({block: block, force: true});
                         if (response.data.ok && response.data.blocks) {
                           response.data.blocks.forEach((res)=>{
                             this.refreshBlock({doc: res, deleted: res.deleted});
                           });
                         }
+                        if (response.data.blocks && response.data.blocks[2]) {
+                          this.parlistO.delBlock(response.data.blocks[2]);
+                          this.scrollBarBlocks = this.parlistO.idsArray();
+                          this.updateScrollSlider();
+                        }
                         this.refreshTmpl();
                         this.unfreeze('joinBlocks');
-                        this.updateScrollSlider();
+                        //this.updateScrollSlider();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
@@ -1613,7 +1614,7 @@ export default {
       }
     }, 400),
 
-    updateScrollSlider(force = true, startId = false)
+    updateScrollSlider(startId = false)
     {
       if (this.$refs.scrollBarRef) {
         this.$refs.scrollBarRef.calculateSize();
@@ -1753,6 +1754,7 @@ export default {
             .then((res)=>{
               this.parlistO.appendLookupsList(this.meta._id, res);
               this.scrollBarBlocks = this.parlistO.idsArray();
+              this.updateScrollSlider();
               //this.lazyLoad();
             });
           });

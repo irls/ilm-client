@@ -205,6 +205,61 @@ class BookBlocks {
     return resultArr;
   }
 
+  delBlock(block) {
+    block.rid = block['@rid'];
+    block.in = block.in[0];
+    block.out = block.out[0];
+    if (this.lookupList.hasOwnProperty(block.rid)) {
+      let listIdsIdx = this.listIds.indexOf(block.blockid);
+      let listRIdsIdx = this.listRIds.indexOf(block.rid);
+      console.log('delete', listIdsIdx, listRIdsIdx);
+      if (this.lookupList.hasOwnProperty(block.in)) {
+        this.lookupList[block.in].out = block.out;
+      }
+      if (this.lookupList.hasOwnProperty(block.out)) {
+        this.lookupList[block.in].in = block.in;
+      }
+      delete this.lookupList[block.rid];
+      this.listIds.splice(listIdsIdx, 1);
+      this.listRIds.splice(listRIdsIdx, 1);
+      this.listIdsCache.rid = false;
+    }
+  }
+
+  addBlock(block) {
+    block.rid = block['@rid'];
+    block.in = block.in[0];
+    block.out = block.out[0];
+    console.log('addBlock', block);
+    let listIdsIdx = false;
+    let listRIdsIdx = false;
+
+    console.log('this.lookupList.hasOwnProperty(block.in)', this.lookupList.hasOwnProperty(block.in));
+    if (this.lookupList.hasOwnProperty(block.in)) {
+      this.lookupList[block.in].out = block.rid;
+      listIdsIdx = this.listIds.indexOf(this.lookupList[block.in].blockid);
+      listRIdsIdx = this.listRIds.indexOf(this.lookupList[block.in].rid);
+      this.listIds.splice( listIdsIdx-1, 0, block.blockid );
+      this.listRIds.splice( listRIdsIdx-1, 0, block.rid );
+    }
+
+    console.log('this.lookupList.hasOwnProperty(block.out)', this.lookupList.hasOwnProperty(block.out));
+    if (this.lookupList.hasOwnProperty(block.out)) {
+      this.lookupList[block.out].in = block.rid;
+      console.log('(!listIdsIdx && !listRIdsIdx)', (!listIdsIdx && !listRIdsIdx));
+      if (!listIdsIdx && !listRIdsIdx) {
+        listIdsIdx = this.listIds.indexOf(this.lookupList[block.out].blockid);
+        listRIdsIdx = this.listRIds.indexOf(this.lookupList[block.out].rid);
+        console.log('before', listIdsIdx, listRIdsIdx);
+        this.listIds.splice( listIdsIdx, 0, block.blockid );
+        this.listRIds.splice( listRIdsIdx, 0, block.rid );
+      }
+    }
+
+    this.lookupList[block.rid] = block;
+    this.listIdsCache.rid = false;
+  }
+
 }
 
 export {
