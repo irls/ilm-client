@@ -189,6 +189,7 @@
         this.$root.$on('for-audioeditor:reload-text', this._setText);
         this.$root.$on('for-audioeditor:select', this.select);
         this.$root.$on('for-audioeditor:close', this.close);
+        this.$root.$on('for-audioeditor:force-close', this.forceClose);
         this.$root.$on('start-align', () => {
           this.alignProcess = true;
         })
@@ -203,6 +204,7 @@
           this.audiosourceEditor = null;
         }
         this.$root.$off('for-audioeditor:close', this.close);
+        this.$root.$off('for-audioeditor:force-close', this.forceClose);
         this.$root.$off('for-audioeditor:load-and-play', this.load);
         this.$root.$off('for-audioeditor:load', this.setAudio);
         this.$root.$off('for-audioeditor:reload-text', this._setText);
@@ -816,6 +818,16 @@
             this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
             this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
           }
+        },
+        forceClose() {
+          if (this.plEventEmitter) {
+            this.plEventEmitter.emit('automaticscroll', false);
+            this.plEventEmitter.emit('clear');
+            this._clearWordSelection();
+          }
+          this._setDefaults();
+          this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
+          this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
         },
         addSilence() {
           if (this.silenceLength > 0 && this.cursorPosition >= 0) {
