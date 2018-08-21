@@ -1193,8 +1193,16 @@
             if (start !== false && end !== false && start < end) {
               this.selection.start = this._round(start, 2);
               this.selection.end = this._round(end, 2);
-              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-              this._showSelectionBorders(true);
+              let replay = this.isPlaying;
+              let wait = this.isPlaying ? [this.pause()] : [];
+              Promise.all(wait)
+                .then(() => {
+                  this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                  this._showSelectionBorders(true);
+                  if (replay) {
+                    this.play();
+                  }
+                })
               //this.setSelectionStart(start);
               //this.setSelectionEnd(end);
               return true;
