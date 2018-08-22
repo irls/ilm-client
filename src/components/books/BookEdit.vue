@@ -1011,9 +1011,11 @@ export default {
             this.parlistO.addBlock(blockO);
             this.scrollBarBlocks = this.parlistO.idsArray();
             if (!this.parlistO.getOutId(blockO.blockid)) {
-              this.startId = blockO.blockid;
-            }
-            //this.updateScrollSlider();
+              let firstId = this.parlistO.idsViewArray()[0];
+              this.startId = this.parlistO.getOutId(firstId);
+              //this.startId = blockO.blockid;
+            } else this.refreshTmpl();
+            this.updateScrollSlider();
           }
           this.unfreeze('insertBlockAfter');
           //this.updateScrollSlider();
@@ -1052,16 +1054,16 @@ export default {
       api.delete(api_url, {})
       .then((response)=>{
         //this.setBlockSelection({start: {}, end: {}});
-//         if (this.startId == block._id) {
-//           this.startId = block.chainid;
-//         }
-        this.parlist.delete(block._id);
         if (response.data) {
-          this.parlistO.delBlock(response.data);
+          let newStartId = this.parlistO.delBlock(response.data);
           this.scrollBarBlocks = this.parlistO.idsArray();
-          console.log('this.scrollBarBlocks', this.scrollBarBlocks);
           this.updateScrollSlider();
+          if (newStartId !== this.startId) {
+            // in case when first or last block in book was deleted
+            this.startId = newStartId;
+          } else this.refreshTmpl();
         }
+        this.parlist.delete(block._id);
         this.unfreeze('deleteBlock');
         //this.updateScrollSlider();
         //this.refreshTmpl();
