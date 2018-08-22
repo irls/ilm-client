@@ -4,12 +4,12 @@
     <div :class="['table-cell', 'controls-left', {'_-check-green': block.checked==true}]">
         <div class="table-row parnum-row" v-if="meta.numeration !== 'none'">
 
-          <template v-if="block.secnum!==false">
-            <span v-if="block.secHide===false" :class="['parnum', '-hidden-hover']">{{block.secnum.toString().length?block.secnum:block.parnum}}</span>
+          <template v-if="blockO.secnum">
+            <span v-if="blockO.secHide" :class="['parnum', '-hidden-hover']">{{blockO.secnum.toString().length?blockO.secnum:blockO.parnum}}</span>
           </template>
 
           <template v-else >
-            <span v-if="block.parnum && block.parnum!==false" :class="['parnum', {'-hidden': block.secHide===true }]">{{block.parnum}}</span>
+            <span v-if="blockO.parnum && blockO.parnum!==false" :class="['parnum', {'-hidden': blockO.secHide===true }]">{{blockO.parnum}}</span>
           </template>
 
           <!--<template v-if="block.secHide===false">
@@ -17,9 +17,9 @@
             <span v-if="block.secnum===''" :class="['parnum', '-hidden-hover', '-auto']">{{block.parnum}}</span>
           </template>-->
 
-          <input v-if="block.secnum!==false"
+          <input v-if="blockO.secnum!==false"
             :class="['secnum', '-hidden-block']"
-            v-model="block.secnum" @input="setSecnumVal"
+            v-model="blockO.secnum" @input="setSecnumVal"
             type="text" maxlength="3" size="3"/>
 
         </div>
@@ -44,10 +44,10 @@
 
           <div class="set-range">
             <i class="fa fa-square-o -hidden" aria-hidden="true"
-            v-if="block.checked === false"
+            v-if="isChecked === false"
             v-on:click="$event.target.checked = true; setRangeSelection('byOne', $event)"></i>
             <i class="fa fa-check-square-o" aria-hidden="true"
-            v-if="block.checked === true"
+            v-if="isChecked === true"
             v-on:click="setRangeSelection('byOne', false)"></i>
 
             <template v-if="selectionStart && selectionStart !== selectionEnd">
@@ -625,6 +625,7 @@ export default {
       styleSel: false,
       blockTypes: BlockTypes,
 
+      isChecked: false,
       isUpdated: false,
       isChanged: false,
 
@@ -673,7 +674,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode'],
+  props: ['block', ,'blockO', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -965,6 +966,7 @@ export default {
       this.isChanged = this.block.isChanged;
       this.isAudioChanged = this.block.isAudioChanged;
       this.isIllustrationChanged = this.block.isIllustrationChanged;
+      this.isChecked = this.blockO.checked;
       //this.detectMissedFlags();
 
       //console.log('mounted', this.block._id);
@@ -1024,6 +1026,10 @@ export default {
         return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
       },
       //-- } -- end -- Checkers --//
+
+      setIsChecked() {
+        this.isChecked = this.blockO.checked;
+      },
 
       destroyEditor() {
         if (this.editor) {
@@ -2657,8 +2663,8 @@ export default {
             document.getSelection().removeAllRanges();
           }
         }
-        this.block.checked = checked;
-        this.$emit('setRangeSelection', this.block, type, checked, shiftKey);
+        //this.blockO.checked = checked;
+        this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
       },
       updateVoicework() {
         if (!this.voiceworkChange) {

@@ -137,9 +137,9 @@ class BookBlock {
     this.isAudioChanged = init.isAudioChanged || false;
     this.isIllustrationChanged = init.isIllustrationChanged || false;
 
-    this.checkedStart = init.checkedStart || false;
-    this.checkedEnd = init.checkedEnd || false;
-    this.checked = init.checked || false;
+//     this.checkedStart = init.checkedStart || false;
+//     this.checkedEnd = init.checkedEnd || false;
+//     this.checked = init.checked || false;
     this.realigned = init.realigned || false;
 
     this.history = {};

@@ -20,6 +20,7 @@ class BookBlocks {
   }
 
   idsViewArray() {
+    if (this.listRIds.length == 0) return [];
     if (this.listIdsCache.rid === this.startRId && this.listIdsCache.listIds.length) {
       return this.listIdsCache.listIds;
     }
@@ -41,6 +42,12 @@ class BookBlocks {
 
   idsArray() {
     return this.listIds;
+  }
+
+  idsArrayRange(startId, endId) {
+    let startIdx = this.listIds.indexOf(startId);
+    let endIdx = this.listIds.indexOf(endId);
+    return this.listIds.slice(startIdx, endIdx+1);
   }
 
   checkFirst() {
@@ -105,6 +112,17 @@ class BookBlocks {
     this.startRId = this.getRIdById(blockId);
   }
 
+  cleanLookupsList(bookId) {
+    if (bookId !== this.meta.bookid) {
+      this.lookupList = {};
+      this.blocksList = {};
+      this.listIds = [];
+      this.listRIds = [];
+      return true;
+    }
+    return false
+  }
+
   setLookupsList(bookId, bookList) {
     this.lookupList = {};
     this.blocksList = {};
@@ -117,6 +135,7 @@ class BookBlocks {
       this.listRIds.push(block.rid);
       block.in = block.in[0];
       block.out = block.out[0];
+      delete block['@type'];
       block.loaded = false;
       block.checked = false;
       this.lookupList[block.rid] = block;
@@ -130,6 +149,7 @@ class BookBlocks {
       this.listRIds.push(block.rid);
       block.in = block.in[0];
       block.out = block.out[0];
+      delete block['@type'];
       block.loaded = false;
       block.checked = false;
       this.lookupList[block.rid] = block;
@@ -172,9 +192,61 @@ class BookBlocks {
     return false;
   }
 
+  getBlockByRid(iRId){
+    if (this.lookupList.hasOwnProperty(iRId)) {
+      return this.lookupList[iRId];
+    }
+    return false;
+  }
+
+  getBlockByIdx(listIdx){
+    let rId = this.listRIds[listIdx];
+    return this.lookupList[rId];
+  }
+
   setLoaded(blockId) {
     let blockRId = this.getRIdById(blockId);
     if (blockRId) this.lookupList[blockRId].loaded = true;
+  }
+
+  setChecked(startRId, endRId = false) {
+    let result = {start: {}, end: {}};
+    if (endRId && startRId !== endRId) {
+      let startIdx = this.listRIds.indexOf(startRId);
+      let endIdx = this.listRIds.indexOf(endRId);
+      if (startIdx < endIdx) {
+        for (var i=startIdx; i<=endIdx; i++) {
+          let iRId = this.listRIds[i];
+          if (this.lookupList.hasOwnProperty(iRId)) {
+            this.lookupList[iRId].checked = true;
+          }
+        }
+        result.start = { _id: this.lookupList[startRId].blockid };
+        result.end = { _id: this.lookupList[endRId].blockid };
+      }
+      if (startIdx > endIdx) {
+        for (var i=endIdx; i<=startIdx; i++) {
+          let iRId = this.listRIds[i];
+          if (this.lookupList.hasOwnProperty(iRId)) {
+            this.lookupList[iRId].checked = true;
+          }
+        }
+        result.start = { _id: this.lookupList[endRId].blockid };
+        result.end = { _id: this.lookupList[startRId].blockid };
+      }
+    }
+    else if (this.lookupList.hasOwnProperty(startRId)) {
+      this.lookupList[startRId].checked = true;
+      result.start = { _id: this.lookupList[startRId].blockid };
+      result.end = { _id: this.lookupList[startRId].blockid };
+    }
+    return result;
+  }
+
+  setUnCheckedRange() {
+    for (var key in this.lookupList) {
+      this.lookupList[key].checked = false;
+    };
   }
 
   getPrevIds(blockId, count) {
@@ -238,6 +310,7 @@ class BookBlocks {
     block.rid = block['@rid'];
     block.in = block.in[0];
     block.out = block.out[0];
+    delete block['@type'];
     let listIdsIdx = false;
     let listRIdsIdx = false;
 

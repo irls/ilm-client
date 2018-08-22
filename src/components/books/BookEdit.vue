@@ -13,13 +13,14 @@
 
       <!--<template v-for="(sublist, page_Idx) in parlist">-->
       <div class="row content-scroll-item" :class="[{'recording-block': recordingBlockId == blockId}]"
-        v-for="blockId in parlistO.idsViewArray()"
+        v-for="(blockId, listIdx) in parlistO.idsViewArray()"
         v-bind:style="{ top: screenTop + 'px' }"
         v-bind:id="'s-'+ blockId"
         v-bind:key="blockId">{{parlistO.getInId(blockId)}} -> {{blockId}} -> {{parlistO.getOutId(blockId)}}
         <div class='col' v-if="parlist.has(blockId)"><!--v-if="block.isVisible"-->
           <BookBlockView ref="blocks"
               :block="parlist.get(blockId)"
+              :blockO="parlistO.getBlockByIdx(listIdx)"
               :blockId = "blockId"
               :putBlock ="putBlockProxy"
               :getBlock ="getBlockProxy"
@@ -177,7 +178,7 @@ export default {
 
       startId: false,
       //parlistC: new Map(),
-      parlistO: new BookBlocks(),
+      //parlistO: new BookBlocks(),
 
       upScreenTop: -85,
       downScreenTop: 0,
@@ -208,6 +209,7 @@ export default {
           isBlocked: 'isBlocked',
           blockers: 'blockers',
           parlist: 'storeList',
+          parlistO: 'storeListO',
           blockSelection: 'blockSelection'
       }),
       metaStyles: function () {
@@ -241,24 +243,20 @@ export default {
           // 'esc+ctrl' is OK.
           'ctrl+home': (ev)=>{
             //console.log('ctrl+home');
-            this.scrollToBlock(this.meta.startBlock_id);
+            let firstRid = this.parlistO.getFirstRid();
+            console.log('firstRid', firstRid);
+            if (firstRid) {
+              let block = this.parlistO.getBlockByRid(firstRid);
+              if (block) this.scrollToBlock(block.blockid);
+            }
           },
           'ctrl+end': (ev)=>{
             //console.log('ctrl+end')
-            if (this.meta.endBlock_id) {
-              this.scrollToBlock(this.meta.endBlock_id)
-            }
-              else
-            {
-              let currId, crossId = this.meta.startBlock_id || this.startId;
-              if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
-                let block = this.parlist.get(crossId);
-                if (block) {
-                  currId = crossId;
-                  crossId = block.chainid;
-                } else break;
-              }
-              if (currId) this.scrollToBlock(currId);
+            let lastRid = this.parlistO.getLastRid();
+            console.log('lastRid', lastRid);
+            if (lastRid) {
+              let block = this.parlistO.getBlockByRid(lastRid);
+              if (block) this.scrollToBlock(block.blockid);
             }
           },
           'ctrl+up': (ev)=>{
@@ -336,6 +334,9 @@ export default {
 
     loadBookMeta(onPage) {
       if (this.$route.params.hasOwnProperty('bookid')) {
+        if (this.parlistO.cleanLookupsList(this.meta._id)) {
+          this.$store.commit('clear_storeList');
+        }
         this.freeze('loadBookMeta');
         return this.loadBook(this.$route.params.bookid)
         .then((meta)=>{
@@ -683,7 +684,7 @@ export default {
     },
 
     refreshBlock (change) {
-      console.log('refreshBlock', change);
+      //console.log('refreshBlock', change);
       //console.log('this.$refs.blocks', this.$refs.blocks);
       //console.log('blockers', this.blockers);
         /*if (change.doc.audiosrc) {
@@ -1076,9 +1077,6 @@ export default {
     },
     joinBlocks(block, block_Idx, direction) {
 
-      this.setBlockSelection({start: {}, end: {}});
-      //this.setUnCheckedRange();
-
       let api_url = this.API_URL + 'book/block_join/';
       let api = this.$store.state.auth.getHttp();
 
@@ -1305,6 +1303,7 @@ export default {
     setRangeSelection(block, type, status, shift = false) {
       //console.log('setRangeSelection', block, type, status, shift);
       let newSelection = Object.assign({}, this.blockSelection);
+
       switch (type) {
         case 'start':
           if (status) {
@@ -1341,67 +1340,27 @@ export default {
             }
           break;
         case 'byOne':
-          //console.log('byOne', status, block._id, 'start:', this.blockSelection.start._id, 'end:', this.blockSelection.end._id);
-          let blockSel = _.pick(block, ['_id', 'chainid']);
+          //console.log('byOne', status, block.rid, 'start:', this.blockSelection.start._id, 'end:', this.blockSelection.end._id);
+
+          let blockSel = {_id: block.blockid};
+          this.parlistO.setUnCheckedRange();
           if (status) { // check
-            if (this.blockSelection.start._id) {
-
-              this.setUnCheckedRange();
-              // this.blockSelection - from store
-              if (shift) {
-                let pBlock, currId = block._id, isFound = false;
-                while (pBlock = this.findPrevBlock(currId)) {
-                  if (pBlock._id === this.blockSelection.start._id) {
-                    newSelection.end = blockSel;
-                    isFound = true;
-                    break;
-                  }
-                  currId = pBlock._id;
-                }
-                //console.log('isFound', isFound);
-                if (!isFound) {
-                  // selected blocks are not found before, so they are after
-                  if (!this.blockSelection.end._id) newSelection.end = this.blockSelection.start;
-                  newSelection.start = blockSel;
-                }
-
-                this.setCheckedRange(newSelection.start._id, newSelection.end._id);
-
-              } else {
-                block.checked = true;
-                newSelection.start = blockSel;
-                newSelection.end = blockSel;
-              }
-
-            } else  {
-              this.setUnCheckedRange();
-              block.checked = true;
-              newSelection.start = blockSel;
-              newSelection.end = blockSel;
-            }
-
-            this.setBlockSelection(newSelection);
-
-          } else { // uncheck
-            if (this.blockSelection.start._id && this.blockSelection.end._id) {
-              if (this.blockSelection.start._id == block._id && block._id == this.blockSelection.end._id) {
-                this.setBlockSelection({start: {}, end: {}});
-              } else if (block._id == this.blockSelection.start._id) {
-                this.setBlockSelection({start: this.parlist.get(block.chainid), end: this.blockSelection.end});
-              } else if (block._id == this.selectionEnd._id) {
-                this.setBlockSelection({start: this.blockSelection.start, end: this.findPrevBlock(block._id)});
-              } else {
-                  this.setBlockSelection({start: this.blockSelection.start, end: this.findPrevBlock(block._id)});
-              }
-              this.setUnCheckedRange();
-              this.setCheckedRange(this.blockSelection.start._id, this.blockSelection.end._id);
-
-
+            if (shift && this.blockSelection.start._id) {
+              let startRId = this.parlistO.getRIdById(this.blockSelection.start._id);
+              newSelection = this.parlistO.setChecked(startRId, block.rid);
             } else {
-              //this.$root.$emit('from-bookedit:set-selection', {}, {});
-              this.setBlockSelection({start: {}, end: {}})
+              newSelection = this.parlistO.setChecked(block.rid);
             }
+            this.setBlockSelection(newSelection);
           }
+          else { // uncheck
+            if (this.blockSelection.start._id && this.blockSelection.end._id && this.blockSelection.start._id !== this.blockSelection.end._id) {
+              newSelection = this.parlistO.setChecked(block.rid);
+              this.setBlockSelection(newSelection);
+            }
+            else this.setBlockSelection({start: {}, end: {}});
+          }
+          this.updateCheckedRange();
           break;
       }
       //this.recountApprovedInRange();
@@ -1421,22 +1380,13 @@ export default {
       }
       return false;
     },
-    setCheckedRange(startId, endId) {
-      if (this.parlist.has(startId)) {
-        let pBlock, currId = startId;
-        do {
-          pBlock = this.parlist.get(currId);
-          if (pBlock) {
-            pBlock.checked = true;
-            currId = pBlock.chainid;
-          }
-        } while (pBlock && pBlock._id !== endId);
-      }
+    updateCheckedRange() {
+      this.$refs.blocks.forEach(($ref)=>{
+        $ref.setIsChecked();
+      })
     },
-    setUnCheckedRange(startId = false) {
-      this.parlist.forEach((pBlock)=>{
-        pBlock.checked = false;
-      });
+    setUnCheckedRange() {
+      this.parlistO.setUnCheckedRange()
     },
     setBlockWatch() {
       //console.log('!!! setBlockWatch');
@@ -1585,10 +1535,10 @@ export default {
         this.screenTop = 0;
         this.startId = id;
       } else {
-        this.loadBookDown(false, id)
+        this.loadPreparedBookDown([id])
         .then((blockId)=>{
           this.setBlockWatch();
-          this.lazyLoad(id);
+          //this.lazyLoad(id);
           this.screenTop = 0;
           this.startId = id;
         });
@@ -1718,18 +1668,33 @@ export default {
       this.refreshTmpl();
 
       this.$router.push({name: this.$route.name, params: {}});
-      this.loadBookMeta()
-      .then(()=>{
-        this.tc_loadBookTask()
-        .then(()=>{
-          this.startId = false;
-          this.loadBookDown(false, false, 10)
-          .then(()=>{
-            this.setBlockWatch();
-            this.$root.$emit('from-book-meta:upd-toc', true);
+//       this.loadBookMeta()
+//       .then(()=>{
+//         this.tc_loadBookTask()
+//         .then(()=>{
+//           this.startId = false;
+//           this.loadBookDown(false, false, 10)
+//           .then(()=>{
+//
+//           });
+//         });
+//       })
+      this.loadBookMeta(10) // also handle route params
+      .then((initBlocks)=>{
+        if (this.meta._id) {
+          this.loadPreparedBookDown(this.parlistO.idsArray(), 10).then(()=>{
+            this.loadBookBlocks({bookId: this.meta._id})
+            .then((res)=>{
+              this.parlistO.appendLookupsList(this.meta._id, res);
+              this.scrollBarBlocks = this.parlistO.idsArray();
+              this.updateScrollSlider();
+              this.setBlockWatch();
+              this.$root.$emit('from-book-meta:upd-toc', true);
+              //this.lazyLoad();
+            });
           });
-        });
-      })
+        }
+      });
     },
 
     bookBlocksUpdates(data) {
@@ -1751,7 +1716,8 @@ export default {
       this.loadBookMeta(10) // also handle route params
       .then((initBlocks)=>{
         if (this.meta._id) {
-          this.loadPreparedBookDown(this.parlistO.idsArray(), 10).then(()=>{
+          this.loadPreparedBookDown(this.parlistO.idsArray())
+          .then(()=>{
             this.loadBookBlocks({bookId: this.meta._id})
             .then((res)=>{
               this.parlistO.appendLookupsList(this.meta._id, res);
@@ -1862,7 +1828,8 @@ export default {
       handler(val) {
         //console.log('blockSelection', 'start:', val.start, 'end:', val.end);
         if (!this.blockSelection.start._id && !this.blockSelection.end._id) {
-          this.setUnCheckedRange();
+          this.parlistO.setUnCheckedRange();
+          this.updateCheckedRange();
         }
       },
       deep: true

@@ -644,22 +644,23 @@ export default {
   computed: {
 
     ...mapGetters({
-      currentBookid: 'currentBookid', 
-      currentBookMeta: 'currentBookMeta', 
-      currentBookFiles: 'currentBookFiles', 
-      isLibrarian: 'isLibrarian', 
-      isEditor: 'isEditor', 
-      isAdmin: 'isAdmin', 
-      bookCollections: 'bookCollections', 
-      allowPublishCurrentBook: 'allowPublishCurrentBook', 
-      currentBookBlocksLeft: 'currentBookBlocksLeft', 
-      currentBookBlocksLeftId: 'currentBookBlocksLeftId', 
-      currentBookAudioExportAllowed: 'currentBookAudioExportAllowed', 
-      currentBookCounters: 'currentBookCounters', 
-      tc_currentBookTasks: 'tc_currentBookTasks', 
-      storeList: 'storeList', 
-      blockSelection: 'blockSelection', 
-      alignCounter: 'alignCounter', 
+      currentBookid: 'currentBookid',
+      currentBookMeta: 'currentBookMeta',
+      currentBookFiles: 'currentBookFiles',
+      isLibrarian: 'isLibrarian',
+      isEditor: 'isEditor',
+      isAdmin: 'isAdmin',
+      bookCollections: 'bookCollections',
+      allowPublishCurrentBook: 'allowPublishCurrentBook',
+      currentBookBlocksLeft: 'currentBookBlocksLeft',
+      currentBookBlocksLeftId: 'currentBookBlocksLeftId',
+      currentBookAudioExportAllowed: 'currentBookAudioExportAllowed',
+      currentBookCounters: 'currentBookCounters',
+      tc_currentBookTasks: 'tc_currentBookTasks',
+      storeList: 'storeList',
+      storeListO: 'storeListO',
+      blockSelection: 'blockSelection',
+      alignCounter: 'alignCounter',
       audiobook: 'currentAudiobook'}),
     collectionsList: {
       get() {
@@ -778,7 +779,7 @@ export default {
     this.getAudioBook(this.currentBookid)
       .then(() => {
         if (this.currentAudiobook) {
-          
+
         }
       });
     this.$root.$on('from-bookblockview:voicework-type-changed', function() {
@@ -1290,11 +1291,14 @@ export default {
     collectCheckedStyles(startId, endId, isSwitch = true) {
       let result = new Map();
       let nums = new Map();
-      if (this.storeList.has(startId)) {
-        let pBlock, currId = startId;
-        do {
-          pBlock = this.storeList.get(currId);
-          if (pBlock && pBlock.checked) {
+
+      if (this.storeListO.getBlock(startId)) {
+        let idsArrayRange = this.storeListO.idsArrayRange(startId, endId);
+        idsArrayRange.forEach((blockId)=>{
+        //console.log('blockId', blockId);
+
+          let pBlock = this.storeList.get(blockId);
+          if (pBlock) {
             if (!result.has(pBlock.type)) result.set(pBlock.type, new Map());
 
             for (let styleKey in this.blockTypes[pBlock.type]) {
@@ -1349,11 +1353,11 @@ export default {
                 nums.get(pBlock.type).set('parNum', false);
               }
             }
-
-            currId = pBlock.chainid;
           }
-        } while (pBlock && pBlock._id !== endId);
+
+        });
       }
+
       this.styleTabs = result;
       this.numProps = nums;
 

@@ -4,6 +4,7 @@ import superlogin from 'superlogin-client'
 import hoodie from 'pouchdb-hoodie-api'
 import PouchDB from 'pouchdb'
 import {BookBlock} from './bookBlock'
+import {BookBlocks} from './bookBlocks'
 const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
@@ -112,6 +113,7 @@ export const store = new Vuex.Store({
     lockedBlocks: [],
     aligningBlocks: [],
     storeList: new Map(), // global parlist
+    storeListO: new BookBlocks(),
     blockSelection: {
       start: {},//block
       end: {},//block
@@ -202,7 +204,7 @@ export const store = new Vuex.Store({
     user: state => state.user,
     currentBookCounters: state => state.currentBookCounters,
     ttsVoices: state => {
-      if (state.currentBookMeta.language === '') return state.ttsVoices;
+      if (!state.currentBookMeta.language || state.currentBookMeta.language === '') return state.ttsVoices;
       let langPrefix = state.currentBookMeta.language.split('-')[0];
       let result = [];
       if (state.ttsVoices) {
@@ -234,6 +236,7 @@ export const store = new Vuex.Store({
     },
 
     storeList: state => state.storeList, // global parlist
+    storeListO: state => state.storeListO, // global parlistO
     blockSelection: state => state.blockSelection,
     alignCounter: state => state.alignCounter,
     lockedBlocks: state => state.lockedBlocks,
@@ -1447,7 +1450,7 @@ export const store = new Vuex.Store({
     },
 
     _putBlock ({state}, block) {
-      console.log('_putBlock block', block);
+      //console.log('_putBlock block', block);
       return state.contentRemoteDB
         .put(block)
         .then(res => Promise.resolve(res))
