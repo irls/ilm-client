@@ -1225,6 +1225,16 @@ export default {
             this.$refs.blockContent.innerHTML = block.content;
             this.$refs.blockContent.focus();
           }
+          this.block.footnotes = block.footnotes ? block.footnotes : [];
+          this.block.footnotes.forEach((ftn, ftnIdx) => {
+            let ref = this.$refs['footnoteContent_' + ftnIdx];
+            if (ref && ref[0]) {
+              ref[0].innerHTML = ftn.content;
+            }
+          });
+          if (this.block.footnotes.length > 0) {
+            this.initFtnEditor(true);
+          }
 
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {

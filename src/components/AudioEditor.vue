@@ -328,9 +328,9 @@
                 zoom = this.zoomOut();
               }
             } else {
-              let zoom = this.zoomIn();// if previously loaded file audio - set zoom level to max zoom in
+              let zoom = this.zoomIn(100);// if previously loaded file audio - set zoom level to max zoom in
               while(zoom) {
-                zoom = this.zoomIn();
+                zoom = this.zoomIn(100);
               }
             }
           }
@@ -705,7 +705,14 @@
             return Promise.resolve();
           }
         },
-        zoomIn() {
+        zoomIn(till = false) {
+          if (till !== false) {
+            let index = this.zoomLevels.indexOf(this.zoomLevel);
+            --index;
+            if (!this.zoomLevels[index] || this.zoomLevels[index] < till) {
+              return false;
+            }
+          }
           if (this.allowZoomIn) {
             this._setDraggableOptions();
             this.plEventEmitter.emit('zoomin');
@@ -1193,8 +1200,16 @@
             if (start !== false && end !== false && start < end) {
               this.selection.start = this._round(start, 2);
               this.selection.end = this._round(end, 2);
-              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-              this._showSelectionBorders(true);
+              let replay = this.isPlaying;
+              let wait = this.isPlaying ? [this.pause()] : [];
+              Promise.all(wait)
+                .then(() => {
+                  this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                  this._showSelectionBorders(true);
+                  if (replay) {
+                    this.play();
+                  }
+                })
               //this.setSelectionStart(start);
               //this.setSelectionEnd(end);
               return true;
@@ -1476,7 +1491,17 @@
             return audio && audio.blockMap ? audio.blockMap : {};
           }
         },
-        ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'hasLocks', 'currentAudiobook'])
+        blockSelection: {
+          get() {
+            return this.mode === 'file' ? this.blkSelection : {};
+          }
+        },
+        ...mapGetters({
+          currentBookMeta: 'currentBookMeta', 
+          blkSelection: 'blockSelection', 
+          alignCounter: 'alignCounter', 
+          hasLocks: 'hasLocks', 
+          currentAudiobook: 'currentAudiobook'})
       },
       watch: {
         'cursorPosition': {
