@@ -136,9 +136,11 @@ class BookBlocks {
       block.in = block.in[0];
       block.out = block.out[0];
       delete block['@type'];
+      delete block['@rid'];
+      delete block['@version'];
       block.loaded = false;
       block.checked = false;
-      this.lookupList[block.rid] = block;
+      this.lookupList[block.rid] = Object.assign({}, block);
       //this.blocksList[block.blockid] = new BookBlock(block);
     })
   }
@@ -150,9 +152,11 @@ class BookBlocks {
       block.in = block.in[0];
       block.out = block.out[0];
       delete block['@type'];
+      delete block['@rid'];
+      delete block['@version'];
       block.loaded = false;
       block.checked = false;
-      this.lookupList[block.rid] = block;
+      this.lookupList[block.rid] = Object.assign({}, block);
       //this.blocksList[block.blockid] = new BookBlock(block);
     })
   }
@@ -186,6 +190,11 @@ class BookBlocks {
   }
 
   getBlock(blockId){
+    let idIdx = this.listIds.indexOf(blockId);
+    if (idIdx > -1) {
+      let rid = this.listRIds[idIdx];
+      if (rid) return this.lookupList[rid];
+    }
     for (var key in this.lookupList) {
       if (this.lookupList[key].blockid == blockId) return this.lookupList[key];
     }
@@ -216,6 +225,7 @@ class BookBlocks {
       let endIdx = this.listRIds.indexOf(endRId);
       if (startIdx < endIdx) {
         for (var i=startIdx; i<=endIdx; i++) {
+          console.log();
           let iRId = this.listRIds[i];
           if (this.lookupList.hasOwnProperty(iRId)) {
             this.lookupList[iRId].checked = true;

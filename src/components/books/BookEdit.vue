@@ -20,7 +20,7 @@
         <div class='col' v-if="parlist.has(blockId)"><!--v-if="block.isVisible"-->
           <BookBlockView ref="blocks"
               :block="parlist.get(blockId)"
-              :blockO="parlistO.getBlockByIdx(listIdx)"
+              :blockO="parlistO.getBlock(blockId)"
               :blockId = "blockId"
               :putBlock ="putBlockProxy"
               :getBlock ="getBlockProxy"
@@ -253,7 +253,6 @@ export default {
           'ctrl+end': (ev)=>{
             //console.log('ctrl+end')
             let lastRid = this.parlistO.getLastRid();
-            console.log('lastRid', lastRid);
             if (lastRid) {
               let block = this.parlistO.getBlockByRid(lastRid);
               if (block) this.scrollToBlock(block.blockid);
@@ -1351,6 +1350,7 @@ export default {
             } else {
               newSelection = this.parlistO.setChecked(block.rid);
             }
+            //console.log('newSelection', newSelection.start._id, newSelection.end._id);
             this.setBlockSelection(newSelection);
           }
           else { // uncheck
@@ -1382,7 +1382,7 @@ export default {
     },
     updateCheckedRange() {
       this.$refs.blocks.forEach(($ref)=>{
-        $ref.setIsChecked();
+        //$ref.setIsChecked();
       })
     },
     setUnCheckedRange() {
@@ -1724,6 +1724,11 @@ export default {
               this.scrollBarBlocks = this.parlistO.idsArray();
               this.updateScrollSlider();
               //this.lazyLoad();
+              console.log('loadBookBlocks then');
+              this.setBlockWatch()
+              if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
+                this.$router.push({name: 'BookEdit', params: {}});
+              }
             });
           });
         }

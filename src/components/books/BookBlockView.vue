@@ -625,7 +625,6 @@ export default {
       styleSel: false,
       blockTypes: BlockTypes,
 
-      isChecked: false,
       isUpdated: false,
       isChanged: false,
 
@@ -680,6 +679,10 @@ export default {
       isLocked: function () {
         return this.block ? this.isBlockLocked(this.block._id) : false;
       },
+      isChecked: { cache: false,
+      get: function () {
+        return (this.blockO && this.blockO.checked === true);
+      }},
       blockClasses: function () {
           return this.blockTypes[this.block.type];
       },
@@ -966,7 +969,8 @@ export default {
       this.isChanged = this.block.isChanged;
       this.isAudioChanged = this.block.isAudioChanged;
       this.isIllustrationChanged = this.block.isIllustrationChanged;
-      this.isChecked = this.blockO.checked;
+      //console.log('mounted isChecked', this.blockO);
+      //this.isChecked = this.blockO.checked;
       //this.detectMissedFlags();
 
       //console.log('mounted', this.block._id);
@@ -1026,10 +1030,6 @@ export default {
         return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
       },
       //-- } -- end -- Checkers --//
-
-      setIsChecked() {
-        this.isChecked = this.blockO.checked;
-      },
 
       destroyEditor() {
         if (this.editor) {
