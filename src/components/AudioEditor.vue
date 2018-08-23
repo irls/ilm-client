@@ -328,9 +328,9 @@
                 zoom = this.zoomOut();
               }
             } else {
-              let zoom = this.zoomIn();// if previously loaded file audio - set zoom level to max zoom in
+              let zoom = this.zoomIn(100);// if previously loaded file audio - set zoom level to max zoom in
               while(zoom) {
-                zoom = this.zoomIn();
+                zoom = this.zoomIn(100);
               }
             }
           }
@@ -705,7 +705,14 @@
             return Promise.resolve();
           }
         },
-        zoomIn() {
+        zoomIn(till = false) {
+          if (till !== false) {
+            let index = this.zoomLevels.indexOf(this.zoomLevel);
+            --index;
+            if (!this.zoomLevels[index] || this.zoomLevels[index] < till) {
+              return false;
+            }
+          }
           if (this.allowZoomIn) {
             this._setDraggableOptions();
             this.plEventEmitter.emit('zoomin');
