@@ -1491,7 +1491,17 @@
             return audio && audio.blockMap ? audio.blockMap : {};
           }
         },
-        ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'hasLocks', 'currentAudiobook'])
+        blockSelection: {
+          get() {
+            return this.mode === 'file' ? this.blkSelection : {};
+          }
+        },
+        ...mapGetters({
+          currentBookMeta: 'currentBookMeta', 
+          blkSelection: 'blockSelection', 
+          alignCounter: 'alignCounter', 
+          hasLocks: 'hasLocks', 
+          currentAudiobook: 'currentAudiobook'})
       },
       watch: {
         'cursorPosition': {
