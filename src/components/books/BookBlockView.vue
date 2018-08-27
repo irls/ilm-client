@@ -1772,6 +1772,7 @@ export default {
         let pos = this.updFootnotes(this.block.footnotes.length + 1);
         this.block.footnotes.splice(pos, 0, new FootNote({}));
         this.$forceUpdate();
+        this.isChanged = true;
         let ref = this.$refs['footnoteContent_' + pos];
         if (ref && ref[0]) {
           ref[0].innerHTML = this.block.footnotes[pos].content;
