@@ -1761,12 +1761,21 @@ export default {
       addFootnote: function() {
         //console.log('this.range', this.range);
         let el = document.createElement('SUP');
-        el.setAttribute('data-idx', this.block.footnotes.length);
+        el.setAttribute('data-idx', this.block.footnotes.length + 1);
         this.range.insertNode(el);
-        let pos = this.updFootnotes(this.block.footnotes.length);
+        this.block.footnotes.forEach((ftn, ftnIdx) => {
+          let ref = this.$refs['footnoteContent_' + ftnIdx]
+          if (ref && ref[0]) {
+            this.block.setContentFootnote(ftnIdx, ref[0].innerHTML);
+          }
+        });
+        let pos = this.updFootnotes(this.block.footnotes.length + 1);
         this.block.footnotes.splice(pos, 0, new FootNote({}));
-        this.isChanged = false; // to be shure to update view
-        this.isChanged = true;
+        this.$forceUpdate();
+        let ref = this.$refs['footnoteContent_' + pos];
+        if (ref && ref[0]) {
+          ref[0].innerHTML = this.block.footnotes[pos].content;
+        }
         this.pushChange('footnotes');
         Vue.nextTick(() => {
           //this.destroyEditor();
