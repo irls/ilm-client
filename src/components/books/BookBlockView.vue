@@ -1786,6 +1786,12 @@ export default {
       delFootnote: function(pos) {
         $('#'+this.block._id).find(`[data-idx='${pos+1}']`).remove();
         this.updFootnotes();
+        this.block.footnotes.forEach((ftn, ftnIdx) => {
+          let ref = this.$refs['footnoteContent_' + ftnIdx]
+          if (ref && ref[0]) {
+            this.block.setContentFootnote(ftnIdx, ref[0].innerHTML);
+          }
+        });
         this.block.footnotes.splice(pos, 1);
         this.isChanged = false; // to be shure to update view
         this.isChanged = true;
@@ -2854,7 +2860,10 @@ export default {
           this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
           if (this.block.footnotes && this.block.footnotes.length) {
             this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-              this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
+              let ref = this.$refs['footnoteContent_' + footnoteIdx];
+              if (ref && ref[0]) {
+                this.block.footnotes[footnoteIdx].content = ref[0].innerHTML;
+              }
             });
           }
         }
