@@ -506,7 +506,7 @@
                   <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled}]"
                     @click.prevent="reworkBlock">
                     Need work</div>
-                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled}]"
+                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
                     @click.prevent="approveBlock">
                     Approve</div>
 
@@ -663,7 +663,8 @@ export default {
       audioSelectPos: {
         start: Number,
         end: Number
-      }
+      },
+      isApproving: false
     }
   },
   components: {
@@ -673,7 +674,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'approveWaiting'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -1530,6 +1531,10 @@ export default {
       },
 
       actionWithBlock: function(ev) {
+        if (this.approveWaiting) {
+          return;
+        }
+        this.isApproving = true;
         this.assembleBlockProxy(ev)
         .then(()=>{
           let task = this.tc_getBlockTask(this.block._id);
@@ -1559,6 +1564,7 @@ export default {
 
           this.tc_approveBookTask(task)
           .then(response => {
+            this.isApproving = false;
             if (response.status == 200) {
               if (typeof response.data._id !== 'undefined') {
                 this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
@@ -1567,7 +1573,9 @@ export default {
               this.getBloksUntil('unresolved', true, this.block._id)
             }
           })
-          .catch(err => {});
+          .catch(err => {
+            this.isApproving = false;
+          });
         });
 
         this.$root.$emit('closeFlagPopup', true);
@@ -3122,6 +3130,18 @@ export default {
             }
           }
         }
+      },
+      'isApproving': {
+        handler(val) {
+          if (this._is('proofer', true)) {
+            this.$root.$emit('block-approving', val);
+          }
+        }
+      },
+      'approveWaiting': {
+        handler(val) {
+          //console.log(this.block._id, 'approveWaiting', val);
+        }
       }
   },
   beforeDestroy: function () {
@@ -3434,6 +3454,10 @@ export default {
           }
           .fa-save {
             color: green;
+          }
+          &.approve-waiting {
+            color: gray;
+            cursor: not-allowed;
           }
         }
     }

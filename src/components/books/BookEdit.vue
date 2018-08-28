@@ -32,6 +32,7 @@
               :allowSetEnd="allowSetEnd"
               :prevId="getPrevId(blockId)"
               :mode="mode"
+              :approveWaiting="approveWaiting"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
@@ -187,7 +188,8 @@ export default {
       isNeedUp: true,
       isNeedDown: true,
       recordingState: '',
-      recordingBlockId: null
+      recordingBlockId: null,
+      approveWaiting: false
 
     }
   },
@@ -1724,6 +1726,9 @@ export default {
     handleScroll(ev) {
       //console.log('handleScroll');
       this.$refs.contentScrollWrapRef.scrollTo(0,0);
+    },
+    _toggleApproveWaiting(val) {
+      this.approveWaiting = val;
     }
 
   },
@@ -1800,6 +1805,7 @@ export default {
       });
 
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
+      this.$root.$on('block-approving', this._toggleApproveWaiting);
   },
 
   beforeDestroy:  function() {
@@ -1811,6 +1817,7 @@ export default {
     this.$root.$off('for-bookedit:scroll-to-block');
     this.$root.$off('book-reimported');
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
+    this.$root.$off('block-approving', this._toggleApproveWaiting)
   },
   watch: {
     'meta._id': {
