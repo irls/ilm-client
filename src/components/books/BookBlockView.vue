@@ -2,39 +2,8 @@
 <div class="table-body -block" v-bind:class="['-mode-' + mode, blockOutPaddings]" :id="block._id">
     <div v-if="isLocked" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': block.checked==true}]">
-        <div class="table-row parnum-row" v-if="meta.numeration !== 'none'">
 
-          <template v-if="blockO.secnum">
-            <span v-if="blockO.secHide" :class="['parnum', '-hidden-hover']">{{blockO.secnum.toString().length?blockO.secnum:blockO.parnum}}</span>
-          </template>
-
-          <template v-else >
-            <span v-if="blockO.parnum && blockO.parnum!==false" :class="['parnum', {'-hidden': blockO.secHide===true }]">{{blockO.parnum}}</span>
-          </template>
-
-          <!--<template v-if="block.secHide===false">
-            <span v-if="block.secnum!==false" :class="['parnum', '-hidden-hover']">{{block.secnum}}</span>
-            <span v-if="block.secnum===''" :class="['parnum', '-hidden-hover', '-auto']">{{block.parnum}}</span>
-          </template>-->
-
-          <input v-if="blockO.secnum!==false"
-            :class="['secnum', '-hidden-block']"
-            v-model="blockO.secnum" @input="setSecnumVal"
-            type="text" maxlength="3" size="3"/>
-
-        </div>
         <div class="table-row" v-if="meta.numeration !== 'none'">
-            <!-- <div class='par-ctrl -hidden'>
-                <i v-if="block.secnum!==false"
-                  class="fa fa-paragraph"
-                  :class="{'-active': block.secHide===false}"
-                  @click="setSecnumHidden"></i>
-
-                <i v-else
-                  class="fa fa-paragraph"
-                  :class="{'-active': block.parnum!==false}"
-                  @click="setParnum"></i>
-            </div> -->
             <div v-if="false" class='par-ctrl -hidden'>
                 <i class="glyphicon glyphicon-volume-up"></i>
                 <i class="glyphicon glyphicon-volume-off"></i>
@@ -96,128 +65,149 @@
         <div :class="['table-body', '-content', {'editing': isAudioEditing}]"
         @mouseleave="onBlur"
         @click="onBlur">
-            <div class="table-row controls-top"><!--:data-json="JSON.stringify(block)"-->
+            <div class="table-row-flex controls-top">
+              <div class="par-ctrl"><!-- -hidden-->
+                <div class="block-menu">
+                  <i class="glyphicon glyphicon-menu-hamburger"
+                  @click.prevent="$refs.blockMenu.open($event, block._id)">
+                  </i><!-- {{changes}} -->
+                  <block-menu
+                      ref="blockMenu"
+                      dir="top"
+                      :update="update"
+                      @click.stop>
 
-              <div class="par-ctrl -hidden -left">
-                  <div class="block-menu">
-                    <i class="glyphicon glyphicon-menu-hamburger"
-                    @click.prevent="$refs.blockMenu.open($event, block._id)">
-                    </i><!-- {{changes}} -->
-                    <block-menu
-                        ref="blockMenu"
-                        dir="top"
-                        :update="update"
-                        @click.stop>
+                    <li v-if="isHideArchFlags"
+                      @click.prevent="toggleArchFlags()">
+                      <i class="fa fa-eye" aria-hidden="true"></i>
+                      Show archived flags</li>
+                    <li v-else
+                      @click.prevent="toggleArchFlags()">
+                      <i class="fa fa-eye-slash" aria-hidden="true"></i>
+                      Hide archived flags</li>
 
-                      <li v-if="isHideArchFlags"
-                        @click.prevent="toggleArchFlags()">
-                        <i class="fa fa-eye" aria-hidden="true"></i>
-                        Show archived flags</li>
-                      <li v-else
-                        @click.prevent="toggleArchFlags()">
-                        <i class="fa fa-eye-slash" aria-hidden="true"></i>
-                        Hide archived flags</li>
-
+                    <li class="separator"></li>
+                    <template v-if="allowEditing">
+                      <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
+                        <i class="fa fa-angle-up" aria-hidden="true"></i>
+                        Insert block before</li>
+                      <li v-else class="disabled">
+                        <i class="fa menu-preloader" aria-hidden="true"></i>
+                        Insert block before</li>
+                      <li v-if="!isBlocked" @click="insertBlockAfter()">
+                        <i class="fa fa-angle-down" aria-hidden="true"></i>
+                        Insert block after</li>
+                      <li v-else class="disabled">
+                        <i class="fa menu-preloader" aria-hidden="true"></i>
+                        Insert block after</li>
+                      <li v-if="!isBlockLocked(prevId)" @click="showModal('delete-block-message')">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                        Delete block</li>
+                      <li v-else class="disabled">
+                        <i class="fa menu-preloader" aria-hidden="true"></i>
+                        Delete block</li>
+                      <!--<li>Split block</li>-->
+                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(prevId)" @click="joinWithPrevious()">
+                        <i class="fa fa-angle-double-up" aria-hidden="true"></i>
+                        Join with previous block</li>
+                      <li v-else class="disabled">
+                        <i class="fa menu-preloader" aria-hidden="true"></i>
+                        Join with previous block</li>
+                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(block.chainid)" @click="joinWithNext()">
+                        <i class="fa fa-angle-double-down" aria-hidden="true"></i>
+                        Join with next block</li>
+                      <li v-else class="disabled">
+                        <i class="fa menu-preloader" aria-hidden="true"></i>
+                        Join with next block</li>
                       <li class="separator"></li>
-                      <template v-if="allowEditing">
-                        <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
-                          <i class="fa fa-angle-up" aria-hidden="true"></i>
-                          Insert block before</li>
-                        <li v-else class="disabled">
-                          <i class="fa menu-preloader" aria-hidden="true"></i>
-                          Insert block before</li>
-                        <li v-if="!isBlocked" @click="insertBlockAfter()">
-                          <i class="fa fa-angle-down" aria-hidden="true"></i>
-                          Insert block after</li>
-                        <li v-else class="disabled">
-                          <i class="fa menu-preloader" aria-hidden="true"></i>
-                          Insert block after</li>
-                        <li v-if="!isBlockLocked(prevId)" @click="showModal('delete-block-message')">
-                          <i class="fa fa-trash" aria-hidden="true"></i>
-                          Delete block</li>
-                        <li v-else class="disabled">
-                          <i class="fa menu-preloader" aria-hidden="true"></i>
-                          Delete block</li>
-                        <!--<li>Split block</li>-->
-                        <li v-if="!isBlockLocked(block._id) && !isBlockLocked(prevId)" @click="joinWithPrevious()">
-                          <i class="fa fa-angle-double-up" aria-hidden="true"></i>
-                          Join with previous block</li>
-                        <li v-else class="disabled">
-                          <i class="fa menu-preloader" aria-hidden="true"></i>
-                          Join with previous block</li>
-                        <li v-if="!isBlockLocked(block._id) && !isBlockLocked(block.chainid)" @click="joinWithNext()">
-                          <i class="fa fa-angle-double-down" aria-hidden="true"></i>
-                          Join with next block</li>
-                        <li v-else class="disabled">
-                          <i class="fa menu-preloader" aria-hidden="true"></i>
-                          Join with next block</li>
-                        <li class="separator"></li>
-                        <template v-if="block.type != 'illustration' && block.type != 'hr'">
-                        <li @click="showModal('block-html')">
-                          <i class="fa fa-code" aria-hidden="true"></i>
-                          Edit HTML</li>
-                        <li class="separator"></li>
-                        </template>
+                      <template v-if="block.type != 'illustration' && block.type != 'hr'">
+                      <li @click="showModal('block-html')">
+                        <i class="fa fa-code" aria-hidden="true"></i>
+                        Edit HTML</li>
+                      <li class="separator"></li>
                       </template>
-                      <li @click="discardAudio" v-if="allowAudioRevert">
-                        <i class="fa fa-cloud-download" aria-hidden="true"></i>
-                        Revert to original audio</li>
-                    </block-menu>
+                    </template>
+                    <li @click="discardAudio" v-if="allowAudioRevert">
+                      <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                      Revert to original audio</li>
+                  </block-menu>
+                </div>
+                <!--<div class="block-menu">-->
+                <div class="par-ctrl-divider"></div>
+
+                <!--<i class="fa fa-trash-o fa-lg"></i>-->
+                <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
+
+                <!--<label v-if="block.type=='header'">start:&nbsp;<input type="checkbox"/></label>&nbsp;-->
+                <template v-if="allowEditing">
+                  <div class="parnum-row">
+                    <label ref="parnumRef" :class="['num -hidden-hover', {'-invisible': block.secHide===true || block.parHide===true }]">{{parnumComp}}</label>
+                    <input v-if="block.type=='header'"
+                      @input="setNumVal" v-model="blockO.secnum" class="num"
+                      type="text" maxlength="12" size="12"/>
+                    <input v-if="block.type=='par'"
+                      @input="setNumVal" v-model="blockO.parnum" class="num"
+                      type="text" maxlength="12" size="12"/>
                   </div>
+                  <div class="par-ctrl-divider"></div>
+                  <i :class="['fa fa-lock', {'-invisible': blockO.isManual!==true || block.secHide===true || block.parHide===true }]"></i>
+                  <div class="par-ctrl-divider"></div>
+                  <div class="par-ctrl-divider"></div>
 
-                  <!--<i class="fa fa-trash-o fa-lg"></i>-->
-                  <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
+                  <!-- Block Type selector -->
+                  <label>
+                    <select v-model="block.type" @input="setChanged(true, 'type', $event)"><!--v-model='block.type'--><!--:value="type"-->
+                      <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
+                    </select>
+                  </label>
 
-                  <!--<label v-if="block.type=='header'">start:&nbsp;<input type="checkbox"/></label>&nbsp;-->
-                  <template v-if="allowEditing">
-                    <!-- Block Type selector -->
+                  <div class="par-ctrl-divider"></div>
+
+                  <template v-if="allowVoiceworkChange()">
+                    <i class="fa fa-volume-off"></i>
+                    <div class="par-ctrl-divider"></div>
                     <label>
-                      <select v-model="block.type" style="min-width: 80px;" @input="setChanged(true, 'type', $event)"><!--v-model='block.type'--><!--:value="type"-->
-                        <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
-                      </select>
-                    </label>
-
-                    <template v-if="allowVoiceworkChange()">
-                      <label>
-                        <i class="fa fa-volume-off"></i>&nbsp;
-                      <select v-model='voiceworkSel' style="min-width: 100px;">
+                      <select v-model='voiceworkSel'>
                         <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
-                      </label>
+                    </label>
+                  </template>
+                  <template v-else>
+                    <i class="fa fa-volume-off"></i>
+                    <div class="par-ctrl-divider"></div>
+                    <label>
+                      <span>{{blockVoiceworks[block.voicework]}}</span>
+                    </label>
+                  </template>
+                </template>
+                <template v-else >
+
+                </template>
+              </div>
+              <!--<div class="par-ctrl -hidden">-->
+              <div class="par-ctrl -audio"> <!---hidden-->
+                <template v-if="player && blockAudio.src && !isRecording">
+                    <template v-if="!isAudStarted">
+                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating"></i>
+                      <i class="fa fa-play-circle-o"
+                        @click="audPlay(block._id, $event)"></i>
+                      <i class="fa fa-stop-circle-o disabled"></i>
                     </template>
                     <template v-else>
-                      <label>
-                        <i class="fa fa-volume-off"></i>&nbsp;<span>{{blockVoiceworks[block.voicework]}}</span>
-                      </label>
+                      <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
+                        @click="audPause(block._id, $event)"></i>
+                      <i class="fa fa-play-circle-o paused" v-else
+                        @click="audResume(block._id, $event)"></i>
+                      <i class="fa fa-stop-circle-o"
+                        @click="audStop(block._id, $event)"></i>
+                      <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
                     </template>
-                  </template>
+                </template>
               </div>
-              <!--<div class="-hidden">-->
-
-              <div class="par-ctrl -audio -hidden -right" v-if="mode !== 'narrate'">
-                  <template v-if="player && blockAudio.src && !isRecording">
-                      <template v-if="!isAudStarted">
-                        <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating"></i>
-                        <i class="fa fa-play-circle-o"
-                          @click="audPlay(block._id, $event)"></i>
-                        <i class="fa fa-stop-circle-o disabled"></i>
-                      </template>
-                      <template v-else>
-                        <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
-                          @click="audPause(block._id, $event)"></i>
-                        <i class="fa fa-play-circle-o paused" v-else
-                          @click="audResume(block._id, $event)"></i>
-                        <i class="fa fa-stop-circle-o"
-                          @click="audStop(block._id, $event)"></i>
-                        <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
-                      </template>
-                  </template>
-
-              </div>
-              <!--<div class="-hidden">-->
-
+              <!--<div class="par-ctrl -hidden">-->
             </div>
             <!--<div class="table-row controls-top">-->
+
             <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div>
@@ -673,7 +663,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', ,'blockO', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode'],
+  props: ['block', 'blockO', 'putBlockO', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -682,6 +672,16 @@ export default {
       isChecked: { cache: false,
       get: function () {
         return (this.blockO && this.blockO.checked === true);
+      }},
+      parnumComp: { cache: false,
+      get: function () {
+        if (this.blockO.secnum || this.blockO.parnum) {
+          if (this.blockO.secnum.toString().length > 0) {
+            return this.blockO.secnum;
+          } else {
+            return this.blockO.parnum;
+          }
+        } return '';
       }},
       blockClasses: function () {
           return this.blockTypes[this.block.type];
@@ -2707,14 +2707,28 @@ export default {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
 
-      setSecnumVal: _.debounce(function(){
+      /*setSecnumVal: _.debounce(function(){
         this.reCount();
         this.block.secVal = this.block.secnum;
         this.block.partUpdate = true;
         this.putBlock(this.block).then(()=>{});
-      }, 500),
+      }, 500),*/
 
-      setSecnum() {
+      setNumVal: _.debounce(function(ev){
+        let val = ev.target.value;
+        if (this.$refs.parnumRef) this.$refs.parnumRef.innerText = val;
+        this.putBlockO ({
+          rid: this.blockO.rid,
+          secnum: this.blockO.secnum,
+          parnum: this.blockO.parnum
+        }).then((blockid)=>{
+          console.log('setNumVal then', blockid);
+//           this.isUpdated = true;
+//           this.isUpdated = false;
+        });
+      }, 1000),
+
+      /*setSecnum() {
         if (this.block.secnum === false) {
           this.block.secnum = this.block.secVal ? this.block.secVal : '';
         }
@@ -2725,17 +2739,17 @@ export default {
         this.reCount();
         this.block.partUpdate = true;
         this.putBlock(this.block).then(()=>{});
-      },
+      },*/
       setSecnumHidden() {
         this.block.secHide = !this.block.secHide;
         this.putBlockPart({block: this.block, field: 'secHide'}).then(()=>{});
       },
-      setParnum() {
+      /*setParnum() {
         if (this.block.parnum === false) this.block.parnum = ''
         else this.block.parnum = false;
         this.reCount();
         this.putBlockPart({block: this.block, field: 'parnum'}).then(()=>{});
-      },
+      },*/
       allowVoiceworkChange() {
         if (this.block.type == 'illustration' || this.block.type == 'hr') {
           return false;
@@ -3244,8 +3258,9 @@ export default {
     display: table-cell;
 
     &.controls-left {
-        width: 50px;
-        padding-left: 15px;
+        width: 36px;
+        padding-left: 8px;
+        padding-top: 0px;
 
         &.-check-green {
           /*border-left: 6px solid darkgreen;*/
@@ -3485,32 +3500,6 @@ export default {
       }
     }
 
-    .block-menu {
-      display: inline-block;
-      vertical-align: bottom;
-      position: relative;
-      width: 40px;
-      height: 20px;
-      .fa, .glyphicon {
-        margin-right: 5px;
-        &.menu-preloader {
-          background: url(/static/preloader-snake-transparent-small.gif);
-          width: 18px;
-          height: 16px;
-          display: inline-block;
-          background-repeat: no-repeat;
-          text-align: center;
-          background-position: 0 0;
-          background-size: 83%;
-          margin-bottom: -3px;
-          margin-right: -1px;
-        }
-      }
-      .disabled {
-        color: gray;
-      }
-
-    }
     .illustration-block {
       img {
         border: solid grey 2px;
@@ -3528,6 +3517,143 @@ export default {
         outline: none;
         border-color: #9ecaed;
         box-shadow: 0 0 10px #9ecaed;
+      }
+    }
+}
+
+.table-row-flex {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+
+    &.controls-top {
+      width: 100%;
+      height: 26px;
+
+      .par-ctrl {
+        width: 440px;
+        /*background: green;*/
+
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-start;
+
+        &.-audio {
+          width: 80px;
+        }
+
+        .par-ctrl-divider {
+          width: 10px;
+        }
+
+        label {
+          display: block;
+          margin-bottom: 0px;
+          padding-left: 4px;
+          line-height: 20px;
+          height: 20px;
+          font-weight: normal;
+        }
+        select {
+          /*border: none;*/
+          border: 1px solid lightgray;
+        }
+
+        .parnum-row {
+          width: 120px;
+          height: 20px;
+          position: relative;
+          /*background: blue;*/
+
+          &:hover {
+            input.num {
+              display: block;
+            }
+          }
+
+          input.num {
+            width: 120px;
+            height: 20px;
+            padding-left: 3px;
+            display: none;
+            position: absolute;
+            &:focus {
+              display: block;
+            }
+          }
+
+          label.num {
+            line-height: 14px;
+            padding: 2px;
+            padding-left: 4px;
+            width: 120px;
+            background: #dddddd;
+            height: 20px;
+            position: absolute;
+            border: 1px solid #d3d3d3;
+            &.-invisible {
+              color: transparent;
+              background: transparent;
+              border: none;
+            }
+          }
+
+/*          .-hidden {
+              display: none;
+              &:hover {
+                display: block;
+              }
+          }*/
+
+/*          .-hidden-hover {
+              display: block;
+          }
+
+          &:hover {
+              .-hidden-hover {
+                  display: none;
+              }
+          }*/
+        }
+
+        .fa {
+          cursor: default;
+        }
+        .fa-lock, .fa-unlock {
+          height: 16px;
+          line-height: 18px;
+          &.-invisible {
+            color: transparent;
+          }
+        }
+
+        .block-menu {
+          /*display: inline-block;
+          vertical-align: bottom;*/
+          position: relative;
+          /*width: 40px;*/
+          height: 20px;
+          .fa, .glyphicon {
+            /*margin-right: 5px;*/
+            &.menu-preloader {
+              background: url(/static/preloader-snake-transparent-small.gif);
+              width: 18px;
+              height: 16px;
+              display: inline-block;
+              background-repeat: no-repeat;
+              text-align: center;
+              background-position: 0 0;
+              background-size: 83%;
+              margin-bottom: -3px;
+              margin-right: -1px;
+            }
+          }
+          .disabled {
+            color: gray;
+          }
+
+        }
       }
     }
 }
@@ -3570,7 +3696,7 @@ export default {
     }
     i.fa-volume-off {
         font-size: 27px;
-        margin-right: 5px;
+        /*margin-right: 5px;*/
     }
     label {
       select, span {

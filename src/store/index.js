@@ -714,6 +714,10 @@ export const store = new Vuex.Store({
       state.storeList = new Map();
     },
 
+    clear_storeListO (state) {
+      state.storeListO = new BookBlocks();
+    },
+
     set_block_selection(state, selection) {
       state.blockSelection.start = typeof selection.start !== 'undefined' ? selection.start : {};
       state.blockSelection.end = typeof selection.end !== 'undefined' ? selection.end : {};
@@ -1517,6 +1521,26 @@ export const store = new Vuex.Store({
       } else {
         return Promise.resolve();
       }
+    },
+
+    putBlockO({commit, state}, params) {
+      let rid = encodeURIComponent(params.rid);
+      let req = state.API_URL + `books/blocks/block/${rid}`;
+      return axios.put(req, params)
+      .then((response) => {
+        if (response.data.updated && response.data.updated > 0) {
+          let block = state.storeListO.getBlockByRid(params.rid);
+          if (block) {
+            block.isManual = true;
+            return block.blockid;
+          }
+        }
+        //console.log('response.data', response.data);
+        if (Array.isArray(response.data)) response.data.forEach((blockO)=>{
+          state.storeListO.updBlockByRid(blockO.rid, blockO);
+        })
+        return response.data;
+      })
     },
 
     putMetaAuthors ({commit, state, dispatch}, authors) {

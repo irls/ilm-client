@@ -3,6 +3,22 @@ const _id = require('uniqid');
 import superlogin from 'superlogin-client';
 import { BookBlock }    from './bookBlock';
 
+class LookupBlock {
+  constructor(block) {
+    this.rid = block.rid;
+    this.blockid = block.blockid;
+    this.in = block.in[0];
+    this.out = block.out[0];
+    this.secnum   = block.secnum   || '';
+    this.parnum   = block.parnum   || '';
+    this.numHide  = block.numHide  || false;
+    this.isManual = block.isManual || false;
+    this.index = block.index || -1;
+    this.loaded = false;
+    this.checked = false;
+  }
+}
+
 class BookBlocks {
   constructor(init) {
     this.lookupList = {};
@@ -133,14 +149,7 @@ class BookBlocks {
     if (Array.isArray(bookList.blocks)) bookList.blocks.forEach((block)=>{
       this.listIds.push(block.blockid);
       this.listRIds.push(block.rid);
-      block.in = block.in[0];
-      block.out = block.out[0];
-      delete block['@type'];
-      delete block['@rid'];
-      delete block['@version'];
-      block.loaded = false;
-      block.checked = false;
-      this.lookupList[block.rid] = Object.assign({}, block);
+      this.lookupList[block.rid] = new LookupBlock(block);
       //this.blocksList[block.blockid] = new BookBlock(block);
     })
   }
@@ -149,14 +158,7 @@ class BookBlocks {
     if (Array.isArray(bookList.blocks)) bookList.blocks.forEach((block)=>{
       this.listIds.push(block.blockid);
       this.listRIds.push(block.rid);
-      block.in = block.in[0];
-      block.out = block.out[0];
-      delete block['@type'];
-      delete block['@rid'];
-      delete block['@version'];
-      block.loaded = false;
-      block.checked = false;
-      this.lookupList[block.rid] = Object.assign({}, block);
+      this.lookupList[block.rid] = new LookupBlock(block);
       //this.blocksList[block.blockid] = new BookBlock(block);
     })
   }
@@ -211,6 +213,17 @@ class BookBlocks {
   getBlockByIdx(listIdx){
     let rId = this.listRIds[listIdx];
     return this.lookupList[rId];
+  }
+
+  updBlockByRid(iRId, data){
+    if (this.lookupList.hasOwnProperty(iRId)) {
+      let block = this.lookupList[iRId];
+      if (!data.in) delete data.in;
+      if (!data.out) delete data.out;
+      this.lookupList[iRId] = Object.assign(block, data);
+      return true;
+    }
+    return false;
   }
 
   setLoaded(blockId) {

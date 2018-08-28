@@ -25,6 +25,7 @@
               :putBlock ="putBlockProxy"
               :getBlock ="getBlockProxy"
               :putBlockPart ="putBlockPartProxy"
+              :putBlockO ="putBlockOProxy"
               :reCount  ="reCountProxy"
               :recorder ="recorder"
               :blockReindexProcess="blockReindexProcess"
@@ -311,7 +312,7 @@ export default {
   methods: {
     ...mapActions([
     'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
-    'loopPreparedBlocksChain',
+    'loopPreparedBlocksChain', 'putBlockO',
 
     'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange']),
 
@@ -789,6 +790,16 @@ export default {
     putBlockPartProxy: function (blockData) {
       return this.putBlockPart(blockData)
       .then(()=>{})
+      .catch((err)=>{})
+    },
+
+    putBlockOProxy: function (blockData) {
+      return this.putBlockO(blockData)
+      .then((blocks)=>{
+        console.log('putBlockO then');
+        this.updateVisibleBlocks();
+        return Promise.resolve(blocks)
+      })
       .catch((err)=>{})
     },
 
@@ -1360,7 +1371,6 @@ export default {
             }
             else this.setBlockSelection({start: {}, end: {}});
           }
-          this.updateCheckedRange();
           break;
       }
       //this.recountApprovedInRange();
@@ -1380,9 +1390,10 @@ export default {
       }
       return false;
     },
-    updateCheckedRange() {
+    updateVisibleBlocks() {
       this.$refs.blocks.forEach(($ref)=>{
-        //$ref.setIsChecked();
+        $ref.isUpdated = true;
+        $ref.isUpdated = false;
       })
     },
     setUnCheckedRange() {
@@ -1665,6 +1676,8 @@ export default {
       this.setBlockSelection({start: {}, end: {}});
 
       this.$store.commit('clear_storeList');
+      this.$store.commit('clear_storeListO');
+      this.startId = false;
       this.refreshTmpl();
 
       this.$router.push({name: this.$route.name, params: {}});
@@ -1683,6 +1696,8 @@ export default {
       .then((initBlocks)=>{
         if (this.meta._id) {
           this.loadPreparedBookDown(this.parlistO.idsArray(), 10).then(()=>{
+            this.startId = this.parlistO.idsArray[0];
+            this.scrollToBlock(this.startId);
             this.loadBookBlocks({bookId: this.meta._id})
             .then((res)=>{
               this.parlistO.appendLookupsList(this.meta._id, res);
@@ -1834,7 +1849,6 @@ export default {
         //console.log('blockSelection', 'start:', val.start, 'end:', val.end);
         if (!this.blockSelection.start._id && !this.blockSelection.end._id) {
           this.parlistO.setUnCheckedRange();
-          this.updateCheckedRange();
         }
       },
       deep: true

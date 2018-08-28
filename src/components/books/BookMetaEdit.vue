@@ -1379,29 +1379,26 @@ export default {
     {
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
-          let pBlock, currId = this.blockSelection.start._id;
-          do {
-            pBlock = this.storeList.get(currId);
-            if (pBlock && pBlock.checked) {
-              if (pBlock.type == blockType) {
-                if (styleVal.length) pBlock.classes[styleKey] = styleVal;
-                else pBlock.classes[styleKey] = '';
+          let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
+          idsArrayRange.forEach((blockId)=>{
+            let pBlock = this.storeList.get(blockId);
+            if (pBlock && pBlock.type == blockType) {
+              if (styleVal.length) pBlock.classes[styleKey] = styleVal;
+              else pBlock.classes[styleKey] = '';
 
-                if (pBlock.isChanged || pBlock.isAudioChanged) {
-                  pBlock.checked = false;
-                  pBlock.checked = true;
-                } else {
-                  pBlock.partUpdate = true;
-                  this.putBlock(pBlock).then(()=>{
-                    if (styleKey == 'table of contents') {
-                      this.$root.$emit('from-book-meta:upd-toc', true);
-                    }
-                  });
-                }
+              if (pBlock.isChanged || pBlock.isAudioChanged) {
+                pBlock.checked = false;
+                pBlock.checked = true;
+              } else {
+                pBlock.partUpdate = true;
+                this.putBlock(pBlock).then(()=>{
+                  if (styleKey == 'table of contents') {
+                    this.$root.$emit('from-book-meta:upd-toc', true);
+                  }
+                });
               }
-              currId = pBlock.chainid;
             }
-          } while (pBlock && pBlock._id !== this.blockSelection.end._id);
+          })
         }
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
@@ -1419,65 +1416,64 @@ export default {
 
     selSecNum (blockType, valKey, currVal) {
       //console.log('selSecNum', blockType, valKey, currVal);
-
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
-          let pBlock, currId = this.blockSelection.start._id;
-          do {
-            pBlock = this.storeList.get(currId);
-            if (pBlock && pBlock.checked) {
-              if (pBlock.type == blockType) {
+          let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
 
-                switch(valKey) {
-                    case 'secNum' : {
-                      if (currVal == 'mixed' || currVal === false) {
-                        if (pBlock.secVal) pBlock.secnum = pBlock.secVal;
-                        else pBlock.secnum = '';
-                      } else {
-                        pBlock.secVal = pBlock.secnum;
-                        pBlock.secnum = false;
-                      }
-                    } break;
-                    case 'secHide' : {
-                      if (currVal == 'mixed' || currVal === false) {
-                        pBlock.secHide = true;
-                      } else {
-                        pBlock.secHide = false;
-                      }
-                    } break;
-                    case 'parNum' : {
-                      if (currVal == 'mixed' || currVal === false) {
-                        pBlock.parnum = '';
-                      } else {
-                        pBlock.parnum = false;
-                      }
-                    } break;
-                    case 'parHide' : {
-                      if (currVal == 'mixed' || currVal === false) {
-                        pBlock.parHide = true;
-                      } else {
-                        pBlock.parHide = false;
-                      }
-                    } break;
-                    default : {
-                    } break;
-                };
+          idsArrayRange.forEach((blockId)=>{
+            let pBlock = this.storeList.get(blockId);
 
-                if (pBlock.isChanged || pBlock.isAudioChanged) {
-                  pBlock.checked = false;
-                  pBlock.checked = true;
-                } else {
-                  pBlock.partUpdate = true;
-                  this.putBlock(pBlock).then(()=>{
-                    if (valKey == 'secNum' || valKey == 'secHide') {
-                      this.$root.$emit('from-book-meta:upd-toc', true);
+            if (pBlock && pBlock.type == blockType) {
+
+              switch(valKey) {
+                  case 'secNum' : {
+                    if (currVal == 'mixed' || currVal === false) {
+                      if (pBlock.secVal) pBlock.secnum = pBlock.secVal;
+                      else pBlock.secnum = '';
+                    } else {
+                      pBlock.secVal = pBlock.secnum;
+                      pBlock.secnum = false;
                     }
-                  });
-                }
+                  } break;
+                  case 'secHide' : {
+                    if (currVal == 'mixed' || currVal === false) {
+                      pBlock.secHide = true;
+                    } else {
+                      pBlock.secHide = false;
+                    }
+                  } break;
+                  case 'parNum' : {
+                    if (currVal == 'mixed' || currVal === false) {
+                      pBlock.parnum = '';
+                    } else {
+                      pBlock.parnum = false;
+                    }
+                  } break;
+                  case 'parHide' : {
+                    if (currVal == 'mixed' || currVal === false) {
+                      pBlock.parHide = true;
+                    } else {
+                      pBlock.parHide = false;
+                    }
+                  } break;
+                  default : {
+                  } break;
+              };
+
+              if (pBlock.isChanged || pBlock.isAudioChanged) {
+                //pBlock.checked = false;
+                //pBlock.checked = true;
+              } else {
+                pBlock.partUpdate = true;
+                this.putBlock(pBlock).then(()=>{
+                  if (valKey == 'secNum' || valKey == 'secHide') {
+                    this.$root.$emit('from-book-meta:upd-toc', true);
+                  }
+                });
               }
-              currId = pBlock.chainid;
             }
-          } while (pBlock && pBlock._id !== this.blockSelection.end._id);
+
+          });
         }
         this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration);
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
