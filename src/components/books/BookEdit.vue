@@ -334,9 +334,10 @@ export default {
 
     loadBookMeta(onPage) {
       if (this.$route.params.hasOwnProperty('bookid')) {
-        if (this.parlistO.cleanLookupsList(this.meta._id)) {
+        //if (this.parlistO.cleanLookupsList(this.meta._id)) {
           this.$store.commit('clear_storeList');
-        }
+          this.$store.commit('clear_storeListO');
+        //}
         this.freeze('loadBookMeta');
         return this.loadBook(this.$route.params.bookid)
         .then((meta)=>{
@@ -346,7 +347,7 @@ export default {
           return this.loadPartOfBookBlocks({
             bookId: this.$route.params.bookid,
             block: startBlock,
-            task: taskType,
+            taskType: taskType,
             onPage: onPage || 10
           }).then((answer)=>{
             this.parlistO.setLookupsList(this.meta._id, answer);
@@ -1739,7 +1740,7 @@ export default {
               this.scrollBarBlocks = this.parlistO.idsArray();
               this.updateScrollSlider();
               //this.lazyLoad();
-              console.log('loadBookBlocks then');
+              //console.log('loadBookBlocks then');
               this.setBlockWatch()
               if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
                 this.$router.push({name: 'BookEdit', params: {}});
