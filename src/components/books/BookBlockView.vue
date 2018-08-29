@@ -66,7 +66,11 @@
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
-              <div class="par-ctrl"><!-- -hidden-->
+              <div v-if="isNumbered" class="par-ctrl -par-num -hidden-hover">
+                <!--<i class="fa fa-hashtag"></i>-->
+                <label ref="parnumRef" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
+              </div>
+              <div class="par-ctrl -hidden">
                 <div class="block-menu">
                   <i class="glyphicon glyphicon-menu-hamburger"
                   @click.prevent="$refs.blockMenu.open($event, block._id)">
@@ -138,19 +142,19 @@
                 <!--<i class="fa fa-trash-o fa-lg"></i>-->
                 <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
 
-                <!--<label v-if="block.type=='header'">start:&nbsp;<input type="checkbox"/></label>&nbsp;-->
                 <template v-if="allowEditing">
-                  <div class="parnum-row">
-                    <label ref="parnumRef" :class="['num -hidden-hover', {'-invisible': block.secHide===true || block.parHide===true }]">{{parnumComp}}</label>
+                  <div v-if="isNumbered"
+                    :class="['parnum-row', {'-locked': blockO.isManual==true}]">
+
                     <input v-if="block.type=='header'"
-                      @input="setNumVal" v-model="blockO.secnum" class="num"
-                      type="text" maxlength="12" size="12"/>
+                      @input="setNumVal" v-model="blockO.secnum"
+                      class="num" type="text" maxlength="12" size="12"/>
                     <input v-if="block.type=='par'"
-                      @input="setNumVal" v-model="blockO.parnum" class="num"
-                      type="text" maxlength="12" size="12"/>
+                      @input="setNumVal" v-model="blockO.parnum"
+                      class="num" type="text" maxlength="12" size="12"/>
+
                   </div>
-                  <div class="par-ctrl-divider"></div>
-                  <i :class="['fa fa-lock', {'-invisible': blockO.isManual!==true || block.secHide===true || block.parHide===true }]"></i>
+                  <!--<div v-else class="parnum-row"></div>-->
                   <div class="par-ctrl-divider"></div>
                   <div class="par-ctrl-divider"></div>
 
@@ -185,7 +189,7 @@
                 </template>
               </div>
               <!--<div class="par-ctrl -hidden">-->
-              <div class="par-ctrl -audio"> <!---hidden-->
+              <div class="par-ctrl -audio -hidden"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
                       <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating"></i>
@@ -682,6 +686,12 @@ export default {
             return this.blockO.parnum;
           }
         } return '';
+      }},
+      isNumbered: { cache: false,
+      get: function () {
+        if (this.block.type == 'par' && this.block.parnum !== false) return true;
+        if (this.block.type == 'header' && this.block.secnum !== false) return true;
+        return false;
       }},
       blockClasses: function () {
           return this.blockTypes[this.block.type];
@@ -2720,7 +2730,8 @@ export default {
         this.putBlockO ({
           rid: this.blockO.rid,
           secnum: this.blockO.secnum,
-          parnum: this.blockO.parnum
+          parnum: this.blockO.parnum,
+          type:  this.block.type
         }).then((blockid)=>{
           console.log('setNumVal then', blockid);
 //           this.isUpdated = true;
@@ -2895,7 +2906,7 @@ export default {
         //this.isUpdated = false;
       },
       'block._rev' (newVal, oldVal) {
-        //console.log('block._rev: ', this.block._rev, 'newVal: ', newVal, 'oldVal: ', oldVal);
+        console.log('block._rev: ', this.block._rev, 'newVal: ', newVal, 'oldVal: ', oldVal);
         if (oldVal) {
           this.isUpdated = true;
           setTimeout(() => {
@@ -3218,6 +3229,16 @@ export default {
             .-hidden {
                 visibility: visible;
             }
+        }
+
+        .-hidden-hover {
+          display: block;
+        }
+
+        &:hover {
+          .-hidden-hover {
+            display: none;
+          }
         }
     }
 
@@ -3542,6 +3563,26 @@ export default {
         &.-audio {
           width: 80px;
         }
+        &.-par-num {
+          width: 180px;
+
+          label.par-num {
+            padding-left: 12px;
+            position: relative;
+            top: 2px;
+            font-size: 18px;
+            font-style: italic;
+
+            &.has-num:before {
+              content: '\0023';/*'\2116';*/
+              font-size: smaller;
+              padding-right: 10px;
+            }
+            &.hide-from {
+              opacity: 0;
+            }
+          }
+        }
 
         .par-ctrl-divider {
           width: 10px;
@@ -3564,57 +3605,24 @@ export default {
           width: 120px;
           height: 20px;
           position: relative;
-          /*background: blue;*/
 
-          &:hover {
-            input.num {
-              display: block;
+            &.-locked:after {
+              font-family: 'FontAwesome';
+              content: "\f023";
+              color: gray;
+              position: absolute;
+              left: 105px;
+              top: 0px;
+              /*&:hover {
+                content: "\f09c";
+              }*/
             }
-          }
 
           input.num {
             width: 120px;
             height: 20px;
             padding-left: 3px;
-            display: none;
-            position: absolute;
-            &:focus {
-              display: block;
-            }
           }
-
-          label.num {
-            line-height: 14px;
-            padding: 2px;
-            padding-left: 4px;
-            width: 120px;
-            background: #dddddd;
-            height: 20px;
-            position: absolute;
-            border: 1px solid #d3d3d3;
-            &.-invisible {
-              color: transparent;
-              background: transparent;
-              border: none;
-            }
-          }
-
-/*          .-hidden {
-              display: none;
-              &:hover {
-                display: block;
-              }
-          }*/
-
-/*          .-hidden-hover {
-              display: block;
-          }
-
-          &:hover {
-              .-hidden-hover {
-                  display: none;
-              }
-          }*/
         }
 
         .fa {
