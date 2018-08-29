@@ -66,7 +66,7 @@
                     <div class="audiofile-player-controls">
                       <i v-if="audiofile.preview && audiofile.preview.end" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'end')"></i>
                     </div>
-                    <div class="audiofile-duration"><span>({{ parseAudioLength(audiofile.duration) }})</span></div>
+                    <div class="audiofile-duration"><span>{{ parseAudioLength(audiofile) }}</span></div>
                   </div>
 
                 </template>
@@ -274,6 +274,15 @@
         if (this.playing) {
           //console.log('FOR ', af)
           this.positions_tmp[this.playing] = {start: start, end: end};
+          if (typeof start !== 'undefined' && typeof end !== 'undefined') {
+            let record = this.audiobook.importFiles.find(f => f.id == this.playing);
+            if (record) {
+              record.positions = {start: start, end: end};
+              this.$forceUpdate();
+            } else {
+
+            }
+          }
         }
       });
       this.$root.$on('book-reimported', () => {
@@ -313,6 +322,13 @@
         this.renaming = id;
       },
       saveAudiobook(reorder = [], removeFiles = [], done = []) {
+        if (removeFiles) {
+          removeFiles.forEach(rf => {
+            if (typeof this.positions_tmp[rf] !== 'undefined') {
+              delete this.positions_tmp[rf];
+            }
+          })
+        }
         let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/audiobooks/' + this.audiobook._id;
         let formData = new FormData();
         //let save_data = this.audiobook;
@@ -564,18 +580,41 @@
         this.paused = false;
         this.playing = false;
       },
-      parseAudioLength(length) {
-        if (!length) {
+      parseAudioLength(record) {
+        if (!record.duration) {
           return '';
         }
-        let l = length.split(':');
-        if (l[0]) {
-          l[0] = parseInt(l[0]);
+        let l = record.duration.split(':');
+        if (l.length === 3) {
+          l.shift();
         }
-        if (l[2]) {
-          l[2] = l[2].split('.').shift();
+        if (l[1]) {
+          l[1] = l[1].split('.').shift();
         }
-        return l.join(':')
+        let length = l.join(':');
+        let selection = this.positions_tmp[record.id] ? this.positions_tmp[record.id] : {};
+        if (record.positions && typeof record.positions.start !== 'undefined' && typeof selection.start === 'undefined') {
+          selection = record.positions;
+        }
+        if (selection && typeof selection.start !== 'undefined' && typeof selection.end !== 'undefined') {
+          let selected = '';
+          let selectionLength = selection.end - selection.start;
+          let selectionStart=parseInt(selectionLength / 60);
+          if (selectionStart < 10) {
+            selectionStart = '0' + selectionStart;
+          }
+          selected+=selectionStart;
+          selected+=':';
+          let selectionEnd=parseInt(selectionLength % 60);
+          if (selectionEnd < 10) {
+            selectionEnd = '0' + selectionEnd;
+          }
+          selected+=selectionEnd;
+          if (selectionStart != l[0] || selectionEnd != l[1]) {
+            length = selected + ' of ' + length;
+          }
+        }
+        return length;
       },
       align(id = null, warn = 2) {
         if (warn >= 2 && this.currentBookCounters.approved_audio_in_range > 0) {
@@ -1197,7 +1236,7 @@
         }
         .audiofile-info {
           display: inline-block;
-          width: 90%;
+          width: 95%;
           white-space: nowrap;
           /*max-width: 80%;*/
           overflow: hidden;
@@ -1209,10 +1248,10 @@
             display: inline-block;
             cursor: pointer;
             white-space: nowrap;
-            max-width: 65%;
+            max-width: 60%;
             overflow: hidden;
             vertical-align: sub;
-            min-width: 65%;
+            min-width: 60%;
           }
           .audiofile-duration {
             display: inline-block;
@@ -1232,6 +1271,7 @@
         .audiofile-options {
           display: inline-block;
           vertical-align: super;
+          width: 3%;
           .btn-group {
             .dropdown-toggle {
                 padding: 6px;
@@ -1287,7 +1327,7 @@
           padding: 2px 12px;
           cursor: pointer;
           &.mark-done {
-            color: green;
+            color: gray;
           }
         }
       }

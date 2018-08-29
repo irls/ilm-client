@@ -410,7 +410,7 @@
                           cursor_position < waveform_position ||
                           cursor_position > waveform_position + waveform_width)) {
                       let scrollPosition = cursor_position > waveform_position + waveform_width ? waveform_position + waveform_width / 2 : cursor_position;
-                      $('.playlist-tracks').scrollLeft(scrollPosition);
+                      $('.playlist-tracks').scrollLeft(scrollPosition);// scrolls to start, changes scroll on click
                   }
                 }
               }
@@ -426,6 +426,12 @@
               let is_single_cursor = end - start == 0;
               if (is_single_cursor && self.contextPosition && self.mode === 'file' &&
                       typeof self.selection.start !== 'undefined' &&
+                      typeof self.selection.end !== 'undefined') {
+                self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
+                return;
+              }
+              if (self.mode === 'file' && Math.abs(end - start) < 0.2 && 
+                      typeof self.selection.start !== 'undefined' && 
                       typeof self.selection.end !== 'undefined') {
                 self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
                 return;
@@ -570,7 +576,7 @@
             if (typeof this.audiosourceEditor !== 'undefined') {
               let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
               let pos_r = this._round(pos, 1);
-              //console.log('click', Math.abs(pos_r - this.mouseSelection.start));
+              //console.log('click', this.mouseSelection.start, Math.abs(pos_r - this.mouseSelection.start));
               if (this.mouseSelection.start !== null && Math.abs(pos_r - this.mouseSelection.start) < 0.1) {
                 //console.log('2', this.cursorPosition, pos_r);
                 if (this.mode === 'block' && e.shiftKey && this.cursorPosition >= 0) {
@@ -1202,6 +1208,7 @@
               this.selection.end = this._round(end, 2);
               let replay = this.isPlaying;
               let wait = this.isPlaying ? [this.pause()] : [];
+              this.cursorPosition = this.selection.start;
               Promise.all(wait)
                 .then(() => {
                   this.plEventEmitter.emit('select', this.selection.start, this.selection.end);

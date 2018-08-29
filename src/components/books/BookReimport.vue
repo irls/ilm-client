@@ -37,10 +37,10 @@
                 <label class='btn btn-default' type="file">
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
-                  <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip,.docx" multiple="false" @change="onFilesChange($event)">
+                  <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip,.docx,.md" multiple="false" @change="onFilesChange($event)">
 
                 </label>
-                <span class="help-block">Book file or ZIP with files and images or Docx with text</span>
+                <span class="help-block">Book file or ZIP with files and images, Docx or Markdown with text</span>
               </div>
 
             </div>
