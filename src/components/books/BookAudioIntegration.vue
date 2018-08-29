@@ -35,14 +35,22 @@
               <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': selections.indexOf(audiofile.id) !== -1}]">
                 <template v-if="audiofile.status == 'processing'">
                   <div class="audiofile-info">
-                    <i>Processing, {{audiofile.name}}</i>
+                    <i>Processing, {{audiofile.title}}</i>
                   </div>
                 </template>
                 <template v-else>
+                  <div v-if="_is('editor', true) || _is('admin')"
+                           class="audiofile-options">
+                    <input type="checkbox" :checked="selections.indexOf(audiofile.id) !== -1"
+                           v-on:click="addSelection(audiofile.id, selections.indexOf(audiofile.id) === -1)"/>
+                  </div>
                   <div :class="['audiofile-info', {'playing': playing == audiofile.id, done: audiofile.done}]">
                     <div class="audiofile-player-controls">
                       <span class="audio-opening" v-if="audioOpening === audiofile.id"></span>
-                      <i v-else class="fa fa-play-circle-o" v-on:click="audiofileClick(audiofile.id, true, $event)"></i>
+                      <!-- <i v-else class="fa fa-play-circle-o" v-on:click="audiofileClick(audiofile.id, true, $event)"></i> -->
+                      <template v-else>
+                        <i v-if="audiofile.preview && audiofile.preview.start" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'start', $event)"></i>
+                      </template>
                       <!-- <i class="fa fa-play-circle-o red" v-on:click="play()" v-if="paused === audiofile.id"></i>
                       <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
                       <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
@@ -50,12 +58,15 @@
                     <div class="audiofile-name">
                       <span v-if="renaming !== audiofile.id"
                             :class="['audiofile-name-edit']"
-                            @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.name}}</span>
-                      <input id="rename-input" type="text" v-model="audiofile.name" class="audiofile-name-edit"
+                            @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.title ? audiofile.title : audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
+                      <input id="rename-input" type="text" v-model="audiofile.title" class="audiofile-name-edit"
                            @focusout="saveAudiobook()"
                            v-else />
                     </div>
-                    <div class="audiofile-duration"><span>({{ parseAudioLength(audiofile.duration) }})</span></div>
+                    <div class="audiofile-player-controls">
+                      <i v-if="audiofile.preview && audiofile.preview.end" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'end')"></i>
+                    </div>
+                    <div class="audiofile-duration"><span>{{ parseAudioLength(audiofile) }}</span></div>
                   </div>
 
                 </template>
@@ -192,7 +203,8 @@
         positions_tmp: {},
         alignProcess: false,
         audioOpening: false,
-        activeTabIndex: 0
+        activeTabIndex: 0,
+        audio_element: false
       }
     },
     mixins: [task_controls, api_config, access],
@@ -262,6 +274,15 @@
         if (this.playing) {
           //console.log('FOR ', af)
           this.positions_tmp[this.playing] = {start: start, end: end};
+          if (typeof start !== 'undefined' && typeof end !== 'undefined') {
+            let record = this.audiobook.importFiles.find(f => f.id == this.playing);
+            if (record) {
+              record.positions = {start: start, end: end};
+              this.$forceUpdate();
+            } else {
+
+            }
+          }
         }
       });
       this.$root.$on('book-reimported', () => {
@@ -301,6 +322,13 @@
         this.renaming = id;
       },
       saveAudiobook(reorder = [], removeFiles = [], done = []) {
+        if (removeFiles) {
+          removeFiles.forEach(rf => {
+            if (typeof this.positions_tmp[rf] !== 'undefined') {
+              delete this.positions_tmp[rf];
+            }
+          })
+        }
         let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/audiobooks/' + this.audiobook._id;
         let formData = new FormData();
         //let save_data = this.audiobook;
@@ -320,7 +348,7 @@
           if (renaming) {
             rename.push({
                 id: renaming.id,
-                name: renaming.name
+                title: renaming.title
               });
           }
         }
@@ -443,6 +471,26 @@
           }
         }
       }, 500),
+      playPreview(id, preview) {
+        if (!this._is('editor', true) && !this._is('admin')) {
+          return;
+        }
+        if (id === this.playing) {
+          return;
+        }
+        if (id) {let record = this.audiobook.importFiles.find(f => {
+            return f.id == id;
+          })
+          if (record && record.preview && record.preview[preview]) {
+            if (!this.audio_element) {
+              this.audio_element = document.createElement('audio')
+            }
+            this.audio_element.src = process.env.ILM_API + this.audiobook.importUrl + record.preview[preview];
+            this.audio_element.play();
+          }
+        }
+        this.paused = false;
+      },
       checkAll(event, value) {
         if (event && event.target) {
           value = event.target.checked;
@@ -532,18 +580,41 @@
         this.paused = false;
         this.playing = false;
       },
-      parseAudioLength(length) {
-        if (!length) {
+      parseAudioLength(record) {
+        if (!record.duration) {
           return '';
         }
-        let l = length.split(':');
-        if (l[0]) {
-          l[0] = parseInt(l[0]);
+        let l = record.duration.split(':');
+        if (l.length === 3) {
+          l.shift();
         }
-        if (l[2]) {
-          l[2] = l[2].split('.').shift();
+        if (l[1]) {
+          l[1] = l[1].split('.').shift();
         }
-        return l.join(':')
+        let length = l.join(':');
+        let selection = this.positions_tmp[record.id] ? this.positions_tmp[record.id] : {};
+        if (record.positions && typeof record.positions.start !== 'undefined' && typeof selection.start === 'undefined') {
+          selection = record.positions;
+        }
+        if (selection && typeof selection.start !== 'undefined' && typeof selection.end !== 'undefined') {
+          let selected = '';
+          let selectionLength = selection.end - selection.start;
+          let selectionStart=parseInt(selectionLength / 60);
+          if (selectionStart < 10) {
+            selectionStart = '0' + selectionStart;
+          }
+          selected+=selectionStart;
+          selected+=':';
+          let selectionEnd=parseInt(selectionLength % 60);
+          if (selectionEnd < 10) {
+            selectionEnd = '0' + selectionEnd;
+          }
+          selected+=selectionEnd;
+          if (selectionStart != l[0] || selectionEnd != l[1]) {
+            length = selected + ' of ' + length;
+          }
+        }
+        return length;
       },
       align(id = null, warn = 2) {
         if (warn >= 2 && this.currentBookCounters.approved_audio_in_range > 0) {
@@ -1165,9 +1236,9 @@
         }
         .audiofile-info {
           display: inline-block;
-          width: 305px;
+          width: 95%;
           white-space: nowrap;
-          max-width: 80%;
+          /*max-width: 80%;*/
           overflow: hidden;
           .audiofile-player-controls {
             width: 19px;
@@ -1177,12 +1248,15 @@
             display: inline-block;
             cursor: pointer;
             white-space: nowrap;
-            max-width: 65%;
+            max-width: 60%;
             overflow: hidden;
+            vertical-align: sub;
+            min-width: 60%;
           }
           .audiofile-duration {
             display: inline-block;
             overflow: hidden;
+            vertical-align: sub;
           }
           /*&.playing {
             color: maroon;
@@ -1196,6 +1270,8 @@
         }
         .audiofile-options {
           display: inline-block;
+          vertical-align: super;
+          width: 3%;
           .btn-group {
             .dropdown-toggle {
                 padding: 6px;
@@ -1251,7 +1327,7 @@
           padding: 2px 12px;
           cursor: pointer;
           &.mark-done {
-            color: green;
+            color: gray;
           }
         }
       }

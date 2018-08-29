@@ -506,7 +506,7 @@
                   <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled}]"
                     @click.prevent="reworkBlock">
                     Need work</div>
-                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled}]"
+                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
                     @click.prevent="approveBlock">
                     Approve</div>
 
@@ -663,7 +663,8 @@ export default {
       audioSelectPos: {
         start: Number,
         end: Number
-      }
+      },
+      isApproving: false
     }
   },
   components: {
@@ -673,7 +674,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode'],
+  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'approveWaiting'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -1219,6 +1220,16 @@ export default {
             this.$refs.blockContent.innerHTML = block.content;
             this.$refs.blockContent.focus();
           }
+          this.block.footnotes = block.footnotes ? block.footnotes : [];
+          this.block.footnotes.forEach((ftn, ftnIdx) => {
+            let ref = this.$refs['footnoteContent_' + ftnIdx];
+            if (ref && ref[0]) {
+              ref[0].innerHTML = ftn.content;
+            }
+          });
+          if (this.block.footnotes.length > 0) {
+            this.initFtnEditor(true);
+          }
 
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
@@ -1520,6 +1531,10 @@ export default {
       },
 
       actionWithBlock: function(ev) {
+        if (this.approveWaiting) {
+          return;
+        }
+        this.isApproving = true;
         this.assembleBlockProxy(ev)
         .then(()=>{
           let task = this.tc_getBlockTask(this.block._id);
@@ -1549,6 +1564,7 @@ export default {
 
           this.tc_approveBookTask(task)
           .then(response => {
+            this.isApproving = false;
             if (response.status == 200) {
               if (typeof response.data._id !== 'undefined') {
                 this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
@@ -1557,7 +1573,9 @@ export default {
               this.getBloksUntil('unresolved', true, this.block._id)
             }
           })
-          .catch(err => {});
+          .catch(err => {
+            this.isApproving = false;
+          });
         });
 
         this.$root.$emit('closeFlagPopup', true);
@@ -1751,12 +1769,22 @@ export default {
       addFootnote: function() {
         //console.log('this.range', this.range);
         let el = document.createElement('SUP');
-        el.setAttribute('data-idx', this.block.footnotes.length);
+        el.setAttribute('data-idx', this.block.footnotes.length + 1);
         this.range.insertNode(el);
-        let pos = this.updFootnotes(this.block.footnotes.length);
+        this.block.footnotes.forEach((ftn, ftnIdx) => {
+          let ref = this.$refs['footnoteContent_' + ftnIdx]
+          if (ref && ref[0]) {
+            this.block.setContentFootnote(ftnIdx, ref[0].innerHTML);
+          }
+        });
+        let pos = this.updFootnotes(this.block.footnotes.length + 1);
         this.block.footnotes.splice(pos, 0, new FootNote({}));
-        this.isChanged = false; // to be shure to update view
+        this.$forceUpdate();
         this.isChanged = true;
+        let ref = this.$refs['footnoteContent_' + pos];
+        if (ref && ref[0]) {
+          ref[0].innerHTML = this.block.footnotes[pos].content;
+        }
         this.pushChange('footnotes');
         Vue.nextTick(() => {
           //this.destroyEditor();
@@ -1766,6 +1794,12 @@ export default {
       delFootnote: function(pos) {
         $('#'+this.block._id).find(`[data-idx='${pos+1}']`).remove();
         this.updFootnotes();
+        this.block.footnotes.forEach((ftn, ftnIdx) => {
+          let ref = this.$refs['footnoteContent_' + ftnIdx]
+          if (ref && ref[0]) {
+            this.block.setContentFootnote(ftnIdx, ref[0].innerHTML);
+          }
+        });
         this.block.footnotes.splice(pos, 1);
         this.isChanged = false; // to be shure to update view
         this.isChanged = true;
@@ -2438,6 +2472,7 @@ export default {
             }
           }
         }
+        this.isAudioChanged = true;
       },
       evFromAudioeditorSaveAndRealign (blockId) {
         if (blockId == this.check_id) {
@@ -2833,7 +2868,10 @@ export default {
           this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
           if (this.block.footnotes && this.block.footnotes.length) {
             this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-              this.block.footnotes[footnoteIdx].content = $('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html();
+              let ref = this.$refs['footnoteContent_' + footnoteIdx];
+              if (ref && ref[0]) {
+                this.block.footnotes[footnoteIdx].content = ref[0].innerHTML;
+              }
             });
           }
         }
@@ -3091,6 +3129,18 @@ export default {
               $('body').off('keypress', this._handleSpacePress);
             }
           }
+        }
+      },
+      'isApproving': {
+        handler(val) {
+          if (this._is('proofer', true)) {
+            this.$root.$emit('block-approving', val);
+          }
+        }
+      },
+      'approveWaiting': {
+        handler(val) {
+          //console.log(this.block._id, 'approveWaiting', val);
         }
       }
   },
@@ -3404,6 +3454,10 @@ export default {
           }
           .fa-save {
             color: green;
+          }
+          &.approve-waiting {
+            color: gray;
+            cursor: not-allowed;
           }
         }
     }

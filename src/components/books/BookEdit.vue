@@ -32,6 +32,7 @@
               :allowSetEnd="allowSetEnd"
               :prevId="getPrevId(blockId)"
               :mode="mode"
+              :approveWaiting="approveWaiting"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
@@ -62,6 +63,13 @@
           <button type="button" class="btn btn-default" @click="doJoinBlocks.show = false;">Cancel</button>
           <button v-if="doJoinBlocks.direction == 'previous'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
           <button v-if="doJoinBlocks.direction == 'next'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
+        </div>
+      </modal>
+      <modal v-model="doJoinBlocks.showAudio" effect="fade" cancel-text="Cancel" title="Join blocks saving">
+        <div slot="modal-body" class="modal-body">Discard unsaved audio changes?</div>
+        <div slot="modal-footer" class="modal-footer">
+          <button type="button" class="btn btn-default" @click="doJoinBlocks.showAudio = false;">Cancel</button>
+          <button type="button" class="btn btn-primary" @click="joinBlocks()">Discard</button>
         </div>
       </modal>
       <modal v-model="unableJoinMessage" effect="fade" cancel-text="Close" title="Join blocks error">
@@ -157,6 +165,7 @@ export default {
       unableJoinMessage: false,
       doJoinBlocks: {
         show: false,
+        showAudio: false,
         action: false,
         block: {},
         block_Idx: false
@@ -179,7 +188,8 @@ export default {
       isNeedUp: true,
       isNeedDown: true,
       recordingState: '',
-      recordingBlockId: null
+      recordingBlockId: null,
+      approveWaiting: false
 
     }
   },
@@ -1066,6 +1076,14 @@ export default {
                 this.unableJoinMessage = true;
                 return Promise.reject('type');
               }
+              
+              
+              let elBlock = this.$children.find(c => {
+                return c.$el.id == block._id;
+              });
+              let elNext = this.$children.find(c => {
+                return c.$el.id == blockBefore._id;
+              });
 
               if (!this.doJoinBlocks.show
                   && (this.parlist.get(block._id).isChanged || this.parlist.get(blockBefore._id).isChanged))
@@ -1075,6 +1093,14 @@ export default {
                 this.doJoinBlocks.block = block;
                 this.doJoinBlocks.direction = direction;
                 this.doJoinBlocks.show = true;
+              } else if (!this.doJoinBlocks.showAudio && 
+                      (this.parlist.get(block._id).isAudioChanged || 
+                      this.parlist.get(blockBefore._id).isAudioChanged ||
+                      (elBlock && elBlock.audioEditFootnote.isAudioChanged) || 
+                      (elNext && elNext.audioEditFootnote.isAudioChanged))) {
+                this.doJoinBlocks.block = block;
+                this.doJoinBlocks.direction = direction;
+                this.doJoinBlocks.showAudio = true;
               }
               else
               {
@@ -1088,11 +1114,27 @@ export default {
                 if (currBlockRef && prevBlockRef) {
                   this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
                   this.freeze('joinBlocks');
+                  currBlockRef.isAudioChanged = false;
+                  let el = this.$children.find(c => {
+                    return c.$el.id == currBlockRef._id;
+                  });
+                  if (el) {
+                    el.evFromAudioeditorClosed(currBlockRef._id);
+                  }
+                  this.$root.$emit('for-audioeditor:force-close');
                   currBlockRef.assembleBlockProxy()
                   .then(()=>{
+                    prevBlockRef.isAudioChanged = false;
+                    let el = this.$children.find(c => {
+                      return c.$el.id == prevBlockRef._id;
+                    });
+                    if (el) {
+                      el.evFromAudioeditorClosed(prevBlockRef._id);
+                    }
                     prevBlockRef.assembleBlockProxy()
                     .then(()=>{
                       this.doJoinBlocks.show = false;
+                      this.doJoinBlocks.showAudio = false;
                       this.doJoinBlocks.block = {};
                       return api.post(api_url, {
                         resultBlock_id: blockBefore._id,
@@ -1134,6 +1176,12 @@ export default {
                 this.unableJoinMessage = true;
                 return Promise.reject('type');
               }
+              let elBlock = this.$children.find(c => {
+                return c.$el.id == block._id;
+              });
+              let elNext = this.$children.find(c => {
+                return c.$el.id == block.chainid;
+              });
               if (!this.doJoinBlocks.show
               && (this.parlist.get(block._id).isChanged || this.parlist.get(block.chainid).isChanged))
               {
@@ -1141,6 +1189,14 @@ export default {
                 this.doJoinBlocks.direction = direction;
                 this.doJoinBlocks.show = true;
 
+              } else if (!this.doJoinBlocks.showAudio && 
+                      (this.parlist.get(block._id).isAudioChanged || 
+                      this.parlist.get(block.chainid).isAudioChanged || 
+                      (elBlock && elBlock.audioEditFootnote.isAudioChanged) || 
+                      (elNext && elNext.audioEditFootnote.isAudioChanged))) {
+                this.doJoinBlocks.block = block;
+                this.doJoinBlocks.direction = direction;
+                this.doJoinBlocks.showAudio = true;
               }
               else
               {
@@ -1154,11 +1210,27 @@ export default {
                 if (currBlockRef && nextBlockRef) {
                   this.freeze('joinBlocks');
                   this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
+                  currBlockRef.isAudioChanged = false;
+                  let el = this.$children.find(c => {
+                    return c.$el.id == currBlockRef._id;
+                  });
+                  if (el) {
+                    el.evFromAudioeditorClosed(currBlockRef._id);
+                  }
+                  this.$root.$emit('for-audioeditor:force-close');
                   currBlockRef.assembleBlockProxy()
                   .then(()=>{
+                    nextBlockRef.isAudioChanged = false;
+                    let el = this.$children.find(c => {
+                      return c.$el.id == nextBlockRef._id;
+                    });
+                    if (el) {
+                      el.evFromAudioeditorClosed(nextBlockRef._id);
+                    }
                     nextBlockRef.assembleBlockProxy()
                     .then(()=>{
                       this.doJoinBlocks.show = false;
+                      this.doJoinBlocks.showAudio = false;
                       this.doJoinBlocks.block = {};
                       return api.post(api_url, {
                         resultBlock_id: block._id,
@@ -1654,6 +1726,9 @@ export default {
     handleScroll(ev) {
       //console.log('handleScroll');
       this.$refs.contentScrollWrapRef.scrollTo(0,0);
+    },
+    _toggleApproveWaiting(val) {
+      this.approveWaiting = val;
     }
 
   },
@@ -1730,6 +1805,7 @@ export default {
       });
 
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
+      this.$root.$on('block-approving', this._toggleApproveWaiting);
   },
 
   beforeDestroy:  function() {
@@ -1741,6 +1817,7 @@ export default {
     this.$root.$off('for-bookedit:scroll-to-block');
     this.$root.$off('book-reimported');
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
+    this.$root.$off('block-approving', this._toggleApproveWaiting)
   },
   watch: {
     'meta._id': {

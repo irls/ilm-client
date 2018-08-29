@@ -189,6 +189,7 @@
         this.$root.$on('for-audioeditor:reload-text', this._setText);
         this.$root.$on('for-audioeditor:select', this.select);
         this.$root.$on('for-audioeditor:close', this.close);
+        this.$root.$on('for-audioeditor:force-close', this.forceClose);
         this.$root.$on('start-align', () => {
           this.alignProcess = true;
         })
@@ -203,6 +204,7 @@
           this.audiosourceEditor = null;
         }
         this.$root.$off('for-audioeditor:close', this.close);
+        this.$root.$off('for-audioeditor:force-close', this.forceClose);
         this.$root.$off('for-audioeditor:load-and-play', this.load);
         this.$root.$off('for-audioeditor:load', this.setAudio);
         this.$root.$off('for-audioeditor:reload-text', this._setText);
@@ -326,9 +328,9 @@
                 zoom = this.zoomOut();
               }
             } else {
-              let zoom = this.zoomIn();// if previously loaded file audio - set zoom level to max zoom in
+              let zoom = this.zoomIn(100);// if previously loaded file audio - set zoom level to max zoom in
               while(zoom) {
-                zoom = this.zoomIn();
+                zoom = this.zoomIn(100);
               }
             }
           }
@@ -408,7 +410,7 @@
                           cursor_position < waveform_position ||
                           cursor_position > waveform_position + waveform_width)) {
                       let scrollPosition = cursor_position > waveform_position + waveform_width ? waveform_position + waveform_width / 2 : cursor_position;
-                      $('.playlist-tracks').scrollLeft(scrollPosition);
+                      $('.playlist-tracks').scrollLeft(scrollPosition);// scrolls to start, changes scroll on click
                   }
                 }
               }
@@ -424,6 +426,12 @@
               let is_single_cursor = end - start == 0;
               if (is_single_cursor && self.contextPosition && self.mode === 'file' &&
                       typeof self.selection.start !== 'undefined' &&
+                      typeof self.selection.end !== 'undefined') {
+                self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
+                return;
+              }
+              if (self.mode === 'file' && Math.abs(end - start) < 0.2 && 
+                      typeof self.selection.start !== 'undefined' && 
                       typeof self.selection.end !== 'undefined') {
                 self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
                 return;
@@ -568,7 +576,7 @@
             if (typeof this.audiosourceEditor !== 'undefined') {
               let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
               let pos_r = this._round(pos, 1);
-              //console.log('click', Math.abs(pos_r - this.mouseSelection.start));
+              //console.log('click', this.mouseSelection.start, Math.abs(pos_r - this.mouseSelection.start));
               if (this.mouseSelection.start !== null && Math.abs(pos_r - this.mouseSelection.start) < 0.1) {
                 //console.log('2', this.cursorPosition, pos_r);
                 if (this.mode === 'block' && e.shiftKey && this.cursorPosition >= 0) {
@@ -703,7 +711,14 @@
             return Promise.resolve();
           }
         },
-        zoomIn() {
+        zoomIn(till = false) {
+          if (till !== false) {
+            let index = this.zoomLevels.indexOf(this.zoomLevel);
+            --index;
+            if (!this.zoomLevels[index] || this.zoomLevels[index] < till) {
+              return false;
+            }
+          }
           if (this.allowZoomIn) {
             this._setDraggableOptions();
             this.plEventEmitter.emit('zoomin');
@@ -816,6 +831,16 @@
             this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
             this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
           }
+        },
+        forceClose() {
+          if (this.plEventEmitter) {
+            this.plEventEmitter.emit('automaticscroll', false);
+            this.plEventEmitter.emit('clear');
+            this._clearWordSelection();
+          }
+          this._setDefaults();
+          this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
+          this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
         },
         addSilence() {
           if (this.silenceLength > 0 && this.cursorPosition >= 0) {
@@ -1181,8 +1206,17 @@
             if (start !== false && end !== false && start < end) {
               this.selection.start = this._round(start, 2);
               this.selection.end = this._round(end, 2);
-              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-              this._showSelectionBorders(true);
+              let replay = this.isPlaying;
+              let wait = this.isPlaying ? [this.pause()] : [];
+              this.cursorPosition = this.selection.start;
+              Promise.all(wait)
+                .then(() => {
+                  this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                  this._showSelectionBorders(true);
+                  if (replay) {
+                    this.play();
+                  }
+                })
               //this.setSelectionStart(start);
               //this.setSelectionEnd(end);
               return true;
@@ -1464,7 +1498,17 @@
             return audio && audio.blockMap ? audio.blockMap : {};
           }
         },
-        ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'hasLocks', 'currentAudiobook'])
+        blockSelection: {
+          get() {
+            return this.mode === 'file' ? this.blkSelection : {};
+          }
+        },
+        ...mapGetters({
+          currentBookMeta: 'currentBookMeta', 
+          blkSelection: 'blockSelection', 
+          alignCounter: 'alignCounter', 
+          hasLocks: 'hasLocks', 
+          currentAudiobook: 'currentAudiobook'})
       },
       watch: {
         'cursorPosition': {
