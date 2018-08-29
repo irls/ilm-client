@@ -320,6 +320,13 @@
         this.renaming = id;
       },
       saveAudiobook(reorder = [], removeFiles = [], done = []) {
+        if (removeFiles) {
+          removeFiles.forEach(rf => {
+            if (typeof this.positions_tmp[rf] !== 'undefined') {
+              delete this.positions_tmp[rf];
+            }
+          })
+        }
         let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/audiobooks/' + this.audiobook._id;
         let formData = new FormData();
         //let save_data = this.audiobook;
