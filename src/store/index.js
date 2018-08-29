@@ -2045,9 +2045,9 @@ export const store = new Vuex.Store({
           clearInterval(state.alignWatch);
         }
         dispatch('getBookAlign');
-//         state.alignWatch = setInterval(() => {
-//           dispatch('getBookAlign');
-//         }, 10000);
+        state.alignWatch = setInterval(() => {
+          dispatch('getBookAlign');
+        }, 10000);
       }
     },
     getBookAlign({state, commit, dispatch}) {
@@ -2111,9 +2111,9 @@ export const store = new Vuex.Store({
       if (state.audiobookWatch) {
         clearInterval(state.audiobookWatch);
       }
-//       setInterval(() => {
-//         dispatch('getAudioBook')
-//       }, 10000);
+      setInterval(() => {
+        dispatch('getAudioBook')
+      }, 10000);
     }
   }
 })
