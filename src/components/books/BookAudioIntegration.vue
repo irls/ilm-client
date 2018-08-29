@@ -274,12 +274,14 @@
         if (this.playing) {
           //console.log('FOR ', af)
           this.positions_tmp[this.playing] = {start: start, end: end};
-          let record = this.audiobook.importFiles.find(f => f.id == this.playing);
-          if (record) {
-            record.positions = {start: start, end: end};
-            this.$forceUpdate();
-          } else {
-            
+          if (typeof start !== 'undefined' && typeof end !== 'undefined') {
+            let record = this.audiobook.importFiles.find(f => f.id == this.playing);
+            if (record) {
+              record.positions = {start: start, end: end};
+              this.$forceUpdate();
+            } else {
+
+            }
           }
         }
       });
