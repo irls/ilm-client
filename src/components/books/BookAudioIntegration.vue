@@ -1318,7 +1318,7 @@
           padding: 2px 12px;
           cursor: pointer;
           &.mark-done {
-            color: green;
+            color: gray;
           }
         }
       }
