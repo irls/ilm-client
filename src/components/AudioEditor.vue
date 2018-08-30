@@ -1211,9 +1211,9 @@
               this.selection.end = this._round(end, 2);
               let replay = this.isPlaying;
               let wait = this.isPlaying ? [this.pause()] : [];
-              this.cursorPosition = this.selection.start;
               Promise.all(wait)
                 .then(() => {
+                  this.cursorPosition = this.selection.start;
                   this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
                   this._showSelectionBorders(true);
                   if (replay) {
