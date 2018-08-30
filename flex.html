@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Title</title>
+<style>
+	html,body{height:100%; margin:0; padding:0;}
+</style>
+</head>
+<body>
+
+<div style="height:100%; display:flex; flex-direction: column; background: yellow;">
+    <div style="min-height: 50px; height: 50px; background: AntiqueWhite;">Top menu</div>
+    <div style="flex-grow: 2; background: LightBlue; display:flex; flex-direction: row-reverse; overflow-y:auto;">
+
+            <div style="flex-grow: 2; max-width: 75%; background: LawnGreen; display:flex; flex-direction: column;">
+
+                  <div style="min-height: 50px; background: LightSalmon;">Secondary menu</div>
+                  <div style="flex-grow: 2; background: LightGoldenRodYellow; display:flex; flex-direction: row; overflow-y:auto;">
+
+                        <div style="flex-grow: 2; background: MediumPurple; overflow-y:auto;">
+
+                        The align-content property aligns a flex container’s lines within the flex container when there is extra space
+                        in the cross-axis, similar to how justify-content aligns individual items within the main-axis. Note,
+                        this property has no effect on a single-line flex container. Values have the following meanings:
+                        Note: Only multi-line flex containers ever have free space in the cross-axis for lines to be aligned in, because in a single-line flex container the sole line automatically stretches to fill the space.
+                        Applies to: flex containers.
+                        Initial: stretch.
+                        flex-start
+                        Lines are packed toward the start of the flex container. The cross-start edge of the first line in the flex container is placed flush with the cross-start edge of the flex container, and each subsequent line is placed flush with the preceding line.
+                        flex-end
+                        Lines are packed toward the end of the flex container. The cross-end edge of the last line is placed flush with the cross-end edge of the flex container, and each preceding line is placed flush with the subsequent line.
+                        center
+                        Lines are packed toward the center of the flex container. The lines in the flex container are placed flush with each other and aligned in the center of the flex container, with equal amounts of space between the cross-start content edge of the flex container and the first line in the flex container, and between the cross-end content edge of the flex container and the last line in the flex container. (If the leftover free-space is negative, the lines will overflow equally in both directions.)
+                        space-between
+                        Lines are evenly distributed in the flex container. If the leftover free-space is negative this value is identical to flex-start. Otherwise, the cross-start edge of the first line in the flex container is placed flush with the cross-start content edge of the flex container, the cross-end edge of the last line in the flex container is placed flush with the cross-end content edge of the flex container, and the remaining lines in the flex container are distributed so that the spacing between any two adjacent lines is the same.
+                        space-around
+                        Lines are evenly distributed in the flex container, with half-size spaces on either end. If the leftover free-space is negative this value is identical to center. Otherwise, the lines in the flex container are distributed such that the spacing between any two adjacent lines is the same, and the spacing between the first/last lines and the flex container edges is half the size of the spacing between flex lines.
+                        stretch
+                        Lines stretch to take up the remaining space. If the leftover free-space is negative, this value is identical to flex-start. Otherwise, the free-space is split equally between all of the lines, increasing their cross size.The align-content property aligns a flex container’s lines within the flex container when there is extra space in the cross-axis, similar to how justify-content aligns individual items within the main-axis. Note, this property has no effect on a single-line flex container. Values have the following meanings:
+                        Note: Only multi-line flex containers ever have free space in the cross-axis for lines to be aligned in, because in a single-line flex container the sole line automatically stretches to fill the space.
+                        Applies to: flex containers.
+                        Initial: stretch.
+                        flex-start
+                        Lines are packed toward the start of the flex container. The cross-start edge of the first line in the flex container is placed flush with the cross-start edge of the flex container, and each subsequent line is placed flush with the preceding line.
+                        flex-end
+                        Lines are packed toward the end of the flex container. The cross-end edge of the last line is placed flush with the cross-end edge of the flex container, and each preceding line is placed flush with the subsequent line.
+                        center
+                        Lines are packed toward the center of the flex container. The lines in the flex container are placed flush with each other and aligned in the center of the flex container, with equal amounts of space between the cross-start content edge of the flex container and the first line in the flex container, and between the cross-end content edge of the flex container and the last line in the flex container. (If the leftover free-space is negative, the lines will overflow equally in both directions.)
+                        space-between
+                        Lines are evenly distributed in the flex container. If the leftover free-space is negative this value is identical to flex-start. Otherwise, the cross-start edge of the first line in the flex container is placed flush with the cross-start content edge of the flex container, the cross-end edge of the last line in the flex container is placed flush with the cross-end content edge of the flex container, and the remaining lines in the flex container are distributed so that the spacing between any two adjacent lines is the same.
+                        space-around
+                        Lines are evenly distributed in the flex container, with half-size spaces on either end. If the leftover free-space is negative this value is identical to center. Otherwise, the lines in the flex container are distributed such that the spacing between any two adjacent lines is the same, and the spacing between the first/last lines and the flex container edges is half the size of the spacing between flex lines.
+                        stretch
+                        Lines stretch to take up the remaining space. If the leftover free-space is negative, this value is identical to flex-start. Otherwise, the free-space is split equally between all of the lines, increasing their cross size.The align-content property aligns a flex container’s lines within the flex container when there is extra space in the cross-axis, similar to how justify-content aligns individual items within the main-axis. Note, this property has no effect on a single-line flex container. Values have the following meanings:
+                        Note: Only multi-line flex containers ever have free space in the cross-axis for lines to be aligned in, because in a single-line flex container the sole line automatically stretches to fill the space.
+                        Applies to: flex containers.
+                        Initial: stretch.
+                        flex-start
+                        Lines are packed toward the start of the flex container. The cross-start edge of the first line in the flex container is placed flush with the cross-start edge of the flex container, and each subsequent line is placed flush with the preceding line.
+                        flex-end
+                        Lines are packed toward the end of the flex container. The cross-end edge of the last line is placed flush with the cross-end edge of the flex container, and each preceding line is placed flush with the subsequent line.
+                        center
+                        Lines are packed toward the center of the flex container. The lines in the flex container are placed flush with each other and aligned in the center of the flex container, with equal amounts of space between the cross-start content edge of the flex container and the first line in the flex container, and between the cross-end content edge of the flex container and the last line in the flex container. (If the leftover free-space is negative, the lines will overflow equally in both directions.)
+                        space-between
+                        Lines are evenly distributed in the flex container. If the leftover free-space is negative this value is identical to flex-start. Otherwise, the cross-start edge of the first line in the flex container is placed flush with the cross-start content edge of the flex container, the cross-end edge of the last line in the flex container is placed flush with the cross-end content edge of the flex container, and the remaining lines in the flex container are distributed so that the spacing between any two adjacent lines is the same.
+                        space-around
+                        Lines are evenly distributed in the flex container, with half-size spaces on either end. If the leftover free-space is negative this value is identical to center. Otherwise, the lines in the flex container are distributed such that the spacing between any two adjacent lines is the same, and the spacing between the first/last lines and the flex container edges is half the size of the spacing between flex lines.
+                        stretch
+                        Lines stretch to take up the remaining space. If the leftover free-space is negative, this value is identical to flex-start. Otherwise, the free-space is split equally between all of the lines, increasing their cross size.
+
+                        </div>
+                        <div style="min-width: 50px; max-width: 50px; background: LimeGreen;"></div>
+
+                  </div>
+
+            </div>
+            <div style="min-width: 350px; max-width: 25%; background: LightSeaGreen; overflow-y:auto;">
+              he align-content property aligns a flex container’s lines within the flex container when there is extra space
+              in the cross-axis, similar to how justify-content aligns individual items within the main-axis. Note,
+              this property has no effect on a single-line flex container. Values have the following meanings:
+              Note: Only multi-line flex containers ever have free space in the cross-axis for lines to be aligned in, because in a single-line flex container the sole line automatically stretches to fill the space.
+              Applies to: flex containers.
+              Initial: stretch.
+              flex-start
+              Lines are packed toward the start of the flex container. The cross-start edge of the first line in the flex container is placed flush with the cross-start edge of the flex container, and each subsequent line is placed flush with the preceding line.
+              flex-end
+              Lines are packed toward the end of the flex container. The cross-end edge of the last line is placed flush with the cross-end edge of the flex container, and each preceding line is placed flush with the subsequent line.
+              center
+              Lines are packed toward the center of the flex container. The lines in the flex container are placed flush with each other and aligned in the center of the flex container, with equal amounts of space between the cross-start content edge of the flex container and the first line in the flex container, and between the cross-end content edge of the flex container and the last line in the flex container. (If the leftover free-space is negative, the lines will overflow equally in both directions.)
+              space-between
+              Lines are evenly distributed in the flex container. If the leftover free-space is negative this value is identical to flex-start. Otherwise, the cross-start edge of the first line in the flex container is placed flush with the cross-start content edge of the flex container, the cross-end edge of the last line in the flex container is placed flush with the cross-end content edge of the flex container, and the remaining lines in the flex container are distributed so that the spacing between any two adjacent lines is the same.
+              space-around
+              Lines are evenly distributed in the flex container, with half-size spaces on either end. If the leftover free-space is negative this value is identical to center. Otherwise, the lines in the flex container are distributed such that the spacing between any two adjacent lines is the same, and the spacing between the first/last lines and the flex container edges is half the size of the spacing between flex lines.
+            </div>
+
+    </div>
+</div>
+
+</body>
+</html>

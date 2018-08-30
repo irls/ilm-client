@@ -1,21 +1,23 @@
 [
   {
-    "rank": 12,
+    "rank": "admin",
     "name": "Admin"
   }, {
-    "rank": 13,
-    "name": "Researcher"
-  }, {
-    "rank": 14,
+    "rank": "editor",
     "name": "Editor"
   }, {
-    "rank": 15,
-    "name": "Voice Artist"
+    "rank": "engineer",
+    "name": "Engineer"
   }, {
-    "rank": 16,
-    "name": "Audio Engineer"
-  }, {
-    "rank": 17,
-    "name": "Alignment"
+    "rank": "librarian",
+    "name": "Librarian"
+  },
+  {
+    "rank": "proofer",
+    "name": "Proofer"
+  },
+  {
+    "rank": "narrator",
+    "name": "Narrator"
   }
 ]

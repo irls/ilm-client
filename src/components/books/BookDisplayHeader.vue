@@ -1,11 +1,11 @@
 <template>
   <div class='titleblock ocean'>
   <table><tr>
-    <td><img class='cover' :src='book.meta.coverimg'/></td>
+    <td><img class='cover' v-if="meta" :src='meta.coverimg'/></td>
     <td>
-      <h1 class='title' v-text='book.meta.title' />
-      <h2 class='subhead author' v-text='book.meta.author' />
-      <p v-text='book.meta.description' />
+      <h1 class='title' v-text='meta.title' />
+      <h2 class='subhead author' v-text='meta.author' />
+      <p v-text='meta.description' />
     </td></tr>
   </table>
 
@@ -21,6 +21,8 @@ export default {
   data () {
     return {
       data: '',
+      book: this.$store.state.currentBook,
+      meta: this.$store.state.currentBookMeta
     }
   },
   components: {
@@ -80,9 +82,11 @@ export default {
 
   },
   computed: {
-    book: function() {
-      return this.$store.getters.currentBook
-    },
+    // current_display_book: function() {
+    //   let book = Object.assign(this.$store.getters.currentBook)
+    //   this.meta = Object.assign(this.$store.getters.currentBookMeta)
+    //   return book
+    // },
     // currentBookContentBlocks: function () {
     //   //console.log("currentBookContentBlocks", this.currentBook)
     //   this.book = this.currentBook

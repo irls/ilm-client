@@ -1,13 +1,15 @@
 <template>
   <transition name="modal">
-    <div class="modal-mask" @click="$emit('close_modal')" >
+    <div class="modal-mask" @click="$emit('close_modal')" v-if="isModal" >
       <div class="modal-wrapper">
         <div class="modal-container" @click="$event.stopPropagation()">
 
           <div class="modal-header">
             <div class="header-title">
-              <img src='/static/bookstack.svg' class='book-logo'>
-              <h3 class="header-h">Import New Book</h3>
+              <img src='/static/bookstack.svg' class='book-logo'> <h3 class="header-h">Import New Book</h3>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')">
+              <i class="fa fa-times-circle-o" aria-hidden="true"></i>
+              </button>
             </div>
           </div>
 
@@ -31,11 +33,11 @@
                     <label class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
-                      <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip" multiple @change="onFilesChange($event)">
+                      <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip,.docx,,.md" :multiple="multiple" @change="onFilesChange($event)">
 
                     </label>
                   </div>
-                  <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images  </span>
+                  <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images, Docx or Markdown with text </span>
                 </div>
 
                 <br><br><br>
@@ -79,9 +81,15 @@
 
                 <br><br><br><br> -->
 
-                <button class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
+                <ul id="selectedBooks">
+                  <li v-for="book in selectedBooks">
+                    {{ book.name }} - {{ humanFileSize(book.size, true) }}
+                  </li>
+               </ul>
+                <button v-if="importTaskId" class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
                   <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
                 </button>
+                <span v-if="!importTaskId" class="label label-danger">Book should be imported from task. You have no import book task assigned</span>
 
             </form>
 
@@ -92,6 +100,35 @@
           </div comment="clearfix">
         </div>
       </div>
+      <alert :value="bookUploadError != false" placement="top" duration="3000" type="danger" width="400px">
+        <span class="icon-ok-circled alert-icon-float-left"></span>
+
+        <p>{{bookUploadError}}.</p>
+      </alert>
+    </div>
+    <div v-else>
+      <div v-show="!isUploading">
+        <div>
+          <label class='btn btn-default' type="file">
+            <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
+
+            <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip,.docx,.md"
+                   :multiple="multiple"
+                   @change="onFilesChange($event)"
+                   v-bind:value="fileValue">
+
+          </label>
+        </div>
+        <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images,Docx or Markdown with text  </span>
+        <ul id="selectedBooks">
+          <li class="book-import-list" v-for="book in selectedBooks">
+            <i class="fa fa-remove" v-on:click="formReset()"></i>{{ book.name }} - {{ humanFileSize(book.size, true) }}
+          </li>
+        </ul>
+      </div>
+      <div id='uploadingMsg' v-show='isUploading'>
+        <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
+      </div>
     </div>
   </transition>
 </template>
@@ -99,7 +136,11 @@
 
 <script>
 
+import { alert } from 'vue-strap'
+import axios from 'axios'
+import api_config from '../../mixins/api_config.js'
 
+const API_URL = process.env.ILM_API + '/api/v1/'
 
 export default {
   data() {
@@ -117,10 +158,38 @@ export default {
         uploadFiles: {bookFiles: 0, audioFiles: 0},
         formData: new FormData(),
         uploadProgress: "Uploading Files...",
-
+        bookUploadError: false,
+        selectedBooks: [],
+        fileValue: ''
     }
   },
+  mixins: [api_config],
+  props: {
+      'multiple': {
+        type: Boolean,
+        default: true
+      },
+      'importTaskId': {
+        type: String,
+        default: null
+      },
+      'isModal': {
+        type: Boolean,
+        default: true
+      },
+      'forceUpload': {
+        type: Boolean,
+        default: false
+      },
+      'bookId': {
+        type: String,
+        default: null
+      }
+  },
   components: {
+    alert
+  },
+  mounted() {
 
   },
   computed: {
@@ -142,26 +211,41 @@ export default {
       // clear formData
       let entries = this.formData.entries()
       for(let pair of entries) this.formData.delete(pair[0])
+      //document.getElementById('bookFiles').value = null
       this.uploadFiles = {bookFiles: 0, audioFiles: 0}
+      this.selectedBooks = []
+      this.$emit('books_changed', this.selectedBooks)
     },
     onFilesChange(e) {
       let fieldName = e.target.name
       let fileList = e.target.files || e.dataTransfer.files
+      this.selectedBooks = [];
+      this.formData = new FormData();
+      for(let file of fileList) {
+          this.selectedBooks.push({name: file.name, size: file.size});
+      }
       Array
         .from(Array(fileList.length).keys())
         .map(x => {
           this.formData.append(fieldName, fileList[x], fileList[x].name);
           this.uploadFiles[fieldName]++
         });
+      this.$emit('books_changed', this.selectedBooks)
     },
 
     onFormSubmit() {
+      if (!this.isModal && this.selectedBooks.length == 0) {// called on Job creation and no file was selected
+        this.$emit('close_modal', false)
+        return
+      }
       let vu_this = this
       let api = this.$store.state.auth.getHttp()
 
       this.formData.append('bookType', this.bookTypes[this.bookType]);
       if (!this.uploadFiles.bookFiles && this.bookURL.length) this.formData.append('bookURL', this.bookURL);
       if (!this.uploadFiles.audioFiles && this.audioURL.length) this.formData.append('audioURL', this.audioURL);
+      this.formData.append('taskId', this.importTaskId);
+      this.formData.append('bookId', this.bookId);
 
       var config = {
         onUploadProgress: function(progressEvent) {
@@ -175,19 +259,59 @@ export default {
         if (response.status===200) {
           // hide modal after one second
           vu_this.uploadProgress = "Upload Successful"
-          setTimeout(function(){ vu_this.$emit('close_modal') }, 1000)
+          if (vu_this.importTaskId && response.data instanceof Array && response.data[0] && response.data[0].ok == true) {
+            axios.put(API_URL + 'task/' + vu_this.importTaskId + '/book_imported', {})
+              .then((link_response) => {
+                vu_this.closeForm(true)
+              })
+              .catch((err) => {
+                vu_this.closeForm(false)
+              })
+          } else {
+            vu_this.closeForm(true)
+          }
         } else {
           // not sure what we should be doing here
           vu_this.formReset()
         }
       }).catch((err) => {
-        console.log('error: '+ err)
+        console.log(err)
+        vu_this.bookUploadError = err.response.data.message
         vu_this.formReset()
-        setTimeout(function(){ vu_this.$emit('close_modal') }, 1000)
+        setTimeout(function(){ vu_this.$emit('close_modal') }, 3000)
       });
 
     },
+    humanFileSize(bytes, si) {
+        var thresh = si ? 1000 : 1024;
+        if(Math.abs(bytes) < thresh) {
+            return bytes + ' B';
+        }
+        var units = si
+            ? ['kB','MB','GB','TB','PB','EB','ZB','YB']
+            : ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
+        var u = -1;
+        do {
+            bytes /= thresh;
+            ++u;
+        } while(Math.abs(bytes) >= thresh && u < units.length - 1);
+        return bytes.toFixed(1)+' '+units[u];
+    },
+    closeForm(response) {
+      let self = this
+      setTimeout(function(){
+        self.formReset()
+        self.$emit('close_modal', response)
+      }, 1000)
+    }
   },
+  watch: {
+    forceUpload(val) {
+      if (val === true) {
+        this.onFormSubmit()
+      }
+    }
+  }
 }
 </script>
 
@@ -313,6 +437,11 @@ export default {
 
 #uploadingMsg {text-align: center; padding-bottom: 1em;}
 #uploadingMsg h2 i {font-size: 24pt; color: silver}
+
+button.close i.fa {font-size: 18pt; padding-right: .5em;}
+
+.book-import-list { list-style-type: none; }
+.book-import-list i { padding: 0px 5px 0px 0px; }
 
 
 </style>

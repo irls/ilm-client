@@ -1,103 +1,195 @@
 <template>
-  <div>
-    <BookDisplayHeader />
-    <BookTOC />
-    <!-- <div v-for="bl in currentBookContentBlocks" v-html='bl.content'
-        :class="[bl.classes ? bl.classes : '', 'blk '+bl.type]"></div> -->
-    <div class='ocean showparnum' v-html='currentBookContent()'></div>
+  <div :class="['ilm-global-style container-fluid', metaStyles]">
+    <!--<BookDisplayHeader />-->
+    <!--<BookTOC />-->
+    <template v-for="(block, blockId) in parlist">
+    <div :key="block._id" :class="['ilm-block', 'ilm-display', blockOutPaddings(block)]">
+      <div v-if="block.type == 'illustration'" :class="block.getClass()">
+        <img :class="block.getClass()" :src="block.getIllustration()"/>
+        <div class="description"
+        :class="['content-description', block.getClass()]"
+        v-if="block.description.length"
+        v-html="block.description">
+        </div>
+      </div>
+      <div v-else-if="block.type == 'hr'">
+        <hr :class="[block.getClass()]"/>
+      </div>
+      <div v-else >
+        <div
+          v-if="block.parnum && block.parnum.length"
+          v-html="block.parnum"
+          :class="['parnum']">
+        </div>
+        <div
+          @click="handleFootnote($event)"
+          :class="[block.getClass()]"
+          :id="block.id"
+          :data-parnum="block.parnum"
+          :lang="block.language || meta.language"
+          :data-type="block.type"
+          v-html="block.content">
+        </div>
+        <div class="footnotes"
+          v-if="block.footnotes.length > 0">
+          <div class="-hidden" ref="footNotes"
+            v-for="(footnote, footnoteIdx) in block.footnotes">
+            <div class="-num">[fn{{footnote.ftnIdx+1}}]</div>
+            <div class="-text"
+              v-html="footnote.content">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="clearfix"></div>
+    </template>
+    <infinite-loading @infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
   </div>
 </template>
 
 <script>
 import BookDisplayHeader from './BookDisplayHeader'
-import BookTOC from './BookTOC'
+//import BookTOC from './BookTOC'
+import InfiniteLoading from 'vue-infinite-loading'
+import { mapGetters, mapState, mapActions } from 'vuex'
+import { BookBlock, setBlockParnum }    from '../../store/bookBlock'
 
 export default {
-
   name: 'BookEditDisplay',
-
   data () {
     return {
-      data: '',
+      parlist: [],
+      page: 0,
+      parCounter: { pref: 0, prefCnt: 0, curr: 1 },
+      fntCounter: 0
     }
   },
   components: {
-    BookDisplayHeader, BookTOC
-  },
-  methods: {
-    block_tag: function(type) {
-      let typetag = {
-        title: 'h1',
-        header: 'h2',
-        subhead: 'h3',
-        par: 'p',
-        illustration: 'div',
-        aside: 'aside',
-        hr: 'hr'
-      }
-      if (typetag.hasOwnProperty(type)) return typetag[type];
-    },
-    cleanCSS: function(block, addType=false){
-      if (!block.hasOwnProperty('classes')) return block.type
-      let css = block.classes.toLowerCase().split(' ').filter(s => s.trim() != '')
-      if (addType) css.push(block.type)
-      css =  Array.from(new Set(css));
-      if(block.type != 'par') css = css.filter(cl => cl!='noid')
-      block.classes = css.join(' ')
-      return block.classes.trim()
-    },
-    currentBookContent: function(){
-      let book = this.currentBook;
-      let blocks = this.currentBookContentBlocks;
-      let displayHTML= '';
-      for (let block of blocks) {
-        let tag = this.block_tag(block.type)
-        let classes = this.cleanCSS(block, true)
-        let parnum = (block.type=='par' && block.hasOwnProperty('parnum')) ? ` data-parnum="${block.parnum}"` : ''
-        let secnum = (block.type=='header' && block.hasOwnProperty('secnum'))?` data-section="${block.secnum}"`:''
-        let lang = ' lang="en"  dir="ltr"';
-        let language = block.hasOwnProperty('lang') ? block.lang : book.meta.lang
-        if (language) {
-          lang = ` lang="${language}"`
-          lang += ['fa','ar','iw'].indexOf(language)>-1 ? ` dir="rtl"` : ` dir="ltr"`
-        }
-        displayHTML+= `<${tag} class="${classes}"${parnum}${secnum}${lang}>${block.content}</${tag}>\n\n`
-      }
-      //console.log(displayHTML)
-      return displayHTML
-    }
+    BookDisplayHeader, InfiniteLoading,  /*BookTOC,*/
   },
   computed: {
-    currentBook: function() {
-      return this.$store.getters.currentBook
+      ...mapGetters({
+        book: 'currentBook',
+        meta: 'currentBookMeta'
+      }),
+      metaStyles: function () {
+          let result = '';
+          if (this.meta.styles) {
+            result = [];
+            for (let style in this.meta.styles) {
+              //console.log('style', style, 'val', this.meta.styles[style]);
+              if (this.meta.styles[style].length) result.push(this.meta.styles[style]);
+            }
+            result = result.join(' ');
+          }
+          return result;
+      },
+  },
+  methods: {
+    ...mapActions(['loadBlocks', 'loadBlocksChain', 'loadBook']),
+
+    onInfiniteScroll() {
+      if (this.meta._id) {
+        this.getBlocks();
+      } else {
+        if (this.$route.params.hasOwnProperty('bookid')) {
+          this.loadBook(this.$route.params.bookid)
+          .then(()=>{
+            this.getBlocks();
+          })
+        }
+      }
     },
-    currentBookContentBlocks: function () {
-      if (this.$store.getters.currentBook && this.$store.getters.currentBook.hasOwnProperty('content')) return this.$store.getters.currentBook.content
-      else return []
+    getBlocks() {
+      if (this.meta._id) {
+        let first_id = false;
+        if (this.parlist.length > 0) first_id = this.parlist[this.parlist.length-1].chainid;
+        else if (this.meta.startBlock_id) first_id = this.meta.startBlock_id;
+        this.loadBlocksChain({
+            book_id: this.meta._id,
+            startId: first_id,
+            onpage: 20
+        })
+        .then((result)=>{
+            if (result.rows.length > 0) {
+                result.rows.forEach((el, idx, arr)=>{
+                    let newBlock = new BookBlock(el);
+                    newBlock.content = newBlock.content.replace(
+                      /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/mig,
+                      '<span data-pg="$1"></span>'
+                    );
+                    //<sup class="service-info" data-pg="xxiii"><w class="service-info" data-sugg="">pg </w><w class="service-info" data-sugg="">xxiii</w></sup>
+                    newBlock.content = newBlock.content.replace(
+                      /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-pg=['"]{1}(.*?)['"]{1}[^>]*>.*?<\/sup>/mig,
+                      '<span class="service-info" data-pg="$1"></span>'
+                    );
+
+                    let ftnIdx = 0;
+                    newBlock.content = newBlock.content.replace(
+                      /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
+                      (idx)=>{
+                        newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+                        ftnIdx++;
+                        return `<sup data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
+                      }
+                    );
+                    //<sup class="service-info" data-idx="2"><w class="service-info" data-sugg="">2</w></sup>
+                    newBlock.content = newBlock.content.replace(
+                      /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
+                      (idx)=>{
+                        newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+                        ftnIdx++;
+                        return `<sup class="service-info" data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
+                      }
+                    );
+                    //'<sup data-idx="$1">[$1]</sup>'
+                    this.parlist.push(newBlock);
+                });
+              //console.log('result', result);
+              if (result.finish) {
+                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
+              } else {
+                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.loaded();
+              }
+            } else {
+                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
+            }
+            this.isAllLoaded = this.$refs.infiniteLoading.isComplete;
+            this.reCountProxy();
+        })
+        .catch((err)=>{
+          if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
+          console.log('Error: ', err.message);
+        });
+      }
+    },
+    reCountProxy: function () {
+      this.parCounter = { pref: 0, prefCnt: 0, curr: 1 };
+      this.parlist.forEach((block, idx, arr)=>{
+        block.parnum = setBlockParnum(block, this.parCounter);
+      })
+    },
+    handleFootnote: function (ev) {
+      if (ev.target.dataset.idx && this.$refs.footNotes[ev.target.dataset.idx]) {
+        let className = this.$refs.footNotes[ev.target.dataset.idx].className;
+        if (className == '-hidden') {
+          this.$refs.footNotes[ev.target.dataset.idx].className = '';
+        } else this.$refs.footNotes[ev.target.dataset.idx].className = '-hidden';
+      }
+    },
+    blockOutPaddings: function (block) {
+//       let match = block.getClass().match(/out[^\s]*/ig);
+//       return (match && match.length) ? match.join(' ') : '';
+      return (block.classes && block.classes.hasOwnProperty('outsize-padding')) ? block.classes['outsize-padding'] : ''
     },
   },
 }
 </script>
 
-
-<style scope>
-.ocean {
-  width: 100%; padding: 1em;
-  font-family: 'gentium', serif; font-size: 1.5em;
-  text-align: justify; justify-content: space-between;
-  color: black;
-}
-@font-face {
-  font-family: 'gentium';
-  src: url('/static/fonts/GentiumPlus-R.woff') format('woff') /* Pretty Modern Browsers */
-}
-.ocean.showparnum {
-  padding-left: 2em;
-}
-.ocean p, .ocean h1, .ocean h2, .ocean h3 {
-  margin-bottom: 1em;
+<style lang="less" scoped>
+.container-fluid {
+  padding-top: 15px;
+  overflow-y: auto;
 }
 </style>
-
-
-<style lang='less' src='./css/ocean.less' scope></style>

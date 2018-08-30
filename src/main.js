@@ -5,11 +5,18 @@ import { store } from './store'
 import { sync } from 'vuex-router-sync'
 import VueResource from 'vue-resource'
 import * as directives from './directives'
-// import superlogin from 'superlogin-client'
-// import PouchDB from 'pouchdb'
-// import hoodieApi from 'pouchdb-hoodie-api'
+//import jQuery from 'jquery'
+//import 'expose-loader?jquery!jquery'
 
+import $ from 'jquery';
+
+// for debugging
+if (process.env.NODE_ENV === 'development') Vue.config.debug = true
+
+// sync the router with the vuex store.
+// this registers `store.state.route`
 sync(store, router)
+
 // register global directives.
 Object.keys(directives).forEach(key => {
   Vue.directive(key, directives[key])

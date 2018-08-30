@@ -1,0 +1,43 @@
+[
+  {
+    "rank": "admin",
+    "name": "Admin"
+  }, {
+    "rank": "researcher",
+    "name": "Researcher"
+  }, {
+    "rank": "editor",
+    "name": "Editor"
+  }, {
+    "rank": "voice_artist",
+    "name": "Voice Artist"
+  }, {
+    "rank": "audio_engineer",
+    "name": "Audio Engineer"
+  }, {
+    "rank": "alignment",
+    "name": "Alignment"
+  }, {
+    "rank": "user",
+    "name": "User"
+  }, {
+    "rank": "librarian",
+    "name": "Librarian"
+  },
+  {
+    "rank": "proofer",
+    "name": "Proofer"
+  },
+  {
+    "rank": "engineer",
+    "name": "Engineer"
+  },
+  {
+    "rank": "reader",
+    "name": "Reader"
+  },
+  {
+    "rank": "narrator",
+    "name": "Narrator"
+  }
+]

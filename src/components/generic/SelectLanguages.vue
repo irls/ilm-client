@@ -8,6 +8,7 @@
     :search="search"
     multiple
     :placeholder="'Editor Languages'"
+    :disabled="isDisabled"
   ></v-select>
 </template>
 <script>
@@ -17,7 +18,7 @@ import LANGUAGES from '../../../static/languages.json'
 
 export default {
 
-  name: 'SelectLanguages',
+  name: 'select-tts-voice',
 
   components: {
     'vSelect': select
@@ -32,7 +33,8 @@ export default {
   },
 
   props: [
-    'selected'
+    'selected',
+    'isDisabled'
   ],
 
   watch: {

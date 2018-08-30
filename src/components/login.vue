@@ -20,91 +20,142 @@
         <h3 class='title'>Request Forgot Password Link</h3>
         <div class="error-message" v-text="passwordError"></div>
         <input type="text" name="email" placeholder="Email" v-model="passwordEmail">
-        <input type="submit" :class="{'disabled': !passwordEmail}" @click="user_passwordreset(passwordEmail)" value='Email Login Link'>
+        <input type="submit" :class="{'disabled': !passwordEmail || hasPasswordResetSuccess}" :disabled="hasPasswordResetSuccess" @click="user_passwordreset(passwordEmail)" value='Send Login Link'>
         <div class="links"><a @click="active = 'login'"> <i class="fa fa-arrow-left"></i> Back to Login</a></div>
       </div>
     </div>
   </div>
+  <alert v-show="hasPasswordResetError" placement="top" duration="" type="danger" width="400px">
+    <span class="icon-info-circled alert-icon-float-left"></span>
+    <p>{{passwordResetError}}</p>
+  </alert>
+  <alert v-show="hasPasswordResetSuccess" placement="top" duration="" type="success" width="400px">
+    <span class="icon-info-circled alert-icon-float-left"></span>
+    <p>{{passwordResetSuccess}}</p>
+  </alert>
 </div>
 </template>
 
 <script>
-  import superlogin from 'superlogin-client'
-  import PouchDB from 'pouchdb'
+import { mapActions } from 'vuex'
+import superlogin from 'superlogin-client'
+import axios from 'axios'
+import { alert } from 'vue-strap'
 
-  export default {
-    data () {
-      return {
-        active: 'login',
-        //auth: this.$store.state.auth,
+export default {
 
-        // Modal text fields
-        loginUser: '',
-        loginPassword: '',
-        passwordEmail: '',
+  data () {
+    return {
+      active: 'login',
 
-        // Modal error messages
-        loginError: '',
-        passwordError: '',
-      }
-    },
-    methods: {
-      user_login: function() {
-        if (!(this.loginUser && this.loginPassword)) {
-          this.loginError = 'Both Password and Username are required'
-          return
-        }
-        var vu_this = this;
-        this.$store.state.auth.login({username: this.loginUser, password: this.loginPassword})
-          .catch((error) => vu_this.loginError = error.message)
-      },
-      user_passwordreset: function(email) {
-        this.auth.forgotPassword(email)
-        alert("A login link has been sent by email to: "+ email)
-        this.active = 'login'
-      },
-      keycheck: function(event) {
-        if (event.key == "Enter") this.user_login()
-      }
+      // Modal text fields
+      loginUser: '',
+      loginPassword: '',
+      passwordEmail: '',
 
-    },
-    created: function() {
-      this.$store.state.auth.configure({
-        // An optional URL to API server, by default a current window location is used.
-        serverUrl: process.env.ILM_API,
-        // A list of API endpoints to automatically add the Authorization header to
-        endpoints: [process.env.ILM_DB], // local couch db and cloudant
-        // The authentication providers that are supported by your SuperLogin host
-        providers: [],
-        // Sets when to check if the session is expired during the setup. // false by default.
-        checkExpired: true,
-      })
-
-      // login event
-      let vu_this = this
-      let auth = this.$store.state.auth
-      auth.on('login', function(session) {
-        if (session.password) {
-          vu_this.$store.commit('RESET_LOGIN_STATE')
-          // this can only be set up after login
-          PouchDB.sync('ilm_library_meta', auth.getDbUrl('ilm_library_meta'), {live:true})
-            .on('change', (change) => vu_this.$store.dispatch('updateBooksList'))
-          // load intial book
-          let bookid = vu_this.$route.params.bookid
-          if (bookid) vu_this.$router.replace({ path: '/books/' + bookid })
-          //vu_this.$store.dispatch('loadBook', bookid)
-        }
-      })
-      // logout event
-      auth.on('logout', function(message) {
-        // for testing only
-        vu_this.$store.dispatch('emptyDB')
-        //
-        window.setTimeout( () => vu_this.$store.commit('RESET_LOGIN_STATE'), 1000)
-      })
-
+      // Modal error messages
+      loginError: '',
+      passwordError: '',
+      hasPasswordResetError: false,
+      hasPasswordResetSuccess: false,
+      passwordResetError: '',
+      passwordResetSuccess: ''
     }
+  },
+
+  components: {
+    alert
+  },
+
+  created () {
+    superlogin.configure({
+      serverUrl: process.env.ILM_API,
+      endpoints: [process.env.ILM_DB],
+      providers: [],
+      checkExpired: true
+    })
+
+    superlogin.removeAllListeners('login');
+    // login event
+    superlogin.once('login', (session) => {
+      //console.log('login event');
+      if (session.token) {
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
+        this.connectDB(session);
+      }
+    });
+
+    // logout event
+    superlogin.on('logout', (message) => {
+      console.log('logout?');
+      this.disconnectDB();
+      location.href = '/';
+    })
+  },
+
+  methods: {
+    ...mapActions([
+      'destroyDB', 'connectDB', 'disconnectDB'
+    ]),
+
+    user_login () {
+      if (!(this.loginUser && this.loginPassword)) {
+        this.loginError = 'Both Password and Username are required'
+        return
+      }
+
+      console.log('user_login');
+
+      this.destroyDB()
+      .then(()=>{
+        console.log('do login');
+        superlogin.login({
+          username: this.loginUser,
+          password: this.loginPassword
+        }).catch(error => {
+          this.loginError = error.message
+        })
+      })
+
+    },
+    user_passwordreset (email) {
+      var self = this
+      if (email.length == 0){
+        self.hasPasswordResetError = true
+        self.passwordResetError = 'Please enter email to send you a password reset link'
+        setTimeout(function(){self.hasPasswordResetError = false}, 5000)
+      } else {
+        if (!/\S+@\S+\.\S+/.test(email)) {
+          self.hasPasswordResetError = true
+          self.passwordResetError = 'Incorrect email format'
+          setTimeout(function(){self.hasPasswordResetError = false}, 5000)
+        } else {
+          axios.post(process.env.ILM_API + '/api/v1/new-password', {'email': email}).then(function(response){
+            console.log(response)
+            if (response.data.ok === true) {
+              //self.active = 'login'
+              self.hasPasswordResetSuccess = true
+              self.passwordResetSuccess = 'Link to reset password has been sent to your email'
+              setTimeout(function(){self.hasPasswordResetSuccess = false}, 5000)
+            } else {
+            }
+          })
+          .catch(function(e){
+            self.hasPasswordResetError = true
+            //self.passwordResetError = e.response.data.message
+            self.passwordResetError = 'ILM account for this email is not found'
+            setTimeout(function(){self.hasPasswordResetError = false}, 5000)
+          })
+        }
+      }
+    },
+    keycheck (event) {
+      if (event.key === 'Enter') this.user_login()
+    }
+
   }
+
+}
 </script>
 
 
