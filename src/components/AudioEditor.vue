@@ -432,7 +432,10 @@
               }
               if (self.mode === 'file' && Math.abs(end - start) < 0.2 && 
                       typeof self.selection.start !== 'undefined' && 
-                      typeof self.selection.end !== 'undefined') {
+                      typeof self.selection.end !== 'undefined' && 
+                      (self.selection.start != start || 
+                      self.selection.end != end)) {
+                
                 self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
                 return;
               }
