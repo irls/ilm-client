@@ -16,7 +16,7 @@
         v-for="(blockId, listIdx) in parlistO.idsViewArray()"
         v-bind:style="{ top: screenTop + 'px' }"
         v-bind:id="'s-'+ blockId"
-        v-bind:key="blockId"><!--{{parlistO.getInId(blockId)}} -> {{blockId}} -> {{parlistO.getOutId(blockId)}}-->
+        v-bind:key="blockId">{{parlistO.getInId(blockId)}} -> {{blockId}}{{parlistO.getRIdById(blockId)}} -> {{parlistO.getOutId(blockId)}}
         <div class='col' v-if="parlist.has(blockId)"><!--v-if="block.isVisible"-->
           <BookBlockView ref="blocks"
               :block="parlist.get(blockId)"
@@ -26,6 +26,7 @@
               :getBlock ="getBlockProxy"
               :putBlockPart ="putBlockPartProxy"
               :putBlockO ="putBlockOProxy"
+              :putNumBlockO ="putNumBlockOProxy"
               :reCount  ="reCountProxy"
               :recorder ="recorder"
               :blockReindexProcess="blockReindexProcess"
@@ -314,7 +315,7 @@ export default {
   methods: {
     ...mapActions([
     'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
-    'loopPreparedBlocksChain', 'putBlockO',
+    'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
 
     'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange']),
 
@@ -825,6 +826,16 @@ export default {
       return this.putBlockO(blockData)
       .then((blocks)=>{
         console.log('putBlockO then');
+        this.updateVisibleBlocks();
+        return Promise.resolve(blocks)
+      })
+      .catch((err)=>{})
+    },
+
+    putNumBlockOProxy: function (blockData) {
+      return this.putNumBlockO(blockData)
+      .then((blocks)=>{
+        console.log('putNumBlockO then');
         this.updateVisibleBlocks();
         return Promise.resolve(blocks)
       })
@@ -1699,11 +1710,11 @@ export default {
       //console.log('handleScroll');
       this.$refs.contentScrollWrapRef.scrollTo(0,0);
     },
-    
+
     _toggleApproveWaiting(val) {
       this.approveWaiting = val;
     },
-    
+
     bookReimported() {
       this.setBlockSelection({start: {}, end: {}});
 

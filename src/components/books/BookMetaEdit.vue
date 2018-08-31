@@ -1415,50 +1415,63 @@ export default {
     },
 
     selSecNum (blockType, valKey, currVal) {
-      //console.log('selSecNum', blockType, valKey, currVal);
+      console.log('selSecNum', blockType, valKey, currVal);
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
+          let putBlockOpromise = [];
           let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
+          let pBlock, oBlock;
 
           idsArrayRange.forEach((blockId)=>{
-            let pBlock = this.storeList.get(blockId);
+            pBlock = this.storeList.get(blockId);
+            //oBlock = this.storeListO.getBlock(blockId);
+            oBlock = { rid: this.storeListO.getRIdById(blockId) };
 
             if (pBlock && pBlock.type == blockType) {
-
               switch(valKey) {
                   case 'secNum' : {
                     if (currVal == 'mixed' || currVal === false) {
                       if (pBlock.secVal) pBlock.secnum = pBlock.secVal;
                       else pBlock.secnum = '';
+                      oBlock.isNumber = true;
                     } else {
                       pBlock.secVal = pBlock.secnum;
                       pBlock.secnum = false;
+                      oBlock.isNumber = false;
                     }
                   } break;
                   case 'secHide' : {
                     if (currVal == 'mixed' || currVal === false) {
                       pBlock.secHide = true;
+                      oBlock.isHidden = true;
                     } else {
                       pBlock.secHide = false;
+                      oBlock.isHidden = false;
                     }
                   } break;
                   case 'parNum' : {
                     if (currVal == 'mixed' || currVal === false) {
                       pBlock.parnum = '';
+                      oBlock.isNumber = true;
                     } else {
                       pBlock.parnum = false;
+                      oBlock.isNumber = false;
                     }
                   } break;
                   case 'parHide' : {
                     if (currVal == 'mixed' || currVal === false) {
                       pBlock.parHide = true;
+                      oBlock.isHidden = true;
                     } else {
                       pBlock.parHide = false;
+                      oBlock.isHidden = false;
                     }
                   } break;
                   default : {
                   } break;
               };
+
+              if (oBlock.rid) putBlockOpromise.push(this.putBlockO(oBlock));
 
               if (pBlock.isChanged || pBlock.isAudioChanged) {
                 //pBlock.checked = false;
@@ -1470,11 +1483,20 @@ export default {
                     this.$root.$emit('from-book-meta:upd-toc', true);
                   }
                 });
+
               }
             }
 
           });
+
+          Promise.all(putBlockOpromise).then((res)=>{
+//             console.log('Promise.all', oBlock);
+//             this.putNumBlockO(oBlock).then((blockid)=>{
+//               console.log('setNumVal then', blockid);
+//             });
+          })
         }
+
         this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration);
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
@@ -1492,7 +1514,7 @@ export default {
       return key.charAt(0).toUpperCase() + key.slice(1);
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'freeze', 'unfreeze', 'blockers'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers'])
   }
 }
 </script>

@@ -11,8 +11,9 @@ class LookupBlock {
     this.out = block.out[0];
     this.secnum   = block.secnum   || '';
     this.parnum   = block.parnum   || '';
-    this.numHide  = block.numHide  || false;
+    this.isNumber = block.isNumber || true;
     this.isManual = block.isManual || false;
+    this.isHidden = block.isHidden  || false;
     this.index = block.index || -1;
     this.loaded = false;
     this.checked = false;

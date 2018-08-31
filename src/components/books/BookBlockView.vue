@@ -668,7 +668,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'approveWaiting'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'approveWaiting'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -2751,15 +2751,13 @@ export default {
       setNumVal: _.debounce(function(ev){
         let val = ev.target.value;
         if (this.$refs.parnumRef) this.$refs.parnumRef.innerText = val;
-        this.putBlockO ({
+        this.putNumBlockO({
           rid: this.blockO.rid,
           secnum: this.blockO.secnum,
           parnum: this.blockO.parnum,
-          type:  this.block.type
+          isManual: true,
         }).then((blockid)=>{
           console.log('setNumVal then', blockid);
-//           this.isUpdated = true;
-//           this.isUpdated = false;
         });
       }, 1000),
 

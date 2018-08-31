@@ -1543,6 +1543,26 @@ export const store = new Vuex.Store({
       })
     },
 
+    putNumBlockO({commit, state}, params) {
+      let rid = encodeURIComponent(params.rid);
+      let req = state.API_URL + `books/blocks/num/${rid}`;
+      return axios.put(req, params)
+      .then((response) => {
+        if (response.data.updated && response.data.updated > 0) {
+          let block = state.storeListO.getBlockByRid(params.rid);
+          if (block) {
+            block.isManual = true;
+            return block.blockid;
+          }
+        }
+        //console.log('response.data', response.data);
+        if (Array.isArray(response.data)) response.data.forEach((blockO)=>{
+          state.storeListO.updBlockByRid(blockO.rid, blockO);
+        })
+        return response.data;
+      })
+    },
+
     putMetaAuthors ({commit, state, dispatch}, authors) {
       let metaAuthors = [];
       authors.forEach((item)=>{
