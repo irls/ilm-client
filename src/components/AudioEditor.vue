@@ -432,7 +432,10 @@
               }
               if (self.mode === 'file' && Math.abs(end - start) < 0.2 && 
                       typeof self.selection.start !== 'undefined' && 
-                      typeof self.selection.end !== 'undefined') {
+                      typeof self.selection.end !== 'undefined' && 
+                      (self.selection.start != start || 
+                      self.selection.end != end)) {
+                
                 self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
                 return;
               }
@@ -1208,9 +1211,9 @@
               this.selection.end = this._round(end, 2);
               let replay = this.isPlaying;
               let wait = this.isPlaying ? [this.pause()] : [];
-              this.cursorPosition = this.selection.start;
               Promise.all(wait)
                 .then(() => {
+                  this.cursorPosition = this.selection.start;
                   this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
                   this._showSelectionBorders(true);
                   if (replay) {
