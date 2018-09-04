@@ -2753,6 +2753,7 @@ export default {
         if (this.$refs.parnumRef) this.$refs.parnumRef.innerText = val;
         this.putNumBlockO({
           rid: this.blockO.rid,
+          type: this.block.type,
           secnum: this.blockO.secnum,
           parnum: this.blockO.parnum,
           isManual: true,

@@ -1474,8 +1474,6 @@ export default {
               if (oBlock.rid) putBlockOpromise.push(this.putBlockO(oBlock));
 
               if (pBlock.isChanged || pBlock.isAudioChanged) {
-                //pBlock.checked = false;
-                //pBlock.checked = true;
               } else {
                 pBlock.partUpdate = true;
                 this.putBlock(pBlock).then(()=>{
@@ -1490,10 +1488,17 @@ export default {
           });
 
           Promise.all(putBlockOpromise).then((res)=>{
-//             console.log('Promise.all', oBlock);
-//             this.putNumBlockO(oBlock).then((blockid)=>{
-//               console.log('setNumVal then', blockid);
-//             });
+            let blockO = this.storeListO.getBlock(this.blockSelection.start._id);
+            console.log('Promise.all', blockO);
+            this.putNumBlockO({
+              rid: blockO.rid,
+              secnum: blockO.secnum,
+              parnum: blockO.parnum,
+              isManual: blockO.isManual
+            }).then((blockid)=>{
+              console.log('setNumVal then', blockid);
+              this.$forceUpdate();
+            });
           })
         }
 
