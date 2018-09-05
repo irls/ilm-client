@@ -143,6 +143,7 @@
                 <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
 
                 <template v-if="allowEditing">
+                  <!--{{blockO.rid}} - {{isNumbered}}-->
                   <div v-if="isNumbered"
                     :class="['parnum-row', {'-locked': blockO.isManual==true}]">
 
@@ -680,18 +681,20 @@ export default {
       }},
       parnumComp: { cache: false,
       get: function () {
-        if (this.blockO.secnum || this.blockO.parnum) {
-          if (this.blockO.secnum.toString().length > 0) {
+          if (this.blockO.type == 'header' && this.blockO.secnum.toString().length > 0) {
             return this.blockO.secnum;
-          } else {
+          }
+          if (this.blockO.type == 'par' && this.blockO.parnum.toString().length > 0) {
             return this.blockO.parnum;
           }
-        } return '';
+          return '';
       }},
       isNumbered: { cache: false,
       get: function () {
-        if (this.block.type == 'par' && this.block.parnum !== false) return true;
-        if (this.block.type == 'header' && this.block.secnum !== false) return true;
+        if (this.block.type == 'par' && this.blockO.isNumber == true) return true;
+        if (this.block.type == 'header' && this.blockO.isNumber == true) return true;
+        //if (this.block.type == 'par' && this.block.parnum !== false) return true;
+        //if (this.block.type == 'header' && this.block.secnum !== false) return true;
         return false;
       }},
       blockClasses: function () {
@@ -1405,9 +1408,32 @@ export default {
           } else if (is_content_changed && this.block.audiosrc) {
             this.doReAlign();
           }
-          this.reCount();
+          //this.reCount();
           if (recount_marked) {
             this.setCurrentBookCounters(['not_marked_blocks']);
+          }
+
+          if (this.block.type !== this.blockO.type) {
+
+            let upd = {
+              rid: this.blockO.rid,
+              type: this.block.type,
+            }
+            this.putBlockO(upd).then(()=>{
+              if (this.block.type == 'header' || this.block.type == 'par') {
+                this.putNumBlockO({
+                  rid: this.blockO.rid,
+                  type: this.block.type,
+                  secnum: this.blockO.secnum,
+                  parnum: this.blockO.parnum,
+                  isManual: true,
+                }).then((blocks)=>{
+                  console.log('assembleBlock putNumBlockO', blocks[0]);
+                });
+              }
+
+            });
+
           }
         });
       },
@@ -2328,10 +2354,10 @@ export default {
           this.pushChange(type);
           if (this.block) {
             this.block.classes = {};
-            this.block.secnum = false;
-            this.block.parnum = false;
+            //this.block.secnum = false;
+            //this.block.parnum = false;
           }
-          this.reCount();
+          //this.reCount();
           this.$root.$emit('from-block-edit:set-style');
           if (type === 'type' && event && event.target) {
             if (event.target.value === 'illustration') {
@@ -2750,15 +2776,15 @@ export default {
 
       setNumVal: _.debounce(function(ev){
         let val = ev.target.value;
-        if (this.$refs.parnumRef) this.$refs.parnumRef.innerText = val;
+        //if (val && this.$refs.parnumRef) this.$refs.parnumRef.innerText = val;
         this.putNumBlockO({
           rid: this.blockO.rid,
           type: this.block.type,
           secnum: this.blockO.secnum,
           parnum: this.blockO.parnum,
           isManual: true,
-        }).then((blockid)=>{
-          console.log('setNumVal then', blockid);
+        }).then((blocks)=>{
+          //console.log('setNumVal then', blocks[0]);
         });
       }, 1000),
 

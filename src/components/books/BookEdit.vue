@@ -825,7 +825,7 @@ export default {
     putBlockOProxy: function (blockData) {
       return this.putBlockO(blockData)
       .then((blocks)=>{
-        console.log('putBlockO then');
+        console.log('putBlockOProxy then');
         this.updateVisibleBlocks();
         return Promise.resolve(blocks)
       })
@@ -835,7 +835,7 @@ export default {
     putNumBlockOProxy: function (blockData) {
       return this.putNumBlockO(blockData)
       .then((blocks)=>{
-        console.log('putNumBlockO then');
+        console.log('putNumBlockOProxy then');
         this.updateVisibleBlocks();
         return Promise.resolve(blocks)
       })
@@ -1605,8 +1605,10 @@ export default {
 //     },
 
     listenSetNum(bookId, numMask) {
-      //console.log('listenSetNum', bookId, numMask);
-      this.reCountProxy(numMask);
+      console.log('listenSetNum', bookId, numMask);
+      //this.reCountProxy(numMask);
+      this.updateVisibleBlocks();
+      //this.refreshTmpl();
     },
 
     throttleScrollUpdate: _.throttle(function () {

@@ -9,9 +9,10 @@ class LookupBlock {
     this.blockid = block.blockid;
     this.in = block.in[0];
     this.out = block.out[0];
+    this.type = block.type || 'par';
     this.secnum   = block.secnum   || '';
     this.parnum   = block.parnum   || '';
-    this.isNumber = block.isNumber || true;
+    this.isNumber = block.isNumber || false;
     this.isManual = block.isManual || false;
     this.isHidden = block.isHidden  || false;
     this.index = block.index || -1;

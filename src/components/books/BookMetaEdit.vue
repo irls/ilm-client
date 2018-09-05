@@ -1415,7 +1415,7 @@ export default {
     },
 
     selSecNum (blockType, valKey, currVal) {
-      console.log('selSecNum', blockType, valKey, currVal);
+      //console.log('selSecNum', blockType, valKey, currVal);
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let putBlockOpromise = [];
@@ -1489,15 +1489,15 @@ export default {
 
           Promise.all(putBlockOpromise).then((res)=>{
             let blockO = this.storeListO.getBlock(this.blockSelection.start._id);
-            console.log('Promise.all', blockO);
             this.putNumBlockO({
               rid: blockO.rid,
+              type: blockO.type,
               secnum: blockO.secnum,
               parnum: blockO.parnum,
-              isManual: blockO.isManual
+              //isManual: blockO.isManual
             }).then((blockid)=>{
-              console.log('setNumVal then', blockid);
-              this.$forceUpdate();
+              this.$root.$emit('from-meta-edit:set-num');
+              //this.$forceUpdate();
             });
           })
         }
