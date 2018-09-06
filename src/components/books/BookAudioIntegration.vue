@@ -273,8 +273,8 @@
       this.$root.$on('from-audioeditor:selection-change', (id, start, end) => {
         if (this.playing) {
           //console.log('FOR ', af)
-          this.positions_tmp[this.playing] = {start: start, end: end};
           if (typeof start !== 'undefined' && typeof end !== 'undefined') {
+            this.positions_tmp[this.playing] = {start: start, end: end};
             let record = this.audiobook.importFiles.find(f => f.id == this.playing);
             if (record) {
               record.positions = {start: start, end: end};
@@ -282,6 +282,9 @@
             } else {
 
             }
+          } else {
+            delete this.positions_tmp[this.playing];
+            
           }
         }
       });

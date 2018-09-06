@@ -234,6 +234,7 @@
             return false;//component was destroyed;
           }
           let mode = bookAudiofile.id ? 'file' : 'block';
+          let closingId = this.audiofileId;
           if (bookAudiofile.id) {
             this.audiofileId = bookAudiofile.id;
           }
@@ -243,6 +244,9 @@
               this.pendingLoad = arguments;
               this.showModal('onExitMessage');
               return;
+            }
+            if (this.isModifiedComputed && this.mode === 'file') {
+              this.$root.$emit('from-audioeditor:save-positions', closingId, this.selection);
             }
             this.silenceLength = 0.1;
             this.cursorPosition = false;
@@ -867,7 +871,7 @@
             if (this.allowAlignSelection) {
               let save_selection = null;
               if (this.isModifiedComputed) {
-                this.origFilePositions = this.selection;
+                this.origFilePositions = Object.assign({}, this.selection);
                 save_selection = this.selection;
               }
               this.$root.$emit('from-audioeditor:align', this.audiofileId, save_selection);
@@ -1550,9 +1554,26 @@
           }
         },
         'blockSelection.start._id': {
-          handler(val) {
+          handler(val, oldVal) {
             //console.log('blockSelection CHANGED', val)
-            this._setBlocksSelection();
+            if ((!val) && 
+                    (this.blockMap && this.blockMap[oldVal])) {
+              if (this.mode === 'file' && this.origFilePositions) {
+                this.selection.start = this._round(this.origFilePositions.start, 2);
+                this.selection.end = this._round(this.origFilePositions.end, 2);
+                let replay = this.isPlaying;
+                let wait = this.isPlaying ? [this.pause()] : [];
+                Promise.all(wait)
+                  .then(() => {
+                    this.cursorPosition = this.selection.start;
+                    this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                    this._showSelectionBorders(true);
+                    if (replay) {
+                      this.play();
+                    }
+                  });
+              }
+            }
           },
           deep: true
         },
