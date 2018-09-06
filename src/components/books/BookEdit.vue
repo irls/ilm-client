@@ -1,7 +1,7 @@
 <template>
 <div class="content-scroll-wrapper" :class="[{'recording-background': recordingState == 'recording'}]" v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="handleScroll">
   <div v-on:wheel.prevent="smoothScrollContent"
-    :class="['container-fluid ilm-global-style', metaStyles]">
+    :class="['container-fluid ilm-book-styles ilm-global-style', metaStyles]">
 
     <!--<div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >-->
 

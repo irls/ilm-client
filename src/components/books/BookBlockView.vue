@@ -1413,13 +1413,19 @@ export default {
             this.setCurrentBookCounters(['not_marked_blocks']);
           }
 
-          if (this.block.type !== this.blockO.type) {
-
-            let upd = {
-              rid: this.blockO.rid,
-              type: this.block.type,
-            }
-            this.putBlockO(upd).then(()=>{
+          this.blockO.status = Object.assign(this.blockO.status, {
+            marked: this.block.markedAsDone,
+            assignee: this.block.status.assignee,
+            proofed: this.block.status.proofed,
+            stage: this.block.status.stage
+          })
+          let upd = {
+            rid: this.blockO.rid,
+            type: this.block.type,
+            status: this.blockO.status,
+          }
+          this.putBlockO(upd).then(()=>{
+            if (this.block.type !== this.blockO.type) {
               if (this.block.type == 'header' || this.block.type == 'par') {
                 this.putNumBlockO({
                   rid: this.blockO.rid,
@@ -1431,10 +1437,8 @@ export default {
                   console.log('assembleBlock putNumBlockO', blocks[0]);
                 });
               }
-
-            });
-
-          }
+            }
+          });
         });
       },
       clearBlockContent: function(content) {
@@ -1533,12 +1537,14 @@ export default {
 
       reworkBlock: function(ev) {
         if (!this.isNeedWorkDisabled) {
+
           this.actionWithBlock(ev)
         }
       },
 
       approveBlock: function(ev) {
         if (!this.isApproveDisabled) {
+
           this.actionWithBlock(ev);
         }
       },
@@ -1582,14 +1588,14 @@ export default {
           let task = this.tc_getBlockTask(this.block._id);
 
           if (!task) {
-             let other_task = this.tc_getBlockTaskOtherRole(this.block._id);
-             if (other_task) {
-               task = Object.assign({}, other_task);
-             } else {
+            let other_task = this.tc_getBlockTaskOtherRole(this.block._id);
+              if (other_task) {
+                task = Object.assign({}, other_task);
+              } else {
               task = {
-               blockid: this.block._id,
-               bookid: this.block.bookid
-             }
+                blockid: this.block._id,
+                bookid: this.block.bookid
+              }
             }
           }
 

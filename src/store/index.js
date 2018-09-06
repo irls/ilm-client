@@ -1531,7 +1531,7 @@ export const store = new Vuex.Store({
         if (response.data.updated && response.data.updated > 0) {
           let block = state.storeListO.getBlockByRid(params.rid);
           if (block) {
-            block.isManual = true;
+            //block.isManual = true;
             return block.blockid;
           }
         }
