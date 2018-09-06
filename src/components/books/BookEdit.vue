@@ -16,7 +16,7 @@
         v-for="(blockId, listIdx) in parlistO.idsViewArray()"
         v-bind:style="{ top: screenTop + 'px' }"
         v-bind:id="'s-'+ blockId"
-        v-bind:key="blockId">{{parlistO.getInId(blockId)}} -> {{blockId}}{{parlistO.getRIdById(blockId)}} -> {{parlistO.getOutId(blockId)}}
+        v-bind:key="blockId"><!--{{parlistO.getInId(blockId)}} -> {{blockId}}{{parlistO.getRIdById(blockId)}} -> {{parlistO.getOutId(blockId)}}-->
         <div class='col' v-if="parlist.has(blockId)"><!--v-if="block.isVisible"-->
           <BookBlockView ref="blocks"
               :block="parlist.get(blockId)"

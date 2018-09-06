@@ -1400,6 +1400,7 @@ export default {
             }
           })
         }
+        this.$root.$emit('from-meta-edit:set-num');
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
     },
