@@ -1,5 +1,5 @@
 <template>
-  <div :class="['ilm-global-style container-fluid', metaStyles]">
+  <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
     <template v-for="(block, blockId) in parlist">
