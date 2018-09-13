@@ -427,7 +427,7 @@
 
   /***** Global whitespace *****/
   .verse {
-    white-space: pre-line;
+    white-space: pre-wrap;
   }
   .pre {
     white-space: pre;
@@ -446,12 +446,13 @@
   }
 
   .list {
-    padding-left: @list_normal_padding;
+    /*padding-left: @list_normal_padding;*/
+    white-space: pre-line;
   }
   .content-wrap {
     &.list:hover {
       // because of border on hover
-      padding-left: @list_normal_padding - 1;
+      /*padding-left: @list_normal_padding - 1;*/
     }
   }
 
