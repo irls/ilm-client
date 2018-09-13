@@ -80,16 +80,11 @@
           </vue-tab>
           <vue-tab title="Audio Integration" id="audio-integration">
             <div class="t-box">
-              <template v-if="currentBook.isMastered">
-                <div class="btn-switch" @click="toggleIsMastered()">
-                  <i class="fa fa-toggle-on"></i>
-                  <span :class="['s-label',  {'-disabled': !isAllowSetMastered}]"> Mastered</span>
-                </div>
-              </template>
-              <template v-else>
-                <div class="btn-switch" @click="toggleIsMastered()">
-                  <i class="fa fa-toggle-off"></i>
-                  <span class="s-label -disabled"> Mastered</span>
+              <template>
+                <div class="btn-switch" @click="toggleMastering()">
+                  <i class="fa fa-toggle-on" v-if="currentBook.masteringRequired"></i>
+                  <i class="fa fa-toggle-off" v-else></i>
+                  <span class="s-label"> Mastering required</span>
                 </div>
               </template>
               <a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
@@ -685,12 +680,6 @@ export default {
         if (this.tc_hasTask('audio_mastering')) {
           return true;
         }
-        if (this.currentBookCounters.not_marked_blocks === 0 && this.currentBookCounters.narration_blocks === 0) {
-          return true;
-        }
-        if (this.currentBookCounters.narration_blocks > 0 && this.currentBookCounters.not_proofed_audio_blocks === 0) {
-          return true;
-        }
         return false;
       }
     },
@@ -701,24 +690,8 @@ export default {
             return true;
           }
         } else if (this.tc_hasTask('audio_mastering')) {
-          if (this.currentBookMeta.isMastered && this.currentBookCounters.not_marked_blocks === 0) {
+          if (this.currentBookCounters.not_marked_blocks === 0) {
             return true;
-          }
-        }
-        return false;
-      }
-    },
-    isAllowSetMastered: {
-      get() {
-        if (!this.tc_hasTask('metadata_cleanup') && !this.tc_hasTask('audio_mastering')) {
-          return false;
-        }
-        if (this.audiobook && this.audiobook.importFiles && this.audiobook.importFiles.length > 0 && (this.tc_hasTask('audio_mastering') || this.currentBookCounters.narration_blocks === 0)) {
-          return true;
-        }
-        if ((this.audiobook._id && (!this.audiobook.importFiles || this.audiobook.importFiles.length === 0)) || parseInt(this.currentBookCounters.narration_blocks) > 0) {
-          if (this.currentBook.isMastered === true) {
-            this.liveUpdate('isMastered',  !this.currentBook.isMastered)
           }
         }
         return false;
@@ -782,7 +755,6 @@ export default {
         }
       });
     this.$root.$on('from-bookblockview:voicework-type-changed', function() {
-      self.setAllowSetMastered();
       self.setCurrentBookCounters(['narration_blocks', 'not_marked_blocks']);
     });
     this.setCurrentBookCounters();
@@ -855,7 +827,7 @@ export default {
     },
     audiobook: {
       handler(val) {
-        this.setAllowSetMastered();
+        
       },
       deep: true
     },
@@ -1222,33 +1194,9 @@ export default {
       }
       return `${this.$route.path}`;
     },
-    toggleIsMastered() {
-      if (this.isAllowSetMastered) {
-        this.liveUpdate('isMastered',  !this.currentBook.isMastered)
-      }
-    },
-    setAllowSetMastered() {
-      return;
-      this.allowSetMastered = false;
-      if (!this.audiobook || !this.audiobook.importFiles || this.audiobook.importFiles.length === 0) {
-        this.allowSetMastered = false;
-        if (this.currentBook.isMastered === true) {
-          this.liveUpdate('isMastered',  !this.currentBook.isMastered)
-        }
-      } else {
-        this.checkAllowSetAudioMastered()
-          .then(response => {
-            if (response && response.rows && typeof response.rows[0] !== 'undefined') {
-              this.allowSetMastered = response.rows[0].value === 0;
-            } else {
-              this.allowSetMastered = true;
-            }
-            if (!this.allowSetMastered) {
-              if (this.currentBook.isMastered === true) {
-                this.liveUpdate('isMastered',  !this.currentBook.isMastered);
-              }
-            }
-          })
+    toggleMastering() {
+      if (this._is('editor', true)) {
+        this.liveUpdate('masteringRequired',  !this.currentBook.masteringRequired)
       }
     },
     setAllowExportAudio() {
