@@ -5,7 +5,10 @@
         <div class="file-catalogue" id="file-catalogue">
           <div class="file-catalogue-buttons">
             <div class="" v-if="_is('admin') || _is('editor')">
-              <input type="checkbox" v-model="checkAllState"/>
+              <label class="checkbox-container">
+                <input type="checkbox" v-model="checkAllState"/>
+                <span class="checkmark"></span>
+              </label>
             </div>
             <div v-if="_is('editor')" class="upload-audio">
               <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload btn-small">
@@ -24,7 +27,7 @@
                 </li>
             </dropdown>
             <div class="align-audio">
-              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)" v-if="!alignProcess">Align&nbsp;<span v-if="alignCounter.count > 0">({{blocksForAlignment}})</span></button>
+              <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)" v-if="!alignProcess">Align&nbsp;<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
               <span v-else class="align-preloader -small"></span>
               <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign(true)" title="Cancel aligning"><i class="fa fa-ban"></i></button>
             </div>
@@ -32,7 +35,7 @@
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
           <div class="file-catalogue-files-wrapper">
             <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
-              <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': selections.indexOf(audiofile.id) !== -1}]">
+              <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}]">
                 <template v-if="audiofile.status == 'processing'">
                   <div class="audiofile-info">
                     <i>Processing, {{audiofile.title}}</i>
@@ -41,8 +44,11 @@
                 <template v-else>
                   <div v-if="_is('editor', true) || _is('admin')"
                            class="audiofile-options">
-                    <input type="checkbox" :checked="selections.indexOf(audiofile.id) !== -1"
+                    <label class="checkbox-container">
+                      <input type="checkbox" :checked="selections.indexOf(audiofile.id) !== -1"
                            v-on:click="addSelection(audiofile.id, selections.indexOf(audiofile.id) === -1)"/>
+                      <span class="checkmark"></span>
+                    </label>
                   </div>
                   <div :class="['audiofile-info', {'playing': playing == audiofile.id, done: audiofile.done}]">
                     <div class="audiofile-player-controls">
@@ -988,7 +994,16 @@
           //console.log(split)
         }
       },
-
+      isAudiofileHighlighted(audiofile) {
+        if (this.alignCounter && this.alignCounter.blocks && audiofile.blockMap) {
+          let hasMap = this.alignCounter.blocks.find(b => {
+            return typeof audiofile.blockMap[b._id] !== 'undefined';
+          });
+          return hasMap;
+        } else {
+          return false;
+        }
+      },
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
     },
     beforeDestroy() {
@@ -1455,5 +1470,65 @@
     background-size: 19px;
     background-repeat: no-repeat;
     background-position: center;
+  }
+  
+  .checkbox-container {
+    display: block;
+    position: relative;
+    padding-left: 15px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 22px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  .checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .checkmark {
+    position: absolute;
+    top: -3px;
+    left: -2px;
+    height: 15px;
+    width: 15px;
+    background-color: #eee;
+    border: 1px solid #b3b0b0;
+    border-radius: 3px;
+  }
+
+  .checkbox-container:hover input ~ .checkmark {
+    background-color: #ccc;
+  }
+
+  .checkbox-container input:checked ~ .checkmark {
+    background-color: #317bb8;
+  }
+
+  .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+  }
+
+  .checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+  }
+
+  .checkbox-container .checkmark:after {
+    left: 5px;
+    top: 1px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
   }
 </style>
