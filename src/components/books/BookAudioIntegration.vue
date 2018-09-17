@@ -297,6 +297,9 @@
       this.$root.$on('book-reimported', () => {
         this.positions_tmp = {};
       });
+      this.$root.$on('from-audioeditor:close-cancelled', () => {
+        this.audioOpening = false;
+      });
 
       this.getTTSVoices(/*this.currentBookMeta.language*/)
       .then(()=>{

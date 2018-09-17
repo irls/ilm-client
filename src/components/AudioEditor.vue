@@ -954,6 +954,7 @@
         },
         checkExitState() {
           this.hideModal('onExitMessage');
+          this.$root.$emit('from-audioeditor:close-cancelled');
           if (this.discardOnExit) {
             this.discard();
           } else {
