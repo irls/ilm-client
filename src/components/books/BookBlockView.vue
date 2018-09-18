@@ -1402,6 +1402,9 @@ export default {
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
+        if (/\r\n|\r|\n/.test(content)) {
+          content = content.replace(/<p[^>]*>([\s\S]+?)<\/p>([\s\S]+?)/gm, `$1\n$2`)// remove Editor's p instead of line breaks
+        }
         content = content.replace(/<p[^>]*>([\s\S]*?)<\/p>/gm, '<br/>$1')
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
