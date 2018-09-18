@@ -1808,7 +1808,7 @@ export default {
       this.$root.$on('block-approving', this._toggleApproveWaiting);
       
       
-      $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner', (e) => {// click on links in blocks
+      $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
         e.preventDefault();
       });
   },

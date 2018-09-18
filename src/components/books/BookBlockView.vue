@@ -913,6 +913,7 @@ export default {
             } else {
               content = this.block.content + '<span class="content-tail"></span>';
               let rg = new RegExp('((?<!St|Mr|Mrs|Dr|[^\\w][\\w]{1})[\\.\\?\\!]+[\'\"\‘\”\“\’]*)([^\\.\\?\\!\'\"\‘\”\“\’]+)', 'mig');
+              content = content.replace(/<a[^>]*>((?!<\/a>).*)<\/a>/igm, '$1')
               content = content.replace(rg, '$1' + split + '$2');
             }
             return content;
