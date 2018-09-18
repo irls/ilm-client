@@ -1492,6 +1492,7 @@
     position: absolute;
     opacity: 0;
     cursor: pointer;
+    margin-left: -15px;
   }
 
   .checkmark {
