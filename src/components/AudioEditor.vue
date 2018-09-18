@@ -248,6 +248,12 @@
             if (this.isModifiedComputed && this.mode === 'file') {
               this.$root.$emit('from-audioeditor:save-positions', closingId, this.selection);
             }
+            if (this.dragRight) {
+              this.dragRight.destroy();
+            }
+            if (this.dragLeft) {
+              this.dragLeft.destroy();
+            }
             this.silenceLength = 0.1;
             this.cursorPosition = false;
             this.isModified = false;
@@ -453,68 +459,76 @@
               //}
               return;
             });
-            $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>').after('<div id="context-position" class="context-position"></div>');
-            self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
+            let dragDropInterval = setInterval(() => {
+              if ($('.waveform .selection').length > 0) {
+                clearInterval(dragDropInterval);
+                $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>').after('<div id="context-position" class="context-position"></div>');
+                self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
 
-              limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
-              onDrag: function(element, x, y, event) {
-                if ($('[id="resize-selection-left"]').position().left >= x) {
-                  let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
-                  self.selection.start = start-1;
-                  self._setSelectionOnWaveform();
-                  return false;
-                }
-                let startX = 0;
-                if (self.selection && typeof self.selection.start !== 'undefined') {
-                  startX = self.selection.start / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
-                } else {
-                  startX = $('[id="resize-selection-left"]').position().left;
-                }
-                if ($('.selection.segment').length > 0) {
-                  $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
-                }
+                  limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
+                  onDrag: function(element, x, y, event) {
+                    if ($('[id="resize-selection-left"]').position().left >= x) {
+                      let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
+                      self.selection.start = start-1;
+                      self._setSelectionOnWaveform();
+                      return false;
+                    }
+                    let startX = 0;
+                    if (self.selection && typeof self.selection.start !== 'undefined') {
+                      startX = self.selection.start / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
+                    } else {
+                      startX = $('[id="resize-selection-left"]').position().left;
+                    }
+                    if ($('.selection.segment').length > 0) {
+                      $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
+                    }
 
-                if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
-                  self.audiosourceEditor.activeTrack.stateObj.startX = startX;
-                  if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
-                    self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
-                  } else {
-                    let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
-                    self.plEventEmitter.emit('select', self.selection.start, startSec);
+                    if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
+                      self.audiosourceEditor.activeTrack.stateObj.startX = startX;
+                      if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
+                        self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
+                      } else {
+                        let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
+                        self.plEventEmitter.emit('select', self.selection.start, startSec);
+                      }
+                    }
+                    //self.cursorPosition = self.selection.start;
                   }
-                }
-                //self.cursorPosition = self.selection.start;
-              }
-            })
-            self.dragLeft = new Draggable (document.getElementById('resize-selection-left'), {
-              limit: {x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
-              onDrag: function(element, x, y, event) {
-                if ($('[id="resize-selection-right"]').position().left <= x) {
-                  let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
-                  self.selection.end = start+1;
-                  self._setSelectionOnWaveform();
-                  return false;
-                }
-                $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
-                $('.selection.segment').css('left', x - 5)
-                let startX = 0;
-                if (self.selection && typeof self.selection.end !== 'undefined') {
-                  startX = self.selection.end / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
-                } else {
-                  startX = $('[id="resize-selection-right"]').position().left;
-                }
-                if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
-                  self.audiosourceEditor.activeTrack.stateObj.startX = startX;
-                  if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
-                    self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
-                  } else {
-                    let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
-                    self.plEventEmitter.emit('select', startSec, self.selection.end);
+                })
+                self.dragLeft = new Draggable (document.getElementById('resize-selection-left'), {
+                  limit: {x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
+                  onDrag: function(element, x, y, event) {
+                    if ($('[id="resize-selection-right"]').position().left <= x) {
+                      let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
+                      self.selection.end = start+1;
+                      self._setSelectionOnWaveform();
+                      return false;
+                    }
+                    $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
+                    $('.selection.segment').css('left', x - 5)
+                    let startX = 0;
+                    if (self.selection && typeof self.selection.end !== 'undefined') {
+                      startX = self.selection.end / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
+                    } else {
+                      startX = $('[id="resize-selection-right"]').position().left;
+                    }
+                    if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
+                      self.audiosourceEditor.activeTrack.stateObj.startX = startX;
+                      if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
+                        self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
+                      } else {
+                        let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
+                        self.plEventEmitter.emit('select', startSec, self.selection.end);
+                      }
+                    }
+                    self.cursorPosition = self.selection.start;
                   }
+                })
+                if (self.mode === 'file') {
+                  self._showSelectionBorders();
                 }
-                self.cursorPosition = self.selection.start;
               }
-            })
+            }, 100)
             this.hideModal('onDiscardMessage');
             if (this.mode == 'file') {
               if (bookAudiofile && bookAudiofile.positions) {
@@ -940,6 +954,7 @@
         },
         checkExitState() {
           this.hideModal('onExitMessage');
+          this.$root.$emit('from-audioeditor:close-cancelled');
           if (this.discardOnExit) {
             this.discard();
           } else {
@@ -1005,8 +1020,11 @@
           if (this.cursorPosition && this.cursorPosition > 0) {
             let position = this.cursorPosition / (this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate);
             $('.cursor').css('left', position + 'px');
-            setTimeout(() => {
-              $('.playlist-tracks').scrollLeft($('.cursor').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+            let interval = setInterval(() => {
+              if (typeof $('.cursor').position() !== 'undefined') {
+                $('.playlist-tracks').scrollLeft($('.cursor').position().left - ($('.playlist-tracks')[0].offsetWidth / 2));
+                clearInterval(interval);
+              }
             }, 50);
           } else if (!this.isPlaying) {
             if (this.isSinglePointSelection) {

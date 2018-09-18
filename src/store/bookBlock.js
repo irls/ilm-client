@@ -68,9 +68,9 @@ let BlockTypes = {
     width: ['', 'width-80', 'width-65', 'width-50', 'width-45', 'width-30'],
     style: ['', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline'/*, 'rulebelow', 'bookgraphic'*/],
     align: ['', 'left', 'center', 'right', 'justify'],
-    whitespace: ['', 'verse', 'pre'],
+    whitespace: ['', 'list', 'verse', 'pre'],
     author: ['', 'bab', 'baha', 'abd', 'shoghi', 'sacred', 'bible', 'muhammad', 'quran', 'jesus', 'ali', 'tradition', 'husayn'],
-    'paragraph type': ['', 'dropcap', 'blockquote', 'centerquote', 'dedication', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer', 'list'],
+    'paragraph type': ['', 'dropcap', 'blockquote', 'centerquote', 'dedication', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer'],
   },
   illustration: {
     size: ['', 'x-small', 'small', 'large', 'x-large'],

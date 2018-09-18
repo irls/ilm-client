@@ -1571,6 +1571,10 @@ export default {
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
             this.setCurrentBookCounters(['not_marked_blocks']);
+            if (this.tc_hasTask('audio_mastering')) {
+              this.setCurrentBookCounters(['not_proofed_audio_blocks']);
+            }
+            
             this.recountApprovedInRange();
             //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
             this.getBloksUntil('unresolved', null, this.block._id)
