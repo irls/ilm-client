@@ -10,6 +10,7 @@ class LookupBlock {
     this.in = block.in[0];
     this.out = block.out[0];
     this.type = block.type || 'par';
+    this.status = block.status || {};
     this.secnum   = block.secnum   || '';
     this.parnum   = block.parnum   || '';
     this.isNumber = block.isNumber || false;
