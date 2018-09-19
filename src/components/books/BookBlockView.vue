@@ -1,7 +1,7 @@
 <template>
 <div class="table-body -block" v-bind:class="['-mode-' + mode, blockOutPaddings]" :id="block._id">
     <div v-if="isLocked" class="locked-block-cover"></div>
-    <div :class="['table-cell', 'controls-left', {'_-check-green': block.checked==true}]">
+    <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
 
         <div class="table-row" v-if="meta.numeration !== 'none'">
             <div v-if="false" class='par-ctrl -hidden'>
@@ -218,11 +218,11 @@
             </div>
             <div :class="['table-row ilm-block', block.markedAsDone && !hasChanges ? '-marked':'']">
                 <hr v-if="block.type=='hr'"
-                  :class="[block.getClass(), {'checked': block.checked}]"
+                  :class="[block.getClass(), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
 
                 <div v-else-if="block.type == 'illustration'"
-                :class="['table-body illustration-block', {'checked': block.checked}]"
+                :class="['table-body illustration-block', {'checked': blockO.checked}]"
                 @click="onClick($event)">
                   <img v-if="block.illustration" :src="block.getIllustration()"
                   :height="block.illustration_height"
@@ -260,7 +260,7 @@
                 v-html="mode === 'narrate' ? blockContent : block.content"
                 :class="[ block.getClass(), {
                   'updated': isUpdated,
-                  'checked': block.checked,
+                  'checked': blockO.checked,
                   'playing': blockAudio.src,
                   'hide-archive': isHideArchFlags
                 }]"
@@ -1581,7 +1581,7 @@ export default {
             if (this.tc_hasTask('audio_mastering')) {
               this.setCurrentBookCounters(['not_proofed_audio_blocks']);
             }
-            
+
             this.recountApprovedInRange();
             //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
             this.getBloksUntil('unresolved', null, this.block._id)
