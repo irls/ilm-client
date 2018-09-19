@@ -125,7 +125,8 @@ export const store = new Vuex.Store({
       blocks: []
     },
     alignWatch: null,
-    audiobookWatch: null
+    audiobookWatch: null,
+    selectionXHR: null
   },
 
   getters: {
@@ -1930,9 +1931,11 @@ export const store = new Vuex.Store({
         //} else { // In case of normal task (with tts counter)
           query+='&voicework=all_audio&realign=true';
         //}
+        state.selectionXHR = Date.now();
+        let run = state.selectionXHR;
         return axios.get(api_url + '?' + query, {})
           .then(response => {
-            if (response.status == 200) {
+            if (response.status == 200 && run === state.selectionXHR) {
               commit('set_align_counter', {
                 count: response.data.count,
                 countTTS: response.data.countTTS,
