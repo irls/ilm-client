@@ -111,7 +111,7 @@
   <vue-scrollbar classes="" ref="scrollBarRef" :onChangePosition="scrollByBar" direction="vertical"
   :onEndDragEvent="endScrollDragging" :onScrollBarClick="scrollBarClick">
   <div class="scroll-me" ref="scrollBarWrapRef">
-  <div v-for="(sBlockId, sBlockIdx) in scrollBarBlocks" :key="sBlockId" :id="'scroll-'+sBlockId" :data-id="sBlockId" ref="scrollBlocksRefs"
+  <div v-for="(sBlockId, sBlockIdx) in scrollBarBlocks" :id="'scroll-'+sBlockId" :data-id="sBlockId" ref="scrollBlocksRefs"
   :style="{height: scrollBarBlockHeight+'px'}"></div>
   <div class="clearfix"></div>
   </div>
