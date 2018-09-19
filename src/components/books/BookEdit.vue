@@ -374,7 +374,7 @@ export default {
 
     lazyLoad(firstId = false, lastId = false)
     {
-      console.log('lazyLoad', this.isNeedUp, this.isNeedDown, this.lazyLoaderDir);
+      //console.log('lazyLoad', this.isNeedUp, this.isNeedDown, this.lazyLoaderDir);
       //console.log('parlist', Array.from(this.parlist.keys()));
       //console.log('lazyLoaderDir1', firstId, lastId);
 
@@ -1752,7 +1752,7 @@ export default {
                 this.updateScrollSlider();
                 this.setBlockWatch();
                 this.$root.$emit('from-book-meta:upd-toc', true);
-                //this.lazyLoad();
+                this.lazyLoad();
               });
             });
           });
@@ -1788,7 +1788,7 @@ export default {
                 this.parlistO.appendLookupsList(this.meta._id, res);
                 this.scrollBarBlocks = this.parlistO.idsArray();
                 this.updateScrollSlider();
-                //this.lazyLoad();
+                this.lazyLoad();
                 //console.log('loadBookBlocks then');
                 this.setBlockWatch()
                 if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
@@ -1813,8 +1813,8 @@ export default {
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
       this.$root.$on('block-approving', this._toggleApproveWaiting);
-      
-      
+
+
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
         e.preventDefault();
       });
