@@ -3647,7 +3647,9 @@ export default {
         justify-content: flex-start;
 
         &.-audio {
-          width: 80px;
+          width: 65px;
+          justify-content: space-between;
+          margin-right: 50px;
         }
         &.-par-num {
           width: 180px;
