@@ -786,6 +786,7 @@ export default {
     this.setCurrentBookCounters();
     this.$root.$on('book-reimported', () => {
       //this.loadAudiobook()
+      this.$root.$emit('from-book-meta:upd-toc', true);
     });
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
 
