@@ -1347,6 +1347,7 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
+      let updateToc = styleKey == 'table of contents';
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let pBlock, currId = this.blockSelection.start._id;
@@ -1357,6 +1358,7 @@ export default {
                 if (styleVal.length) {
                   pBlock.classes[styleKey] = styleVal;
                   if (blockType === 'header' && styleKey === 'level') {
+                    updateToc = true;
                     pBlock.classes['table of contents'] = 'toc' + styleVal.replace(/\D/, '');
                   }
                 }
@@ -1368,7 +1370,7 @@ export default {
                 } else {
                   pBlock.partUpdate = true;
                   this.putBlock(pBlock).then(()=>{
-                    if (styleKey == 'table of contents') {
+                    if (updateToc) {
                       this.$root.$emit('from-book-meta:upd-toc', true);
                     }
                   });
