@@ -98,10 +98,10 @@ let BlockTypesAlias = {
     },
     'table of contents': {
       values: {
-        'toc1': 'level1',
-        'toc2': 'level2',
-        'toc3': 'level3',
-        'toc4': 'level4'
+        'toc1': 'level 1',
+        'toc2': 'level 2',
+        'toc3': 'level 3',
+        'toc4': 'level 4'
       }
     }
   }
