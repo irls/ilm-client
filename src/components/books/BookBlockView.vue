@@ -3306,8 +3306,13 @@ export default {
             visibility: hidden;
         }
 
-        &:hover, &.editing {
+        &:hover {
             .-hidden {
+                visibility: visible;
+            }
+        }
+        &.editing {
+            .-hidden.-audio {
                 visibility: visible;
             }
         }
