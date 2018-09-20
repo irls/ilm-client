@@ -1430,10 +1430,12 @@ export default {
       return false;
     },
     updateVisibleBlocks() {
-      this.$refs.blocks.forEach(($ref)=>{
-        $ref.isUpdated = true;
-        $ref.isUpdated = false;
-      })
+      if (this.$refs.blocks && this.$refs.blocks.length) {
+        this.$refs.blocks.forEach(($ref)=>{
+          $ref.isUpdated = true;
+          $ref.isUpdated = false;
+        })
+      }
     },
     setUnCheckedRange() {
       this.parlistO.setUnCheckedRange()

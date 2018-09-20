@@ -3635,6 +3635,7 @@ export default {
     &.controls-top {
       width: 100%;
       height: 26px;
+      position: relative;
 
       .par-ctrl {
         width: 440px;
@@ -3724,7 +3725,7 @@ export default {
         .block-menu {
           /*display: inline-block;
           vertical-align: bottom;*/
-          position: relative;
+          /*position: relative;*/
           /*width: 40px;*/
           height: 20px;
           .fa, .glyphicon {
