@@ -352,6 +352,31 @@
                       Hide from display
                     </label>
                   </fieldset>
+                  <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                    <legend>Type</legend>
+                    <label v-for="sVal in blockTypes[blockType]['level']"
+                          @click="selectStyle(blockType, 'level', sVal)"
+                          class="block-style-label"
+                          :key="blockType + 'level' + sVal"
+                          :id="blockType + 'level' + sVal">
+                          
+                          <template v-if="styleTabs.get(blockType).get('level').size > 1">
+                            <i class="fa fa-dot-circle-o"
+                            v-if="styleTabs.get(blockType).get('level').has(sVal.length?sVal:'none')"
+                            ></i>
+                            <i v-else class="fa fa-circle-o"></i>
+                          </template>
+
+                          <template v-else>
+                            <i v-if="styleTabs.get(blockType).get('level').has(sVal.length?sVal:'none')"
+                            class="fa fa-check-circle-o"></i>
+                            <i v-else class="fa fa-circle-o"></i>
+                          </template>
+
+                          <template v-if="sVal.length">{{styleValue(blockType, 'level', sVal)}}</template>
+                          <template v-else>none</template>
+                        </label>
+                  </fieldset>
 
                   <fieldset class="block-style-fieldset block-num-fieldset"
                   v-if="numProps.has(blockType) && ['par'].indexOf(blockType) > -1">
@@ -383,10 +408,10 @@
                       Hide from display
                     </label>
                   </fieldset>
-
+                  <i>Pleas keep defaults unless you have a compelling reason to change them</i>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
-                      <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length" :key="styleKey" class="block-style-fieldset">
+                      <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && (styleKey !== 'level' || blockType !== 'header')" :key="styleKey" class="block-style-fieldset">
                       <legend>{{styleCaption(blockType, styleKey)}}</legend>
 
                         <label v-for="sVal in styleArr"
@@ -394,7 +419,7 @@
                           class="block-style-label"
                           :key="blockType + styleKey.replace(' ', '') + sVal"
                           :id="blockType + styleKey.replace(' ', '') + sVal">
-
+                          
                           <template v-if="styleTabs.get(blockType).get(styleKey).size > 1">
                             <i class="fa fa-dot-circle-o"
                             v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
@@ -408,7 +433,7 @@
                             <i v-else class="fa fa-circle-o"></i>
                           </template>
 
-                          <template v-if="sVal.length">{{sVal}}</template>
+                          <template v-if="sVal.length">{{styleValue(blockType, styleKey, sVal)}}</template>
                           <template v-else>none</template>
                         </label>
 
@@ -548,7 +573,7 @@
 <script>
 import Vue from 'vue'
 import { mapGetters, mapActions } from 'vuex'
-import { BlockTypes } from '../../store/bookBlock'
+import { BlockTypes, BlockTypesAlias } from '../../store/bookBlock'
 import superlogin from 'superlogin-client'
 import BookDownload from './BookDownload'
 import BookEditCoverModal from './BookEditCoverModal'
@@ -762,6 +787,7 @@ export default {
     this.setCurrentBookCounters();
     this.$root.$on('book-reimported', () => {
       //this.loadAudiobook()
+      this.$root.$emit('from-book-meta:upd-toc', true);
     });
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
 
@@ -1326,13 +1352,20 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
+      let updateToc = styleKey == 'table of contents';
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
           idsArrayRange.forEach((blockId)=>{
             let pBlock = this.storeList.get(blockId);
             if (pBlock && pBlock.type == blockType) {
-              if (styleVal.length) pBlock.classes[styleKey] = styleVal;
+                if (styleVal.length) {
+                  pBlock.classes[styleKey] = styleVal;
+                  if (blockType === 'header' && styleKey === 'level') {
+                    updateToc = true;
+                    pBlock.classes['table of contents'] = 'toc' + styleVal.replace(/\D/, '');
+                  }
+                }
               else pBlock.classes[styleKey] = '';
 
               if (pBlock.isChanged || pBlock.isAudioChanged) {
@@ -1341,7 +1374,7 @@ export default {
               } else {
                 pBlock.partUpdate = true;
                 this.putBlock(pBlock).then(()=>{
-                  if (styleKey == 'table of contents') {
+                  if (updateToc) {
                     this.$root.$emit('from-book-meta:upd-toc', true);
                   }
                 });
@@ -1467,6 +1500,13 @@ export default {
         return caption.charAt(0).toUpperCase() + caption.slice(1);
       }
       return key.charAt(0).toUpperCase() + key.slice(1);
+    },
+    styleValue(type, key, val) {
+      if (BlockTypesAlias[type] && BlockTypesAlias[type][key] && BlockTypesAlias[type][key]['values'] && BlockTypesAlias[type][key]['values'][val]) {
+        return BlockTypesAlias[type][key]['values'][val];
+      } else {
+        return val;
+      }
     },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers'])

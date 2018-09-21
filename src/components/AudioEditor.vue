@@ -1209,7 +1209,9 @@
             //self.audiosourceEditor.annotationList.renderResizeLeft(annotations.length - 1);
         },
         _isAnnotationsEditable() {
-          return this.currentBookMeta.isMastered || (this.block && this.block.voicework === 'tts');
+          return (!this.currentBookMeta.masteringRequired || this.currentBookMeta.isMastered) || 
+                  (this.block && this.block.voicework === 'tts' || 
+                  (this.block && this.block.status && this.block.status.proofed === false && this.tc_hasTask('audio_mastering') && this.block.status.stage === 'audio_mastering'));
         },
         _setBlocksSelection() {
           if (this.blockSelection && ((this.blockSelection.start && this.blockSelection.start._id) || (this.blockSelection.end && this.blockSelection.end._id)) && this.plEventEmitter) {
