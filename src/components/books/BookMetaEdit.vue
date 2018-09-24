@@ -903,6 +903,12 @@ export default {
       handler(val) {
         this.isPublishing = false;
       }
+    },
+    'currentBook.isIntheProcessOfPublication': {
+      handler(val) {
+        console.log(val)
+        this.isPublishing = !!val;
+      }
     }
 
   },
