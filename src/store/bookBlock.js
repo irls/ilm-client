@@ -465,7 +465,7 @@ class BookBlock {
         }
       }
     }
-    
+
     return result;
   }
 
