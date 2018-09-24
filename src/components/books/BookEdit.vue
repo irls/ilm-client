@@ -1,7 +1,7 @@
 <template>
 <div class="content-scroll-wrapper" :class="[{'recording-background': recordingState == 'recording'}]" v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="handleScroll">
   <div v-on:wheel.prevent="smoothScrollContent"
-    :class="['container-fluid ilm-global-style', metaStyles]">
+    :class="['container-fluid ilm-book-styles ilm-global-style', metaStyles]">
 
     <!--<div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >-->
 
@@ -1076,8 +1076,8 @@ export default {
                 this.unableJoinMessage = true;
                 return Promise.reject('type');
               }
-              
-              
+
+
               let elBlock = this.$children.find(c => {
                 return c.$el.id == block._id;
               });
@@ -1093,10 +1093,10 @@ export default {
                 this.doJoinBlocks.block = block;
                 this.doJoinBlocks.direction = direction;
                 this.doJoinBlocks.show = true;
-              } else if (!this.doJoinBlocks.showAudio && 
-                      (this.parlist.get(block._id).isAudioChanged || 
+              } else if (!this.doJoinBlocks.showAudio &&
+                      (this.parlist.get(block._id).isAudioChanged ||
                       this.parlist.get(blockBefore._id).isAudioChanged ||
-                      (elBlock && elBlock.audioEditFootnote.isAudioChanged) || 
+                      (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
                       (elNext && elNext.audioEditFootnote.isAudioChanged))) {
                 this.doJoinBlocks.block = block;
                 this.doJoinBlocks.direction = direction;
@@ -1189,10 +1189,10 @@ export default {
                 this.doJoinBlocks.direction = direction;
                 this.doJoinBlocks.show = true;
 
-              } else if (!this.doJoinBlocks.showAudio && 
-                      (this.parlist.get(block._id).isAudioChanged || 
-                      this.parlist.get(block.chainid).isAudioChanged || 
-                      (elBlock && elBlock.audioEditFootnote.isAudioChanged) || 
+              } else if (!this.doJoinBlocks.showAudio &&
+                      (this.parlist.get(block._id).isAudioChanged ||
+                      this.parlist.get(block.chainid).isAudioChanged ||
+                      (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
                       (elNext && elNext.audioEditFootnote.isAudioChanged))) {
                 this.doJoinBlocks.block = block;
                 this.doJoinBlocks.direction = direction;
@@ -1806,6 +1806,11 @@ export default {
 
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
       this.$root.$on('block-approving', this._toggleApproveWaiting);
+      
+      
+      $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
+        e.preventDefault();
+      });
   },
 
   beforeDestroy:  function() {

@@ -1,5 +1,5 @@
 <template>
-  <div :class="['ilm-global-style container-fluid', metaStyles]">
+  <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
     <template v-for="(block, blockId) in parlist">
@@ -129,7 +129,9 @@ export default {
                     newBlock.content = newBlock.content.replace(
                       /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gmi,
                       (idx)=>{
-                        newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+                        if (typeof newBlock.footnotes[ftnIdx] !== 'undefined') {
+                          newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+                        }
                         ftnIdx++;
                         return `<sup data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
                       }
@@ -138,7 +140,9 @@ export default {
                     newBlock.content = newBlock.content.replace(
                       /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gmi,
                       (idx)=>{
-                        newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+                        if (typeof newBlock.footnotes[ftnIdx] !== 'undefined') {
+                          newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+                        }
                         ftnIdx++;
                         return `<sup class="service-info" data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
                       }

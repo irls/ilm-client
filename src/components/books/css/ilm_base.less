@@ -54,6 +54,9 @@
 @font_title_author: 27pt;
 @font_title_copyright: 15pt;
 @font_title_translator: 27pt;
+@font_header_normal: 23pt;
+
+.ilm-book-styles {
 
 .table-body.-block { /*Outer paddings for edit mode*/
   &.outpad-top {
@@ -192,6 +195,7 @@
   .title {
     font-size: @font_title_normal;
     line-height: @font_title_normal;
+    font-weight: normal;
 
     text-align: center;
     /*margin-bottom: 1em; */
@@ -261,10 +265,16 @@
   }
 
   .header {
-    font-size: @main_font_size * 1.5;
+    font-size: @font_header_normal;
     text-align: center;
     /*margin-bottom: 1em; */
     padding: @normal_padding;
+    &.xx-small { font-size: @font_header_normal*0.6; }
+    &.x-small { font-size: @font_header_normal*0.7; }
+    &.small { font-size: @font_header_normal*0.8; }
+    &.large { font-size: @font_header_normal*1.1; }
+    &.x-large { font-size: @font_header_normal*1.2; }
+    &.xx-large { font-size: @font_header_normal*1.3; }
   }
   .content-wrap {
     &.header {
@@ -425,7 +435,7 @@
 
   /***** Global whitespace *****/
   .verse {
-    white-space: pre-line;
+    white-space: pre-wrap;
   }
   .pre {
     white-space: pre;
@@ -444,12 +454,13 @@
   }
 
   .list {
-    padding-left: @list_normal_padding;
+    /*padding-left: @list_normal_padding;*/
+    white-space: pre-line;
   }
   .content-wrap {
     &.list:hover {
       // because of border on hover
-      padding-left: @list_normal_padding - 1;
+      /*padding-left: @list_normal_padding - 1;*/
     }
   }
 
@@ -645,7 +656,7 @@
 
 }
 
-.ilm-global-style {
+&.ilm-global-style {
   &.typewriter {
     .ilm-block {
       font-family: Typewriter;
@@ -754,7 +765,7 @@
 }
 
 
-.global-ocean {
+&.global-ocean {
 
   .ilm-block {
 
@@ -952,7 +963,7 @@
         font-family: GoudyHandtooled;
         color: #1a1a1a;
         /*text-transform: uppercase;*/
-        font-size: 32pt;
+        /*font-size: 32pt;*/
         &.smallcaps {
           font-variant: small-caps;
           text-transform: none;
@@ -966,7 +977,7 @@
       }
       &.h3 {
         font-family: Garamond1689;
-        font-size: 24pt;
+        /*font-size: 24pt;*/
         line-height: 1em;
         font-weight: normal;
         page-break-after: avoid;
@@ -986,7 +997,7 @@
       }
       &.h4 {
         font-family: Garamond1689;
-        font-size: 20pt;
+        /*font-size: 20pt;*/
         line-height: 1em;
         font-weight: normal;
         page-break-after: avoid;
@@ -1003,7 +1014,7 @@
 
 }
 
-.global-ffa {
+&.global-ffa {
 
   .ilm-block {
 
@@ -1186,7 +1197,6 @@
         font-family: Garamond1689;
         color: rgb(63, 74, 40);
         font-weight: 700;
-        font-size: 55px;
         &.subhead {
           font-weight: 700;
           font-size: 38px;
@@ -1202,7 +1212,6 @@
         font-weight: 700;
         min-height: 95px;
         color: rgb(104, 122, 67);
-        font-size: 1.7em;
 
 /*        font-size: 1.7em;
         line-height: 1.45em;
@@ -1241,4 +1250,4 @@
   }
 
 }
-
+}
