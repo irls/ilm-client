@@ -93,7 +93,7 @@ import { mapGetters, mapState, mapActions } from 'vuex'
 
           let ftnIdx = 0;
           viewObj.content = viewObj.content.replace(
-            /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
+            /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
             (idx)=>{
               if (typeof viewObj.footnotes[ftnIdx] !== 'undefined') {
                 viewObj.footnotes[ftnIdx].ftnIdx = this.fntCounter;
@@ -104,7 +104,7 @@ import { mapGetters, mapState, mapActions } from 'vuex'
           );
           //<sup class="service-info" data-idx="2"><w class="service-info" data-sugg="">2</w></sup>
           viewObj.content = viewObj.content.replace(
-            /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
+            /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
             (idx)=>{
               if (typeof viewObj.footnotes[ftnIdx] !== 'undefined') {
                 viewObj.footnotes[ftnIdx].ftnIdx = this.fntCounter;
