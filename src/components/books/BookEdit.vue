@@ -338,10 +338,8 @@ export default {
 
     loadBookMeta(onPage) {
       if (this.$route.params.hasOwnProperty('bookid')) {
-        //if (this.parlistO.cleanLookupsList(this.meta._id)) {
-          this.$store.commit('clear_storeList');
-          this.$store.commit('clear_storeListO');
-        //}
+        this.$store.commit('clear_storeList');
+        this.$store.commit('clear_storeListO');
         this.freeze('loadBookMeta');
         return this.loadBook(this.$route.params.bookid)
         .then((meta)=>{

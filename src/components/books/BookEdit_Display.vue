@@ -1,39 +1,41 @@
 <template>
-  <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
+  <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]" @scroll="onScroll">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
-    <template v-for="(block, blockId) in parlist">
-    <div :key="block._id" :class="['ilm-block', 'ilm-display', blockOutPaddings(block)]">
-      <div v-if="block.type == 'illustration'" :class="block.getClass()">
-        <img :class="block.getClass()" :src="block.getIllustration()"/>
+    <template v-for="(blockId, listIdx) in parlistO.idsArray()">
+    <template v-for="blockView in blockViewPrepare(blockId)">
+    <div :key="blockId" :id="blockId" :data-id="blockId" :data-rid="parlistO.getRIdById(blockId)" ref="viewBlocks" :class="['ilm-block', 'ilm-display', blockOutPaddings(blockView)]">
+
+      <div v-if="blockView.type == 'illustration'" :class="blockView.getClass()">
+        <img :class="blockView.getClass()" :src="blockView.getIllustration()"/>
         <div class="description"
-        :class="['content-description', block.getClass()]"
-        v-if="block.description.length"
-        v-html="block.description">
+        :class="['content-description', blockView.getClass()]"
+        v-if="blockView.description.length"
+        v-html="blockView.description">
         </div>
       </div>
-      <div v-else-if="block.type == 'hr'">
-        <hr :class="[block.getClass()]"/>
+      <div v-else-if="blockView.type == 'hr'">
+        <hr :class="[blockView.getClass()]"/>
       </div>
       <div v-else >
         <div
-          v-if="block.parnum && block.parnum.length"
-          v-html="block.parnum"
+          v-if="blockView.parnum && blockView.parnum.length"
+          v-html="blockView.parnum"
           :class="['parnum']">
         </div>
         <div
           @click="handleFootnote($event)"
-          :class="[block.getClass()]"
-          :id="block.id"
-          :data-parnum="block.parnum"
-          :lang="block.language || meta.language"
-          :data-type="block.type"
-          v-html="block.content">
+          :class="[blockView.getClass()]"
+          :id="blockId"
+          :data-parnum="blockView.parnum"
+          :lang="blockView.language || meta.language"
+          :data-type="blockView.type"
+          v-html="blockView.content">
         </div>
         <div class="footnotes"
-          v-if="block.footnotes.length > 0">
+          v-if="blockView.footnotes.length > 0">
           <div class="-hidden" ref="footNotes"
-            v-for="(footnote, footnoteIdx) in block.footnotes">
+            v-for="(footnote, footnoteIdx) in blockView.footnotes">
             <div class="-num">[fn{{footnote.ftnIdx+1}}]</div>
             <div class="-text"
               v-html="footnote.content">
@@ -44,14 +46,14 @@
     </div>
     <div class="clearfix"></div>
     </template>
-    <infinite-loading @infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
+    </template>
   </div>
 </template>
 
 <script>
+import Vue from 'vue'
 import BookDisplayHeader from './BookDisplayHeader'
 //import BookTOC from './BookTOC'
-import InfiniteLoading from 'vue-infinite-loading'
 import { mapGetters, mapState, mapActions } from 'vuex'
 import { BookBlock, setBlockParnum }    from '../../store/bookBlock'
 
@@ -59,19 +61,20 @@ export default {
   name: 'BookEditDisplay',
   data () {
     return {
-      parlist: [],
       page: 0,
-      parCounter: { pref: 0, prefCnt: 0, curr: 1 },
+      startId: false,
       fntCounter: 0
     }
   },
   components: {
-    BookDisplayHeader, InfiniteLoading,  /*BookTOC,*/
+    BookDisplayHeader, /*InfiniteLoading,  BookTOC,*/
   },
   computed: {
       ...mapGetters({
         book: 'currentBook',
-        meta: 'currentBookMeta'
+        meta: 'currentBookMeta',
+        parlist: 'storeList',
+        parlistO: 'storeListO'
       }),
       metaStyles: function () {
           let result = '';
@@ -87,92 +90,126 @@ export default {
       },
   },
   methods: {
-    ...mapActions(['loadBlocks', 'loadBlocksChain', 'loadBook']),
+    ...mapActions([
+      'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
+      'loopPreparedBlocksChain'
+    ]),
 
-    onInfiniteScroll() {
-      if (this.meta._id) {
-        this.getBlocks();
-      } else {
-        if (this.$route.params.hasOwnProperty('bookid')) {
-          this.loadBook(this.$route.params.bookid)
-          .then(()=>{
-            this.getBlocks();
-          })
-        }
-      }
-    },
-    getBlocks() {
-      if (this.meta._id) {
-        let first_id = false;
-        if (this.parlist.length > 0) first_id = this.parlist[this.parlist.length-1].chainid;
-        else if (this.meta.startBlock_id) first_id = this.meta.startBlock_id;
-        this.loadBlocksChain({
-            book_id: this.meta._id,
-            startId: first_id,
-            onpage: 20
-        })
-        .then((result)=>{
-            if (result.rows.length > 0) {
-                result.rows.forEach((el, idx, arr)=>{
-                    let newBlock = new BookBlock(el);
-                    newBlock.content = newBlock.content.replace(
-                      /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/mig,
-                      '<span data-pg="$1"></span>'
-                    );
-                    //<sup class="service-info" data-pg="xxiii"><w class="service-info" data-sugg="">pg </w><w class="service-info" data-sugg="">xxiii</w></sup>
-                    newBlock.content = newBlock.content.replace(
-                      /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-pg=['"]{1}(.*?)['"]{1}[^>]*>.*?<\/sup>/mig,
-                      '<span class="service-info" data-pg="$1"></span>'
-                    );
+    blockViewPrepare(blockId, blockRid) {
+      console.log('blockViewPrepare');
+      if (this.parlist.has(blockId)) {
+        let viewObj = new BookBlock(this.parlist.get(blockId));//Object.assign({}, this.parlist.get(blockId));
+        viewObj.content = viewObj.content.replace(
+          /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/mig,
+          '<span data-pg="$1"></span>'
+        );
+        //<sup class="service-info" data-pg="xxiii"><w class="service-info" data-sugg="">pg </w><w class="service-info" data-sugg="">xxiii</w></sup>
+        viewObj.content = viewObj.content.replace(
+          /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-pg=['"]{1}(.*?)['"]{1}[^>]*>.*?<\/sup>/mig,
+          '<span class="service-info" data-pg="$1"></span>'
+        );
 
-                    let ftnIdx = 0;
-                    newBlock.content = newBlock.content.replace(
-                      /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
-                      (idx)=>{
-                        if (typeof newBlock.footnotes[ftnIdx] !== 'undefined') {
-                          newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
-                        }
-                        ftnIdx++;
-                        return `<sup data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
-                      }
-                    );
-                    //<sup class="service-info" data-idx="2"><w class="service-info" data-sugg="">2</w></sup>
-                    newBlock.content = newBlock.content.replace(
-                      /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
-                      (idx)=>{
-                        if (typeof newBlock.footnotes[ftnIdx] !== 'undefined') {
-                          newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
-                        }
-                        ftnIdx++;
-                        return `<sup class="service-info" data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
-                      }
-                    );
-                    //'<sup data-idx="$1">[$1]</sup>'
-                    this.parlist.push(newBlock);
-                });
-              //console.log('result', result);
-              if (result.finish) {
-                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
-              } else {
-                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.loaded();
-              }
-            } else {
-                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
+        let ftnIdx = 0;
+        viewObj.content = viewObj.content.replace(
+          /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
+          (idx)=>{
+            if (typeof viewObj.footnotes[ftnIdx] !== 'undefined') {
+              viewObj.footnotes[ftnIdx].ftnIdx = this.fntCounter;
             }
-            this.isAllLoaded = this.$refs.infiniteLoading.isComplete;
-            this.reCountProxy();
-        })
-        .catch((err)=>{
-          if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
-          console.log('Error: ', err.message);
-        });
+            ftnIdx++;
+            return `<sup data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
+          }
+        );
+        //<sup class="service-info" data-idx="2"><w class="service-info" data-sugg="">2</w></sup>
+        viewObj.content = viewObj.content.replace(
+          /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
+          (idx)=>{
+            if (typeof viewObj.footnotes[ftnIdx] !== 'undefined') {
+              viewObj.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+            }
+            ftnIdx++;
+            return `<sup class="service-info" data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
+          }
+        );
+
+//         let rid = this.parlistO.getRIdById(blockId);
+//         let blockO = this.parlistO.getBlockByRid(rid);
+//         if (blockO.type == 'header' && blockO.secnum.toString().length > 0) {
+//           viewObj.parnum = blockO.secnum;
+//         }
+//         else if (blockO.type == 'par' && blockO.parnum.toString().length > 0) {
+//           viewObj.parnum = blockO.parnum;
+//         }
+//         else viewObj.parnum = false;
+
+        return [viewObj];
       }
+      return [{ getClass: ()=>'', footnotes: [] }];
     },
-    reCountProxy: function () {
-      this.parCounter = { pref: 0, prefCnt: 0, curr: 1 };
-      this.parlist.forEach((block, idx, arr)=>{
-        block.parnum = setBlockParnum(block, this.parCounter);
-      })
+
+    onScroll(ev) {
+      //console.log('scroll', ev);
+      let stopCond = false;
+      let firstVisibleId = false;
+      let visible = false;
+      let idsArray = [];
+      for (let blockRef of this.$refs.viewBlocks) {
+        visible = this.checkVisible(blockRef);
+        if (visible) {
+          stopCond = true;
+          if (!firstVisibleId) firstVisibleId = blockRef.dataset.id;
+          if (this.parlistO.getBlockByRid(blockRef.dataset.rid).loaded === false) {
+            idsArray.push(blockRef.dataset.id);
+          }
+          //console.log('visible', blockRef.dataset.rid, blockRef.dataset.id, this.parlistO.getBlockByRid(blockRef.dataset.rid).loaded);
+        }
+        if (!visible && stopCond) break;
+      }
+      if (idsArray.length) {
+        this.getBlocks(idsArray)
+        .then((answer)=>{
+          //console.log('getBlocks answer', answer);
+          this.$forceUpdate();
+        })
+      }
+      //console.log('firstVisibleId', firstVisibleId);
+      if (this.$route.params.block !== firstVisibleId) this.$router.push({name: 'BookEditDisplay', params: {block: firstVisibleId}});
+    },
+
+    checkVisible(elm) {
+      var rect = elm.getBoundingClientRect();
+      var viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+      return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
+    },
+
+    getAllBlocks(metaId, startBlock) {
+      this.loadBookBlocks({bookId: metaId})
+      .then((answer)=>{
+        console.log('1', this.parlistO.idsArray());
+        let scrollId = this.parlistO.idsArray()[0];
+        this.parlistO.updateLookupsList(metaId, answer);
+        Vue.nextTick(()=>{
+          document.getElementById(scrollId).scrollIntoView();
+        });
+      });
+    },
+    getBlocks(idsArray) {
+      //console.log('getBlocks idsArray', idsArray);
+      return this.loopPreparedBlocksChain({ids: idsArray})
+      .then((result)=>{
+        let resIdsArray = [];
+        if (result.rows && result.rows.length > 0) {
+          result.rows.forEach((el, idx, arr)=>{
+            if (!this.parlist.has(el._id)) {
+              let newBlock = new BookBlock(el);
+              this.$store.commit('set_storeList', newBlock);
+              this.parlistO.setLoaded(el._id);
+              resIdsArray.push(el._id);
+            }
+          });
+        }
+        return Promise.resolve(resIdsArray);
+      });
     },
     handleFootnote: function (ev) {
       if (ev.target.dataset.idx && this.$refs.footNotes[ev.target.dataset.idx]) {
@@ -187,6 +224,57 @@ export default {
 //       return (match && match.length) ? match.join(' ') : '';
       return (block.classes && block.classes.hasOwnProperty('outsize-padding')) ? block.classes['outsize-padding'] : ''
     },
+  },
+  mounted: function() {
+
+      if (this.$route.params.hasOwnProperty('bookid')) {
+        let bookid = this.$route.params.bookid;
+        if (!this.meta._id || bookid !== this.parlistO.meta.bookid) {
+          this.$store.commit('clear_storeList');
+          this.$store.commit('clear_storeListO');
+          this.loadBook(bookid)
+          .then((meta)=>{
+            console.log('then meta', meta);
+
+            let startBlock = this.$route.params.block || false;
+            this.startId = startBlock;
+
+            return this.loadPartOfBookBlocks({
+              bookId: this.$route.params.bookid,
+              block: startBlock,
+              taskType: false,
+              onPage: 20
+            }).then((answer)=>{
+              this.parlistO.setLookupsList(answer.meta.bookid, answer);
+              if (this.startId == false) this.startId = this.parlistO.idsArray()[0];
+              this.loopPreparedBlocksChain({ids: this.parlistO.idsArray()})
+              .then((result)=>{
+              console.log('result', result);
+                if (result.rows && result.rows.length > 0) {
+                  result.rows.forEach((el, idx, arr)=>{
+                    if (!this.parlist.has(el._id)) {
+                      let newBlock = new BookBlock(el);
+                      this.$store.commit('set_storeList', newBlock);
+                      this.parlistO.setLoaded(el._id);
+                    }
+                  });
+                }
+                this.getAllBlocks(this.parlistO.meta.bookid, startBlock);
+              });
+              //console.log('this.parlistO.meta', this.parlistO.meta);
+              //console.log('parlistO.idsArray()', this.parlistO.idsArray());
+            });
+          })
+        }
+
+      }
+  },
+  beforeDestroy:  function() {
+  },
+  watch: {
+//     '$route' (toRoute, fromRoute) {
+//       //console.log('$route', toRoute, fromRoute);
+//     }
   },
 }
 </script>

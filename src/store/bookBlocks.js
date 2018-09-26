@@ -143,6 +143,7 @@ class BookBlocks {
   }
 
   setLookupsList(bookId, bookList) {
+    console.log('setLookupsList');
     this.lookupList = {};
     this.blocksList = {};
     this.listIds = [];
@@ -158,12 +159,31 @@ class BookBlocks {
   }
 
   appendLookupsList(bookId, bookList) {
+//     console.log('appendLookupsList');
     if (Array.isArray(bookList.blocks)) bookList.blocks.forEach((block)=>{
-      this.listIds.push(block.blockid);
-      this.listRIds.push(block.rid);
-      this.lookupList[block.rid] = new LookupBlock(block);
-      //this.blocksList[block.blockid] = new BookBlock(block);
+      if (!this.lookupList[block.rid]) {
+        this.listIds.push(block.blockid);
+        this.listRIds.push(block.rid);
+        this.lookupList[block.rid] = new LookupBlock(block);
+        //this.blocksList[block.blockid] = new BookBlock(block);
+      }
     })
+  }
+
+  updateLookupsList(bookId, bookList) {
+//     console.log('appendLookupsList');
+    let listIds = [];
+    let listRIds = [];
+    if (Array.isArray(bookList.blocks)) bookList.blocks.forEach((block)=>{
+      listIds.push(block.blockid);
+      listRIds.push(block.rid);
+      if (!this.lookupList[block.rid]) {
+        this.lookupList[block.rid] = new LookupBlock(block);
+        //this.blocksList[block.blockid] = new BookBlock(block);
+      }
+    })
+    this.listIds = listIds;
+    this.listRIds = listRIds;
   }
 
   getFirstRid(){
@@ -231,6 +251,7 @@ class BookBlocks {
 
   setLoaded(blockId) {
     let blockRId = this.getRIdById(blockId);
+    //console.log('setLoaded', blockId, blockRId);
     if (blockRId) this.lookupList[blockRId].loaded = true;
   }
 

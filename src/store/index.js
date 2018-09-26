@@ -982,12 +982,13 @@ export const store = new Vuex.Store({
 
       // if currentbook exists, check if currrent book needs saving
       commit('set_currentAudiobook', {});
-      let oldBook = (state.currentBook && state.currentBook._id)
+      //let oldBook = (state.currentBook && state.currentBook._id)
 
 //       if (oldBook && state.currentBook_dirty || state.currentBookMeta_dirty) {
 //         // save old state
 //       }
-      if (book_id && book_id === state.currentBook._id) return Promise.resolve(state.currentBook);
+
+      if (book_id && book_id === state.currentBookid) return Promise.resolve(state.currentBookMeta);
 
       if (book_id) {
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
