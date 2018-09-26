@@ -1,0 +1,147 @@
+<template>
+<section>
+  <div v-if="blockO.loaded" ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', blockOutPaddings]">
+
+
+      <div v-if="blockView.type == 'illustration'" :class="blockView.getClass()">
+        <img :class="blockView.getClass()" :src="blockView.getIllustration()"/>
+        <div class="description"
+        :class="['content-description', blockView.getClass()]"
+        v-if="blockView.description.length"
+        v-html="blockView.description">
+        </div>
+      </div>
+      <div v-else-if="blockView.type == 'hr'">
+        <hr :class="[blockView.getClass()]"/>
+      </div>
+      <div v-else >
+        <div
+          v-if="blockView.parnum && blockView.parnum.length"
+          v-html="blockView.parnum"
+          :class="['parnum']">
+        </div>
+        <div
+          @click="handleFootnote($event)"
+          :class="[blockView.getClass()]"
+          :id="blockId"
+          :data-parnum="blockView.parnum"
+          :lang="blockView.language || lang"
+          :data-type="blockView.type"
+          v-html="blockView.content">
+        </div>
+        <div class="footnotes"
+          v-if="blockView.footnotes.length > 0">
+          <div class="-hidden" ref="footNotes"
+            v-for="(footnote, footnoteIdx) in blockView.footnotes">
+            <div class="-num">[fn{{footnote.ftnIdx+1}}]</div>
+            <div class="-text"
+              v-html="footnote.content">
+            </div>
+          </div>
+        </div>
+      </div>
+
+  </div>
+  <div v-else ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', 'in-loading']"></div>
+
+  <div class="clearfix"></div>
+</section>
+</template>
+
+<script>
+import Vue from 'vue'
+import { BookBlock }    from '../../store/bookBlock'
+import { mapGetters, mapState, mapActions } from 'vuex'
+
+  export default {
+    name: 'book-block-display',
+    props: [
+      'blockId', 'blockRid', 'blockO', 'lang'
+    ],
+    data() {
+      return {
+        fntCounter: 0
+      }
+    },
+    computed: {
+      ...mapGetters({
+        book: 'currentBook',
+        meta: 'currentBookMeta',
+        parlist: 'storeList',
+        parlistO: 'storeListO'
+      }),
+      block: function() {
+        return this.parlist.get(this.blockId)
+      },
+      blockOutPaddings: function () {
+        if (this.block) {
+          return (this.block.classes && this.block.classes.hasOwnProperty('outsize-padding')) ? this.block.classes['outsize-padding'] : ''
+        } else return '';
+      },
+      blockView: function () {
+        if (this.block) {
+          let viewObj = new BookBlock(this.block);//Object.assign({}, this.parlist.get(blockId));
+          viewObj.content = viewObj.content.replace(
+            /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/mig,
+            '<span data-pg="$1"></span>'
+          );
+          //<sup class="service-info" data-pg="xxiii"><w class="service-info" data-sugg="">pg </w><w class="service-info" data-sugg="">xxiii</w></sup>
+          viewObj.content = viewObj.content.replace(
+            /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-pg=['"]{1}(.*?)['"]{1}[^>]*>.*?<\/sup>/mig,
+            '<span class="service-info" data-pg="$1"></span>'
+          );
+
+          let ftnIdx = 0;
+          viewObj.content = viewObj.content.replace(
+            /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
+            (idx)=>{
+              if (typeof viewObj.footnotes[ftnIdx] !== 'undefined') {
+                viewObj.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+              }
+              ftnIdx++;
+              return `<sup data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
+            }
+          );
+          //<sup class="service-info" data-idx="2"><w class="service-info" data-sugg="">2</w></sup>
+          viewObj.content = viewObj.content.replace(
+            /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
+            (idx)=>{
+              if (typeof viewObj.footnotes[ftnIdx] !== 'undefined') {
+                viewObj.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+              }
+              ftnIdx++;
+              return `<sup class="service-info" data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
+            }
+          );
+
+          if (this.blockO.type == 'header' && this.blockO.secnum.toString().length > 0) {
+            viewObj.parnum = this.blockO.secnum;
+          }
+          else if (this.blockO.type == 'par' && this.blockO.parnum.toString().length > 0) {
+            viewObj.parnum = this.blockO.parnum;
+          }
+          else viewObj.parnum = false;
+
+          return viewObj;
+        } else return { getClass: ()=>'', footnotes: [] };
+      }
+    },
+    methods: {
+      handleFootnote: function (ev) {
+        if (ev.target.dataset.idx && this.$refs.footNotes[ev.target.dataset.idx]) {
+          let className = this.$refs.footNotes[ev.target.dataset.idx].className;
+          if (className == '-hidden') {
+            this.$refs.footNotes[ev.target.dataset.idx].className = '';
+          } else this.$refs.footNotes[ev.target.dataset.idx].className = '-hidden';
+        }
+      }
+    },
+    mounted: function() {
+      //console.log(this.blockId);
+    }
+  }
+</script>
+
+<style lang='less' scoped>
+
+</style>
