@@ -203,7 +203,7 @@
               <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
               <div v-if="allowPublishCurrentBook">
                 <button disabled class="btn btn-primary" v-if="isPublishingButInQueueStill">Already in queue</button>
-                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishing">Publish</button>
+                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingButInQueueStill && !isPublishing">Publish</button>
                 <span v-else class="align-preloader -small"></span>
 
               </div>
