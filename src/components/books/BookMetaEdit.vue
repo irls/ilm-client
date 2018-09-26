@@ -202,8 +202,10 @@
               </div>
               <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
               <div v-if="allowPublishCurrentBook">
-                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishing">Publish</button>
-                <span v-else class="align-preloader -small"></span>
+                <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
+                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
+                <span v-if="isPublishing" class="align-preloader -small"></span>
+
               </div>
               <button class="btn btn-primary hidden" v-on:click="publishContent()">Publish Content</button>
             </template>
@@ -653,7 +655,8 @@ export default {
       styleTabs: new Map(),
       numProps: new Map(),
       activeTabIndex: 0,
-      isPublishing: false
+      isPublishing: false,
+      isPublishingQueue: false
     }
   },
 
@@ -900,9 +903,20 @@ export default {
         }
       }
     },
-    'currentBook.published': {
+    // 'currentBook.published': {
+    //   handler(val) {
+    //     this.isPublishing = false;
+    //   }
+    // },
+    'currentBook.isIntheProcessOfPublication': {
       handler(val) {
-        this.isPublishing = false;
+        console.log(val)
+        this.isPublishing = !!val;
+      }
+    },
+    'currentBook.isInTheQueueOfPublication': {
+      handler(val) {
+        this.isPublishingQueue = !!val;
       }
     }
 
@@ -1195,7 +1209,8 @@ export default {
       }
     },
     publish() {
-      this.isPublishing = true;
+      // this.isPublishing = false;
+      this.isPublishingQueue = true;
       return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish')
       .then(resp => {
         console.log(resp);
