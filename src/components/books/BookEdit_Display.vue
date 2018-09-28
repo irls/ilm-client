@@ -127,18 +127,22 @@ export default {
 
                     let ftnIdx = 0;
                     newBlock.content = newBlock.content.replace(
-                      /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
+                      /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gmi,
                       (idx)=>{
-                        newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+                        if (typeof newBlock.footnotes[ftnIdx] !== 'undefined') {
+                          newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+                        }
                         ftnIdx++;
                         return `<sup data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
                       }
                     );
                     //<sup class="service-info" data-idx="2"><w class="service-info" data-sugg="">2</w></sup>
                     newBlock.content = newBlock.content.replace(
-                      /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gm,
+                      /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gmi,
                       (idx)=>{
-                        newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+                        if (typeof newBlock.footnotes[ftnIdx] !== 'undefined') {
+                          newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
+                        }
                         ftnIdx++;
                         return `<sup class="service-info" data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
                       }

@@ -80,16 +80,11 @@
           </vue-tab>
           <vue-tab title="Audio Integration" id="audio-integration">
             <div class="t-box">
-              <template v-if="currentBook.isMastered">
-                <div class="btn-switch" @click="toggleIsMastered()">
-                  <i class="fa fa-toggle-on"></i>
-                  <span :class="['s-label',  {'-disabled': !isAllowSetMastered}]"> Mastered</span>
-                </div>
-              </template>
-              <template v-else>
-                <div class="btn-switch" @click="toggleIsMastered()">
-                  <i class="fa fa-toggle-off"></i>
-                  <span class="s-label -disabled"> Mastered</span>
+              <template>
+                <div class="btn-switch" @click="toggleMastering()">
+                  <i class="fa fa-toggle-on" v-if="currentBook.masteringRequired"></i>
+                  <i class="fa fa-toggle-off" v-else></i>
+                  <span class="s-label"> Mastering required</span>
                 </div>
               </template>
               <a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
@@ -207,8 +202,10 @@
               </div>
               <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
               <div v-if="allowPublishCurrentBook">
-                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishing">Publish</button>
-                <span v-else class="align-preloader -small"></span>
+                <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
+                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
+                <span v-if="isPublishing" class="align-preloader -small"></span>
+
               </div>
               <button class="btn btn-primary hidden" v-on:click="publishContent()">Publish Content</button>
             </template>
@@ -357,6 +354,31 @@
                       Hide from display
                     </label>
                   </fieldset>
+                  <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                    <legend>Type</legend>
+                    <label v-for="sVal in blockTypes[blockType]['level']"
+                          @click="selectStyle(blockType, 'level', sVal)"
+                          class="block-style-label"
+                          :key="blockType + 'level' + sVal"
+                          :id="blockType + 'level' + sVal">
+                          
+                          <template v-if="styleTabs.get(blockType).get('level').size > 1">
+                            <i class="fa fa-dot-circle-o"
+                            v-if="styleTabs.get(blockType).get('level').has(sVal.length?sVal:'none')"
+                            ></i>
+                            <i v-else class="fa fa-circle-o"></i>
+                          </template>
+
+                          <template v-else>
+                            <i v-if="styleTabs.get(blockType).get('level').has(sVal.length?sVal:'none')"
+                            class="fa fa-check-circle-o"></i>
+                            <i v-else class="fa fa-circle-o"></i>
+                          </template>
+
+                          <template v-if="sVal.length">{{styleValue(blockType, 'level', sVal)}}</template>
+                          <template v-else>none</template>
+                        </label>
+                  </fieldset>
 
                   <fieldset class="block-style-fieldset block-num-fieldset"
                   v-if="numProps.has(blockType) && ['par'].indexOf(blockType) > -1">
@@ -388,10 +410,10 @@
                       Hide from display
                     </label>
                   </fieldset>
-
+                  <i>Pleas keep defaults unless you have a compelling reason to change them</i>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
-                      <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length" :key="styleKey" class="block-style-fieldset">
+                      <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && (styleKey !== 'level' || blockType !== 'header')" :key="styleKey" class="block-style-fieldset">
                       <legend>{{styleCaption(blockType, styleKey)}}</legend>
 
                         <label v-for="sVal in styleArr"
@@ -399,7 +421,7 @@
                           class="block-style-label"
                           :key="blockType + styleKey.replace(' ', '') + sVal"
                           :id="blockType + styleKey.replace(' ', '') + sVal">
-
+                          
                           <template v-if="styleTabs.get(blockType).get(styleKey).size > 1">
                             <i class="fa fa-dot-circle-o"
                             v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
@@ -413,7 +435,7 @@
                             <i v-else class="fa fa-circle-o"></i>
                           </template>
 
-                          <template v-if="sVal.length">{{sVal}}</template>
+                          <template v-if="sVal.length">{{styleValue(blockType, styleKey, sVal)}}</template>
                           <template v-else>none</template>
                         </label>
 
@@ -553,7 +575,7 @@
 <script>
 import Vue from 'vue'
 import { mapGetters, mapActions } from 'vuex'
-import { BlockTypes } from '../../store/bookBlock'
+import { BlockTypes, BlockTypesAlias } from '../../store/bookBlock'
 import superlogin from 'superlogin-client'
 import BookDownload from './BookDownload'
 import BookEditCoverModal from './BookEditCoverModal'
@@ -633,7 +655,8 @@ export default {
       styleTabs: new Map(),
       numProps: new Map(),
       activeTabIndex: 0,
-      isPublishing: false
+      isPublishing: false,
+      isPublishingQueue: false
     }
   },
 
@@ -685,12 +708,6 @@ export default {
         if (this.tc_hasTask('audio_mastering')) {
           return true;
         }
-        if (this.currentBookCounters.not_marked_blocks === 0 && this.currentBookCounters.narration_blocks === 0) {
-          return true;
-        }
-        if (this.currentBookCounters.narration_blocks > 0 && this.currentBookCounters.not_proofed_audio_blocks === 0) {
-          return true;
-        }
         return false;
       }
     },
@@ -701,24 +718,8 @@ export default {
             return true;
           }
         } else if (this.tc_hasTask('audio_mastering')) {
-          if (this.currentBookMeta.isMastered && this.currentBookCounters.not_marked_blocks === 0) {
+          if (this.currentBookCounters.not_marked_blocks === 0) {
             return true;
-          }
-        }
-        return false;
-      }
-    },
-    isAllowSetMastered: {
-      get() {
-        if (!this.tc_hasTask('metadata_cleanup') && !this.tc_hasTask('audio_mastering')) {
-          return false;
-        }
-        if (this.audiobook && this.audiobook.importFiles && this.audiobook.importFiles.length > 0 && (this.tc_hasTask('audio_mastering') || this.currentBookCounters.narration_blocks === 0)) {
-          return true;
-        }
-        if ((this.audiobook._id && (!this.audiobook.importFiles || this.audiobook.importFiles.length === 0)) || parseInt(this.currentBookCounters.narration_blocks) > 0) {
-          if (this.currentBook.isMastered === true) {
-            this.liveUpdate('isMastered',  !this.currentBook.isMastered)
           }
         }
         return false;
@@ -782,12 +783,13 @@ export default {
         }
       });
     this.$root.$on('from-bookblockview:voicework-type-changed', function() {
-      self.setAllowSetMastered();
       self.setCurrentBookCounters(['narration_blocks', 'not_marked_blocks']);
+      self.getAudioBook();
     });
     this.setCurrentBookCounters();
     this.$root.$on('book-reimported', () => {
       //this.loadAudiobook()
+      this.$root.$emit('from-book-meta:upd-toc', true);
     });
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
 
@@ -855,7 +857,7 @@ export default {
     },
     audiobook: {
       handler(val) {
-        this.setAllowSetMastered();
+        
       },
       deep: true
     },
@@ -900,9 +902,20 @@ export default {
         }
       }
     },
-    'currentBook.published': {
+    // 'currentBook.published': {
+    //   handler(val) {
+    //     this.isPublishing = false;
+    //   }
+    // },
+    'currentBook.isIntheProcessOfPublication': {
       handler(val) {
-        this.isPublishing = false;
+        console.log(val)
+        this.isPublishing = !!val;
+      }
+    },
+    'currentBook.isInTheQueueOfPublication': {
+      handler(val) {
+        this.isPublishingQueue = !!val;
       }
     }
 
@@ -1195,7 +1208,8 @@ export default {
       }
     },
     publish() {
-      this.isPublishing = true;
+      // this.isPublishing = false;
+      this.isPublishingQueue = true;
       return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish')
       .then(resp => {
         console.log(resp);
@@ -1222,33 +1236,9 @@ export default {
       }
       return `${this.$route.path}`;
     },
-    toggleIsMastered() {
-      if (this.isAllowSetMastered) {
-        this.liveUpdate('isMastered',  !this.currentBook.isMastered)
-      }
-    },
-    setAllowSetMastered() {
-      return;
-      this.allowSetMastered = false;
-      if (!this.audiobook || !this.audiobook.importFiles || this.audiobook.importFiles.length === 0) {
-        this.allowSetMastered = false;
-        if (this.currentBook.isMastered === true) {
-          this.liveUpdate('isMastered',  !this.currentBook.isMastered)
-        }
-      } else {
-        this.checkAllowSetAudioMastered()
-          .then(response => {
-            if (response && response.rows && typeof response.rows[0] !== 'undefined') {
-              this.allowSetMastered = response.rows[0].value === 0;
-            } else {
-              this.allowSetMastered = true;
-            }
-            if (!this.allowSetMastered) {
-              if (this.currentBook.isMastered === true) {
-                this.liveUpdate('isMastered',  !this.currentBook.isMastered);
-              }
-            }
-          })
+    toggleMastering() {
+      if (this._is('editor', true)) {
+        this.liveUpdate('masteringRequired',  !this.currentBook.masteringRequired)
       }
     },
     setAllowExportAudio() {
@@ -1373,6 +1363,7 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
+      let updateToc = styleKey == 'table of contents';
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let pBlock, currId = this.blockSelection.start._id;
@@ -1380,7 +1371,13 @@ export default {
             pBlock = this.storeList.get(currId);
             if (pBlock && pBlock.checked) {
               if (pBlock.type == blockType) {
-                if (styleVal.length) pBlock.classes[styleKey] = styleVal;
+                if (styleVal.length) {
+                  pBlock.classes[styleKey] = styleVal;
+                  if (blockType === 'header' && styleKey === 'level') {
+                    updateToc = true;
+                    pBlock.classes['table of contents'] = 'toc' + styleVal.replace(/\D/, '');
+                  }
+                }
                 else pBlock.classes[styleKey] = '';
 
                 if (pBlock.isChanged || pBlock.isAudioChanged) {
@@ -1389,7 +1386,7 @@ export default {
                 } else {
                   pBlock.partUpdate = true;
                   this.putBlock(pBlock).then(()=>{
-                    if (styleKey == 'table of contents') {
+                    if (updateToc) {
                       this.$root.$emit('from-book-meta:upd-toc', true);
                     }
                   });
@@ -1490,6 +1487,13 @@ export default {
         return caption.charAt(0).toUpperCase() + caption.slice(1);
       }
       return key.charAt(0).toUpperCase() + key.slice(1);
+    },
+    styleValue(type, key, val) {
+      if (BlockTypesAlias[type] && BlockTypesAlias[type][key] && BlockTypesAlias[type][key]['values'] && BlockTypesAlias[type][key]['values'][val]) {
+        return BlockTypesAlias[type][key]['values'][val];
+      } else {
+        return val;
+      }
     },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'freeze', 'unfreeze', 'blockers'])

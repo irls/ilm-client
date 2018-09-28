@@ -913,6 +913,7 @@ export default {
             } else {
               content = this.block.content + '<span class="content-tail"></span>';
               let rg = new RegExp('((?<!St|Mr|Mrs|Dr|[^\\w][\\w]{1})[\\.\\?\\!]+[\'\"\‘\”\“\’]*)([^\\.\\?\\!\'\"\‘\”\“\’]+)', 'mig');
+              content = content.replace(/<a[^>]*>((?!<\/a>).*)<\/a>/igm, '$1')
               content = content.replace(rg, '$1' + split + '$2');
             }
             return content;
@@ -1402,6 +1403,12 @@ export default {
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
+        if (/\r\n|\r|\n/.test(content) && this.block && this.block.classes.whitespace && ['verse', 'pre', 'list'].indexOf(this.block.classes.whitespace) !== -1) {
+          content = content.replace(/<p><br[\/]?><\/p>/gm, '\n');
+          content = content.replace(/<p[^>]*>([\s\S]+?)<\/p>([\s\S]+?)/gm, `$1\n$2`)// remove Editor's p instead of line breaks
+          content = content.replace(/<div>/gm, '')
+          content = content.replace(/<\/div>/gm, '\n')
+        }
         content = content.replace(/<p[^>]*>([\s\S]*?)<\/p>/gm, '<br/>$1')
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
@@ -1523,6 +1530,10 @@ export default {
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
             this.setCurrentBookCounters(['not_marked_blocks']);
+            if (this.tc_hasTask('audio_mastering')) {
+              this.setCurrentBookCounters(['not_proofed_audio_blocks']);
+            }
+            
             this.recountApprovedInRange();
             //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
             this.getBloksUntil('unresolved', null, this.block._id)

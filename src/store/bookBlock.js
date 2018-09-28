@@ -46,8 +46,8 @@ let BlockTypes = {
     'outsize-padding': ['', 'outpad-top', 'outpad-top-extra', 'outpad-bottom', 'outpad-bottom-extra'],
   },
   header: {
-    type: ['', 'subhead'],
-    level: ['', 'h2', 'h3', 'h4', 'h5'],
+    //type: ['', 'subhead'],
+    level: ['', 'h2', 'h3', 'h4'],
     align: ['', 'left', 'center', 'right', 'justify'],
     'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4'],
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
@@ -68,9 +68,9 @@ let BlockTypes = {
     width: ['', 'width-80', 'width-65', 'width-50', 'width-45', 'width-30'],
     style: ['', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline'/*, 'rulebelow', 'bookgraphic'*/],
     align: ['', 'left', 'center', 'right', 'justify'],
-    whitespace: ['', 'verse', 'pre'],
+    whitespace: ['', 'list', 'verse', 'pre'],
     author: ['', 'bab', 'baha', 'abd', 'shoghi', 'sacred', 'bible', 'muhammad', 'quran', 'jesus', 'ali', 'tradition', 'husayn'],
-    'paragraph type': ['', 'dropcap', 'blockquote', 'centerquote', 'dedication', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer', 'list'],
+    'paragraph type': ['', 'dropcap', 'blockquote', 'centerquote', 'dedication', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer'],
   },
   illustration: {
     size: ['', 'x-small', 'small', 'large', 'x-large'],
@@ -84,6 +84,26 @@ let BlockTypes = {
     size: ['', 'small', 'large'],
     padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
     'outsize-padding': ['', 'outpad-top', 'outpad-top-extra', 'outpad-bottom', 'outpad-bottom-extra'],
+  }
+}
+let BlockTypesAlias = {
+  header: {
+    level: {
+      'title': 'type',
+      values: {
+        'h2': 'header',
+        'h3': 'subheader',
+        'h4': 'sub subheader'
+      }
+    },
+    'table of contents': {
+      values: {
+        'toc1': 'level 1',
+        'toc2': 'level 2',
+        'toc3': 'level 3',
+        'toc4': 'level 4'
+      }
+    }
   }
 }
 
@@ -106,8 +126,8 @@ class BookBlock {
     //this.section = typeof init.section !== 'undefined' ? init.section : false;
 
     this.secVal  = typeof init.secVal  !== 'undefined' ? init.secVal  : false;
-    this.secnum  = typeof init.secnum  !== 'undefined' ? init.secnum  : (this.type === 'header' ? '' : this.secVal);
-    this.secHide = typeof init.secHide !== 'undefined' ? init.secHide : (this.type === 'header' ? true: false);
+    this.secnum  = typeof init.secnum  !== 'undefined' ? init.secnum  : (this.type === 'header' ? false : this.secVal);
+    this.secHide = typeof init.secHide !== 'undefined' ? init.secHide : false;
 
     this.audiosrc = init.audiosrc || '';
     this.footnotes = init.footnotes || [];
@@ -599,5 +619,6 @@ export {
   BookBlock,
   BlockTypes,
   FootNote,
-  setBlockParnum
+  setBlockParnum,
+  BlockTypesAlias
 }
