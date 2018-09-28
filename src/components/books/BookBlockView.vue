@@ -2394,7 +2394,6 @@ export default {
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
         Vue.nextTick(() => {
-          console.log('open');
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
           let text = footnote ? footnote.content : this.blockAudio.map;
           let loadBlock = footnoteIdx !== null ? {_id: this.check_id, voicework: footnote ? footnote.voicework : 'tts'} : this.block;
@@ -3642,7 +3641,7 @@ export default {
         /*cursor: pointer*/
       }
 
-      w:not([data-map]) {
+      w:not([data-map]), w.alignment-changed {
         background: linear-gradient(
             transparent,
             transparent 30%,
