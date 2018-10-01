@@ -143,5 +143,7 @@ import { mapGetters, mapState, mapActions } from 'vuex'
 </script>
 
 <style lang='less' scoped>
-
+  .in-loading {
+    height: 100px;
+  }
 </style>

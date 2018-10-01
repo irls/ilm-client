@@ -75,7 +75,9 @@ export default {
   methods: {
 
     viewSelect: function(val) {
-      this.$router.push({ name: val});
+      if (this.$route.params.block) {
+        this.$router.push({ name: val, params: { block: this.$route.params.block } });
+      } else this.$router.push({ name: val });
     },
     goBack: function() {
       if (this.currentBookMeta && this.currentBookMeta.collection_id) {
@@ -174,10 +176,10 @@ export default {
     },
   },
   mounted() {
-    
+
   },
   destroyed: function () {
-    
+
   }
 }
 </script>

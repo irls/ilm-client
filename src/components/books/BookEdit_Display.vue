@@ -96,7 +96,7 @@ export default {
         })
       }
       //console.log('firstVisibleId', firstVisibleId);
-      if (firstVisibleId!==false && this.$route.params.block !== firstVisibleId) this.$router.push({name: 'BookEditDisplay', params: {block: firstVisibleId}});
+      if (firstVisibleId!==false && this.$route.params.block !== firstVisibleId) this.$router.replace({name: 'BookEditDisplay', params: {block: firstVisibleId}});
     },
 
     checkVisible(elm) {
@@ -136,7 +136,7 @@ export default {
 
   },
   mounted: function() {
-
+      //console.log('mounted');
       if (this.$route.params.hasOwnProperty('bookid')) {
         let bookid = this.$route.params.bookid;
         if (!this.meta._id || bookid !== this.parlistO.meta.bookid) {
@@ -184,7 +184,7 @@ export default {
   },
   watch: {
 //     '$route' (toRoute, fromRoute) {
-//       //console.log('$route', toRoute, fromRoute);
+//       console.log('$route', toRoute, fromRoute);
 //     }
   },
 }
