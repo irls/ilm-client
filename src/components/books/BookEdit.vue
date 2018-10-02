@@ -1588,7 +1588,7 @@ export default {
         this.screenTop = 0;
         this.startId = id;
       } else {
-        this.д([id])
+        this.loadPreparedBookDown([id])
         .then((blockId)=>{
           this.setBlockWatch();
           //this.lazyLoad(id);
@@ -1597,7 +1597,7 @@ export default {
         });
       }
     },
-    
+
     scrollToBlockEnd(id) {
       try {
         let blockOffset = $('#' + id).offset().top;
@@ -1763,7 +1763,7 @@ export default {
               this.scrollToBlock(this.startId);
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
-                this.parlistO.setLookupsList(this.meta._id, res);
+                this.parlistO.updateLookupsList(this.meta._id, res);
                 this.scrollBarBlocks = this.parlistO.idsArray();
                 this.updateScrollSlider();
                 this.setBlockWatch();
@@ -1845,7 +1845,7 @@ export default {
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
         e.preventDefault();
       });
-      
+
       this.$root.$on('for-bookedit:scroll-to-block-end', this.scrollToBlockEnd);
   },
 
