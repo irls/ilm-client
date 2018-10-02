@@ -337,36 +337,40 @@ export default {
     },
 
     loadBookMeta(onPage) {
+      let checkMeta = this.parlistO.meta || {};
+      checkMeta = checkMeta.bookid || false;
       if (this.$route.params.hasOwnProperty('bookid')) {
-        this.$store.commit('clear_storeList');
-        this.$store.commit('clear_storeListO');
-        this.freeze('loadBookMeta');
-        return this.loadBook(this.$route.params.bookid)
-        .then((meta)=>{
-          this.unfreeze('loadBookMeta');
-          return this.searchBlockUnresolved()
-          .then((blockId)=>{
+        if (!checkMeta || checkMeta!==this.$route.params.bookid) {
+          this.freeze('loadBookMeta');
+          return this.loadBook(this.$route.params.bookid)
+          .then((meta)=>{
+            //console.log('loadBook then meta', meta);
+            this.unfreeze('loadBookMeta');
+            return this.searchBlockUnresolved()
+            .then((blockId)=>{
 
-            let startBlock = blockId || this.$route.params.block || false;
-            let taskType = /*this.$route.params.task_type ||*/ false;
+              let startBlock = blockId || this.$route.params.block || false;
+              let taskType = this.$route.params.task_type || false;
 
-            return this.loadPartOfBookBlocks({
-              bookId: this.$route.params.bookid,
-              block: startBlock,
-              taskType: taskType,
-              onPage: onPage || 10
-            }).then((answer)=>{
-              this.parlistO.setLookupsList(this.meta._id, answer);
-              let idsArray = this.parlistO.idsArray();
-              this.isNeedUp = idsArray[0];
-              this.isNeedDown = idsArray[idsArray.length-1];
-              return Promise.resolve(answer);
+              return this.loadPartOfBookBlocks({
+                bookId: this.$route.params.bookid,
+                block: startBlock,
+                taskType: taskType,
+                onPage: onPage || 10
+              }).then((answer)=>{
+                this.parlistO.setLookupsList(this.meta._id, answer);
+                let idsArray = this.parlistO.idsArray();
+                this.isNeedUp = idsArray[0];
+                this.isNeedDown = idsArray[idsArray.length-1];
+                this.$router.replace({name: this.$route.name, params: {}});
+                return Promise.resolve(answer);
+              })
             })
-          })
-        }).catch((err)=>{
-          this.unfreeze('loadBookMeta');
-          return Promise.reject(err);
-        });
+          }).catch((err)=>{
+            this.unfreeze('loadBookMeta');
+            return Promise.reject(err);
+          });
+        } else return Promise.resolve({ blocks:[] }); // already loaded
       } else return Promise.reject('No bookid');
     },
 
@@ -461,12 +465,12 @@ export default {
 
     searchBlockUnresolved() { //TODO Temporary solution
       let task_type = this.$route.params.task_type || false;
-      if (!task_type) return Promise.resolve();
-      if (task_type && task_type !== 'text-cleanup' && task_type !== 'master-audio') {
+      if (!task_type) return Promise.resolve(false);
+      if (task_type && task_type !== 'master-audio') {
         if (!Object.keys(this.tc_tasksByBlock).length) {
-          return Promise.reject();
+          return Promise.resolve(false);
         }
-      }
+      }//&& task_type !== 'text-cleanup'
 
       if (task_type === 'true') {
         task_type = true;
@@ -474,7 +478,6 @@ export default {
       if (!task_type && !this._is('editor')) {
         task_type = true;
       }
-
       return this.$store.dispatch('searchBlocksChain', {
         book_id: this.meta._id,
         startId: this.startId || this.meta.startBlock_id,
@@ -1585,7 +1588,7 @@ export default {
         this.screenTop = 0;
         this.startId = id;
       } else {
-        this.loadPreparedBookDown([id])
+        this.д([id])
         .then((blockId)=>{
           this.setBlockWatch();
           //this.lazyLoad(id);
@@ -1747,7 +1750,7 @@ export default {
               this.scrollToBlock(this.startId);
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
-                this.parlistO.appendLookupsList(this.meta._id, res);
+                this.parlistO.setLookupsList(this.meta._id, res);
                 this.scrollBarBlocks = this.parlistO.idsArray();
                 this.updateScrollSlider();
                 this.setBlockWatch();
@@ -1773,19 +1776,27 @@ export default {
           //console.log("keydown: ", key)
       }
   },
+  beforeMount: function() {
+    if (this.$route.params.hasOwnProperty('bookid')) {
+      if (!(this.parlistO.meta && this.parlistO.meta.bookid && this.parlistO.meta.bookid == this.$route.params.bookid)) {
+        this.$store.commit('clear_storeList');
+        this.$store.commit('clear_storeListO');
+      }
+    }
+  },
   mounted: function() {
       //this.onScrollBookDown();
-      console.log('book mounted', this.meta._id);
+      //console.log('book mounted', this.meta._id);
       this.loadBookMeta(10) // also handle route params
       .then((initBlocks)=>{
-        if (this.meta._id) {
+        if (this.meta._id && initBlocks.blocks.length) {
           this.tc_loadBookTask()
           .then(()=>{
             this.loadPreparedBookDown(this.parlistO.idsArray())
             .then(()=>{
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
-                this.parlistO.appendLookupsList(this.meta._id, res);
+                this.parlistO.updateLookupsList(this.meta._id, res);
                 this.scrollBarBlocks = this.parlistO.idsArray();
                 this.updateScrollSlider();
                 this.lazyLoad();
@@ -1797,6 +1808,9 @@ export default {
               });
             });
           });
+        } else if (this.$route.params.hasOwnProperty('block')){
+          this.scrollToBlock(this.$route.params.block);
+          this.$router.replace({name: this.$route.name, params: {}});
         }
       });
 
@@ -1856,14 +1870,25 @@ export default {
       }
     },
     '$route' (toRoute, fromRoute) {
-      console.log('$route', toRoute, fromRoute);
-//       if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
-//         //this.f(this.$route.params.block, this.$route.params.task_type)
-//         this.loadBookDown(true)
-//         .then((blockId)=>{
-//           this.setBlockWatch()
-//         });
-//       }
+      //console.log('$route', toRoute, fromRoute);
+      if (toRoute.params.hasOwnProperty('task_type') && toRoute.params.task_type) {
+        let taskType = toRoute.params.task_type;
+        this.loadPartOfBookBlocks({
+          bookId: this.$route.params.bookid,
+          block: 'unresolved',
+          taskType: taskType,
+          onPage: 1
+        }).then((answer)=>{
+          //this.startId = answer.blocks[0].blockid;
+          //console.log('answer', answer);
+          this.scrollToBlock(answer.blocks[0].blockid);
+          this.$router.replace({name: this.$route.name, params: {}});
+        })
+      }
+      if (this.$route.params.hasOwnProperty('block') && this.$route.params.block!=='unresolved') {
+        this.scrollToBlock(this.$route.params.block);
+        this.$router.replace({name: this.$route.name, params: {}});
+      }
     },
     'tc_tasksByBlock': {
       handler(val, oldVal) {

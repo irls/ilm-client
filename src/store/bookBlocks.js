@@ -143,7 +143,7 @@ class BookBlocks {
   }
 
   setLookupsList(bookId, bookList) {
-    console.log('setLookupsList');
+    //console.log('setLookupsList', bookList);
     this.lookupList = {};
     this.blocksList = {};
     this.listIds = [];

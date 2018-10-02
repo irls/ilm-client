@@ -32,7 +32,8 @@ export default {
     return {
       page: 0,
       startId: false,
-      fntCounter: 0
+      fntCounter: 0,
+      onScrollEv: false,
     }
   },
   components: {
@@ -96,7 +97,14 @@ export default {
         })
       }
       //console.log('firstVisibleId', firstVisibleId);
-      if (firstVisibleId!==false && this.$route.params.block !== firstVisibleId) this.$router.replace({name: 'BookEditDisplay', params: {block: firstVisibleId}});
+      if (firstVisibleId!==false && this.$route.params.block !== firstVisibleId) {
+        this.onScrollEv = true;
+        this.$router.push({
+          name: 'BookEditDisplay',
+          params: { block: firstVisibleId }
+        });
+
+      }
     },
 
     checkVisible(elm) {
@@ -148,11 +156,13 @@ export default {
 
             let startBlock = this.$route.params.block || false;
             this.startId = startBlock;
+            let taskType = this.$route.params.task_type || false;
+
 
             return this.loadPartOfBookBlocks({
               bookId: this.$route.params.bookid,
               block: startBlock,
-              taskType: false,
+              taskType: taskType,
               onPage: 20
             }).then((answer)=>{
               this.parlistO.setLookupsList(answer.meta.bookid, answer);
@@ -183,9 +193,22 @@ export default {
   beforeDestroy:  function() {
   },
   watch: {
-//     '$route' (toRoute, fromRoute) {
-//       console.log('$route', toRoute, fromRoute);
-//     }
+    '$route' (toRoute, fromRoute, aaa) {
+      //console.log('$route', toRoute, fromRoute, this.onScrollEv);
+      if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
+        if (toRoute.params.block !== 'unresolved') {
+          document.getElementById(toRoute.params.block).scrollIntoView();
+        } else {
+          //TODO add method to find unresolved
+          this.onScrollEv = true;
+          this.$router.push({
+            name: 'BookEditDisplay',
+            params: { }
+          });
+        }
+      }
+      else this.onScrollEv = false;
+    }
   },
 }
 </script>

@@ -40,7 +40,7 @@
               <div v-if="!textCleanupProcess" class="editing-wrapper">
                 <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Editing complete</button>
                 <div class="col-sm-8 blocks-counter">
-                  <router-link :to="goToUnresolved()"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
+                  <router-link :to="goToUnresolved(true)"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
                 </div>
               </div>
               <div v-else class="preloader-small"></div>
@@ -361,7 +361,7 @@
                           class="block-style-label"
                           :key="blockType + 'level' + sVal"
                           :id="blockType + 'level' + sVal">
-                          
+
                           <template v-if="styleTabs.get(blockType).get('level').size > 1">
                             <i class="fa fa-dot-circle-o"
                             v-if="styleTabs.get(blockType).get('level').has(sVal.length?sVal:'none')"
@@ -421,7 +421,7 @@
                           class="block-style-label"
                           :key="blockType + styleKey.replace(' ', '') + sVal"
                           :id="blockType + styleKey.replace(' ', '') + sVal">
-                          
+
                           <template v-if="styleTabs.get(blockType).get(styleKey).size > 1">
                             <i class="fa fa-dot-circle-o"
                             v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
@@ -680,6 +680,7 @@ export default {
       currentBookAudioExportAllowed: 'currentBookAudioExportAllowed',
       currentBookCounters: 'currentBookCounters',
       tc_currentBookTasks: 'tc_currentBookTasks',
+      tc_tasksByBlock: 'tc_tasksByBlock',
       storeList: 'storeList',
       storeListO: 'storeListO',
       blockSelection: 'blockSelection',
@@ -858,7 +859,7 @@ export default {
     },
     audiobook: {
       handler(val) {
-        
+
       },
       deep: true
     },
@@ -1220,22 +1221,30 @@ export default {
       return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
     },
     goToUnresolved(with_task = false) {
-      if (this.blocksToApproveCounter === 0) {
-        return `${this.$route.path}`;
+
+      let route = {
+        name: this.$route.name,
+        params: {
+          book: this.$route.params.bookid
+        }
       }
+
+      if (this.blocksToApproveCounter === 0) {
+        return route;
+      }
+
       if (this.$route.matched.some(record => {
         return record.meta.mode === 'edit' || record.meta.mode === 'narrate'
       })) {
-        let params = { block: 'unresolved' };
-        let path = `${this.$route.path}/${params.block}`;
+        route.params.block = 'unresolved';
+
         if (with_task) {
-          params['task_type'] = true;
-          path += `/${params.task_type}`;
+          route.params.task_type = true;
+          if (this.tc_hasTask('content_cleanup')) route.params.task_type = 'text-cleanup';
         }
-        //this.$router.push({name: this.$route.name, params:  params});
-        return path;
+      //this.$router.push({name: this.$route.name, params:  params});
       }
-      return `${this.$route.path}`;
+      return route;
     },
     toggleMastering() {
       if (this._is('editor', true)) {
