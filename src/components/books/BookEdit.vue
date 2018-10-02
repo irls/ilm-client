@@ -5,7 +5,7 @@
 
     <!--<div class="content-scroll" ref="contentScrollRef" v-bind:style="{ top: scrollTop + 'px' }" >-->
 
-      <div v-show="upScreenTop"
+      <div v-show="isBlocked && !parlistO.checkFirst()"
       class="infinite-loading-container -up"
       v-bind:style="{ top: upScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookUp') >-1"-->
         <div><i class="loading-default"></i></div>
@@ -13,24 +13,27 @@
 
       <!--<template v-for="(sublist, page_Idx) in parlist">-->
       <div class="row content-scroll-item" :class="[{'recording-block': recordingBlockId == blockId}]"
-        v-for="blockId in Array.from(parlistC.keys())"
+        v-for="(blockId, listIdx) in parlistO.idsViewArray()"
         v-bind:style="{ top: screenTop + 'px' }"
-        v-bind:id="'s-'+ parlistC.get(blockId)._id"
-        v-bind:key="blockId">
-        <div class='col'><!--v-if="block.isVisible"-->
+        v-bind:id="'s-'+ blockId"
+        v-bind:key="blockId"><!--{{parlistO.getInId(blockId)}} -> {{blockId}}{{parlistO.getRIdById(blockId)}} -> {{parlistO.getOutId(blockId)}}-->
+        <div class='col' v-if="parlist.has(blockId)"><!--v-if="block.isVisible"-->
           <BookBlockView ref="blocks"
               :block="parlist.get(blockId)"
+              :blockO="parlistO.getBlock(blockId)"
               :blockId = "blockId"
               :putBlock ="putBlockProxy"
               :getBlock ="getBlockProxy"
               :putBlockPart ="putBlockPartProxy"
+              :putBlockO ="putBlockOProxy"
+              :putNumBlockO ="putNumBlockOProxy"
               :reCount  ="reCountProxy"
               :recorder ="recorder"
               :blockReindexProcess="blockReindexProcess"
               :getBloksUntil="getBloksUntil"
               :allowSetStart="allowSetStart"
               :allowSetEnd="allowSetEnd"
-              :prevId="getPrevId(blockId)"
+              :prevId="parlistO.getInId(blockId)"
               :mode="mode"
               :approveWaiting="approveWaiting"
               @stopRecordingAndNext="stopRecordingAndNext"
@@ -46,10 +49,13 @@
         <!--<div class='col'>-->
       </div>
       <!--<div class="row"--> <!--v-show="hasScrollDown"-->
-      <div v-show="downScreenTop"
+      <div v-show="isBlocked && !parlistO.checkLast()"
         class="infinite-loading-container -down"
         v-bind:style="{ top: downScreenTop + 'px' }"><!--&& isBlocked && blockers.indexOf('loadBookDown') >-1"-->
         <div><i class="loading-default"></i></div>
+      </div>
+      <div class="end-of-book" v-show="parlistO.checkLast()">
+        End Of Book
       </div>
       <!--<div v-else class="infinite-loading-container -down">
         <div>End of book</div>
@@ -92,7 +98,7 @@
 
   </div>
   <!--<div class="container-fluid">   -->
-  <div class="custom-scroll">
+  <div class="custom-scroll" v-if="scrollBarBlocks.length > 0">
   <div class="vue-scrollbar__up"
     @click.prevent="()=>{return true;}"
     @mousedown="scrollByBarStart('up')"
@@ -105,7 +111,7 @@
   <vue-scrollbar classes="" ref="scrollBarRef" :onChangePosition="scrollByBar" direction="vertical"
   :onEndDragEvent="endScrollDragging" :onScrollBarClick="scrollBarClick">
   <div class="scroll-me" ref="scrollBarWrapRef">
-  <div v-for="(sBlockId, sBlockIdx) in scrollBarBlocks" :key="sBlockId" :id="'scroll-'+sBlockId" :data-id="sBlockId" ref="scrollBlocksRefs"
+  <div v-for="(sBlockId, sBlockIdx) in scrollBarBlocks" :id="'scroll-'+sBlockId" :data-id="sBlockId" ref="scrollBlocksRefs"
   :style="{height: scrollBarBlockHeight+'px'}"></div>
   <div class="clearfix"></div>
   </div>
@@ -137,6 +143,7 @@ import mediaStreamRecorder from 'recordrtc'
 import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
 import { BookBlock, setBlockParnum }    from '../../store/bookBlock';
+import { BookBlocks }    from '../../store/bookBlocks';
 import { modal }        from 'vue-strap';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
@@ -173,7 +180,8 @@ export default {
       blockReindexProcess: false,
 
       startId: false,
-      parlistC: new Map(),
+      //parlistC: new Map(),
+      //parlistO: new BookBlocks(),
 
       upScreenTop: -85,
       downScreenTop: 0,
@@ -205,6 +213,7 @@ export default {
           isBlocked: 'isBlocked',
           blockers: 'blockers',
           parlist: 'storeList',
+          parlistO: 'storeListO',
           blockSelection: 'blockSelection'
       }),
       metaStyles: function () {
@@ -238,24 +247,19 @@ export default {
           // 'esc+ctrl' is OK.
           'ctrl+home': (ev)=>{
             //console.log('ctrl+home');
-            this.scrollToBlock(this.meta.startBlock_id);
+            let firstRid = this.parlistO.getFirstRid();
+            console.log('firstRid', firstRid);
+            if (firstRid) {
+              let block = this.parlistO.getBlockByRid(firstRid);
+              if (block) this.scrollToBlock(block.blockid);
+            }
           },
           'ctrl+end': (ev)=>{
             //console.log('ctrl+end')
-            if (this.meta.endBlock_id) {
-              this.scrollToBlock(this.meta.endBlock_id)
-            }
-              else
-            {
-              let currId, crossId = this.meta.startBlock_id || this.startId;
-              if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
-                let block = this.parlist.get(crossId);
-                if (block) {
-                  currId = crossId;
-                  crossId = block.chainid;
-                } else break;
-              }
-              if (currId) this.scrollToBlock(currId);
+            let lastRid = this.parlistO.getLastRid();
+            if (lastRid) {
+              let block = this.parlistO.getBlockByRid(lastRid);
+              if (block) this.scrollToBlock(block.blockid);
             }
           },
           'ctrl+up': (ev)=>{
@@ -263,10 +267,10 @@ export default {
             let jumpStep = Math.floor(this.parlist.size * 0.1);
             let currId, crossId = this.startId;
             if (crossId) for (var idx=0; idx < jumpStep; idx++) {
-              let block = this.findPrevBlock(crossId);
-              if (block) {
-                currId = block._id;
-                crossId = block._id;
+              let blockId = this.parlistO.getInId(crossId);
+              if (blockId) {
+                currId = blockId;
+                crossId = blockId;
               } else break;
             }
             if (currId) this.scrollToBlock(currId);
@@ -287,8 +291,8 @@ export default {
           'pgup': (ev)=>{
             //console.log('page up');
             ev.preventDefault();
-            let pBlock = this.findPrevBlock(this.startId);
-            if (pBlock) this.scrollToBlock(pBlock._id);
+            let blockId = this.parlistO.getInId(this.startId);
+            if (blockId) this.scrollToBlock(blockId);
           },
           'pgdn': (ev)=>{
             //console.log('page down');
@@ -309,7 +313,11 @@ export default {
       modal, vueSlider, VueScrollbar
   },
   methods: {
-    ...mapActions(['loadBook', 'loadBlocks', 'loadBlocksChainUp', 'loadBlocksChain', 'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange']),
+    ...mapActions([
+    'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
+    'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
+
+    'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange']),
 
     test() {
         window.scrollTo(0, document.body.scrollHeight-500);
@@ -321,36 +329,49 @@ export default {
       /*let startId = this.startId;
       this.startId = false;
       this.startId = startId;*/
-      //this.$forceUpdate();
       //this.updateScrollSlider();
 
-
-      let result = new Map();
-      if (this.startId && this.parlist.has(this.startId)) {
-        let seqId = this.startId;
-        for (var i=0; i<=9; i++) {
-          if (this.parlist.get(seqId)) {
-            result.set(seqId, this.parlist.get(seqId));
-            seqId = this.parlist.get(seqId).chainid;
-          }
-        }
-      }
-      this.parlistC = result;
-
+      this.parlistO.setStartId(this.startId);
+      this.$forceUpdate();
+      //this.updateVisibleBlocks();
     },
 
-    loadBookMeta() {
+    loadBookMeta(onPage) {
+      let checkMeta = this.parlistO.meta || {};
+      checkMeta = checkMeta.bookid || false;
       if (this.$route.params.hasOwnProperty('bookid')) {
-        this.freeze('loadBookMeta');
-        //console.log('loadBookMeta', this.$route.params.bookid);
-        return this.loadBook(this.$route.params.bookid)
-        .then(()=>{
-          this.unfreeze('loadBookMeta');
-          if (this.meta.blocks) this.scrollBarBlocks = this.meta.blocks;
-        }).catch((err)=>{
-          this.unfreeze('loadBookMeta');
-        });
-      } else return Promise.reject();
+        if (!checkMeta || checkMeta!==this.$route.params.bookid) {
+          this.freeze('loadBookMeta');
+          return this.loadBook(this.$route.params.bookid)
+          .then((meta)=>{
+            //console.log('loadBook then meta', meta);
+            this.unfreeze('loadBookMeta');
+            return this.searchBlockUnresolved()
+            .then((blockId)=>{
+
+              let startBlock = blockId || this.$route.params.block || false;
+              let taskType = this.$route.params.task_type || false;
+
+              return this.loadPartOfBookBlocks({
+                bookId: this.$route.params.bookid,
+                block: startBlock,
+                taskType: taskType,
+                onPage: onPage || 10
+              }).then((answer)=>{
+                this.parlistO.setLookupsList(this.meta._id, answer);
+                let idsArray = this.parlistO.idsArray();
+                this.isNeedUp = idsArray[0];
+                this.isNeedDown = idsArray[idsArray.length-1];
+                this.$router.replace({name: this.$route.name, params: {}});
+                return Promise.resolve(answer);
+              })
+            })
+          }).catch((err)=>{
+            this.unfreeze('loadBookMeta');
+            return Promise.reject(err);
+          });
+        } else return Promise.resolve({ blocks:[] }); // already loaded
+      } else return Promise.reject('No bookid');
     },
 
     lazyLoad(firstId = false, lastId = false)
@@ -361,26 +382,25 @@ export default {
 
       this.isNeedUp = firstId || this.isNeedUp;
       this.isNeedDown = lastId || this.isNeedDown;
-
-      //console.log('lazyLoader',this.isNeedUp, this.isNeedDown);
+      let idsViewArray = this.parlistO.idsViewArray();
 
       if (!this.isBlocked && (this.isNeedUp || this.isNeedDown)) {
         switch(this.lazyLoaderDir) {
           case 'down' : {
+            this.isNeedDown = this.parlistO.getOutId(this.isNeedDown);
             if (this.isNeedDown)
             {
-              lastId = this.isNeedDown;
-              if (this.isNeedDown === true) lastId = Array.from(this.parlistC.keys()).pop();
-              this.getBlocks(lastId, 1)
+
+              this.getBlock(this.isNeedDown)
               .then((result)=>{
-                if (this.isNeedUp) this.lazyLoaderDir = 'up';
-                if (this.isNeedDown) this.isNeedDown = this.parlist.get(result.blockId).chainid;
-                this.lazyLoad();
-              }).catch(()=>{
-                if (this.isNeedUp) this.lazyLoaderDir = 'up';
-                this.isNeedDown = false;
-                this.lazyLoad();
-              })
+                if (!this.parlist.has(result._id)) {
+                  let newBlock = new BookBlock(result);
+                  this.$store.commit('set_storeList', newBlock);
+                  this.parlistO.setLoaded(result._id);
+                  if (this.isNeedUp) this.lazyLoaderDir = 'up';
+                  this.lazyLoad();
+                }
+              });
             } else {
               if (this.isNeedUp) this.lazyLoaderDir = 'up';
               this.lazyLoad();
@@ -388,22 +408,19 @@ export default {
 
           } break;
           case 'up' : {
+            this.isNeedUp = this.parlistO.getInId(this.isNeedUp);
             if (this.isNeedUp)
             {
-              //let startId = this.parlist[0]._id;
-              firstId = this.isNeedUp;
-              if (this.isNeedUp === true) firstId = this.startId;
-
-              this.getBlocksUp(firstId, 1)
+              this.getBlock(this.isNeedUp)
               .then((result)=>{
-                if (this.isNeedDown) this.lazyLoaderDir = 'down';
-                if (this.isNeedUp) this.isNeedUp = result.blockId;
-                this.lazyLoad();
-              }).catch(()=>{
-                if (this.isNeedDown) this.lazyLoaderDir = 'down';
-                this.isNeedUp = false;
-                this.lazyLoad();
-              })
+                if (!this.parlist.has(result._id)) {
+                  let newBlock = new BookBlock(result);
+                  this.$store.commit('set_storeList', newBlock);
+                  this.parlistO.setLoaded(result._id);
+                  if (this.isNeedDown) this.lazyLoaderDir = 'down';
+                  this.lazyLoad();
+                }
+              });
             } else {
               if (this.isNeedDown) this.lazyLoaderDir = 'down';
               this.lazyLoad();
@@ -413,6 +430,61 @@ export default {
 
         //this.lazyLoad();
       };
+    },
+
+    loadPreparedBookDown(idsArray) { // mostly first page load
+
+      let startId = idsArray[0] || this.meta.startBlock_id;
+      this.freeze('loadBook');
+      return this.loopPreparedBlocksChain({ids: idsArray})
+      .then((result)=>{
+        if (result.rows && result.rows.length > 0) {
+          //console.log('loadPreparedBookDown result', result.rows);
+          result.rows.forEach((el, idx, arr)=>{
+            if (!this.parlist.has(el._id)) {
+              let newBlock = new BookBlock(el);
+              this.$store.commit('set_storeList', newBlock);
+              this.parlistO.setLoaded(el._id);
+              //this.updateScrollSlider(false);
+            }
+          });
+          if (this.startId === false) {
+            this.startId = startId; // first load
+          }
+          this.unfreeze('loadBook');
+          result.blockId = result.rows[result.rows.length-1]._id;
+          return Promise.resolve(res);
+        } else {
+          this.unfreeze('loadBook');
+          return Promise.reject();
+        }
+      }).catch(err=>{
+        this.unfreeze('loadBook'); return err;
+      });
+    },
+
+    searchBlockUnresolved() { //TODO Temporary solution
+      let task_type = this.$route.params.task_type || false;
+      if (!task_type) return Promise.resolve(false);
+      if (task_type && task_type !== 'master-audio') {
+        if (!Object.keys(this.tc_tasksByBlock).length) {
+          return Promise.resolve(false);
+        }
+      }//&& task_type !== 'text-cleanup'
+
+      if (task_type === 'true') {
+        task_type = true;
+      }
+      if (!task_type && !this._is('editor')) {
+        task_type = true;
+      }
+      return this.$store.dispatch('searchBlocksChain', {
+        book_id: this.meta._id,
+        startId: this.startId || this.meta.startBlock_id,
+        search: {block_type: 'unresolved',  task_type: task_type}
+      }).then((result)=>{
+        return result.blockId;
+      });
     },
 
     loadBookDown(checkRoute = false, startId = false, onPage = 10) {
@@ -493,7 +565,7 @@ export default {
             if (!this.parlist.has(el._id)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
-              this.updateScrollSlider(false, this.isNeedUp);
+              //this.updateScrollSlider(false, this.isNeedUp);
             }
           });
           result.blockId = result.rows[0]._id;
@@ -505,7 +577,7 @@ export default {
       })
       .catch((err)=>{
         console.log('BlocksUp Error: ', err.message);
-        this.updateScrollSlider(false, this.isNeedUp);
+        //this.updateScrollSlider(false, this.isNeedUp);
         this.refreshTmpl();
         return Promise.reject(err);
       });
@@ -523,7 +595,7 @@ export default {
             if (!this.parlist.has(el._id)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
-              this.updateScrollSlider(false);
+              //this.updateScrollSlider(false);
             }
           });
           result.blockId = result.rows[result.rows.length-1]._id;
@@ -531,12 +603,12 @@ export default {
           this.hasScrollDown = false;
           return Promise.reject();
         }
-        this.reCountProxy();
+        //this.reCountProxy();
         return Promise.resolve(result);
       })
       .catch((err)=>{
         console.log('BlocksDown Error: ', err);
-        this.updateScrollSlider(false);
+        //this.updateScrollSlider(false);
         this.refreshTmpl();
         this.hasScrollDown = false;
         return Promise.reject(err);
@@ -669,21 +741,15 @@ export default {
           this.clearBlockLock({block: change.doc});
           if (oldBlock.partUpdate) {
             oldBlock._rev = change.doc._rev;
-            //this.parlist.set(change.doc._id, new BookBlock(oldBlock));
             this.$store.commit('set_storeList', new BookBlock(oldBlock));
             this.refreshTmpl();
           } else if (updField) {
-            //console.log('updField', updField, change.doc[updField], oldBlock[updField]);
             oldBlock[updField] = change.doc[updField];
             oldBlock._rev = change.doc._rev;
-            //this.parlist.set(change.doc._id, new BookBlock(oldBlock));
             this.$store.commit('set_storeList', new BookBlock(oldBlock));
             this.refreshTmpl();
           } else {
             let newBlock = new BookBlock(change.doc);
-            if (oldBlock.checked === true) {
-              newBlock.checked = true;
-            }
             if (oldBlock.isChanged || oldBlock.isAudioChanged || oldBlock.isIllustrationChanged) {
               if (oldBlock.status && newBlock.status && oldBlock.status.assignee === newBlock.status.assignee) {
                 oldBlock._rev = change.doc._rev;
@@ -754,6 +820,26 @@ export default {
     putBlockPartProxy: function (blockData) {
       return this.putBlockPart(blockData)
       .then(()=>{})
+      .catch((err)=>{})
+    },
+
+    putBlockOProxy: function (blockData) {
+      return this.putBlockO(blockData)
+      .then((blocks)=>{
+        console.log('putBlockOProxy then');
+        this.updateVisibleBlocks();
+        return Promise.resolve(blocks)
+      })
+      .catch((err)=>{})
+    },
+
+    putNumBlockOProxy: function (blockData) {
+      return this.putNumBlockO(blockData)
+      .then((blocks)=>{
+        console.log('putNumBlockOProxy then');
+        this.updateVisibleBlocks();
+        return Promise.resolve(blocks)
+      })
       .catch((err)=>{})
     },
 
@@ -926,7 +1012,7 @@ export default {
         block: newBlock
       })
         .then((response)=>{
-          this.setBlockSelection({start: {}, end: {}});
+          //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
           this.$store.commit('set_storeList', newBlock);
@@ -934,9 +1020,18 @@ export default {
           if (b_old) {
             this.refreshBlock({doc: b_old, deleted: false});
           }
+          if (response.data.blockO) {
+            let blockO = response.data.blockO;
+            this.parlistO.addBlock(blockO);
+            this.scrollBarBlocks = this.parlistO.idsArray();
+            if (!this.parlistO.getInId(blockO.blockid)) {
+              this.startId = blockO.blockid;
+            }
+            //this.updateScrollSlider();
+          }
           this.unfreeze('insertBlockBefore');
-          this.updateScrollSlider();
-          this.refreshTmpl();
+          //this.updateScrollSlider();
+          //this.refreshTmpl();
         })
         .catch(err => {
           this.unfreeze('insertBlockBefore');
@@ -956,15 +1051,26 @@ export default {
         block: newBlock
       })
         .then((response)=>{
-          this.setBlockSelection({start: {}, end: {}});
+          //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
           this.$store.commit('set_storeList', newBlock);
           this.refreshBlock({doc: b_new, deleted: false});
           this.refreshBlock({doc: b_old, deleted: false});
+          if (response.data.blockO) {
+            let blockO = response.data.blockO;
+            this.parlistO.addBlock(blockO);
+            this.scrollBarBlocks = this.parlistO.idsArray();
+            if (!this.parlistO.getOutId(blockO.blockid)) {
+              let firstId = this.parlistO.idsViewArray()[0];
+              this.startId = this.parlistO.getOutId(firstId);
+              //this.startId = blockO.blockid;
+            } else this.refreshTmpl();
+            this.updateScrollSlider();
+          }
           this.unfreeze('insertBlockAfter');
-          this.updateScrollSlider();
-          this.refreshTmpl();
+          //this.updateScrollSlider();
+          //this.refreshTmpl();
         })
         .catch(err => {
           this.unfreeze('insertBlockAfter');
@@ -994,62 +1100,32 @@ export default {
     deleteBlock(block, block_Idx) {
       //console.log('deleteBlock', block._id);
       this.freeze('deleteBlock');
-//       this.getBlockByChainId(block._id)
-//       .then((blockBefore)=>{
+      let api_url = this.API_URL + 'book/block/' + block._id;
+      let api = this.$store.state.auth.getHttp();
+      api.delete(api_url, {})
+      .then((response)=>{
+        //this.setBlockSelection({start: {}, end: {}});
+        if (response.data) {
+          let newStartId = this.parlistO.delBlock(response.data);
+          this.scrollBarBlocks = this.parlistO.idsArray();
+          this.updateScrollSlider();
+          if (newStartId !== this.startId) {
+            // in case when first or last block in book was deleted
+            this.startId = newStartId;
+          } else this.refreshTmpl();
+        }
+        this.parlist.delete(block._id);
+        this.unfreeze('deleteBlock');
+        //this.updateScrollSlider();
+        //this.refreshTmpl();
+      })
+      .catch(err => {
+        this.unfreeze('deleteBlock');
+        return err;
+      });
 
-
-
-//           if (blockBefore) {
-//             blockBefore.chainid = block.chainid;
-//             this.freeze('putBlockPart');
-//             this.putBlockPart({
-//               block: new BookBlock(blockBefore),
-//               field: 'chainid'
-//             }).then((response)=>{
-//               //this.blockReindexProcess = false
-//               this.unfreeze('putBlockPart');
-//             }).catch((err)=>{
-//               this.unfreeze('putBlockPart');
-//               return err;
-//             })
-//           } else {
-//             this.startId = block.chainid;
-//             this.setMetaData({ key: 'startBlock_id', value: block.chainid})
-//             .then((response)=>{
-//               //this.blockReindexProcess = false
-//             });
-//           }
-
-
-          let api_url = this.API_URL + 'book/block/' + block._id;
-          let api = this.$store.state.auth.getHttp();
-          api.delete(api_url, {})
-          .then((response)=>{
-            this.setBlockSelection({start: {}, end: {}});
-            //console.log('api response', response);
-            if (this.startId == block._id) {
-              this.startId = block.chainid;
-            }
-            this.parlist.delete(block._id);
-            this.unfreeze('deleteBlock');
-            this.updateScrollSlider();
-            this.refreshTmpl();
-          })
-          .catch(err => {
-            this.unfreeze('deleteBlock');
-            return err;
-          });
-//       })
-//       .catch((err)=>{
-//         this.unfreeze('deleteBlock');
-//         console.log('deleteBlock Err', err);
-//         return err;
-//       })
     },
     joinBlocks(block, block_Idx, direction) {
-
-      this.setBlockSelection({start: {}, end: {}});
-      //this.setUnCheckedRange();
 
       let api_url = this.API_URL + 'book/block_join/';
       let api = this.$store.state.auth.getHttp();
@@ -1065,7 +1141,7 @@ export default {
 
         switch(direction) {
           case 'previous' : {
-            return this.getBlockByChainId(block._id)
+            return this.getBlock(this.parlistO.getInId(block._id))
             .then((blockBefore)=>{
               //if (!checkArr.includes(block.type) || !checkArr.includes(blockBefore.type)) {
               if (block.type !== blockBefore.type) {
@@ -1141,16 +1217,21 @@ export default {
                         donorBlock_id: block._id
                       })
                       .then((response)=>{
-                        this.setBlockSelection({start: {}, end: {}});
+                        //this.setBlockSelection({start: {}, end: {}});
                         this.clearBlockLock({block: blockBefore, force: true});
                         if (response.data.ok && response.data.blocks) {
                           response.data.blocks.forEach((res)=>{
                             this.refreshBlock({doc: res, deleted: res.deleted});
                           });
                         }
+                        if (response.data.blocks && response.data.blocks[2]) {
+                          this.parlistO.delBlock(response.data.blocks[2]);
+                          this.scrollBarBlocks = this.parlistO.idsArray();
+                          this.updateScrollSlider();
+                        }
                         this.refreshTmpl();
                         this.unfreeze('joinBlocks');
-                        this.updateScrollSlider();
+                        //this.updateScrollSlider();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
@@ -1237,16 +1318,21 @@ export default {
                         donorBlock_id: blockAfter._id
                       })
                       .then((response)=>{
-                        this.setBlockSelection({start: {}, end: {}});
+                        //this.setBlockSelection({start: {}, end: {}});
                         this.clearBlockLock({block: block, force: true});
                         if (response.data.ok && response.data.blocks) {
                           response.data.blocks.forEach((res)=>{
                             this.refreshBlock({doc: res, deleted: res.deleted});
                           });
                         }
+                        if (response.data.blocks && response.data.blocks[2]) {
+                          this.parlistO.delBlock(response.data.blocks[2]);
+                          this.scrollBarBlocks = this.parlistO.idsArray();
+                          this.updateScrollSlider();
+                        }
                         this.refreshTmpl();
                         this.unfreeze('joinBlocks');
-                        this.updateScrollSlider();
+                        //this.updateScrollSlider();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
@@ -1267,6 +1353,7 @@ export default {
     setRangeSelection(block, type, status, shift = false) {
       //console.log('setRangeSelection', block, type, status, shift);
       let newSelection = Object.assign({}, this.blockSelection);
+
       switch (type) {
         case 'start':
           if (status) {
@@ -1303,66 +1390,26 @@ export default {
             }
           break;
         case 'byOne':
-          //console.log('byOne', status, block._id, 'start:', this.blockSelection.start._id, 'end:', this.blockSelection.end._id);
-          let blockSel = _.pick(block, ['_id', 'chainid']);
+          //console.log('byOne', status, block.rid, 'start:', this.blockSelection.start._id, 'end:', this.blockSelection.end._id);
+
+          let blockSel = {_id: block.blockid};
+          this.parlistO.setUnCheckedRange();
           if (status) { // check
-            if (this.blockSelection.start._id) {
-
-              this.setUnCheckedRange();
-              // this.blockSelection - from store
-              if (shift) {
-                let pBlock, currId = block._id, isFound = false;
-                while (pBlock = this.findPrevBlock(currId)) {
-                  if (pBlock._id === this.blockSelection.start._id) {
-                    newSelection.end = blockSel;
-                    isFound = true;
-                    break;
-                  }
-                  currId = pBlock._id;
-                }
-                //console.log('isFound', isFound);
-                if (!isFound) {
-                  // selected blocks are not found before, so they are after
-                  if (!this.blockSelection.end._id) newSelection.end = this.blockSelection.start;
-                  newSelection.start = blockSel;
-                }
-
-                this.setCheckedRange(newSelection.start._id, newSelection.end._id);
-
-              } else {
-                block.checked = true;
-                newSelection.start = blockSel;
-                newSelection.end = blockSel;
-              }
-
-            } else  {
-              this.setUnCheckedRange();
-              block.checked = true;
-              newSelection.start = blockSel;
-              newSelection.end = blockSel;
-            }
-
-            this.setBlockSelection(newSelection);
-
-          } else { // uncheck
-            if (this.blockSelection.start._id && this.blockSelection.end._id) {
-              if (this.blockSelection.start._id == block._id && block._id == this.blockSelection.end._id) {
-                this.setBlockSelection({start: {}, end: {}});
-              } else if (block._id == this.blockSelection.start._id) {
-                this.setBlockSelection({start: this.parlist.get(block.chainid), end: this.blockSelection.end});
-              } else if (block._id == this.selectionEnd._id) {
-                this.setBlockSelection({start: this.blockSelection.start, end: this.findPrevBlock(block._id)});
-              } else {
-                  this.setBlockSelection({start: this.blockSelection.start, end: this.findPrevBlock(block._id)});
-              }
-              this.setUnCheckedRange();
-              this.setCheckedRange(this.blockSelection.start._id, this.blockSelection.end._id);
-
-
+            if (shift && this.blockSelection.start._id) {
+              let startRId = this.parlistO.getRIdById(this.blockSelection.start._id);
+              newSelection = this.parlistO.setChecked(startRId, block.rid);
             } else {
-              //this.$root.$emit('from-bookedit:set-selection', {}, {});
-              this.setBlockSelection({start: {}, end: {}})
+              newSelection = this.parlistO.setChecked(block.rid);
             }
+            //console.log('newSelection', newSelection.start._id, newSelection.end._id);
+            this.setBlockSelection(newSelection);
+          }
+          else { // uncheck
+            if (this.blockSelection.start._id && this.blockSelection.end._id && this.blockSelection.start._id !== this.blockSelection.end._id) {
+              newSelection = this.parlistO.setChecked(block.rid);
+              this.setBlockSelection(newSelection);
+            }
+            else this.setBlockSelection({start: {}, end: {}});
           }
           break;
       }
@@ -1383,22 +1430,16 @@ export default {
       }
       return false;
     },
-    setCheckedRange(startId, endId) {
-      if (this.parlist.has(startId)) {
-        let pBlock, currId = startId;
-        do {
-          pBlock = this.parlist.get(currId);
-          if (pBlock) {
-            pBlock.checked = true;
-            currId = pBlock.chainid;
-          }
-        } while (pBlock && pBlock._id !== endId);
+    updateVisibleBlocks() {
+      if (this.$refs.blocks && this.$refs.blocks.length) {
+        this.$refs.blocks.forEach(($ref)=>{
+          $ref.isUpdated = true;
+          $ref.isUpdated = false;
+        })
       }
     },
-    setUnCheckedRange(startId = false) {
-      this.parlist.forEach((pBlock)=>{
-        pBlock.checked = false;
-      });
+    setUnCheckedRange() {
+      this.parlistO.setUnCheckedRange()
     },
     setBlockWatch() {
       //console.log('!!! setBlockWatch');
@@ -1425,24 +1466,22 @@ export default {
       //this.screenTop -= ((ev.deltaY!==false) ? (ev.deltaY > 0 ? 47 : -47) : 0);
       //if (true) return;
 
-      let wrapHeight = this.$refs.contentScrollWrapRef.getBoundingClientRect().height;
+      let wrapHeight = this.$refs.contentScrollWrapRef.offsetHeight;
 
       //console.log('currTop', currTop, 'dataHeight', dataHeight);
       //console.log('ev.deltaY', ev.deltaY);
       //console.log('ev', ev);
       if (ev.deltaY !== false && ev.hasOwnProperty('preventDefault')) ev.preventDefault();
 
-      if (ev.deltaY < 0 && this.blockers.indexOf('loadBookUp') >-1) return;
-      if (ev.deltaY > 0 && this.blockers.indexOf('loadBookDown') >-1) return;
+      if (ev.deltaY < 0 && this.blockers.indexOf('loadBook') >-1) return;
+      if (ev.deltaY > 0 && this.blockers.indexOf('loadBook') >-1) return;
 
       step = (ev.deltaY!==false) ? (ev.deltaY > 0 ? step : -1*step) : 0;
 
-      if (this.parlistC.size > 0) {
-        let firstId, lastId;
-        this.parlistC.forEach((value, _id, map)=>{
-          if (!firstId) firstId = _id;
-          lastId = _id;
-        });
+      let idsViewArray = this.parlistO.idsViewArray();
+      if (idsViewArray.length > 0) {
+        let firstId = idsViewArray[0];
+        let lastId = idsViewArray[idsViewArray.length-1];
 
         if (ev.deltaY < 0 && this.screenTop >= 0 && firstId == this.meta.startBlock_id)
         { // if this is a very first block
@@ -1452,7 +1491,7 @@ export default {
 
         let firstHeight;
         try {
-          firstHeight = document.getElementById('s-'+firstId).getBoundingClientRect().height;
+          firstHeight = document.getElementById('s-'+firstId).offsetHeight;
         } catch (err) {
           this.screenTop -= step;
           return;
@@ -1463,94 +1502,75 @@ export default {
         this.upScreenTop = false;
         if (ev.deltaY < 0 && (this.screenTop > 10))
         { // first block moved down -> try to show previous
-          let prevBlockId = false;
-          this.parlist.forEach((block, _id)=>{
-            if (block.chainid == firstId) {
-              prevBlockId = block._id;
-              return;
-            }
-          });
-          if (prevBlockId) { // already loaded
-            this.startId = prevBlockId;
-            this.$refs.blocks.forEach(($ref)=>{
-              $ref.addContentListeners();
-            })
-            Vue.nextTick(()=>{
-              let prevHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
-              if (prevHeight) {
-                this.screenTop = this.screenTop - prevHeight;
-              };
-            });
-          } else {
-            this.upScreenTop = 1;
-            this.loadBookUp(firstId)
-            .then(()=>{
-              this.parlist.forEach((block, _id)=>{
-                if (block.chainid == firstId) {
-                  prevBlockId = block._id;
-                  return;
-                }
-              });
+          let prevBlockId = this.parlistO.getInId(firstId);
+          if (prevBlockId) {
+            if (this.parlist.has(prevBlockId)) { // already loaded
               this.startId = prevBlockId;
-              this.$refs.blocks.forEach(($ref)=>{
-                $ref.addContentListeners();
-              });
-              if (this.blockSelection.start._id && this.blockSelection.end._id) { // re-check blocks
-                this.setCheckedRange(this.blockSelection.start._id, this.blockSelection.end._id);
-              }
-              Vue.nextTick(()=>{
-                this.upScreenTop = false;
-                let prevHeight = document.getElementById('s-'+this.startId).getBoundingClientRect().height;
-                if (prevHeight) {
-                  this.screenTop = this.screenTop - prevHeight;
-                };
-              });
-            }).catch(err=>{
-              //console.log('scroll Up Catch');
-              this.screenTop = 0;
-              this.upScreenTop = false;
-              return err;
-            });
-          }
-        }
-        else if (ev.deltaY > 0 && (this.screenTop + firstHeight + 200) < 0) //ev.deltaY < 0
-        { // scroll down
-            if (this.parlistC.size <= 1) { // last block reached
-              //this.downScreenTop = false;
-              this.screenTop += step;
-              return;
-            }
-            this.downScreenTop = 1;
-            let nextBlockId = false;
-            this.parlist.forEach((block, _id)=>{
-              if (_id == this.parlistC.get(lastId).chainid) {
-                nextBlockId = _id;
-                return;
-              }
-            });
-            if (nextBlockId) { // already loaded
-              this.startId = this.parlistC.get(firstId).chainid;
               this.$refs.blocks.forEach(($ref)=>{
                 $ref.addContentListeners();
               })
               Vue.nextTick(()=>{
-                this.screenTop = this.screenTop + firstHeight;
+                let prevHeight = document.getElementById('s-'+this.startId).offsetHeight;
+                if (prevHeight) {
+                  this.screenTop = this.screenTop - prevHeight;
+                };
               });
             } else {
-              this.loadBookDown(false, this.parlistC.get(lastId).chainid, 5)
+              this.upScreenTop = 1;
+              let idsArray = this.parlistO.getPrevIds(prevBlockId, 5);
+              this.loadPreparedBookDown(idsArray)
               .then(()=>{
-                this.startId = this.parlistC.get(firstId).chainid;
-                  this.$refs.blocks.forEach(($ref)=>{
+                this.startId = prevBlockId;
+                this.$refs.blocks.forEach(($ref)=>{
+                  $ref.addContentListeners();
+                });
+                Vue.nextTick(()=>{
+                  this.upScreenTop = false;
+                  let prevHeight = document.getElementById('s-'+this.startId).offsetHeight;
+                  if (prevHeight) {
+                    this.screenTop = this.screenTop - prevHeight;
+                  };
+                });
+              }).catch(err=>{
+                this.screenTop = 0;
+                this.upScreenTop = false;
+                return err;
+              });
+            }
+          } else this.upScreenTop = 1;
+        }
+        else if (ev.deltaY > 0 && (this.screenTop + firstHeight + 200) < 0) //ev.deltaY < 0
+        { // scroll down
+          //TODO reimplement to Orient
+            if (idsViewArray.length <= 1 && Math.abs(this.screenTop) > document.getElementById('s-'+lastId).offsetHeight + 200) { // last block reached
+              this.screenTop += step;
+              return;
+            }
+
+            let nextBlockId = this.parlistO.getOutId(lastId);
+            if (nextBlockId) {
+              if (this.parlist.has(nextBlockId)) { // already loaded
+                this.startId = this.parlistO.getOutId(firstId);
+
+                this.$refs.blocks.forEach(($ref)=>{
                   $ref.addContentListeners();
                 })
-                if (this.blockSelection.start._id && this.blockSelection.end._id)
-                { // re-check blocks
-                  this.setCheckedRange(this.blockSelection.start._id, this.blockSelection.end._id);
-                }
                 Vue.nextTick(()=>{
                   this.screenTop = this.screenTop + firstHeight;
                 });
-              }).catch(err=>err);
+              } else {
+                let idsArray = this.parlistO.getNextIds(nextBlockId, 5);
+                this.loadPreparedBookDown(idsArray)
+                .then(()=>{
+                  this.startId = this.parlistO.getOutId(firstId);
+                  this.$refs.blocks.forEach(($ref)=>{
+                    $ref.addContentListeners();
+                  })
+                  Vue.nextTick(()=>{
+                    this.screenTop = this.screenTop + firstHeight;
+                  });
+                }).catch(err=>err);
+              }
             }
         }
 
@@ -1568,10 +1588,10 @@ export default {
         this.screenTop = 0;
         this.startId = id;
       } else {
-        this.loadBookDown(false, id)
+        this.д([id])
         .then((blockId)=>{
           this.setBlockWatch();
-          this.lazyLoad(id);
+          //this.lazyLoad(id);
           this.screenTop = 0;
           this.startId = id;
         });
@@ -1591,18 +1611,20 @@ export default {
       }
     },
 
-    getPrevId(id) {
-      for (let val of this.parlist.values()) {
-        if (val.chainid === id) {
-          return val._id;
-        }
-      }
-      return false;
-    },
+//     getPrevId(id) {
+//       for (let val of this.parlist.values()) {
+//         if (val.chainid === id) {
+//           return val._id;
+//         }
+//       }
+//       return false;
+//     },
 
     listenSetNum(bookId, numMask) {
-      //console.log('listenSetNum', bookId, numMask);
-      this.reCountProxy(numMask);
+      console.log('listenSetNum', bookId, numMask);
+      //this.reCountProxy(numMask);
+      this.updateVisibleBlocks();
+      //this.refreshTmpl();
     },
 
     throttleScrollUpdate: _.throttle(function () {
@@ -1612,45 +1634,11 @@ export default {
       }
     }, 400),
 
-    updateScrollSlider(force = true, startId = false)
+    updateScrollSlider(startId = false)
     {
-      //console.log('updateScrollSlider', new Date().getTime());
-      if (!this.$refs.scrollBarRef.dragging) {
-        if (force || this.scrollBarBlocks.length < this.parlist.size) /* ? */ {
-          //console.log('updateScrollSlider condition', this.scrollBarBlocks.length);
-          let resultArr = [], isUpdate = false;
-          let crossId = startId || this.meta.startBlock_id;
-          //console.log('startId', startId, 'crossId', crossId);
-          if (crossId) for (var idx=0; idx < this.parlist.size; idx++) {
-            let block = this.parlist.get(crossId);
-            if (block) {
-              resultArr.push(crossId);
-              if (this.scrollBarBlocks.indexOf(crossId) == -1) isUpdate = true;
-              crossId = block.chainid;
-            } else break;
-          }
-          //console.log('this.meta.blocks', this.meta.blocks && this.meta.blocks.length, 'resultArr.length', resultArr.length, 'this.scrollBarBlocks', this.scrollBarBlocks.length);
-          if (resultArr.length && isUpdate) {
-            this.scrollBarBlocks = resultArr;
-            //if (this.$refs.scrollBarRef) this.$refs.scrollBarRef.calculateSize();
-
-            //Vue.nextTick(()=>{
-              //this.throttleScrollUpdate();
-              if (this.$refs.scrollBarRef) {
-                this.$refs.scrollBarRef.calculateSize();
-                this.scrollBarUpdatePosition(this.startId);
-              }
-            //});
-          }
-        } else {
-//           Vue.nextTick(()=>{
-//             this.throttleScrollUpdate();
-//           });
-              if (this.$refs.scrollBarRef) {
-                this.$refs.scrollBarRef.calculateSize();
-                this.scrollBarUpdatePosition(this.startId);
-              }
-        }
+      if (this.$refs.scrollBarRef) {
+        this.$refs.scrollBarRef.calculateSize();
+        this.scrollBarUpdatePosition(this.startId);
       }
     },
 
@@ -1740,8 +1728,59 @@ export default {
       //console.log('handleScroll');
       this.$refs.contentScrollWrapRef.scrollTo(0,0);
     },
+
     _toggleApproveWaiting(val) {
       this.approveWaiting = val;
+    },
+
+    bookReimported() {
+      this.setBlockSelection({start: {}, end: {}});
+
+      this.$store.commit('clear_storeList');
+      this.$store.commit('clear_storeListO');
+      this.startId = false;
+      this.refreshTmpl();
+
+      this.$router.push({name: this.$route.name, params: {}});
+//       this.loadBookMeta()
+//       .then(()=>{
+//         this.tc_loadBookTask()
+//         .then(()=>{
+//           this.startId = false;
+//           this.loadBookDown(false, false, 10)
+//           .then(()=>{
+//
+//           });
+//         });
+//       })
+      this.loadBookMeta(10) // also handle route params
+      .then((initBlocks)=>{
+        if (this.meta._id) {
+          this.tc_loadBookTask()
+          .then(()=>{
+            this.loadPreparedBookDown(this.parlistO.idsArray(), 10).then(()=>{
+              this.startId = this.parlistO.idsArray[0];
+              this.scrollToBlock(this.startId);
+              this.loadBookBlocks({bookId: this.meta._id})
+              .then((res)=>{
+                this.parlistO.setLookupsList(this.meta._id, res);
+                this.scrollBarBlocks = this.parlistO.idsArray();
+                this.updateScrollSlider();
+                this.setBlockWatch();
+                this.$root.$emit('from-book-meta:upd-toc', true);
+                this.lazyLoad();
+              });
+            });
+          });
+        }
+      });
+    },
+
+    bookBlocksUpdates(data) {
+      let updField = data.updField || false;
+      if (Array.isArray(data.blocks)) data.blocks.forEach((res)=>{
+        this.refreshBlock({doc: res, deleted: res.deleted || false, updField: updField});
+      })
     }
 
   },
@@ -1750,26 +1789,43 @@ export default {
           //console.log("keydown: ", key)
       }
   },
+  beforeMount: function() {
+    if (this.$route.params.hasOwnProperty('bookid')) {
+      if (!(this.parlistO.meta && this.parlistO.meta.bookid && this.parlistO.meta.bookid == this.$route.params.bookid)) {
+        this.$store.commit('clear_storeList');
+        this.$store.commit('clear_storeListO');
+      }
+    }
+  },
   mounted: function() {
       //this.onScrollBookDown();
-      console.log('book mounted', this.meta._id);
-
-      //this.upScreenTop = -85;
-      //this.downScreenTop = this.$refs.contentScrollWrapRef.getBoundingClientRect().height;
-
-      if (this.meta._id) {
-        if (this.meta.blocks) this.scrollBarBlocks = this.meta.blocks;
-        this.loadBookDown(true)
-        .then(()=>{
-          this.setBlockWatch()
-          if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
-            this.$router.push({name: 'BookEdit', params: {}});
-          }
-        });
-      } else {
-        /*setTimeout(()=>{*/
-          this.loadBookMeta();
-      }
+      //console.log('book mounted', this.meta._id);
+      this.loadBookMeta(10) // also handle route params
+      .then((initBlocks)=>{
+        if (this.meta._id && initBlocks.blocks.length) {
+          this.tc_loadBookTask()
+          .then(()=>{
+            this.loadPreparedBookDown(this.parlistO.idsArray())
+            .then(()=>{
+              this.loadBookBlocks({bookId: this.meta._id})
+              .then((res)=>{
+                this.parlistO.updateLookupsList(this.meta._id, res);
+                this.scrollBarBlocks = this.parlistO.idsArray();
+                this.updateScrollSlider();
+                this.lazyLoad();
+                //console.log('loadBookBlocks then');
+                this.setBlockWatch()
+                if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
+                  this.$router.push({name: 'BookEdit', params: {}});
+                }
+              });
+            });
+          });
+        } else if (this.$route.params.hasOwnProperty('block')){
+          this.scrollToBlock(this.$route.params.block);
+          this.$router.replace({name: this.$route.name, params: {}});
+        }
+      });
 
       window.addEventListener('keydown', this.eventKeyDown);
 
@@ -1779,48 +1835,13 @@ export default {
         $('#narrateStartCountdown').css('height', '100%')
       }
 
-      this.$root.$on('book-reimported', ()=>{
-        //console.log("$on('book-reimported')", this.$refs.blocks);
-//         this.$refs.blocks.forEach((block)=>{
-//           block._id = null;
-//         });
-        this.setBlockSelection({start: {}, end: {}});
-
-        this.$store.commit('clear_storeList');
-        this.refreshTmpl();
-
-        this.$router.push({name: this.$route.name, params: {}});
-        this.loadBookMeta()
-        .then(()=>{
-          this.tc_loadBookTask()
-          .then(()=>{
-            this.startId = false;
-            this.loadBookDown(false, false, 10)
-            .then(()=>{
-              this.setBlockWatch();
-              this.$root.$emit('from-book-meta:upd-toc', true);
-            });
-          });
-        })
-
-
-      });
-
-      this.$root.$on('for-bookedit:scroll-to-block', (id)=>{
-        this.scrollToBlock(id);
-      });
-
-      this.$root.$on('bookBlocksUpdates', (data) => {
-        let updField = data.updField || false;
-        if (Array.isArray(data.blocks)) data.blocks.forEach((res)=>{
-          this.refreshBlock({doc: res, deleted: res.deleted || false, updField: updField});
-        })
-      });
-
+      this.$root.$on('book-reimported', this.bookReimported);
+      this.$root.$on('for-bookedit:scroll-to-block', this.scrollToBlock);
+      this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
       this.$root.$on('block-approving', this._toggleApproveWaiting);
-      
-      
+
+
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
         e.preventDefault();
       });
@@ -1833,28 +1854,29 @@ export default {
     this.setBlockSelection({start: {}, end: {}});
     this.isNeedUp = false;
     this.isNeedDown = false;
-    this.$root.$off('bookBlocksUpdates');
-    this.$root.$off('for-bookedit:scroll-to-block');
-    this.$root.$off('book-reimported');
+    this.$root.$off('bookBlocksUpdates', this.bookBlocksUpdates);
+    this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
+    this.$root.$off('book-reimported', this.bookReimported);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
     this.$root.$off('block-approving', this._toggleApproveWaiting)
   },
   watch: {
     'meta._id': {
       handler(newVal, oldVal) {
-        //console.log('watch meta._id', newVal, oldVal);
-        if (newVal) {
-          this.tc_loadBookTask()
-          .then(()=>{
-            if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
-              this.$router.push({name: 'BookEdit', params: {}});
-            }
-            this.loadBookDown(true)
-            .then(()=>{
-              this.setBlockWatch()
-            });
-          });
-        }
+        console.log('watch meta._id', newVal, oldVal);
+//         if (newVal) {
+//           this.tc_loadBookTask()
+//           .then(()=>{
+//             if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
+//               this.$router.push({name: 'BookEdit', params: {}});
+//             }
+//             this.loadBookDown(true)
+//             .then(()=>{
+//               this.setBlockWatch();
+//               //this.loadBookBlocks(newVal);
+//             });
+//           });
+//         }
       }
     },
     'allBooks': {
@@ -1864,12 +1886,23 @@ export default {
     },
     '$route' (toRoute, fromRoute) {
       //console.log('$route', toRoute, fromRoute);
-      if (this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
-        //this.f(this.$route.params.block, this.$route.params.task_type)
-        this.loadBookDown(true)
-        .then((blockId)=>{
-          this.setBlockWatch()
-        });
+      if (toRoute.params.hasOwnProperty('task_type') && toRoute.params.task_type) {
+        let taskType = toRoute.params.task_type;
+        this.loadPartOfBookBlocks({
+          bookId: this.$route.params.bookid,
+          block: 'unresolved',
+          taskType: taskType,
+          onPage: 1
+        }).then((answer)=>{
+          //this.startId = answer.blocks[0].blockid;
+          //console.log('answer', answer);
+          this.scrollToBlock(answer.blocks[0].blockid);
+          this.$router.replace({name: this.$route.name, params: {}});
+        })
+      }
+      if (this.$route.params.hasOwnProperty('block') && this.$route.params.block!=='unresolved') {
+        this.scrollToBlock(this.$route.params.block);
+        this.$router.replace({name: this.$route.name, params: {}});
       }
     },
     'tc_tasksByBlock': {
@@ -1892,7 +1925,7 @@ export default {
       handler(val) {
         //console.log('blockSelection', 'start:', val.start, 'end:', val.end);
         if (!this.blockSelection.start._id && !this.blockSelection.end._id) {
-          this.setUnCheckedRange();
+          this.parlistO.setUnCheckedRange();
         }
       },
       deep: true

@@ -42,7 +42,7 @@ export default new Router({
           component: BookEdit, meta: { mode: 'edit' }, props: { mode: 'edit' }
         },
         {
-          path: 'display/:block?', name: 'BookEditDisplay',
+          path: 'display/:block?/:task_type?', name: 'BookEditDisplay',
           component: BookEditDisplay, meta: { mode: 'edit' }
         },
         {

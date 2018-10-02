@@ -110,6 +110,13 @@ let BlockTypesAlias = {
 class BookBlock {
   constructor(init) {
 
+    // OrientDB properties
+//     this.rid = init.rid || '';
+//     this.in = init.in || '';
+//     this.out = init.out || '';
+//     this.blockid = init.blockid || '';
+
+    // CouchDB properties
     this._id = init._id || '';
     this._rev = init._rev || '';
     this.bookid = init.bookid || '';
@@ -150,9 +157,9 @@ class BookBlock {
     this.isAudioChanged = init.isAudioChanged || false;
     this.isIllustrationChanged = init.isIllustrationChanged || false;
 
-    this.checkedStart = init.checkedStart || false;
-    this.checkedEnd = init.checkedEnd || false;
-    this.checked = init.checked || false;
+//     this.checkedStart = init.checkedStart || false;
+//     this.checkedEnd = init.checkedEnd || false;
+//     this.checked = init.checked || false;
     this.realigned = init.realigned || false;
 
     this.history = {};

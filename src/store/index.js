@@ -4,6 +4,7 @@ import superlogin from 'superlogin-client'
 import hoodie from 'pouchdb-hoodie-api'
 import PouchDB from 'pouchdb'
 import {BookBlock} from './bookBlock'
+import {BookBlocks} from './bookBlocks'
 const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
@@ -75,8 +76,8 @@ export const store = new Vuex.Store({
     currentBookid: '',
     currentBook: {},
     currentBookMeta: {},
-    currentBook_dirty: false,
-    currentBookMeta_dirty: false,
+//     currentBook_dirty: false,
+//     currentBookMeta_dirty: false,
     currentEditingBlockId: '',
     currentBookFiles: { coverimg: false },
     currentBookBlocksLeft: 0,
@@ -112,6 +113,7 @@ export const store = new Vuex.Store({
     lockedBlocks: [],
     aligningBlocks: [],
     storeList: new Map(), // global parlist
+    storeListO: new BookBlocks(),
     blockSelection: {
       start: {},//block
       end: {},//block
@@ -203,7 +205,7 @@ export const store = new Vuex.Store({
     user: state => state.user,
     currentBookCounters: state => state.currentBookCounters,
     ttsVoices: state => {
-      if (state.currentBookMeta.language === '') return state.ttsVoices;
+      if (!state.currentBookMeta.language || state.currentBookMeta.language === '') return state.ttsVoices;
       let langPrefix = state.currentBookMeta.language.split('-')[0];
       let result = [];
       if (state.ttsVoices) {
@@ -235,6 +237,7 @@ export const store = new Vuex.Store({
     },
 
     storeList: state => state.storeList, // global parlist
+    storeListO: state => state.storeListO, // global parlistO
     blockSelection: state => state.blockSelection,
     alignCounter: state => state.alignCounter,
     lockedBlocks: state => state.lockedBlocks,
@@ -277,7 +280,7 @@ export const store = new Vuex.Store({
             state.contentDBWatch = false;
         }
     },
-    
+
     set_currentAudiobook (state, audiobook) {
       state.currentAudiobook = audiobook;
       //console.log('CURRENT AUDIOBOOK', state.currentAudiobook)
@@ -303,8 +306,8 @@ export const store = new Vuex.Store({
     SET_CURRENTBOOK_META (state, meta) {
       // state.currentBookid = meta._id
       // state.currentBook = book
-      state.currentBook_dirty = false
-      state.currentBookMeta_dirty = false
+//       state.currentBook_dirty = false
+//       state.currentBookMeta_dirty = false
       if (meta) {
         state.currentBookMeta = meta
         state.currentBookid = meta._id
@@ -712,6 +715,10 @@ export const store = new Vuex.Store({
       state.storeList = new Map();
     },
 
+    clear_storeListO (state) {
+      state.storeListO = new BookBlocks();
+    },
+
     set_block_selection(state, selection) {
       state.blockSelection.start = typeof selection.start !== 'undefined' ? selection.start : {};
       state.blockSelection.end = typeof selection.end !== 'undefined' ? selection.end : {};
@@ -942,6 +949,32 @@ export const store = new Vuex.Store({
       // clear currentBookid
     },
 
+    loadBookBlocks({commit, state, dispatch}, params) {
+      let skip = params.skip ? `/${params.skip}` : '';
+      let url = state.API_URL + `books/blocks/${params.bookId}`;
+      return axios.get(url)
+      .then((response) => {
+        return response.data;
+      })
+      .catch(err => err)
+    },
+
+    loadPartOfBookBlocks({commit, state, dispatch}, params) {
+      let req = state.API_URL + `books/blocks/${params.bookId}/onpage/${params.onPage}`;
+      if (params.block) {
+        if (params.block === 'unresolved' && params.taskType) {
+          req += `/search/${params.taskType}`
+        } else {
+          req += `/from/${params.block}`
+        }
+      }
+      return axios.get(req)
+      .then((response) => {
+        return response.data;
+      })
+      .catch(err => err)
+    },
+
     loadBook ({commit, state, dispatch}, book_id) {
       //console.log('loading currentBook: ', book_id)
       // if (!book_id) return  // if no currentbookid, exit
@@ -949,14 +982,17 @@ export const store = new Vuex.Store({
 
       // if currentbook exists, check if currrent book needs saving
       commit('set_currentAudiobook', {});
-      let oldBook = (state.currentBook && state.currentBook._id)
+      //let oldBook = (state.currentBook && state.currentBook._id)
 
-      if (oldBook && state.currentBook_dirty || state.currentBookMeta_dirty) {
-        // save old state
-      }
+//       if (oldBook && state.currentBook_dirty || state.currentBookMeta_dirty) {
+//         // save old state
+//       }
+
+      if (book_id && book_id === state.currentBookid) return Promise.resolve(state.currentBookMeta);
+
       if (book_id) {
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
-        let metaDB = state.metaDBcomplete ? state.metaDB : state.metaRemoteDB;
+        let metaDB = state.metaRemoteDB;
         return metaDB.get(book_id).then(meta => {
           commit('SET_CURRENTBOOK_META', meta)
           commit('TASK_LIST_LOADED')
@@ -971,7 +1007,6 @@ export const store = new Vuex.Store({
           .catch((err)=>{
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
           })
-          //console.log('currentBookMeta', state.currentBookMeta);
           return Promise.resolve(meta);
         }).catch((err)=>{
           console.log('metaDB.get Error: ', err);
@@ -981,8 +1016,6 @@ export const store = new Vuex.Store({
         commit('SET_CURRENTBOOK_META', false);
         return Promise.resolve()
       }
-
-
     },
 
     reloadBookMeta ({commit, state, dispatch}) {
@@ -1261,6 +1294,35 @@ export const store = new Vuex.Store({
       });
     },
 
+    loopPreparedBlocksChain ({commit, state, dispatch}, params) {
+      let results = {rows: [], finish: false, blockId: false};
+      return new Promise ((resolve, reject)=>{
+
+        (function loop(i, block_id) {
+
+          if (i <= params.ids.length && block_id) {
+            dispatch('getBlock', block_id)
+            .then((b)=>{
+              if (b && b._id) {
+                results.rows.push(b);
+                loop(i+1, params.ids[i]);
+              } else resolve(results);
+            })
+            .catch((err)=>{
+              results.finish = true;
+              resolve(results);
+            })
+          }
+          else {
+            results.finish = true;
+            resolve(results);
+          }
+        })(0, params.ids[0]); // start
+
+      })
+
+    },
+
     searchBlocksChain ({commit, state, dispatch}, params) {
       let requests = [];
       let results = {rows: [], finish: false, blockId: false};
@@ -1288,59 +1350,6 @@ export const store = new Vuex.Store({
       .catch(err => {
         return Promise.reject(err);
       })
-
-//       (function loop(block_id) {
-//
-//           dispatch('getBlock', block_id)
-//           .then((block)=>{
-//             if (block && block._id) {
-//               results.rows.push(block);
-//
-//               if (metadata_cleanup || audio_mastering)
-//               {
-//                 if (!block.markedAsDone && (!block.status || !block.status.proofed))
-//                 {
-//                   results.blockId = block._id;
-//                   results.finish = true;
-//                   requests[0].resolve();
-//                 }
-//                 else loop(block.chainid);
-//
-//               } else {
-//                 let task = state.tc_currentBookTasks.tasks.find((t) => {
-//                   return t.blockid == block._id;
-//                 });
-//                 //console.log('searchBlocksChain 3', task, task_type, block.markedAsDone);
-//                 if (task && (task_type === true || task.type === task_type))
-//                 {
-//                   results.blockId = block._id;
-//                   results.finish = true;
-//                   requests[0].resolve();
-//                 } else if (!block.markedAsDone) {
-//                   results.blockId = block._id;
-//                   results.finish = true;
-//                   requests[0].resolve();
-//                 }
-//               }
-//
-//               if (!results.finish) loop(block.chainid);
-//
-//             } else requests[0].resolve();
-//           })
-//           .catch((err)=>{
-//             //console.log('loop_BlocksChain Catch: ', err);
-//             results.blockId = results.length ? results.rows[0]._id : null;
-//             results.finish = true;
-//             requests[0].resolve();
-//           })
-//
-//       })(params.startId); // start
-//
-//       return Promise.all(requests)
-//       .then(() => {
-//         //console.log('searchBlocksChain results', results);
-//         return Promise.resolve(results);
-//       });
     },
 
     loadBlocksChain ({commit, state, dispatch}, params) {
@@ -1447,7 +1456,7 @@ export const store = new Vuex.Store({
     },
 
     _putBlock ({state}, block) {
-      console.log('_putBlock block', block);
+      //console.log('_putBlock block', block);
       return state.contentRemoteDB
         .put(block)
         .then(res => Promise.resolve(res))
@@ -1514,6 +1523,46 @@ export const store = new Vuex.Store({
       } else {
         return Promise.resolve();
       }
+    },
+
+    putBlockO({commit, state}, params) {
+      let rid = encodeURIComponent(params.rid);
+      let req = state.API_URL + `books/blocks/block/${rid}`;
+      return axios.put(req, params)
+      .then((response) => {
+        if (response.data.updated && response.data.updated > 0) {
+          let block = state.storeListO.getBlockByRid(params.rid);
+          if (block) {
+            //block.isManual = true;
+            return block.blockid;
+          }
+        }
+        //console.log('response.data', response.data);
+        if (Array.isArray(response.data)) response.data.forEach((blockO)=>{
+          state.storeListO.updBlockByRid(blockO.rid, blockO);
+        })
+        return response.data;
+      })
+    },
+
+    putNumBlockO({commit, state}, params) {
+      let rid = encodeURIComponent(params.rid);
+      let req = state.API_URL + `books/blocks/num/${rid}`;
+      return axios.put(req, params)
+      .then((response) => {
+        if (response.data.updated && response.data.updated > 0) {
+          let block = state.storeListO.getBlockByRid(params.rid);
+          if (block) {
+            block.isManual = true;
+            return block.blockid;
+          }
+        }
+        //console.log('response.data', response.data);
+        if (Array.isArray(response.data)) response.data.forEach((blockO)=>{
+          state.storeListO.updBlockByRid(blockO.rid, blockO);
+        })
+        return response.data;
+      })
     },
 
     putMetaAuthors ({commit, state, dispatch}, authors) {
@@ -2046,7 +2095,7 @@ export const store = new Vuex.Store({
                           blockStore._rev = block._rev;
                           blockStore.content = block.content;
                           blockStore.setAudiosrc(block.audiosrc, block.audiosrc_ver);
-                          if (blockStore.footnotes && blockStore.footnotes.length > 0 && 
+                          if (blockStore.footnotes && blockStore.footnotes.length > 0 &&
                                   block.footnotes && block.footnotes.length > 0) {
                             block.footnotes.forEach((f, idx) => {
                               if (f.audiosrc && blockStore.footnotes[idx]) {
