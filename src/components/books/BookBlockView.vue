@@ -513,6 +513,9 @@
                   <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
                     @click.prevent="markBlock">
                     Approve</div>
+                  <div v-if="!isSpotCheckDisabled" class="save-block -right" @click.prevent="spotCheck">
+                    Spot check
+                  </div>
 
                   </template>
               </div>
@@ -819,6 +822,18 @@ export default {
           return task ? true : false;
         }
         return false;
+      },
+      isSpotCheckDisabled: function() {
+        if (!this.block.audiosrc || !this._is('editor', true)) {
+          return true;
+        }
+        if (this.tc_getBlockTask(this.block._id)) {
+          return false;
+        }
+        if ((this.tc_hasTask('content_cleanup') || (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')) && !this.block.markedAsDone) {
+          return false;
+        }
+        return true;
       },
       isCompleted: function () {
           if (this._is('editor', true) && (
@@ -2394,7 +2409,6 @@ export default {
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
         Vue.nextTick(() => {
-          console.log('open');
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
           let text = footnote ? footnote.content : this.blockAudio.map;
           let loadBlock = footnoteIdx !== null ? {_id: this.check_id, voicework: footnote ? footnote.voicework : 'tts'} : this.block;
@@ -2885,6 +2899,46 @@ export default {
               }
             });
           }
+        }
+      },
+      spotCheck: function() {
+        let length = 3;
+        if (this.player && this.player.audio_element) {
+          let menuHeight = $('div.top-menu-wrapper').height() + $('div.toolbar').height();
+          let blockOffset = $('#' + this.block._id).offset().top;
+          if (menuHeight > blockOffset) {
+            this.$root.$emit('for-bookedit:scroll-to-block', this.block._id);
+          }
+          let w = $('#content-'+this.block._id + ' w[data-map]').last();
+          if (w.length > 0) {
+            w = w[0];
+          }
+          if (!w || !w.dataset || !w.dataset.map) {
+            return;
+          }
+          let map = w.dataset.map.split(',');
+          map[0] = parseInt(map[0]);
+          map[1] = parseInt(map[1]);
+          if (map[0] + map[1] < (2 * length + 1) * 1000) {
+            this.player.playBlock('content-' + this.block._id);
+          } else {
+            //this.player.audio_element.onended = () => {
+              //console.log('ENDED')
+            //};
+
+            this.player.audio_element.onpause = () => {
+              //console.log('PAUSE')
+              this.$root.$emit('for-bookedit:scroll-to-block-end', this.block._id);
+              setTimeout(() => {
+                this.player.playRange('content-' + this.block._id, map[0] + map[1] - length * 1000, map[0] + map[1]);
+              }, 1000);
+
+              //console.log(this.player);
+              this.player.audio_element.onpause = null;
+            };
+            this.player.playRange('content-' + this.block._id, 0, length * 1000);
+          }
+          
         }
       }
   },
