@@ -1577,6 +1577,19 @@ export default {
         });
       }
     },
+    
+    scrollToBlockEnd(id) {
+      try {
+        let blockOffset = $('#' + id).offset().top;
+        let firstHeight = $('#content-' + id).height();
+        if (firstHeight + blockOffset > window.innerHeight) {
+          this.screenTop-=firstHeight - 200;
+        }
+      } catch (err) {
+        //this.screenTop -= step;
+        return;
+      }
+    },
 
     getPrevId(id) {
       for (let val of this.parlist.values()) {
@@ -1811,6 +1824,8 @@ export default {
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
         e.preventDefault();
       });
+      
+      this.$root.$on('for-bookedit:scroll-to-block-end', this.scrollToBlockEnd);
   },
 
   beforeDestroy:  function() {
