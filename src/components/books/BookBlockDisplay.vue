@@ -65,10 +65,7 @@ import { mapGetters, mapState, mapActions } from 'vuex'
     },
     computed: {
       ...mapGetters({
-        book: 'currentBook',
-        meta: 'currentBookMeta',
-        parlist: 'storeList',
-        parlistO: 'storeListO'
+        parlist: 'storeList'
       }),
       block: function() {
         return this.parlist.get(this.blockId)

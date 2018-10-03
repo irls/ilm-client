@@ -72,11 +72,48 @@ export default {
     'toggleMetaVisible',
     'metaVisible'
   ],
+  computed: {
+
+    currRoute: function () {
+      let result = ''
+      return this.$route.name;
+    },
+
+    editModesAvailable: {
+      get() {
+        let modes;
+        if (this.$route.path.indexOf('/collections') === 0) {
+          modes = {
+            'CollectionBookEdit': 'Edit',
+            'CollectionBookNarrate': 'Narrate',
+            'CollectionBookEditDisplay': 'Display'
+          }
+          if (!this.tc_hasTask('block_narrate')) {
+            delete modes['CollectionBookNarrate']
+          }
+        } else {
+          modes = {
+            'BookEdit': 'Edit' ,
+            'BookNarrate': 'Narrate',
+            'BookEditDisplay': 'Display'
+          }
+          if (!this.tc_hasTask('block_narrate')) {
+            delete modes['BookNarrate']
+          }
+        }
+        return modes;
+      }
+    },
+    ...mapGetters(['currentBookMeta', 'currentBookid', 'currentBook', 'storeListO', 'isBlocked', 'blockSelection'])
+  },
   methods: {
 
     viewSelect: function(val) {
       if (this.$route.params.block) {
         this.$router.push({ name: val, params: { block: this.$route.params.block } });
+      } else if (this.storeListO.meta && this.currentBookid == this.storeListO.meta.bookid) {
+        this.$router.push({ name: val, params: { block: this.storeListO.startId } });
+
       } else this.$router.push({ name: val });
     },
     goBack: function() {
@@ -123,46 +160,6 @@ export default {
   // },
   created: function () {
     if (!this.isAdmin) delete this.editModes.JSON;
-  },
-  computed: {
-
-    currRoute: function () {
-      let result = ''
-      return this.$route.name;
-    },
-
-    currentBook: function() {
-      return this.$store.state.currentBook
-    },
-    currentBookMeta: function() {
-      return this.$store.state.currentBookMeta
-    },
-    editModesAvailable: {
-      get() {
-        let modes;
-        if (this.$route.path.indexOf('/collections') === 0) {
-          modes = {
-            'CollectionBookEdit': 'Edit',
-            'CollectionBookNarrate': 'Narrate',
-            'CollectionBookEditDisplay': 'Display'
-          }
-          if (!this.tc_hasTask('block_narrate')) {
-            delete modes['CollectionBookNarrate']
-          }
-        } else {
-          modes = {
-            'BookEdit': 'Edit' ,
-            'BookNarrate': 'Narrate',
-            'BookEditDisplay': 'Display'
-          }
-          if (!this.tc_hasTask('block_narrate')) {
-            delete modes['BookNarrate']
-          }
-        }
-        return modes;
-      }
-    },
-    ...mapGetters(['currentBookMeta', 'isBlocked', 'blockSelection'])
   },
   watch: {
     '$route' (toRoute, fromRoute) {

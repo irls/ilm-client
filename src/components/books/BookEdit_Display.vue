@@ -187,7 +187,14 @@ export default {
             });
           })
         }
-
+        else {
+          if (this.$route.params.block && this.$route.params.block!=='unresolved') {
+            Vue.nextTick(()=>{
+              this.onScrollEv = true;
+              document.getElementById(this.$route.params.block).scrollIntoView();
+            });
+          }
+        }
       }
   },
   beforeDestroy:  function() {
