@@ -374,6 +374,7 @@
               this.load(audio, text, block, autostart, bookAudiofile);
               return;
             }
+            let self = this;;
             this.audiosourceEditor.annotationList.resizeHandlers.forEach((rh, i) => {
               this.audiosourceEditor.annotationList.resizeHandlers[i].ondragover = (e) => {
                 if ($('.annotation-resize-pos').length == 0) {
@@ -604,7 +605,6 @@
             } else if (autostart) {
               this.play();
             }
-            let self = this;
             $('#' + this.blockId).on('click', '#content-' + this.blockId + ' w', function() {
               let index = $('#content-' + self.blockId).find('w[data-map]').index($(this));
               let show_selection = true;
