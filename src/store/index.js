@@ -1565,6 +1565,16 @@ export const store = new Vuex.Store({
       })
     },
 
+    putNumBlockOBatch({commit, state}, params) {
+      let bookId = encodeURIComponent(params.bookId);
+      //let bookNum = encodeURIComponent(params.bookNum);
+      let req = state.API_URL + `books/blocks/batch/num/${bookId}`;
+      return axios.put(req, params)
+      .then((response) => {
+        return response.data;
+      })
+    },
+
     putMetaAuthors ({commit, state, dispatch}, authors) {
       let metaAuthors = [];
       authors.forEach((item)=>{

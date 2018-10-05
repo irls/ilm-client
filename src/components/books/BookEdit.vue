@@ -316,6 +316,7 @@ export default {
     ...mapActions([
     'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
+    'putNumBlockOBatch',
 
     'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange']),
 
@@ -826,7 +827,7 @@ export default {
     putBlockOProxy: function (blockData) {
       return this.putBlockO(blockData)
       .then((blocks)=>{
-        console.log('putBlockOProxy then');
+        //console.log('putBlockOProxy then');
         this.updateVisibleBlocks();
         return Promise.resolve(blocks)
       })
@@ -836,7 +837,17 @@ export default {
     putNumBlockOProxy: function (blockData) {
       return this.putNumBlockO(blockData)
       .then((blocks)=>{
-        console.log('putNumBlockOProxy then');
+        //console.log('putNumBlockOProxy then');
+        this.updateVisibleBlocks();
+        return Promise.resolve(blocks)
+      })
+      .catch((err)=>{})
+    },
+
+    putNumBlockOBatchProxy: function (numData) {
+      return this.putNumBlockOBatch(numData)
+      .then((blocks)=>{
+        //console.log('putNumBlockOProxy then');
         this.updateVisibleBlocks();
         return Promise.resolve(blocks)
       })
@@ -1611,19 +1622,10 @@ export default {
       }
     },
 
-//     getPrevId(id) {
-//       for (let val of this.parlist.values()) {
-//         if (val.chainid === id) {
-//           return val._id;
-//         }
-//       }
-//       return false;
-//     },
-
     listenSetNum(bookId, numMask) {
       console.log('listenSetNum', bookId, numMask);
-      //this.reCountProxy(numMask);
-      this.updateVisibleBlocks();
+      this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask});
+      //this.updateVisibleBlocks();
       //this.refreshTmpl();
     },
 

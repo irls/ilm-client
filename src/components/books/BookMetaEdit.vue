@@ -1038,7 +1038,7 @@ export default {
         if (key == 'numeration') {
           this.unfreeze('updateBookMeta');
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
-          this.$root.$emit('from-book-meta:upd-toc', true);
+          //this.$root.$emit('from-book-meta:upd-toc', true);
         }
         //console.log('success DB update: ', doc)
         return this.updateBookVersion({minor: true})
@@ -1406,7 +1406,7 @@ export default {
             }
           })
         }
-        this.$root.$emit('from-meta-edit:set-num');
+        //this.$root.$emit('from-meta-edit:set-num');
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
     },
@@ -1422,7 +1422,7 @@ export default {
     },
 
     selSecNum (blockType, valKey, currVal) {
-      //console.log('selSecNum', blockType, valKey, currVal);
+      console.log('selSecNum', blockType, valKey, currVal);
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let putBlockOpromise = [];
@@ -1503,7 +1503,7 @@ export default {
               parnum: blockO.parnum,
               //isManual: blockO.isManual
             }).then((blockid)=>{
-              this.$root.$emit('from-meta-edit:set-num');
+              //this.$root.$emit('from-meta-edit:set-num');
               //this.$forceUpdate();
             });
           })

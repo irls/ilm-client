@@ -2797,14 +2797,6 @@ export default {
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
-
-      /*setSecnumVal: _.debounce(function(){
-        this.reCount();
-        this.block.secVal = this.block.secnum;
-        this.block.partUpdate = true;
-        this.putBlock(this.block).then(()=>{});
-      }, 500),*/
-
       setNumVal: _.debounce(function(ev){
         let val = ev.target.value;
         //if (val && this.$refs.parnumRef) this.$refs.parnumRef.innerText = val;
@@ -2819,28 +2811,11 @@ export default {
         });
       }, 1000),
 
-      /*setSecnum() {
-        if (this.block.secnum === false) {
-          this.block.secnum = this.block.secVal ? this.block.secVal : '';
-        }
-        else {
-          this.block.secVal = this.block.secnum;
-          this.block.secnum = false;
-        }
-        this.reCount();
-        this.block.partUpdate = true;
-        this.putBlock(this.block).then(()=>{});
-      },*/
       setSecnumHidden() {
         this.block.secHide = !this.block.secHide;
         this.putBlockPart({block: this.block, field: 'secHide'}).then(()=>{});
       },
-      /*setParnum() {
-        if (this.block.parnum === false) this.block.parnum = ''
-        else this.block.parnum = false;
-        this.reCount();
-        this.putBlockPart({block: this.block, field: 'parnum'}).then(()=>{});
-      },*/
+
       allowVoiceworkChange() {
         if (this.block.type == 'illustration' || this.block.type == 'hr') {
           return false;
@@ -3000,7 +2975,7 @@ export default {
             };
             this.player.playRange('content-' + this.block._id, 0, length * 1000);
           }
-          
+
         }
       }
   },
