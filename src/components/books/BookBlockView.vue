@@ -1444,6 +1444,7 @@ export default {
             if (this.block.type !== this.blockO.type) {
               if (this.block.type == 'header' || this.block.type == 'par') {
                 this.putNumBlockO({
+                  bookId: this.block.bookid,
                   rid: this.blockO.rid,
                   type: this.block.type,
                   secnum: this.blockO.secnum,
@@ -2801,6 +2802,7 @@ export default {
         let val = ev.target.value;
         //if (val && this.$refs.parnumRef) this.$refs.parnumRef.innerText = val;
         this.putNumBlockO({
+          bookId: this.block.bookid,
           rid: this.blockO.rid,
           type: this.block.type,
           secnum: this.blockO.secnum,

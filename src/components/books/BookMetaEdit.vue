@@ -1497,6 +1497,7 @@ export default {
           Promise.all(putBlockOpromise).then((res)=>{
             let blockO = this.storeListO.getBlock(this.blockSelection.start._id);
             this.putNumBlockO({
+              bookId: this.currentBookid,
               rid: blockO.rid,
               type: blockO.type,
               secnum: blockO.secnum,
@@ -1509,7 +1510,7 @@ export default {
           })
         }
 
-        this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration);
+//         this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration);
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
     },

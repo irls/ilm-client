@@ -835,6 +835,7 @@ export default {
     },
 
     putNumBlockOProxy: function (blockData) {
+    console.log('putNumBlockOProxy', blockData);
       return this.putNumBlockO(blockData)
       .then((blocks)=>{
         //console.log('putNumBlockOProxy then');
