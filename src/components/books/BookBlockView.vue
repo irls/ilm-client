@@ -508,7 +508,7 @@
                   <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
                     @click.prevent="markBlock">
                     Approve</div>
-                  <div v-if="!isSpotCheckDisabled" class="save-block -right" @click.prevent="spotCheck">
+                  <div :class="['save-block', '-right', {'-disabled': isSpotCheckDisabled }]" @click.prevent="spotCheck">
                     Spot check
                   </div>
 
@@ -843,6 +843,9 @@ export default {
       isSpotCheckDisabled: function() {
         if (!this.block.audiosrc || !this._is('editor', true)) {
           return true;
+        }
+        if (this.isAudioChanged) {
+          return false;
         }
         if (this.tc_getBlockTask(this.block._id)) {
           return false;
@@ -1529,6 +1532,12 @@ export default {
           return api.post(api_url, data, {})
             .then(response => {
               if (response.status == 200) {
+                
+                if (this.block.markedAsDone != response.data.markedAsDone) {
+                  this.block.markedAsDone = response.data.markedAsDone;
+                  this.setCurrentBookCounters(['not_marked_blocks']);
+                }
+                this.$emit('blockUpdated', this.block._id);
                 if (footnoteIdx === null) {
                   this.block.content = response.data.content;
                   this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
@@ -1540,6 +1549,7 @@ export default {
                   this.isChanged = false;
                   return BPromise.resolve();
                 } else {
+                  this.isAudioChanged = false;
                   this.isChanged = false;
                   let resp_block = response.data;
                   let resp_f = resp_block.footnotes[footnoteIdx];
@@ -1645,6 +1655,7 @@ export default {
                 this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
               }
               //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
+              this.recountApprovedInRange();
               this.getBloksUntil('unresolved', true, this.block._id)
             }
           })

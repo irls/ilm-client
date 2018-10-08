@@ -1622,7 +1622,7 @@ export const store = new Vuex.Store({
         });
     },
 
-    tc_loadBookTask({state, commit}) {
+    tc_loadBookTask({state, commit, dispatch}) {
       //console.log('a1');
       return axios.get(state.API_URL + 'tasks')
         .then((list) => {
@@ -1631,6 +1631,7 @@ export const store = new Vuex.Store({
           state.tc_userTasks = {list: list.data.rows, total: 0}
           commit('TASK_LIST_LOADED')
           commit('PREPARE_BOOK_COLLECTIONS');
+          dispatch('recountApprovedInRange');
           return list;
         })
         .catch(err => err)
@@ -2038,6 +2039,14 @@ export const store = new Vuex.Store({
                   ++approved_narration;
                   break;
               }
+              if (block.voicework !== 'tts' && block.footnotes && Array.isArray(block.footnotes) && block.footnotes.length > 0) {
+                let ftn = block.footnotes.find(f => {
+                  return f.voicework === 'tts';
+                });
+                if (ftn) {
+                  ++approved_tts;
+                }
+              }
             }
             if (block.isChanged || block.isAudioChanged) {
               if (block.voicework === 'audio_file') {
@@ -2137,6 +2146,7 @@ export const store = new Vuex.Store({
                   commit('set_aligning_blocks', response.data);
                   if (checks.length > 0) {
                     dispatch('_setNotMarkedAsDoneBlocksCounter');
+                    dispatch('recountApprovedInRange');
                   }
                 })
             }

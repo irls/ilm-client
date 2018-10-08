@@ -374,6 +374,7 @@
               this.load(audio, text, block, autostart, bookAudiofile);
               return;
             }
+            let self = this;;
             this.audiosourceEditor.annotationList.resizeHandlers.forEach((rh, i) => {
               this.audiosourceEditor.annotationList.resizeHandlers[i].ondragover = (e) => {
                 if ($('.annotation-resize-pos').length == 0) {
@@ -604,7 +605,6 @@
             } else if (autostart) {
               this.play();
             }
-            let self = this;
             $('#' + this.blockId).on('click', '#content-' + this.blockId + ' w', function() {
               let index = $('#content-' + self.blockId).find('w[data-map]').index($(this));
               let show_selection = true;
@@ -1478,7 +1478,7 @@
                   } while (j >= 0 && !shifted);
                   shifted = true;
                   shift = 0;
-                  for (j = 0; j <= shiftedIndex + 1; ++j) {// if some words start is before zero, shift all words
+                  for (j = 0; j <= shiftedIndex + 2; ++j) {// if some words start is before zero, shift all words
                     if (this.annotations[j]) {
                       if (this.annotations[j].begin < 0) {
                         if (shift == 0) {
@@ -1487,11 +1487,13 @@
                         this.annotations[j].begin+=shift;
                         this.annotations[j].end+=shift;
                       }
-                      else if (this.annotations[j].end - this.annotations[j].begin + shift >= this.minWordSize) {
+                      else if (this.annotations[j].end - this.annotations[j].begin - shift >= this.minWordSize) {
                         this.annotations[j].begin+= shift;
                         shift = 0;
                       } else {
+                        let diff = this.minWordSize - (this.annotations[j].end - this.annotations[j].begin);
                         this.annotations[j].begin+=shift;
+                        shift = this.minWordSize - (this.annotations[j].end - this.annotations[j].begin);
                         this.annotations[j].end+=shift;
                       }
                     }
@@ -1514,7 +1516,7 @@
                   } while (j < this.annotations.length && !shifted);
                   shifted = true;
                   shift = 0;
-                  for (j = this.annotations.length; j >= shiftedIndex - 1; --j) {// if some words end if after audio finish, shift all words
+                  for (j = this.annotations.length; j >= shiftedIndex - 2; --j) {// if some words end if after audio finish, shift all words
                     if (this.annotations[j]) {
                       if (this.annotations[j].end > this.audiosourceEditor.duration) {
                         if (shift == 0) {
@@ -1523,12 +1525,13 @@
                         this.annotations[j].begin-=shift;
                         this.annotations[j].end-=shift;
                       }
-                      else if (this.annotations[j].end - this.annotations[j].begin + shift >= this.minWordSize) {
+                      else if (this.annotations[j].end - this.annotations[j].begin - shift >= this.minWordSize) {
                         this.annotations[j].end-= shift;
                         shift = 0;
                       } else {
-                        this.annotations[j].begin-=shift;
                         this.annotations[j].end-=shift;
+                        shift = this.minWordSize - (this.annotations[j].end - this.annotations[j].begin);
+                        this.annotations[j].begin-=shift;
                       }
                     }
                   }
