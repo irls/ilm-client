@@ -325,7 +325,7 @@
                   :id="'block-type-'+blockType" :key="blockType">
 
                   <fieldset class="block-style-fieldset block-num-fieldset"
-                  v-if="numProps.has(blockType) && ['title', 'header'].indexOf(blockType) > -1">
+                  v-if="numProps.has(blockType) && ['header'].indexOf(blockType) > -1">
                     <legend>numeration</legend>
                     <label class="block-style-label"
                       @click="selSecNum(blockType, 'secNum', numProps.get(blockType).get('secNum'))">
