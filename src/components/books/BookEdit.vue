@@ -835,10 +835,8 @@ export default {
     },
 
     putNumBlockOProxy: function (blockData) {
-    console.log('putNumBlockOProxy', blockData);
       return this.putNumBlockO(blockData)
       .then((blocks)=>{
-        //console.log('putNumBlockOProxy then');
         this.updateVisibleBlocks();
         return Promise.resolve(blocks)
       })
@@ -1035,6 +1033,9 @@ export default {
           if (response.data.blockO) {
             let blockO = response.data.blockO;
             this.parlistO.addBlock(blockO);
+
+            this.putNumBlockOBatchProxy({bookId: block.bookid});
+
             this.scrollBarBlocks = this.parlistO.idsArray();
             if (!this.parlistO.getInId(blockO.blockid)) {
               this.startId = blockO.blockid;
@@ -1072,12 +1073,15 @@ export default {
           if (response.data.blockO) {
             let blockO = response.data.blockO;
             this.parlistO.addBlock(blockO);
+
+            this.putNumBlockOBatchProxy({bookId: block.bookid});
+
             this.scrollBarBlocks = this.parlistO.idsArray();
             if (!this.parlistO.getOutId(blockO.blockid)) {
               let firstId = this.parlistO.idsViewArray()[0];
               this.startId = this.parlistO.getOutId(firstId);
               //this.startId = blockO.blockid;
-            } else this.refreshTmpl();
+            } //else this.refreshTmpl();
             this.updateScrollSlider();
           }
           this.unfreeze('insertBlockAfter');
@@ -1124,9 +1128,12 @@ export default {
           if (newStartId !== this.startId) {
             // in case when first or last block in book was deleted
             this.startId = newStartId;
-          } else this.refreshTmpl();
+          } //else this.refreshTmpl();
         }
         this.parlist.delete(block._id);
+
+        this.putNumBlockOBatchProxy({bookId: block.bookid});
+
         this.unfreeze('deleteBlock');
         //this.updateScrollSlider();
         //this.refreshTmpl();
@@ -1625,7 +1632,7 @@ export default {
 
     listenSetNum(bookId, numMask, blockRid) {
       //console.log('listenSetNum', bookId, numMask);
-      if (bookId && numMask) this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask, blockRid: blockRid});
+      if (bookId) this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask, blockRid: blockRid});
       else this.updateVisibleBlocks();
       //this.refreshTmpl();
     },
