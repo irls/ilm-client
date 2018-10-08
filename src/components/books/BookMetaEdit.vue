@@ -282,7 +282,7 @@
                   </fieldset>
 
                   <fieldset class="block-style-fieldset">
-                  <legend>Numeration</legend>
+                  <legend>Automatic numeration</legend>
                   <div>
                     <label class="style-label"
                       @click="liveUpdate('numeration', 'x')">
@@ -1502,7 +1502,6 @@ export default {
           });
 
           Promise.all(putBlockOpromise).then((res)=>{
-            console.log(' Promise.all(putBlockOpromise) valKey', valKey);
             if (valKey == 'secNum' || valKey == 'parNum') {
               let blockO = this.storeListO.getBlock(this.blockSelection.start._id);
               this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration, blockO.rid)

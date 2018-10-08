@@ -1456,8 +1456,9 @@ export default {
     updateVisibleBlocks() {
       if (this.$refs.blocks && this.$refs.blocks.length) {
         this.$refs.blocks.forEach(($ref)=>{
-          $ref.isUpdated = true;
-          $ref.isUpdated = false;
+          //$ref.isUpdated = true;
+          //$ref.isUpdated = false;
+          $ref.$forceUpdate();
         })
       }
     },
@@ -1838,6 +1839,7 @@ export default {
         } else if (this.$route.params.hasOwnProperty('block')){
           this.scrollToBlock(this.$route.params.block);
           this.$router.replace({name: this.$route.name, params: {}});
+          this.updateVisibleBlocks();
         }
       });
 

@@ -2,7 +2,6 @@
 <section>
   <div v-if="blockO.loaded" ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', blockOutPaddings]">
 
-
       <div v-if="blockView.type == 'illustration'" :class="blockView.getClass()">
         <img :class="blockView.getClass()" :src="blockView.getIllustration()"/>
         <div class="description"
@@ -16,15 +15,15 @@
       </div>
       <div v-else >
         <div
-          v-if="blockView.parnum && blockView.parnum.length"
-          v-html="blockView.parnum"
+          v-if="parnum && parnum.length"
+          v-html="parnum"
           :class="['parnum']">
         </div>
         <div
           @click="handleFootnote($event)"
           :class="[blockView.getClass()]"
           :id="blockId"
-          :data-parnum="blockView.parnum"
+          :data-parnum="parnum"
           :lang="blockView.language || lang"
           :data-type="blockView.type"
           v-html="blockView.content">
@@ -75,6 +74,17 @@ import { mapGetters, mapState, mapActions } from 'vuex'
           return (this.block.classes && this.block.classes.hasOwnProperty('outsize-padding')) ? this.block.classes['outsize-padding'] : ''
         } else return '';
       },
+      parnum: { cache: false,
+        get: function () {
+          if (this.blockO.type == 'header' && this.blockO.isNumber && !this.blockO.isHidden) {
+            return this.blockO.secnum;
+          }
+          else if (this.blockO.type == 'par' && this.blockO.isNumber && !this.blockO.isHidden) {
+            return this.blockO.parnum;
+          }
+          else return false;
+        }
+      },
       blockView: function () {
         if (this.block) {
           let viewObj = new BookBlock(this.block);//Object.assign({}, this.parlist.get(blockId));
@@ -110,15 +120,6 @@ import { mapGetters, mapState, mapActions } from 'vuex'
               return `<sup class="service-info" data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
             }
           );
-
-          if (this.blockO.type == 'header' && this.blockO.secnum.toString().length > 0) {
-            viewObj.parnum = this.blockO.secnum;
-          }
-          else if (this.blockO.type == 'par' && this.blockO.parnum.toString().length > 0) {
-            viewObj.parnum = this.blockO.parnum;
-          }
-          else viewObj.parnum = false;
-
           return viewObj;
         } else return { getClass: ()=>'', footnotes: [] };
       }

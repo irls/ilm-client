@@ -6,7 +6,7 @@
 
       <book-block-display
         ref="viewBlocks"
-        :key = "listIdx"
+        :key = "blockId"
         :blockId = "blockId"
         :blockRid = "parlistO.getRIdById(blockId)"
         :blockO = "parlistO.getBlock(blockId)"
@@ -62,7 +62,7 @@ export default {
   methods: {
     ...mapActions([
       'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
-      'loopPreparedBlocksChain'
+      'loopPreparedBlocksChain', 'putNumBlockOBatch'
     ]),
 
     onScroll(ev) {
@@ -141,7 +141,18 @@ export default {
         return Promise.resolve(resIdsArray);
       });
     },
-
+    listenSetNum(bookId, numMask, blockRid) {
+      if (bookId) {
+        this.putNumBlockOBatch({bookId: bookId, bookNum: numMask, blockRid: blockRid})
+        .then((blocks)=>{
+          for (let blockRef of this.$refs.viewBlocks) {
+            //blockRef.blockO = new LookupBlock(this.parlistO.getBlockByRid(blockRef.blockRid));
+            blockRef.$forceUpdate();
+          }
+        })
+        .catch((err)=>{})
+      }
+    },
   },
   mounted: function() {
       //console.log('mounted');
@@ -196,8 +207,10 @@ export default {
           }
         }
       }
+      this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
   },
   beforeDestroy:  function() {
+    this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
   },
   watch: {
     '$route' (toRoute, fromRoute, aaa) {

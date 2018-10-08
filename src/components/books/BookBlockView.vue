@@ -684,10 +684,10 @@ export default {
       }},
       parnumComp: { cache: false,
       get: function () {
-          if (this.blockO.type == 'header' && this.blockO.secnum.toString().length > 0) {
+          if (this.blockO.type == 'header' && this.blockO.isNumber && !this.blockO.isHidden) {
             return this.blockO.secnum;
           }
-          if (this.blockO.type == 'par' && this.blockO.parnum.toString().length > 0) {
+          if (this.blockO.type == 'par' && this.blockO.isNumber && !this.blockO.isHidden) {
             return this.blockO.parnum;
           }
           return '';
@@ -1532,7 +1532,7 @@ export default {
           return api.post(api_url, data, {})
             .then(response => {
               if (response.status == 200) {
-                
+
                 if (this.block.markedAsDone != response.data.markedAsDone) {
                   this.block.markedAsDone = response.data.markedAsDone;
                   this.setCurrentBookCounters(['not_marked_blocks']);
