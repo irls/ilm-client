@@ -410,7 +410,7 @@
                       Hide from display
                     </label>
                   </fieldset>
-                  <i>Pleas keep defaults unless you have a compelling reason to change them</i>
+                  <i>Please keep defaults unless you have a compelling reason to change them</i>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
                       <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && (styleKey !== 'level' || blockType !== 'header')" :key="styleKey" class="block-style-fieldset">
