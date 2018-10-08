@@ -1623,10 +1623,10 @@ export default {
       }
     },
 
-    listenSetNum(bookId, numMask) {
-      console.log('listenSetNum', bookId, numMask);
-      this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask});
-      //this.updateVisibleBlocks();
+    listenSetNum(bookId, numMask, blockRid) {
+      //console.log('listenSetNum', bookId, numMask);
+      if (bookId && numMask) this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask, blockRid: blockRid});
+      else this.updateVisibleBlocks();
       //this.refreshTmpl();
     },
 

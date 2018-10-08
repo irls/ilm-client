@@ -243,7 +243,10 @@ class BookBlocks {
       let block = this.lookupList[iRId];
       if (!data.in) delete data.in;
       if (!data.out) delete data.out;
+      if (typeof data.isHidden == 'undefined') delete data.isHidden;
+      if (typeof data.isNumber == 'undefined') delete data.isNumber;
       this.lookupList[iRId] = Object.assign(block, data);
+      //console.log('updBlockByRid', iRId, data, this.lookupList[iRId]);
       return true;
     }
     return false;

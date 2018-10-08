@@ -1478,14 +1478,21 @@ export default {
                   } break;
               };
 
-              if (oBlock.rid) putBlockOpromise.push(this.putBlockO(oBlock));
+              if (oBlock.rid) {
+                putBlockOpromise.push(this.putBlockO(oBlock));
+                this.storeListO.updBlockByRid(oBlock.rid, {
+                  isHidden: oBlock.isHidden,
+                  isNumber: oBlock.isNumber
+                })
+              }
 
               if (pBlock.isChanged || pBlock.isAudioChanged) {
               } else {
                 pBlock.partUpdate = true;
                 this.putBlock(pBlock).then(()=>{
                   if (valKey == 'secNum' || valKey == 'secHide') {
-                    this.$root.$emit('from-book-meta:upd-toc', true);
+                    // TODO create other method
+                    //this.$root.$emit('from-book-meta:upd-toc', true);
                   }
                 });
 
@@ -1495,22 +1502,16 @@ export default {
           });
 
           Promise.all(putBlockOpromise).then((res)=>{
-            let blockO = this.storeListO.getBlock(this.blockSelection.start._id);
-            this.putNumBlockO({
-              bookId: this.currentBookid,
-              rid: blockO.rid,
-              type: blockO.type,
-              secnum: blockO.secnum,
-              parnum: blockO.parnum,
-              //isManual: blockO.isManual
-            }).then((blockid)=>{
-              //this.$root.$emit('from-meta-edit:set-num');
-              //this.$forceUpdate();
-            });
+            console.log(' Promise.all(putBlockOpromise) valKey', valKey);
+            if (valKey == 'secNum' || valKey == 'parNum') {
+              let blockO = this.storeListO.getBlock(this.blockSelection.start._id);
+              this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration, blockO.rid)
+            } else {
+              this.$root.$emit('from-meta-edit:set-num');
+            }
           })
         }
 
-//         this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration);
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
     },
