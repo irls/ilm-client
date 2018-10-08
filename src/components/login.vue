@@ -59,7 +59,8 @@ export default {
       hasPasswordResetError: false,
       hasPasswordResetSuccess: false,
       passwordResetError: '',
-      passwordResetSuccess: ''
+      passwordResetSuccess: '',
+      sessionTimeout: null
     }
   },
 
@@ -78,7 +79,14 @@ export default {
     superlogin.removeAllListeners('login');
     // login event
     superlogin.once('login', (session) => {
-      //console.log('login event');
+      if (session && session.expires) {
+        if (this.sessionTimeout) {
+          clearTimeout(this.sessionTimeout);
+        }
+        this.sessionTimeout = setTimeout(() => {
+          location.href = '/';
+        }, session.expires - Date.now() + 10000);
+      }
       if (session.token) {
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
         this.connectDB(session);
@@ -87,7 +95,10 @@ export default {
 
     // logout event
     superlogin.on('logout', (message) => {
-      console.log('logout?');
+      //console.log('logout?');
+      if (this.sessionTimeout) {
+        clearTimeout(this.sessionTimeout);
+      }
       this.disconnectDB();
       location.href = '/';
     })
