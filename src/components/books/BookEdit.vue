@@ -1248,7 +1248,9 @@ export default {
                           this.scrollBarBlocks = this.parlistO.idsArray();
                           this.updateScrollSlider();
                         }
-                        this.refreshTmpl();
+
+                        this.putNumBlockOBatchProxy({bookId: block.bookid});
+                        //this.refreshTmpl();
                         this.unfreeze('joinBlocks');
                         //this.updateScrollSlider();
                         return Promise.resolve();
@@ -1349,7 +1351,9 @@ export default {
                           this.scrollBarBlocks = this.parlistO.idsArray();
                           this.updateScrollSlider();
                         }
-                        this.refreshTmpl();
+
+                        this.putNumBlockOBatchProxy({bookId: block.bookid});
+                        //this.refreshTmpl();
                         this.unfreeze('joinBlocks');
                         //this.updateScrollSlider();
                         return Promise.resolve();
