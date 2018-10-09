@@ -12,6 +12,7 @@
         :blockO = "parlistO.getBlock(blockId)"
         :fntCounter = "fntCounter"
         :lang = "meta.language"
+        :loaded = "parlistO.getBlock(blockId) && parlistO.getBlock(blockId).loaded"
       ></book-block-display>
 
     </template>
@@ -186,6 +187,8 @@ export default {
                     if (!this.parlist.has(el._id)) {
                       let newBlock = new BookBlock(el);
                       this.$store.commit('set_storeList', newBlock);
+                      this.parlistO.setLoaded(el._id);
+                    } else {
                       this.parlistO.setLoaded(el._id);
                     }
                   });

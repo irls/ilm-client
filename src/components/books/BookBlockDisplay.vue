@@ -1,6 +1,6 @@
 <template>
 <section>
-  <div v-if="blockO.loaded" ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', blockOutPaddings]">
+  <div v-if="loaded || blockO.loaded" ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', blockOutPaddings]">
 
       <div v-if="blockView.type == 'illustration'" :class="blockView.getClass()">
         <img :class="blockView.getClass()" :src="blockView.getIllustration()"/>
@@ -55,8 +55,8 @@ import { mapGetters, mapState, mapActions } from 'vuex'
   export default {
     name: 'book-block-display',
     props: [
-      'blockId', 'blockRid', 'blockO', 'lang'
-    ],
+      'blockId', 'blockRid', 'blockO', 'lang', 'loaded'
+    ],// loaded property is necessary for updating first part of loaded blocks, VueJS is not updating automatically
     data() {
       return {
         fntCounter: 0
