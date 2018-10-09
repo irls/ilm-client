@@ -39,6 +39,7 @@ let BlockTypes = {
 //     translator: []
 //   },
   title: {
+    'table of contents': ['', 'level 1'],
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
     style: ['', 'subtitle', 'author', 'translator', 'copyright', 'allcaps'],
     align: ['', 'left', 'center', 'right', 'justify'],

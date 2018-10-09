@@ -325,7 +325,7 @@
                   :id="'block-type-'+blockType" :key="blockType">
 
                   <fieldset class="block-style-fieldset block-num-fieldset"
-                  v-if="numProps.has(blockType) && ['title', 'header'].indexOf(blockType) > -1">
+                  v-if="numProps.has(blockType) && ['header'].indexOf(blockType) > -1">
                     <legend>numeration</legend>
                     <label class="block-style-label"
                       @click="selSecNum(blockType, 'secNum', numProps.get(blockType).get('secNum'))">
@@ -410,7 +410,7 @@
                       Hide from display
                     </label>
                   </fieldset>
-                  <i>Pleas keep defaults unless you have a compelling reason to change them</i>
+                  <i>Please keep defaults unless you have a compelling reason to change them</i>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
                       <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && (styleKey !== 'level' || blockType !== 'header')" :key="styleKey" class="block-style-fieldset">
