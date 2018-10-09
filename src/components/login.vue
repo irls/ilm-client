@@ -60,7 +60,7 @@ export default {
       hasPasswordResetSuccess: false,
       passwordResetError: '',
       passwordResetSuccess: '',
-      sessionTimeout: null
+      sessionInterval: null
     }
   },
 
@@ -80,14 +80,25 @@ export default {
     // login event
     superlogin.once('login', (session) => {
       if (session && session.expires) {
-        if (this.sessionTimeout) {
-          clearTimeout(this.sessionTimeout);
+        if (this.sessionInterval) {
+          clearInterval(this.sessionInterval);
         }
-        this.sessionTimeout = setTimeout(() => {
-          location.href = '/';
-        }, session.expires - Date.now() + 10000);
+        let interval = (session.expires - Date.now()) / 2;
+        if ((session.expires - Date.now()) / 2 < 0 || interval < 30000) {
+          superlogin.refresh();
+        }
+        if (interval < 30000) {
+          interval = 30000;
+        }
+        this.sessionInterval = setInterval(() => {
+          //console.log(session.token, session.password)
+          //console.log(this.$store.state.auth.getSession())
+          superlogin.refresh();
+        }, interval);
+        //console.log('SET INTERVAL TO', interval)
       }
       if (session.token) {
+        //console.log(session.token, session.password, session)
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
         this.connectDB(session);
       }
@@ -96,8 +107,8 @@ export default {
     // logout event
     superlogin.on('logout', (message) => {
       //console.log('logout?');
-      if (this.sessionTimeout) {
-        clearTimeout(this.sessionTimeout);
+      if (this.sessionInterval) {
+        clearInterval(this.sessionInterval);
       }
       this.disconnectDB();
       location.href = '/';
