@@ -5,13 +5,13 @@
       <div class="preloader-spinner"></div>
     </template>
     <template v-else>
-      <div v-if="tocs.length > 0" class="toc-list">
+      <div v-if="currentBookToc.data.length > 0" class="toc-list">
         <!--<div :class="['toc-item', toc.level]" v-for="(toc, tocIdx) in tocs" v-bind:key="tocIdx">
           <span :class="['toc-item-number', toc.level]">{{toc.secnum?toc.secnum:''}}</span>
           <span class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</span>
         </div>-->
         <table class="toc-list-table table-striped">
-          <tr :class="['toc-item', toc.level]" v-for="(toc, tocIdx) in tocs" v-bind:key="tocIdx">
+          <tr :class="['toc-item', toc.level]" v-for="(toc, tocIdx) in currentBookToc.data" v-bind:key="tocIdx">
             <!--<template v-if="!toc.level">
               <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
               <td colspan="4" class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
@@ -55,7 +55,6 @@ export default {
 
   data () {
     return {
-      tocs: [],
       currBookId: this.bookId
     }
   },
@@ -66,7 +65,7 @@ export default {
 
 
   computed: {
-    ...mapGetters(['isBlocked', 'blockers'])
+    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc'])
   },
 
   methods: {
@@ -81,7 +80,6 @@ export default {
       if (!isWait) this.freeze('loadBookToc');
       this.loadBookToc({bookId: this.currBookId, isWait: isWait})
       .then((res)=>{
-        this.tocs = res.data;
         this.unfreeze('loadBookToc');
       })
       .catch((err)=>{
