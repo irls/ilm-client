@@ -360,21 +360,21 @@ class BookBlocks {
     block.rid = block['@rid'];
     block.in = block.in[0];
     block.out = block.out[0];
+    block.loaded = true;
     delete block['@type'];
-    let listIdsIdx = false;
-    let listRIdsIdx = false;
-
+    let listIdsIdx = -1;
+    let listRIdsIdx = -1;
     if (this.lookupList.hasOwnProperty(block.in)) {
       this.lookupList[block.in].out = block.rid;
       listIdsIdx = this.listIds.indexOf(this.lookupList[block.in].blockid);
       listRIdsIdx = this.listRIds.indexOf(this.lookupList[block.in].rid);
-      this.listIds.splice( listIdsIdx-1, 0, block.blockid );
-      this.listRIds.splice( listRIdsIdx-1, 0, block.rid );
+      this.listIds.splice( listIdsIdx+1, 0, block.blockid );
+      this.listRIds.splice( listRIdsIdx+1, 0, block.rid );
     }
 
     if (this.lookupList.hasOwnProperty(block.out)) {
       this.lookupList[block.out].in = block.rid;
-      if (!listIdsIdx && !listRIdsIdx) {
+      if (listIdsIdx == -1 && listRIdsIdx == -1) {
         listIdsIdx = this.listIds.indexOf(this.lookupList[block.out].blockid);
         listRIdsIdx = this.listRIds.indexOf(this.lookupList[block.out].rid);
         this.listIds.splice( listIdsIdx, 0, block.blockid );
