@@ -1445,7 +1445,7 @@ export default {
           }
           this.putBlockO(upd).then(()=>{
             if (this.block.type !== this.blockO.type) {
-              if (this.block.type == 'header' || this.block.type == 'par') {
+              //if (this.block.type == 'header' || this.block.type == 'par') {
                 this.putNumBlockO({
                   bookId: this.block.bookid,
                   rid: this.blockO.rid,
@@ -1456,7 +1456,7 @@ export default {
                 }).then((blocks)=>{
                   console.log('assembleBlock putNumBlockO', blocks[0]);
                 });
-              }
+              //}
             }
           });
         });
