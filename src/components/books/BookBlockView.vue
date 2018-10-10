@@ -2928,10 +2928,14 @@ export default {
 
             this.player.audio_element.onpause = () => {
               //console.log('PAUSE')
+              let delay = 1000;
+              if (this.player.load_delay) {
+                delay+=this.player.load_delay;
+              }
               this.$root.$emit('for-bookedit:scroll-to-block-end', this.block._id);
               setTimeout(() => {
                 this.player.playRange('content-' + this.block._id, map[0] + map[1] - length * 1000, map[0] + map[1]);
-              }, 1000);
+              }, delay);
 
               //console.log(this.player);
               this.player.audio_element.onpause = null;
