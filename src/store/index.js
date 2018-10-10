@@ -1001,7 +1001,7 @@ export const store = new Vuex.Store({
           dispatch('setCurrentBookCounters');
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
-          dispatch('loadBookToc', {bookId: book_id});
+          //dispatch('loadBookToc', {bookId: book_id});
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
