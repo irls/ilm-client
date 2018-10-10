@@ -318,7 +318,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange']),
+    'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc']),
 
     test() {
         window.scrollTo(0, document.body.scrollHeight-500);
@@ -1782,7 +1782,7 @@ export default {
                 this.scrollBarBlocks = this.parlistO.idsArray();
                 this.updateScrollSlider();
                 this.setBlockWatch();
-                this.$root.$emit('from-book-meta:upd-toc', true);
+                this.loadBookToc({bookId: this.meta._id, isWait: true});
                 this.lazyLoad();
               });
             });
