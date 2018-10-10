@@ -88,6 +88,14 @@ let BlockTypes = {
   }
 }
 let BlockTypesAlias = {
+  title: {
+    'table of contents': {
+      values: {
+        'toc1': 'level 1'
+      }
+    }
+  },
+
   header: {
     level: {
       'title': 'type',
