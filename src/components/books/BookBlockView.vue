@@ -2959,21 +2959,17 @@ export default {
           if (menuHeight > blockOffset) {
             this.$root.$emit('for-bookedit:scroll-to-block', this.block._id);
           }
-          let w_end = $('#content-'+this.block._id + ' w[data-map]').last();
-          let w_start = $('#content-'+this.block._id + ' w[data-map]').first();
-          if (w_end.length > 0) {
-            w_end = w_end[0];
+          let w = $('#content-'+this.block._id + ' w[data-map]').last();
+          if (w.length > 0) {
+            w = w[0];
           }
-          if (w_start.length > 0) {
-            w_start = w_start[0];
-          }
-          if (!w_end || !w_end.dataset || !w_end.dataset.map) {
+          if (!w || !w.dataset || !w.dataset.map) {
             return;
           }
-          let map_end = w_end.dataset.map.split(',');
-          map_end[0] = parseInt(map_end[0]);
-          map_end[1] = parseInt(map_end[1]);
-          if (map_end[0] + map_end[1] < (2 * length + 1) * 1000) {
+          let map = w.dataset.map.split(',');
+          map[0] = parseInt(map[0]);
+          map[1] = parseInt(map[1]);
+          if (map[0] + map[1] < (2 * length + 1) * 1000) {
             this.player.playBlock('content-' + this.block._id);
           } else {
             //this.player.audio_element.onended = () => {
@@ -2982,28 +2978,19 @@ export default {
 
             this.player.audio_element.onpause = () => {
               //console.log('PAUSE')
+              let delay = 1000;
+              if (this.player.load_delay) {
+                delay+=this.player.load_delay;
+              }
               this.$root.$emit('for-bookedit:scroll-to-block-end', this.block._id);
               setTimeout(() => {
-                let start = map_end[0] + map_end[1] - length * 1000;
-                let end = map_end[0] + map_end[1];
-                if (map_end[1] > length * 1000) {
-                  start = map_end[0];
-                }
-                this.player.playRange('content-' + this.block._id, start, end);
-              }, 1000);
+                this.player.playRange('content-' + this.block._id, map[0] + map[1] - length * 1000, map[0] + map[1]);
+              }, delay);
 
               //console.log(this.player);
               this.player.audio_element.onpause = null;
             };
-            let end = length * 1000;
-            if (w_start) {
-              let map_start = w_start.dataset.map.split(',');
-              map_start[1] = parseInt(map_start[1]);
-              if (map_start[1] > length * 1000) {
-                end = map_start[1];
-              }
-            }
-            this.player.playRange('content-' + this.block._id, 0, end);
+            this.player.playRange('content-' + this.block._id, 0, length * 1000);
           }
 
         }

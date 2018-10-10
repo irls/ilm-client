@@ -789,10 +789,6 @@ export default {
       self.getAudioBook();
     });
     this.setCurrentBookCounters();
-    this.$root.$on('book-reimported', () => {
-      //this.loadAudiobook()
-      this.$root.$emit('from-book-meta:upd-toc', true);
-    });
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
 
     if (this.selectionStart && this.selectionEnd) {
@@ -1376,12 +1372,25 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
+      console.log('select style', blockType, styleKey, styleVal);
+      
       let updateToc = styleKey == 'table of contents';
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
           idsArrayRange.forEach((blockId)=>{
             let pBlock = this.storeList.get(blockId);
+
+            if (pBlock && blockType == 'title' && styleKey == 'style' && styleVal != ''){
+              console.log('HERE! 1');
+              pBlock.classes['table of contents'] = '';
+            }
+
+            if (pBlock && blockType == 'title' && styleKey == 'table of contents' && styleVal != ''){
+              console.log('HERE! 2');
+              pBlock.classes['style'] = '';
+            }
+
             if (pBlock && pBlock.type == blockType) {
                 if (styleVal.length) {
                   pBlock.classes[styleKey] = styleVal;

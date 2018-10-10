@@ -39,7 +39,7 @@ let BlockTypes = {
 //     translator: []
 //   },
   title: {
-    'table of contents': ['', 'level 1'],
+    'table of contents': ['', 'toc1'],
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
     style: ['', 'subtitle', 'author', 'translator', 'copyright', 'allcaps'],
     align: ['', 'left', 'center', 'right', 'justify'],
@@ -88,6 +88,14 @@ let BlockTypes = {
   }
 }
 let BlockTypesAlias = {
+  title: {
+    'table of contents': {
+      values: {
+        'toc1': 'level 1'
+      }
+    }
+  },
+
   header: {
     level: {
       'title': 'type',
