@@ -1037,6 +1037,9 @@ export const store = new Vuex.Store({
 
     loadBookToc({state, commit, dispatch}, params) {
       if (state.currentBookToc.bookId === params.bookId && !params.isWait) return state.currentBookToc;
+      if (state.blockers.indexOf('loadBookToc') !== -1) {
+        return state.currentBookToc;
+      }
       dispatch('freeze', 'loadBookToc');
       return axios.get(state.API_URL + `books/toc/${params.bookId}` + (params.isWait ? '/wait':''))
       .then((response) => {
