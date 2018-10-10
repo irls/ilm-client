@@ -77,7 +77,7 @@ export default {
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
     },
     loadBookTocProxy(isWait = false) {
-      if (!isWait) this.freeze('loadBookToc');
+      //if (!isWait) this.freeze('loadBookToc');
       this.loadBookToc({bookId: this.currBookId, isWait: isWait})
       .then((res)=>{
         this.unfreeze('loadBookToc');
@@ -90,7 +90,7 @@ export default {
 
   mounted () {
     //console.log('mounted TOC', this.currBookId);
-    this.loadBookTocProxy();
+    this.loadBookTocProxy(true);
     this.$root.$on('from-book-meta:upd-toc', this.loadBookTocProxy)
   },
 
