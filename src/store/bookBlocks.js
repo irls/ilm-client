@@ -63,6 +63,10 @@ class BookBlocks {
     return this.listIds;
   }
 
+  rIdsArray() {
+    return this.listRIds;
+  }
+
   idsArrayRange(startId, endId) {
     let startIdx = this.listIds.indexOf(startId);
     let endIdx = this.listIds.indexOf(endId);

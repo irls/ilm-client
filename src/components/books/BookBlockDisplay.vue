@@ -1,17 +1,17 @@
 <template>
 <section>
-  <div v-if="loaded || blockO.loaded" ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', blockOutPaddings]">
+  <div v-if="loaded === true || blockO.loaded === true" ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', blockOutPaddings]">
 
-      <div v-if="blockView.type == 'illustration'" :class="blockView.getClass()">
-        <img :class="blockView.getClass()" :src="blockView.getIllustration()"/>
-        <div class="description"
-        :class="['content-description', blockView.getClass()]"
-        v-if="blockView.description.length"
-        v-html="blockView.description">
+      <div v-if="blockO.type == 'illustration'" :class="getClass">
+        <img :class="getClass" :src="getIllustration"/>
+        <div class="getDescription"
+        :class="['content-description', getClass]"
+        v-if="getDescription.length"
+        v-html="getDescription">
         </div>
       </div>
-      <div v-else-if="blockView.type == 'hr'">
-        <hr :class="[blockView.getClass()]"/>
+      <div v-else-if="blockO.type == 'hr'">
+        <hr :class="[getClass]"/>
       </div>
       <div v-else >
         <div
@@ -21,11 +21,11 @@
         </div>
         <div
           @click="handleFootnote($event)"
-          :class="[blockView.getClass()]"
+          :class="[getClass]"
           :id="blockId"
           :data-parnum="parnum"
           :lang="blockView.language || lang"
-          :data-type="blockView.type"
+          :data-type="blockO.type"
           v-html="blockView.content">
         </div>
         <div class="footnotes"
@@ -41,7 +41,9 @@
       </div>
 
   </div>
-  <div v-else ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', 'in-loading']"></div>
+  <div v-else ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', 'in-loading']">
+    <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
+  </div>
 
   <div class="clearfix"></div>
 </section>
@@ -55,7 +57,7 @@ import { mapGetters, mapState, mapActions } from 'vuex'
   export default {
     name: 'book-block-display',
     props: [
-      'blockId', 'blockRid', 'blockO', 'lang', 'loaded'
+      'blockRid', 'blockO', 'lang', 'loaded'
     ],// loaded property is necessary for updating first part of loaded blocks, VueJS is not updating automatically
     data() {
       return {
@@ -66,6 +68,9 @@ import { mapGetters, mapState, mapActions } from 'vuex'
       ...mapGetters({
         parlist: 'storeList'
       }),
+      blockId: function() {
+        return this.blockO.blockid;
+      },
       block: function() {
         return this.parlist.get(this.blockId)
       },
@@ -85,10 +90,25 @@ import { mapGetters, mapState, mapActions } from 'vuex'
           else return false;
         }
       },
+      getClass: { cache: true,
+        get: function () {
+          return this.block.getClass();
+        }
+      },
+      getIllustration: { cache: true,
+        get: function () {
+          return this.block.getIllustration();
+        }
+      },
+      getDescription: { cache: true,
+        get: function () {
+          return this.block.description;
+        }
+      },
       blockView: function () {
         if (this.block) {
-          let viewObj = new BookBlock(this.block);//Object.assign({}, this.parlist.get(blockId));
-          viewObj.content = viewObj.content.replace(
+          let viewObj = { footnotes: this.block.footnotes, language: this.block.language };//new BookBlock(this.block);//Object.assign({}, this.parlist.get(blockId));
+          viewObj.content = this.block.content.replace(
             /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/mig,
             '<span data-pg="$1"></span>'
           );
@@ -121,7 +141,7 @@ import { mapGetters, mapState, mapActions } from 'vuex'
             }
           );
           return viewObj;
-        } else return { getClass: ()=>'', footnotes: [] };
+        } else return { footnotes: [] };
       }
     },
     methods: {
@@ -133,15 +153,17 @@ import { mapGetters, mapState, mapActions } from 'vuex'
           } else this.$refs.footNotes[ev.target.dataset.idx].className = '-hidden';
         }
       }
-    },
-    mounted: function() {
-      //console.log(this.blockId);
     }
   }
 </script>
 
 <style lang='less' scoped>
   .in-loading {
-    height: 100px;
+    height: 150px;
+    background: url(/static/preloader-snake-small.gif);
+    width: 100%;
+    background-repeat: no-repeat;
+    text-align: center;
+    background-position: center;
   }
 </style>

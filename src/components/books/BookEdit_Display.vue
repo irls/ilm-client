@@ -2,17 +2,15 @@
   <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]" @scroll="onScroll">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
-    <template v-for="(blockId, listIdx) in parlistO.idsArray()">
+    <template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
 
       <book-block-display
         ref="viewBlocks"
-        :key = "blockId"
-        :blockId = "blockId"
-        :blockRid = "parlistO.getRIdById(blockId)"
-        :blockO = "parlistO.getBlock(blockId)"
+        :blockRid = "blockRid"
+        :blockO = "parlistO.getBlockByRid(blockRid)"
         :fntCounter = "fntCounter"
         :lang = "meta.language"
-        :loaded = "parlistO.getBlock(blockId) && parlistO.getBlock(blockId).loaded"
+        :loaded = "parlistO.getBlockByRid(blockRid) && parlistO.getBlockByRid(blockRid).loaded"
       ></book-block-display>
 
     </template>
@@ -67,23 +65,22 @@ export default {
     ]),
 
     onScroll(ev) {
-      //console.log('scroll');
-      let stopCond = false;
       let firstVisibleId = false;
       let visible = false;
       let idsArray = [];
       for (let blockRef of this.$refs.viewBlocks) {
-        //console.log(this.checkVisible(blockRef.$refs.viewBlock));
         visible = this.checkVisible(blockRef.$refs.viewBlock);
         if (visible) {
-          stopCond = true;
           if (!firstVisibleId) firstVisibleId = blockRef.blockId;
-          if (this.parlistO.getBlockByRid(blockRef.blockRid).loaded === false) {
+          if (this.parlist.has(blockRef.blockId)) {
+            this.parlistO.setLoaded(blockRef.blockId);
+            blockRef.$forceUpdate();
+          }
+          else if (this.parlistO.getBlockByRid(blockRef.blockRid).loaded === false) {
+            this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
             idsArray.push(blockRef.blockId);
           }
-          //console.log('visible', blockRef.dataset.rid, blockRef.dataset.id, this.parlistO.getBlockByRid(blockRef.dataset.rid).loaded);
         }
-        if (!visible && stopCond) break;
       }
       if (idsArray.length) {
         //console.log('idsArray', idsArray);
@@ -98,7 +95,7 @@ export default {
         })
       }
       //console.log('firstVisibleId', firstVisibleId);
-      if (firstVisibleId!==false && this.$route.params.block !== firstVisibleId) {
+      if (firstVisibleId !== false && this.$route.params.block !== firstVisibleId) {
         this.onScrollEv = true;
         this.$router.push({
           name: 'BookEditDisplay',
@@ -115,10 +112,12 @@ export default {
     },
 
     getAllBlocks(metaId, startBlock) {
+      //console.time('getAllBlocks');
       this.loadBookBlocks({bookId: metaId})
       .then((answer)=>{
         let scrollId = this.parlistO.idsArray()[0];
         this.parlistO.updateLookupsList(metaId, answer);
+        //console.timeEnd('getAllBlocks');
         Vue.nextTick(()=>{
           document.getElementById(scrollId).scrollIntoView();
         });
@@ -163,6 +162,7 @@ export default {
       this.loadBookMounted();
     },
     loadBookMounted() {
+      //console.time('loadBookMounted');
       if (this.$route.params.hasOwnProperty('bookid')) {
         let bookid = this.$route.params.bookid;
         if (!this.meta._id || bookid !== this.parlistO.meta.bookid) {
@@ -202,6 +202,7 @@ export default {
                 for (let blockRef of this.$refs.viewBlocks) {
                   blockRef.$forceUpdate();
                 }
+                //console.timeEnd('loadBookMounted');
                 this.getAllBlocks(this.parlistO.meta.bookid, startBlock);
               });
             });
@@ -212,12 +213,27 @@ export default {
             Vue.nextTick(()=>{
               this.onScrollEv = true;
               document.getElementById(this.$route.params.block).scrollIntoView();
+              //console.timeEnd('loadBookMounted');
             });
           }
         }
       }
     }
   },
+//   beforeMount: function() {
+//     console.time('beforeMount');
+//     if (this.$route.params.block && this.$route.params.block!=='unresolved') {
+//       let checkIdx = this.parlistO.idsArray().indexOf(this.$route.params.block);
+//       if (checkIdx > -1) {
+//         this.parlistO.ridsArray().forEach((blockRid, blockIdx)=>{
+//           if (blockIdx >= checkIdx && blockIdx <= checkIdx + 10) {
+//           //console.log('beforeMount', checkIdx, blockRid, blockIdx);
+//           } else this.parlistO.getBlockByRid(blockRid).loaded = 'loading';
+//         })
+//       }
+//     }
+//     console.timeEnd('beforeMount');
+//   },
   mounted: function() {
       //console.log('mounted');
       this.loadBookMounted();
