@@ -34,7 +34,7 @@ export default {
       page: 0,
       startId: false,
       fntCounter: 0,
-      onScrollEv: false,
+      onScrollEv: false
     }
   },
   components: {
@@ -58,7 +58,7 @@ export default {
             result = result.join(' ');
           }
           return result;
-      },
+      }
   },
   methods: {
     ...mapActions([
@@ -154,9 +154,15 @@ export default {
         .catch((err)=>{})
       }
     },
-  },
-  mounted: function() {
-      //console.log('mounted');
+    bookReimported() {
+      this.$store.commit('clear_storeList');
+      this.$store.commit('clear_storeListO');
+      this.$router.push({
+        name: 'BookEditDisplay', params: {}
+      });
+      this.loadBookMounted();
+    },
+    loadBookMounted() {
       if (this.$route.params.hasOwnProperty('bookid')) {
         let bookid = this.$route.params.bookid;
         if (!this.meta._id || bookid !== this.parlistO.meta.bookid) {
@@ -174,8 +180,7 @@ export default {
             return this.loadPartOfBookBlocks({
               bookId: this.$route.params.bookid,
               block: startBlock,
-              taskType: taskType,
-              onPage: 20
+              taskType: taskType
             }).then((answer)=>{
               this.parlistO.setLookupsList(answer.meta.bookid, answer);
               if (this.startId == false) this.startId = this.parlistO.idsArray()[0];
@@ -210,13 +215,20 @@ export default {
           }
         }
       }
+    }
+  },
+  mounted: function() {
+      //console.log('mounted');
+      this.loadBookMounted();
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
+      this.$root.$on('book-reimported', this.bookReimported);
   },
   beforeDestroy:  function() {
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
+    this.$root.$off('book-reimported', this.bookReimported);
   },
   watch: {
-    '$route' (toRoute, fromRoute, aaa) {
+    '$route' (toRoute, fromRoute) {
       //console.log('$route', toRoute, fromRoute, this.onScrollEv);
       if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
         if (toRoute.params.block !== 'unresolved') {

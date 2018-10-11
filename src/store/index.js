@@ -126,7 +126,8 @@ export const store = new Vuex.Store({
     },
     alignWatch: null,
     audiobookWatch: null,
-    selectionXHR: null
+    selectionXHR: null,
+    partOfBookBlocksXHR: null
   },
 
   getters: {
@@ -253,7 +254,8 @@ export const store = new Vuex.Store({
       }
     },
     aligningBlocks: state => state.aligningBlocks,
-    currentAudiobook: state => state.currentAudiobook
+    currentAudiobook: state => state.currentAudiobook,
+    currentBookToc: state => state.currentBookToc
   },
 
   mutations: {
@@ -960,6 +962,12 @@ export const store = new Vuex.Store({
     },
 
     loadPartOfBookBlocks({commit, state, dispatch}, params) {
+      if (state.partOfBookBlocksXHR != null) {
+        return state.partOfBookBlocksXHR;
+      }
+      if (typeof params.onPage === 'undefined') {
+        params.onPage = 10;
+      }
       let req = state.API_URL + `books/blocks/${params.bookId}/onpage/${params.onPage}`;
       if (params.block) {
         if (params.block === 'unresolved' && params.taskType) {
@@ -968,11 +976,16 @@ export const store = new Vuex.Store({
           req += `/from/${params.block}`
         }
       }
-      return axios.get(req)
+      state.partOfBookBlocksXHR = axios.get(req)
       .then((response) => {
+        state.partOfBookBlocksXHR = null;
         return response.data;
       })
-      .catch(err => err)
+      .catch(err => {
+        state.partOfBookBlocksXHR = null;
+        return err;
+      });
+      return state.partOfBookBlocksXHR;
     },
 
     loadBook ({commit, state, dispatch}, book_id) {
@@ -1000,6 +1013,7 @@ export const store = new Vuex.Store({
           dispatch('setCurrentBookCounters');
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
+          //dispatch('loadBookToc', {bookId: book_id});
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
@@ -1033,15 +1047,23 @@ export const store = new Vuex.Store({
         }
     },
 
-    loadBookToc({state, commit}, params) {
+    loadBookToc({state, commit, dispatch}, params) {
       if (state.currentBookToc.bookId === params.bookId && !params.isWait) return state.currentBookToc;
+      if (state.blockers.indexOf('loadBookToc') !== -1) {
+        return state.currentBookToc;
+      }
+      dispatch('freeze', 'loadBookToc');
       return axios.get(state.API_URL + `books/toc/${params.bookId}` + (params.isWait ? '/wait':''))
       .then((response) => {
         state.currentBookToc.bookId = params.bookId;
         state.currentBookToc.data = response.data;
+        dispatch('unfreeze', 'loadBookToc');
         return response;
       })
-      .catch(err => err)
+      .catch(err => {
+        dispatch('unfreeze', 'loadBookToc')
+        return err;
+      })
     },
 
     updateBookVersion({state, dispatch}, update) {
