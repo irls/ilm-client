@@ -1376,8 +1376,6 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
-      console.log('select style', blockType, styleKey, styleVal);
-      
       let updateToc = styleKey == 'table of contents';
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
