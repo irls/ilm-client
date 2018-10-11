@@ -1376,7 +1376,7 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
-      let updateToc = styleKey == 'table of contents';
+      let updateToc = (styleKey == 'table of contents' || (blockType == 'title' && styleKey == 'style') );
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
@@ -1384,12 +1384,10 @@ export default {
             let pBlock = this.storeList.get(blockId);
 
             if (pBlock && blockType == 'title' && styleKey == 'style' && styleVal != ''){
-              console.log('HERE! 1');
               pBlock.classes['table of contents'] = '';
             }
 
             if (pBlock && blockType == 'title' && styleKey == 'table of contents' && styleVal != ''){
-              console.log('HERE! 2');
               pBlock.classes['style'] = '';
             }
 
