@@ -1835,12 +1835,17 @@ export default {
               });
             });
           });
-        } else if (this.$route.params.hasOwnProperty('block')){
-          this.scrollToBlock(this.$route.params.block);
-          this.$router.replace({name: this.$route.name, params: {}});
-          this.updateVisibleBlocks();
         } else {
-          this.$router.replace({name: this.$route.name, params: {block: this.meta.startBlock_id}});// force view update when switching from display mode 
+          this.scrollBarBlocks = this.parlistO.idsArray();
+          this.updateScrollSlider();
+
+          if (this.$route.params.hasOwnProperty('block')) {
+            this.scrollToBlock(this.$route.params.block);
+            this.$router.replace({name: this.$route.name, params: {}});
+            this.updateVisibleBlocks();
+          } else {
+            this.$router.replace({name: this.$route.name, params: {block: this.meta.startBlock_id}});// force view update when switching from display mode
+          }
         }
       });
 
