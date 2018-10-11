@@ -96,7 +96,17 @@ export default {
         this.sessionInterval = setInterval(() => {
           //console.log(session.token, session.password)
           //console.log(this.$store.state.auth.getSession())
-          superlogin.refresh();
+          superlogin.refresh()
+            .then(() => {})
+            .catch(err => {
+              superlogin.logout()
+                .then(() => {
+                  location.href = '/';
+                })
+                .catch(() => {
+                  location.href = '/';
+                });
+            });
         }, interval);
         //console.log('SET INTERVAL TO', interval)
       }
