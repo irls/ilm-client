@@ -219,20 +219,6 @@ export default {
       }
     }
   },
-//   beforeMount: function() {
-//     console.time('beforeMount');
-//     if (this.$route.params.block && this.$route.params.block!=='unresolved') {
-//       let checkIdx = this.parlistO.idsArray().indexOf(this.$route.params.block);
-//       if (checkIdx > -1) {
-//         this.parlistO.ridsArray().forEach((blockRid, blockIdx)=>{
-//           if (blockIdx >= checkIdx && blockIdx <= checkIdx + 10) {
-//           //console.log('beforeMount', checkIdx, blockRid, blockIdx);
-//           } else this.parlistO.getBlockByRid(blockRid).loaded = 'loading';
-//         })
-//       }
-//     }
-//     console.timeEnd('beforeMount');
-//   },
   mounted: function() {
       //console.log('mounted');
       this.loadBookMounted();

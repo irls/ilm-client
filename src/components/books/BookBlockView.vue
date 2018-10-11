@@ -672,7 +672,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'approveWaiting'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'approveWaiting'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -1427,7 +1427,6 @@ export default {
           } else if (is_content_changed && this.block.audiosrc) {
             this.doReAlign();
           }
-          //this.reCount();
           if (recount_marked) {
             this.setCurrentBookCounters(['not_marked_blocks']);
           }
@@ -2401,7 +2400,6 @@ export default {
             //this.block.secnum = false;
             //this.block.parnum = false;
           }
-          //this.reCount();
           this.$root.$emit('from-block-edit:set-style');
           if (type === 'type' && event && event.target) {
             if (event.target.value === 'illustration') {
@@ -3055,7 +3053,6 @@ export default {
 //         if (this.block) {
 //           this.block.classes = {};
 //         }
-//         this.reCount();
 //         this.$root.$emit('from-block-edit:set-style');
 //       },
       'classSel' (newVal, oldVal) {

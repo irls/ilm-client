@@ -368,6 +368,9 @@ class BookBlocks {
     delete block['@type'];
     let listIdsIdx = -1;
     let listRIdsIdx = -1;
+
+    this.lookupList[block.rid] = block;
+
     if (this.lookupList.hasOwnProperty(block.in)) {
       this.lookupList[block.in].out = block.rid;
       listIdsIdx = this.listIds.indexOf(this.lookupList[block.in].blockid);
@@ -385,8 +388,6 @@ class BookBlocks {
         this.listRIds.splice( listRIdsIdx, 0, block.rid );
       }
     }
-
-    this.lookupList[block.rid] = block;
     this.listIdsCache.rid = false;
   }
 

@@ -27,7 +27,6 @@
               :putBlockPart ="putBlockPartProxy"
               :putBlockO ="putBlockOProxy"
               :putNumBlockO ="putNumBlockOProxy"
-              :reCount  ="reCountProxy"
               :recorder ="recorder"
               :blockReindexProcess="blockReindexProcess"
               :getBloksUntil="getBloksUntil"
@@ -142,7 +141,7 @@ import taskControls from '../../mixins/task_controls.js'
 import mediaStreamRecorder from 'recordrtc'
 import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
-import { BookBlock, setBlockParnum }    from '../../store/bookBlock';
+import { BookBlock }    from '../../store/bookBlock';
 import { BookBlocks }    from '../../store/bookBlocks';
 import { modal }        from 'vue-strap';
 import _ from 'lodash';
@@ -331,7 +330,7 @@ export default {
       this.startId = false;
       this.startId = startId;*/
       //this.updateScrollSlider();
-
+      //console.log('refreshTmpl');
       this.parlistO.setStartId(this.startId);
       this.$forceUpdate();
       //this.updateVisibleBlocks();
@@ -536,53 +535,6 @@ export default {
       }
     },
 
-    loadBookUp(startId = false) {
-      if (this.parlist.size > 0) {
-        //startId = startId || this.parlist[0]._id;
-        this.freeze('loadBookUp');
-        return this.getBlocksUp(startId, 5)
-        .then(res=>{
-          this.unfreeze('loadBookUp');
-          this.lazyLoad(startId);
-          return Promise.resolve(startId);
-        }).catch(err=>{
-          this.unfreeze('loadBookUp');
-          return Promise.reject();
-        });
-      } else return Promise.reject();
-    },
-
-    getBlocksUp(startId, onPage = 5)
-    {
-      return this.loadBlocksChainUp({
-        book_id: this.meta._id,
-        startId: startId,
-        onpage: onPage
-      })
-      .then((result)=>{
-        if (result.rows && result.rows.length > 0) {
-          result.rows.forEach((el, idx, arr)=>{
-            if (!this.parlist.has(el._id)) {
-              let newBlock = new BookBlock(el);
-              this.$store.commit('set_storeList', newBlock);
-              //this.updateScrollSlider(false, this.isNeedUp);
-            }
-          });
-          result.blockId = result.rows[0]._id;
-        } else {
-          return Promise.reject();
-        }
-        this.reCountProxy();
-        return Promise.resolve(result);
-      })
-      .catch((err)=>{
-        console.log('BlocksUp Error: ', err.message);
-        //this.updateScrollSlider(false, this.isNeedUp);
-        this.refreshTmpl();
-        return Promise.reject(err);
-      });
-    },
-
     getBlocks(startId, onPage = 10) {
       return this.loadBlocksChain({
         book_id: this.meta._id,
@@ -603,7 +555,6 @@ export default {
           this.hasScrollDown = false;
           return Promise.reject();
         }
-        //this.reCountProxy();
         return Promise.resolve(result);
       })
       .catch((err)=>{
@@ -765,14 +716,9 @@ export default {
                   //this.clearBlockLock({block: change.doc});
                 //}
               } else {
-                //ref.isChanged = false;
-                //ref.isAudioChanged = false;
-                //ref.isIllustrationChanged = false;
-                //this.parlist.set(change.doc._id, newBlock);
                 this.$store.commit('set_storeList', newBlock);
               }
             } else {
-              //this.parlist.set(change.doc._id, new BookBlock(change.doc));
               this.$store.commit('set_storeList', newBlock);
               this.refreshTmpl();
             }
@@ -783,7 +729,6 @@ export default {
         $ref.addContentListeners();
       })
       this.initRecorder();
-      this.reCountProxy();
       this.recountApprovedInRange();
     },
 
@@ -868,23 +813,6 @@ export default {
       .catch((err)=>{
         console.log(err);
       })
-    },
-
-    reCountProxy: function (numMask = false) {
-      this.parCounter = { pref: 0, prefCnt: 0, curr: 1 };
-      let crossId = (this.isNeedUp && this.isNeedUp!==true) ? this.isNeedUp : this.meta.startBlock_id;//this.startId;
-      //console.log(numMask, this.meta.numeration);
-      numMask = numMask || this.meta.numeration;
-      for (var idx=0; idx < this.parlist.size; idx++) {
-        let block = this.parlist.get(crossId);
-        if (block) {
-          block.parnum = setBlockParnum(block, this.parCounter, numMask);
-          crossId = block.chainid;
-        } else break;
-      }
-      //this.parlist.forEach((block, idx, arr)=>{
-      //  block.parnum = setBlockParnum(block, this.parCounter);
-      //})
     },
 
     allowSetStart: function(block_id) {
