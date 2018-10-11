@@ -180,8 +180,7 @@ export default {
             return this.loadPartOfBookBlocks({
               bookId: this.$route.params.bookid,
               block: startBlock,
-              taskType: taskType,
-              onPage: 20
+              taskType: taskType
             }).then((answer)=>{
               this.parlistO.setLookupsList(answer.meta.bookid, answer);
               if (this.startId == false) this.startId = this.parlistO.idsArray()[0];

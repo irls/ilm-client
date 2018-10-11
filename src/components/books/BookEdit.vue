@@ -337,7 +337,7 @@ export default {
       //this.updateVisibleBlocks();
     },
 
-    loadBookMeta(onPage) {
+    loadBookMeta() {
       let checkMeta = this.parlistO.meta || {};
       checkMeta = checkMeta.bookid || false;
       if (this.$route.params.hasOwnProperty('bookid')) {
@@ -356,8 +356,7 @@ export default {
               return this.loadPartOfBookBlocks({
                 bookId: this.$route.params.bookid,
                 block: startBlock,
-                taskType: taskType,
-                onPage: onPage || 10
+                taskType: taskType
               }).then((answer)=>{
                 this.parlistO.setLookupsList(this.meta._id, answer);
                 let idsArray = this.parlistO.idsArray();
@@ -1768,7 +1767,7 @@ export default {
 //           });
 //         });
 //       })
-      this.loadBookMeta(10) // also handle route params
+      this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
         if (this.meta._id) {
           this.tc_loadBookTask()
@@ -1815,7 +1814,7 @@ export default {
   mounted: function() {
       //this.onScrollBookDown();
       //console.log('book mounted', this.meta._id);
-      this.loadBookMeta(10) // also handle route params
+      this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
         if (this.meta._id && initBlocks.blocks.length) {
           this.tc_loadBookTask()
@@ -1840,6 +1839,8 @@ export default {
           this.scrollToBlock(this.$route.params.block);
           this.$router.replace({name: this.$route.name, params: {}});
           this.updateVisibleBlocks();
+        } else {
+          this.$router.replace({name: this.$route.name, params: {block: this.meta.startBlock_id}});// force view update when switching from display mode 
         }
       });
 
