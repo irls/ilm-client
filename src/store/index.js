@@ -126,7 +126,8 @@ export const store = new Vuex.Store({
     },
     alignWatch: null,
     audiobookWatch: null,
-    selectionXHR: null
+    selectionXHR: null,
+    partOfBookBlocksXHR: null
   },
 
   getters: {
@@ -961,6 +962,12 @@ export const store = new Vuex.Store({
     },
 
     loadPartOfBookBlocks({commit, state, dispatch}, params) {
+      if (state.partOfBookBlocksXHR != null) {
+        return state.partOfBookBlocksXHR;
+      }
+      if (typeof params.onPage === 'undefined') {
+        params.onPage = 10;
+      }
       let req = state.API_URL + `books/blocks/${params.bookId}/onpage/${params.onPage}`;
       if (params.block) {
         if (params.block === 'unresolved' && params.taskType) {
@@ -969,11 +976,16 @@ export const store = new Vuex.Store({
           req += `/from/${params.block}`
         }
       }
-      return axios.get(req)
+      state.partOfBookBlocksXHR = axios.get(req)
       .then((response) => {
+        state.partOfBookBlocksXHR = null;
         return response.data;
       })
-      .catch(err => err)
+      .catch(err => {
+        state.partOfBookBlocksXHR = null;
+        return err;
+      });
+      return state.partOfBookBlocksXHR;
     },
 
     loadBook ({commit, state, dispatch}, book_id) {
