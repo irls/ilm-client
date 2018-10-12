@@ -18,22 +18,22 @@
             </template>-->
             <template v-if="toc.level == 'toc1'">
               <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
-              <td colspan="4" class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
+              <td colspan="4" class="toc-item-link" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
             </template>
             <template v-if="toc.level == 'toc2'">
               <td></td>
               <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
-              <td colspan="3" class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
+              <td colspan="3" class="toc-item-link" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
             </template>
             <template v-if="toc.level == 'toc3'">
               <td></td><td></td>
               <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
-              <td colspan="2" class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
+              <td colspan="2" class="toc-item-link" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
             </template>
             <template v-if="toc.level == 'toc4'">
               <td></td><td></td><td></td>
               <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
-              <td class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
+              <td class="toc-item-link" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
             </template>
           </tr>
         </table>
