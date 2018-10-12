@@ -1035,7 +1035,8 @@ export default {
         'setCurrentBookCounters',
         'addBlockLock',
         'getAlignCount',
-        'recountApprovedInRange'
+        'recountApprovedInRange',
+        'loadBookToc'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -2819,6 +2820,9 @@ export default {
           isManual: true,
         }).then((blocks)=>{
           //console.log('setNumVal then', blocks[0]);
+          if (['header', 'title'].indexOf(this.block.type) !== -1) {
+            this.loadBookToc({bookId: this.block.bookid, isWait: true});
+          }
         });
       }, 1000),
 
