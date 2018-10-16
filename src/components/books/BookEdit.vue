@@ -671,7 +671,7 @@ export default {
     },
 
     refreshBlock (change) {
-      console.log('refreshBlock', change);
+      //console.log('refreshBlock', change);
       //console.log('this.$refs.blocks', this.$refs.blocks);
       //console.log('blockers', this.blockers);
         /*if (change.doc.audiosrc) {
@@ -1587,7 +1587,7 @@ export default {
     scrollBarUpdatePosition(startId)
     {
       startId = startId || this.startId;
-      let currIdx = this.scrollBarBlocks.indexOf(startId);
+      let currIdx = this.parlistO.idsArray().indexOf(startId);
       //console.log('scrollBarUpdatePosition', currIdx, this.scrollBarBlocks.length);
       if (currIdx > -1) {
         let scrollBarTop = 0;
@@ -1606,7 +1606,7 @@ export default {
 
     endScrollDragging(top, left) {
 
-      let currIdx = this.scrollBarBlocks.indexOf(this.startId);
+      let currIdx = this.parlistO.idsArray().indexOf(this.startId);
 
       let scrollBarTop = 0;
       try {
@@ -1685,17 +1685,6 @@ export default {
       this.refreshTmpl();
 
       this.$router.push({name: this.$route.name, params: {}});
-//       this.loadBookMeta()
-//       .then(()=>{
-//         this.tc_loadBookTask()
-//         .then(()=>{
-//           this.startId = false;
-//           this.loadBookDown(false, false, 10)
-//           .then(()=>{
-//
-//           });
-//         });
-//       })
       this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
         if (this.meta._id) {
@@ -1884,13 +1873,14 @@ export default {
     'startId': {
       handler(newVal, oldVal) {
         //console.log('this.startId', newVal);
-        this.refreshTmpl();
-        if (this.$refs.scrollBarRef && !this.$refs.scrollBarRef.dragging) {
-          if (newVal && this.scrollBarBlocks.length) {
-            this.scrollBarUpdatePosition(newVal);
-          } else this.updateScrollSlider();
+        if (typeof newVal !== 'undefined') { // a trick to prevent scroll to undefined startId
+          this.refreshTmpl();
+          if (this.$refs.scrollBarRef && !this.$refs.scrollBarRef.dragging) {
+            if (newVal && this.scrollBarBlocks.length) {
+              this.scrollBarUpdatePosition(newVal);
+            } else this.updateScrollSlider();
+          }
         }
-
       }
     },
     'mode': {

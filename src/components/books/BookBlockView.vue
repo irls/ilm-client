@@ -1455,7 +1455,7 @@ export default {
                   parnum: this.blockO.parnum,
                   isManual: true,
                 }).then((blocks)=>{
-                  console.log('assembleBlock putNumBlockO', blocks[0]);
+                  //console.log('assembleBlock putNumBlockO', blocks[0]);
                   this.storeListO.updBlockByRid(this.blockO.rid, {
                     type: this.block.type
                   })
@@ -2726,7 +2726,7 @@ export default {
         formData.append('block', JSON.stringify({'description': this.$refs.blockDescription.innerHTML}));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/image';
-        
+
         api.post(api_url, formData, {}).then((response) => {
           if (response.status===200) {
             // hide modal after one second
@@ -3053,7 +3053,7 @@ export default {
         //this.isUpdated = false;
       },
       'block._rev' (newVal, oldVal) {
-        console.log('block._rev: ', this.block._rev, 'newVal: ', newVal, 'oldVal: ', oldVal);
+        //console.log('block._rev: ', this.block._rev, 'newVal: ', newVal, 'oldVal: ', oldVal);
         if (oldVal) {
           this.isUpdated = true;
           setTimeout(() => {
