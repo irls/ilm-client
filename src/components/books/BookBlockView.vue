@@ -911,7 +911,8 @@ export default {
           isBlocked: 'isBlocked',
           blockSelection: 'blockSelection',
           isBlockLocked: 'isBlockLocked',
-          lockedBlocks: 'lockedBlocks'
+          lockedBlocks: 'lockedBlocks',
+          storeListO: 'storeListO'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
@@ -1455,6 +1456,9 @@ export default {
                   isManual: true,
                 }).then((blocks)=>{
                   console.log('assembleBlock putNumBlockO', blocks[0]);
+                  this.storeListO.updBlockByRid(this.blockO.rid, {
+                    type: this.block.type
+                  })
                 });
               //}
             }
@@ -2722,27 +2726,53 @@ export default {
         formData.append('block', JSON.stringify({'description': this.$refs.blockDescription.innerHTML}));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/image';
-        let self = this;
-        api.post(api_url, formData, {}).then(function(response){
+        
+        api.post(api_url, formData, {}).then((response) => {
           if (response.status===200) {
             // hide modal after one second
-            self.$refs.illustrationInput.removeImage();
-            self.$emit('blockUpdated', self.block._id);
+            this.$refs.illustrationInput.removeImage();
+            this.$emit('blockUpdated', this.block._id);
             //let offset = document.getElementById(self.block._id).getBoundingClientRect()
             //window.scrollTo(0, window.pageYOffset + offset.top);
-            self.isIllustrationChanged = false;
-            self.isChanged = false;
-            self.block.isIllustrationChanged = false;
-            self.block.isChanged = false;
-            self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
+            this.isIllustrationChanged = false;
+            this.isChanged = false;
+            this.block.isIllustrationChanged = false;
+            this.block.isChanged = false;
+            this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
             //if (self.editor) {
               //self.editor.destroy();
             //}
-            $('[id="' + self.block._id + '"] .illustration-block')
+            $('[id="' + this.block._id + '"] .illustration-block')
               .removeAttr('contenteditable')
               .removeAttr('data-placeholder');
           } else {
 
+          }
+          if (this.blockO.type !== this.block.type) {
+            this.blockO.status = Object.assign(this.blockO.status, {
+              marked: this.block.markedAsDone,
+              assignee: this.block.status.assignee,
+              proofed: this.block.status.proofed,
+              stage: this.block.status.stage
+            })
+            let upd = {
+              rid: this.blockO.rid,
+              type: this.block.type,
+              status: this.blockO.status
+            }
+            this.putBlockO(upd).then(()=>{
+              this.putNumBlockO({
+                bookId: this.block.bookid,
+                rid: this.blockO.rid,
+                secnum: '',
+                parnum: ''
+              }).then((blocks)=>{
+                console.log('assembleBlock putNumBlockO', blocks[0]);
+                this.storeListO.updBlockByRid(this.blockO.rid, {
+                  type: this.block.type
+                })
+              });
+            });
           }
         }).catch((err) => {
           console.log(err)
