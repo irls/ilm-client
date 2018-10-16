@@ -317,7 +317,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc']),
+    'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters']),
 
     test() {
         window.scrollTo(0, document.body.scrollHeight-500);
@@ -1681,6 +1681,7 @@ export default {
       this.$store.commit('clear_storeList');
       this.$store.commit('clear_storeListO');
       this.startId = false;
+      this.setCurrentBookCounters(['not_marked_blocks']);
       this.refreshTmpl();
 
       this.$router.push({name: this.$route.name, params: {}});
