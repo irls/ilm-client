@@ -1556,7 +1556,7 @@ export const store = new Vuex.Store({
           let block = state.storeListO.getBlockByRid(params.rid);
           if (block) {
             //block.isManual = true;
-            if (params.type) block.type = params.type;
+            state.storeListO.updBlockByRid(params.rid, params);
             return block.blockid;
           }
         }
