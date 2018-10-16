@@ -841,7 +841,7 @@ export default {
         return false;
       },
       isSpotCheckDisabled: function() {
-        if (!this.block.audiosrc || !this._is('editor', true)) {
+        if (!this.block.audiosrc || !this._is('editor', true) || this.mode != 'edit') {
           return true;
         }
         if (this.isAudioChanged) {
