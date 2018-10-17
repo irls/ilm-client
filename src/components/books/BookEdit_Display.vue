@@ -61,7 +61,7 @@ export default {
   methods: {
     ...mapActions([
       'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
-      'loopPreparedBlocksChain', 'putNumBlockOBatch'
+      'loopPreparedBlocksChain', 'putNumBlockOBatch', 'setCurrentBookCounters', 'loadBookToc'
     ]),
 
     onScroll(ev) {
@@ -162,6 +162,8 @@ export default {
         name: 'BookEditDisplay', params: {}
       });
       this.loadBookMounted();
+      this.setCurrentBookCounters(['not_marked_blocks']);
+      this.loadBookToc({bookId: this.meta._id, isWait: true});
     },
     loadBookMounted() {
       //console.time('loadBookMounted');
