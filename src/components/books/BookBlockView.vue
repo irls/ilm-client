@@ -1,5 +1,5 @@
 <template>
-<div class="table-body -block" v-bind:class="['-mode-' + mode, blockOutPaddings]" :id="block._id">
+<div class="table-body -block" ref="viewBlock" v-bind:class="['-mode-' + mode, blockOutPaddings]" :id="block._id">
     <div v-if="isLocked" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
 
