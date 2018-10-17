@@ -736,8 +736,14 @@
           this.load(audio, text, this.block);
         },
         play(cursorPosition) {
-          if (typeof cursorPosition === 'undefined' && this.cursorPosition !== false) {
-            cursorPosition = this.cursorPosition;
+          if (typeof cursorPosition === 'undefined') {
+            if (this.cursorPosition !== false) {
+              cursorPosition = this.cursorPosition;
+            } else if (!this.selection.start) {
+              //this.cursorPosition = 0;
+              this.audiosourceEditor.setTimeSelection(0);
+              cursorPosition = 0;
+            }
           }
           this.cursorPosition = false;
           if (cursorPosition) {
