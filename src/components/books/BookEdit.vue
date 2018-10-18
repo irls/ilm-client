@@ -228,19 +228,6 @@ export default {
           return result;
       },
 
-//       parlistC: function() {
-//         let result = new Map();
-//         if (this.startId && this.parlist.has(this.startId)) {
-//           let seqId = this.startId;
-//           for (var i=0; i<=9; i++) {
-//             if (this.parlist.get(seqId)) {
-//               result.set(seqId, this.parlist.get(seqId));
-//               seqId = this.parlist.get(seqId).chainid;
-//             }
-//           }
-//         }
-//         return result;
-//       },
       keymap: function() {
         return {
           // 'esc+ctrl' is OK.
@@ -331,8 +318,8 @@ export default {
       this.startId = startId;*/
       //this.updateScrollSlider();
       //console.log('refreshTmpl');
-      this.parlistO.setStartId(this.startId);
-      //this.$forceUpdate();
+      //this.parlistO.setStartId(this.startId);
+      this.$forceUpdate();
       //this.updateVisibleBlocks();
     },
 
@@ -758,18 +745,23 @@ export default {
     },
 
     putBlockProxy: function (block) {
+      //console.log('putBlockProxy', block);
       return this.putBlock(block)
-      .then(()=>{})
+      .then(()=>{
+        this.updateVisibleBlocks();
+      })
       .catch((err)=>{})
     },
 
     putBlockPartProxy: function (blockData) {
+      //console.log('putBlockPartProxy', blockData);
       return this.putBlockPart(blockData)
       .then(()=>{})
       .catch((err)=>{})
     },
 
     putBlockOProxy: function (blockData) {
+      //console.log('putBlockOProxy', blockData);
       return this.putBlockO(blockData)
       .then((blocks)=>{
         //console.log('putBlockOProxy then');
@@ -1179,9 +1171,9 @@ export default {
                         }
 
                         this.putNumBlockOBatchProxy({bookId: block.bookid});
-                        //this.refreshTmpl();
+                        this.refreshTmpl();
                         this.unfreeze('joinBlocks');
-                        //this.updateScrollSlider();
+                        this.updateScrollSlider();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
@@ -1494,7 +1486,7 @@ export default {
         if (lastBlock.out == this.parlistO.meta.rid) {
           let lastDomBlock = document.getElementById('s-'+idsViewArray[lenDomBlocks-1].blockId);
           let lastDomRect = lastDomBlock.getBoundingClientRect();
-          if (lastDomRect.top <= topShift) {
+          if (lastDomRect.bottom <= topShift + 100) {
             return; //last block reached
           }
         }
@@ -1549,13 +1541,16 @@ export default {
       if (this.parlist.has(id)) {
         this.screenTop = 0;
         this.startId = id;
+        this.parlistO.setStartId(id);
       } else {
-        this.loadPreparedBookDown([id])
+        let idsArray = this.parlistO.getNextIds(id, 5);
+        this.loadPreparedBookDown(idsArray)
         .then((blockId)=>{
           this.setBlockWatch();
-          //this.lazyLoad(id);
+          this.lazyLoad(id);
           this.screenTop = 0;
           this.startId = id;
+          this.parlistO.setStartId(id);
         });
       }
     },
@@ -1884,14 +1879,13 @@ export default {
     'startId': {
       handler(newVal, oldVal) {
         //console.log('this.startId', newVal);
-//         if (typeof newVal !== 'undefined') { // a trick to prevent scroll to undefined startId
-//           this.refreshTmpl();
-//           if (this.$refs.scrollBarRef && !this.$refs.scrollBarRef.dragging) {
-//             if (newVal && this.scrollBarBlocks.length) {
-//               this.scrollBarUpdatePosition(newVal);
-//             } else this.updateScrollSlider();
-//           }
-//         }
+        if (typeof newVal !== 'undefined') {
+          if (this.$refs.scrollBarRef && !this.$refs.scrollBarRef.dragging) {
+            if (newVal && this.scrollBarBlocks.length) {
+              this.scrollBarUpdatePosition(newVal);
+            } else this.updateScrollSlider();
+          }
+        }
       }
     },
     'mode': {

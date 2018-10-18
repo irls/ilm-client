@@ -116,29 +116,33 @@ class BookBlocks {
   }
 
   getInId(blockId) {
-    let rid;
-    if (blockId.charAt(0) == '#') { // Orient RID
-      rid = blockId;
-    } else {
-      rid = this.getRIdById(blockId);
-    }
-    if (rid && this.lookupList.hasOwnProperty(this.lookupList[rid].in)) {
-      if (this.lookupList[rid].in == this.meta.rid) return false;
-      return this.lookupList[this.lookupList[rid].in].blockid;
+    if (blockId && blockId.length) {
+      let rid;
+      if (blockId.charAt(0) == '#') { // Orient RID
+        rid = blockId;
+      } else {
+        rid = this.getRIdById(blockId);
+      }
+      if (rid && this.lookupList.hasOwnProperty(this.lookupList[rid].in)) {
+        if (this.lookupList[rid].in == this.meta.rid) return false;
+        return this.lookupList[this.lookupList[rid].in].blockid;
+      }
     }
     return false;
   }
 
   getOutId(blockId) {
-    let rid;
-    if (blockId.charAt(0) == '#') { // Orient RID
-      rid = blockId;
-    } else {
-      rid = this.getRIdById(blockId);
-    }
-    if (rid && this.lookupList.hasOwnProperty(this.lookupList[rid].out)) {
-      if (this.lookupList[rid].out == this.meta.rid) return false;
-      return this.lookupList[this.lookupList[rid].out].blockid;
+    if (blockId && blockId.length) {
+      let rid;
+      if (blockId.charAt(0) == '#') { // Orient RID
+        rid = blockId;
+      } else {
+        rid = this.getRIdById(blockId);
+      }
+      if (rid && this.lookupList.hasOwnProperty(this.lookupList[rid].out)) {
+        if (this.lookupList[rid].out == this.meta.rid) return false;
+        return this.lookupList[this.lookupList[rid].out].blockid;
+      }
     }
     return false;
   }

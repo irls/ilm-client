@@ -741,12 +741,11 @@ export default {
           'no_audio': 'No audio'
         }
       },
-      voiceworkSel: {
+      voiceworkSel: { cache: false,
         get() {
           return this.block.voicework;
         },
         set(val) {
-          //console.log('voiceworkSel set', val);
           if (val && val !== this.block.voicework) {
             if (this._is('editor', true)) {
               this.voiceworkChange = val;
@@ -760,7 +759,7 @@ export default {
           }
         }
       },
-      footnVoiceworkSel: {
+      footnVoiceworkSel: { cache: false,
         get() {
           return 'ttn';
         },
@@ -789,49 +788,55 @@ export default {
 
           return flagsSummary.stat !== 'open';
       },
-      enableMarkAsDone: function() {
-        if (this.tc_getBlockTask(this.block._id)) {
-          return false;
-        }
-        return this._is('editor', true) && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
-      },
-      markAsDoneButtonDisabled: function() {
-        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
-          return true;
-        }
-        let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
-        if (this.block.footnotes) {
-          this.block.footnotes.forEach(f => {
-            if (f.voicework === 'tts' && !f.audiosrc) {
-              disable_audio = true;
-            }
-          });
-        }
-        return this.block.markedAsDone ||
-                (this.block.status && this.block.status.proofed === true) ||
-                disable_audio;
-      },
-      isApproveDisabled: function () {
-        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.isRecording || this.isUpdating) {
-          return true;
-        }
-        let flags_summary = this.block.calcFlagsSummary();
-          if (this.isCanApproveWithoutTask) {
-            if (flags_summary.stat === 'open') {
-              return true;
-            } else {
-              return false;
-            }
+      enableMarkAsDone: { cache: false,
+        get() {
+          if (this.tc_getBlockTask(this.block._id)) {
+            return false;
           }
-          if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
-          if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1) return false;
-          if (this._is('editor', true) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
-          if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
-          if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
-          if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
+          return this._is('editor', true) && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
+        }
+      },
+      markAsDoneButtonDisabled: { cache: false,
+        get() {
+          if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
             return true;
           }
-          return false;
+          let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
+          if (this.block.footnotes) {
+            this.block.footnotes.forEach(f => {
+              if (f.voicework === 'tts' && !f.audiosrc) {
+                disable_audio = true;
+              }
+            });
+          }
+          return this.block.markedAsDone ||
+                  (this.block.status && this.block.status.proofed === true) ||
+                  disable_audio;
+        }
+      },
+      isApproveDisabled: { cache: false,
+        get() {
+          if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.isRecording || this.isUpdating) {
+            return true;
+          }
+          let flags_summary = this.block.calcFlagsSummary();
+            if (this.isCanApproveWithoutTask) {
+              if (flags_summary.stat === 'open') {
+                return true;
+              } else {
+                return false;
+              }
+            }
+            if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
+            if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1) return false;
+            if (this._is('editor', true) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
+            if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
+            if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
+            if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
+              return true;
+            }
+            return false;
+        }
       },
       isCanApproveWithoutTask: function() {
         if (this._is('editor', true)) {
@@ -855,7 +860,8 @@ export default {
         }
         return true;
       },
-      isCompleted: function () {
+      isCompleted: { cache: false,
+        get() {
           if (this._is('editor', true) && (
                   this.tc_hasTask('content_cleanup') ||
                   (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')
@@ -872,6 +878,7 @@ export default {
             }
           }
           return this.tc_getBlockTask(this.block._id) ? false : true;
+        }
       },
       displaySelectionStart() {
         return this.blockSelection.end._id == this.block._id ? this.blockSelection.start._id : false;
@@ -895,7 +902,7 @@ export default {
         }
         return false;
       },
-      hasChanges: {
+      hasChanges: { cache: false,
         get() {
           return this.isChanged || this.isIllustrationChanged || this.isAudioChanged;
         }
@@ -2826,6 +2833,7 @@ export default {
               this.getAlignCount();
               response.data.updField = 'voicework';
               this.$root.$emit('bookBlocksUpdates', response.data);
+              this.block.voicework = this.voiceworkChange;
               //this.setCurrentBookBlocksLeft(this.block.bookid);
             }
             this.voiceworkChange = false;
