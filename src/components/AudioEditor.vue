@@ -739,7 +739,7 @@
           if (typeof cursorPosition === 'undefined') {
             if (this.cursorPosition !== false) {
               cursorPosition = this.cursorPosition;
-            } else if (!this.selection.start) {
+            } else if (!this.selection.start && this.mode === 'block') {
               //this.cursorPosition = 0;
               this.audiosourceEditor.setTimeSelection(0);
               cursorPosition = 0;
