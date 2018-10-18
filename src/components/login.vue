@@ -90,8 +90,8 @@ export default {
         if (interval < 30000) {
           interval = 30000;
         }
-        if (interval > 1000 * 60 * 60) {// hour
-          interval = 1000 * 60 * 60;
+        if (interval > 1000 * 60 * 60 * 3) {// 3 hours
+          interval = 1000 * 60 * 60 * 3;
         }
         this.sessionInterval = setInterval(() => {
           //console.log(session.token, session.password)
