@@ -40,7 +40,7 @@
               <div v-if="!textCleanupProcess" class="editing-wrapper">
                 <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Editing complete</button>
                 <div class="col-sm-8 blocks-counter">
-                  <router-link :to="goToUnresolved()"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
+                  <router-link :to="goToUnresolved(true)"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
                 </div>
               </div>
               <div v-else class="preloader-small"></div>
@@ -282,7 +282,7 @@
                   </fieldset>
 
                   <fieldset class="block-style-fieldset">
-                  <legend>Numeration</legend>
+                  <legend>Automatic numeration</legend>
                   <div>
                     <label class="style-label"
                       @click="liveUpdate('numeration', 'x')">
@@ -325,7 +325,7 @@
                   :id="'block-type-'+blockType" :key="blockType">
 
                   <fieldset class="block-style-fieldset block-num-fieldset"
-                  v-if="numProps.has(blockType) && ['title', 'header'].indexOf(blockType) > -1">
+                  v-if="numProps.has(blockType) && ['header'].indexOf(blockType) > -1">
                     <legend>numeration</legend>
                     <label class="block-style-label"
                       @click="selSecNum(blockType, 'secNum', numProps.get(blockType).get('secNum'))">
@@ -361,7 +361,7 @@
                           class="block-style-label"
                           :key="blockType + 'level' + sVal"
                           :id="blockType + 'level' + sVal">
-                          
+
                           <template v-if="styleTabs.get(blockType).get('level').size > 1">
                             <i class="fa fa-dot-circle-o"
                             v-if="styleTabs.get(blockType).get('level').has(sVal.length?sVal:'none')"
@@ -410,7 +410,7 @@
                       Hide from display
                     </label>
                   </fieldset>
-                  <i>Pleas keep defaults unless you have a compelling reason to change them</i>
+                  <i>Please keep defaults unless you have a compelling reason to change them</i>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
                       <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && (styleKey !== 'level' || blockType !== 'header')" :key="styleKey" class="block-style-fieldset">
@@ -421,7 +421,7 @@
                           class="block-style-label"
                           :key="blockType + styleKey.replace(' ', '') + sVal"
                           :id="blockType + styleKey.replace(' ', '') + sVal">
-                          
+
                           <template v-if="styleTabs.get(blockType).get(styleKey).size > 1">
                             <i class="fa fa-dot-circle-o"
                             v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
@@ -667,22 +667,24 @@ export default {
   computed: {
 
     ...mapGetters({
-      currentBookid: 'currentBookid', 
-      currentBookMeta: 'currentBookMeta', 
-      currentBookFiles: 'currentBookFiles', 
-      isLibrarian: 'isLibrarian', 
-      isEditor: 'isEditor', 
-      isAdmin: 'isAdmin', 
-      bookCollections: 'bookCollections', 
-      allowPublishCurrentBook: 'allowPublishCurrentBook', 
-      currentBookBlocksLeft: 'currentBookBlocksLeft', 
-      currentBookBlocksLeftId: 'currentBookBlocksLeftId', 
-      currentBookAudioExportAllowed: 'currentBookAudioExportAllowed', 
-      currentBookCounters: 'currentBookCounters', 
-      tc_currentBookTasks: 'tc_currentBookTasks', 
-      storeList: 'storeList', 
-      blockSelection: 'blockSelection', 
-      alignCounter: 'alignCounter', 
+      currentBookid: 'currentBookid',
+      currentBookMeta: 'currentBookMeta',
+      currentBookFiles: 'currentBookFiles',
+      isLibrarian: 'isLibrarian',
+      isEditor: 'isEditor',
+      isAdmin: 'isAdmin',
+      bookCollections: 'bookCollections',
+      allowPublishCurrentBook: 'allowPublishCurrentBook',
+      currentBookBlocksLeft: 'currentBookBlocksLeft',
+      currentBookBlocksLeftId: 'currentBookBlocksLeftId',
+      currentBookAudioExportAllowed: 'currentBookAudioExportAllowed',
+      currentBookCounters: 'currentBookCounters',
+      tc_currentBookTasks: 'tc_currentBookTasks',
+      tc_tasksByBlock: 'tc_tasksByBlock',
+      storeList: 'storeList',
+      storeListO: 'storeListO',
+      blockSelection: 'blockSelection',
+      alignCounter: 'alignCounter',
       audiobook: 'currentAudiobook'}),
     collectionsList: {
       get() {
@@ -779,7 +781,7 @@ export default {
     this.getAudioBook(this.currentBookid)
       .then(() => {
         if (this.currentAudiobook) {
-          
+
         }
       });
     this.$root.$on('from-bookblockview:voicework-type-changed', function() {
@@ -787,10 +789,6 @@ export default {
       self.getAudioBook();
     });
     this.setCurrentBookCounters();
-    this.$root.$on('book-reimported', () => {
-      //this.loadAudiobook()
-      this.$root.$emit('from-book-meta:upd-toc', true);
-    });
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
 
     if (this.selectionStart && this.selectionEnd) {
@@ -857,7 +855,7 @@ export default {
     },
     audiobook: {
       handler(val) {
-        
+
       },
       deep: true
     },
@@ -1036,7 +1034,7 @@ export default {
         if (key == 'numeration') {
           this.unfreeze('updateBookMeta');
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
-          this.$root.$emit('from-book-meta:upd-toc', true);
+          //this.$root.$emit('from-book-meta:upd-toc', true);
         }
         //console.log('success DB update: ', doc)
         return this.updateBookVersion({minor: true})
@@ -1219,22 +1217,30 @@ export default {
       return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
     },
     goToUnresolved(with_task = false) {
-      if (this.blocksToApproveCounter === 0) {
-        return `${this.$route.path}`;
+
+      let route = {
+        name: this.$route.name,
+        params: {
+          book: this.$route.params.bookid
+        }
       }
+
+      if (this.blocksToApproveCounter === 0) {
+        return route;
+      }
+
       if (this.$route.matched.some(record => {
         return record.meta.mode === 'edit' || record.meta.mode === 'narrate'
       })) {
-        let params = { block: 'unresolved' };
-        let path = `${this.$route.path}/${params.block}`;
+        route.params.block = 'unresolved';
+
         if (with_task) {
-          params['task_type'] = true;
-          path += `/${params.task_type}`;
+          route.params.task_type = true;
+          if (this.tc_hasTask('content_cleanup')) route.params.task_type = 'text-cleanup';
         }
-        //this.$router.push({name: this.$route.name, params:  params});
-        return path;
+      //this.$router.push({name: this.$route.name, params:  params});
       }
-      return `${this.$route.path}`;
+      return route;
     },
     toggleMastering() {
       if (this._is('editor', true)) {
@@ -1280,11 +1286,14 @@ export default {
     collectCheckedStyles(startId, endId, isSwitch = true) {
       let result = new Map();
       let nums = new Map();
-      if (this.storeList.has(startId)) {
-        let pBlock, currId = startId;
-        do {
-          pBlock = this.storeList.get(currId);
-          if (pBlock && pBlock.checked) {
+
+      if (this.storeListO.getBlock(startId)) {
+        let idsArrayRange = this.storeListO.idsArrayRange(startId, endId);
+        idsArrayRange.forEach((blockId)=>{
+        //console.log('blockId', blockId);
+
+          let pBlock = this.storeList.get(blockId);
+          if (pBlock) {
             if (!result.has(pBlock.type)) result.set(pBlock.type, new Map());
 
             for (let styleKey in this.blockTypes[pBlock.type]) {
@@ -1339,11 +1348,11 @@ export default {
                 nums.get(pBlock.type).set('parNum', false);
               }
             }
-
-            currId = pBlock.chainid;
           }
-        } while (pBlock && pBlock._id !== endId);
+
+        });
       }
+
       this.styleTabs = result;
       this.numProps = nums;
 
@@ -1363,14 +1372,22 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
-      let updateToc = styleKey == 'table of contents';
+      let updateToc = (styleKey == 'table of contents' || (blockType == 'title' && styleKey == 'style') );
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
-          let pBlock, currId = this.blockSelection.start._id;
-          do {
-            pBlock = this.storeList.get(currId);
-            if (pBlock && pBlock.checked) {
-              if (pBlock.type == blockType) {
+          let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
+          idsArrayRange.forEach((blockId)=>{
+            let pBlock = this.storeList.get(blockId);
+
+            if (pBlock && blockType == 'title' && styleKey == 'style' && styleVal != ''){
+              pBlock.classes['table of contents'] = '';
+            }
+
+            if (pBlock && blockType == 'title' && styleKey == 'table of contents' && styleVal != ''){
+              pBlock.classes['style'] = '';
+            }
+
+            if (pBlock && pBlock.type == blockType) {
                 if (styleVal.length) {
                   pBlock.classes[styleKey] = styleVal;
                   if (blockType === 'header' && styleKey === 'level') {
@@ -1378,24 +1395,23 @@ export default {
                     pBlock.classes['table of contents'] = 'toc' + styleVal.replace(/\D/, '');
                   }
                 }
-                else pBlock.classes[styleKey] = '';
+              else pBlock.classes[styleKey] = '';
 
-                if (pBlock.isChanged || pBlock.isAudioChanged) {
-                  pBlock.checked = false;
-                  pBlock.checked = true;
-                } else {
-                  pBlock.partUpdate = true;
-                  this.putBlock(pBlock).then(()=>{
-                    if (updateToc) {
-                      this.$root.$emit('from-book-meta:upd-toc', true);
-                    }
-                  });
-                }
+              if (pBlock.isChanged || pBlock.isAudioChanged) {
+                pBlock.checked = false;
+                pBlock.checked = true;
+              } else {
+                pBlock.partUpdate = true;
+                this.putBlock(pBlock).then(()=>{
+                  if (updateToc) {
+                    this.$root.$emit('from-book-meta:upd-toc', true);
+                  }
+                });
               }
-              currId = pBlock.chainid;
             }
-          } while (pBlock && pBlock._id !== this.blockSelection.end._id);
+          })
         }
+        //this.$root.$emit('from-meta-edit:set-num');
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
     },
@@ -1411,68 +1427,95 @@ export default {
     },
 
     selSecNum (blockType, valKey, currVal) {
-      //console.log('selSecNum', blockType, valKey, currVal);
-
+      console.log('selSecNum', blockType, valKey, currVal);
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
-          let pBlock, currId = this.blockSelection.start._id;
-          do {
-            pBlock = this.storeList.get(currId);
-            if (pBlock && pBlock.checked) {
-              if (pBlock.type == blockType) {
+          let putBlockOpromise = [];
+          let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
+          let pBlock, oBlock;
 
-                switch(valKey) {
-                    case 'secNum' : {
-                      if (currVal == 'mixed' || currVal === false) {
-                        if (pBlock.secVal) pBlock.secnum = pBlock.secVal;
-                        else pBlock.secnum = '';
-                      } else {
-                        pBlock.secVal = pBlock.secnum;
-                        pBlock.secnum = false;
-                      }
-                    } break;
-                    case 'secHide' : {
-                      if (currVal == 'mixed' || currVal === false) {
-                        pBlock.secHide = true;
-                      } else {
-                        pBlock.secHide = false;
-                      }
-                    } break;
-                    case 'parNum' : {
-                      if (currVal == 'mixed' || currVal === false) {
-                        pBlock.parnum = '';
-                      } else {
-                        pBlock.parnum = false;
-                      }
-                    } break;
-                    case 'parHide' : {
-                      if (currVal == 'mixed' || currVal === false) {
-                        pBlock.parHide = true;
-                      } else {
-                        pBlock.parHide = false;
-                      }
-                    } break;
-                    default : {
-                    } break;
-                };
+          idsArrayRange.forEach((blockId)=>{
+            pBlock = this.storeList.get(blockId);
+            //oBlock = this.storeListO.getBlock(blockId);
+            oBlock = { rid: this.storeListO.getRIdById(blockId) };
 
-                if (pBlock.isChanged || pBlock.isAudioChanged) {
-                  pBlock.checked = false;
-                  pBlock.checked = true;
-                } else {
-                  pBlock.partUpdate = true;
-                  this.putBlock(pBlock).then(()=>{
-                    if (valKey == 'secNum' || valKey == 'secHide') {
-                      this.$root.$emit('from-book-meta:upd-toc', true);
+            if (pBlock && pBlock.type == blockType) {
+              switch(valKey) {
+                  case 'secNum' : {
+                    if (currVal == 'mixed' || currVal === false) {
+                      if (pBlock.secVal) pBlock.secnum = pBlock.secVal;
+                      else pBlock.secnum = '';
+                      oBlock.isNumber = true;
+                    } else {
+                      pBlock.secVal = pBlock.secnum;
+                      pBlock.secnum = false;
+                      oBlock.isNumber = false;
                     }
-                  });
-                }
+                  } break;
+                  case 'secHide' : {
+                    if (currVal == 'mixed' || currVal === false) {
+                      pBlock.secHide = true;
+                      oBlock.isHidden = true;
+                    } else {
+                      pBlock.secHide = false;
+                      oBlock.isHidden = false;
+                    }
+                  } break;
+                  case 'parNum' : {
+                    if (currVal == 'mixed' || currVal === false) {
+                      pBlock.parnum = '';
+                      oBlock.isNumber = true;
+                    } else {
+                      pBlock.parnum = false;
+                      oBlock.isNumber = false;
+                    }
+                  } break;
+                  case 'parHide' : {
+                    if (currVal == 'mixed' || currVal === false) {
+                      pBlock.parHide = true;
+                      oBlock.isHidden = true;
+                    } else {
+                      pBlock.parHide = false;
+                      oBlock.isHidden = false;
+                    }
+                  } break;
+                  default : {
+                  } break;
+              };
+
+              if (oBlock.rid) {
+                putBlockOpromise.push(this.putBlockO(oBlock));
+                this.storeListO.updBlockByRid(oBlock.rid, {
+                  isHidden: oBlock.isHidden,
+                  isNumber: oBlock.isNumber
+                })
               }
-              currId = pBlock.chainid;
+
+              if (pBlock.isChanged || pBlock.isAudioChanged) {
+              } else {
+                pBlock.partUpdate = true;
+                this.putBlock(pBlock).then(()=>{
+                  if (valKey == 'secNum' || valKey == 'secHide') {
+                    // TODO create other method
+                    //this.$root.$emit('from-book-meta:upd-toc', true);
+                  }
+                });
+
+              }
             }
-          } while (pBlock && pBlock._id !== this.blockSelection.end._id);
+
+          });
+
+          Promise.all(putBlockOpromise).then((res)=>{
+            if (valKey == 'secNum' || valKey == 'parNum') {
+              let blockO = this.storeListO.getBlock(this.blockSelection.start._id);
+              this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration, blockO.rid)
+            } else {
+              this.$root.$emit('from-meta-edit:set-num');
+            }
+          })
         }
-        this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration);
+
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
     },
@@ -1496,7 +1539,7 @@ export default {
       }
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'freeze', 'unfreeze', 'blockers'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers'])
   }
 }
 </script>

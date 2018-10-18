@@ -179,7 +179,9 @@
             start: null,
             end: null
           },
-          alignProcess: false
+          alignProcess: false,
+          annotations: [],
+          minWordSize: 0.05
         }
       },
       mounted() {
@@ -372,6 +374,57 @@
               this.load(audio, text, block, autostart, bookAudiofile);
               return;
             }
+            let self = this;;
+            this.audiosourceEditor.annotationList.resizeHandlers.forEach((rh, i) => {
+              this.audiosourceEditor.annotationList.resizeHandlers[i].ondragover = (e) => {
+                if ($('.annotation-resize-pos').length == 0) {
+                  $('.annotations').prepend('<div class="annotation-resize-pos"></div>')
+                }
+                if ((rh.data.direction === 'left' && rh.data.index == 0) || 
+                        (rh.data.direction === 'right' && rh.data.index == this.annotations.length - 1)) {
+                  return;
+                }
+                var deltaX = e.clientX - rh.prevX;
+                $('.annotation-resize-pos').show();
+                $('.annotation-resize-pos').css('left', (e.clientX - 10) + 'px');// show resize marker
+                rh.prevX = e.clientX;
+
+                // emit shift event if not 0
+                if (deltaX) {
+                  //let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
+                  var deltaTime = deltaX * this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate;
+                  var annotationIndex = rh.data.index;
+                  var annotations = this.audiosourceEditor.annotationList.annotations;
+                  var note = annotations[annotationIndex];
+
+                  // resizing to the left
+                  if (rh.data.direction === 'left') {
+                    var originalVal = note.start;
+                    note.start += deltaTime;
+
+                    if (note.start < 0) {
+                      note.start = 0;
+                    }
+
+                    if (annotations[annotationIndex - 1]) {
+                      annotations[annotationIndex - 1].end = note.start;
+                    }
+                  } else {
+                    // resizing to the right
+                    var _originalVal = note.end;
+                    note.end += deltaTime;
+
+                    if (note.end > this.audiosourceEditor.duration) {
+                      note.end = this.audiosourceEditor.duration;
+                    }
+
+                    if (annotations[annotationIndex + 1]) {
+                      annotations[annotationIndex + 1].start = note.end;
+                    }
+                  }
+                }
+              };
+            })
             if (this.blockId) {
               this.$root.$emit('from-audioeditor:block-loaded', this.blockId);
             } else if (bookAudiofile && bookAudiofile.id) {
@@ -552,6 +605,25 @@
             } else if (autostart) {
               this.play();
             }
+            $('#' + this.blockId).on('click', '#content-' + this.blockId + ' w', function() {
+              let index = $('#content-' + self.blockId).find('w[data-map]').index($(this));
+              let show_selection = true;
+              if (typeof index =='undefined' || index === false || index < 0) {
+                let index_no_data = $('#content-' + self.blockId).find('w:not([data-map])').index($(this));
+                let total_index = $('#content-' + self.blockId).find('w').index($(this));
+                index = total_index - index_no_data;
+                show_selection = false;
+              }
+              if (!self.isAnnotationVisible(index)) {
+                self.scrollPlayerToAnnotation(index, 'middle');
+              }
+              if (show_selection) {
+                self.blockSelectionEmit = true;
+                self._setWordSelection(index, true);
+              } else {
+                self._clearWordSelection();
+              }
+            });
           })
           .catch(err => {
             //console.log(err)
@@ -559,26 +631,7 @@
             this.close();
           });
           });
-          var self = this;
-          $('#' + this.blockId).on('click', '#content-' + this.blockId + ' w', function() {
-            let index = $('#content-' + self.blockId).find('w[data-map]').index($(this));
-            let show_selection = true;
-            if (typeof index =='undefined' || index === false || index < 0) {
-              let index_no_data = $('#content-' + self.blockId).find('w:not([data-map])').index($(this));
-              let total_index = $('#content-' + self.blockId).find('w').index($(this));
-              index = total_index - index_no_data;
-              show_selection = false;
-            }
-            if (!self.isAnnotationVisible(index)) {
-              self.scrollPlayerToAnnotation(index, 'middle');
-            }
-            if (show_selection) {
-              self.blockSelectionEmit = true;
-              self._setWordSelection(index, true);
-            } else {
-              self._clearWordSelection();
-            }
-          });
+          let self = this;
           $('.wf-playlist').on('click', '.annotations-boxes .annotation-box', function(e) {
             let index = $('.annotations-boxes .annotation-box').index($(this));
             self.blockSelectionEmit = true;
@@ -683,8 +736,14 @@
           this.load(audio, text, this.block);
         },
         play(cursorPosition) {
-          if (typeof cursorPosition === 'undefined' && this.cursorPosition !== false) {
-            cursorPosition = this.cursorPosition;
+          if (typeof cursorPosition === 'undefined') {
+            if (this.cursorPosition !== false) {
+              cursorPosition = this.cursorPosition;
+            } else if (!this.selection.start && this.mode === 'block') {
+              //this.cursorPosition = 0;
+              this.audiosourceEditor.setTimeSelection(0);
+              cursorPosition = 0;
+            }
           }
           this.cursorPosition = false;
           if (cursorPosition) {
@@ -1199,6 +1258,8 @@
                 }
               });
             }
+            //annotations = annotations.splice(annotations.length - 10);
+            self.annotations = annotations;
             self.audiosourceEditor.setAnnotations({
                 annotations: annotations,
                 editable: true,
@@ -1369,20 +1430,138 @@
         }, 30),
 
         smoothDrag:_.debounce(function (ev) {
+          $('.annotation-resize-pos').remove();// hide resize marker
           if (!this._isAnnotationsEditable()) {
             this.showModal('onWordRepositionMessage');
           }
           let map = [];
-          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
-            map.push([Math.round(al.start * 1000), Math.round((al.end - al.start) * 1000)]);
+          let direction = '';
+          
+          let shiftedAnnotation = null;
+          let shiftedIndex = null;
+          
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {// find the shifted annotation, find shift direction
+            if (this.annotations[i]) {
+              if (this.annotations[i].begin == al.start && this.annotations[i].end != al.end) {
+                direction = this.annotations[i].end > al.end ? 'left' : 'right';
+                if (direction === 'left') {
+                  shiftedAnnotation = Object.assign({}, al);
+                  shiftedIndex = i;
+                } else if (direction === 'right') {
+                  let next = this.audiosourceEditor.annotationList.annotations[i + 1];
+                  if (next) {
+                    shiftedAnnotation = Object.assign({}, next);
+                    shiftedIndex = i + 1;
+                  }
+                }
+              }
+              this.annotations[i].begin = al.start;
+              this.annotations[i].end = al.end;
+            }
+          });
+          let shifted = false;
+          
+          if (shiftedAnnotation) {
+            if (shiftedAnnotation.end - shiftedAnnotation.start < this.minWordSize) {// find words with length less than minimum
+              let shift = this.minWordSize - (shiftedAnnotation.end - shiftedAnnotation.start);
+              let found = false;
+              let shiftIndexes = [];
+              switch (direction) {
+                case 'left':
+                  this.annotations[shiftedIndex].begin-= shift;
+                  let j = shiftedIndex - 1;
+                  do {
+                    if (this.annotations[j]) {
+                      this.annotations[j].end-=shift;
+                      if (this.annotations[j].end - this.annotations[j].begin >= this.minWordSize) {
+                        shifted = true;
+                      } else {
+                        shift = this.minWordSize - (this.annotations[j].end - this.annotations[j].begin);
+                        this.annotations[j].begin-= shift;
+                      }
+                    }
+                    --j;
+                  } while (j >= 0 && !shifted);
+                  shifted = true;
+                  shift = 0;
+                  for (j = 0; j <= shiftedIndex + 2; ++j) {// if some words start is before zero, shift all words
+                    if (this.annotations[j]) {
+                      if (this.annotations[j].begin < 0) {
+                        if (shift == 0) {
+                          shift+= -1 * (this.annotations[j].begin);
+                        }
+                        this.annotations[j].begin+=shift;
+                        this.annotations[j].end+=shift;
+                      }
+                      else if (this.annotations[j].end - this.annotations[j].begin - shift >= this.minWordSize) {
+                        this.annotations[j].begin+= shift;
+                        shift = 0;
+                      } else {
+                        let diff = this.minWordSize - (this.annotations[j].end - this.annotations[j].begin);
+                        this.annotations[j].begin+=shift;
+                        shift = this.minWordSize - (this.annotations[j].end - this.annotations[j].begin);
+                        this.annotations[j].end+=shift;
+                      }
+                    }
+                  }
+                  break;
+                case 'right':
+                  this.annotations[shiftedIndex].end+= shift;
+                  j = shiftedIndex + 1;
+                  do {
+                    if (this.annotations[j]) {
+                      this.annotations[j].begin+=shift;
+                      if (this.annotations[j].end - this.annotations[j].begin >= this.minWordSize) {
+                        shifted = true;
+                      } else {
+                        shift = this.minWordSize - (this.annotations[j].end - this.annotations[j].begin);
+                        this.annotations[j].end+= shift;
+                      }
+                    }
+                    ++j;
+                  } while (j < this.annotations.length && !shifted);
+                  shifted = true;
+                  shift = 0;
+                  for (j = this.annotations.length; j >= shiftedIndex - 2; --j) {// if some words end if after audio finish, shift all words
+                    if (this.annotations[j]) {
+                      if (this.annotations[j].end > this.audiosourceEditor.duration) {
+                        if (shift == 0) {
+                          shift+= this.annotations[j].end - this.audiosourceEditor.duration;
+                        }
+                        this.annotations[j].begin-=shift;
+                        this.annotations[j].end-=shift;
+                      }
+                      else if (this.annotations[j].end - this.annotations[j].begin - shift >= this.minWordSize) {
+                        this.annotations[j].end-= shift;
+                        shift = 0;
+                      } else {
+                        this.annotations[j].end-=shift;
+                        shift = this.minWordSize - (this.annotations[j].end - this.annotations[j].begin);
+                        this.annotations[j].begin-=shift;
+                      }
+                    }
+                  }
+                  break;
+              }
+            }
+          }
+          this.annotations.forEach((al, i) => {
+            map.push([Math.round(al.begin * 1000), Math.round((al.end - al.begin) * 1000)]);
             let w = this.words.find(_w => {
               return _w.alignedIndex == i;
             });
             if (w) {
-              w.start = al.start;
+              w.start = al.begin;
               w.end = al.end;
             }
           });
+          if (shifted) {
+            this.annotations.forEach((al, i) => {
+              this.audiosourceEditor.annotationList.annotations[i].start = al.begin;
+              this.audiosourceEditor.annotationList.annotations[i].end = al.end;
+            });
+          }
+          this.audiosourceEditor.drawRequest();
           this.$root.$emit('from-audioeditor:word-realign', map, this.blockId);
           this.isModified = true;
         }, 30),
@@ -1744,6 +1923,17 @@
             border-radius: 10px;
             -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
             background-color: #555;
+          }
+          .annotation-resize-pos {
+              width: 20px;
+              height: 30px;
+              position: absolute;
+              background-color: gray;
+              z-index: 9999;
+              border-left: 9px solid #bebebe;
+              border-right: 9px solid #bebebe;
+              cursor: ew-resize;
+              display: none;
           }
         }
         .playlist-time-scale {

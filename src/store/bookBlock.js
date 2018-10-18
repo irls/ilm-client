@@ -39,6 +39,7 @@ let BlockTypes = {
 //     translator: []
 //   },
   title: {
+    'table of contents': ['', 'toc1'],
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
     style: ['', 'subtitle', 'author', 'translator', 'copyright', 'allcaps'],
     align: ['', 'left', 'center', 'right', 'justify'],
@@ -87,6 +88,14 @@ let BlockTypes = {
   }
 }
 let BlockTypesAlias = {
+  title: {
+    'table of contents': {
+      values: {
+        'toc1': 'level 1'
+      }
+    }
+  },
+
   header: {
     level: {
       'title': 'type',
@@ -110,6 +119,13 @@ let BlockTypesAlias = {
 class BookBlock {
   constructor(init) {
 
+    // OrientDB properties
+//     this.rid = init.rid || '';
+//     this.in = init.in || '';
+//     this.out = init.out || '';
+//     this.blockid = init.blockid || '';
+
+    // CouchDB properties
     this._id = init._id || '';
     this._rev = init._rev || '';
     this.bookid = init.bookid || '';
@@ -150,9 +166,9 @@ class BookBlock {
     this.isAudioChanged = init.isAudioChanged || false;
     this.isIllustrationChanged = init.isIllustrationChanged || false;
 
-    this.checkedStart = init.checkedStart || false;
-    this.checkedEnd = init.checkedEnd || false;
-    this.checked = init.checked || false;
+//     this.checkedStart = init.checkedStart || false;
+//     this.checkedEnd = init.checkedEnd || false;
+//     this.checked = init.checked || false;
     this.realigned = init.realigned || false;
 
     this.history = {};

@@ -1,57 +1,27 @@
 <template>
-  <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
+  <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]" @scroll="onScroll">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
-    <template v-for="(block, blockId) in parlist">
-    <div :key="block._id" :class="['ilm-block', 'ilm-display', blockOutPaddings(block)]">
-      <div v-if="block.type == 'illustration'" :class="block.getClass()">
-        <img :class="block.getClass()" :src="block.getIllustration()"/>
-        <div class="description"
-        :class="['content-description', block.getClass()]"
-        v-if="block.description.length"
-        v-html="block.description">
-        </div>
-      </div>
-      <div v-else-if="block.type == 'hr'">
-        <hr :class="[block.getClass()]"/>
-      </div>
-      <div v-else >
-        <div
-          v-if="block.parnum && block.parnum.length"
-          v-html="block.parnum"
-          :class="['parnum']">
-        </div>
-        <div
-          @click="handleFootnote($event)"
-          :class="[block.getClass()]"
-          :id="block.id"
-          :data-parnum="block.parnum"
-          :lang="block.language || meta.language"
-          :data-type="block.type"
-          v-html="block.content">
-        </div>
-        <div class="footnotes"
-          v-if="block.footnotes.length > 0">
-          <div class="-hidden" ref="footNotes"
-            v-for="(footnote, footnoteIdx) in block.footnotes">
-            <div class="-num">[fn{{footnote.ftnIdx+1}}]</div>
-            <div class="-text"
-              v-html="footnote.content">
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="clearfix"></div>
+    <template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
+
+      <book-block-display
+        ref="viewBlocks"
+        :blockRid = "blockRid"
+        :blockO = "parlistO.getBlockByRid(blockRid)"
+        :fntCounter = "fntCounter"
+        :lang = "meta.language"
+        :loaded = "parlistO.getBlockByRid(blockRid) && parlistO.getBlockByRid(blockRid).loaded"
+      ></book-block-display>
+
     </template>
-    <infinite-loading @infinite="onInfiniteScroll" ref="infiniteLoading"></infinite-loading>
   </div>
 </template>
 
 <script>
+import Vue from 'vue'
 import BookDisplayHeader from './BookDisplayHeader'
+import BookBlockDisplay   from './BookBlockDisplay';
 //import BookTOC from './BookTOC'
-import InfiniteLoading from 'vue-infinite-loading'
 import { mapGetters, mapState, mapActions } from 'vuex'
 import { BookBlock, setBlockParnum }    from '../../store/bookBlock'
 
@@ -59,19 +29,21 @@ export default {
   name: 'BookEditDisplay',
   data () {
     return {
-      parlist: [],
       page: 0,
-      parCounter: { pref: 0, prefCnt: 0, curr: 1 },
-      fntCounter: 0
+      startId: false,
+      fntCounter: 0,
+      onScrollEv: false
     }
   },
   components: {
-    BookDisplayHeader, InfiniteLoading,  /*BookTOC,*/
+    BookDisplayHeader, BookBlockDisplay/*InfiniteLoading,  BookTOC,*/
   },
   computed: {
       ...mapGetters({
         book: 'currentBook',
-        meta: 'currentBookMeta'
+        meta: 'currentBookMeta',
+        parlist: 'storeList',
+        parlistO: 'storeListO'
       }),
       metaStyles: function () {
           let result = '';
@@ -84,109 +56,198 @@ export default {
             result = result.join(' ');
           }
           return result;
-      },
+      }
   },
   methods: {
-    ...mapActions(['loadBlocks', 'loadBlocksChain', 'loadBook']),
+    ...mapActions([
+      'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
+      'loopPreparedBlocksChain', 'putNumBlockOBatch', 'setCurrentBookCounters', 'loadBookToc'
+    ]),
 
-    onInfiniteScroll() {
-      if (this.meta._id) {
-        this.getBlocks();
-      } else {
-        if (this.$route.params.hasOwnProperty('bookid')) {
-          this.loadBook(this.$route.params.bookid)
-          .then(()=>{
-            this.getBlocks();
+    onScroll(ev) {
+      //console.log('onScroll', 'this.onScrollEv', this.onScrollEv);
+      if (!this.onScrollEv) {
+        let firstVisibleId = false;
+        let visible = false;
+        let idsArray = [];
+        for (let blockRef of this.$refs.viewBlocks) {
+          visible = this.checkVisible(blockRef.$refs.viewBlock);
+          if (visible) {
+            if (!firstVisibleId) firstVisibleId = blockRef.blockId;
+            if (this.parlist.has(blockRef.blockId)) {
+              this.parlistO.setLoaded(blockRef.blockId);
+              blockRef.$forceUpdate();
+            }
+            else if (this.parlistO.getBlockByRid(blockRef.blockRid).loaded === false) {
+              this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
+              idsArray.push(blockRef.blockId);
+            }
+          }
+        }
+        if (idsArray.length) {
+          //console.log('idsArray', idsArray);
+          this.getBlocks(idsArray)
+          .then((resIdsArray)=>{
+            for (let blockRef of this.$refs.viewBlocks) {
+              if (resIdsArray.indexOf(blockRef.blockId) > -1) {
+                //blockRef.block = this.parlist.get(blockRef.blockId);
+                blockRef.$forceUpdate();
+              }
+            }
           })
         }
-      }
+        //console.log('firstVisibleId', firstVisibleId);
+        if (firstVisibleId !== false && this.$route.params.block !== firstVisibleId) {
+          this.onScrollEv = true;
+          this.$router.push({
+            name: 'BookEditDisplay',
+            params: { block: firstVisibleId }
+          });
+        }
+      } else this.onScrollEv = false;
     },
-    getBlocks() {
-      if (this.meta._id) {
-        let first_id = false;
-        if (this.parlist.length > 0) first_id = this.parlist[this.parlist.length-1].chainid;
-        else if (this.meta.startBlock_id) first_id = this.meta.startBlock_id;
-        this.loadBlocksChain({
-            book_id: this.meta._id,
-            startId: first_id,
-            onpage: 20
-        })
-        .then((result)=>{
-            if (result.rows.length > 0) {
-                result.rows.forEach((el, idx, arr)=>{
-                    let newBlock = new BookBlock(el);
-                    newBlock.content = newBlock.content.replace(
-                      /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/mig,
-                      '<span data-pg="$1"></span>'
-                    );
-                    //<sup class="service-info" data-pg="xxiii"><w class="service-info" data-sugg="">pg </w><w class="service-info" data-sugg="">xxiii</w></sup>
-                    newBlock.content = newBlock.content.replace(
-                      /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-pg=['"]{1}(.*?)['"]{1}[^>]*>.*?<\/sup>/mig,
-                      '<span class="service-info" data-pg="$1"></span>'
-                    );
 
-                    let ftnIdx = 0;
-                    newBlock.content = newBlock.content.replace(
-                      /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gmi,
-                      (idx)=>{
-                        if (typeof newBlock.footnotes[ftnIdx] !== 'undefined') {
-                          newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
-                        }
-                        ftnIdx++;
-                        return `<sup data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
-                      }
-                    );
-                    //<sup class="service-info" data-idx="2"><w class="service-info" data-sugg="">2</w></sup>
-                    newBlock.content = newBlock.content.replace(
-                      /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/gmi,
-                      (idx)=>{
-                        if (typeof newBlock.footnotes[ftnIdx] !== 'undefined') {
-                          newBlock.footnotes[ftnIdx].ftnIdx = this.fntCounter;
-                        }
-                        ftnIdx++;
-                        return `<sup class="service-info" data-idx="${this.fntCounter++}">[${this.fntCounter}]</sup>`
-                      }
-                    );
-                    //'<sup data-idx="$1">[$1]</sup>'
-                    this.parlist.push(newBlock);
-                });
-              //console.log('result', result);
-              if (result.finish) {
-                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
-              } else {
-                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.loaded();
-              }
-            } else {
-                if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
-            }
-            this.isAllLoaded = this.$refs.infiniteLoading.isComplete;
-            this.reCountProxy();
-        })
-        .catch((err)=>{
-          if (this.$refs.infiniteLoading) this.$refs.infiniteLoading.stateChanger.complete();
-          console.log('Error: ', err.message);
+    checkVisible(elm) {
+      var rect = elm.getBoundingClientRect();
+      var viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+      return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
+    },
+
+    getAllBlocks(metaId, startBlock) {
+      //console.time('getAllBlocks');
+      this.loadBookBlocks({bookId: metaId})
+      .then((answer)=>{
+        let scrollId = this.parlistO.idsArray()[0];
+        this.parlistO.updateLookupsList(metaId, answer);
+        //console.timeEnd('getAllBlocks');
+        Vue.nextTick(()=>{
+          document.getElementById(scrollId).scrollIntoView();
         });
+      });
+    },
+    getBlocks(idsArray) {
+      //console.log('getBlocks idsArray', idsArray);
+      return this.loopPreparedBlocksChain({ids: idsArray})
+      .then((result)=>{
+        let resIdsArray = [];
+        if (result.rows && result.rows.length > 0) {
+          result.rows.forEach((el, idx, arr)=>{
+            if (!this.parlist.has(el._id)) {
+              let newBlock = new BookBlock(el);
+              this.$store.commit('set_storeList', newBlock);
+              this.parlistO.setLoaded(el._id);
+              resIdsArray.push(el._id);
+            }
+          });
+        }
+        return Promise.resolve(resIdsArray);
+      });
+    },
+    listenSetNum(bookId, numMask, blockRid) {
+      if (bookId) {
+        this.putNumBlockOBatch({bookId: bookId, bookNum: numMask, blockRid: blockRid})
+        .then((blocks)=>{
+          for (let blockRef of this.$refs.viewBlocks) {
+            //blockRef.blockO = new LookupBlock(this.parlistO.getBlockByRid(blockRef.blockRid));
+            blockRef.$forceUpdate();
+          }
+        })
+        .catch((err)=>{})
       }
     },
-    reCountProxy: function () {
-      this.parCounter = { pref: 0, prefCnt: 0, curr: 1 };
-      this.parlist.forEach((block, idx, arr)=>{
-        block.parnum = setBlockParnum(block, this.parCounter);
-      })
+    bookReimported() {
+      this.$store.commit('clear_storeList');
+      this.$store.commit('clear_storeListO');
+      this.$router.push({
+        name: 'BookEditDisplay', params: {}
+      });
+      this.loadBookMounted();
+      this.setCurrentBookCounters(['not_marked_blocks']);
+      this.loadBookToc({bookId: this.meta._id, isWait: true});
     },
-    handleFootnote: function (ev) {
-      if (ev.target.dataset.idx && this.$refs.footNotes[ev.target.dataset.idx]) {
-        let className = this.$refs.footNotes[ev.target.dataset.idx].className;
-        if (className == '-hidden') {
-          this.$refs.footNotes[ev.target.dataset.idx].className = '';
-        } else this.$refs.footNotes[ev.target.dataset.idx].className = '-hidden';
+    loadBookMounted() {
+      //console.time('loadBookMounted');
+      if (this.$route.params.hasOwnProperty('bookid')) {
+        let bookid = this.$route.params.bookid;
+        if (!this.meta._id || bookid !== this.parlistO.meta.bookid) {
+          this.$store.commit('clear_storeList');
+          this.$store.commit('clear_storeListO');
+          this.loadBook(bookid)
+          .then((meta)=>{
+            //console.log('then meta', meta);
+
+            let startBlock = this.$route.params.block || false;
+            this.startId = startBlock;
+            let taskType = this.$route.params.task_type || false;
+
+
+            return this.loadPartOfBookBlocks({
+              bookId: this.$route.params.bookid,
+              block: startBlock,
+              taskType: taskType
+            }).then((answer)=>{
+              this.parlistO.setLookupsList(answer.meta.bookid, answer);
+              if (this.startId == false) this.startId = this.parlistO.idsArray()[0];
+              this.loopPreparedBlocksChain({ids: this.parlistO.idsArray()})
+              .then((result)=>{
+                //console.log('result', result);
+                if (result.rows && result.rows.length > 0) {
+                  result.rows.forEach((el, idx, arr)=>{
+                    if (!this.parlist.has(el._id)) {
+                      let newBlock = new BookBlock(el);
+                      this.$store.commit('set_storeList', newBlock);
+                      this.parlistO.setLoaded(el._id);
+                    } else {
+                      this.parlistO.setLoaded(el._id);
+                    }
+                  });
+                }
+                for (let blockRef of this.$refs.viewBlocks) {
+                  blockRef.$forceUpdate();
+                }
+                //console.timeEnd('loadBookMounted');
+                this.getAllBlocks(this.parlistO.meta.bookid, startBlock);
+              });
+            });
+          })
+        }
+        else {
+          if (this.$route.params.block && this.$route.params.block!=='unresolved') {
+            this.onScrollEv = true;
+            document.getElementById(this.$route.params.block).scrollIntoView();
+            //console.timeEnd('loadBookMounted');
+          }
+        }
       }
-    },
-    blockOutPaddings: function (block) {
-//       let match = block.getClass().match(/out[^\s]*/ig);
-//       return (match && match.length) ? match.join(' ') : '';
-      return (block.classes && block.classes.hasOwnProperty('outsize-padding')) ? block.classes['outsize-padding'] : ''
-    },
+    }
+  },
+  mounted: function() {
+      //console.log('mounted');
+      this.loadBookMounted();
+      this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
+      this.$root.$on('book-reimported', this.bookReimported);
+  },
+  beforeDestroy:  function() {
+    this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
+    this.$root.$off('book-reimported', this.bookReimported);
+  },
+  watch: {
+    '$route' (toRoute, fromRoute) {
+      //console.log('$route', toRoute, fromRoute, this.onScrollEv);
+      if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
+        if (toRoute.params.block !== 'unresolved') {
+          document.getElementById(toRoute.params.block).scrollIntoView();
+        } else {
+          //TODO add method to find unresolved
+          this.onScrollEv = true;
+          this.$router.push({
+            name: 'BookEditDisplay',
+            params: { }
+          });
+        }
+      }
+      else this.onScrollEv = false;
+    }
   },
 }
 </script>

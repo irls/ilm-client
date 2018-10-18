@@ -59,7 +59,8 @@ export default {
       hasPasswordResetError: false,
       hasPasswordResetSuccess: false,
       passwordResetError: '',
-      passwordResetSuccess: ''
+      passwordResetSuccess: '',
+      sessionInterval: null
     }
   },
 
@@ -78,8 +79,39 @@ export default {
     superlogin.removeAllListeners('login');
     // login event
     superlogin.once('login', (session) => {
-      //console.log('login event');
+      if (session && session.expires) {
+        if (this.sessionInterval) {
+          clearInterval(this.sessionInterval);
+        }
+        let interval = (session.expires - Date.now()) / 2;
+        if ((session.expires - Date.now()) / 2 < 0 || interval < 30000) {
+          superlogin.refresh();
+        }
+        if (interval < 30000) {
+          interval = 30000;
+        }
+        if (interval > 1000 * 60 * 60 * 3) {// 3 hours
+          interval = 1000 * 60 * 60 * 3;
+        }
+        this.sessionInterval = setInterval(() => {
+          //console.log(session.token, session.password)
+          //console.log(this.$store.state.auth.getSession())
+          superlogin.refresh()
+            .then(() => {})
+            .catch(err => {
+              superlogin.logout()
+                .then(() => {
+                  location.href = '/';
+                })
+                .catch(() => {
+                  location.href = '/';
+                });
+            });
+        }, interval);
+        //console.log('SET INTERVAL TO', interval)
+      }
       if (session.token) {
+        //console.log(session.token, session.password, session)
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
         this.connectDB(session);
       }
@@ -87,7 +119,10 @@ export default {
 
     // logout event
     superlogin.on('logout', (message) => {
-      console.log('logout?');
+      //console.log('logout?');
+      if (this.sessionInterval) {
+        clearInterval(this.sessionInterval);
+      }
       this.disconnectDB();
       location.href = '/';
     })

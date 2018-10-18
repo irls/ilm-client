@@ -1,40 +1,9 @@
 <template>
-<div class="table-body -block" v-bind:class="['-mode-' + mode, blockOutPaddings]" :id="block._id">
+<div class="table-body -block" ref="viewBlock" v-bind:class="['-mode-' + mode, blockOutPaddings]" :id="block._id">
     <div v-if="isLocked" class="locked-block-cover"></div>
-    <div :class="['table-cell', 'controls-left', {'_-check-green': block.checked==true}]">
-        <div class="table-row parnum-row" v-if="meta.numeration !== 'none'">
+    <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
 
-          <template v-if="block.secnum!==false">
-            <span v-if="block.secHide===false" :class="['parnum', '-hidden-hover']">{{block.secnum.toString().length?block.secnum:block.parnum}}</span>
-          </template>
-
-          <template v-else >
-            <span v-if="block.parnum && block.parnum!==false" :class="['parnum', {'-hidden': block.secHide===true }]">{{block.parnum}}</span>
-          </template>
-
-          <!--<template v-if="block.secHide===false">
-            <span v-if="block.secnum!==false" :class="['parnum', '-hidden-hover']">{{block.secnum}}</span>
-            <span v-if="block.secnum===''" :class="['parnum', '-hidden-hover', '-auto']">{{block.parnum}}</span>
-          </template>-->
-
-          <input v-if="block.secnum!==false"
-            :class="['secnum', '-hidden-block']"
-            v-model="block.secnum" @input="setSecnumVal"
-            type="text" maxlength="3" size="3"/>
-
-        </div>
         <div class="table-row" v-if="meta.numeration !== 'none'">
-            <!-- <div class='par-ctrl -hidden'>
-                <i v-if="block.secnum!==false"
-                  class="fa fa-paragraph"
-                  :class="{'-active': block.secHide===false}"
-                  @click="setSecnumHidden"></i>
-
-                <i v-else
-                  class="fa fa-paragraph"
-                  :class="{'-active': block.parnum!==false}"
-                  @click="setParnum"></i>
-            </div> -->
             <div v-if="false" class='par-ctrl -hidden'>
                 <i class="glyphicon glyphicon-volume-up"></i>
                 <i class="glyphicon glyphicon-volume-off"></i>
@@ -44,10 +13,10 @@
 
           <div class="set-range">
             <i class="fa fa-square-o -hidden" aria-hidden="true"
-            v-if="block.checked === false"
+            v-if="isChecked === false"
             v-on:click="$event.target.checked = true; setRangeSelection('byOne', $event)"></i>
             <i class="fa fa-check-square-o" aria-hidden="true"
-            v-if="block.checked === true"
+            v-if="isChecked === true"
             v-on:click="setRangeSelection('byOne', false)"></i>
 
             <template v-if="selectionStart && selectionStart !== selectionEnd">
@@ -96,138 +65,164 @@
         <div :class="['table-body', '-content', {'editing': isAudioEditing}]"
         @mouseleave="onBlur"
         @click="onBlur">
-            <div class="table-row controls-top"><!--:data-json="JSON.stringify(block)"-->
+            <div class="table-row-flex controls-top">
+              <div v-if="isNumbered" class="par-ctrl -par-num -hidden-hover">
+                <!--<i class="fa fa-hashtag"></i>-->
+                <label ref="parnumRef" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
+              </div>
+              <div class="par-ctrl -hidden">
+                <div class="block-menu">
+                  <i class="glyphicon glyphicon-menu-hamburger"
+                  @click.prevent="$refs.blockMenu.open($event, block._id)">
+                  </i><!-- {{changes}} -->
+                  <block-menu
+                      ref="blockMenu"
+                      dir="top"
+                      :update="update"
+                      @click.stop>
 
-              <div class="par-ctrl -hidden -left">
-                  <div class="block-menu">
-                    <i class="glyphicon glyphicon-menu-hamburger"
-                    @click.prevent="$refs.blockMenu.open($event, block._id)">
-                    </i><!-- {{changes}} -->
-                    <block-menu
-                        ref="blockMenu"
-                        dir="top"
-                        :update="update"
-                        @click.stop>
+                    <li v-if="isHideArchFlags"
+                      @click.prevent="toggleArchFlags()">
+                      <i class="fa fa-eye" aria-hidden="true"></i>
+                      Show archived flags</li>
+                    <li v-else
+                      @click.prevent="toggleArchFlags()">
+                      <i class="fa fa-eye-slash" aria-hidden="true"></i>
+                      Hide archived flags</li>
 
-                      <li v-if="isHideArchFlags"
-                        @click.prevent="toggleArchFlags()">
-                        <i class="fa fa-eye" aria-hidden="true"></i>
-                        Show archived flags</li>
-                      <li v-else
-                        @click.prevent="toggleArchFlags()">
-                        <i class="fa fa-eye-slash" aria-hidden="true"></i>
-                        Hide archived flags</li>
-
+                    <li class="separator"></li>
+                    <template v-if="allowEditing">
+                      <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
+                        <i class="fa fa-angle-up" aria-hidden="true"></i>
+                        Insert block before</li>
+                      <li v-else class="disabled">
+                        <i class="fa menu-preloader" aria-hidden="true"></i>
+                        Insert block before</li>
+                      <li v-if="!isBlocked" @click="insertBlockAfter()">
+                        <i class="fa fa-angle-down" aria-hidden="true"></i>
+                        Insert block after</li>
+                      <li v-else class="disabled">
+                        <i class="fa menu-preloader" aria-hidden="true"></i>
+                        Insert block after</li>
+                      <li v-if="!isBlockLocked(prevId)" @click="showModal('delete-block-message')">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                        Delete block</li>
+                      <li v-else class="disabled">
+                        <i class="fa menu-preloader" aria-hidden="true"></i>
+                        Delete block</li>
+                      <!--<li>Split block</li>-->
+                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(prevId)" @click="joinWithPrevious()">
+                        <i class="fa fa-angle-double-up" aria-hidden="true"></i>
+                        Join with previous block</li>
+                      <li v-else class="disabled">
+                        <i class="fa menu-preloader" aria-hidden="true"></i>
+                        Join with previous block</li>
+                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(block.chainid)" @click="joinWithNext()">
+                        <i class="fa fa-angle-double-down" aria-hidden="true"></i>
+                        Join with next block</li>
+                      <li v-else class="disabled">
+                        <i class="fa menu-preloader" aria-hidden="true"></i>
+                        Join with next block</li>
                       <li class="separator"></li>
-                      <template v-if="allowEditing">
-                        <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
-                          <i class="fa fa-angle-up" aria-hidden="true"></i>
-                          Insert block before</li>
-                        <li v-else class="disabled">
-                          <i class="fa menu-preloader" aria-hidden="true"></i>
-                          Insert block before</li>
-                        <li v-if="!isBlocked" @click="insertBlockAfter()">
-                          <i class="fa fa-angle-down" aria-hidden="true"></i>
-                          Insert block after</li>
-                        <li v-else class="disabled">
-                          <i class="fa menu-preloader" aria-hidden="true"></i>
-                          Insert block after</li>
-                        <li v-if="!isBlockLocked(prevId)" @click="showModal('delete-block-message')">
-                          <i class="fa fa-trash" aria-hidden="true"></i>
-                          Delete block</li>
-                        <li v-else class="disabled">
-                          <i class="fa menu-preloader" aria-hidden="true"></i>
-                          Delete block</li>
-                        <!--<li>Split block</li>-->
-                        <li v-if="!isBlockLocked(block._id) && !isBlockLocked(prevId)" @click="joinWithPrevious()">
-                          <i class="fa fa-angle-double-up" aria-hidden="true"></i>
-                          Join with previous block</li>
-                        <li v-else class="disabled">
-                          <i class="fa menu-preloader" aria-hidden="true"></i>
-                          Join with previous block</li>
-                        <li v-if="!isBlockLocked(block._id) && !isBlockLocked(block.chainid)" @click="joinWithNext()">
-                          <i class="fa fa-angle-double-down" aria-hidden="true"></i>
-                          Join with next block</li>
-                        <li v-else class="disabled">
-                          <i class="fa menu-preloader" aria-hidden="true"></i>
-                          Join with next block</li>
-                        <li class="separator"></li>
-                        <template v-if="block.type != 'illustration' && block.type != 'hr'">
-                        <li @click="showModal('block-html')">
-                          <i class="fa fa-code" aria-hidden="true"></i>
-                          Edit HTML</li>
-                        <li class="separator"></li>
-                        </template>
+                      <template v-if="block.type != 'illustration' && block.type != 'hr'">
+                      <li @click="showModal('block-html')">
+                        <i class="fa fa-code" aria-hidden="true"></i>
+                        Edit HTML</li>
+                      <li class="separator"></li>
                       </template>
-                      <li @click="discardAudio" v-if="allowAudioRevert">
-                        <i class="fa fa-cloud-download" aria-hidden="true"></i>
-                        Revert to original audio</li>
-                    </block-menu>
+                    </template>
+                    <li @click="discardAudio" v-if="allowAudioRevert">
+                      <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                      Revert to original audio</li>
+                  </block-menu>
+                </div>
+                <!--<div class="block-menu">-->
+                <div class="par-ctrl-divider"></div>
+
+                <!--<i class="fa fa-trash-o fa-lg"></i>-->
+                <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
+
+                <template v-if="allowEditing">
+                  <!--{{blockO.rid}} - {{isNumbered}}-->
+                  <div v-if="isNumbered"
+                    :class="['parnum-row', {'-locked': blockO.isManual==true}]">
+
+                    <input v-if="block.type=='header'"
+                      @input="setNumVal" v-model="blockO.secnum"
+                      class="num" type="text" maxlength="12" size="12"/>
+                    <input v-if="block.type=='par'"
+                      @input="setNumVal" v-model="blockO.parnum"
+                      class="num" type="text" maxlength="12" size="12"/>
+
                   </div>
+                  <!--<div v-else class="parnum-row"></div>-->
+                  <div class="par-ctrl-divider"></div>
+                  <div class="par-ctrl-divider"></div>
 
-                  <!--<i class="fa fa-trash-o fa-lg"></i>-->
-                  <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
+                  <!-- Block Type selector -->
+                  <label>
+                    <select v-model="block.type" @input="setChanged(true, 'type', $event)"><!--v-model='block.type'--><!--:value="type"-->
+                      <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
+                    </select>
+                  </label>
 
-                  <!--<label v-if="block.type=='header'">start:&nbsp;<input type="checkbox"/></label>&nbsp;-->
-                  <template v-if="allowEditing">
-                    <!-- Block Type selector -->
+                  <div class="par-ctrl-divider"></div>
+
+                  <template v-if="allowVoiceworkChange()">
+                    <i class="fa fa-volume-off"></i>
+                    <div class="par-ctrl-divider"></div>
                     <label>
-                      <select v-model="block.type" style="min-width: 80px;" @input="setChanged(true, 'type', $event)"><!--v-model='block.type'--><!--:value="type"-->
-                        <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
-                      </select>
-                    </label>
-
-                    <template v-if="allowVoiceworkChange()">
-                      <label>
-                        <i class="fa fa-volume-off"></i>&nbsp;
-                      <select v-model='voiceworkSel' style="min-width: 100px;">
+                      <select v-model='voiceworkSel'>
                         <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
-                      </label>
+                    </label>
+                  </template>
+                  <template v-else>
+                    <i class="fa fa-volume-off"></i>
+                    <div class="par-ctrl-divider"></div>
+                    <label>
+                      <span>{{blockVoiceworks[block.voicework]}}</span>
+                    </label>
+                  </template>
+                </template>
+                <template v-else >
+
+                </template>
+              </div>
+              <!--<div class="par-ctrl -hidden">-->
+              <div class="par-ctrl -audio -hidden"> <!---->
+                <template v-if="player && blockAudio.src && !isRecording">
+                    <template v-if="!isAudStarted">
+                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating"></i>
+                      <i class="fa fa-play-circle-o"
+                        @click="audPlay(block._id, $event)"></i>
+                      <i class="fa fa-stop-circle-o disabled"></i>
                     </template>
                     <template v-else>
-                      <label>
-                        <i class="fa fa-volume-off"></i>&nbsp;<span>{{blockVoiceworks[block.voicework]}}</span>
-                      </label>
+                      <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
+                        @click="audPause(block._id, $event)"></i>
+                      <i class="fa fa-play-circle-o paused" v-else
+                        @click="audResume(block._id, $event)"></i>
+                      <i class="fa fa-stop-circle-o"
+                        @click="audStop(block._id, $event)"></i>
+                      <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
                     </template>
-                  </template>
+                </template>
               </div>
-              <!--<div class="-hidden">-->
-
-              <div class="par-ctrl -audio -hidden -right" v-if="mode !== 'narrate'">
-                  <template v-if="player && blockAudio.src && !isRecording">
-                      <template v-if="!isAudStarted">
-                        <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating"></i>
-                        <i class="fa fa-play-circle-o"
-                          @click="audPlay(block._id, $event)"></i>
-                        <i class="fa fa-stop-circle-o disabled"></i>
-                      </template>
-                      <template v-else>
-                        <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
-                          @click="audPause(block._id, $event)"></i>
-                        <i class="fa fa-play-circle-o paused" v-else
-                          @click="audResume(block._id, $event)"></i>
-                        <i class="fa fa-stop-circle-o"
-                          @click="audStop(block._id, $event)"></i>
-                        <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
-                      </template>
-                  </template>
-
-              </div>
-              <!--<div class="-hidden">-->
-
+              <!--<div class="par-ctrl -hidden">-->
             </div>
             <!--<div class="table-row controls-top">-->
+
             <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div>
             <div :class="['table-row ilm-block', block.markedAsDone && !hasChanges ? '-marked':'']">
                 <hr v-if="block.type=='hr'"
-                  :class="[block.getClass(), {'checked': block.checked}]"
+                  :class="[block.getClass(), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
 
                 <div v-else-if="block.type == 'illustration'"
-                :class="['table-body illustration-block', {'checked': block.checked}]"
+                :class="['table-body illustration-block', {'checked': blockO.checked}]"
                 @click="onClick($event)">
                   <img v-if="block.illustration" :src="block.getIllustration()"
                   :height="block.illustration_height"
@@ -265,7 +260,7 @@
                 v-html="mode === 'narrate' ? blockContent : block.content"
                 :class="[ block.getClass(), {
                   'updated': isUpdated,
-                  'checked': block.checked,
+                  'checked': blockO.checked,
                   'playing': blockAudio.src,
                   'hide-archive': isHideArchFlags
                 }]"
@@ -513,6 +508,9 @@
                   <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
                     @click.prevent="markBlock">
                     Approve</div>
+                  <div :class="['save-block', '-right', {'-disabled': isSpotCheckDisabled }]" @click.prevent="spotCheck">
+                    Spot check
+                  </div>
 
                   </template>
               </div>
@@ -674,12 +672,34 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'putBlock', 'putBlockPart', 'getBlock', 'reCount', 'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'approveWaiting'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'approveWaiting'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
         return this.block ? this.isBlockLocked(this.block._id) : false;
       },
+      isChecked: { cache: false,
+      get: function () {
+        return (this.blockO && this.blockO.checked === true);
+      }},
+      parnumComp: { cache: false,
+      get: function () {
+          if (this.blockO.type == 'header' && this.blockO.isNumber && !this.blockO.isHidden) {
+            return this.blockO.secnum;
+          }
+          if (this.blockO.type == 'par' && this.blockO.isNumber && !this.blockO.isHidden) {
+            return this.blockO.parnum;
+          }
+          return '';
+      }},
+      isNumbered: { cache: false,
+      get: function () {
+        if (this.block.type == 'par' && this.blockO.isNumber == true) return true;
+        if (this.block.type == 'header' && this.blockO.isNumber == true) return true;
+        //if (this.block.type == 'par' && this.block.parnum !== false) return true;
+        //if (this.block.type == 'header' && this.block.secnum !== false) return true;
+        return false;
+      }},
       blockClasses: function () {
           return this.blockTypes[this.block.type];
       },
@@ -721,12 +741,11 @@ export default {
           'no_audio': 'No audio'
         }
       },
-      voiceworkSel: {
+      voiceworkSel: { cache: false,
         get() {
           return this.block.voicework;
         },
         set(val) {
-          //console.log('voiceworkSel set', val);
           if (val && val !== this.block.voicework) {
             if (this._is('editor', true)) {
               this.voiceworkChange = val;
@@ -740,7 +759,7 @@ export default {
           }
         }
       },
-      footnVoiceworkSel: {
+      footnVoiceworkSel: { cache: false,
         get() {
           return 'ttn';
         },
@@ -769,49 +788,55 @@ export default {
 
           return flagsSummary.stat !== 'open';
       },
-      enableMarkAsDone: function() {
-        if (this.tc_getBlockTask(this.block._id)) {
-          return false;
-        }
-        return this._is('editor', true) && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
-      },
-      markAsDoneButtonDisabled: function() {
-        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
-          return true;
-        }
-        let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
-        if (this.block.footnotes) {
-          this.block.footnotes.forEach(f => {
-            if (f.voicework === 'tts' && !f.audiosrc) {
-              disable_audio = true;
-            }
-          });
-        }
-        return this.block.markedAsDone ||
-                (this.block.status && this.block.status.proofed === true) ||
-                disable_audio;
-      },
-      isApproveDisabled: function () {
-        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.isRecording || this.isUpdating) {
-          return true;
-        }
-        let flags_summary = this.block.calcFlagsSummary();
-          if (this.isCanApproveWithoutTask) {
-            if (flags_summary.stat === 'open') {
-              return true;
-            } else {
-              return false;
-            }
+      enableMarkAsDone: { cache: false,
+        get() {
+          if (this.tc_getBlockTask(this.block._id)) {
+            return false;
           }
-          if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
-          if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1) return false;
-          if (this._is('editor', true) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
-          if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
-          if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
-          if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
+          return this._is('editor', true) && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
+        }
+      },
+      markAsDoneButtonDisabled: { cache: false,
+        get() {
+          if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
             return true;
           }
-          return false;
+          let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
+          if (this.block.footnotes) {
+            this.block.footnotes.forEach(f => {
+              if (f.voicework === 'tts' && !f.audiosrc) {
+                disable_audio = true;
+              }
+            });
+          }
+          return this.block.markedAsDone ||
+                  (this.block.status && this.block.status.proofed === true) ||
+                  disable_audio;
+        }
+      },
+      isApproveDisabled: { cache: false,
+        get() {
+          if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.isRecording || this.isUpdating) {
+            return true;
+          }
+          let flags_summary = this.block.calcFlagsSummary();
+            if (this.isCanApproveWithoutTask) {
+              if (flags_summary.stat === 'open') {
+                return true;
+              } else {
+                return false;
+              }
+            }
+            if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
+            if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1) return false;
+            if (this._is('editor', true) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
+            if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
+            if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
+            if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
+              return true;
+            }
+            return false;
+        }
       },
       isCanApproveWithoutTask: function() {
         if (this._is('editor', true)) {
@@ -820,7 +845,23 @@ export default {
         }
         return false;
       },
-      isCompleted: function () {
+      isSpotCheckDisabled: function() {
+        if (!this.block.audiosrc || !this._is('editor', true) || this.mode != 'edit') {
+          return true;
+        }
+        if (this.isAudioChanged) {
+          return false;
+        }
+        if (this.tc_getBlockTask(this.block._id)) {
+          return false;
+        }
+        if ((this.tc_hasTask('content_cleanup') || (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')) && !this.block.markedAsDone) {
+          return false;
+        }
+        return true;
+      },
+      isCompleted: { cache: false,
+        get() {
           if (this._is('editor', true) && (
                   this.tc_hasTask('content_cleanup') ||
                   (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')
@@ -837,6 +878,7 @@ export default {
             }
           }
           return this.tc_getBlockTask(this.block._id) ? false : true;
+        }
       },
       displaySelectionStart() {
         return this.blockSelection.end._id == this.block._id ? this.blockSelection.start._id : false;
@@ -860,7 +902,7 @@ export default {
         }
         return false;
       },
-      hasChanges: {
+      hasChanges: { cache: false,
         get() {
           return this.isChanged || this.isIllustrationChanged || this.isAudioChanged;
         }
@@ -876,7 +918,8 @@ export default {
           isBlocked: 'isBlocked',
           blockSelection: 'blockSelection',
           isBlockLocked: 'isBlockLocked',
-          lockedBlocks: 'lockedBlocks'
+          lockedBlocks: 'lockedBlocks',
+          storeListO: 'storeListO'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
@@ -967,6 +1010,8 @@ export default {
       this.isChanged = this.block.isChanged;
       this.isAudioChanged = this.block.isAudioChanged;
       this.isIllustrationChanged = this.block.isIllustrationChanged;
+      //console.log('mounted isChecked', this.blockO);
+      //this.isChecked = this.blockO.checked;
       //this.detectMissedFlags();
 
       //console.log('mounted', this.block._id);
@@ -998,7 +1043,8 @@ export default {
         'setCurrentBookCounters',
         'addBlockLock',
         'getAlignCount',
-        'recountApprovedInRange'
+        'recountApprovedInRange',
+        'loadBookToc'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1390,10 +1436,40 @@ export default {
           } else if (is_content_changed && this.block.audiosrc) {
             this.doReAlign();
           }
-          this.reCount();
           if (recount_marked) {
             this.setCurrentBookCounters(['not_marked_blocks']);
           }
+
+          this.blockO.status = Object.assign(this.blockO.status, {
+            marked: this.block.markedAsDone,
+            assignee: this.block.status.assignee,
+            proofed: this.block.status.proofed,
+            stage: this.block.status.stage
+          })
+          let upd = {
+            rid: this.blockO.rid,
+            type: this.block.type,
+            status: this.blockO.status,
+          }
+          this.putBlockO(upd).then(()=>{
+            if (this.block.type !== this.blockO.type) {
+              //if (this.block.type == 'header' || this.block.type == 'par') {
+                this.putNumBlockO({
+                  bookId: this.block.bookid,
+                  rid: this.blockO.rid,
+                  type: this.block.type,
+                  secnum: this.blockO.secnum,
+                  parnum: this.blockO.parnum,
+                  isManual: true,
+                }).then((blocks)=>{
+                  //console.log('assembleBlock putNumBlockO', blocks[0]);
+                  this.storeListO.updBlockByRid(this.blockO.rid, {
+                    type: this.block.type
+                  })
+                });
+              //}
+            }
+          });
         });
       },
       clearBlockContent: function(content) {
@@ -1467,6 +1543,12 @@ export default {
           return api.post(api_url, data, {})
             .then(response => {
               if (response.status == 200) {
+
+                if (this.block.markedAsDone != response.data.markedAsDone) {
+                  this.block.markedAsDone = response.data.markedAsDone;
+                  this.setCurrentBookCounters(['not_marked_blocks']);
+                }
+                this.$emit('blockUpdated', this.block._id);
                 if (footnoteIdx === null) {
                   this.block.content = response.data.content;
                   this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
@@ -1478,6 +1560,7 @@ export default {
                   this.isChanged = false;
                   return BPromise.resolve();
                 } else {
+                  this.isAudioChanged = false;
                   this.isChanged = false;
                   let resp_block = response.data;
                   let resp_f = resp_block.footnotes[footnoteIdx];
@@ -1498,12 +1581,14 @@ export default {
 
       reworkBlock: function(ev) {
         if (!this.isNeedWorkDisabled) {
+
           this.actionWithBlock(ev)
         }
       },
 
       approveBlock: function(ev) {
         if (!this.isApproveDisabled) {
+
           this.actionWithBlock(ev);
         }
       },
@@ -1533,7 +1618,7 @@ export default {
             if (this.tc_hasTask('audio_mastering')) {
               this.setCurrentBookCounters(['not_proofed_audio_blocks']);
             }
-            
+
             this.recountApprovedInRange();
             //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
             this.getBloksUntil('unresolved', null, this.block._id)
@@ -1551,14 +1636,14 @@ export default {
           let task = this.tc_getBlockTask(this.block._id);
 
           if (!task) {
-             let other_task = this.tc_getBlockTaskOtherRole(this.block._id);
-             if (other_task) {
-               task = Object.assign({}, other_task);
-             } else {
+            let other_task = this.tc_getBlockTaskOtherRole(this.block._id);
+              if (other_task) {
+                task = Object.assign({}, other_task);
+              } else {
               task = {
-               blockid: this.block._id,
-               bookid: this.block.bookid
-             }
+                blockid: this.block._id,
+                bookid: this.block.bookid
+              }
             }
           }
 
@@ -1581,6 +1666,7 @@ export default {
                 this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
               }
               //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
+              this.recountApprovedInRange();
               this.getBloksUntil('unresolved', true, this.block._id)
             }
           })
@@ -2323,10 +2409,9 @@ export default {
           this.pushChange(type);
           if (this.block) {
             this.block.classes = {};
-            this.block.secnum = false;
-            this.block.parnum = false;
+            //this.block.secnum = false;
+            //this.block.parnum = false;
           }
-          this.reCount();
           this.$root.$emit('from-block-edit:set-style');
           if (type === 'type' && event && event.target) {
             if (event.target.value === 'illustration') {
@@ -2394,7 +2479,6 @@ export default {
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
         Vue.nextTick(() => {
-          console.log('open');
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
           let text = footnote ? footnote.content : this.blockAudio.map;
           let loadBlock = footnoteIdx !== null ? {_id: this.check_id, voicework: footnote ? footnote.voicework : 'tts'} : this.block;
@@ -2649,27 +2733,53 @@ export default {
         formData.append('block', JSON.stringify({'description': this.$refs.blockDescription.innerHTML}));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/image';
-        let self = this;
-        api.post(api_url, formData, {}).then(function(response){
+
+        api.post(api_url, formData, {}).then((response) => {
           if (response.status===200) {
             // hide modal after one second
-            self.$refs.illustrationInput.removeImage();
-            self.$emit('blockUpdated', self.block._id);
+            this.$refs.illustrationInput.removeImage();
+            this.$emit('blockUpdated', this.block._id);
             //let offset = document.getElementById(self.block._id).getBoundingClientRect()
             //window.scrollTo(0, window.pageYOffset + offset.top);
-            self.isIllustrationChanged = false;
-            self.isChanged = false;
-            self.block.isIllustrationChanged = false;
-            self.block.isChanged = false;
-            self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
+            this.isIllustrationChanged = false;
+            this.isChanged = false;
+            this.block.isIllustrationChanged = false;
+            this.block.isChanged = false;
+            this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
             //if (self.editor) {
               //self.editor.destroy();
             //}
-            $('[id="' + self.block._id + '"] .illustration-block')
+            $('[id="' + this.block._id + '"] .illustration-block')
               .removeAttr('contenteditable')
               .removeAttr('data-placeholder');
           } else {
 
+          }
+          if (this.blockO.type !== this.block.type) {
+            this.blockO.status = Object.assign(this.blockO.status, {
+              marked: this.block.markedAsDone,
+              assignee: this.block.status.assignee,
+              proofed: this.block.status.proofed,
+              stage: this.block.status.stage
+            })
+            let upd = {
+              rid: this.blockO.rid,
+              type: this.block.type,
+              status: this.blockO.status
+            }
+            this.putBlockO(upd).then(()=>{
+              this.putNumBlockO({
+                bookId: this.block.bookid,
+                rid: this.blockO.rid,
+                secnum: '',
+                parnum: ''
+              }).then((blocks)=>{
+                console.log('assembleBlock putNumBlockO', blocks[0]);
+                this.storeListO.updBlockByRid(this.blockO.rid, {
+                  type: this.block.type
+                })
+              });
+            });
           }
         }).catch((err) => {
           console.log(err)
@@ -2702,8 +2812,8 @@ export default {
             document.getSelection().removeAllRanges();
           }
         }
-        this.block.checked = checked;
-        this.$emit('setRangeSelection', this.block, type, checked, shiftKey);
+        //this.blockO.checked = checked;
+        this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
       },
       updateVoicework() {
         if (!this.voiceworkChange) {
@@ -2723,6 +2833,7 @@ export default {
               this.getAlignCount();
               response.data.updField = 'voicework';
               this.$root.$emit('bookBlocksUpdates', response.data);
+              this.block.voicework = this.voiceworkChange;
               //this.setCurrentBookBlocksLeft(this.block.bookid);
             }
             this.voiceworkChange = false;
@@ -2735,36 +2846,29 @@ export default {
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
+      setNumVal: _.debounce(function(ev){
+        let val = ev.target.value;
+        //if (val && this.$refs.parnumRef) this.$refs.parnumRef.innerText = val;
+        this.putNumBlockO({
+          bookId: this.block.bookid,
+          rid: this.blockO.rid,
+          type: this.block.type,
+          secnum: this.blockO.secnum,
+          parnum: this.blockO.parnum,
+          isManual: true,
+        }).then((blocks)=>{
+          //console.log('setNumVal then', blocks[0]);
+          if (['header', 'title'].indexOf(this.block.type) !== -1) {
+            this.loadBookToc({bookId: this.block.bookid, isWait: true});
+          }
+        });
+      }, 1000),
 
-      setSecnumVal: _.debounce(function(){
-        this.reCount();
-        this.block.secVal = this.block.secnum;
-        this.block.partUpdate = true;
-        this.putBlock(this.block).then(()=>{});
-      }, 500),
-
-      setSecnum() {
-        if (this.block.secnum === false) {
-          this.block.secnum = this.block.secVal ? this.block.secVal : '';
-        }
-        else {
-          this.block.secVal = this.block.secnum;
-          this.block.secnum = false;
-        }
-        this.reCount();
-        this.block.partUpdate = true;
-        this.putBlock(this.block).then(()=>{});
-      },
       setSecnumHidden() {
         this.block.secHide = !this.block.secHide;
         this.putBlockPart({block: this.block, field: 'secHide'}).then(()=>{});
       },
-      setParnum() {
-        if (this.block.parnum === false) this.block.parnum = ''
-        else this.block.parnum = false;
-        this.reCount();
-        this.putBlockPart({block: this.block, field: 'parnum'}).then(()=>{});
-      },
+
       allowVoiceworkChange() {
         if (this.block.type == 'illustration' || this.block.type == 'hr') {
           return false;
@@ -2886,6 +2990,50 @@ export default {
             });
           }
         }
+      },
+      spotCheck: function() {
+        let length = 3;
+        if (this.player && this.player.audio_element) {
+          let menuHeight = $('div.top-menu-wrapper').height() + $('div.toolbar').height();
+          let blockOffset = $('#' + this.block._id).offset().top;
+          if (menuHeight > blockOffset) {
+            this.$root.$emit('for-bookedit:scroll-to-block', this.block._id);
+          }
+          let w = $('#content-'+this.block._id + ' w[data-map]').last();
+          if (w.length > 0) {
+            w = w[0];
+          }
+          if (!w || !w.dataset || !w.dataset.map) {
+            return;
+          }
+          let map = w.dataset.map.split(',');
+          map[0] = parseInt(map[0]);
+          map[1] = parseInt(map[1]);
+          if (map[0] + map[1] < (2 * length + 1) * 1000) {
+            this.player.playBlock('content-' + this.block._id);
+          } else {
+            //this.player.audio_element.onended = () => {
+              //console.log('ENDED')
+            //};
+
+            this.player.audio_element.onpause = () => {
+              //console.log('PAUSE')
+              let delay = 1000;
+              if (this.player.load_delay) {
+                delay+=this.player.load_delay;
+              }
+              this.$root.$emit('for-bookedit:scroll-to-block-end', this.block._id);
+              setTimeout(() => {
+                this.player.playRange('content-' + this.block._id, map[0] + map[1] - length * 1000, map[0] + map[1]);
+              }, delay);
+
+              //console.log(this.player);
+              this.player.audio_element.onpause = null;
+            };
+            this.player.playRange('content-' + this.block._id, 0, length * 1000);
+          }
+
+        }
       }
   },
   watch: {
@@ -2947,7 +3095,6 @@ export default {
 //         if (this.block) {
 //           this.block.classes = {};
 //         }
-//         this.reCount();
 //         this.$root.$emit('from-block-edit:set-style');
 //       },
       'classSel' (newVal, oldVal) {
@@ -3244,10 +3391,25 @@ export default {
             visibility: hidden;
         }
 
-        &:hover, &.editing {
+        &:hover {
             .-hidden {
                 visibility: visible;
             }
+        }
+        &.editing {
+            .-hidden.-audio {
+                visibility: visible;
+            }
+        }
+
+        .-hidden-hover {
+          display: block;
+        }
+
+        &:hover {
+          .-hidden-hover {
+            display: none;
+          }
         }
     }
 
@@ -3288,8 +3450,9 @@ export default {
     display: table-cell;
 
     &.controls-left {
-        width: 50px;
-        padding-left: 15px;
+        width: 36px;
+        padding-left: 8px;
+        padding-top: 0px;
 
         &.-check-green {
           /*border-left: 6px solid darkgreen;*/
@@ -3533,32 +3696,6 @@ export default {
       }
     }
 
-    .block-menu {
-      display: inline-block;
-      vertical-align: bottom;
-      position: relative;
-      width: 40px;
-      height: 20px;
-      .fa, .glyphicon {
-        margin-right: 5px;
-        &.menu-preloader {
-          background: url(/static/preloader-snake-transparent-small.gif);
-          width: 18px;
-          height: 16px;
-          display: inline-block;
-          background-repeat: no-repeat;
-          text-align: center;
-          background-position: 0 0;
-          background-size: 83%;
-          margin-bottom: -3px;
-          margin-right: -1px;
-        }
-      }
-      .disabled {
-        color: gray;
-      }
-
-    }
     .illustration-block {
       img {
         border: solid grey 2px;
@@ -3576,6 +3713,133 @@ export default {
         outline: none;
         border-color: #9ecaed;
         box-shadow: 0 0 10px #9ecaed;
+      }
+    }
+}
+
+.table-row-flex {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+
+    &.controls-top {
+      width: 100%;
+      height: 26px;
+      position: relative;
+
+      .par-ctrl {
+        width: 440px;
+        /*background: green;*/
+
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-start;
+
+        &.-audio {
+          width: 65px;
+          justify-content: space-between;
+          margin-right: 50px;
+        }
+        &.-par-num {
+          width: 180px;
+
+          label.par-num {
+            padding-left: 12px;
+            position: relative;
+            top: 2px;
+            font-size: 18px;
+            font-style: italic;
+
+            &.has-num:before {
+              content: '\0023';/*'\2116';*/
+              font-size: smaller;
+              padding-right: 10px;
+            }
+            &.hide-from {
+              opacity: 0;
+            }
+          }
+        }
+
+        .par-ctrl-divider {
+          width: 10px;
+        }
+
+        label {
+          display: block;
+          margin-bottom: 0px;
+          padding-left: 4px;
+          line-height: 20px;
+          height: 20px;
+          font-weight: normal;
+        }
+        select {
+          /*border: none;*/
+          border: 1px solid lightgray;
+        }
+
+        .parnum-row {
+          width: 120px;
+          height: 20px;
+          position: relative;
+
+            &.-locked:after {
+              font-family: 'FontAwesome';
+              content: "\f023";
+              color: gray;
+              position: absolute;
+              left: 105px;
+              top: 0px;
+              /*&:hover {
+                content: "\f09c";
+              }*/
+            }
+
+          input.num {
+            width: 120px;
+            height: 20px;
+            padding-left: 3px;
+          }
+        }
+
+        .fa {
+          cursor: default;
+        }
+        .fa-lock, .fa-unlock {
+          height: 16px;
+          line-height: 18px;
+          &.-invisible {
+            color: transparent;
+          }
+        }
+
+        .block-menu {
+          /*display: inline-block;
+          vertical-align: bottom;*/
+          /*position: relative;*/
+          /*width: 40px;*/
+          height: 20px;
+          .fa, .glyphicon {
+            /*margin-right: 5px;*/
+            &.menu-preloader {
+              background: url(/static/preloader-snake-transparent-small.gif);
+              width: 18px;
+              height: 16px;
+              display: inline-block;
+              background-repeat: no-repeat;
+              text-align: center;
+              background-position: 0 0;
+              background-size: 83%;
+              margin-bottom: -3px;
+              margin-right: -1px;
+            }
+          }
+          .disabled {
+            color: gray;
+          }
+
+        }
       }
     }
 }
@@ -3618,7 +3882,7 @@ export default {
     }
     i.fa-volume-off {
         font-size: 27px;
-        margin-right: 5px;
+        /*margin-right: 5px;*/
     }
     label {
       select, span {
@@ -3642,7 +3906,7 @@ export default {
         /*cursor: pointer*/
       }
 
-      w:not([data-map]) {
+      w:not([data-map]), w.alignment-changed {
         background: linear-gradient(
             transparent,
             transparent 30%,
