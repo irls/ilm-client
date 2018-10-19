@@ -1042,16 +1042,17 @@ export default {
       .then((response)=>{
         //this.setBlockSelection({start: {}, end: {}});
         if (response.data) {
-          this.parlistO.setStartId(this.startId);
+
           let newStartId = this.parlistO.delBlock(response.data);
-          this.scrollBarBlocks = this.parlistO.idsArray();
-          this.updateScrollSlider();
           if (newStartId !== this.startId) {
             // in case when first or last block in book was deleted
             this.startId = newStartId;
+            this.parlistO.setStartId(newStartId);
           } //else this.refreshTmpl();
+          this.parlist.delete(block._id);
+          this.scrollBarBlocks = this.parlistO.idsArray();
+          this.updateScrollSlider();
         }
-        this.parlist.delete(block._id);
 
         this.putNumBlockOBatchProxy({bookId: block.bookid});
 
