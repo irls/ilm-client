@@ -115,7 +115,7 @@ export default {
 
     getAllBlocks(metaId, startBlock) {
       //console.time('getAllBlocks');
-      this.loadBookBlocks({bookId: metaId})
+      return this.loadBookBlocks({bookId: metaId})
       .then((answer)=>{
         let scrollId = this.parlistO.idsArray()[0];
         this.parlistO.updateLookupsList(metaId, answer);
@@ -123,6 +123,7 @@ export default {
         Vue.nextTick(()=>{
           document.getElementById(scrollId).scrollIntoView();
         });
+        return Promise.resolve(metaId);
       });
     },
     getBlocks(idsArray) {
@@ -161,9 +162,11 @@ export default {
       this.$router.push({
         name: 'BookEditDisplay', params: {}
       });
-      this.loadBookMounted();
-      this.setCurrentBookCounters(['not_marked_blocks']);
-      this.loadBookToc({bookId: this.meta._id, isWait: true});
+      this.loadBookMounted()
+      .then(()=>{
+        this.setCurrentBookCounters(['not_marked_blocks']);
+        this.loadBookToc({bookId: this.meta._id, isWait: true});
+      })
     },
     loadBookMounted() {
       //console.time('loadBookMounted');
@@ -172,7 +175,7 @@ export default {
         if (!this.meta._id || bookid !== this.parlistO.meta.bookid) {
           this.$store.commit('clear_storeList');
           this.$store.commit('clear_storeListO');
-          this.loadBook(bookid)
+          return this.loadBook(bookid)
           .then((meta)=>{
             //console.log('then meta', meta);
 
@@ -188,7 +191,7 @@ export default {
             }).then((answer)=>{
               this.parlistO.setLookupsList(answer.meta.bookid, answer);
               if (this.startId == false) this.startId = this.parlistO.idsArray()[0];
-              this.loopPreparedBlocksChain({ids: this.parlistO.idsArray()})
+              return this.loopPreparedBlocksChain({ids: this.parlistO.idsArray()})
               .then((result)=>{
                 //console.log('result', result);
                 if (result.rows && result.rows.length > 0) {
@@ -206,7 +209,7 @@ export default {
                   blockRef.$forceUpdate();
                 }
                 //console.timeEnd('loadBookMounted');
-                this.getAllBlocks(this.parlistO.meta.bookid, startBlock);
+                return this.getAllBlocks(this.parlistO.meta.bookid, startBlock);
               });
             });
           })
@@ -214,7 +217,9 @@ export default {
         else {
           if (this.$route.params.block && this.$route.params.block!=='unresolved') {
             this.onScrollEv = true;
-            document.getElementById(this.$route.params.block).scrollIntoView();
+            Vue.nextTick(()=>{
+              document.getElementById(this.$route.params.block).scrollIntoView();
+            });
             //console.timeEnd('loadBookMounted');
           }
         }
@@ -236,7 +241,9 @@ export default {
       //console.log('$route', toRoute, fromRoute, this.onScrollEv);
       if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
         if (toRoute.params.block !== 'unresolved') {
-          document.getElementById(toRoute.params.block).scrollIntoView();
+          Vue.nextTick(()=>{
+            document.getElementById(toRoute.params.block).scrollIntoView();
+          });
         } else {
           //TODO add method to find unresolved
           this.onScrollEv = true;
