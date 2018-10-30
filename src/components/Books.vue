@@ -310,7 +310,7 @@ export default {
 }
 
 .-lang-fa, .-lang-ar {
-    .ilm-block {
+    .ilm-block, .content-wrap-footn {
       direction: rtl;
     }
 }
