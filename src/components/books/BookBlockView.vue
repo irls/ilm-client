@@ -411,6 +411,11 @@
                           <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                         </select>
                         </label>
+                        <label>Language:&nbsp;
+                        <select v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
+                          <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
+                        </select>
+                        </label>
                       </template>
                     </template>
                   </div>
@@ -443,7 +448,7 @@
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}]"
+                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-lang-' + footnote.language]"
                     @input="commitFootnote(ftnIdx, $event)"
                     v-html="footnote.content"
                     :ref="'footnoteContent_' + ftnIdx">
@@ -594,6 +599,7 @@ import BlockContextMenu   from '../generic/BlockContextMenu';
 import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
+import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
@@ -622,6 +628,7 @@ export default {
       classSel: false,
       styleSel: false,
       blockTypes: BlockTypes,
+      languages: Languages,
 
       isUpdated: false,
       isChanged: false,
@@ -740,6 +747,9 @@ export default {
           'tts': 'Text to Speech',
           'no_audio': 'No audio'
         }
+      },
+      footnLanguages: function () {
+        return this.languages;
       },
       voiceworkSel: { cache: false,
         get() {

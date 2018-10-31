@@ -314,4 +314,12 @@ export default {
       direction: rtl;
     }
 }
+
+.content-footnotes {
+    .-lang-fa, .-lang-ar {
+      direction: rtl;
+    }
+}
+
+
 </style>
