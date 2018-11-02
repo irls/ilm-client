@@ -88,7 +88,7 @@ export const store = new Vuex.Store({
     bookFilters: {filter: '', language: '', importStatus: 'staging'},
     editMode: 'Editor',
     allowBookEditMode: false,
-    tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": []},
+    tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
     tc_tasksByBlock: {},
     tc_userTasks: {list: [], total: 0},
     API_URL: process.env.ILM_API + '/api/v1/',
@@ -156,7 +156,7 @@ export const store = new Vuex.Store({
         }
         if (state.tc_userTasks && state.tc_userTasks.list) {
           for (let t_id in state.tc_userTasks.list) {
-            if (state.tc_userTasks.list[t_id].tasks && state.tc_userTasks.list[t_id].tasks.length > 0) {
+            if ((state.tc_userTasks.list[t_id].tasks && state.tc_userTasks.list[t_id].tasks.length > 0) || state.tc_userTasks.list[t_id].is_proofread_unassigned) {
               let exists = books.find(_b => _b._id == state.tc_userTasks.list[t_id].bookid);
               if (!exists) {
                 let b = state.books_meta.find(_b => state.tc_userTasks.list[t_id].bookid == _b._id);
@@ -428,7 +428,7 @@ export const store = new Vuex.Store({
     TASK_LIST_LOADED (state) {
       let tc_userTasks = 0;
       state.tc_tasksByBlock = {};
-      state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": []};
+      state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false};
       for (let jobid in state.tc_userTasks.list) {
         let job = Object.assign({}, state.tc_userTasks.list[jobid])
         tc_userTasks+= job.tasks.length
@@ -475,11 +475,11 @@ export const store = new Vuex.Store({
               state.tc_tasksByBlock[t.blockid].push(t)
             }
           })
-          state.tc_currentBookTasks = {job: job, tasks: job.tasks, assignments: assignments, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : []}
+          state.tc_currentBookTasks = {job: job, tasks: job.tasks, assignments: assignments, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : [], is_proofread_unassigned: job.is_proofread_unassigned ? job.is_proofread_unassigned : false}
         }
       }
       state.tc_userTasks.total = tc_userTasks;
-      state.allowBookEditMode = state.tc_currentBookTasks.tasks.length > 0;
+      state.allowBookEditMode = state.tc_currentBookTasks.tasks.length > 0 || state.tc_currentBookTasks.is_proofread_unassigned;
     },
     PREPARE_BOOK_COLLECTIONS(state) {
       if (state.isAdmin || state.isLibrarian) {
@@ -896,7 +896,7 @@ export const store = new Vuex.Store({
         commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
         commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
-        state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": []};
+        state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false};
 
         if (state.metaDB) state.metaDB.destroy()
         if (state.contentDB) state.contentDB.destroy()
@@ -1661,7 +1661,7 @@ export const store = new Vuex.Store({
     },
 
     tc_setCurrentBookTasks({state}) {
-      state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": []};
+      state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false};
       for (let jobid in state.tc_userTasks.list) {
         let job = state.tc_userTasks.list[jobid]
         if (job.bookid == state.currentBookid) {
@@ -1671,7 +1671,7 @@ export const store = new Vuex.Store({
           if (t.blockid) {
             state.tc_tasksByBlock[t.blockid] = t
           }*/
-          state.tc_currentBookTasks = {job: job, tasks: job.tasks, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : []}
+          state.tc_currentBookTasks = {job: job, tasks: job.tasks, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : [], is_proofread_unassigned: job.is_proofread_unassigned ? job.is_proofread_unassigned : false}
         }
       }
       commit('ALLOW_BOOK_EDIT_MODE', state.tc_currentBookTasks.tasks.length > 0);
