@@ -38,7 +38,7 @@
       <template v-if="job.total > 0">
         <div class="tr">
           <div class="td task-type">
-            <h2><i class="fa fa-book" data-toggle="tooltip" v-bind:title="job.description"></i>&nbsp;{{job.title}}&nbsp;({{job.total}})&nbsp;<i :class="[job.tasksVisible ? 'fa-chevron-up' : 'fa-chevron-down' , 'fa collapsebtn']" aria-hidden="true" @click='job.tasksVisible = !job.tasksVisible'></i></h2>
+            <h2><i class="fa fa-book" data-toggle="tooltip" v-bind:title="job.description"></i>&nbsp;{{job.title}}&nbsp;({{job.total}})<span class="hidden">{{job.bookid}}</span>&nbsp;<i :class="[job.tasksVisible ? 'fa-chevron-up' : 'fa-chevron-down' , 'fa collapsebtn']" aria-hidden="true" @click='job.tasksVisible = !job.tasksVisible'></i></h2>
           </div>
           <!--<div class="td"></div>-->
         </div>

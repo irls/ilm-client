@@ -312,7 +312,7 @@
                       Archive flag</a>
 
                     <a href="#" class="flag-control -right -top"
-                      v-if="_is('proofer', true) && part.status == 'hidden' && !isCompleted"
+                      v-if="_is('proofer', true) && part.status == 'hidden' && (!isCompleted || isProofreadUnassigned())"
                       @click.prevent="unHideFlagPart($event, partIdx)">
                       Unarchive flag</a>
 
@@ -350,12 +350,12 @@
                       Flag for editing also</a>
                     </template>
 
-                    <a v-if="part.status == 'resolved' && !part.collapsed && !isCompleted"
+                    <a v-if="part.status == 'resolved' && !part.collapsed && (!isCompleted ||isProofreadUnassigned())"
                       href="#" class="flag-control"
                       @click.prevent="reopenFlagPart($event, partIdx)">
                       Re-open flag</a>
 
-                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && !isCompleted"
+                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned())"
                       href="#" class="flag-control -left"
                       @click.prevent="resolveFlagPart($event, partIdx)">
                       Resolve flag</a>
@@ -489,7 +489,7 @@
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
                   <div class="save-block -right" @click="discardBlock"
-                       v-bind:class="{'-disabled': !(allowEditing && hasChanges) || isAudioEditing}">
+                       v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
                     Discard
                   </div>
                   <div class="save-block -right"
@@ -672,7 +672,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'approveWaiting'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'approveWaiting', 'createBlockSubtask'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -784,7 +784,15 @@ export default {
           }
           let flagsSummary = this.block.calcFlagsSummary();
           let executors = this.tc_currentBookTasks.job.executors;
-          if (executors[flagsSummary.dir] ==  this.auth.getSession().user_id) return true;
+          if (executors[flagsSummary.dir] ==  this.auth.getSession().user_id) {
+            if (this._is('proofer', true) && 
+                    (this.tc_hasBlockTask(this.block._id, 'approve-block') || this.tc_hasBlockTask(this.block._id, 'approve-revoked-block')) && 
+                    flagsSummary.stat === 'open') {// if flag assigned to proofer - user has two roles
+              return false;
+            } else {
+              return true;
+            }
+          }
 
           return flagsSummary.stat !== 'open';
       },
@@ -830,6 +838,7 @@ export default {
             if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
             if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1) return false;
             if (this._is('editor', true) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
+            if (this._is('proofer', true) && this.tc_hasBlockTask(this.block._id, 'approve-revoked-block') && flags_summary.stat !== 'open') return false;
             if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
             if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
             if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
@@ -1048,6 +1057,9 @@ export default {
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
+        if (this.isProofreadUnassigned()) {
+          return true;
+        }
         if (!this.tc_getBlockTask(this.block._id)) {
           return false;
         }
@@ -1070,6 +1082,25 @@ export default {
         }
 
         return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
+      },
+      isProofreadUnassigned: function() {
+        if (this._is('proofer', true)) {
+          if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned()) {
+            return true;
+          }
+          if (this.block.flags && this.block.flags.length) {
+            let result = this.block.flags.find(f => {
+              
+              if (f.creator === this.auth.getSession().user_id && f.parts && f.parts.length > 0) {
+                return f.parts.find(p => p.status === 'open');
+              } else {
+                return false;
+              }
+            });
+            return result;
+          }
+        }
+        return false;
       },
       //-- } -- end -- Checkers --//
 
@@ -1267,6 +1298,9 @@ export default {
             this.$refs.blockContent.innerHTML = block.content;
             this.$refs.blockContent.focus();
           }
+          if (this.$refs.blockFlagPopup) {
+            this.$refs.blockFlagPopup.close();
+          }
           this.block.footnotes = block.footnotes ? block.footnotes : [];
           this.block.footnotes.forEach((ftn, ftnIdx) => {
             let ref = this.$refs['footnoteContent_' + ftnIdx];
@@ -1415,8 +1449,15 @@ export default {
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
         return this.putBlock(this.block).then(()=>{
-          if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1)) {
-            this.$emit('blockUpdated', this.block._id);
+          if (!this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') && 
+                  !this.tc_getBlockTask(this.block._id)) {
+            if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) && 
+                    this._is('editor', true)) {
+              this.createBlockSubtask(this.block._id, 'approve-modified-block', 'editor');
+            } else if (!this.tc_getBlockTask(this.block._id) && 
+                    this.changes.indexOf('flags') !== -1 && this._is('proofer', true)) {
+              this.createBlockSubtask(this.block._id, 'approve-revoked-block', 'proofer');
+            }
           }
           let is_content_changed = this.hasChange('content');
           this.isChanged = false;
@@ -2055,9 +2096,10 @@ export default {
 
       canDeleteFlagPart: function (flagPart) {
           let result = false;
-          if (!this.isCompleted && flagPart.creator === this.auth.getSession().user_id) {
+          let isProofreadUnassigned = this.isProofreadUnassigned();
+          if ((!this.isCompleted || isProofreadUnassigned) && flagPart.creator === this.auth.getSession().user_id) {
             result = true;
-            if (flagPart.comments.length) flagPart.comments.forEach((comment)=>{
+            if (flagPart.comments.length && !isProofreadUnassigned) flagPart.comments.forEach((comment)=>{
               if (comment.creator !== flagPart.creator) result = false;
             });
           }

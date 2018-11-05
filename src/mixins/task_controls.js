@@ -80,6 +80,9 @@ export default {
         return this.$store.state.tc_tasksByBlock[blockid].find(t => {
           return ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block'].indexOf(t.type) !== -1;
         });
+      },
+      tc_isProofreadUnassigned() {
+        return this.$store.state.tc_currentBookTasks.is_proofread_unassigned;
       }
     },
     computed: {

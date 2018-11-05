@@ -35,6 +35,7 @@
               :prevId="parlistO.getInId(viewObj.blockRid)"
               :mode="mode"
               :approveWaiting="approveWaiting"
+              :createBlockSubtask="createBlockSubtask"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
@@ -1015,10 +1016,12 @@ export default {
     },
     blockUpdated(blockid) {
       if (this._is('editor', true) && !this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') && !this.tc_getBlockTask(blockid)) {
-        this._createBlockSubtask(blockid, 'approve-modified-block', 'editor');
+        this.createBlockSubtask(blockid, 'approve-modified-block', 'editor');
+      } else if (this._is('proofer', true) && !this.tc_getBlockTask(blockid) && !this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering')) {
+        this.createBlockSubtask(blockid, 'approve-revoked-block', 'proofer');
       }
     },
-    _createBlockSubtask(blockid, type, executor) {
+    createBlockSubtask(blockid, type, executor) {
       axios.post(this.API_URL + 'task/subtask_by_book', {
         bookid: this.meta._id,
         params: {
@@ -1028,7 +1031,7 @@ export default {
         }
       })
         .then((response) => {
-
+          this.tc_loadBookTask();
         })
         .catch((err) => {})
     },
