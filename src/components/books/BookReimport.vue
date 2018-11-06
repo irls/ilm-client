@@ -1,13 +1,10 @@
 <template>
-  <transition name="modal">
-    <div class="modal-mask" @click="$emit('close_modal')">
-      <div class="modal-wrapper">
-        <div class="modal-container" @click="$event.stopPropagation()">
-
+  <modal name="book-reimport" :resizeable="false" :clickToClose="false" height="auto" width="500px">
+      
           <div class="modal-header">
             <div class="header-title">
               <img src='/static/bookstack.svg' class='book-logo'> <h3 class="header-h">Re-Import Book</h3>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')" v-if="!isUploading">
                 <i class="fa fa-times-circle-o" aria-hidden="true"></i>
               </button>
             </div>
@@ -15,25 +12,8 @@
           <div class="modal-body clearfix">
 
             <div class="col-sm-12">
-              <!--<div class="col-sm-5">
-                <div class="form-group">
-                  <label for="booktype">Book Type:</label>
-
-                  <select :class="['form-control', {'alert alert-warning': errors.bookType}]" id="booktype" v-model="bookType" @change="validate">
-                    <option v-for='(type, index) in bookTypes' v-bind:value="index">{{type}}</option>
-                  </select>
-                  <span v-if="errors.bookType" class="alert alert-warning">{{errors.bookType}}</span>
-
-                </div>
-              </div>-->
-              <!-- <div class="col-sm-7">
-                <div class="input-group">
-                  <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                  <input type="text" class="form-control" placeholder="URL" v-model="bookURL"/>
-                </div>
-              </div> -->
               <div class="col-sm-12">
-                <!-- or &nbsp;&nbsp;&nbsp; -->
+                
                 <label class='btn btn-default' type="file">
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
@@ -62,25 +42,26 @@
             </div>
 
           </div>
-        </div>
-      </div>
       <alert :value="bookUploadError != false" placement="top" duration="3000" type="danger" width="400px">
         <span class="icon-ok-circled alert-icon-float-left"></span>
 
         <p>{{bookUploadError}}.</p>
       </alert>
-    </div>
-  </transition>
+  </modal>
 </template>
 
 
 <script>
 
   import { alert } from 'vue-strap'
-          import axios from 'axios'
-          import api_config from '../../mixins/api_config.js'
+  import axios from 'axios'
+  import api_config from '../../mixins/api_config.js'
+  import v_modal from 'vue-js-modal';
+  import Vue from 'vue'
+  
+  Vue.use(v_modal, { dialog: true });
 
-          const API_URL = process.env.ILM_API + '/api/v1/'
+  const API_URL = process.env.ILM_API + '/api/v1/'
 
   export default {
     data() {
@@ -112,7 +93,7 @@
       alert
     },
     mounted() {
-
+      this.showModal('book-reimport');
     },
     computed: {
       selectedBookType: function () {
@@ -122,7 +103,7 @@
         //return (!this.bookURL && !this. bookFile);
         //console.log(this.uploadFiles.bookFiles, this.bookURL.length)
 
-        return (this.uploadFile == false)
+        return (this.uploadFile == false || this.isUploading)
       }
     },
     methods: {
@@ -179,6 +160,12 @@
           }, 3000)
         });
 
+      },
+      showModal(name) {
+        this.$modal.show(name);
+      },
+      hideModal(name) {
+        this.$modal.hide(name);
       },
       humanFileSize(bytes, si) {
         var thresh = si ? 1000 : 1024;
