@@ -127,7 +127,9 @@ export const store = new Vuex.Store({
     alignWatch: null,
     audiobookWatch: null,
     selectionXHR: null,
-    partOfBookBlocksXHR: null
+    partOfBookBlocksXHR: null,
+    bookBlocksXHR: null,
+    bookTocXHR: null
   },
 
   getters: {
@@ -952,13 +954,18 @@ export const store = new Vuex.Store({
     },
 
     loadBookBlocks({commit, state, dispatch}, params) {
+      if (state.bookBlocksXHR !== null) {
+        return state.bookBlocksXHR;
+      }
       let skip = params.skip ? `/${params.skip}` : '';
       let url = state.API_URL + `books/blocks/${params.bookId}`;
-      return axios.get(url)
+      state.bookBlocksXHR = axios.get(url)
       .then((response) => {
+        state.bookBlocksXHR = null;
         return response.data;
       })
       .catch(err => err)
+      return state.bookBlocksXHR;
     },
 
     loadPartOfBookBlocks({commit, state, dispatch}, params) {
@@ -1051,21 +1058,24 @@ export const store = new Vuex.Store({
 
     loadBookToc({state, commit, dispatch}, params) {
       if (state.currentBookToc.bookId === params.bookId && !params.isWait) return state.currentBookToc;
-      if (state.blockers.indexOf('loadBookToc') !== -1) {
-        return state.currentBookToc;
+      if (state.bookTocXHR !== null) {
+        return state.bookTocXHR;
       }
       dispatch('freeze', 'loadBookToc');
-      return axios.get(state.API_URL + `books/toc/${params.bookId}` + (params.isWait ? '/wait':''))
+      state.bookTocXHR = axios.get(state.API_URL + `books/toc/${params.bookId}` + (params.isWait ? '/wait':''))
       .then((response) => {
         state.currentBookToc.bookId = params.bookId;
         state.currentBookToc.data = response.data;
         dispatch('unfreeze', 'loadBookToc');
+        state.bookTocXHR = null;
         return response;
       })
       .catch(err => {
         dispatch('unfreeze', 'loadBookToc')
+        state.bookTocXHR = null;
         return err;
       })
+      return state.bookTocXHR;
     },
 
     updateBookVersion({state, dispatch}, update) {
