@@ -197,10 +197,16 @@ export default {
           let key = 'type_'+val.type;
           if (acc.hasOwnProperty(key)) acc[key].count ++;
           else {
-              val.title = this.task_types.tasks.find((s_type) => {
+              
+              let title = this.task_types.tasks.find((s_type) => {
                   return s_type._id == val.type
-              }).title;
-              acc[key] = {count:1, ...val};
+              })
+              if (title) {
+                val.title = title.title;
+                acc[key] = {count:1, ...val};
+              } else {
+                console.log('title is not found: ', val, this.task_types.tasks);
+              }
           }
           return  acc;
         }, {} );
