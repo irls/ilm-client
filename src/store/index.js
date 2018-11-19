@@ -127,7 +127,8 @@ export const store = new Vuex.Store({
     alignWatch: null,
     audiobookWatch: null,
     selectionXHR: null,
-    partOfBookBlocksXHR: null
+    partOfBookBlocksXHR: null,
+    tasksXHR: 0
   },
 
   getters: {
@@ -1647,17 +1648,25 @@ export const store = new Vuex.Store({
 
     tc_loadBookTask({state, commit, dispatch}) {
       //console.log('a1');
-      return axios.get(state.API_URL + 'tasks')
+      state.tasksXHR = Date.now();
+      let start = state.tasksXHR;
+      return axios.get(state.API_URL + 'tasks?start=' + start)
         .then((list) => {
           //console.log('a2');
-          state.tc_tasksByBlock = {}
-          state.tc_userTasks = {list: list.data.rows, total: 0}
-          commit('TASK_LIST_LOADED')
-          commit('PREPARE_BOOK_COLLECTIONS');
-          dispatch('recountApprovedInRange');
-          return list;
+          if (start == state.tasksXHR) {
+            state.tc_tasksByBlock = {}
+            state.tc_userTasks = {list: list.data.rows, total: 0}
+            commit('TASK_LIST_LOADED')
+            commit('PREPARE_BOOK_COLLECTIONS');
+            dispatch('recountApprovedInRange');
+            return list;
+          } else {
+            return Promise.resolve([]);
+          }
         })
-        .catch(err => err)
+        .catch(err => {
+          console.log(err)
+        })
     },
 
     tc_setCurrentBookTasks({state}) {
