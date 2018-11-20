@@ -62,7 +62,7 @@
         </template>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
-        <div :class="['table-body', '-content', {'editing': isAudioEditing}]"
+        <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-lang-' + block.language]"
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
@@ -123,6 +123,12 @@
                       <li v-else class="disabled">
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Join with next block</li>
+                      <li class="separator"></li>
+                      <li @click.prevent="selectLang($event)">
+                          Language: <select v-model='block.language' style="min-width: 100px;" @input="selectLangSubmit(block);">
+                          <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
+                        </select>
+                      </li>
                       <li class="separator"></li>
                       <template v-if="block.type != 'illustration' && block.type != 'hr'">
                       <li @click="showModal('block-html')">
@@ -741,6 +747,9 @@ export default {
           }
         }
         return voiceworks;
+      },
+      blockLanguages: function () {
+        return this.languages;
       },
       footnVoiceworks: function () {
         return {
@@ -2856,6 +2865,16 @@ export default {
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
+      selectLang(event){
+        event.preventDefault();
+        event.cancelBubble = true;
+        return false;
+      },
+      selectLangSubmit(block){
+        this.isChanged = true;
+        this.pushChange('language');
+        this.$refs.blockMenu.close();
+      },
       setNumVal: _.debounce(function(ev){
         let val = ev.target.value;
         //if (val && this.$refs.parnumRef) this.$refs.parnumRef.innerText = val;
@@ -3847,6 +3866,9 @@ export default {
           }
           .disabled {
             color: gray;
+          }
+          select {
+            color: black;
           }
 
         }

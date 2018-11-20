@@ -321,5 +321,26 @@ export default {
     }
 }
 
+.content-footnotes {
+   .-lang-de, 
+   .-lang-da, 
+   .-lang-cy, 
+   .-lang-es, 
+   .-lang-fr, 
+   .-lang-is, 
+   .-lang-it, 
+   .-lang-ko, 
+   .-lang-ja, 
+   .-lang-nb, 
+   .-lang-nl, 
+   .-lang-pl, 
+   .-lang-pt, 
+   .-lang-ro,
+   .-lang-ru,
+   .-lang-sv,
+   .-lang-tr  { direction: ltr; }
+}
+
+
 
 </style>
