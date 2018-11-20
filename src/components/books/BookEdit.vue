@@ -34,7 +34,6 @@
               :allowSetEnd="allowSetEnd"
               :prevId="parlistO.getInId(viewObj.blockRid)"
               :mode="mode"
-              :approveWaiting="approveWaiting"
               :createBlockSubtask="createBlockSubtask"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
@@ -196,8 +195,7 @@ export default {
       isNeedUp: true,
       isNeedDown: true,
       recordingState: '',
-      recordingBlockId: null,
-      approveWaiting: false
+      recordingBlockId: null
 
     }
   },
@@ -1031,7 +1029,7 @@ export default {
         }
       })
         .then((response) => {
-          this.tc_loadBookTask();
+          //this.tc_loadBookTask();
         })
         .catch((err) => {})
     },
@@ -1681,10 +1679,6 @@ export default {
       this.$refs.contentScrollWrapRef.scrollTo(0,0);
     },
 
-    _toggleApproveWaiting(val) {
-      this.approveWaiting = val;
-    },
-
     bookReimported() {
       this.setBlockSelection({start: {}, end: {}});
 
@@ -1789,7 +1783,6 @@ export default {
       this.$root.$on('for-bookedit:scroll-to-block', this.scrollToBlock);
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
-      this.$root.$on('block-approving', this._toggleApproveWaiting);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -1808,7 +1801,6 @@ export default {
     this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
     this.$root.$off('book-reimported', this.bookReimported);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
-    this.$root.$off('block-approving', this._toggleApproveWaiting)
   },
   watch: {
     'meta._id': {

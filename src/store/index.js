@@ -128,7 +128,8 @@ export const store = new Vuex.Store({
     audiobookWatch: null,
     selectionXHR: null,
     partOfBookBlocksXHR: null,
-    tasksXHR: 0
+    tasksXHR: 0,
+    approveBlocksList: []
   },
 
   getters: {
@@ -256,7 +257,8 @@ export const store = new Vuex.Store({
     },
     aligningBlocks: state => state.aligningBlocks,
     currentAudiobook: state => state.currentAudiobook,
-    currentBookToc: state => state.currentBookToc
+    currentBookToc: state => state.currentBookToc,
+    approveBlocksList: state => state.approveBlocksList
   },
 
   mutations: {
@@ -811,8 +813,31 @@ export const store = new Vuex.Store({
         .on('complete', (info) => {
           state.tasksDB.sync(state.tasksRemoteDB, {live: true, retry: true})
           .on('change', (change) => {
-            //console.log('Tasks DB change', change);
-            dispatch('tc_loadBookTask');
+            //console.log('Tasks DB change', change.change.docs);
+            if (change.change && change.change.docs && Array.isArray(change.change.docs)) {
+              let isReload = change.change.docs.filter(d => {
+                //console.log('COMPARE', d, d.executor, state.auth.getSession().user_id);
+                return d.executor === state.auth.getSession().user_id
+              });
+              if (isReload) {
+                //console.log('LOAD')
+                isReload.forEach(task => {
+                  if (!task.time_completed) {
+                    //console.log('PUSH', task)
+                    state.tc_currentBookTasks.tasks.push(task);
+                  } else {
+                    let _t = state.tc_currentBookTasks.tasks.find(t => t._id == task._id);
+                    //console.log('COMPLETED', _t);
+                    if (_t) {
+                      //console.log(state.tc_currentBookTasks.tasks.length);
+                      state.tc_currentBookTasks.tasks.splice(state.tc_currentBookTasks.tasks.indexOf(_t), 1);
+                      //console.log(state.tc_currentBookTasks.tasks.length);
+                    }
+                  }
+                });
+                dispatch('tc_loadBookTask');
+              }
+            }
           })
         });
 
@@ -1687,6 +1712,9 @@ export const store = new Vuex.Store({
     },
 
     tc_approveBookTask({state, commit, dispatch}, task) {
+      if (task.blockid) {
+        state.approveBlocksList.push(task.blockid);
+      }
       return axios.post(state.API_URL + 'task/' + task.blockid + '/approve_block',
       {
         'bookId': task.bookid || false,
@@ -1695,6 +1723,13 @@ export const store = new Vuex.Store({
         'taskType': task.type || false
       })
       .then((list) => {
+        if (task.blockid) {
+          state.approveBlocksList.forEach((_b, i) => {
+            if (_b === task.blockid) {
+              state.approveBlocksList.splice(i, 1);
+            }
+          })
+        }
         //console.log('APPROVE TC', list)
         //state.tc_tasksByBlock = {}
         //state.tc_userTasks = {list: list.data.rows, total: 0}
@@ -1707,7 +1742,7 @@ export const store = new Vuex.Store({
           });
         }
         //state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": []};
-        dispatch('tc_loadBookTask');
+        //dispatch('tc_loadBookTask');
         return Promise.resolve(list);
       })
       .catch(err => err)
