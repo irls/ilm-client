@@ -498,7 +498,7 @@
                     Save
                   </div>
                   <template v-if="!isCompleted">
-                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled}]"
+                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
                     @click.prevent="reworkBlock">
                     Need work</div>
                   <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
@@ -662,7 +662,7 @@ export default {
         start: Number,
         end: Number
       },
-      isApproving: false
+      //isApproving: false
     }
   },
   components: {
@@ -672,7 +672,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'approveWaiting', 'createBlockSubtask'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'createBlockSubtask'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -916,6 +916,17 @@ export default {
           return this.isChanged || this.isIllustrationChanged || this.isAudioChanged;
         }
       },
+      isApproving :{
+        get() {
+          let r = this.approveBlocksList.find(_r => this.block && _r === this.block._id);
+          return r;
+        }
+      },
+      approveWaiting: {
+        get() {
+          return this._is('proofer', true) && this.approveBlocksList.length > 0;
+        }
+      },
       ...mapGetters({
           auth: 'auth',
           book: 'currentBook',
@@ -928,7 +939,8 @@ export default {
           blockSelection: 'blockSelection',
           isBlockLocked: 'isBlockLocked',
           lockedBlocks: 'lockedBlocks',
-          storeListO: 'storeListO'
+          storeListO: 'storeListO',
+          approveBlocksList: 'approveBlocksList'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
@@ -1671,7 +1683,7 @@ export default {
         if (this.approveWaiting) {
           return;
         }
-        this.isApproving = true;
+        //this.isApproving = true;
         this.assembleBlockProxy(ev)
         .then(()=>{
           let task = this.tc_getBlockTask(this.block._id);
@@ -1701,7 +1713,7 @@ export default {
 
           this.tc_approveBookTask(task)
           .then(response => {
-            this.isApproving = false;
+            //this.isApproving = false;
             if (response.status == 200) {
               if (typeof response.data._id !== 'undefined') {
                 this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
@@ -1712,7 +1724,7 @@ export default {
             }
           })
           .catch(err => {
-            this.isApproving = false;
+            //this.isApproving = false;
           });
         });
 
@@ -3328,13 +3340,6 @@ export default {
             } else {
               $('body').off('keypress', this._handleSpacePress);
             }
-          }
-        }
-      },
-      'isApproving': {
-        handler(val) {
-          if (this._is('proofer', true)) {
-            this.$root.$emit('block-approving', val);
           }
         }
       },
