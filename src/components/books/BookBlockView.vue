@@ -62,7 +62,7 @@
         </template>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
-        <div :class="['table-body', '-content', {'editing': isAudioEditing}]"
+        <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-lang-' + block.language]"
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
@@ -123,6 +123,12 @@
                       <li v-else class="disabled">
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Join with next block</li>
+                      <li class="separator"></li>
+                      <li @click.prevent="selectLang($event)">
+                          Language: <select v-model='block.language' style="min-width: 100px;" @input="selectLangSubmit(block);">
+                          <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
+                        </select>
+                      </li>
                       <li class="separator"></li>
                       <template v-if="block.type != 'illustration' && block.type != 'hr'">
                       <li @click="showModal('block-html')">
@@ -411,6 +417,11 @@
                           <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                         </select>
                         </label>
+                        <label>Language:&nbsp;
+                        <select v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
+                          <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
+                        </select>
+                        </label>
                       </template>
                     </template>
                   </div>
@@ -443,7 +454,7 @@
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}]"
+                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-lang-' + footnote.language]"
                     @input="commitFootnote(ftnIdx, $event)"
                     v-html="footnote.content"
                     :ref="'footnoteContent_' + ftnIdx">
@@ -594,6 +605,7 @@ import BlockContextMenu   from '../generic/BlockContextMenu';
 import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
+import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
@@ -622,6 +634,7 @@ export default {
       classSel: false,
       styleSel: false,
       blockTypes: BlockTypes,
+      languages: Languages,
 
       isUpdated: false,
       isChanged: false,
@@ -735,11 +748,17 @@ export default {
         }
         return voiceworks;
       },
+      blockLanguages: function () {
+        return this.languages;
+      },
       footnVoiceworks: function () {
         return {
           'tts': 'Text to Speech',
           'no_audio': 'No audio'
         }
+      },
+      footnLanguages: function () {
+        return this.languages;
       },
       voiceworkSel: { cache: false,
         get() {
@@ -2900,6 +2919,16 @@ export default {
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
+      selectLang(event){
+        event.preventDefault();
+        event.cancelBubble = true;
+        return false;
+      },
+      selectLangSubmit(block){
+        this.isChanged = true;
+        this.pushChange('language');
+        this.$refs.blockMenu.close();
+      },
       setNumVal: _.debounce(function(ev){
         let val = ev.target.value;
         //if (val && this.$refs.parnumRef) this.$refs.parnumRef.innerText = val;
@@ -3884,6 +3913,9 @@ export default {
           }
           .disabled {
             color: gray;
+          }
+          select {
+            color: black;
           }
 
         }

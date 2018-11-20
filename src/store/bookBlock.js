@@ -25,6 +25,7 @@ let defBlock = [
   'illustration_height',
   'description',
   'voicework',
+  'language',
   'markedAsDone',
   'status',
   'audiosrc_ver',
@@ -158,6 +159,7 @@ class BookBlock {
     this.partUpdate = false;
 
     this.markedAsDone = init.markedAsDone || false;
+    this.language = init.language || false;
     this.status = init.status;
     this.audiosrc_ver = init.audiosrc_ver || {};
 

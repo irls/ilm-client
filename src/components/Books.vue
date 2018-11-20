@@ -310,8 +310,37 @@ export default {
 }
 
 .-lang-fa, .-lang-ar {
-    .ilm-block {
+    .ilm-block, .content-wrap-footn {
       direction: rtl;
     }
 }
+
+.content-footnotes {
+    .-lang-fa, .-lang-ar {
+      direction: rtl;
+    }
+}
+
+.content-footnotes {
+   .-lang-de, 
+   .-lang-da, 
+   .-lang-cy, 
+   .-lang-es, 
+   .-lang-fr, 
+   .-lang-is, 
+   .-lang-it, 
+   .-lang-ko, 
+   .-lang-ja, 
+   .-lang-nb, 
+   .-lang-nl, 
+   .-lang-pl, 
+   .-lang-pt, 
+   .-lang-ro,
+   .-lang-ru,
+   .-lang-sv,
+   .-lang-tr  { direction: ltr; }
+}
+
+
+
 </style>
