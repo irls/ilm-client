@@ -1029,7 +1029,7 @@ export default {
         }
       })
         .then((response) => {
-          //this.tc_loadBookTask();
+          this.tc_loadBookTask();
         })
         .catch((err) => {})
     },
