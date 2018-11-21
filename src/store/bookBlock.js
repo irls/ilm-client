@@ -165,6 +165,7 @@ class BookBlock {
 
     this.isUpdated = false;
     this.isChanged = init.isChanged || false;
+    this.changes = init.changes || [];
     this.isAudioChanged = init.isAudioChanged || false;
     this.isIllustrationChanged = init.isIllustrationChanged || false;
 
