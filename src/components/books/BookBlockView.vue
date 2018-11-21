@@ -1074,7 +1074,7 @@ export default {
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
         if (this.isProofreadUnassigned()) {
-          return true;
+          return flagType === 'narrator' ? this.block.voicework === 'narration' : true;
         }
         if (!this.tc_getBlockTask(this.block._id)) {
           return false;
