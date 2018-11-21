@@ -129,7 +129,8 @@ export const store = new Vuex.Store({
     selectionXHR: null,
     partOfBookBlocksXHR: null,
     tasksXHR: 0,
-    approveBlocksList: []
+    approveBlocksList: [],
+    replicatingDB: {}
   },
 
   getters: {
@@ -808,9 +809,11 @@ export const store = new Vuex.Store({
 //               // handle errors
 //             })
 //         });
-
+        state.replicatingDB.ilm_tasks = false;
         state.tasksDB.replicate.from(state.tasksRemoteDB)
         .on('complete', (info) => {
+          state.replicatingDB.ilm_tasks = true;
+          console.log('REPLICATION COMPLETE TASKS')
           state.tasksDB.sync(state.tasksRemoteDB, {live: true, retry: true})
           .on('change', (change) => {
             //console.log('Tasks DB change', change.change.docs);
@@ -1743,8 +1746,13 @@ export const store = new Vuex.Store({
             }
           });
         }
+        if (!state.tc_currentBookTasks.tasks || state.tc_currentBookTasks.tasks.length === 0) {
+          state.tc_currentBookTasks.is_proofread_unassigned = false;
+        }
         //state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": []};
-        //dispatch('tc_loadBookTask');
+        if (state.replicatingDB.ilm_tasks !== true) {
+          dispatch('tc_loadBookTask');
+        }
         return Promise.resolve(list);
       })
       .catch(err => err)
