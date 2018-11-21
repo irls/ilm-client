@@ -1031,6 +1031,10 @@ export default {
       this.isChanged = this.block.isChanged;
       this.isAudioChanged = this.block.isAudioChanged;
       this.isIllustrationChanged = this.block.isIllustrationChanged;
+      if (this.block.changes) {
+        this.changes = this.block.changes;
+        delete this.block.changes;
+      }
       //console.log('mounted isChecked', this.blockO);
       //this.isChecked = this.blockO.checked;
       //this.detectMissedFlags();
@@ -3353,6 +3357,7 @@ export default {
 //      console.log('beforeDestroy', this.block._id);
 //     console.log('this.isChanged', this.isChanged);
     if (this.block && this.isChanged) {
+        this.block.changes = this.changes;
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
