@@ -1123,14 +1123,10 @@ export default {
           if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned()) {
             return true;
           }
-          if (this.block.flags && this.block.flags.length) {
+          if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned()) {
             let result = this.block.flags.find(f => {
               
-              if (f.creator === this.auth.getSession().user_id && f.parts && f.parts.length > 0) {
-                return f.parts.find(p => p.status === 'open');
-              } else {
-                return false;
-              }
+              return f.creator === this.auth.getSession().user_id
             });
             return result;
           }
