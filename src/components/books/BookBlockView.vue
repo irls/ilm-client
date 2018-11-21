@@ -125,6 +125,7 @@
                         Join with next block</li>
                       <li class="separator"></li>
                       <li @click.prevent="selectLang($event)">
+                          <i class="fa fa-language" aria-hidden="true"></i>
                           Language: <select v-model='block.language' style="min-width: 100px;" @input="selectLangSubmit(block);">
                           <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
                         </select>
@@ -412,12 +413,14 @@
                   <div class="table-cell">
                     <template v-if="allowEditing">
                       <template v-if="tc_hasTask('content_cleanup')">
-                        <label>Voicework:&nbsp;
-                        <select v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
-                          <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
-                        </select>
+                        <label>
+                          <i class="fa fa-volume-off"></i>
+                          
+                          <select v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
+                            <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
+                          </select>
                         </label>
-                        <label>Language:&nbsp;
+                        <label><i class="fa fa-language" aria-hidden="true"></i>
                         <select v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
                           <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
                         </select>
