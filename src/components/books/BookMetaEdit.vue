@@ -1113,6 +1113,7 @@ export default {
                 self.textCleanupProcess = false
                 if (!doc.data.error) {
                   self.currentBook.private = false
+                  self.tc_currentBookTasks.assignments.splice(self.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
                   self.$store.dispatch('tc_loadBookTask')
                   self.infoMessage = 'Text cleanup task finished'
                 } else {
