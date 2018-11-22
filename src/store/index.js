@@ -1292,6 +1292,24 @@ export const store = new Vuex.Store({
         });
     },
 
+    getBlocks ({commit, state, dispatch}, blocksIds) {
+      return state.contentRemoteDB
+      .query('filters_byId/byId', {
+          keys: blocksIds,
+          include_docs: true
+      }).then(function (res) {
+          let result = [];
+          res.rows.forEach(b => {
+            if (b.doc.audiosrc) {
+              b.doc.audiosrc = process.env.ILM_API + b.doc.audiosrc;
+            }
+            result.push(b.doc);
+          });
+          return result;
+      })
+      .catch(err => err);
+    },
+
     loadBlocks ({commit, state, dispatch}, params) {
         let skip = params.page * params.onpage;
         if (typeof params.skipOffset !== 'undefined') {
@@ -1348,32 +1366,12 @@ export const store = new Vuex.Store({
     },
 
     loopPreparedBlocksChain ({commit, state, dispatch}, params) {
-      let results = {rows: [], finish: false, blockId: false};
-      return new Promise ((resolve, reject)=>{
-
-        (function loop(i, block_id) {
-
-          if (i <= params.ids.length && block_id) {
-            dispatch('getBlock', block_id)
-            .then((b)=>{
-              if (b && b._id) {
-                results.rows.push(b);
-                loop(i+1, params.ids[i]);
-              } else resolve(results);
-            })
-            .catch((err)=>{
-              results.finish = true;
-              resolve(results);
-            })
-          }
-          else {
-            results.finish = true;
-            resolve(results);
-          }
-        })(0, params.ids[0]); // start
-
+      let results = {rows: []};
+      return dispatch('getBlocks', params.ids)
+      .then((rows)=>{
+        results.rows = rows;
+        return results;
       })
-
     },
 
     searchBlocksChain ({commit, state, dispatch}, params) {
@@ -2171,7 +2169,7 @@ export const store = new Vuex.Store({
         dispatch('getBookAlign');
         state.alignWatch = setInterval(() => {
           dispatch('getBookAlign');
-        }, 10000);
+        }, 15000);
       }
     },
     getBookAlign({state, commit, dispatch}) {
@@ -2236,9 +2234,9 @@ export const store = new Vuex.Store({
       if (state.audiobookWatch) {
         clearInterval(state.audiobookWatch);
       }
-      setInterval(() => {
+      state.audiobookWatch = setInterval(() => {
         dispatch('getAudioBook')
-      }, 10000);
+      }, 15000);
     }
   }
 })

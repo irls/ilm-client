@@ -168,6 +168,7 @@ class BookBlock {
     this.changes = init.changes || [];
     this.isAudioChanged = init.isAudioChanged || false;
     this.isIllustrationChanged = init.isIllustrationChanged || false;
+    this.timestamp = (new Date()).toJSON();
 
 //     this.checkedStart = init.checkedStart || false;
 //     this.checkedEnd = init.checkedEnd || false;
@@ -398,7 +399,7 @@ class BookBlock {
 
   getIllustration() {
     if (this.illustration) {
-      return process.env.ILM_API + this.illustration + '?' + (new Date()).toJSON();
+      return process.env.ILM_API + this.illustration + '?' + this.timestamp;
     }
   }
 

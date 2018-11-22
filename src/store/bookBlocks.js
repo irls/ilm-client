@@ -17,6 +17,7 @@ class LookupBlock {
     this.isManual = block.isManual || false;
     this.isHidden = block.isHidden  || false;
     this.index = block.index || -1;
+    this.visible = false;
     this.loaded = false;
     this.checked = false;
   }
@@ -59,8 +60,12 @@ class BookBlocks {
     return this.listIdsCache.list;
   }
 
-  createViewArray() {
-
+  isInViewArray(blockRid) {
+    let result = false;
+    this.idsViewArray().forEach((viewObj)=>{
+      if (viewObj.blockRid == blockRid) result = true;
+    })
+    return result;
   }
 
   idsArray() {
@@ -148,10 +153,18 @@ class BookBlocks {
   }
 
   setStartId(blockId) {
-    if (this.startId && this.startId == blockId) return;
-    this.startId = blockId;
-    this.startRId = this.getRIdById(blockId);
+    if (!blockId) return false;
+    if (this.startId && this.startId == blockId) return false;
+
+    if (blockId.charAt(0) == '#') { // Orient RID
+      this.f = this.lookupList[blockId].blockid;
+      this.startRId = blockId
+    } else {
+      this.startId = blockId;
+      this.startRId = this.getRIdById(blockId);
+    }
     this.listIdsCache.rid = false;
+    return true;
   }
 
   cleanLookupsList(bookId) {
@@ -256,6 +269,21 @@ class BookBlocks {
     return false;
   }
 
+  get(blockId){
+    if (blockId) {
+      let rid;
+      if (blockId.charAt(0) == '#') { // Orient RID
+        rid = blockId;
+      } else {
+        rid = this.getRIdById(blockId);
+      }
+      if (rid && this.lookupList.hasOwnProperty(rid)) {
+        return this.lookupList[rid];
+      }
+    }
+    return false;
+  }
+
   getBlockByIdx(listIdx){
     let rId = this.listRIds[listIdx];
     return this.lookupList[rId];
@@ -276,9 +304,25 @@ class BookBlocks {
   }
 
   setLoaded(blockId) {
-    let blockRId = this.getRIdById(blockId);
-    //console.log('setLoaded', blockId, blockRId);
-    if (blockRId) this.lookupList[blockRId].loaded = true;
+    let rid;
+    if (blockId.charAt(0) == '#') { // Orient RID
+      rid = blockId;
+    } else {
+      rid = this.getRIdById(blockId);
+    }
+    if (rid) this.lookupList[rid].loaded = true;
+    //console.log('setLoaded', rid, this.lookupList[rid].loaded);
+  }
+
+  setVisible(blockId, val = true) {
+    let rid;
+    if (blockId.charAt(0) == '#') { // Orient RID
+      rid = blockId;
+    } else {
+      rid = this.getRIdById(blockId);
+    }
+    if (rid) this.lookupList[rid].visible = val;
+    //console.log('setVisible', rid, this.lookupList[rid].visible);
   }
 
   setChecked(startRId, endRId = false) {
@@ -323,13 +367,19 @@ class BookBlocks {
   }
 
   getPrevIds(blockId, count) {
+    //console.log('getPrevIds', blockId, count);
     let resultArr = [];
+    if (!blockId || blockId === true) return resultArr;
     if (blockId) {
       let seqRid;
       if (blockId.charAt(0) == '#') { // Orient RID
         seqRid = blockId;
       } else {
         seqRid = this.getRIdById(blockId);
+      }
+      if (seqRid && this.lookupList.hasOwnProperty(seqRid)) {
+        seqRid = this.lookupList[seqRid].in;
+        if (seqRid == this.meta.rid) return resultArr;
       }
       if (seqRid) for (var i=0; i<=count-1; i++) {
         if (this.lookupList.hasOwnProperty(seqRid)) {
@@ -343,13 +393,19 @@ class BookBlocks {
   }
 
   getNextIds(blockId, count) {
+    //console.log('getNextIds', blockId, count);
     let resultArr = [];
+    if (!blockId || blockId === true) return resultArr;
     if (blockId) {
       let seqRid;
       if (blockId.charAt(0) == '#') { // Orient RID
         seqRid = blockId;
       } else {
         seqRid = this.getRIdById(blockId);
+      }
+      if (seqRid && this.lookupList.hasOwnProperty(seqRid)) {
+        seqRid = this.lookupList[seqRid].out;
+        if (seqRid == this.meta.rid) return resultArr;
       }
       if (seqRid) for (var i=0; i<=count-1; i++) {
         if (this.lookupList.hasOwnProperty(seqRid)) {

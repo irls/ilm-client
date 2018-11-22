@@ -1,5 +1,6 @@
 <template>
-<div class="table-body -block" ref="viewBlock" v-bind:class="['-mode-' + mode, blockOutPaddings]" :id="block._id">
+  <div ref="viewBlock" :id="block._id"
+    :class="['table-body -block', '-mode-' + mode, blockOutPaddings]">
     <div v-if="isLocked" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
 
@@ -61,10 +62,12 @@
           </div>
         </template>
     </div>
-    <div class="table-cell" :class="{'completed': isCompleted}" >
+    <!--<div :class="['table-cell', 'controls-left'-->
+
+    <div :class="['table-cell', {'completed': isCompleted}]" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-lang-' + block.language]"
-        @mouseleave="onBlur"
-        @click="onBlur">
+          @mouseleave="onBlur"
+          @click="onBlur">
             <div class="table-row-flex controls-top">
               <div v-if="isNumbered" class="par-ctrl -par-num -hidden-hover">
                 <!--<i class="fa fa-hashtag"></i>-->
@@ -218,11 +221,12 @@
               </div>
               <!--<div class="par-ctrl -hidden">-->
             </div>
-            <!--<div class="table-row controls-top">-->
+            <!--<div class="table-row-flex controls-top">-->
 
             <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div>
+
             <div :class="['table-row ilm-block', block.markedAsDone && !hasChanges ? '-marked':'']">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(), {'checked': blockO.checked}]"
@@ -261,7 +265,7 @@
                 </div>
                 <!--<img v-if="block.illustration"-->
 
-                <div v-else class="content-wrap"
+                <div v-else class="content-wrap -hover -focus"
                 :id="'content-'+block._id"
                 ref="blockContent"
                 v-html="mode === 'narrate' ? blockContent : block.content"
@@ -415,7 +419,7 @@
                       <template v-if="tc_hasTask('content_cleanup')">
                         <label>
                           <i class="fa fa-volume-off"></i>
-                          
+
                           <select v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                             <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                           </select>
@@ -532,7 +536,9 @@
             </div>
             <!--<div class="table-row controls-bottom">-->
         </div>
+        <!--<div :class="['table-body', '-content',-->
     </div>
+    <!--<div :class="['table-cell'-->
     <div class="table-cell controls-right">
     </div>
     <modal :name="'delete-block-message' + block._id" :resizeable="false" :clickToClose="false" height="auto">
@@ -591,7 +597,7 @@
       </div>
     </div>
     </modal>
-</div>
+  </div>
 </template>
 
 <script>
@@ -663,6 +669,7 @@ export default {
       },
 
       reRecordPosition: false,
+      hasContentListeners: false,
       isUpdating: false,
       recordStartCounter: 0,
       voiceworkChange: false,
@@ -807,8 +814,8 @@ export default {
           let flagsSummary = this.block.calcFlagsSummary();
           let executors = this.tc_currentBookTasks.job.executors;
           if (executors[flagsSummary.dir] ==  this.auth.getSession().user_id) {
-            if (this._is('proofer', true) && 
-                    (this.tc_hasBlockTask(this.block._id, 'approve-block') || this.tc_hasBlockTask(this.block._id, 'approve-revoked-block')) && 
+            if (this._is('proofer', true) &&
+                    (this.tc_hasBlockTask(this.block._id, 'approve-block') || this.tc_hasBlockTask(this.block._id, 'approve-revoked-block')) &&
                     flagsSummary.stat === 'open') {// if flag assigned to proofer - user has two roles
               return false;
             } else {
@@ -1128,7 +1135,7 @@ export default {
           }
           if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned()) {
             let result = this.block.flags.find(f => {
-              
+
               return f.creator === this.auth.getSession().user_id
             });
             return result;
@@ -1483,12 +1490,12 @@ export default {
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
         return this.putBlock(this.block).then(()=>{
-          if (!this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') && 
+          if (!this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') &&
                   !this.tc_getBlockTask(this.block._id)) {
-            if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) && 
+            if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) &&
                     this._is('editor', true)) {
               this.createBlockSubtask(this.block._id, 'approve-modified-block', 'editor');
-            } else if (!this.tc_getBlockTask(this.block._id) && 
+            } else if (!this.tc_getBlockTask(this.block._id) &&
                     this.changes.indexOf('flags') !== -1 && this._is('proofer', true)) {
               this.createBlockSubtask(this.block._id, 'approve-revoked-block', 'proofer');
             }
@@ -3044,6 +3051,7 @@ export default {
             }
           }
         }
+        this.hasContentListeners = true;
       },
       _handleSpacePress(e) {
         if (e) {
@@ -3428,6 +3436,11 @@ export default {
 </script>
 
 <style lang='less'>
+
+.row.content-scroll-item.front {
+  /*border-bottom: 1px solid blue;*/
+}
+
 @variable: 90px;
 .ilm-block {
     padding: 0;
@@ -3724,13 +3737,13 @@ export default {
       box-shadow: none;
       transition: box-shadow 900ms;
 
-      &:hover {
+      &.-hover:hover {
           border: 1px solid silver;
           /*padding: 5px 10px;*/
           padding: 10px;
           background: rgba(219, 232, 255, .3);
       }
-      &:focus {
+      &.-focus:focus {
           outline: none;
           /*border-color: #9ecaed;*/
           box-shadow: 0 0 10px #9ecaed;

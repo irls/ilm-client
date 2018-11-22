@@ -67,6 +67,7 @@ export default {
     onScroll(ev) {
       //console.log('onScroll', 'this.onScrollEv', this.onScrollEv);
       if (!this.onScrollEv) {
+        //console.time('handleScroll');
         let firstVisibleId = false;
         let visible = false;
         let idsArray = [];
@@ -104,6 +105,7 @@ export default {
             params: { block: firstVisibleId }
           });
         }
+        //console.timeEnd('handleScroll');
       } else this.onScrollEv = false;
     },
 
