@@ -66,7 +66,10 @@ export default {
             console.log('firstRid', firstRid);
             if (firstRid) {
               let block = this.parlistO.getBlockByRid(firstRid);
-              if (block) this.scrollToBlock(block.blockid);
+              if (block) {
+                document.getElementById(block.blockid).scrollIntoView();
+                this.startId = block.blockid;
+              } 
             }
           },
           'ctrl+end': (ev)=>{
@@ -74,46 +77,53 @@ export default {
             let lastRid = this.parlistO.getLastRid();
             if (lastRid) {
               let block = this.parlistO.getBlockByRid(lastRid);
-              if (block) this.scrollToBlock(block.blockid);
+              if (block) {
+                document.getElementById(block.blockid).scrollIntoView();
+                this.startId = block.blockid;
+              }
             }
           },
           'ctrl+up': (ev)=>{
-            console.log('ctrl+up arrow. startId:', this.startId);
-            let jumpStep = Math.floor(this.parlist.size * 0.1);
+            let jumpStep = Math.floor(this.parlistO.rIdsArray().length * 0.1);
             let currId, crossId = this.startId;
             if (crossId) for (var idx=0; idx < jumpStep; idx++) {
               let blockId = this.parlistO.getInId(crossId);
               if (blockId) {
-                currId = blockId;
+                currId = crossId;
                 crossId = blockId;
               } else break;
             }
-            if (currId) this.scrollToBlock(currId);
+            if (currId) {
+              document.getElementById(currId).scrollIntoView();
+              this.startId = currId;
+            }
           },
           'ctrl+down': (ev)=>{
-            console.log('ctrl+down arrow. startId:', this.startId);
-            let jumpStep = Math.floor(this.parlist.size * 0.1);
+            let jumpStep = Math.floor(this.parlistO.rIdsArray().length * 0.1);
             let currId, crossId = this.startId;
             if (crossId) for (var idx=0; idx < jumpStep; idx++) {
-              let block = this.parlist.get(crossId);
-              if (block) {
+              let blockId = this.parlistO.getOutId(crossId);
+              if (blockId) {
                 currId = crossId;
-                crossId = block.chainid;
+                crossId = blockId;
               } else break;
             }
-            if (currId) this.scrollToBlock(currId);
+            if (currId) {
+              document.getElementById(currId).scrollIntoView();
+              this.startId = currId;
+            }
           },
           'pgup': (ev)=>{
             //console.log('page up');
             ev.preventDefault();
             let blockId = this.parlistO.getInId(this.startId);
-            if (blockId) this.scrollToBlock(blockId);
+            if (blockId) document.getElementById(blockId).scrollIntoView();
           },
           'pgdn': (ev)=>{
             //console.log('page down');
             ev.preventDefault();
             let nextId = this.parlist.get(this.startId).chainid;
-            if (this.parlist.has(nextId)) this.scrollToBlock(nextId);
+            if (this.parlist.has(nextId)) document.getElementById(nextId).scrollIntoView();
           }
         }
       }
@@ -237,7 +247,7 @@ export default {
         this.loadPreparedBookDown(idsArray)
         .then((blockId)=>{
           console.log('loading id: ', blockId);
-          this.setBlockWatch();
+          //this.setBlockWatch();
           this.lazyLoad(id);
           this.screenTop = 0;
           this.startId = id;
@@ -248,6 +258,7 @@ export default {
     loadPreparedBookDown(idsArray) { // mostly first page load
 
       let startId = idsArray[0] || this.meta.startBlock_id;
+      console.log('startId: ', startId);
       //this.freeze('loadBook');
       return this.loopPreparedBlocksChain({ids: idsArray})
       .then((result)=>{
@@ -293,6 +304,7 @@ export default {
             this.startId = startBlock;
             let taskType = this.$route.params.task_type || false;
 
+            console.log('startId', this.startId);
 
             return this.loadPartOfBookBlocks({
               bookId: this.$route.params.bookid,
