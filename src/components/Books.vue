@@ -313,7 +313,55 @@ export default {
     .ilm-block, .content-wrap-footn {
       direction: rtl;
     }
+   .-lang-en, 
+   .-lang-de, 
+   .-lang-da, 
+   .-lang-cy, 
+   .-lang-es, 
+   .-lang-fr, 
+   .-lang-is, 
+   .-lang-it, 
+   .-lang-ko, 
+   .-lang-ja, 
+   .-lang-nb, 
+   .-lang-nl, 
+   .-lang-pl, 
+   .-lang-pt, 
+   .-lang-ro,
+   .-lang-ru,
+   .-lang-sv,
+   .-lang-tr  { 
+     .ilm-block {
+       direction: ltr; 
+     }
+   }
 }
+
+/*.table-cell {
+   .-lang-en, 
+   .-lang-de, 
+   .-lang-da, 
+   .-lang-cy, 
+   .-lang-es, 
+   .-lang-fr, 
+   .-lang-is, 
+   .-lang-it, 
+   .-lang-ko, 
+   .-lang-ja, 
+   .-lang-nb, 
+   .-lang-nl, 
+   .-lang-pl, 
+   .-lang-pt, 
+   .-lang-ro,
+   .-lang-ru,
+   .-lang-sv,
+   .-lang-tr  { 
+     ilm-block {
+       direction: ltr; 
+     }
+   }
+}*/
+
 
 .content-footnotes {
     .-lang-fa, .-lang-ar {
@@ -322,6 +370,7 @@ export default {
 }
 
 .content-footnotes {
+   .-lang-en, 
    .-lang-de, 
    .-lang-da, 
    .-lang-cy, 
