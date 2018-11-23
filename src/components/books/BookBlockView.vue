@@ -127,7 +127,7 @@
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Join with next block</li>
                       <li class="separator"></li>
-                      <li @click.prevent="selectLang($event)">
+                      <li @click.prevent="selectLang($event)"  v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
                           <i class="fa fa-language" aria-hidden="true"></i>
                           Language: <select v-model='block.language' style="min-width: 100px;" @input="selectLangSubmit(block);">
                           <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
