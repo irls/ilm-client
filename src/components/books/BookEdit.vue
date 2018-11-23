@@ -84,12 +84,6 @@
           <button type="button" class="btn btn-primary" @click="joinBlocks()">Discard</button>
         </div>
       </modal>
-      <modal v-model="unableJoinMessage" effect="fade" cancel-text="Close" title="Join blocks error">
-        <div slot="modal-body" class="modal-body">Blocks with different types can't be joined</div>
-        <div slot="modal-footer" class="modal-footer">
-          <button type="button" class="btn btn-default" @click="unableJoinMessage = false">Close</button>
-        </div>
-      </modal>
 
       <!--<infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>-->
 
@@ -140,7 +134,6 @@ export default {
       selectionEnd: {},
       parCounter: { pref: 0, prefCnt: 0, curr: 1 },
       blocksListQuery: false,
-      unableJoinMessage: false,
       doJoinBlocks: {
         show: false,
         showAudio: false,
@@ -1048,15 +1041,34 @@ export default {
 
         switch(direction) {
           case 'previous' : {
-            return this.getBlock(this.parlistO.getInId(block._id))
+            let getPrevBlock = new Promise((resolve, reject) => {
+              let _prevId = this.parlistO.getInId(block._id);
+              let _prev = this.parlist.get(_prevId);
+              if (_prev) {
+                resolve(_prev);
+              } else {
+                this.getBlock(_prevId)
+                  .then(_prev => {
+                    resolve(_prev);
+                  })
+                  .catch(err => {
+                    reject(err);
+                  });
+              }
+            });
+            return getPrevBlock
             .then((blockBefore)=>{
               //if (!checkArr.includes(block.type) || !checkArr.includes(blockBefore.type)) {
               if (block.type !== blockBefore.type) {
-                this.unableJoinMessage = true;
+                this.unableJoinMessage();
                 return Promise.reject('type');
               }
               if (!this.parlist.has(blockBefore._id)) {
-                this.unableJoinMessage = true;
+                this.unableJoinMessage();
+                return Promise.reject('type');
+              }
+              if (block.voicework !== blockBefore.voicework) {
+                this.unableToJoinVoiceworkMessage();
                 return Promise.reject('type');
               }
 
@@ -1096,6 +1108,7 @@ export default {
                 });
                 if (currBlockRef && prevBlockRef) {
                   this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
+                  this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
                   this.freeze('joinBlocks');
                   currBlockRef.isAudioChanged = false;
                   let el = this.$children.find(c => {
@@ -1126,6 +1139,7 @@ export default {
                       .then((response)=>{
                         //this.setBlockSelection({start: {}, end: {}});
                         this.clearBlockLock({block: blockBefore, force: true});
+                        this.clearBlockLock({block: block, force: true});
                         if (response.data.ok && response.data.blocks) {
                           response.data.blocks.forEach((res)=>{
                             this.refreshBlock({doc: res, deleted: res.deleted});
@@ -1153,24 +1167,44 @@ export default {
             })
           } break;
           case 'next' : {
-            return this.getBlock(block.chainid)
+            let getNextBlock = new Promise((resolve, reject) => {
+              let _nextId = this.parlistO.getOutId(block._id);
+              let _next = this.parlist.get(_nextId);
+              if (_next) {
+                resolve(_next);
+              } else {
+                this.getBlock(_nextId)
+                  .then(_next => {
+                    resolve(_next);
+                  })
+                  .catch(err => {
+                    reject(err);
+                  });
+              }
+            });
+            return getNextBlock
             .then((blockAfter)=>{
               if (block.type !== blockAfter.type) {
-                this.unableJoinMessage = true;
+                this.unableJoinMessage();
                 return Promise.reject('type');
               }
-              if (!this.parlist.has(block.chainid)) {
-                this.unableJoinMessage = true;
+              if (!this.parlist.has(this.parlistO.getOutId(block._id))) {
+                this.unableJoinMessage();
                 return Promise.reject('type');
               }
+              if (block.voicework !== blockAfter.voicework) {
+                this.unableToJoinVoiceworkMessage();
+                return Promise.reject('type');
+              }
+              let chainId = this.parlistO.getOutId(block._id);
               let elBlock = this.$children.find(c => {
                 return c.$el.id == block._id;
               });
               let elNext = this.$children.find(c => {
-                return c.$el.id == block.chainid;
+                return c.$el.id == chainId;
               });
               if (!this.doJoinBlocks.show
-              && (this.parlist.get(block._id).isChanged || this.parlist.get(block.chainid).isChanged))
+              && (this.parlist.get(block._id).isChanged || this.parlist.get(chainId).isChanged))
               {
                 this.doJoinBlocks.block = block;
                 this.doJoinBlocks.direction = direction;
@@ -1178,7 +1212,7 @@ export default {
 
               } else if (!this.doJoinBlocks.showAudio &&
                       (this.parlist.get(block._id).isAudioChanged ||
-                      this.parlist.get(block.chainid).isAudioChanged ||
+                      this.parlist.get(chainId).isAudioChanged ||
                       (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
                       (elNext && elNext.audioEditFootnote.isAudioChanged))) {
                 this.doJoinBlocks.block = block;
@@ -1192,11 +1226,12 @@ export default {
                   return blockRef.blockId == block._id;
                 });
                 let nextBlockRef = this.$refs.blocks.find((blockRef)=>{
-                  return blockRef.blockId == block.chainid;
+                  return blockRef.blockId == chainId;
                 });
                 if (currBlockRef && nextBlockRef) {
                   this.freeze('joinBlocks');
                   this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
+                  this.addBlockLock({block: blockAfter, watch: ['realigned'], type: 'join'})
                   currBlockRef.isAudioChanged = false;
                   let el = this.$children.find(c => {
                     return c.$el.id == currBlockRef._id;
@@ -1226,6 +1261,7 @@ export default {
                       .then((response)=>{
                         //this.setBlockSelection({start: {}, end: {}});
                         this.clearBlockLock({block: block, force: true});
+                        this.clearBlockLock({block: blockAfter, force: true});
                         if (response.data.ok && response.data.blocks) {
                           response.data.blocks.forEach((res)=>{
                             this.refreshBlock({doc: res, deleted: res.deleted});
@@ -1253,6 +1289,38 @@ export default {
              })
           } break;
         };
+    },
+    
+    unableJoinMessage() {
+      this.$root.$emit('show-modal', {
+        title: 'Blocks with different types can\'t be joined',
+        text: '',
+        buttons: [
+          {
+            title: 'Close',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+            },
+          }
+        ],
+        class: ['align-modal']
+      });
+    },
+    
+    unableToJoinVoiceworkMessage() {
+      this.$root.$emit('show-modal', {
+        title: 'Blocks with different voicework type can’t be joined.',
+        text: '',
+        buttons: [
+          {
+            title: 'Close',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+            },
+          }
+        ],
+        class: ['align-modal']
+      });
     },
 
     setRangeSelection(block, type, status, shift = false) {
