@@ -1971,7 +1971,7 @@ export default {
         });
       },
       delFootnote: function(pos) {
-        $('#'+this.block._id).find(`[data-idx='${pos+1}']`).remove();
+        this.$refs.blockContent.querySelector(`[data-idx='${pos+1}']`).remove();
         this.updFootnotes();
         this.block.footnotes.forEach((ftn, ftnIdx) => {
           let ref = this.$refs['footnoteContent_' + ftnIdx]
@@ -1986,9 +1986,10 @@ export default {
       },
       updFootnotes: function(c_pos = 0) {
         let pos = 0;
-        $('#'+this.block._id).find('[data-idx]').each(function(idx) {
-          if ($(this).data('idx') == c_pos) pos = idx;
-          $(this).text(idx+1).attr('data-idx', idx+1);
+        this.$refs.blockContent.querySelectorAll('[data-idx]').forEach(function(el, idx) {
+          if (el.getAttribute('data-idx') == c_pos) pos = idx;
+          el.textContent = idx+1;
+          el.setAttribute('data-idx', idx+1);
         });
         return pos;
       },
@@ -2592,7 +2593,8 @@ export default {
           }
           $('nav.fixed-bottom').addClass('hidden');
 
-          $('#' + this.block._id + ' .table-body.-content').removeClass('editing');
+          this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
+          //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
           //this.check_id = null;
         }
 
@@ -3089,7 +3091,7 @@ export default {
         let length = 3;
         if (this.player && this.player.audio_element) {
           let menuHeight = $('div.top-menu-wrapper').height() + $('div.toolbar').height();
-          let blockOffset = $('#' + this.block._id).offset().top;
+          let blockOffset =this.$refs.viewBlock.offsetTop;
           if (menuHeight > blockOffset) {
             this.$root.$emit('for-bookedit:scroll-to-block', this.block._id);
           }
@@ -3344,19 +3346,19 @@ export default {
             if (this.$refs.blockContent) {
               let i = setInterval(() => {
                 let w = this.$refs.blockContent.querySelectorAll('w');
-                let ctrl = $('#'+this.block._id).find('.recording-hover-controls')
+                let ctrl = this.$refs.viewBlock.querySelector('.recording-hover-controls')
                 if (ctrl.length > 0) {
                   clearInterval(i);
                   let ctrl_pos = ctrl.position();
                   if (w.length === 0) {
                     w = this.$refs.blockContent.querySelectorAll('*');
                   }
-                  ctrl_pos.top+=parseInt(ctrl.css('margin-top'));
+                  ctrl_pos.top+=parseInt(ctrl.style['margin-top']);
                   if (w.length > 0) {
                     w.forEach(_w => {
                       let _w_pos = $(_w).position();
                       if (_w_pos.left + _w.offsetWidth >= ctrl_pos.left && _w_pos.top + _w.offsetHeight >= ctrl_pos.top) {
-                        ctrl.css('margin-top', '-15px');
+                        ctrl.style['margin-top'] = '-15px';
                         return;
                       }
                     });
