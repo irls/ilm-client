@@ -2,7 +2,7 @@
 <div :class="['content-scroll-wrapper', {'recording-background': recordingState == 'recording'}]"
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="smoothHandleScroll()">
 
-  <div :class="['container-fluid back ilm-book-styles ilm-global-style', metaStyles]">
+  <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
         <div :class="['row content-scroll-item back']"
           v-bind:id="'v-'+ parlistO.get(blockRid).blockid">
@@ -24,10 +24,10 @@
         <!--<div class="row"-->
       </template>
   </div>
-  <!--<div class="container-fluid">-->
+  <!--<div class="container-block">-->
 
   <div v-bind:style="{ top: screenTop + 'px' }"
-    :class="['container-fluid front ilm-book-styles ilm-global-style', metaStyles]" >
+    :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
 
       <div :class="['row content-scroll-item front', {'recording-block': recordingBlockId == viewObj.blockId}]"
         v-for="(viewObj, blockIdx) in parlistO.idsViewArray()"
@@ -100,7 +100,7 @@
       </div>
 
   </div>
-  <!--<div class="container-fluid">   -->
+  <!--<div class="container-block">   -->
 
 </div>
 <!--<div class="content-scroll-wrapper">-->
@@ -1915,10 +1915,9 @@ export default {
     overflow-y: auto; /*hidden;*/
     overflow-x: auto;
 
-    .container-fluid {
+    .container-block {
       padding-top: 15px;
       &.back {
-        float: left;
         margin-right: -50%;
         /*visibility: hidden;*/
       }
@@ -1926,8 +1925,6 @@ export default {
         /*position: absolute;*/
         position: relative;
         top: 0px;
-        /*background: white;*/
-        /*float: left; */
         margin-left: -50%;
         overflow-y: initial;
       }
@@ -1935,10 +1932,12 @@ export default {
 
     .content-scroll-item {
       width: 100%;
+      margin-right: 0px;
+      margin-left: 0px;
+
       &.front {
         position: relative;
         background: white;
-        /*top: 0px;*/
       }
     }
   }

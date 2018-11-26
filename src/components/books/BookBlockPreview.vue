@@ -83,7 +83,7 @@
 
   </div>
   <!--<div v-if="loaded === true || blockO.loaded === true"-->
-  <div v-else ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', 'in-loading']">
+  <div v-else ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['table-body -block', 'in-loading']">
     <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
   </div>
 
@@ -197,6 +197,7 @@ import access             from '../../mixins/access.js';
     height: 150px;
     background: url(/static/preloader-snake-small.gif);
     width: 100%;
+    /*margin: 0 auto;*/
     background-repeat: no-repeat;
     text-align: center;
     background-position: center;

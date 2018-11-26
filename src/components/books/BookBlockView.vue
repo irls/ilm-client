@@ -3439,10 +3439,6 @@ export default {
 
 <style lang='less'>
 
-.row.content-scroll-item.front {
-  /*border-bottom: 1px solid blue;*/
-}
-
 @variable: 90px;
 .ilm-block {
     padding: 0;
