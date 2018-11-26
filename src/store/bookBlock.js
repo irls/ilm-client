@@ -170,6 +170,9 @@ class BookBlock {
 //     this.checkedEnd = init.checkedEnd || false;
 //     this.checked = init.checked || false;
     this.realigned = init.realigned || false;
+    this.check_id = init.check_id || null;
+    this.footnoteIdx = init.footnoteIdx || null;
+    this.isAudioEditing = init.isAudioEditing || false;
 
     this.history = {};
 

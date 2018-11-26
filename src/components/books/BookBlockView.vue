@@ -982,6 +982,7 @@ export default {
   mounted: function() {
       //this.initEditor();
       //console.log('mounted', this.block._id);
+      this.$root.$emit('reload-block-' + this.block._id);
       this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
       if (!this.player && this.blockAudio.src) {
           this.initPlayer();
@@ -1010,6 +1011,20 @@ export default {
       this.isChanged = this.block.isChanged;
       this.isAudioChanged = this.block.isAudioChanged;
       this.isIllustrationChanged = this.block.isIllustrationChanged;
+      if (this.block.check_id) {
+        this.check_id = this.block.check_id;
+        delete this.block.check_id;
+      }
+      if (this.block.footnoteIdx) {
+        this.footnoteIdx = this.block.footnoteIdx;
+        delete this.block.footnoteIdx;
+      }
+      if (this.block.isAudioEditing) {
+        this.isAudioEditing = this.block.isAudioEditing;
+        this.audioEditorEventsOff();
+        this.audioEditorEventsOn();
+        delete this.block.isAudioEditing;
+      }
       //console.log('mounted isChecked', this.blockO);
       //this.isChecked = this.blockO.checked;
       //this.detectMissedFlags();
@@ -1029,6 +1044,9 @@ export default {
         this.recountApprovedInRange();
       });
       this.$root.$on('prepare-alignment', this._saveContent);
+      this.$root.$on('reload-block-' + this.block._id, () => {
+        this.audioEditorEventsOff();
+      });
 
 
 //       Vue.nextTick(() => {
@@ -1558,10 +1576,14 @@ export default {
                   this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
                   this.isAudioChanged = false;
                   this.isChanged = false;
+                  this.block.isAudioChanged = false;
+                  this.block.isChanged = false;
                   return BPromise.resolve();
                 } else {
                   this.isAudioChanged = false;
                   this.isChanged = false;
+                  this.block.isAudioChanged = false;
+                  this.block.isChanged = false;
                   let resp_block = response.data;
                   let resp_f = resp_block.footnotes[footnoteIdx];
                   this.block.setContentFootnote(footnoteIdx, resp_f.content);
@@ -2466,17 +2488,8 @@ export default {
         }
         this.footnoteIdx = footnoteIdx;
         this.check_id = footnoteIdx !== null ? this.block._id + '_' + footnoteIdx : this.block._id;
-
-        this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
-        this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-        this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
-        this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
-        this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
-        this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-        this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
-        this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
-        this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
-        this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+        this.audioEditorEventsOff();
+        
 
         Vue.nextTick(() => {
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
@@ -2485,17 +2498,7 @@ export default {
           this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
 
           let self = this;
-          this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
-          this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-          this.$root.$on('from-audioeditor:save', this.evFromAudioeditorSave);
-          this.$root.$on('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
-          this.$root.$on('from-audioeditor:cut', this.evFromAudioeditorCut);
-          this.$root.$on('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-          this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
-          this.$root.$on('from-audioeditor:discard', this.evFromAudioeditorDiscard);
-          this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
-
-          this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
+          this.audioEditorEventsOn();
         });
       },
 
@@ -2507,23 +2510,14 @@ export default {
           if (this.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false);
           }
-          $('nav.fixed-bottom').addClass('hidden');
+          //$('nav.fixed-bottom').addClass('hidden');
 
           $('#' + this.block._id + ' .table-body.-content').removeClass('editing');
           //this.check_id = null;
         }
 
         console.log('stop events', this.block._id);
-        this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
-        this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-        this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
-        this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
-        this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
-        this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-        this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
-        this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
-        this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
-        this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+        this.audioEditorEventsOff();
 
       },
       evFromAudioeditorBlockLoaded(blockId) {
@@ -2662,6 +2656,31 @@ export default {
             this.audioSelectPos.end = end;
           }
         }
+      },
+      audioEditorEventsOn() {
+        this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
+        this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
+        this.$root.$on('from-audioeditor:save', this.evFromAudioeditorSave);
+        this.$root.$on('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
+        this.$root.$on('from-audioeditor:cut', this.evFromAudioeditorCut);
+        this.$root.$on('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
+        this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
+        this.$root.$on('from-audioeditor:discard', this.evFromAudioeditorDiscard);
+        this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
+
+        this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
+      },
+      audioEditorEventsOff() {
+        this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
+        this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
+        this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
+        this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
+        this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
+        this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
+        this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
+        this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
+        this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
+        this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
       },
       //-- } -- end -- Events --//
 
@@ -3305,6 +3324,15 @@ export default {
   beforeDestroy: function () {
 //      console.log('beforeDestroy', this.block._id);
 //     console.log('this.isChanged', this.isChanged);
+    if (this.check_id) {
+      this.block.check_id = this.check_id;
+    }
+    if (this.footnoteIdx) {
+      this.block.footnoteIdx = this.footnoteIdx;
+    }
+    if (this.isAudioEditing) {
+      this.block.isAudioEditing = this.isAudioEditing;
+    }
     if (this.block && this.isChanged) {
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
@@ -3334,9 +3362,6 @@ export default {
 
       this.$root.$off('saved-block:' + this.block._id);
 
-      if (this.check_id || this.footnoteIdx) {
-        this.evFromAudioeditorClosed(this.check_id || this.block._id);
-      }
       this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
     }
