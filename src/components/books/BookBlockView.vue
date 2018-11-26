@@ -345,7 +345,9 @@
                     <textarea v-if="part.status !== 'hidden'"
                       class="flag-comment"
                       v-model="part.newComment"
-                      placeholder="Enter description here ...">
+                      placeholder="Enter description here ..."
+                      @input="onInputFlag"
+                      :disabled="!canCommentFlagPart(part)">
                     </textarea>
 
                     </template>
@@ -1325,6 +1327,11 @@ export default {
         $(ev.target).find("span[style]").contents().unwrap();
         ev.target.focus();
       },
+      onInputFlag: function(ev) {
+        this.isChanged = true;
+        this.pushChange('flags');
+        ev.target.focus();
+      },
       onFocusout: function(el) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
@@ -2134,6 +2141,9 @@ export default {
             }
           }
           return result;
+      },
+      canCommentFlagPart: function(flagPart) {
+        return this.canResolveFlagPart(flagPart) && flagPart.status == 'open' && !flagPart.collapsed && (!this.isCompleted || this.isProofreadUnassigned());
       },
 
       canDeleteFlagPart: function (flagPart) {
