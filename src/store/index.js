@@ -1523,7 +1523,7 @@ export const store = new Vuex.Store({
         let cleanBlock = block.clean();
         commit('set_blocker', 'putBlock');
         //console.log('putBlock', cleanBlock);
-        return dispatch('getBlock', cleanBlock._id)
+        /*return dispatch('getBlock', cleanBlock._id)
         .then(function(doc) {
           cleanBlock._rev = doc._rev;
           return dispatch('_putBlock', cleanBlock)
@@ -1546,7 +1546,19 @@ export const store = new Vuex.Store({
               commit('clear_blocker', 'putBlock');
               console.log('Block save error:', err);
             }
-        });
+        });*/
+        return axios.put(state.API_URL + 'book/block/' + block._id,
+          {
+            'block': block,
+          })
+            .then(response => {
+              commit('clear_blocker', 'putBlock');
+              block._rev = response.rev;
+              return Promise.resolve(response);
+            })
+            .catch(err => {
+              console.log(err);
+            });
     },
 
     putBlockPart ({commit, state, dispatch}, blockData) {
