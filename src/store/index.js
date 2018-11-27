@@ -1300,9 +1300,6 @@ export const store = new Vuex.Store({
       }).then(function (res) {
           let result = [];
           res.rows.forEach(b => {
-            if (b.doc.audiosrc) {
-              b.doc.audiosrc = process.env.ILM_API + b.doc.audiosrc;
-            }
             result.push(b.doc);
           });
           return result;
