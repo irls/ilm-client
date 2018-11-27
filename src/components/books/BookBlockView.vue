@@ -347,6 +347,7 @@
                       v-model="part.newComment"
                       placeholder="Enter description here ..."
                       @input="onInputFlag"
+                      @focusout="onFocusoutFlag(part, $event)"
                       :disabled="!canCommentFlagPart(part)">
                     </textarea>
 
@@ -687,7 +688,7 @@ export default {
         start: Number,
         end: Number
       },
-      //isApproving: false
+      isSaving: false
     }
   },
   components: {
@@ -701,6 +702,9 @@ export default {
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
+        if (this.isSaving) {
+          return true;
+        }
         return this.block ? this.isBlockLocked(this.block._id) : false;
       },
       isChecked: { cache: false,
@@ -1350,6 +1354,13 @@ export default {
         this.pushChange('flags');
         ev.target.focus();
       },
+      onFocusoutFlag: function(part, ev) {
+        if (ev && ev.target) {
+          if (part.newComment !== ev.target.value) {
+            part.newComment = ev.target.value;
+          }
+        }
+      },
       onFocusout: function(el) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
@@ -1514,8 +1525,10 @@ export default {
 
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
+        this.isSaving = true;
         return this.putBlock(this.block).then(()=>{
-          if (!this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') &&
+          this.isSaving = false;
+          if (!this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') && 
                   !this.tc_getBlockTask(this.block._id)) {
             if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) &&
                     this._is('editor', true)) {
