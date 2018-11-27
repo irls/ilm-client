@@ -499,7 +499,7 @@
                   <a class="go-to-block" v-on:click="scrollToBlock(selectionEnd)">View end({{displaySelectionEnd}})</a>
                 </template>
               </div>
-              <div v-if="isRecording" class="recording-hover-controls" >
+              <div v-if="isRecording" class="recording-hover-controls" ref="recordingCtrls">
                 <i class="fa fa-ban" v-if="isRecording" @click="cancelRecording()"></i>
                 <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i>
                 <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i>
@@ -2258,7 +2258,7 @@ export default {
         this.$emit('recordingState', 'recording', this.block._id);
         this.recordTimer()
         .then(() => {
-          this.recordStartCounter = 0;
+          //this.recordStartCounter = 0;
           this.isRecording = true;
           this.recorder.startRecording();
         })
@@ -3372,31 +3372,30 @@ export default {
         handler(val) {
           this.$emit('recordingState', val ? 'recording' : 'stopped', this.block._id);
           if (val === true) {
-            if (this.$refs.blockContent) {
-              let i = setInterval(() => {
+            Vue.nextTick(()=>{
+              if (this.$refs.recordingCtrls && this.$refs.blockContent) {
                 let w = this.$refs.blockContent.querySelectorAll('w');
-                let ctrl = this.$refs.viewBlock.querySelector('.recording-hover-controls')
-                if (ctrl.length > 0) {
-                  clearInterval(i);
-                  let ctrl_pos = ctrl.position();
-                  if (w.length === 0) {
-                    w = this.$refs.blockContent.querySelectorAll('*');
-                  }
-                  ctrl_pos.top+=parseInt(ctrl.style['margin-top']);
-                  if (w.length > 0) {
-                    w.forEach(_w => {
-                      let _w_pos = $(_w).position();
-                      if (_w_pos.left + _w.offsetWidth >= ctrl_pos.left && _w_pos.top + _w.offsetHeight >= ctrl_pos.top) {
-                        ctrl.style['margin-top'] = '-15px';
-                        return;
-                      }
-                    });
-                  }
+                if (w.length === 0) {
+                   w = this.$refs.blockContent.querySelectorAll('*');
                 }
-              }, 50)
-            }
-            $('body').off('keypress', this._handleSpacePress);
-            $('body').on('keypress', this._handleSpacePress);
+
+                let ctrl_pos = $(this.$refs.recordingCtrls).position();
+                ctrl_pos.top+=parseInt(this.$refs.recordingCtrls.style['margin-top']);
+
+                if (w.length > 0) {
+                  w.forEach(_w => {
+                    let _w_pos = $(_w).position();
+                    if (_w_pos.left + _w.offsetWidth >= ctrl_pos.left && _w_pos.top + _w.offsetHeight >= ctrl_pos.top) {
+                      this.$refs.recordingCtrls.style['margin-top'] = '-15px';
+                      return;
+                    }
+                  });
+                }
+
+                $('body').off('keypress', this._handleSpacePress);
+                $('body').on('keypress', this._handleSpacePress);
+              }
+            })
           } else {
             $('body').off('keypress', this._handleSpacePress);
           }
@@ -3473,10 +3472,6 @@ export default {
 </script>
 
 <style lang='less'>
-
-.row.content-scroll-item.front {
-  /*border-bottom: 1px solid blue;*/
-}
 
 @variable: 90px;
 .ilm-block {
@@ -4353,7 +4348,7 @@ export default {
   }
   .recording-hover-controls {
     position: absolute;
-    right: 30px;
+    right: 34px;
     margin-top: -35px;
     i {
       font-size: 27px;

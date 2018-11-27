@@ -200,6 +200,7 @@ export default {
       align-items: center;
       box-shadow: 0px 2px 3px 0px rgba(178, 191, 224, 0.53);
       padding-left: 4px;
+      margin-bottom: 3px;
     }
 
     .scroll-wrapper {
@@ -371,19 +372,19 @@ export default {
 
 .content-footnotes {
    .-lang-en, 
-   .-lang-de, 
-   .-lang-da, 
-   .-lang-cy, 
-   .-lang-es, 
-   .-lang-fr, 
-   .-lang-is, 
-   .-lang-it, 
-   .-lang-ko, 
-   .-lang-ja, 
-   .-lang-nb, 
-   .-lang-nl, 
-   .-lang-pl, 
-   .-lang-pt, 
+   .-lang-de,
+   .-lang-da,
+   .-lang-cy,
+   .-lang-es,
+   .-lang-fr,
+   .-lang-is,
+   .-lang-it,
+   .-lang-ko,
+   .-lang-ja,
+   .-lang-nb,
+   .-lang-nl,
+   .-lang-pl,
+   .-lang-pt,
    .-lang-ro,
    .-lang-ru,
    .-lang-sv,

@@ -2,7 +2,7 @@
 <div :class="['content-scroll-wrapper', {'recording-background': recordingState == 'recording'}]"
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="smoothHandleScroll()">
 
-  <div :class="['container-fluid back ilm-book-styles ilm-global-style', metaStyles]">
+  <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
         <div :class="['row content-scroll-item back']"
           v-bind:id="'v-'+ parlistO.get(blockRid).blockid">
@@ -16,6 +16,7 @@
             :mode="mode"
             :lang = "meta.language"
             :loaded = "parlistO.get(blockRid) && parlistO.get(blockRid).loaded"
+            :inBack = "parlistO.isInViewArray(blockRid)"
           ></BookBlockPreview>
           </div>
           <!--<div class='col'>-->
@@ -24,10 +25,10 @@
         <!--<div class="row"-->
       </template>
   </div>
-  <!--<div class="container-fluid">-->
+  <!--<div class="container-block">-->
 
   <div v-bind:style="{ top: screenTop + 'px' }"
-    :class="['container-fluid front ilm-book-styles ilm-global-style', metaStyles]" >
+    :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
 
       <div :class="['row content-scroll-item front', {'recording-block': recordingBlockId == viewObj.blockId}]"
         v-for="(viewObj, blockIdx) in parlistO.idsViewArray()"
@@ -87,14 +88,14 @@
 
       <!--<infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>-->
 
-      <div id="narrateStartCountdown" class="modal fade in">
-        <div>
-          <strong>3</strong>
-        </div>
-      </div>
-
   </div>
-  <!--<div class="container-fluid">   -->
+  <!--<div class="container-block">   -->
+
+  <div id="narrateStartCountdown" class="modal fade in">
+    <div>
+      <strong>3</strong>
+    </div>
+  </div>
 
 </div>
 <!--<div class="content-scroll-wrapper">-->
@@ -843,7 +844,10 @@ export default {
         });
         if (el) {
           this.scrollToBlock(next._id);
-          el.startRecording();
+          this.handleScroll(true);
+          Vue.nextTick(()=>{
+            el.startRecording();
+          })
         }
       }
     },
@@ -1627,6 +1631,9 @@ export default {
     }, 100),
 
     handleScroll(force = false) {
+      if (this.recordingState == 'recording') {
+        return false;
+      }
       if (!this.onScrollEv) {
         let firstVisible = false;
         let lastVisible = false;
@@ -1922,33 +1929,24 @@ export default {
 <style lang="less">
   #narrateStartCountdown {
       display: none;
-      position: absolute;
-      width: 100%;
+      position: fixed;
 
-      strong {
-          margin: 0px 50%;
-          display: block;
+      div {
+        display: flex;
+        align-items: center;
+        height: 100%;
+
+        strong {
           width: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
           font-size: 100px;
-          top: 50%;
-          position: absolute;
           color: #f2d3d3;
-      }
-  }
-  .recording-background {
-      background-color: rgba(0,0,0,0.5);
-      div.completed {
-          background-color: inherit;
-      }
-  }
-  .recording-block {
-      .-content {
-        background-color: white;
-        border-radius: 5px;
-        .content-wrap {
-          overflow-y: scroll;
-          max-height: 80vh;
         }
+
       }
   }
   .infinite-status-prompt {
@@ -1979,23 +1977,47 @@ export default {
     display:flex;
     flex-direction: row;
 
-    position: relative;
+    /*position: relative;*/
     overflow-y: auto; /*hidden;*/
     overflow-x: auto;
 
-    .container-fluid {
-      padding-top: 15px;
+    &.recording-background {
+      /*background-color: rgba(0,0,0,0.5);*/
+      overflow: hidden;
+      margin-right: 8px;
+
+      div.completed {
+        background-color: inherit;
+      }
+
+      .content-scroll-item.front {
+        background-color: rgba(0,0,0,0.5);
+      }
+
+      .recording-block {
+        .-content {
+          background-color: white;
+          border-radius: 5px;
+          .content-wrap {
+            overflow-y: scroll;
+            max-height: 80vh;
+          }
+        }
+      }
+    }
+
+
+    .container-block {
+      /*padding-top: 15px;*/
+      width: 100%;
+
       &.back {
-        float: left;
         margin-right: -50%;
-        /*visibility: hidden;*/
       }
       &.front {
         /*position: absolute;*/
         position: relative;
         top: 0px;
-        /*background: white;*/
-        /*float: left; */
         margin-left: -50%;
         overflow-y: initial;
       }
@@ -2003,10 +2025,12 @@ export default {
 
     .content-scroll-item {
       width: 100%;
+      margin-right: 0px;
+      margin-left: 0px;
+
       &.front {
         position: relative;
-        background: white;
-        /*top: 0px;*/
+        /*background: white;*/
       }
     }
   }
