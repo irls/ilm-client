@@ -336,6 +336,7 @@
                       v-model="part.newComment"
                       placeholder="Enter description here ..."
                       @input="onInputFlag"
+                      @focusout="onFocusoutFlag(part, $event)"
                       :disabled="!canCommentFlagPart(part)">
                     </textarea>
 
@@ -1305,6 +1306,13 @@ export default {
         this.isChanged = true;
         this.pushChange('flags');
         ev.target.focus();
+      },
+      onFocusoutFlag: function(part, ev) {
+        if (ev && ev.target) {
+          if (part.newComment !== ev.target.value) {
+            part.newComment = ev.target.value;
+          }
+        }
       },
       onFocusout: function(el) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
