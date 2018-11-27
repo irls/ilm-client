@@ -664,7 +664,7 @@ export default {
         start: Number,
         end: Number
       },
-      //isApproving: false
+      isSaving: false
     }
   },
   components: {
@@ -678,6 +678,9 @@ export default {
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
+        if (this.isSaving) {
+          return true;
+        }
         return this.block ? this.isBlockLocked(this.block._id) : false;
       },
       isChecked: { cache: false,
@@ -1467,7 +1470,9 @@ export default {
 
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
+        this.isSaving = true;
         return this.putBlock(this.block).then(()=>{
+          this.isSaving = false;
           if (!this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') && 
                   !this.tc_getBlockTask(this.block._id)) {
             if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) && 
