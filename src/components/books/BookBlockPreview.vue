@@ -155,6 +155,26 @@ import access             from '../../mixins/access.js';
           return this.block && (this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup')) && this.mode === 'edit';
         }
       },
+      blockContent: {
+        get() {
+          if (this.mode === 'narrate') {
+            let content = '';
+            let split = '<br class="narrate-split"/><br class="narrate-split"/>';
+            if ($('<div>' + this.block.content + '</div>').find('w').length > 0) {
+              let rg = new RegExp('(<[^>]+>[^<]*?)((?<!St|Mr|Mrs|Dr|[^\\w][\\w]{1})[\\.|\\?|\\!]+[\'\"\‘\”\“\’]*)([^<]*?<\\/[^>]+>.+?)', 'gmi')
+              content = this.block.content.replace(rg, '$1$2' + split + '$3')
+            } else {
+              content = this.block.content + '<span class="content-tail"></span>';
+              let rg = new RegExp('((?<!St|Mr|Mrs|Dr|[^\\w][\\w]{1})[\\.\\?\\!]+[\'\"\‘\”\“\’]*)([^\\.\\?\\!\'\"\‘\”\“\’]+)', 'mig');
+              content = content.replace(/<a[^>]*>((?!<\/a>).*)<\/a>/igm, '$1')
+              content = content.replace(rg, '$1' + split + '$2');
+            }
+            return content;
+          } else {
+            return this.block.content;
+          }
+        }
+      },
       isIllustrationChanged: { cache: true,
         get() {
           return this.block.isIllustrationChanged;
