@@ -103,11 +103,11 @@ import access             from '../../mixins/access.js';
   export default {
     name: 'book-block-preview',
     props: [
-      'blockRid', 'blockO', 'lang', 'loaded', 'mode'
+      'blockRid', 'blockO', 'lang', 'loaded', 'mode', 'inBack'
     ],// loaded property is necessary for updating first part of loaded blocks, VueJS is not updating automatically
     data() {
       return {
-        inBack: false
+//         inBack: false
       }
     },
     mixins: [access, taskControls, apiConfig],

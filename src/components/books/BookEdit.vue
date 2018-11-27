@@ -16,6 +16,7 @@
             :mode="mode"
             :lang = "meta.language"
             :loaded = "parlistO.get(blockRid) && parlistO.get(blockRid).loaded"
+            :inBack = "parlistO.isInViewArray(blockRid)"
           ></BookBlockPreview>
           </div>
           <!--<div class='col'>-->
@@ -850,7 +851,10 @@ export default {
         });
         if (el) {
           this.scrollToBlock(next._id);
-          el.startRecording();
+          this.handleScroll(true);
+          Vue.nextTick(()=>{
+            el.startRecording();
+          })
         }
       }
     },
@@ -1913,26 +1917,34 @@ export default {
       /*background-color: rgba(0,0,0,0.5);*/
       overflow: hidden;
       margin-right: 8px;
+
       div.completed {
         background-color: inherit;
       }
-    }
-    .recording-block {
-      .-content {
-        background-color: white;
-        border-radius: 5px;
-        .content-wrap {
-          overflow-y: scroll;
-          max-height: 80vh;
+
+      .content-scroll-item.front {
+        background-color: rgba(0,0,0,0.5);
+      }
+
+      .recording-block {
+        .-content {
+          background-color: white;
+          border-radius: 5px;
+          .content-wrap {
+            overflow-y: scroll;
+            max-height: 80vh;
+          }
         }
       }
     }
 
+
     .container-block {
       /*padding-top: 15px;*/
+      width: 100%;
+
       &.back {
         margin-right: -50%;
-        /*visibility: hidden;*/
       }
       &.front {
         /*position: absolute;*/
@@ -1950,7 +1962,7 @@ export default {
 
       &.front {
         position: relative;
-        background: white;
+        /*background: white;*/
       }
     }
   }
