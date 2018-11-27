@@ -93,14 +93,14 @@
 
       <!--<infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>-->
 
-      <div id="narrateStartCountdown" class="modal fade in">
-        <div>
-          <strong>3</strong>
-        </div>
-      </div>
-
   </div>
   <!--<div class="container-block">   -->
+
+  <div id="narrateStartCountdown" class="modal fade in">
+    <div>
+      <strong>3</strong>
+    </div>
+  </div>
 
 </div>
 <!--<div class="content-scroll-wrapper">-->
@@ -1559,6 +1559,9 @@ export default {
     }, 100),
 
     handleScroll(force = false) {
+      if (this.recordingState == 'recording') {
+        return false;
+      }
       if (!this.onScrollEv) {
         let firstVisible = false;
         let lastVisible = false;
@@ -1854,33 +1857,24 @@ export default {
 <style lang="less">
   #narrateStartCountdown {
       display: none;
-      position: absolute;
-      width: 100%;
+      position: fixed;
 
-      strong {
-          margin: 0px 50%;
-          display: block;
+      div {
+        display: flex;
+        align-items: center;
+        height: 100%;
+
+        strong {
           width: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
           font-size: 100px;
-          top: 50%;
-          position: absolute;
           color: #f2d3d3;
-      }
-  }
-  .recording-background {
-      background-color: rgba(0,0,0,0.5);
-      div.completed {
-          background-color: inherit;
-      }
-  }
-  .recording-block {
-      .-content {
-        background-color: white;
-        border-radius: 5px;
-        .content-wrap {
-          overflow-y: scroll;
-          max-height: 80vh;
         }
+
       }
   }
   .infinite-status-prompt {
@@ -1911,12 +1905,31 @@ export default {
     display:flex;
     flex-direction: row;
 
-    position: relative;
+    /*position: relative;*/
     overflow-y: auto; /*hidden;*/
     overflow-x: auto;
 
+    &.recording-background {
+      /*background-color: rgba(0,0,0,0.5);*/
+      overflow: hidden;
+      margin-right: 8px;
+      div.completed {
+        background-color: inherit;
+      }
+    }
+    .recording-block {
+      .-content {
+        background-color: white;
+        border-radius: 5px;
+        .content-wrap {
+          overflow-y: scroll;
+          max-height: 80vh;
+        }
+      }
+    }
+
     .container-block {
-      padding-top: 15px;
+      /*padding-top: 15px;*/
       &.back {
         margin-right: -50%;
         /*visibility: hidden;*/
