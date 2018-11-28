@@ -1621,9 +1621,9 @@ export default {
             if (this.parlistO.setStartId(prevId)) {
               let firstDomBlock = document.getElementById('v-'+prevId);
               this.screenTop = firstDomBlock.offsetTop;
-              this.$refs.blocks.forEach(($ref)=>{
-                $ref.addContentListeners();
-              })
+//               this.$refs.blocks.forEach(($ref)=>{
+//                 $ref.addContentListeners();
+//               })
             }
           }
         }
