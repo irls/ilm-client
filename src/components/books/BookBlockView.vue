@@ -347,7 +347,7 @@
                       v-model="part.newComment"
                       placeholder="Enter description here ..."
                       @input="onInputFlag"
-                      @focusout="onFocusoutFlag(part, partIdx, $event)"
+                      @focusout="onFocusoutFlag(partIdx, $event)"
                       :disabled="!canCommentFlagPart(part)">
                     </textarea>
 
@@ -1354,9 +1354,14 @@ export default {
         this.pushChange('flags');
         ev.target.focus();
       },
-      onFocusoutFlag: function(part, partIdx, ev) {
+      onFocusoutFlag: function(partIdx, ev) {
         if (ev && ev.target) {
-          this.flagsSel.parts[partIdx].newComment = ev.target.value;
+          this.block.flags.forEach((flag, idx) => {
+            if (flag._id === this.flagsSel._id) {
+              this.block.flags[idx].parts[partIdx].newComment = ev.target.value;
+            }
+          });
+          
         }
         //console.log(this.flagsSel);
       },
