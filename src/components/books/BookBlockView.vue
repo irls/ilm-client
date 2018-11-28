@@ -2626,10 +2626,10 @@ export default {
           this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
           //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
           //this.check_id = null;
+          this.audioEditorEventsOff();
         }
 
-        console.log('stop events', this.block._id);
-        this.audioEditorEventsOff();
+        //console.log('stop events', this.block._id);
 
       },
       evFromAudioeditorBlockLoaded(blockId) {
