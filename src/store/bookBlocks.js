@@ -105,7 +105,12 @@ class BookBlocks {
   }
 
   isFirst(blockId) {
-    let rid = this.getRIdById(blockId);
+    let rid;
+    if (blockId.charAt(0) == '#') { // Orient RID
+      rid = blockId;
+    } else {
+      rid = this.getRIdById(blockId);
+    }
     if (rid) {
       return this.lookupList[rid].in == this.meta.rid;
     }
@@ -113,7 +118,12 @@ class BookBlocks {
   }
 
   isLast(blockId) {
-    let rid = this.getRIdById(blockId);
+    let rid;
+    if (blockId.charAt(0) == '#') { // Orient RID
+      rid = blockId;
+    } else {
+      rid = this.getRIdById(blockId);
+    }
     if (rid) {
       return this.lookupList[rid].out == this.meta.rid;
     }
