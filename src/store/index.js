@@ -1262,32 +1262,14 @@ export const store = new Vuex.Store({
     },
 
     getBlock ({commit, state, dispatch}, block_id) {
-      //commit('set_blocker', 'getBlock');
-      return state.contentRemoteDB
-        .get(block_id)
-        .then(res => {
-          //commit('clear_blocker', 'getBlock');
-          //commit('clear_block_lock', {block: res});
-          //commit('check_block_lock', {block: res});
-          return Promise.resolve(res)
-        })
-        .catch((err) => {
-          if (err.status == 404) {
-          return state.contentDB
-            .get(block_id)
-            .then(res => {
-              //commit('clear_blocker', 'getBlock');
-              return Promise.resolve(res)
+        return axios.get(state.API_URL + 'book/block/' + block_id)
+          .then(response => {
+              return Promise.resolve(response.data);
             })
             .catch(err => {
-              //commit('clear_blocker', 'getBlock');
-              return Promise.reject(err)
+              console.log(err);
+              return Promise.reject(err);
             });
-          } else {
-            //commit('clear_blocker', 'getBlock');
-            return Promise.reject(err);
-          }
-        });
     },
 
     loadBlocks ({commit, state, dispatch}, params) {
@@ -1552,12 +1534,12 @@ export const store = new Vuex.Store({
         });*/
         return axios.put(state.API_URL + 'book/block/' + block._id,
           {
-            'block': block,
+            'block': cleanBlock,
           })
             .then(response => {
               commit('clear_blocker', 'putBlock');
-              block._rev = response.rev;
-              return Promise.resolve(response);
+              block._rev = response.data.rev;
+              return Promise.resolve(response.data);
             })
             .catch(err => {
               console.log(err);
