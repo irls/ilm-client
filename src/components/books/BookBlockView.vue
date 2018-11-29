@@ -1237,7 +1237,7 @@ export default {
                 ]
               };
           }
-          this.editorDescr = new MediumEditor('[id="' + this.block._id + '"] .content-wrap-desc', {
+          this.editorDescr = new MediumEditor(this.$refs.blockDescription, {
               toolbar: toolbar,
               buttonLabels: 'fontawesome',
               quotesList: this.authors,
@@ -1325,6 +1325,7 @@ export default {
         $(ev.target).find("span[style]").contents().unwrap();
         ev.target.focus();
       },
+
       onFocusout: function(el) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
@@ -2500,7 +2501,7 @@ export default {
           if (type === 'type' && event && event.target) {
             if (event.target.value === 'illustration') {
               let i = setInterval(() => {
-                if (document.querySelectorAll('[id="' + this.block._id + '"] .content-wrap-desc').length > 0) {
+                if (this.$refs.blockDescription) {
                   this.initEditor();
                   clearInterval(i);
                 }
