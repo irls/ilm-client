@@ -1261,7 +1261,7 @@ export default {
                 ]
               };
           }
-          this.editorDescr = new MediumEditor('[id="' + this.block._id + '"] .content-wrap-desc', {
+          this.editorDescr = new MediumEditor(this.$refs.blockDescription, {
               toolbar: toolbar,
               buttonLabels: 'fontawesome',
               quotesList: this.authors,
@@ -1361,7 +1361,7 @@ export default {
               this.block.flags[idx].parts[partIdx].newComment = ev.target.value;
             }
           });
-          
+
         }
         //console.log(this.flagsSel);
       },
@@ -1532,7 +1532,7 @@ export default {
         this.isSaving = true;
         return this.putBlock(this.block).then(()=>{
           this.isSaving = false;
-          if (!this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') && 
+          if (!this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') &&
                   !this.tc_getBlockTask(this.block._id)) {
             if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) &&
                     this._is('editor', true)) {
@@ -2549,7 +2549,7 @@ export default {
           if (type === 'type' && event && event.target) {
             if (event.target.value === 'illustration') {
               let i = setInterval(() => {
-                if (document.querySelectorAll('[id="' + this.block._id + '"] .content-wrap-desc').length > 0) {
+                if (this.$refs.blockDescription) {
                   this.initEditor();
                   clearInterval(i);
                 }
@@ -2600,7 +2600,7 @@ export default {
         this.footnoteIdx = footnoteIdx;
         this.check_id = footnoteIdx !== null ? this.block._id + '_' + footnoteIdx : this.block._id;
         this.audioEditorEventsOff();
-        
+
 
         Vue.nextTick(() => {
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;

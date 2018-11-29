@@ -6,15 +6,15 @@
       <template v-for="(viewObj, listIdx) in getListObjs">
         <div :class="['row content-scroll-item back']"
           v-bind:id="'v-'+ viewObj.blockId"
-          v-bind:key="viewObj.blockRid">
+          >
 
           <div class='col'>
           <BookBlockPreview
             ref="viewBlocks"
+            v-bind:key="viewObj.blockRid"
             :blockRid = "viewObj.blockRid"
             :blockO = "parlistO.get(viewObj.blockRid)"
             :block = "parlist.get(viewObj.blockId)"
-            :mode = "mode"
             :inBack = "parlistO.isInViewArray(viewObj.blockRid)"
           ></BookBlockPreview>
           </div>

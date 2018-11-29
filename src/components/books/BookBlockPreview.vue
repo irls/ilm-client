@@ -1,5 +1,5 @@
 <template>
-<div ref="viewBlock">
+<div ref="viewBlock" class="block-preview">
   <div v-if="block && (loaded === true || blockO.loaded === true)"
     :class="['table-body -block', blockOutPaddings, {'in-back': inBack === true }]"><!--{'in-back': parlistO.isInViewArray(blockRid)}-->
 
@@ -15,18 +15,18 @@
         <div :class="['table-row ilm-block']">
 
         <hr v-if="block.type=='hr'"
-          :class="[block.getClass()]"/>
+          :class="[getClass]"/>
 
         <div v-else-if="block.type == 'illustration'"
         :class="['table-body illustration-block']">
           <img v-if="block.illustration" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
           :height="block.illustration_height"
-          :class="[block.getClass()]"/>
+          :class="[getClass]"/>
           <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': isChanged && !isIllustrationChanged}]" v-if="allowEditing">
             <div class="preview-container"></div>
           </div>
 
-          <div :class="['table-row content-description', block.getClass()]">
+          <div :class="['table-row content-description', getClass]">
             <div class="content-wrap-desc description"
               v-html="block.description">
             </div>
@@ -36,16 +36,15 @@
         <!--<img v-if="block.illustration"-->
 
         <div v-else class="content-wrap-preview"
-        v-html="mode === 'narrate' ? blockContent : block.content"
-        :class="[ block.getClass()]">
+        v-html="block.content"
+        :class="[getClass]">
         </div>
         <!--<div class="content-wrap">-->
 
         </div>
         <!--<div :class="['table-row ilm-block']">-->
 
-        <div class="table-row content-footnotes"
-          v-if="block.footnotes.length > 0 && mode !== 'narrate'">
+        <div class="table-row content-footnotes">
           <div class="table-body footnote"
             v-for="(footnote, ftnIdx) in block.footnotes">
 
@@ -54,7 +53,7 @@
 
             <div class="table-row">
               <div class="table-cell -num">{{ftnIdx+1}}.</div>
-              <div class="content-wrap-footn table-cell -text"
+              <div class="content-wrap-footn-preview table-cell -text"
                 v-html="footnote.content">
               </div>
               <div class="table-cell -control"></div>
@@ -82,7 +81,7 @@
 
   </div>
   <!--<div v-if="loaded === true || blockO.loaded === true"-->
-  <div v-else :class="['table-body -block', 'in-loading']">
+  <div v-else :class="['in-loading']">
     <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
   </div>
 </div>
@@ -96,7 +95,7 @@ import access             from '../../mixins/access.js';
   export default {
     name: 'book-block-preview',
     props: [
-      'blockRid', 'blockO', 'block', 'mode', 'inBack'
+      'blockRid', 'blockO', 'block', 'inBack'
     ],// loaded property is necessary for updating first part of loaded blocks, VueJS is not updating automatically
     data() {
       return {
@@ -129,7 +128,7 @@ import access             from '../../mixins/access.js';
           else return false;
         }
       },
-      getClass: { cache: false,
+      getClass: { cache: true,
         get: function () {
           return this.block.getClass();
         }
@@ -181,7 +180,8 @@ import access             from '../../mixins/access.js';
   }
 </script>
 
-<style lang='less' scoped>
+<style lang='less'>
+.block-preview {
   .in-loading {
     height: 150px;
     background: url(/static/preloader-snake-small.gif);
@@ -226,4 +226,10 @@ import access             from '../../mixins/access.js';
     }
   }
 
+  .content-wrap-footn-preview {
+    p {
+      margin: 0;
+    }
+  }
+}
 </style>
