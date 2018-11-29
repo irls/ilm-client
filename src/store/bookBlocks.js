@@ -31,6 +31,7 @@ class BookBlocks {
     this.listIds = [];
     this.listIdsCache = {rid: false, list: []};
     this.listRIds = [];
+    this.listObjs = [];
 
     this.meta = {};
 
@@ -167,8 +168,8 @@ class BookBlocks {
     if (this.startId && this.startId == blockId) return false;
 
     if (blockId.charAt(0) == '#') { // Orient RID
-      this.f = this.lookupList[blockId].blockid;
-      this.startRId = blockId
+      this.startId = this.lookupList[blockId].blockid;
+      this.startRId = blockId;
     } else {
       this.startId = blockId;
       this.startRId = this.getRIdById(blockId);
@@ -194,11 +195,13 @@ class BookBlocks {
     this.blocksList = {};
     this.listIds = [];
     this.listRIds = [];
+    this.listObjs = [];
     this.meta = bookList.meta;
     this.meta.rid = bookList.meta['@rid'];
     if (Array.isArray(bookList.blocks)) bookList.blocks.forEach((block)=>{
       this.listIds.push(block.blockid);
       this.listRIds.push(block.rid);
+      this.listObjs.push({blockRid: block.rid, blockId: block.blockid});
       this.lookupList[block.rid] = new LookupBlock(block);
       //this.blocksList[block.blockid] = new BookBlock(block);
     })
@@ -210,6 +213,7 @@ class BookBlocks {
       if (!this.lookupList[block.rid]) {
         this.listIds.push(block.blockid);
         this.listRIds.push(block.rid);
+        this.listObjs.push({blockRid: block.rid, blockId: block.blockid});
         this.lookupList[block.rid] = new LookupBlock(block);
         //this.blocksList[block.blockid] = new BookBlock(block);
       }
@@ -220,9 +224,16 @@ class BookBlocks {
 //     console.log('appendLookupsList');
     let listIds = [];
     let listRIds = [];
-    if (Array.isArray(bookList.blocks)) bookList.blocks.forEach((block)=>{
+    let listObjs = [];
+    if (Array.isArray(bookList.blocks)) bookList.blocks.forEach((block, blockIdx)=>{
       listIds.push(block.blockid);
       listRIds.push(block.rid);
+      listObjs.push({
+        blockRid: block.rid,
+        blockId: block.blockid/*,
+        height: (this.listObjs[blockIdx] ? this.listObjs[blockIdx].height : 0),
+        loaded: (this.listObjs[blockIdx] ? this.listObjs[blockIdx].loaded : false)*/
+      });
       if (!this.lookupList[block.rid]) {
         this.lookupList[block.rid] = new LookupBlock(block);
         //this.blocksList[block.blockid] = new BookBlock(block);
@@ -230,6 +241,7 @@ class BookBlocks {
     })
     this.listIds = listIds;
     this.listRIds = listRIds;
+    this.listObjs = listObjs;
   }
 
   getFirstRid(){

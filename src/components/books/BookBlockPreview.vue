@@ -1,11 +1,10 @@
 <template>
-<section>
-  <div v-if="loaded === true || blockO.loaded === true"
-    ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId"
+<div ref="viewBlock">
+  <div v-if="block && (loaded === true || blockO.loaded === true)"
     :class="['table-body -block', blockOutPaddings, {'in-back': inBack === true }]"><!--{'in-back': parlistO.isInViewArray(blockRid)}-->
 
     <div :class="['table-cell', 'controls-left']">
-      <div class="table-row" v-if="meta.numeration !== 'none'"></div>
+      <div class="table-row"></div>
       <div class="table-row check-row"></div>
     </div>
     <!--<div :class="['table-cell', 'controls-left']">-->
@@ -83,19 +82,13 @@
 
   </div>
   <!--<div v-if="loaded === true || blockO.loaded === true"-->
-  <div v-else ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['table-body -block', 'in-loading']">
+  <div v-else :class="['table-body -block', 'in-loading']">
     <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
   </div>
-
-  <div class="clearfix"></div>
-</section>
+</div>
 </template>
 
 <script>
-import Vue from 'vue'
-import { BookBlock }    from '../../store/bookBlock'
-import { mapGetters, mapState, mapActions } from 'vuex'
-
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import access             from '../../mixins/access.js';
@@ -103,26 +96,22 @@ import access             from '../../mixins/access.js';
   export default {
     name: 'book-block-preview',
     props: [
-      'blockRid', 'blockO', 'lang', 'loaded', 'mode', 'inBack'
+      'blockRid', 'blockO', 'block', 'mode', 'inBack'
     ],// loaded property is necessary for updating first part of loaded blocks, VueJS is not updating automatically
     data() {
       return {
-//         inBack: false
+        loaded: false
       }
     },
     mixins: [access, taskControls, apiConfig],
     computed: {
-      ...mapGetters({
+      /*...mapGetters({
         meta: 'currentBookMeta',
-        parlist: 'storeList'/*,
-        parlistO: 'storeListO'*/
-      }),
+        parlist: 'storeList',
+        parlistO: 'storeListO'
+      }),*/
       blockId: function() {
         return this.blockO.blockid;
-      },
-      block: function() {
-        //console.log('preview get block');
-        return this.parlist.get(this.blockId)
       },
       blockOutPaddings: function () {
         if (this.block) {
