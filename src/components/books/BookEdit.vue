@@ -3,20 +3,19 @@
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="smoothHandleScroll()">
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
-      <template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
+      <template v-for="(viewObj, listIdx) in getListObjs">
         <div :class="['row content-scroll-item back']"
-          v-bind:id="'v-'+ parlistO.get(blockRid).blockid">
-          <!--v-bind:key="blockRid"-->
+          v-bind:id="'v-'+ viewObj.blockId"
+          v-bind:key="viewObj.blockRid">
 
           <div class='col'>
           <BookBlockPreview
             ref="viewBlocks"
-            :blockRid = "blockRid"
-            :blockO = "parlistO.get(blockRid)"
-            :mode="mode"
-            :lang = "meta.language"
-            :loaded = "parlistO.get(blockRid) && parlistO.get(blockRid).loaded"
-            :inBack = "parlistO.isInViewArray(blockRid)"
+            :blockRid = "viewObj.blockRid"
+            :blockO = "parlistO.get(viewObj.blockRid)"
+            :block = "parlist.get(viewObj.blockId)"
+            :mode = "mode"
+            :inBack = "parlistO.isInViewArray(viewObj.blockRid)"
           ></BookBlockPreview>
           </div>
           <!--<div class='col'>-->
@@ -191,7 +190,11 @@ export default {
           }
           return result;
       },
-
+      getListObjs: { cache: false,
+        get: function () {
+          return this.parlistO.listObjs;
+        }
+      },
       keymap: function() {
         return {
           // 'esc+ctrl' is OK.
@@ -288,11 +291,15 @@ export default {
 
     refreshPreviewTmpl(idsArray) {
       //console.time('refreshPreviewTmpl');
-      for (let blockRef of this.$refs.viewBlocks) {
-        if (idsArray.indexOf(blockRef.blockId) > -1) {
-          this.parlistO.setLoaded(blockRef.blockRid);
-          //blockRef.$forceUpdate();
-        }
+      //console.log('refreshPreviewTmpl', idsArray);
+      if (this.$refs.viewBlocks) {
+        this.$refs.viewBlocks.forEach((blockRef, idx)=>{
+          if (idsArray.indexOf(blockRef.blockId) > -1) {
+            this.parlistO.setLoaded(blockRef.blockRid);
+            blockRef.loaded = true;
+          }
+        })
+
       }
       //console.timeEnd('refreshPreviewTmpl');
     },
@@ -1628,7 +1635,7 @@ export default {
 
     smoothHandleScroll: _.debounce(function () {
       this.handleScroll();
-    }, 100),
+    }, 150),
 
     handleScroll(force = false) {
       if (this.recordingState == 'recording') {
@@ -1788,10 +1795,11 @@ export default {
           .then(()=>{
             this.loadPreparedBookDown(this.parlistO.idsArray())
             .then(()=>{
-              this.refreshTmpl();
+              //this.refreshTmpl();
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
+                this.refreshPreviewTmpl(this.parlistO.idsArray());
                 this.lazyLoad();
                 this.setBlockWatch()
                 if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
