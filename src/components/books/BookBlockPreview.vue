@@ -1,7 +1,7 @@
 <template>
 <div ref="viewBlock" class="block-preview">
   <div v-if="block && (loaded === true || blockO.loaded === true)"
-    :class="['table-body -block', blockOutPaddings, {'in-back': inBack === true }]"><!--{'in-back': parlistO.isInViewArray(blockRid)}-->
+    :class="['table-body -block', blockOutPaddings]">
 
     <div :class="['table-cell', 'controls-left']">
       <div class="table-row"></div>
@@ -95,7 +95,7 @@ import access             from '../../mixins/access.js';
   export default {
     name: 'book-block-preview',
     props: [
-      'blockRid', 'blockO', 'block', 'inBack'
+      'blockRid', 'blockO', 'block', 'mode'
     ],// loaded property is necessary for updating first part of loaded blocks, VueJS is not updating automatically
     data() {
       return {
@@ -138,7 +138,7 @@ import access             from '../../mixins/access.js';
           return this.block.getIllustration();
         }
       },
-      allowEditing: { cache: true,
+      allowEditing: { cache: false,
         get() {
           return this.block && (this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup')) && this.mode === 'edit';
         }
@@ -204,6 +204,10 @@ import access             from '../../mixins/access.js';
 
   .table-row .illustration-block img {
     border: solid white 2px;
+  }
+
+  .content-wrap-desc.description {
+    min-height: 30px;
   }
 
   .content-wrap-preview {

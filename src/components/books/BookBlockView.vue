@@ -4247,40 +4247,6 @@ export default {
     }
   }
 
-  /*.drag-uploader {
-    width: 20%;
-    max-height: 100px;
-    display: table-row;
-    .uploadBox {
-      .uploadBoxMain {
-        max-height: 100px;
-        margin: 0px;
-      }
-      .uploadBoxMain.uploading {
-        p, ol {
-          display: none;
-        }
-      }
-      .dropArea {
-        max-height: 100px;
-        padding-top: 30px;
-        font-size: 20px;
-        content: '';
-        .help-block {
-          display: none;
-        }
-      }
-      form {
-        max-height: 100px;
-        button {
-          display: none;
-        }
-      }
-      h3 {
-        display: none;
-      }
-    }
-  }*/
   .drag-uploader {
     /*display: table-row;*/
     .picture-input {
