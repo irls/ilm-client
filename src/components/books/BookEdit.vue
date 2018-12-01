@@ -3,30 +3,31 @@
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="smoothHandleScroll()">
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
-      <template v-for="(viewObj, listIdx) in getListObjs">
-        <div :class="['row content-scroll-item back']"
-          v-bind:id="'v-'+ viewObj.blockId"
-          >
+      <div class="content-background">
+      <div v-for="(viewObj, listIdx) in getListObjs"
+        :class="['row content-scroll-item back']"
+        v-bind:id="'v-'+ viewObj.blockId">
 
-          <div class='col'>
-          <BookBlockPreview
-            ref="viewBlocks"
-            v-bind:key="viewObj.blockRid"
-            :blockRid = "viewObj.blockRid"
-            :blockO = "parlistO.get(viewObj.blockRid)"
-            :block = "parlist.get(viewObj.blockId)"
-            :mode = "mode"
-          ></BookBlockPreview>
-          </div>
-          <!--<div class='col'>-->
-
+        <div class='col'>
+        <BookBlockPreview
+          ref="viewBlocks"
+          v-bind:key="viewObj.blockRid"
+          :blockRid = "viewObj.blockRid"
+          :blockO = "parlistO.get(viewObj.blockRid)"
+          :block = "parlist.get(viewObj.blockId)"
+          :mode = "mode"
+        ></BookBlockPreview>
         </div>
-        <!--<div class="row"-->
-      </template>
+        <!--<div class='col'>-->
+
+      </div>
+      <!--<div class="row"-->
+      </div>
+      <!--<div class="content-background">-->
   </div>
   <!--<div class="container-block">-->
 
-  <div v-bind:style="{ top: screenTop + 'px' }"
+  <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
       <div :class="['row content-scroll-item front', {'recording-block': recordingBlockId == viewObj.blockId}]"
@@ -146,7 +147,7 @@ export default {
 
       upScreenTop: -85,
       downScreenTop: 0,
-      screenTop: 0,
+      screenTop: 84,
 
       scrollBarTop: 0,
       scrollBarBlockHeight: 150,
@@ -487,7 +488,7 @@ export default {
 
           if (routeBlockId !== 'unresolved' && this.parlist.has(routeBlockId)) {
             this.startId = routeBlockId;
-            this.screenTop = 0;
+            this.screenTop = 84;
             this.lazyLoad();
             return Promise.resolve(routeBlockId);
             //this.lazyLoad(false, lastId);
@@ -1515,7 +1516,7 @@ export default {
                 });
 
               }).catch(err=>{
-                this.screenTop = 0;
+                this.screenTop = 84;
                 return err;
               });
             }
@@ -1561,7 +1562,7 @@ export default {
                 })
 
               }).catch(err=>{
-                this.screenTop = 0;
+                this.screenTop = 84;
                 return err;
               });
             }
@@ -2026,7 +2027,6 @@ export default {
         margin-right: -50%;
       }
       &.front {
-        /*position: absolute;*/
         position: relative;
         top: 0px;
         margin-left: -50%;
