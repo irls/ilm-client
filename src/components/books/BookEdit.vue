@@ -15,7 +15,7 @@
             :blockRid = "viewObj.blockRid"
             :blockO = "parlistO.get(viewObj.blockRid)"
             :block = "parlist.get(viewObj.blockId)"
-            :inBack = "parlistO.isInViewArray(viewObj.blockRid)"
+            :mode = "mode"
           ></BookBlockPreview>
           </div>
           <!--<div class='col'>-->
@@ -28,7 +28,7 @@
 
   <div v-bind:style="{ top: screenTop + 'px' }"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
-
+      <div class="content-background">
       <div :class="['row content-scroll-item front', {'recording-block': recordingBlockId == viewObj.blockId}]"
         v-for="(viewObj, blockIdx) in parlistO.idsViewArray()"
         v-bind:id="'s-'+ viewObj.blockId"
@@ -64,11 +64,8 @@
         <!--<div class='col'>-->
       </div>
       <!--<div class="row"-->
-
-      <!--<div class="end-of-book" v-show="parlistO.checkLast()">
-        End Of Book
-      </div>-->
-
+      </div>
+      <!--<div class="content-background">-->
       <modal v-model="doJoinBlocks.show" effect="fade" cancel-text="Close" title="Join blocks saving">
         <div slot="modal-body" class="modal-body">Save changes and join blocks?</div>
         <div slot="modal-footer" class="modal-footer">
@@ -344,7 +341,10 @@ export default {
             this.unfreeze('loadBookMeta');
             return Promise.reject(err);
           });
-        } else return Promise.resolve({ blocks:[] }); // already loaded
+        } else {
+          this.handleScroll(true);
+          return Promise.resolve({ blocks:[] }); // already loaded
+        }
       } else return Promise.reject('No bookid');
     },
 
@@ -357,7 +357,7 @@ export default {
       this.isNeedUp = firstId || this.isNeedUp;
       this.isNeedDown = lastId || this.isNeedDown;
 
-      console.log('lazyLoad', this.isNeedUp, this.isNeedDown, this.lazyLoaderDir);
+      //console.log('lazyLoad', this.isNeedUp, this.isNeedDown, this.lazyLoaderDir);
 
       if (!this.isBlocked && (this.isNeedUp || this.isNeedDown)) {
         switch(this.lazyLoaderDir) {
@@ -376,7 +376,7 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
-                  this.refreshPreviewTmpl(this.isNeedDown);
+                  //this.refreshPreviewTmpl(this.isNeedDown);
                   if (this.isNeedUp) this.lazyLoaderDir = 'up';
                   this.isNeedDown = this.isNeedDown.pop();
                   //Vue.nextTick(()=>{
@@ -408,7 +408,7 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
-                  this.refreshPreviewTmpl(this.isNeedUp);
+                  //this.refreshPreviewTmpl(this.isNeedUp);
                   if (this.isNeedUp) this.lazyLoaderDir = 'down';
                   if (Array.isArray(this.isNeedUp)) this.isNeedUp = this.isNeedUp[0];
                   //Vue.nextTick(()=>{
@@ -1586,7 +1586,7 @@ export default {
             lastVisible =  blockRef.blockO;
             if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
               this.parlistO.setLoaded(blockRef.blockRid);
-              //blockRef.$forceUpdate();
+              blockRef.$forceUpdate();
             }
             else if (this.parlistO.get(blockRef.blockRid).loaded === false) {
               this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
@@ -1682,10 +1682,12 @@ export default {
           .then(()=>{
             this.loadPreparedBookDown(this.parlistO.idsArray(), 10).then(()=>{
               this.startId = this.parlistO.idsArray[0];
-              this.scrollToBlock(this.startId);
+
+              //this.handleScroll(true);
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
+                this.scrollToBlock(this.startId);
                 this.setBlockWatch();
                 this.loadBookToc({bookId: this.meta._id, isWait: true});
                 this.lazyLoad();
@@ -1731,7 +1733,7 @@ export default {
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
-                this.refreshPreviewTmpl(this.parlistO.idsArray());
+                //this.refreshPreviewTmpl(this.parlistO.idsArray());
                 this.lazyLoad();
                 this.setBlockWatch()
                 if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
@@ -1745,7 +1747,7 @@ export default {
           if (this.$route.params.hasOwnProperty('block')) {
             this.scrollToBlock(this.$route.params.block);
             this.$router.replace({name: this.$route.name, params: {}});
-            this.updateVisibleBlocks();
+            //this.updateVisibleBlocks();
           } else {
             this.$router.replace({name: this.$route.name, params: {block: this.meta.startBlock_id}});// force view update when switching from display mode
           }
@@ -1915,7 +1917,6 @@ export default {
     flex-grow: 2;
 
     display:flex;
-    flex-direction: row;
 
     /*position: relative;*/
     overflow-y: auto; /*hidden;*/
@@ -1930,8 +1931,10 @@ export default {
         background-color: inherit;
       }
 
-      .content-scroll-item.front {
-        background-color: rgba(0,0,0,0.5);
+      .content-scroll-item{
+        &.front {
+          background-color: rgba(0,0,0,0.5);
+        }
       }
 
       .recording-block {
@@ -1959,7 +1962,10 @@ export default {
         position: relative;
         top: 0px;
         margin-left: -50%;
-        overflow-y: initial;
+
+        .content-background {
+          background: white;
+        }
       }
     }
 
@@ -1970,7 +1976,6 @@ export default {
 
       &.front {
         position: relative;
-        /*background: white;*/
       }
     }
   }
