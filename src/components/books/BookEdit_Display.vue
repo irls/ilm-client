@@ -345,10 +345,17 @@ export default {
           })
         }
         else {
-          if (this.$route.params.block && this.$route.params.block!=='unresolved') {
-            this.onScrollEv = true;
-            document.getElementById(this.$route.params.block).scrollIntoView();
-            //console.timeEnd('loadBookMounted');
+          if (this.$route.params.block) {
+            if (this.$route.params.block!=='unresolved') {
+              this.onScrollEv = true;
+              this.startId = this.$route.params.block || false;
+              document.getElementById(this.$route.params.block).scrollIntoView();
+              //console.timeEnd('loadBookMounted');
+            } else {
+              this.startId = this.parlistO.idsArray()[0] || false;
+            }
+          } else {
+            this.startId = this.parlistO.idsArray()[0] || false;
           }
         }
       }
