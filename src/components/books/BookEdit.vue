@@ -1697,7 +1697,7 @@ export default {
           prevId = prevId.pop();
           if (this.parlistO.setStartId(prevId)) {
             let firstDomBlock = document.getElementById('v-'+prevId);
-            this.screenTop = firstDomBlock.offsetTop;
+            if (firstDomBlock) this.screenTop = firstDomBlock.offsetTop;
 //               this.$refs.blocks.forEach(($ref)=>{
 //                 $ref.addContentListeners();
 //               })
