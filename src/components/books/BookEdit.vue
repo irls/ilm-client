@@ -304,7 +304,7 @@ export default {
         this.$refs.viewBlocks.forEach((blockRef, idx)=>{
           if (idsArray.indexOf(blockRef.blockId) > -1) {
             this.parlistO.setLoaded(blockRef.blockRid);
-            blockRef.loaded = true;
+            blockRef.$forceUpdate();
           }
         })
 
@@ -692,6 +692,7 @@ export default {
               }
             } else {
               this.$store.commit('set_storeList', newBlock);
+              this.refreshPreviewTmpl([newBlock._id]);
               this.refreshTmpl();
             }
           }
@@ -733,6 +734,7 @@ export default {
       return this.putBlock(block)
       .then(()=>{
         this.updateVisibleBlocks();
+        this.refreshPreviewTmpl([block._id]);
       })
       .catch((err)=>{})
     },
