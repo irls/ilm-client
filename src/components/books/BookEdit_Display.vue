@@ -69,7 +69,7 @@ export default {
               if (block) {
                 document.getElementById(block.blockid).scrollIntoView();
                 this.startId = block.blockid;
-              } 
+              }
             }
           },
           'ctrl+end': (ev)=>{
@@ -116,15 +116,21 @@ export default {
           'pgup': (ev)=>{
             //console.log('page up');
             ev.preventDefault();
-            let blockId = this.parlistO.getInId(this.startId);
-            if (blockId) document.getElementById(blockId).scrollIntoView();
+            let prevId = this.parlistO.getInId(this.startId);
+            if (prevId && prevId !== this.startId) {
+              this.startId = prevId;
+              document.getElementById(prevId).scrollIntoView();
+            }
           },
           'pgdn': (ev)=>{
             //console.log('page down');
             ev.preventDefault();
-            let nextId = this.parlist.get(this.startId).chainid;
-            if (this.parlist.has(nextId)) document.getElementById(nextId).scrollIntoView();
-          }
+            let nextId = this.parlistO.getOutId(this.startId);
+            if (nextId && nextId !== this.startId) {
+              this.startId = nextId;
+              document.getElementById(nextId).scrollIntoView();
+            }
+          },
         }
       }
   },
@@ -286,7 +292,7 @@ export default {
           return Promise.reject();
         }
       }).catch(err=>{
-        //this.unfreeze('loadBook'); 
+        //this.unfreeze('loadBook');
         return err;
       });
     },
