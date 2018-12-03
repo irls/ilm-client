@@ -458,6 +458,7 @@ class BookBlocks {
       }
       this.listIds.splice(listIdsIdx, 1);
       this.listRIds.splice(listRIdsIdx, 1);
+      this.listObjs.splice(listRIdsIdx, 1);
       delete this.lookupList[block.rid];
       this.listIdsCache.rid = false;
     }
@@ -487,6 +488,7 @@ class BookBlocks {
       listRIdsIdx = this.listRIds.indexOf(this.lookupList[block.in].rid);
       this.listIds.splice( listIdsIdx+1, 0, block.blockid );
       this.listRIds.splice( listRIdsIdx+1, 0, block.rid );
+      this.listObjs.splice( listRIdsIdx+1, 0, {blockRid: block.rid, blockId: block.blockid} );
     }
 
     if (this.lookupList.hasOwnProperty(block.out)) {
@@ -496,6 +498,7 @@ class BookBlocks {
         listRIdsIdx = this.listRIds.indexOf(this.lookupList[block.out].rid);
         this.listIds.splice( listIdsIdx, 0, block.blockid );
         this.listRIds.splice( listRIdsIdx, 0, block.rid );
+        this.listObjs.splice( listRIdsIdx, 0, {blockRid: block.rid, blockId: block.blockid} );
       }
     }
     this.listIdsCache.rid = false;
