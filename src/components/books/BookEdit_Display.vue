@@ -67,7 +67,7 @@ export default {
             if (firstRid) {
               let block = this.parlistO.getBlockByRid(firstRid);
               if (block) {
-                this.scrollToBlock(block.blockid);
+                this.scrollToBlock(block.blockid, true);
               }
             }
           },
@@ -77,7 +77,7 @@ export default {
             if (lastRid) {
               let block = this.parlistO.getBlockByRid(lastRid);
               if (block) {
-                this.scrollToBlock(block.blockid);
+                this.scrollToBlock(block.blockid, true);
               }
             }
           },
@@ -89,7 +89,7 @@ export default {
             if (currIdx > -1) {
               let jumpIdx = currIdx - jumpStep;
               if (jumpIdx < 0) jumpIdx = 0;
-              this.scrollToBlock(idsArray[jumpIdx]);
+              this.scrollToBlock(idsArray[jumpIdx], true);
             }
           },
           'ctrl+down': (ev)=>{
@@ -100,7 +100,7 @@ export default {
             if (currIdx > -1) {
               let jumpIdx = currIdx + jumpStep;
               if (jumpIdx > idsArray.length) jumpIdx = idsArray.length -1;
-              this.scrollToBlock(idsArray[jumpIdx]);
+              this.scrollToBlock(idsArray[jumpIdx], true);
             }
           },
           'pgup': (ev)=>{
@@ -108,7 +108,7 @@ export default {
             ev.preventDefault();
             let prevId = this.parlistO.getInId(this.startId);
             if (prevId && prevId !== this.startId) {
-              this.scrollToBlock(prevId);
+              this.scrollToBlock(prevId, true);
             }
           },
           'pgdn': (ev)=>{
@@ -128,11 +128,11 @@ export default {
       'loopPreparedBlocksChain', 'putNumBlockOBatch', 'setCurrentBookCounters', 'loadBookToc'
     ]),
 
-    scrollToBlock(blockId)
+    scrollToBlock(blockId, setStartId = false)
     {
       let vBlock = document.getElementById(blockId);
       if (vBlock) {
-        this.startId = blockId;
+        if (setStartId) this.startId = blockId;
         vBlock.scrollIntoView();
       }
     },
@@ -196,7 +196,7 @@ export default {
         this.parlistO.updateLookupsList(metaId, answer);
         //console.timeEnd('getAllBlocks');
         Vue.nextTick(()=>{
-          document.getElementById(scrollId).scrollIntoView();
+          this.scrollToBlock(scrollId);
         });
       });
     },
@@ -298,7 +298,6 @@ export default {
             }).then((answer)=>{
               this.parlistO.setLookupsList(answer.meta.bookid, answer);
               if (this.startId == false) this.startId = this.parlistO.idsArray()[0];
-              console.log('this.startId2', this.startId);
               this.loopPreparedBlocksChain({ids: this.parlistO.idsArray()})
               .then((result)=>{
                 //console.log('result', result);
@@ -327,7 +326,7 @@ export default {
             if (this.$route.params.block!=='unresolved') {
               this.onScrollEv = true;
               this.startId = this.$route.params.block || false;
-              document.getElementById(this.$route.params.block).scrollIntoView();
+              this.scrollToBlock(this.$route.params.block);
               //console.timeEnd('loadBookMounted');
             } else {
               this.startId = this.parlistO.idsArray()[0] || false;
@@ -354,7 +353,7 @@ export default {
       //console.log('$route', toRoute, fromRoute, this.onScrollEv);
       if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
         if (toRoute.params.block !== 'unresolved') {
-          document.getElementById(toRoute.params.block).scrollIntoView();
+          this.scrollToBlock(toRoute.params.block);
         } else {
           //TODO add method to find unresolved
           this.onScrollEv = true;
