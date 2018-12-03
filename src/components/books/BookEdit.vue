@@ -1,6 +1,6 @@
 <template>
 <div :class="['content-scroll-wrapper', {'recording-background': recordingState == 'recording'}]"
-  v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="smoothHandleScroll()">
+  v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="smoothHandleScroll(); updatePositions();">
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <div class="content-background">
@@ -125,6 +125,8 @@ import vueSlider from 'vue-slider-component';
 import VueHotkey from 'v-hotkey';
 Vue.use(VueHotkey);
 
+const initialTopOffset = 84;
+
 export default {
   data () {
     return {
@@ -152,9 +154,8 @@ export default {
       fntCounter: 0,
       onScrollEv: false,
 
-      upScreenTop: -85,
-      downScreenTop: 0,
-      screenTop: 84,
+      screenTop: initialTopOffset,
+      scrollPrev: 0,
 
       scrollBarTop: 0,
       scrollBarBlockHeight: 150,
@@ -495,7 +496,7 @@ export default {
 
           if (routeBlockId !== 'unresolved' && this.parlist.has(routeBlockId)) {
             this.startId = routeBlockId;
-            this.screenTop = 84;
+            this.screenTop = initialTopOffset;
             this.lazyLoad();
             return Promise.resolve(routeBlockId);
             //this.lazyLoad(false, lastId);
@@ -1448,7 +1449,7 @@ export default {
                 });
 
               }).catch(err=>{
-                this.screenTop = 84;
+                this.screenTop = initialTopOffset;
                 return err;
               });
             }
@@ -1494,7 +1495,7 @@ export default {
                 })
 
               }).catch(err=>{
-                this.screenTop = 84;
+                this.screenTop = initialTopOffset;
                 return err;
               });
             }
@@ -1566,6 +1567,17 @@ export default {
       return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
     },
 
+    updatePositions() {
+      //setTimeout(()=>{
+        let currScroll = this.$refs.contentScrollWrapRef.scrollTop;
+        var editors = document.getElementsByClassName('medium-editor-toolbar-active');
+        if (editors && editors.length) { //move editor toolbar
+          editors[0].style.top = editors[0].getBoundingClientRect().top - (currScroll - this.scrollPrev) +'px';
+        }
+        this.scrollPrev = currScroll;
+      //}, 1);
+    },
+
     smoothHandleScroll: _.debounce(function () {
       this.handleScroll();
     }, 150),
@@ -1635,6 +1647,7 @@ export default {
             }
           }
         }
+
 //         if (firstVisibleId !== false && this.$route.params.block !== firstVisibleId) {
 //           this.onScrollEv = true;
 //           this.$router.push({
