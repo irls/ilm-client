@@ -67,8 +67,7 @@ export default {
             if (firstRid) {
               let block = this.parlistO.getBlockByRid(firstRid);
               if (block) {
-                document.getElementById(block.blockid).scrollIntoView();
-                this.startId = block.blockid;
+                this.scrollToBlock(block.blockid);
               }
             }
           },
@@ -78,39 +77,30 @@ export default {
             if (lastRid) {
               let block = this.parlistO.getBlockByRid(lastRid);
               if (block) {
-                document.getElementById(block.blockid).scrollIntoView();
-                this.startId = block.blockid;
+                this.scrollToBlock(block.blockid);
               }
             }
           },
           'ctrl+up': (ev)=>{
-            let jumpStep = Math.floor(this.parlistO.rIdsArray().length * 0.1);
-            let currId, crossId = this.startId;
-            if (crossId) for (var idx=0; idx < jumpStep; idx++) {
-              let blockId = this.parlistO.getInId(crossId);
-              if (blockId) {
-                currId = crossId;
-                crossId = blockId;
-              } else break;
-            }
-            if (currId) {
-              document.getElementById(currId).scrollIntoView();
-              this.startId = currId;
+            //console.log('ctrl+up arrow');
+            let idsArray = this.parlistO.idsArray();
+            let jumpStep = Math.floor(idsArray.length * 0.1);
+            let currIdx = idsArray.indexOf(this.startId);
+            if (currIdx > -1) {
+              let jumpIdx = currIdx - jumpStep;
+              if (jumpIdx < 0) jumpIdx = 0;
+              this.scrollToBlock(idsArray[jumpIdx]);
             }
           },
           'ctrl+down': (ev)=>{
-            let jumpStep = Math.floor(this.parlistO.rIdsArray().length * 0.1);
-            let currId, crossId = this.startId;
-            if (crossId) for (var idx=0; idx < jumpStep; idx++) {
-              let blockId = this.parlistO.getOutId(crossId);
-              if (blockId) {
-                currId = crossId;
-                crossId = blockId;
-              } else break;
-            }
-            if (currId) {
-              document.getElementById(currId).scrollIntoView();
-              this.startId = currId;
+            //console.log('ctrl+down arrow');
+            let idsArray = this.parlistO.idsArray();
+            let jumpStep = Math.floor(idsArray.length * 0.1);
+            let currIdx = idsArray.indexOf(this.startId);
+            if (currIdx > -1) {
+              let jumpIdx = currIdx + jumpStep;
+              if (jumpIdx > idsArray.length) jumpIdx = idsArray.length -1;
+              this.scrollToBlock(idsArray[jumpIdx]);
             }
           },
           'pgup': (ev)=>{
@@ -118,8 +108,7 @@ export default {
             ev.preventDefault();
             let prevId = this.parlistO.getInId(this.startId);
             if (prevId && prevId !== this.startId) {
-              this.startId = prevId;
-              document.getElementById(prevId).scrollIntoView();
+              this.scrollToBlock(prevId);
             }
           },
           'pgdn': (ev)=>{
@@ -127,8 +116,7 @@ export default {
             ev.preventDefault();
             let nextId = this.parlistO.getOutId(this.startId);
             if (nextId && nextId !== this.startId) {
-              this.startId = nextId;
-              document.getElementById(nextId).scrollIntoView();
+              this.scrollToBlock(nextId);
             }
           },
         }
@@ -139,6 +127,15 @@ export default {
       'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
       'loopPreparedBlocksChain', 'putNumBlockOBatch', 'setCurrentBookCounters', 'loadBookToc'
     ]),
+
+    scrollToBlock(blockId)
+    {
+      let vBlock = document.getElementById(blockId);
+      if (vBlock) {
+        this.startId = blockId;
+        vBlock.scrollIntoView();
+      }
+    },
 
     onScroll(ev) {
       //console.log('onScroll', 'this.onScrollEv', this.onScrollEv);
@@ -243,26 +240,6 @@ export default {
       this.setCurrentBookCounters(['not_marked_blocks']);
       this.loadBookToc({bookId: this.meta._id, isWait: true});
     },
-    scrollToBlock(id, position = 'top')
-    {
-      if (this.parlist.has(id)) {
-        this.screenTop = 0;
-        this.startId = id;
-        this.parlistO.setStartId(id);
-        console.log('Has id: ', id);
-      } else {
-        let idsArray = this.parlistO.getNextIds(id, 5);
-        this.loadPreparedBookDown(idsArray)
-        .then((blockId)=>{
-          console.log('loading id: ', blockId);
-          //this.setBlockWatch();
-          this.lazyLoad(id);
-          this.screenTop = 0;
-          this.startId = id;
-          this.parlistO.setStartId(id);
-        });
-      }
-    },
     loadPreparedBookDown(idsArray) { // mostly first page load
 
       let startId = idsArray[0] || this.meta.startBlock_id;
@@ -312,7 +289,7 @@ export default {
             this.startId = startBlock;
             let taskType = this.$route.params.task_type || false;
 
-            console.log('startId', this.startId);
+            console.log('startId', this.$route.params.block, this.startId);
 
             return this.loadPartOfBookBlocks({
               bookId: this.$route.params.bookid,
@@ -321,6 +298,7 @@ export default {
             }).then((answer)=>{
               this.parlistO.setLookupsList(answer.meta.bookid, answer);
               if (this.startId == false) this.startId = this.parlistO.idsArray()[0];
+              console.log('this.startId2', this.startId);
               this.loopPreparedBlocksChain({ids: this.parlistO.idsArray()})
               .then((result)=>{
                 //console.log('result', result);
