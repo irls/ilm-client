@@ -1563,7 +1563,7 @@ export default {
       if (this.recordingState == 'recording') {
         return false;
       }
-      console.log('handleScroll', (new Date()).toJSON());
+      //console.log('handleScroll', (new Date()).toJSON());
       if (!this.onScrollEv) {
         let firstVisible = false;
         let lastVisible = false;
@@ -1943,12 +1943,12 @@ export default {
       width: 100%;
 
       &.back {
-        /*margin-right: -50%;*/
+        margin-right: -50%;
       }
       &.front {
         position: relative;
         top: 0px;
-        /*margin-left: -50%;*/
+        margin-left: -50%;
 
         .content-background {
           background: white;
