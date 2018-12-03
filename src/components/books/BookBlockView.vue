@@ -62,7 +62,7 @@
         </template>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
-        <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-lang-' + block.language]"
+        <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + block.language]"
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
@@ -457,7 +457,7 @@
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-lang-' + footnote.language]"
+                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + footnote.language]"
                     @input="commitFootnote(ftnIdx, $event)"
                     v-html="footnote.content"
                     :ref="'footnoteContent_' + ftnIdx">

@@ -309,87 +309,78 @@ export default {
   }*/
 }
 
+
+// for book settings:
 .-lang-fa, .-lang-ar {
-    .ilm-block, .content-wrap-footn {
-      direction: rtl;
-    }
-   .-lang-en, 
-   .-lang-de, 
-   .-lang-da, 
-   .-lang-cy, 
-   .-lang-es, 
-   .-lang-fr, 
-   .-lang-is, 
-   .-lang-it, 
-   .-lang-ko, 
-   .-lang-ja, 
-   .-lang-nb, 
-   .-lang-nl, 
-   .-lang-pl, 
-   .-lang-pt, 
-   .-lang-ro,
-   .-lang-ru,
-   .-lang-sv,
-   .-lang-tr  { 
-     .ilm-block {
-       direction: ltr; 
-     }
+  .ilm-block, /*.content-wrap-footn*/ {
+    direction: rtl;
+  }
+
+   .-langftn-undefined,
+   .-langftn-ar,
+   .-langftn-fa  { 
+     direction: rtl; 
    }
-}
 
-/*.table-cell {
-   .-lang-en, 
-   .-lang-de, 
-   .-lang-da, 
-   .-lang-cy, 
-   .-lang-es, 
-   .-lang-fr, 
-   .-lang-is, 
-   .-lang-it, 
-   .-lang-ko, 
-   .-lang-ja, 
-   .-lang-nb, 
-   .-lang-nl, 
-   .-lang-pl, 
-   .-lang-pt, 
-   .-lang-ro,
-   .-lang-ru,
-   .-lang-sv,
-   .-lang-tr  { 
-     ilm-block {
-       direction: ltr; 
-     }
-   }
-}*/
-
-
-.content-footnotes {
-    .-lang-fa, .-lang-ar {
-      direction: rtl;
-    }
-}
-
-.content-footnotes {
-   .-lang-en, 
-   .-lang-de, 
-   .-lang-da, 
-   .-lang-cy, 
-   .-lang-es, 
-   .-lang-fr, 
-   .-lang-is, 
-   .-lang-it, 
-   .-lang-ko, 
-   .-lang-ja, 
-   .-lang-nb, 
-   .-lang-nl, 
-   .-lang-pl, 
-   .-lang-pt, 
-   .-lang-ro,
-   .-lang-ru,
-   .-lang-sv,
-   .-lang-tr  { direction: ltr; }
 }
 
 
+// for block settings:
+.-langblock-en, 
+.-langblock-de, 
+.-langblock-da, 
+.-langblock-cy, 
+.-langblock-es, 
+.-langblock-fr, 
+.-langblock-is, 
+.-langblock-it, 
+.-langblock-ko, 
+.-langblock-ja, 
+.-langblock-nb, 
+.-langblock-nl, 
+.-langblock-pl, 
+.-langblock-pt, 
+.-langblock-ro,
+.-langblock-ru,
+.-langblock-sv,
+.-langblock-tr  { 
+  .ilm-block {
+    direction: ltr; 
+  }
+}
+
+.-langblock-ar,
+.-langblock-fa  { 
+  .ilm-block {
+    direction: rtl; 
+  }
+}
+
+// for footnote settings:
+.-langftn-en, 
+.-langftn-de, 
+.-langftn-da, 
+.-langftn-cy, 
+.-langftn-es, 
+.-langftn-fr, 
+.-langftn-is, 
+.-langftn-it, 
+.-langftn-ko, 
+.-langftn-ja, 
+.-langftn-nb, 
+.-langftn-nl, 
+.-langftn-pl, 
+.-langftn-pt, 
+.-langftn-ro,
+.-langftn-ru,
+.-langftn-sv,
+.-langftn-tr  { 
+  direction: ltr; 
+}
+
+.-langftn-ar,
+.-langftn-fa  { 
+  direction: rtl; 
+}
 
 </style>
