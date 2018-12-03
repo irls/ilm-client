@@ -2903,7 +2903,7 @@ export default {
                 secnum: '',
                 parnum: ''
               }).then((blocks)=>{
-                console.log('assembleBlock putNumBlockO', blocks[0]);
+                //console.log('assembleBlock putNumBlockO', blocks[0]);
                 this.storeListO.updBlockByRid(this.blockO.rid, {
                   type: this.block.type
                 })

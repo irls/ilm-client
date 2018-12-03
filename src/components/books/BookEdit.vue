@@ -687,6 +687,7 @@ export default {
               this.$store.commit('set_storeList', newBlock);
               this.refreshPreviewTmpl([newBlock._id]);
               this.refreshTmpl();
+              if (newBlock.type == 'illustration') this.scrollToBlock(newBlock._id);
             }
           }
         }
@@ -1307,7 +1308,7 @@ export default {
           } break;
         };
     },
-    
+
     unableJoinMessage() {
       this.$root.$emit('show-modal', {
         title: 'Blocks with different types can\'t be joined',
@@ -1323,7 +1324,7 @@ export default {
         class: ['align-modal']
       });
     },
-    
+
     unableToJoinVoiceworkMessage() {
       this.$root.$emit('show-modal', {
         title: 'Blocks with different voicework type can’t be joined.',
