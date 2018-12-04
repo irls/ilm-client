@@ -127,7 +127,8 @@ export const store = new Vuex.Store({
     alignWatch: null,
     audiobookWatch: null,
     selectionXHR: null,
-    partOfBookBlocksXHR: null
+    partOfBookBlocksXHR: null,
+    taskTypes: {tasks: [], categories: []}
   },
 
   getters: {
@@ -255,7 +256,8 @@ export const store = new Vuex.Store({
     },
     aligningBlocks: state => state.aligningBlocks,
     currentAudiobook: state => state.currentAudiobook,
-    currentBookToc: state => state.currentBookToc
+    currentBookToc: state => state.currentBookToc,
+    taskTypes: state => state.taskTypes
   },
 
   mutations: {
@@ -884,6 +886,8 @@ export const store = new Vuex.Store({
 //              dispatch('updateLibrariesList');
 //            });*/
 //          });
+          
+          dispatch('getTaskTypes');
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -2187,6 +2191,15 @@ export const store = new Vuex.Store({
       setInterval(() => {
         dispatch('getAudioBook')
       }, 10000);
+    },
+    getTaskTypes({state}) {
+      return axios.get(state.API_URL + 'tasks/types').then(types => {
+        state.taskTypes = types.data
+        return Promise.resolve(state.taskTypes)
+      })
+      .catch(error => {
+        return Promise.reject({})
+      })
     }
   }
 })
