@@ -25,6 +25,7 @@ let defBlock = [
   'illustration_height',
   'description',
   'voicework',
+  'language',
   'markedAsDone',
   'status',
   'audiosrc_ver',
@@ -158,18 +159,24 @@ class BookBlock {
     this.partUpdate = false;
 
     this.markedAsDone = init.markedAsDone || false;
+    this.language = init.language || false;
     this.status = init.status;
     this.audiosrc_ver = init.audiosrc_ver || {};
 
     this.isUpdated = false;
     this.isChanged = init.isChanged || false;
+    this.changes = init.changes || [];
     this.isAudioChanged = init.isAudioChanged || false;
     this.isIllustrationChanged = init.isIllustrationChanged || false;
+    this.timestamp = (new Date()).toJSON();
 
 //     this.checkedStart = init.checkedStart || false;
 //     this.checkedEnd = init.checkedEnd || false;
 //     this.checked = init.checked || false;
     this.realigned = init.realigned || false;
+    this.check_id = init.check_id || null;
+    this.footnoteIdx = init.footnoteIdx || null;
+    this.isAudioEditing = init.isAudioEditing || false;
 
     this.history = {};
 
@@ -395,7 +402,7 @@ class BookBlock {
 
   getIllustration() {
     if (this.illustration) {
-      return process.env.ILM_API + this.illustration + '?' + (new Date()).toJSON();
+      return process.env.ILM_API + this.illustration + '?' + this.timestamp;
     }
   }
 

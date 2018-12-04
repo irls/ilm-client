@@ -38,7 +38,7 @@
       <template v-if="job.total > 0">
         <div class="tr">
           <div class="td task-type">
-            <h2><i class="fa fa-book" data-toggle="tooltip" v-bind:title="job.description"></i>&nbsp;{{job.title}}&nbsp;({{job.total}})&nbsp;<i :class="[job.tasksVisible ? 'fa-chevron-up' : 'fa-chevron-down' , 'fa collapsebtn']" aria-hidden="true" @click='job.tasksVisible = !job.tasksVisible'></i></h2>
+            <h2><i class="fa fa-book" data-toggle="tooltip" v-bind:title="job.description"></i>&nbsp;{{job.title}}&nbsp;({{job.total}})<span class="hidden">{{job.bookid}}</span>&nbsp;<i :class="[job.tasksVisible ? 'fa-chevron-up' : 'fa-chevron-down' , 'fa collapsebtn']" aria-hidden="true" @click='job.tasksVisible = !job.tasksVisible'></i></h2>
           </div>
           <!--<div class="td"></div>-->
         </div>
@@ -197,10 +197,16 @@ export default {
           let key = 'type_'+val.type;
           if (acc.hasOwnProperty(key)) acc[key].count ++;
           else {
-              val.title = this.task_types.tasks.find((s_type) => {
+              
+              let title = this.task_types.tasks.find((s_type) => {
                   return s_type._id == val.type
-              }).title;
-              acc[key] = {count:1, ...val};
+              })
+              if (title) {
+                val.title = title.title;
+                acc[key] = {count:1, ...val};
+              } else {
+                console.log('title is not found: ', val, this.task_types.tasks);
+              }
           }
           return  acc;
         }, {} );

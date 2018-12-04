@@ -88,7 +88,7 @@ export const store = new Vuex.Store({
     bookFilters: {filter: '', language: '', importStatus: 'staging'},
     editMode: 'Editor',
     allowBookEditMode: false,
-    tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": []},
+    tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
     tc_tasksByBlock: {},
     tc_userTasks: {list: [], total: 0},
     API_URL: process.env.ILM_API + '/api/v1/',
@@ -127,7 +127,10 @@ export const store = new Vuex.Store({
     alignWatch: null,
     audiobookWatch: null,
     selectionXHR: null,
-    partOfBookBlocksXHR: null
+    partOfBookBlocksXHR: null,
+    tasksXHR: 0,
+    approveBlocksList: [],
+    replicatingDB: {}
   },
 
   getters: {
@@ -156,7 +159,7 @@ export const store = new Vuex.Store({
         }
         if (state.tc_userTasks && state.tc_userTasks.list) {
           for (let t_id in state.tc_userTasks.list) {
-            if (state.tc_userTasks.list[t_id].tasks && state.tc_userTasks.list[t_id].tasks.length > 0) {
+            if ((state.tc_userTasks.list[t_id].tasks && state.tc_userTasks.list[t_id].tasks.length > 0) || state.tc_userTasks.list[t_id].is_proofread_unassigned) {
               let exists = books.find(_b => _b._id == state.tc_userTasks.list[t_id].bookid);
               if (!exists) {
                 let b = state.books_meta.find(_b => state.tc_userTasks.list[t_id].bookid == _b._id);
@@ -255,7 +258,8 @@ export const store = new Vuex.Store({
     },
     aligningBlocks: state => state.aligningBlocks,
     currentAudiobook: state => state.currentAudiobook,
-    currentBookToc: state => state.currentBookToc
+    currentBookToc: state => state.currentBookToc,
+    approveBlocksList: state => state.approveBlocksList
   },
 
   mutations: {
@@ -428,7 +432,7 @@ export const store = new Vuex.Store({
     TASK_LIST_LOADED (state) {
       let tc_userTasks = 0;
       state.tc_tasksByBlock = {};
-      state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": []};
+      state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false};
       for (let jobid in state.tc_userTasks.list) {
         let job = Object.assign({}, state.tc_userTasks.list[jobid])
         tc_userTasks+= job.tasks.length
@@ -475,11 +479,11 @@ export const store = new Vuex.Store({
               state.tc_tasksByBlock[t.blockid].push(t)
             }
           })
-          state.tc_currentBookTasks = {job: job, tasks: job.tasks, assignments: assignments, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : []}
+          state.tc_currentBookTasks = {job: job, tasks: job.tasks, assignments: assignments, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : [], is_proofread_unassigned: job.is_proofread_unassigned ? job.is_proofread_unassigned : false}
         }
       }
       state.tc_userTasks.total = tc_userTasks;
-      state.allowBookEditMode = state.tc_currentBookTasks.tasks.length > 0;
+      state.allowBookEditMode = state.tc_currentBookTasks.tasks.length > 0 || state.tc_currentBookTasks.is_proofread_unassigned;
     },
     PREPARE_BOOK_COLLECTIONS(state) {
       if (state.isAdmin || state.isLibrarian) {
@@ -805,13 +809,38 @@ export const store = new Vuex.Store({
 //               // handle errors
 //             })
 //         });
-
+        state.replicatingDB.ilm_tasks = false;
         state.tasksDB.replicate.from(state.tasksRemoteDB)
         .on('complete', (info) => {
+          state.replicatingDB.ilm_tasks = true;
+          console.log('REPLICATION COMPLETE TASKS')
           state.tasksDB.sync(state.tasksRemoteDB, {live: true, retry: true})
           .on('change', (change) => {
-            //console.log('Tasks DB change', change);
-            dispatch('tc_loadBookTask');
+            //console.log('Tasks DB change', change.change.docs);
+            if (change.change && change.change.docs && Array.isArray(change.change.docs)) {
+              let isReload = change.change.docs.filter(d => {
+                //console.log('COMPARE', d, d.executor, state.auth.getSession().user_id);
+                return d.executor === state.auth.getSession().user_id
+              });
+              if (isReload) {
+                //console.log('LOAD')
+                isReload.forEach(task => {
+                  if (!task.time_completed) {
+                    //console.log('PUSH', task)
+                    state.tc_currentBookTasks.tasks.push(task);
+                  } else {
+                    let _t = state.tc_currentBookTasks.tasks.find(t => t._id == task._id);
+                    //console.log('COMPLETED', _t);
+                    if (_t) {
+                      //console.log(state.tc_currentBookTasks.tasks.length);
+                      state.tc_currentBookTasks.tasks.splice(state.tc_currentBookTasks.tasks.indexOf(_t), 1);
+                      //console.log(state.tc_currentBookTasks.tasks.length);
+                    }
+                  }
+                });
+                dispatch('tc_loadBookTask');
+              }
+            }
           })
         });
 
@@ -896,7 +925,7 @@ export const store = new Vuex.Store({
         commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
         commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
-        state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": []};
+        state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false};
 
         if (state.metaDB) state.metaDB.destroy()
         if (state.contentDB) state.contentDB.destroy()
@@ -1235,32 +1264,29 @@ export const store = new Vuex.Store({
     },
 
     getBlock ({commit, state, dispatch}, block_id) {
-      //commit('set_blocker', 'getBlock');
-      return state.contentRemoteDB
-        .get(block_id)
-        .then(res => {
-          //commit('clear_blocker', 'getBlock');
-          //commit('clear_block_lock', {block: res});
-          //commit('check_block_lock', {block: res});
-          return Promise.resolve(res)
-        })
-        .catch((err) => {
-          if (err.status == 404) {
-          return state.contentDB
-            .get(block_id)
-            .then(res => {
-              //commit('clear_blocker', 'getBlock');
-              return Promise.resolve(res)
+        return axios.get(state.API_URL + 'book/block/' + block_id)
+          .then(response => {
+              return Promise.resolve(response.data);
             })
             .catch(err => {
-              //commit('clear_blocker', 'getBlock');
-              return Promise.reject(err)
+              console.log(err);
+              return Promise.reject(err);
             });
-          } else {
-            //commit('clear_blocker', 'getBlock');
-            return Promise.reject(err);
-          }
-        });
+    },
+
+    getBlocks ({commit, state, dispatch}, blocksIds) {
+      return state.contentRemoteDB
+      .query('filters_byId/byId', {
+          keys: blocksIds,
+          include_docs: true
+      }).then(function (res) {
+          let result = [];
+          res.rows.forEach(b => {
+            result.push(b.doc);
+          });
+          return result;
+      })
+      .catch(err => err);
     },
 
     loadBlocks ({commit, state, dispatch}, params) {
@@ -1319,32 +1345,12 @@ export const store = new Vuex.Store({
     },
 
     loopPreparedBlocksChain ({commit, state, dispatch}, params) {
-      let results = {rows: [], finish: false, blockId: false};
-      return new Promise ((resolve, reject)=>{
-
-        (function loop(i, block_id) {
-
-          if (i <= params.ids.length && block_id) {
-            dispatch('getBlock', block_id)
-            .then((b)=>{
-              if (b && b._id) {
-                results.rows.push(b);
-                loop(i+1, params.ids[i]);
-              } else resolve(results);
-            })
-            .catch((err)=>{
-              results.finish = true;
-              resolve(results);
-            })
-          }
-          else {
-            results.finish = true;
-            resolve(results);
-          }
-        })(0, params.ids[0]); // start
-
+      let results = {rows: []};
+      return dispatch('getBlocks', params.ids)
+      .then((rows)=>{
+        results.rows = rows;
+        return results;
       })
-
     },
 
     searchBlocksChain ({commit, state, dispatch}, params) {
@@ -1499,7 +1505,7 @@ export const store = new Vuex.Store({
         let cleanBlock = block.clean();
         commit('set_blocker', 'putBlock');
         //console.log('putBlock', cleanBlock);
-        return dispatch('getBlock', cleanBlock._id)
+        /*return dispatch('getBlock', cleanBlock._id)
         .then(function(doc) {
           cleanBlock._rev = doc._rev;
           return dispatch('_putBlock', cleanBlock)
@@ -1522,7 +1528,19 @@ export const store = new Vuex.Store({
               commit('clear_blocker', 'putBlock');
               console.log('Block save error:', err);
             }
-        });
+        });*/
+        return axios.put(state.API_URL + 'book/block/' + block._id,
+          {
+            'block': cleanBlock,
+          })
+            .then(response => {
+              commit('clear_blocker', 'putBlock');
+              block._rev = response.data.rev;
+              return Promise.resolve(response.data);
+            })
+            .catch(err => {
+              console.log(err);
+            });
     },
 
     putBlockPart ({commit, state, dispatch}, blockData) {
@@ -1649,21 +1667,29 @@ export const store = new Vuex.Store({
 
     tc_loadBookTask({state, commit, dispatch}) {
       //console.log('a1');
-      return axios.get(state.API_URL + 'tasks')
+      state.tasksXHR = Date.now();
+      let start = state.tasksXHR;
+      return axios.get(state.API_URL + 'tasks?start=' + start)
         .then((list) => {
           //console.log('a2');
-          state.tc_tasksByBlock = {}
-          state.tc_userTasks = {list: list.data.rows, total: 0}
-          commit('TASK_LIST_LOADED')
-          commit('PREPARE_BOOK_COLLECTIONS');
-          dispatch('recountApprovedInRange');
-          return list;
+          if (start == state.tasksXHR) {
+            state.tc_tasksByBlock = {}
+            state.tc_userTasks = {list: list.data.rows, total: 0}
+            commit('TASK_LIST_LOADED')
+            commit('PREPARE_BOOK_COLLECTIONS');
+            dispatch('recountApprovedInRange');
+            return list;
+          } else {
+            return Promise.resolve([]);
+          }
         })
-        .catch(err => err)
+        .catch(err => {
+          console.log(err)
+        })
     },
 
     tc_setCurrentBookTasks({state}) {
-      state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": []};
+      state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false};
       for (let jobid in state.tc_userTasks.list) {
         let job = state.tc_userTasks.list[jobid]
         if (job.bookid == state.currentBookid) {
@@ -1673,13 +1699,16 @@ export const store = new Vuex.Store({
           if (t.blockid) {
             state.tc_tasksByBlock[t.blockid] = t
           }*/
-          state.tc_currentBookTasks = {job: job, tasks: job.tasks, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : []}
+          state.tc_currentBookTasks = {job: job, tasks: job.tasks, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : [], is_proofread_unassigned: job.is_proofread_unassigned ? job.is_proofread_unassigned : false}
         }
       }
       commit('ALLOW_BOOK_EDIT_MODE', state.tc_currentBookTasks.tasks.length > 0);
     },
 
     tc_approveBookTask({state, commit, dispatch}, task) {
+      if (task.blockid) {
+        state.approveBlocksList.push(task.blockid);
+      }
       return axios.post(state.API_URL + 'task/' + task.blockid + '/approve_block',
       {
         'bookId': task.bookid || false,
@@ -1688,6 +1717,13 @@ export const store = new Vuex.Store({
         'taskType': task.type || false
       })
       .then((list) => {
+        if (task.blockid) {
+          state.approveBlocksList.forEach((_b, i) => {
+            if (_b === task.blockid) {
+              state.approveBlocksList.splice(i, 1);
+            }
+          })
+        }
         //console.log('APPROVE TC', list)
         //state.tc_tasksByBlock = {}
         //state.tc_userTasks = {list: list.data.rows, total: 0}
@@ -1699,8 +1735,13 @@ export const store = new Vuex.Store({
             }
           });
         }
+        if (!state.tc_currentBookTasks.tasks || state.tc_currentBookTasks.tasks.length === 0) {
+          state.tc_currentBookTasks.is_proofread_unassigned = false;
+        }
         //state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": []};
-        dispatch('tc_loadBookTask');
+        if (state.replicatingDB.ilm_tasks !== true) {
+          dispatch('tc_loadBookTask');
+        }
         return Promise.resolve(list);
       })
       .catch(err => err)
@@ -2119,7 +2160,7 @@ export const store = new Vuex.Store({
         dispatch('getBookAlign');
         state.alignWatch = setInterval(() => {
           dispatch('getBookAlign');
-        }, 10000);
+        }, 15000);
       }
     },
     getBookAlign({state, commit, dispatch}) {
@@ -2184,9 +2225,9 @@ export const store = new Vuex.Store({
       if (state.audiobookWatch) {
         clearInterval(state.audiobookWatch);
       }
-      setInterval(() => {
+      state.audiobookWatch = setInterval(() => {
         dispatch('getAudioBook')
-      }, 10000);
+      }, 15000);
     }
   }
 })

@@ -200,6 +200,9 @@
               <div>
                 Version #{{ currentBook.version ? currentBook.version : '1.0' }}
               </div>
+              <div v-if="publicationStatus" >
+                Status #{{ publicationStatus }}
+              </div>
               <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
               <div v-if="allowPublishCurrentBook">
                 <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
@@ -656,7 +659,8 @@ export default {
       numProps: new Map(),
       activeTabIndex: 0,
       isPublishing: false,
-      isPublishingQueue: false
+      isPublishingQueue: false,
+      publicationStatus: false
     }
   },
 
@@ -900,11 +904,11 @@ export default {
         }
       }
     },
-    // 'currentBook.published': {
-    //   handler(val) {
-    //     this.isPublishing = false;
-    //   }
-    // },
+    'currentBook.publicationStatus': {
+      handler(val) {
+        this.publicationStatus = val;
+      }
+    },
     'currentBook.isIntheProcessOfPublication': {
       handler(val) {
         console.log(val)
@@ -1113,6 +1117,7 @@ export default {
                 self.textCleanupProcess = false
                 if (!doc.data.error) {
                   self.currentBook.private = false
+                  self.tc_currentBookTasks.assignments.splice(self.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
                   self.$store.dispatch('tc_loadBookTask')
                   self.infoMessage = 'Text cleanup task finished'
                 } else {

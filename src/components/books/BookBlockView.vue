@@ -1,5 +1,6 @@
 <template>
-<div class="table-body -block" ref="viewBlock" v-bind:class="['-mode-' + mode, blockOutPaddings]" :id="block._id">
+  <div ref="viewBlock" :id="block._id"
+    :class="['table-body -block', '-mode-' + mode, blockOutPaddings]">
     <div v-if="isLocked" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
 
@@ -62,7 +63,7 @@
         </template>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
-        <div :class="['table-body', '-content', {'editing': isAudioEditing}]"
+        <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + block.language]"
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
@@ -123,6 +124,13 @@
                       <li v-else class="disabled">
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Join with next block</li>
+                      <li class="separator"></li>
+                      <li @click.prevent="selectLang($event)"  v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
+                          <i class="fa fa-language" aria-hidden="true"></i>
+                          Language: <select v-model='block.language' style="min-width: 100px;" @input="selectLangSubmit(block);">
+                          <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
+                        </select>
+                      </li>
                       <li class="separator"></li>
                       <template v-if="block.type != 'illustration' && block.type != 'hr'">
                       <li @click="showModal('block-html')">
@@ -211,11 +219,12 @@
               </div>
               <!--<div class="par-ctrl -hidden">-->
             </div>
-            <!--<div class="table-row controls-top">-->
+            <!--<div class="table-row-flex controls-top">-->
 
             <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div>
+
             <div :class="['table-row ilm-block', block.markedAsDone && !hasChanges ? '-marked':'']">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(), {'checked': blockO.checked}]"
@@ -254,7 +263,7 @@
                 </div>
                 <!--<img v-if="block.illustration"-->
 
-                <div v-else class="content-wrap"
+                <div v-else class="content-wrap -hover -focus"
                 :id="'content-'+block._id"
                 ref="blockContent"
                 v-html="mode === 'narrate' ? blockContent : block.content"
@@ -312,7 +321,7 @@
                       Archive flag</a>
 
                     <a href="#" class="flag-control -right -top"
-                      v-if="_is('proofer', true) && part.status == 'hidden' && !isCompleted"
+                      v-if="_is('proofer', true) && part.status == 'hidden' && (!isCompleted || isProofreadUnassigned())"
                       @click.prevent="unHideFlagPart($event, partIdx)">
                       Unarchive flag</a>
 
@@ -334,7 +343,10 @@
                     <textarea v-if="part.status !== 'hidden'"
                       class="flag-comment"
                       v-model="part.newComment"
-                      placeholder="Enter description here ...">
+                      placeholder="Enter description here ..."
+                      @input="onInputFlag"
+                      @focusout="onFocusoutFlag(partIdx, $event)"
+                      :disabled="!canCommentFlagPart(part)">
                     </textarea>
 
                     </template>
@@ -350,12 +362,12 @@
                       Flag for editing also</a>
                     </template>
 
-                    <a v-if="part.status == 'resolved' && !part.collapsed && !isCompleted"
+                    <a v-if="part.status == 'resolved' && !part.collapsed && (!isCompleted ||isProofreadUnassigned())"
                       href="#" class="flag-control"
                       @click.prevent="reopenFlagPart($event, partIdx)">
                       Re-open flag</a>
 
-                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && !isCompleted"
+                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned())"
                       href="#" class="flag-control -left"
                       @click.prevent="resolveFlagPart($event, partIdx)">
                       Resolve flag</a>
@@ -406,9 +418,16 @@
                   <div class="table-cell">
                     <template v-if="allowEditing">
                       <template v-if="tc_hasTask('content_cleanup')">
-                        <label>Voicework:&nbsp;
-                        <select v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
-                          <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
+                        <label>
+                          <i class="fa fa-volume-off"></i>
+
+                          <select v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
+                            <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
+                          </select>
+                        </label>
+                        <label><i class="fa fa-language" aria-hidden="true"></i>
+                        <select v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
+                          <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
                         </select>
                         </label>
                       </template>
@@ -443,7 +462,7 @@
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}]"
+                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + footnote.language]"
                     @input="commitFootnote(ftnIdx, $event)"
                     v-html="footnote.content"
                     :ref="'footnoteContent_' + ftnIdx">
@@ -479,7 +498,7 @@
                   <a class="go-to-block" v-on:click="scrollToBlock(selectionEnd)">View end({{displaySelectionEnd}})</a>
                 </template>
               </div>
-              <div v-if="isRecording" class="recording-hover-controls" >
+              <div v-if="isRecording" class="recording-hover-controls" ref="recordingCtrls">
                 <i class="fa fa-ban" v-if="isRecording" @click="cancelRecording()"></i>
                 <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i>
                 <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i>
@@ -489,7 +508,7 @@
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
                   <div class="save-block -right" @click="discardBlock"
-                       v-bind:class="{'-disabled': !(allowEditing && hasChanges) || isAudioEditing}">
+                       v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
                     Discard
                   </div>
                   <div class="save-block -right"
@@ -498,7 +517,7 @@
                     Save
                   </div>
                   <template v-if="!isCompleted">
-                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled}]"
+                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
                     @click.prevent="reworkBlock">
                     Need work</div>
                   <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
@@ -518,7 +537,9 @@
             </div>
             <!--<div class="table-row controls-bottom">-->
         </div>
+        <!--<div :class="['table-body', '-content',-->
     </div>
+    <!--<div :class="['table-cell'-->
     <div class="table-cell controls-right">
     </div>
     <modal :name="'delete-block-message' + block._id" :resizeable="false" :clickToClose="false" height="auto">
@@ -577,7 +598,7 @@
       </div>
     </div>
     </modal>
-</div>
+  </div>
 </template>
 
 <script>
@@ -594,6 +615,7 @@ import BlockContextMenu   from '../generic/BlockContextMenu';
 import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
+import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
@@ -622,6 +644,7 @@ export default {
       classSel: false,
       styleSel: false,
       blockTypes: BlockTypes,
+      languages: Languages,
 
       isUpdated: false,
       isChanged: false,
@@ -647,6 +670,7 @@ export default {
       },
 
       reRecordPosition: false,
+      hasContentListeners: false,
       isUpdating: false,
       recordStartCounter: 0,
       voiceworkChange: false,
@@ -662,7 +686,7 @@ export default {
         start: Number,
         end: Number
       },
-      isApproving: false
+      isSaving: false
     }
   },
   components: {
@@ -672,10 +696,13 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'approveWaiting'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'createBlockSubtask'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
+        if (this.isSaving) {
+          return true;
+        }
         return this.block ? this.isBlockLocked(this.block._id) : false;
       },
       isChecked: { cache: false,
@@ -735,11 +762,17 @@ export default {
         }
         return voiceworks;
       },
+      blockLanguages: function () {
+        return this.languages;
+      },
       footnVoiceworks: function () {
         return {
           'tts': 'Text to Speech',
           'no_audio': 'No audio'
         }
+      },
+      footnLanguages: function () {
+        return this.languages;
       },
       voiceworkSel: { cache: false,
         get() {
@@ -784,7 +817,15 @@ export default {
           }
           let flagsSummary = this.block.calcFlagsSummary();
           let executors = this.tc_currentBookTasks.job.executors;
-          if (executors[flagsSummary.dir] ==  this.auth.getSession().user_id) return true;
+          if (executors[flagsSummary.dir] ==  this.auth.getSession().user_id) {
+            if (this._is('proofer', true) &&
+                    (this.tc_hasBlockTask(this.block._id, 'approve-block') || this.tc_hasBlockTask(this.block._id, 'approve-revoked-block')) &&
+                    flagsSummary.stat === 'open') {// if flag assigned to proofer - user has two roles
+              return false;
+            } else {
+              return true;
+            }
+          }
 
           return flagsSummary.stat !== 'open';
       },
@@ -830,6 +871,7 @@ export default {
             if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
             if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1) return false;
             if (this._is('editor', true) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
+            if (this._is('proofer', true) && this.tc_hasBlockTask(this.block._id, 'approve-revoked-block') && flags_summary.stat !== 'open') return false;
             if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
             if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
             if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
@@ -907,6 +949,17 @@ export default {
           return this.isChanged || this.isIllustrationChanged || this.isAudioChanged;
         }
       },
+      isApproving :{
+        get() {
+          let r = this.approveBlocksList.find(_r => this.block && _r === this.block._id);
+          return r;
+        }
+      },
+      approveWaiting: {
+        get() {
+          return this._is('proofer', true) && this.approveBlocksList.length > 0;
+        }
+      },
       ...mapGetters({
           auth: 'auth',
           book: 'currentBook',
@@ -919,7 +972,8 @@ export default {
           blockSelection: 'blockSelection',
           isBlockLocked: 'isBlockLocked',
           lockedBlocks: 'lockedBlocks',
-          storeListO: 'storeListO'
+          storeListO: 'storeListO',
+          approveBlocksList: 'approveBlocksList'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
@@ -982,6 +1036,7 @@ export default {
   mounted: function() {
       //this.initEditor();
       //console.log('mounted', this.block._id);
+      this.$root.$emit('reload-block-' + this.block._id);
       this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
       if (!this.player && this.blockAudio.src) {
           this.initPlayer();
@@ -1010,6 +1065,24 @@ export default {
       this.isChanged = this.block.isChanged;
       this.isAudioChanged = this.block.isAudioChanged;
       this.isIllustrationChanged = this.block.isIllustrationChanged;
+      if (this.block.changes) {
+        this.changes = this.block.changes;
+        delete this.block.changes;
+      }
+      if (this.block.check_id) {
+        this.check_id = this.block.check_id;
+        delete this.block.check_id;
+      }
+      if (this.block.footnoteIdx) {
+        this.footnoteIdx = this.block.footnoteIdx;
+        delete this.block.footnoteIdx;
+      }
+      if (this.block.isAudioEditing) {
+        this.isAudioEditing = this.block.isAudioEditing;
+        this.audioEditorEventsOff();
+        this.audioEditorEventsOn();
+        delete this.block.isAudioEditing;
+      }
       //console.log('mounted isChecked', this.blockO);
       //this.isChecked = this.blockO.checked;
       //this.detectMissedFlags();
@@ -1029,6 +1102,9 @@ export default {
         this.recountApprovedInRange();
       });
       this.$root.$on('prepare-alignment', this._saveContent);
+      this.$root.$on('reload-block-' + this.block._id, () => {
+        this.audioEditorEventsOff();
+      });
 
 
 //       Vue.nextTick(() => {
@@ -1048,6 +1124,9 @@ export default {
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
+        if (this.isProofreadUnassigned()) {
+          return flagType === 'narrator' ? this.block.voicework === 'narration' : true;
+        }
         if (!this.tc_getBlockTask(this.block._id)) {
           return false;
         }
@@ -1070,6 +1149,21 @@ export default {
         }
 
         return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
+      },
+      isProofreadUnassigned: function() {
+        if (this._is('proofer', true)) {
+          if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned()) {
+            return true;
+          }
+          if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned()) {
+            let result = this.block.flags.find(f => {
+
+              return f.creator === this.auth.getSession().user_id
+            });
+            return result;
+          }
+        }
+        return false;
       },
       //-- } -- end -- Checkers --//
 
@@ -1165,7 +1259,7 @@ export default {
                 ]
               };
           }
-          this.editorDescr = new MediumEditor('[id="' + this.block._id + '"] .content-wrap-desc', {
+          this.editorDescr = new MediumEditor(this.$refs.blockDescription, {
               toolbar: toolbar,
               buttonLabels: 'fontawesome',
               quotesList: this.authors,
@@ -1253,6 +1347,22 @@ export default {
         $(ev.target).find("span[style]").contents().unwrap();
         ev.target.focus();
       },
+      onInputFlag: function(ev) {
+        this.isChanged = true;
+        this.pushChange('flags');
+        ev.target.focus();
+      },
+      onFocusoutFlag: function(partIdx, ev) {
+        if (ev && ev.target) {
+          this.block.flags.forEach((flag, idx) => {
+            if (flag._id === this.flagsSel._id) {
+              this.block.flags[idx].parts[partIdx].newComment = ev.target.value;
+            }
+          });
+
+        }
+        //console.log(this.flagsSel);
+      },
       onFocusout: function(el) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
@@ -1266,6 +1376,9 @@ export default {
           if (this.$refs.blockContent) {
             this.$refs.blockContent.innerHTML = block.content;
             this.$refs.blockContent.focus();
+          }
+          if (this.$refs.blockFlagPopup) {
+            this.$refs.blockFlagPopup.close();
           }
           this.block.footnotes = block.footnotes ? block.footnotes : [];
           this.block.footnotes.forEach((ftn, ftnIdx) => {
@@ -1414,9 +1527,18 @@ export default {
 
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
+        this.isSaving = true;
         return this.putBlock(this.block).then(()=>{
-          if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1)) {
-            this.$emit('blockUpdated', this.block._id);
+          this.isSaving = false;
+          if (!this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') &&
+                  !this.tc_getBlockTask(this.block._id)) {
+            if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) &&
+                    this._is('editor', true)) {
+              this.createBlockSubtask(this.block._id, 'approve-modified-block', 'editor');
+            } else if (!this.tc_getBlockTask(this.block._id) &&
+                    this.changes.indexOf('flags') !== -1 && this._is('proofer', true)) {
+              this.createBlockSubtask(this.block._id, 'approve-revoked-block', 'proofer');
+            }
           }
           let is_content_changed = this.hasChange('content');
           this.isChanged = false;
@@ -1558,10 +1680,14 @@ export default {
                   this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
                   this.isAudioChanged = false;
                   this.isChanged = false;
+                  this.block.isAudioChanged = false;
+                  this.block.isChanged = false;
                   return BPromise.resolve();
                 } else {
                   this.isAudioChanged = false;
                   this.isChanged = false;
+                  this.block.isAudioChanged = false;
+                  this.block.isChanged = false;
                   let resp_block = response.data;
                   let resp_f = resp_block.footnotes[footnoteIdx];
                   this.block.setContentFootnote(footnoteIdx, resp_f.content);
@@ -1630,7 +1756,7 @@ export default {
         if (this.approveWaiting) {
           return;
         }
-        this.isApproving = true;
+        //this.isApproving = true;
         this.assembleBlockProxy(ev)
         .then(()=>{
           let task = this.tc_getBlockTask(this.block._id);
@@ -1660,7 +1786,7 @@ export default {
 
           this.tc_approveBookTask(task)
           .then(response => {
-            this.isApproving = false;
+            //this.isApproving = false;
             if (response.status == 200) {
               if (typeof response.data._id !== 'undefined') {
                 this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
@@ -1671,7 +1797,7 @@ export default {
             }
           })
           .catch(err => {
-            this.isApproving = false;
+            //this.isApproving = false;
           });
         });
 
@@ -1889,7 +2015,7 @@ export default {
         });
       },
       delFootnote: function(pos) {
-        $('#'+this.block._id).find(`[data-idx='${pos+1}']`).remove();
+        this.$refs.blockContent.querySelector(`[data-idx='${pos+1}']`).remove();
         this.updFootnotes();
         this.block.footnotes.forEach((ftn, ftnIdx) => {
           let ref = this.$refs['footnoteContent_' + ftnIdx]
@@ -1904,9 +2030,10 @@ export default {
       },
       updFootnotes: function(c_pos = 0) {
         let pos = 0;
-        $('#'+this.block._id).find('[data-idx]').each(function(idx) {
-          if ($(this).data('idx') == c_pos) pos = idx;
-          $(this).text(idx+1).attr('data-idx', idx+1);
+        this.$refs.blockContent.querySelectorAll('[data-idx]').forEach(function(el, idx) {
+          if (el.getAttribute('data-idx') == c_pos) pos = idx;
+          el.textContent = idx+1;
+          el.setAttribute('data-idx', idx+1);
         });
         return pos;
       },
@@ -2052,12 +2179,16 @@ export default {
           }
           return result;
       },
+      canCommentFlagPart: function(flagPart) {
+        return this.canResolveFlagPart(flagPart) && flagPart.status == 'open' && !flagPart.collapsed && (!this.isCompleted || this.isProofreadUnassigned());
+      },
 
       canDeleteFlagPart: function (flagPart) {
           let result = false;
-          if (!this.isCompleted && flagPart.creator === this.auth.getSession().user_id) {
+          let isProofreadUnassigned = this.isProofreadUnassigned();
+          if ((!this.isCompleted || isProofreadUnassigned) && flagPart.creator === this.auth.getSession().user_id) {
             result = true;
-            if (flagPart.comments.length) flagPart.comments.forEach((comment)=>{
+            if (flagPart.comments.length && !isProofreadUnassigned) flagPart.comments.forEach((comment)=>{
               if (comment.creator !== flagPart.creator) result = false;
             });
           }
@@ -2142,7 +2273,7 @@ export default {
         this.$emit('recordingState', 'recording', this.block._id);
         this.recordTimer()
         .then(() => {
-          this.recordStartCounter = 0;
+          //this.recordStartCounter = 0;
           this.isRecording = true;
           this.recorder.startRecording();
         })
@@ -2416,7 +2547,7 @@ export default {
           if (type === 'type' && event && event.target) {
             if (event.target.value === 'illustration') {
               let i = setInterval(() => {
-                if (document.querySelectorAll('[id="' + this.block._id + '"] .content-wrap-desc').length > 0) {
+                if (this.$refs.blockDescription) {
                   this.initEditor();
                   clearInterval(i);
                 }
@@ -2466,17 +2597,8 @@ export default {
         }
         this.footnoteIdx = footnoteIdx;
         this.check_id = footnoteIdx !== null ? this.block._id + '_' + footnoteIdx : this.block._id;
+        this.audioEditorEventsOff();
 
-        this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
-        this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-        this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
-        this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
-        this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
-        this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-        this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
-        this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
-        this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
-        this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
         Vue.nextTick(() => {
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
@@ -2485,17 +2607,7 @@ export default {
           this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
 
           let self = this;
-          this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
-          this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-          this.$root.$on('from-audioeditor:save', this.evFromAudioeditorSave);
-          this.$root.$on('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
-          this.$root.$on('from-audioeditor:cut', this.evFromAudioeditorCut);
-          this.$root.$on('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-          this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
-          this.$root.$on('from-audioeditor:discard', this.evFromAudioeditorDiscard);
-          this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
-
-          this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
+          this.audioEditorEventsOn();
         });
       },
 
@@ -2507,23 +2619,15 @@ export default {
           if (this.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false);
           }
-          $('nav.fixed-bottom').addClass('hidden');
+          //$('nav.fixed-bottom').addClass('hidden');
 
-          $('#' + this.block._id + ' .table-body.-content').removeClass('editing');
+          this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
+          //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
           //this.check_id = null;
+          this.audioEditorEventsOff();
         }
 
-        console.log('stop events', this.block._id);
-        this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
-        this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-        this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
-        this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
-        this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
-        this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-        this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
-        this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
-        this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
-        this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+        //console.log('stop events', this.block._id);
 
       },
       evFromAudioeditorBlockLoaded(blockId) {
@@ -2663,6 +2767,31 @@ export default {
           }
         }
       },
+      audioEditorEventsOn() {
+        this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
+        this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
+        this.$root.$on('from-audioeditor:save', this.evFromAudioeditorSave);
+        this.$root.$on('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
+        this.$root.$on('from-audioeditor:cut', this.evFromAudioeditorCut);
+        this.$root.$on('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
+        this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
+        this.$root.$on('from-audioeditor:discard', this.evFromAudioeditorDiscard);
+        this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
+
+        this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
+      },
+      audioEditorEventsOff() {
+        this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
+        this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
+        this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
+        this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
+        this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
+        this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
+        this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
+        this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
+        this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
+        this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+      },
       //-- } -- end -- Events --//
 
       _getParent(node, tag) {
@@ -2774,7 +2903,7 @@ export default {
                 secnum: '',
                 parnum: ''
               }).then((blocks)=>{
-                console.log('assembleBlock putNumBlockO', blocks[0]);
+                //console.log('assembleBlock putNumBlockO', blocks[0]);
                 this.storeListO.updBlockByRid(this.blockO.rid, {
                   type: this.block.type
                 })
@@ -2845,6 +2974,16 @@ export default {
       },
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
+      },
+      selectLang(event){
+        event.preventDefault();
+        event.cancelBubble = true;
+        return false;
+      },
+      selectLangSubmit(block){
+        this.isChanged = true;
+        this.pushChange('language');
+        this.$refs.blockMenu.close();
       },
       setNumVal: _.debounce(function(ev){
         let val = ev.target.value;
@@ -2958,6 +3097,7 @@ export default {
             }
           }
         }
+        this.hasContentListeners = true;
       },
       _handleSpacePress(e) {
         if (e) {
@@ -2995,7 +3135,7 @@ export default {
         let length = 3;
         if (this.player && this.player.audio_element) {
           let menuHeight = $('div.top-menu-wrapper').height() + $('div.toolbar').height();
-          let blockOffset = $('#' + this.block._id).offset().top;
+          let blockOffset =this.$refs.viewBlock.offsetTop;
           if (menuHeight > blockOffset) {
             this.$root.$emit('for-bookedit:scroll-to-block', this.block._id);
           }
@@ -3247,31 +3387,30 @@ export default {
         handler(val) {
           this.$emit('recordingState', val ? 'recording' : 'stopped', this.block._id);
           if (val === true) {
-            if (this.$refs.blockContent) {
-              let i = setInterval(() => {
+            Vue.nextTick(()=>{
+              if (this.$refs.recordingCtrls && this.$refs.blockContent) {
                 let w = this.$refs.blockContent.querySelectorAll('w');
-                let ctrl = $('#'+this.block._id).find('.recording-hover-controls')
-                if (ctrl.length > 0) {
-                  clearInterval(i);
-                  let ctrl_pos = ctrl.position();
-                  if (w.length === 0) {
-                    w = this.$refs.blockContent.querySelectorAll('*');
-                  }
-                  ctrl_pos.top+=parseInt(ctrl.css('margin-top'));
-                  if (w.length > 0) {
-                    w.forEach(_w => {
-                      let _w_pos = $(_w).position();
-                      if (_w_pos.left + _w.offsetWidth >= ctrl_pos.left && _w_pos.top + _w.offsetHeight >= ctrl_pos.top) {
-                        ctrl.css('margin-top', '-15px');
-                        return;
-                      }
-                    });
-                  }
+                if (w.length === 0) {
+                   w = this.$refs.blockContent.querySelectorAll('*');
                 }
-              }, 50)
-            }
-            $('body').off('keypress', this._handleSpacePress);
-            $('body').on('keypress', this._handleSpacePress);
+
+                let ctrl_pos = $(this.$refs.recordingCtrls).position();
+                ctrl_pos.top+=parseInt(this.$refs.recordingCtrls.style['margin-top']);
+
+                if (w.length > 0) {
+                  w.forEach(_w => {
+                    let _w_pos = $(_w).position();
+                    if (_w_pos.left + _w.offsetWidth >= ctrl_pos.left && _w_pos.top + _w.offsetHeight >= ctrl_pos.top) {
+                      this.$refs.recordingCtrls.style['margin-top'] = '-15px';
+                      return;
+                    }
+                  });
+                }
+
+                $('body').off('keypress', this._handleSpacePress);
+                $('body').on('keypress', this._handleSpacePress);
+              }
+            })
           } else {
             $('body').off('keypress', this._handleSpacePress);
           }
@@ -3289,13 +3428,6 @@ export default {
           }
         }
       },
-      'isApproving': {
-        handler(val) {
-          if (this._is('proofer', true)) {
-            this.$root.$emit('block-approving', val);
-          }
-        }
-      },
       'approveWaiting': {
         handler(val) {
           //console.log(this.block._id, 'approveWaiting', val);
@@ -3305,7 +3437,17 @@ export default {
   beforeDestroy: function () {
 //      console.log('beforeDestroy', this.block._id);
 //     console.log('this.isChanged', this.isChanged);
+    if (this.check_id) {
+      this.block.check_id = this.check_id;
+    }
+    if (this.footnoteIdx) {
+      this.block.footnoteIdx = this.footnoteIdx;
+    }
+    if (this.isAudioEditing) {
+      this.block.isAudioEditing = this.isAudioEditing;
+    }
     if (this.block && this.isChanged) {
+        this.block.changes = this.changes;
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
@@ -3334,9 +3476,6 @@ export default {
 
       this.$root.$off('saved-block:' + this.block._id);
 
-      if (this.check_id || this.footnoteIdx) {
-        this.evFromAudioeditorClosed(this.check_id || this.block._id);
-      }
       this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
     }
@@ -3348,6 +3487,7 @@ export default {
 </script>
 
 <style lang='less'>
+
 @variable: 90px;
 .ilm-block {
     padding: 0;
@@ -3644,13 +3784,13 @@ export default {
       box-shadow: none;
       transition: box-shadow 900ms;
 
-      &:hover {
+      &.-hover:hover {
           border: 1px solid silver;
           /*padding: 5px 10px;*/
           padding: 10px;
           background: rgba(219, 232, 255, .3);
       }
-      &:focus {
+      &.-focus:focus {
           outline: none;
           /*border-color: #9ecaed;*/
           box-shadow: 0 0 10px #9ecaed;
@@ -3837,6 +3977,9 @@ export default {
           }
           .disabled {
             color: gray;
+          }
+          select {
+            color: black;
           }
 
         }
@@ -4102,40 +4245,6 @@ export default {
     }
   }
 
-  /*.drag-uploader {
-    width: 20%;
-    max-height: 100px;
-    display: table-row;
-    .uploadBox {
-      .uploadBoxMain {
-        max-height: 100px;
-        margin: 0px;
-      }
-      .uploadBoxMain.uploading {
-        p, ol {
-          display: none;
-        }
-      }
-      .dropArea {
-        max-height: 100px;
-        padding-top: 30px;
-        font-size: 20px;
-        content: '';
-        .help-block {
-          display: none;
-        }
-      }
-      form {
-        max-height: 100px;
-        button {
-          display: none;
-        }
-      }
-      h3 {
-        display: none;
-      }
-    }
-  }*/
   .drag-uploader {
     /*display: table-row;*/
     .picture-input {
@@ -4220,7 +4329,7 @@ export default {
   }
   .recording-hover-controls {
     position: absolute;
-    right: 30px;
+    right: 34px;
     margin-top: -35px;
     i {
       font-size: 27px;

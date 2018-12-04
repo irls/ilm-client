@@ -200,6 +200,7 @@ export default {
       align-items: center;
       box-shadow: 0px 2px 3px 0px rgba(178, 191, 224, 0.53);
       padding-left: 4px;
+      margin-bottom: 3px;
     }
 
     .scroll-wrapper {
@@ -213,105 +214,80 @@ export default {
       }
     }
   }
-
-
-/*  .contentarea {
-    margin-top:10px;
-  }*/
-
-  /*#bodytable {
-    width: 100%;
-    height: 100%;
-    display: table;
-    table-layout: fixed;
-    background: #FFFFFF;
-    tr {
-      td {
-        &.toolbar-wrapper {
-
-          width: 100%;
-          height: 47px;
-
-          &.meta-visible {
-            width: 70%;
-          }
-
-          .toolbar {
-            height: 38px;
-            padding-top: 2px;
-            padding-left: 3px;
-            background: #FFFFFF;
-            width: 100%;
-            box-shadow: 0px 0px 2px 2px rgba(178, 191, 224, 0.53);
-          }
-        }
-        &.maincontent {
-          /*padding-top: 5px;*/
-          /*height: 100%;
-          .scroll-wrapper {
-            height: 100%;
-            overflow: auto;
-          }
-        }
-        &.metaedit {
-          width: 30%;
-          min-width: 300px!important;
-          vertical-align: top;
-          padding-left: 6px;
-        }
-        &.collapseEditBar {
-          vertical-align: top;
-          width: 40px;
-          min-width: 40px;
-          height: 100%;
-          /*padding: 13px*/
-          /*padding-top: 23px;
-          padding-left: 8px;
-          cursor: pointer;
-          /*position: relative;*/
-
-          /*.bar {
-            width: 100%;
-            min-width: 2px;
-            height: 100%;
-            background-color: rgba(204, 212, 226, .25);
-            /*position: relative;*/
-
-            /*.collapsebtn {
-              /*position: fixed;*/
-              /*background: white;
-              padding: 5px 5px 3px 8px;
-              border: .5px solid rgb(204, 212, 226);
-              border-radius: 25px;
-              box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.2);
-              color: rgba(204, 212, 226, 1);
-              cursor: pointer;
-              font-size: 1.25em;
-
-              &.fa-chevron-left {
-                padding-left: 5px;
-                padding-right: 8px;
-              }
-              &:hover {
-                color: green;
-              }
-            }
-          }
-          &.visible {
-            .fa-chevron-right {
-              margin-top: 50px;
-              margin-left: -3px;
-            }
-          }
-        }
-      }
-    }
-  }*/
 }
 
+
+// for book settings:
 .-lang-fa, .-lang-ar {
-    .ilm-block {
-      direction: rtl;
-    }
+  .ilm-block, /*.content-wrap-footn*/ {
+    direction: rtl;
+  }
+
+   .-langftn-undefined,
+   .-langftn-ar,
+   .-langftn-fa  { 
+     direction: rtl; 
+   }
+
 }
+
+
+// for block settings:
+.-langblock-en, 
+.-langblock-de, 
+.-langblock-da, 
+.-langblock-cy, 
+.-langblock-es, 
+.-langblock-fr, 
+.-langblock-is, 
+.-langblock-it, 
+.-langblock-ko, 
+.-langblock-ja, 
+.-langblock-nb, 
+.-langblock-nl, 
+.-langblock-pl, 
+.-langblock-pt, 
+.-langblock-ro,
+.-langblock-ru,
+.-langblock-sv,
+.-langblock-tr  { 
+  .ilm-block {
+    direction: ltr; 
+  }
+}
+
+.-langblock-ar,
+.-langblock-fa  { 
+  .ilm-block {
+    direction: rtl; 
+  }
+}
+
+// for footnote settings:
+.-langftn-en, 
+.-langftn-de, 
+.-langftn-da, 
+.-langftn-cy, 
+.-langftn-es, 
+.-langftn-fr, 
+.-langftn-is, 
+.-langftn-it, 
+.-langftn-ko, 
+.-langftn-ja, 
+.-langftn-nb, 
+.-langftn-nl, 
+.-langftn-pl, 
+.-langftn-pt, 
+.-langftn-ro,
+.-langftn-ru,
+.-langftn-sv,
+.-langftn-tr  { 
+  direction: ltr; 
+}
+
+.-langftn-ar,
+.-langftn-fa  { 
+  direction: rtl; 
+}
+
 </style>
