@@ -116,7 +116,7 @@ export default {
             ev.preventDefault();
             let nextId = this.parlistO.getOutId(this.startId);
             if (nextId && nextId !== this.startId) {
-              this.scrollToBlock(nextId);
+              this.scrollToBlock(nextId, true);
             }
           },
         }
