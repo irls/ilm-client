@@ -35,8 +35,8 @@
         </div>
         <!--<img v-if="block.illustration"-->
 
-        <div v-else class="content-wrap-preview"
-        v-html="block.content"
+        <div v-else v-cloak class="content-wrap-preview"
+        v-html="blockContent"
         :class="[getClass]">
         </div>
         <!--<div class="content-wrap">-->
@@ -143,8 +143,9 @@ import access             from '../../mixins/access.js';
           return this.block && (this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup')) && this.mode === 'edit';
         }
       },
-      blockContent: {
+      blockContent: { cache: false,
         get() {
+          //console.log('blockContent', this.block._id);
           if (this.mode === 'narrate') {
             let content = '';
             let split = '<br class="narrate-split"/><br class="narrate-split"/>';
