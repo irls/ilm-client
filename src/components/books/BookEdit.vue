@@ -1835,6 +1835,7 @@ export default {
   },
 
   beforeDestroy:  function() {
+    this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
     this.setBlockSelection({start: {}, end: {}});
     this.isNeedUp = false;
@@ -1843,7 +1844,6 @@ export default {
     this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
     this.$root.$off('book-reimported', this.bookReimported);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
-    this.$root.$emit('for-audioeditor:close');
   },
   watch: {
     'meta._id': {
