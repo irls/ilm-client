@@ -44,7 +44,8 @@
         </div>
         <!--<div :class="['table-row ilm-block']">-->
 
-        <div class="table-row content-footnotes">
+        <div class="table-row content-footnotes"
+          v-if="block.footnotes.length > 0 && mode !== 'narrate'">
           <div class="table-body footnote"
             v-for="(footnote, ftnIdx) in block.footnotes">
 
