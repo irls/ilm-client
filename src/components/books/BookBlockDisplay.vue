@@ -34,7 +34,7 @@
             v-for="(footnote, footnoteIdx) in blockView.footnotes" >
             <div :class="['-langftn-' + footnote.language]">
               <div class="-num">[fn{{footnote.ftnIdx+1}}]</div>
-              <div v-html="footnote.content">
+              <div  class="-text" v-html="footnote.content">
               </div>
             </div>
           </div>
