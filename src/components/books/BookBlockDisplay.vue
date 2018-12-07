@@ -1,5 +1,5 @@
 <template>
-<section>
+<section :class="['-langblock-' + block.language]">
   <div v-if="loaded === true || blockO.loaded === true" ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', blockOutPaddings]">
 
       <div v-if="blockO.type == 'illustration'" :class="getClass">
@@ -31,10 +31,11 @@
         <div class="footnotes"
           v-if="blockView.footnotes.length > 0">
           <div class="-hidden" ref="footNotes"
-            v-for="(footnote, footnoteIdx) in blockView.footnotes">
-            <div class="-num">[fn{{footnote.ftnIdx+1}}]</div>
-            <div class="-text"
-              v-html="footnote.content">
+            v-for="(footnote, footnoteIdx) in blockView.footnotes" >
+            <div :class="['-langftn-' + footnote.language]">
+              <div class="-num">[fn{{footnote.ftnIdx+1}}]</div>
+              <div v-html="footnote.content">
+              </div>
             </div>
           </div>
         </div>
