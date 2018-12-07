@@ -1835,6 +1835,7 @@ export default {
   },
 
   beforeDestroy:  function() {
+    this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
     this.setBlockSelection({start: {}, end: {}});
     this.isNeedUp = false;

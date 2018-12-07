@@ -77,13 +77,13 @@
     </v-tab>
     <v-tab title="Work History">
     <div class="overflow-wrapper">
-      <TaskHistory :_task_types="task_types" :current_user="true"></TaskHistory>
+      <TaskHistory :current_user="true"></TaskHistory>
     </div>
     <!--<div class="overflow-wrapper">-->
     </v-tab>
     <v-tab v-if="isAdmin" title="Total work history">
     <div class="overflow-wrapper">
-      <TaskHistory :_task_types="task_types" :current_user="false"></TaskHistory>
+      <TaskHistory :current_user="false"></TaskHistory>
     </div>
     <!--<div class="overflow-wrapper">-->
     </v-tab>
@@ -115,7 +115,6 @@ export default {
         list: [],
         total: 0
       },
-      task_types: [],
       users: {
         'editor': [],
         'proofer': [],
@@ -148,7 +147,8 @@ export default {
   computed: mapGetters([
     'isAdmin',
     'isLibrarian',
-    'tc_userTasks'
+    'tc_userTasks',
+    'taskTypes'
   ]),
 
   watch: {
@@ -162,9 +162,7 @@ export default {
 
   mounted() {
     var self = this
-    self.getTaskTypes().then(function(){
-      self.parseTasks();
-    })
+    self.parseTasks();
     self.getTaskUsers()
   },
 
@@ -179,9 +177,9 @@ export default {
             jobs[jobId].status = meta.status;
             jobs[jobId].meta = meta
         }).catch(error => {});
-        this.getAudioBook(jobs[jobId].bookid).then(audio => {
-          jobs[jobId].audio = audio;
-        })
+        //this.getAudioBook(jobs[jobId].bookid).then(audio => {
+          //jobs[jobId].audio = audio;
+        //})
 
         tasks_formatted.list.push(jobs[jobId]);
         jobs[jobId].total = jobs[jobId].tasks.length;
@@ -197,16 +195,14 @@ export default {
           let key = 'type_'+val.type;
           if (acc.hasOwnProperty(key)) acc[key].count ++;
           else {
-              
-              let title = this.task_types.tasks.find((s_type) => {
-                  return s_type._id == val.type
-              })
-              if (title) {
-                val.title = title.title;
-                acc[key] = {count:1, ...val};
+            if (this.taskTypes.tasks) {
+                val.title = this.taskTypes.tasks.find((s_type) => {
+                    return s_type._id == val.type
+                }).title;
               } else {
-                console.log('title is not found: ', val, this.task_types.tasks);
+                val.title = '';
               }
+              acc[key] = {count:1, ...val};
           }
           return  acc;
         }, {} );
@@ -221,16 +217,7 @@ export default {
         //this.getTasks()
       }
     },
-    getTaskTypes() {
-      var self = this
-      return axios.get(this.API_URL + 'tasks/types').then(types => {
-        self.task_types = types.data
-        return BPromise.resolve(self.task_types)
-      })
-      .catch(error => {
-        return BPromise.reject({})
-      })
-    },
+    
     getTaskUsers() {
       var self = this
       axios.get(this.API_URL + 'tasks/users').then(users => {

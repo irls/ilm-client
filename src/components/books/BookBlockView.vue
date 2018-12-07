@@ -3437,6 +3437,11 @@ export default {
   beforeDestroy: function () {
 //      console.log('beforeDestroy', this.block._id);
 //     console.log('this.isChanged', this.isChanged);
+
+    this.audioEditorEventsOff();
+    //this.$root.$emit('for-audioeditor:close');
+    this.$root.$emit('for-audioeditor:force-close');
+
     if (this.check_id) {
       this.block.check_id = this.check_id;
     }
