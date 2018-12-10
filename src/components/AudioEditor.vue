@@ -369,6 +369,7 @@
             }
           ])
           .then(() => {
+            this.audiosourceEditor.stopAnimation();
             if (this.audiosourceEditor.tracks.length > 1) {
               this.audiosourceEditor.getEventEmitter().emit('clear');
               this.load(audio, text, block, autostart, bookAudiofile);
@@ -897,6 +898,7 @@
         },
         close(autosave = true) {
           //console.log('AudioEditor close', autosave);
+          this.audiosourceEditor.stopAnimation();
           if (this.isModifiedComputed && this.mode === 'block') {
             this.showModal('onExitMessage');
           } else {
@@ -914,11 +916,13 @@
           }
         },
         forceClose() {
+          this.audiosourceEditor.stopAnimation();
           if (this.plEventEmitter) {
             this.plEventEmitter.emit('automaticscroll', false);
             this.plEventEmitter.emit('clear');
             this._clearWordSelection();
           }
+          //console.log('forceClose');
           this._setDefaults();
           this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
           this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
