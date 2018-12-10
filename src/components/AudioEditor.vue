@@ -898,7 +898,7 @@
         },
         close(autosave = true) {
           //console.log('AudioEditor close', autosave);
-          this.audiosourceEditor.stopAnimation();
+          if (this.audiosourceEditor) this.audiosourceEditor.stopAnimation();
           if (this.isModifiedComputed && this.mode === 'block') {
             this.showModal('onExitMessage');
           } else {
@@ -916,7 +916,7 @@
           }
         },
         forceClose() {
-          this.audiosourceEditor.stopAnimation();
+          if (this.audiosourceEditor) this.audiosourceEditor.stopAnimation();
           if (this.plEventEmitter) {
             this.plEventEmitter.emit('automaticscroll', false);
             this.plEventEmitter.emit('clear');
