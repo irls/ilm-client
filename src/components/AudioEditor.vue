@@ -380,7 +380,7 @@
                 if ($('.annotation-resize-pos').length == 0) {
                   $('.annotations').prepend('<div class="annotation-resize-pos"></div>')
                 }
-                if ((rh.data.direction === 'left' && rh.data.index == 0) || 
+                if ((rh.data.direction === 'left' && rh.data.index == 0) ||
                         (rh.data.direction === 'right' && rh.data.index == this.annotations.length - 1)) {
                   return;
                 }
@@ -493,12 +493,12 @@
                 self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
                 return;
               }
-              if (self.mode === 'file' && Math.abs(end - start) < 0.2 && 
-                      typeof self.selection.start !== 'undefined' && 
-                      typeof self.selection.end !== 'undefined' && 
-                      (self.selection.start != start || 
+              if (self.mode === 'file' && Math.abs(end - start) < 0.2 &&
+                      typeof self.selection.start !== 'undefined' &&
+                      typeof self.selection.end !== 'undefined' &&
+                      (self.selection.start != start ||
                       self.selection.end != end)) {
-                
+
                 self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
                 return;
               }
@@ -896,6 +896,7 @@
           return !this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0;
         },
         close(autosave = true) {
+          //console.log('AudioEditor close', autosave);
           if (this.isModifiedComputed && this.mode === 'block') {
             this.showModal('onExitMessage');
           } else {
@@ -1270,8 +1271,8 @@
             //self.audiosourceEditor.annotationList.renderResizeLeft(annotations.length - 1);
         },
         _isAnnotationsEditable() {
-          return (!this.currentBookMeta.masteringRequired || this.currentBookMeta.isMastered) || 
-                  (this.block && this.block.voicework === 'tts' || 
+          return (!this.currentBookMeta.masteringRequired || this.currentBookMeta.isMastered) ||
+                  (this.block && this.block.voicework === 'tts' ||
                   (this.block && this.block.status && this.block.status.proofed === false && this.tc_hasTask('audio_mastering') && this.block.status.stage === 'audio_mastering'));
         },
         _setBlocksSelection() {
@@ -1436,10 +1437,10 @@
           }
           let map = [];
           let direction = '';
-          
+
           let shiftedAnnotation = null;
           let shiftedIndex = null;
-          
+
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {// find the shifted annotation, find shift direction
             if (this.annotations[i]) {
               if (this.annotations[i].begin == al.start && this.annotations[i].end != al.end) {
@@ -1460,7 +1461,7 @@
             }
           });
           let shifted = false;
-          
+
           if (shiftedAnnotation) {
             if (shiftedAnnotation.end - shiftedAnnotation.start < this.minWordSize) {// find words with length less than minimum
               let shift = this.minWordSize - (shiftedAnnotation.end - shiftedAnnotation.start);
@@ -1710,10 +1711,10 @@
           }
         },
         ...mapGetters({
-          currentBookMeta: 'currentBookMeta', 
-          blkSelection: 'blockSelection', 
-          alignCounter: 'alignCounter', 
-          hasLocks: 'hasLocks', 
+          currentBookMeta: 'currentBookMeta',
+          blkSelection: 'blockSelection',
+          alignCounter: 'alignCounter',
+          hasLocks: 'hasLocks',
           currentAudiobook: 'currentAudiobook'})
       },
       watch: {
@@ -1755,7 +1756,7 @@
         'blockSelection.start._id': {
           handler(val, oldVal) {
             //console.log('blockSelection CHANGED', val)
-            if ((!val) && 
+            if ((!val) &&
                     (this.blockMap && this.blockMap[oldVal])) {
               if (this.mode === 'file' && this.origFilePositions) {
                 this.selection.start = this._round(this.origFilePositions.start, 2);
@@ -1798,12 +1799,13 @@
           }
         },
         '$route' () {
-          if (this.$route.params.hasOwnProperty('bookid') && this.mode === 'block') {
-            if (!this.currentBookMeta || this.$route.path.indexOf(this.currentBookMeta._id + '/edit' === -1)) {
-              this._setDefaults();
-              this.close();
-            }
-          }
+//           console.log('$route', this.mode);
+//           if (this.$route.params.hasOwnProperty('bookid') && this.mode === 'block') {
+//             if (!this.currentBookMeta || this.$route.path.indexOf(this.currentBookMeta._id + '/edit' === -1)) {
+//               this._setDefaults();
+//               this.close();
+//             }
+//           }
         },
         'currentBookMeta._id': {
           handler(val, oldVal) {

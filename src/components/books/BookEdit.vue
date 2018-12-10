@@ -6,12 +6,12 @@
       <div class="content-background">
       <div v-for="(viewObj, listIdx) in getListObjs"
         :class="['row content-scroll-item back']"
-        v-bind:id="'v-'+ viewObj.blockId">
+        :key = "viewObj.blockRid"
+        :id="'v-'+ viewObj.blockId">
 
         <div class='col'>
         <BookBlockPreview
           ref="viewBlocks"
-          v-bind:key="viewObj.blockRid"
           :blockRid = "viewObj.blockRid"
           :blockId = "viewObj.blockId"
           :blockO = "parlistO.get(viewObj.blockRid)"
@@ -375,7 +375,8 @@ export default {
                   });
                   //this.refreshPreviewTmpl(this.isNeedDown);
                   if (this.isNeedUp) this.lazyLoaderDir = 'up';
-                  this.isNeedDown = this.isNeedDown.pop();
+                  if (Array.isArray(this.isNeedDown)) this.isNeedDown = this.isNeedDown.pop();
+                  //else this.isNeedDown = false;
                   //Vue.nextTick(()=>{
                     this.lazyLoad();
                   //})
@@ -1840,6 +1841,9 @@ export default {
     this.setBlockSelection({start: {}, end: {}});
     this.isNeedUp = false;
     this.isNeedDown = false;
+    //console.log('BookEdit beforeDestroy');
+    this.$root.$emit('for-audioeditor:force-close');
+
     this.$root.$off('bookBlocksUpdates', this.bookBlocksUpdates);
     this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
     this.$root.$off('book-reimported', this.bookReimported);
