@@ -1,6 +1,6 @@
 <template>
 <div :class="['content-scroll-wrapper', {'recording-background': recordingState == 'recording'}]"
-  v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="smoothHandleScroll(); updatePositions();">
+  v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="smoothHandleScroll($event); updatePositions();">
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <div class="content-background">
@@ -1627,7 +1627,8 @@ export default {
       //}, 1);
     },
 
-    smoothHandleScroll: _.debounce(function () {
+    smoothHandleScroll: _.debounce(function (ev) {
+      ev.stopPropagation();
       this.handleScroll();
     }, 100),
 

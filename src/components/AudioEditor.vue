@@ -334,8 +334,11 @@
               linkEndpoints: true
             });
             this.audiosourceEditor.drawRequest = (() => {
-              var _this15 = this.audiosourceEditor;
-              _this15.draw(_this15.render());
+              //console.log('drawRequest');
+              Vue.nextTick(()=>{
+                var _this15 = this.audiosourceEditor;
+                _this15.draw(_this15.render());
+              });
             })
           } else if (changeZoomLevel) {
             if (this.mode == 'file') {
