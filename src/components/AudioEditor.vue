@@ -333,6 +333,10 @@
               timescale: true,
               linkEndpoints: true
             });
+            this.audiosourceEditor.drawRequest = (() => {
+              var _this15 = this.audiosourceEditor;
+              _this15.draw(_this15.render());
+            })
           } else if (changeZoomLevel) {
             if (this.mode == 'file') {
               let zoom = this.zoomOut();// if previously loaded block audio - set zoom level to max zoom out
