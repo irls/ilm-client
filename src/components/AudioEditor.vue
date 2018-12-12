@@ -189,7 +189,7 @@
         this.$root.$on('for-audioeditor:load-and-play', this.load);
         this.$root.$on('for-audioeditor:load', this.setAudio);
         this.$root.$on('for-audioeditor:reload-text', this._setText);
-        this.$root.$on('for-audioeditor:select', this.select);
+        //this.$root.$on('for-audioeditor:select', this.select);
         this.$root.$on('for-audioeditor:close', this.close);
         this.$root.$on('for-audioeditor:force-close', this.forceClose);
         this.$root.$on('start-align', () => {
@@ -226,6 +226,9 @@
         load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
           //console.log('load', audio, text, block, autostart, bookAudiofile, reloadOnChange);
           let blockId = block ? block._id : null;
+
+          this.$root.$on('for-audioeditor:select', this.select);
+
           //if (bookAudiofile && bookAudiofile.blockMap) {
             //this.blockMap = bookAudiofile.blockMap;
           //} else {
@@ -333,13 +336,13 @@
               timescale: true,
               linkEndpoints: true
             });
-            this.audiosourceEditor.drawRequest = (() => {
-              //console.log('drawRequest');
-              Vue.nextTick(()=>{
-                var _this15 = this.audiosourceEditor;
-                _this15.draw(_this15.render());
-              });
-            })
+//             var _this15 = this.audiosourceEditor;
+//             this.audiosourceEditor.drawRequest = function (){
+//               console.log('drawRequest');
+//               if (_this15) {
+//                 _this15.draw(_this15.render());
+//               }
+//             }
           } else if (changeZoomLevel) {
             if (this.mode == 'file') {
               let zoom = this.zoomOut();// if previously loaded block audio - set zoom level to max zoom out
@@ -613,25 +616,7 @@
             } else if (autostart) {
               this.play();
             }
-            $('#' + this.blockId).on('click', '#content-' + this.blockId + ' w', function() {
-              let index = $('#content-' + self.blockId).find('w[data-map]').index($(this));
-              let show_selection = true;
-              if (typeof index =='undefined' || index === false || index < 0) {
-                let index_no_data = $('#content-' + self.blockId).find('w:not([data-map])').index($(this));
-                let total_index = $('#content-' + self.blockId).find('w').index($(this));
-                index = total_index - index_no_data;
-                show_selection = false;
-              }
-              if (!self.isAnnotationVisible(index)) {
-                self.scrollPlayerToAnnotation(index, 'middle');
-              }
-              if (show_selection) {
-                self.blockSelectionEmit = true;
-                self._setWordSelection(index, true);
-              } else {
-                self._clearWordSelection();
-              }
-            });
+            $('#' + this.blockId).find('#content-' + this.blockId).on('click', 'w', {blockId: this.blockId}, this.showSelection);
           })
           .catch(err => {
             //console.log(err)
@@ -650,9 +635,7 @@
             this.smoothDrag(ev);
           });
 
-          $('body').on('mouseup', '.playlist-overlay.state-select', () => {
-            this._showSelectionBorders();
-          });
+          $('body').on('mouseup', '.playlist-overlay.state-select', this._showSelectionBorders);
 
           $('body').on('click', '.playlist-overlay', (e) => {
             if (typeof this.audiosourceEditor !== 'undefined') {
@@ -729,6 +712,26 @@
                 })
               }
             }, 500);
+          }
+        },
+        showSelection (event) {
+          let blockId = event.data.blockId;
+          let index = $('#content-' + blockId).find('w[data-map]').index($(event.target));
+          let show_selection = true;
+          if (typeof index =='undefined' || index === false || index < 0) {
+            let index_no_data = $('#content-' + blockId).find('w:not([data-map])').index($(event.target));
+            let total_index = $('#content-' + blockId).find('w').index($(event.target));
+            index = total_index - index_no_data;
+            show_selection = false;
+          }
+          if (!this.isAnnotationVisible(index)) {
+            this.scrollPlayerToAnnotation(index, 'middle');
+          }
+          if (show_selection) {
+            this.blockSelectionEmit = true;
+            this._setWordSelection(index, true);
+          } else {
+            this._clearWordSelection();
           }
         },
         setAudio(audio, text, saveToHistory) {
@@ -920,6 +923,10 @@
             this._setDefaults();
             this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
             this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
+            console.log('AudioEditor close this.blockId', this.blockId);
+            $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBorders);
+            $('#' + this.blockId).find('#content-' + this.blockId).off('click', 'w', this.showSelection);
+            this.$root.$off('for-audioeditor:select', this.select);
           }
         },
         forceClose() {
@@ -933,6 +940,9 @@
           this._setDefaults();
           this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
           this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
+          $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBorders);
+          $('#' + this.blockId).find('#content-' + this.blockId).off('click', 'w', this.showSelection);
+          this.$root.$off('for-audioeditor:select', this.select);
         },
         addSilence() {
           if (this.silenceLength > 0 && this.cursorPosition >= 0) {
