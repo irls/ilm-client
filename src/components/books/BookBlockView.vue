@@ -1031,12 +1031,12 @@ export default {
   },
   beforeDestroy:  function() {
     if (this.editor) this.editor.destroy();
+    this.audioEditorEventsOff();
     this.$root.$off('block-state-refresh-' + this.block._id);
   },
   mounted: function() {
       //this.initEditor();
       //console.log('mounted', this.block._id);
-      this.$root.$emit('reload-block-' + this.block._id);
       this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
       if (!this.player && this.blockAudio.src) {
           this.initPlayer();
@@ -1102,10 +1102,6 @@ export default {
         this.recountApprovedInRange();
       });
       this.$root.$on('prepare-alignment', this._saveContent);
-      this.$root.$on('reload-block-' + this.block._id, () => {
-        this.audioEditorEventsOff();
-      });
-
 
 //       Vue.nextTick(() => {
 //
