@@ -188,7 +188,7 @@
         this.audioContext = new (window.AudioContext || window.webkitAudioContext);
         this.$root.$on('for-audioeditor:load-and-play', this.load);
         this.$root.$on('for-audioeditor:load', this.setAudio);
-        this.$root.$on('for-audioeditor:reload-text', this._setText);
+        //this.$root.$on('for-audioeditor:reload-text', this._setText);
         //this.$root.$on('for-audioeditor:select', this.select);
         this.$root.$on('for-audioeditor:close', this.close);
         this.$root.$on('for-audioeditor:force-close', this.forceClose);
@@ -228,6 +228,7 @@
           let blockId = block ? block._id : null;
 
           this.$root.$on('for-audioeditor:select', this.select);
+          this.$root.$on('for-audioeditor:reload-text', this._setText);
 
           //if (bookAudiofile && bookAudiofile.blockMap) {
             //this.blockMap = bookAudiofile.blockMap;
@@ -338,7 +339,7 @@
             });
             var _this15 = this.audiosourceEditor;
             this.audiosourceEditor.drawRequest = function (){
-              console.log('drawRequest');
+              console.log('drawRequest', blockId);
               if (_this15) {
                 _this15.draw(_this15.render());
               }
@@ -930,6 +931,7 @@
             $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBorders);
             $('#' + this.blockId).find('#content-' + this.blockId).off('click', 'w', this.showSelection);
             this.$root.$off('for-audioeditor:select', this.select);
+            this.$root.$off('for-audioeditor:reload-text', this._setText);
           }
         },
         forceClose() {

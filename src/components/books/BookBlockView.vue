@@ -1032,7 +1032,7 @@ export default {
   beforeDestroy:  function() {
     if (this.editor) this.editor.destroy();
     this.audioEditorEventsOff();
-    this.$root.$off('block-state-refresh-' + this.block._id);
+    this.$root.$off('block-state-refresh-' + this.block._id, this.$forceUpdate);
   },
   mounted: function() {
       //this.initEditor();
@@ -1092,9 +1092,7 @@ export default {
       this.initEditor();
       this.addContentListeners();
 
-      this.$root.$on('block-state-refresh-' + this.block._id, () => {
-        this.$forceUpdate();
-      });
+      this.$root.$on('block-state-refresh-' + this.block._id, this.$forceUpdate);
       this.$root.$on('saved-block:' + this.block._id, () => {
         this.isChanged = false;
         this.isAudioChanged = false;
@@ -2623,7 +2621,7 @@ export default {
           this.audioEditorEventsOff();
         }
 
-        //console.log('stop events', this.block._id);
+        console.log('stop events', this.block._id);
 
       },
       evFromAudioeditorBlockLoaded(blockId) {
