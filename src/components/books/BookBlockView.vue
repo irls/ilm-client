@@ -3481,11 +3481,6 @@ export default {
           //console.log(this.block._id, 'approveWaiting', val);
         }
       }
-
-    this.audioEditorEventsOff();
-    //this.$root.$emit('for-audioeditor:close');
-    this.$root.$emit('for-audioeditor:force-close');
-
   }
 }
 </script>
