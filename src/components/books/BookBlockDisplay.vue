@@ -1,5 +1,5 @@
 <template>
-<section :class="['-langblock-' + block.language]">
+<section :class="['-langblock-' + blockView.language]">
   <div v-if="loaded === true || blockO.loaded === true" ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', blockOutPaddings]">
 
       <div v-if="blockO.type == 'illustration'" :class="getClass">
