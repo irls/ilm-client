@@ -444,7 +444,7 @@
             }
             $('.playlist-tracks').scrollLeft(this.playlistScrollPosition);
             $('.playlist-tracks').on('scroll', () => {
-              console.log('.playlist-tracks scroll');
+              //console.log('.playlist-tracks scroll');
               this.playlistScrollPosition = $('.playlist-tracks').scrollLeft();
             });
             if (this.selection.end && this.selection.end > parseFloat(this.audiosourceEditor.duration)) {
@@ -459,7 +459,7 @@
               //this.plEventEmitter.emit('automaticscroll', true);
             }
             this.plEventEmitter.on('timeupdate', function(position) {
-              console.log('this.plEventEmitter.on(timeupdate');
+              //console.log('this.plEventEmitter.on(timeupdate');
               if (self.mode == 'block') {
                 if ((!self.isSingleWordPlaying && !self.isPlaying) || self.currentWord && self.currentWord.start <= position && self.currentWord.end > position) {
                   return;
