@@ -337,13 +337,13 @@
               timescale: true,
               linkEndpoints: true
             });
-            var _this15 = this.audiosourceEditor;
-            this.audiosourceEditor.drawRequest = function (){
-              console.log('drawRequest', blockId);
-              if (_this15) {
-                _this15.draw(_this15.render());
-              }
-            }
+//             var _this15 = this.audiosourceEditor;
+//             this.audiosourceEditor.drawRequest = function (){
+//               console.log('drawRequest', blockId);
+//               if (_this15) {
+//                 _this15.draw(_this15.render());
+//               }
+//            }
           } else if (changeZoomLevel) {
             if (this.mode == 'file') {
               let zoom = this.zoomOut();// if previously loaded block audio - set zoom level to max zoom out
