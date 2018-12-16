@@ -142,7 +142,7 @@ import { mapGetters, mapState, mapActions } from 'vuex'
             }
           );
           return viewObj;
-        } else return { footnotes: [] };
+        } else return { footnotes: [], language: 'en' };
       }
     },
     methods: {
