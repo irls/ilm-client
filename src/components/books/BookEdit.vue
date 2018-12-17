@@ -176,7 +176,8 @@ export default {
           blockers: 'blockers',
           parlist: 'storeList',
           parlistO: 'storeListO',
-          blockSelection: 'blockSelection'
+          blockSelection: 'blockSelection',
+          currentJobInfo: 'currentJobInfo'
       }),
       metaStyles: function () {
           let result = '';
@@ -272,7 +273,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters']),
+    'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo']),
 
     test() {
         window.scrollTo(0, document.body.scrollHeight-500);
@@ -903,7 +904,7 @@ export default {
           proofed: false
         }
       }
-      if (this.tc_hasTask('content_cleanup')) {
+      if (this.currentJobInfo.text_cleanup) {
         newBlock.status['stage'] = 'cleanup';
         newBlock.markedAsDone = false;
         newBlock.voicework = 'audio_file';
@@ -917,7 +918,7 @@ export default {
 
     insertBlockBefore(block, block_Idx) {
       this.freeze('insertBlockBefore');
-      let newBlock = this.createEmptyBlock(block.bookid, block._id);
+      let newBlock = this.createEmptyBlock(block.bookid, block._id).clean();
       let api_url = this.API_URL + 'book/block';
       let api = this.$store.state.auth.getHttp();
       api.post(api_url, {
@@ -946,6 +947,8 @@ export default {
             }
           }
           this.unfreeze('insertBlockBefore');
+          this.tc_loadBookTask();
+          this.getCurrentJobInfo();
           //this.refreshTmpl();
         })
         .catch(err => {
@@ -957,7 +960,7 @@ export default {
     insertBlockAfter(block, block_Idx) {
       //this.insertBlock(block_id, 'after');
       this.freeze('insertBlockAfter');
-      let newBlock = this.createEmptyBlock(block.bookid, block.chainid);
+      let newBlock = this.createEmptyBlock(block.bookid, block.chainid).clean();
       let api_url = this.API_URL + 'book/block';
       let api = this.$store.state.auth.getHttp();
       api.post(api_url, {
@@ -985,6 +988,8 @@ export default {
             } //else this.refreshTmpl();
           }
           this.unfreeze('insertBlockAfter');
+          this.tc_loadBookTask();
+          this.getCurrentJobInfo();
           //this.refreshTmpl();
         })
         .catch(err => {
@@ -1010,6 +1015,7 @@ export default {
       })
         .then((response) => {
           this.tc_loadBookTask();
+          this.getCurrentJobInfo();
         })
         .catch((err) => {})
     },
@@ -1063,7 +1069,7 @@ export default {
             let getPrevBlock = new Promise((resolve, reject) => {
               let _prevId = this.parlistO.getInId(block._id);
               let _prev = this.parlist.get(_prevId);
-              if (_prev) {
+              if (_prev && (this.doJoinBlocks.show || this.doJoinBlocks.showAudio)) {
                 resolve(_prev);
               } else {
                 this.getBlock(_prevId)

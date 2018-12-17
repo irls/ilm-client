@@ -417,7 +417,7 @@
                   <div class="table-cell"></div>
                   <div class="table-cell">
                     <template v-if="allowEditing">
-                      <template v-if="tc_hasTask('content_cleanup')">
+                      <template v-if="allowVoiceworkChange">
                         <label>
                           <i class="fa fa-volume-off"></i>
 
@@ -751,13 +751,30 @@ export default {
         }
       },
       blockVoiceworksSel: function() {
-        if (this.tc_hasTask('content_cleanup')) {
+        if (this.currentJobInfo.text_cleanup) {
           return this.blockVoiceworks;
         }
         let voiceworks = {};
-        for (let k in this.blockVoiceworks) {
-          if (['tts', 'no_audio'].indexOf(k) !== -1) {
-            voiceworks[k] = this.blockVoiceworks[k];
+        if (this.adminOrLibrarian) {
+          let allowed = [];
+          switch (this.block.voicework) {
+            case 'narration':
+              allowed = Object.keys(this.blockVoiceworks);
+              break;
+            default:
+              allowed = ['audio_file', 'tts', 'no_audio'];
+              break;
+          }
+          for (let k in this.blockVoiceworks) {
+            if (allowed.indexOf(k) !== -1) {
+              voiceworks[k] = this.blockVoiceworks[k];
+            }
+          }
+        } else {
+          for (let k in this.blockVoiceworks) {
+            if (['tts', 'no_audio'].indexOf(k) !== -1) {
+              voiceworks[k] = this.blockVoiceworks[k];
+            }
           }
         }
         return voiceworks;
@@ -780,14 +797,12 @@ export default {
         },
         set(val) {
           if (val && val !== this.block.voicework) {
-            if (this._is('editor', true)) {
-              this.voiceworkChange = val;
-              if (!this.block.markedAsDone && this.tc_hasTask('content_cleanup')) {
-                this.showModal('voicework-change');
-              } else {
-                this.voiceworkUpdateType = 'single';
-                this.updateVoicework();
-              }
+            this.voiceworkChange = val;
+            if (!this.block.markedAsDone && this.currentJobInfo.text_cleanup) {
+              this.showModal('voicework-change');
+            } else {
+              this.voiceworkUpdateType = 'single';
+              this.updateVoicework();
             }
           }
         }
@@ -812,10 +827,17 @@ export default {
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
             return true;
           }
+          let flagsSummary = this.block.calcFlagsSummary();
+          if (this.adminOrLibrarian && flagsSummary.dir === 'narrator' && flagsSummary.stat === 'open') {
+            let approveTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'approve-modified-block');
+            if (approveTask) {
+              return false;
+            }
+          }
           if (!this.tc_getBlockTask(this.block._id)) {
             return true;
           }
-          let flagsSummary = this.block.calcFlagsSummary();
+          
           let executors = this.tc_currentBookTasks.job.executors;
           if (executors[flagsSummary.dir] ==  this.auth.getSession().user_id) {
             if (this._is('proofer', true) &&
@@ -831,6 +853,7 @@ export default {
       },
       enableMarkAsDone: { cache: false,
         get() {
+          return this.tc_enableMarkAsDone(this.block);
           if (this.tc_getBlockTask(this.block._id)) {
             return false;
           }
@@ -887,23 +910,16 @@ export default {
         }
         return false;
       },
-      isSpotCheckDisabled: function() {
-        if (!this.block.audiosrc || !this._is('editor', true) || this.mode != 'edit') {
-          return true;
+      isSpotCheckDisabled: {
+        cache: false,
+        get() {
+          
+          return this.mode != 'edit' || !this.block || this.tc_isSpotCheckDisabled(this.block);
         }
-        if (this.isAudioChanged) {
-          return false;
-        }
-        if (this.tc_getBlockTask(this.block._id)) {
-          return false;
-        }
-        if ((this.tc_hasTask('content_cleanup') || (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')) && !this.block.markedAsDone) {
-          return false;
-        }
-        return true;
       },
       isCompleted: { cache: false,
         get() {
+          return this.block ? this.tc_isCompleted(this.block) : true;
           if (this._is('editor', true) && (
                   this.tc_hasTask('content_cleanup') ||
                   (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')
@@ -973,14 +989,16 @@ export default {
           isBlockLocked: 'isBlockLocked',
           lockedBlocks: 'lockedBlocks',
           storeListO: 'storeListO',
-          approveBlocksList: 'approveBlocksList'
+          approveBlocksList: 'approveBlocksList',
+          adminOrLibrarian: 'adminOrLibrarian',
+          currentJobInfo: 'currentJobInfo'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
       },
       allowEditing: {
         get() {
-          return this.block && (this.tc_isShowEdit(this.block._id) || this.tc_hasTask('content_cleanup')) && this.mode === 'edit';
+          return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
         }
       },
       blockTypeLabel: {
@@ -1168,12 +1186,21 @@ export default {
         'addBlockLock',
         'getAlignCount',
         'recountApprovedInRange',
-        'loadBookToc'
+        'loadBookToc',
+        'tc_loadBookTask',
+        'getCurrentJobInfo',
+        'getTotalBookTasks'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
+        if (flagType === 'narrator' && this.block.voicework !== 'narration') {
+          return false;
+        }
         if (this.isProofreadUnassigned()) {
-          return flagType === 'narrator' ? this.block.voicework === 'narration' : true;
+          return true;
+        }
+        if (this.tc_allowAdminFlagging(this.block, flagType)) {
+          return true;
         }
         if (!this.tc_getBlockTask(this.block._id)) {
           return false;
@@ -1578,15 +1605,19 @@ export default {
         this.isSaving = true;
         return this.putBlock(this.block).then(()=>{
           this.isSaving = false;
-          if (!this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') &&
-                  !this.tc_getBlockTask(this.block._id)) {
-            if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) &&
-                    this._is('editor', true)) {
+          /*if (this.tc_createApproveModifiedBlock(this.block._id)) {
+            if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) || 
+                    this.tc_allowAdminFlagging(this.block)) {
               this.createBlockSubtask(this.block._id, 'approve-modified-block', 'editor');
-            } else if (!this.tc_getBlockTask(this.block._id) &&
-                    this.changes.indexOf('flags') !== -1 && this._is('proofer', true)) {
-              this.createBlockSubtask(this.block._id, 'approve-revoked-block', 'proofer');
             }
+          } else if (this.tc_createApproveRevokedBlock(this.block._id) &&
+                  this.changes.indexOf('flags') !== -1) {
+            this.createBlockSubtask(this.block._id, 'approve-revoked-block', 'proofer');
+          }*/
+          if (this.isCompleted) {
+            this.tc_loadBookTask();
+            this.getCurrentJobInfo();
+            this.getTotalBookTasks();
           }
           let is_content_changed = this.hasChange('content');
           this.isChanged = false;
@@ -2180,6 +2211,9 @@ export default {
             if (type === 'editor' && this._is('editor', true)) {
               type = 'narrator';
             }
+            if (type === 'editor' && this.tc_allowAdminFlagging(this.block)) {
+              type = 'narrator';
+            }
             flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
             this.$refs.blockFlagControl.dataset.status = 'open';
             this.isChanged = true;
@@ -2211,24 +2245,10 @@ export default {
       },
 
       canResolveFlagPart: function (flagPart) {
-          let result = false;
-          if (flagPart.creator === this.auth.getSession().user_id) {
-            result = true;
-            if (flagPart.comments.length) flagPart.comments.forEach((comment)=>{
-              if (comment.creator !== flagPart.creator) result = false;
-            });
-          } else {
-            if (this._is(flagPart.type, true) && this.tc_getBlockTask(this.block._id)) {
-              result = true;
-            }
-            if (!result && flagPart.type === 'narrator' && this._is('editor', true)) {
-              result = true;
-            }
-          }
-          return result;
+          return this.tc_canResolveFlagPart(flagPart);
       },
       canCommentFlagPart: function(flagPart) {
-        return this.canResolveFlagPart(flagPart) && flagPart.status == 'open' && !flagPart.collapsed && (!this.isCompleted || this.isProofreadUnassigned());
+        return this.canResolveFlagPart(flagPart) && flagPart.status == 'open' && !flagPart.collapsed/* && (!this.isCompleted || this.isProofreadUnassigned())*/;
       },
 
       canDeleteFlagPart: function (flagPart) {
@@ -2242,7 +2262,7 @@ export default {
           }
           return result;
       },
-
+      
       delFlagPart: function(ev, partIdx) {
         if (this.canDeleteFlagPart(this.flagsSel.parts[partIdx])) {
 
@@ -2913,6 +2933,10 @@ export default {
 
         api.post(api_url, formData, {}).then((response) => {
           if (response.status===200) {
+            if (this.isCompleted) {
+              this.tc_loadBookTask();
+              this.getCurrentJobInfo();
+            }
             // hide modal after one second
             this.$refs.illustrationInput.removeImage();
             this.$emit('blockUpdated', this.block._id);
@@ -2979,6 +3003,9 @@ export default {
         }
       },
       setRangeSelection(type, ev) {
+        if (this.block && !this.tc_isShowEdit(this.block._id)) {
+          return false;
+        }
         let checked;
         if (ev === true || ev === false) checked = ev;
         else checked = ev.target && ev.target.checked;
@@ -3057,13 +3084,7 @@ export default {
       },
 
       allowVoiceworkChange() {
-        if (this.block.type == 'illustration' || this.block.type == 'hr') {
-          return false;
-        }
-        if (this.tc_hasTask('content_cleanup')) {
-          return true;
-        }
-        return this.tc_hasBlockTask(this.block._id, 'approve-new-block') || this.tc_hasBlockTask(this.block._id, 'approve-modified-block');
+        return this.block && this.tc_allowVoiceworkChange(this.block);
       },
       pushChange(change) {
         if (this.changes.indexOf(change) === -1) {
