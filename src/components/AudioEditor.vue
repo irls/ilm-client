@@ -444,7 +444,6 @@
             }
             $('.playlist-tracks').scrollLeft(this.playlistScrollPosition);
             $('.playlist-tracks').on('scroll', () => {
-              //console.log('.playlist-tracks scroll');
               this.playlistScrollPosition = $('.playlist-tracks').scrollLeft();
             });
             if (this.selection.end && this.selection.end > parseFloat(this.audiosourceEditor.duration)) {
@@ -639,7 +638,7 @@
             this.smoothDrag(ev);
           });
 
-          $('body').on('mouseup', '.playlist-overlay.state-select', this._showSelectionBorders);
+          $('body').on('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
 
           $('body').on('click', '.playlist-overlay', (e) => {
             if (typeof this.audiosourceEditor !== 'undefined') {
@@ -928,7 +927,7 @@
             this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
             this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
             console.log('AudioEditor close this.blockId', this.blockId);
-            $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBorders);
+            $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
             $('#' + this.blockId).find('#content-' + this.blockId).off('click', 'w', this.showSelection);
             this.$root.$off('for-audioeditor:select', this.select);
             this.$root.$off('for-audioeditor:reload-text', this._setText);
@@ -945,7 +944,7 @@
           this._setDefaults();
           this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
           this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
-          $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBorders);
+          $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
           $('#' + this.blockId).find('#content-' + this.blockId).off('click', 'w', this.showSelection);
           this.$root.$off('for-audioeditor:select', this.select);
         },
@@ -1086,6 +1085,11 @@
           precision = typeof precision == 'undefined' ? 1 : precision;
           let step = parseInt('1' + '0'.repeat(precision));
           return Math.round(val * step) / step;
+        },
+        _showSelectionBordersOnClick(ev) {
+          ev.preventDefault();
+          this._showSelectionBorders(false);
+          return false;
         },
         _showSelectionBorders(scroll_to_selection = false) {
           setTimeout(() => {
