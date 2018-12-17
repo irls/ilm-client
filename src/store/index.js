@@ -130,7 +130,16 @@ export const store = new Vuex.Store({
     partOfBookBlocksXHR: null,
     tasksXHR: 0,
     approveBlocksList: [],
-    replicatingDB: {}
+    replicatingDB: {},
+    adminOrLibrarian: false,
+    currentJobInfo: {
+      can_resolve_tasks: [],
+      mastering: null,
+      proofing: null,
+      published: null,
+      text_cleanup: null,
+      is_proofread_unassigned: null
+    }
   },
 
   getters: {
@@ -147,7 +156,7 @@ export const store = new Vuex.Store({
     allowPublishCurrentBook: state => state.allowPublishCurrentBook,
     allRolls: state => state.allRolls,
     allBooks: state => {
-      if (state.isAdmin || state.isLibrarian) {
+      if (state.adminOrLibrarian) {
         return state.books_meta;
       } else {
         let books = [];
@@ -259,7 +268,9 @@ export const store = new Vuex.Store({
     aligningBlocks: state => state.aligningBlocks,
     currentAudiobook: state => state.currentAudiobook,
     currentBookToc: state => state.currentBookToc,
-    approveBlocksList: state => state.approveBlocksList
+    approveBlocksList: state => state.approveBlocksList,
+    adminOrLibrarian: state => state.adminOrLibrarian,
+    currentJobInfo: state => state.currentJobInfo
   },
 
   mutations: {
@@ -762,6 +773,7 @@ export const store = new Vuex.Store({
 
     // login event
     connectDB ({ state, commit, dispatch }, session) {
+        state.adminOrLibrarian = superlogin.confirmRole('admin') || superlogin.confirmRole('librarian');
         commit('RESET_LOGIN_STATE');
 
         commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
@@ -1044,6 +1056,7 @@ export const store = new Vuex.Store({
           dispatch('setCurrentBookCounters');
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
+          dispatch('getCurrentJobInfo');
           //dispatch('loadBookToc', {bookId: book_id});
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
@@ -1742,6 +1755,7 @@ export const store = new Vuex.Store({
         if (state.replicatingDB.ilm_tasks !== true) {
           dispatch('tc_loadBookTask');
         }
+        dispatch('getCurrentJobInfo');
         return Promise.resolve(list);
       })
       .catch(err => err)
@@ -2089,10 +2103,18 @@ export const store = new Vuex.Store({
         for (var idx=0; idx < state.storeList.size; idx++) {
           let block = state.storeList.get(crossId);
           if (block) {
-            let hasAssignment = state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1 || state.tc_currentBookTasks.assignments.indexOf('content_cleanup') !== -1;
+            let hasAssignment = state.currentJobInfo.mastering  || state.currentJobInfo.text_cleanup;
             let hasTask = state.tc_currentBookTasks.tasks.find((t) => {
               return t.blockid == block._id;
             })
+            if (!hasAssignment && state.adminOrLibrarian) {
+              hasAssignment = state.currentJobInfo.completed;
+            }
+            if (!hasTask && state.adminOrLibrarian) {
+              hasTask = state.currentJobInfo.can_resolve_tasks.find((t) => {
+                return t.blockid == block._id;
+              });
+            }
             if (block.markedAsDone || (!hasAssignment && !hasTask)) {
               switch (block.voicework) {
                 case 'audio_file' :
@@ -2208,6 +2230,7 @@ export const store = new Vuex.Store({
                 .then(() => {
                   if (oldBlocks.length != blocks.length) {
                     dispatch('getAudioBook');
+                    dispatch('getCurrentJobInfo');
                   }
                   commit('set_aligning_blocks', response.data);
                   if (checks.length > 0) {
@@ -2228,6 +2251,23 @@ export const store = new Vuex.Store({
       state.audiobookWatch = setInterval(() => {
         dispatch('getAudioBook')
       }, 15000);
+    },
+    getCurrentJobInfo({state}) {
+      /*state.currentJobInfo = {
+        can_resolve_tasks: [],
+        mastering: null,
+        proofing: null,
+        published: null,
+        text_cleanup: null,
+        is_proofread_unassigned: null
+      };*/
+      return axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
+        .then(data => {
+          state.currentJobInfo = data.data;
+        })
+        .catch(err => {
+          console.log(err);
+        })
     }
   }
 })
