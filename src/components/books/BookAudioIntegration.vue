@@ -10,7 +10,7 @@
                 <span class="checkmark"></span>
               </label>
             </div>
-            <div v-if="_is('editor')" class="upload-audio">
+            <div v-if="_is('editor', true) || adminOrLibrarian" class="upload-audio">
               <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload btn-small">
                 Import Audio
               </button>
@@ -1063,7 +1063,8 @@
         hasLocks: 'hasLocks', 
         lockedBlocks: 'lockedBlocks', 
         audiobook: 'currentAudiobook',
-        currentJobInfo: 'currentJobInfo'})
+        currentJobInfo: 'currentJobInfo',
+        adminOrLibrarian: 'adminOrLibrarian'})
     },
     watch: {
       'audiobook': {
