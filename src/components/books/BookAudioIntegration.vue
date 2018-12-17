@@ -4,7 +4,7 @@
       <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
           <div class="file-catalogue-buttons">
-            <div class="" v-if="_is('admin') || _is('editor')">
+            <div class="" v-if="adminOrLibrarian || _is('editor', true)">
               <label class="checkbox-container">
                 <input type="checkbox" v-model="checkAllState"/>
                 <span class="checkmark"></span>
@@ -42,7 +42,7 @@
                   </div>
                 </template>
                 <template v-else>
-                  <div v-if="_is('editor', true) || _is('admin')"
+                  <div v-if="_is('editor', true) || adminOrLibrarian"
                            class="audiofile-options">
                     <label class="checkbox-container">
                       <input type="checkbox" :checked="selections.indexOf(audiofile.id) !== -1"
