@@ -631,6 +631,7 @@ export default {
       styleTitles: {
         'title_style': 'type'
       },
+      styleNotNumbered: ['sitalcent', 'editor-note', 'signature', 'reference'],
       languages: Languages,
       dirty: {
       },
@@ -1379,8 +1380,19 @@ export default {
               pBlock.classes['style'] = '';
             }
 
+            if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) == -1 && this.styleNotNumbered.indexOf(styleVal) != -1){
+                pBlock.parnum = false;
+                pBlock.isNumber = false;
+              }
+
+            if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) != -1 && this.styleNotNumbered.indexOf(styleVal) == -1){
+                pBlock.parnum = true;
+                pBlock.isNumber = true;
+              }
+
             if (pBlock && pBlock.type == blockType) {
                 if (styleVal.length) {
+
                   pBlock.classes[styleKey] = styleVal;
                   if (blockType === 'header' && styleKey === 'level') {
                     updateToc = true;
