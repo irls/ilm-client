@@ -1077,18 +1077,6 @@ export default {
             return getPrevBlock
             .then((blockBefore)=>{
               //if (!checkArr.includes(block.type) || !checkArr.includes(blockBefore.type)) {
-              if (block.type !== blockBefore.type) {
-                this.unableJoinMessage();
-                return Promise.reject('type');
-              }
-              if (!this.parlist.has(blockBefore._id)) {
-                this.unableJoinMessage();
-                return Promise.reject('type');
-              }
-              if (block.voicework !== blockBefore.voicework) {
-                this.unableToJoinVoiceworkMessage();
-                return Promise.reject('type');
-              }
 
 
               let elBlock = this.$children.find(c => {
@@ -1117,6 +1105,21 @@ export default {
               }
               else
               {
+                if (block.type !== blockBefore.type) {
+                  this.doJoinBlocks.show = false;
+                  this.unableJoinMessage();
+                  return Promise.reject('type');
+                }
+                if (!this.parlist.has(blockBefore._id)) {
+                  this.doJoinBlocks.show = false;
+                  this.unableJoinMessage();
+                  return Promise.reject('type');
+                }
+                if (block.voicework !== blockBefore.voicework) {
+                  this.doJoinBlocks.show = false;
+                  this.unableToJoinVoiceworkMessage();
+                  return Promise.reject('type');
+                }
                 this.doJoinBlocks.block = {};
                 let currBlockRef = this.$refs.blocks.find((blockRef)=>{
                   return blockRef.blockId == block._id;
@@ -1202,18 +1205,7 @@ export default {
             });
             return getNextBlock
             .then((blockAfter)=>{
-              if (block.type !== blockAfter.type) {
-                this.unableJoinMessage();
-                return Promise.reject('type');
-              }
-              if (!this.parlist.has(this.parlistO.getOutId(block._id))) {
-                this.unableJoinMessage();
-                return Promise.reject('type');
-              }
-              if (block.voicework !== blockAfter.voicework) {
-                this.unableToJoinVoiceworkMessage();
-                return Promise.reject('type');
-              }
+              
               let chainId = this.parlistO.getOutId(block._id);
               let elBlock = this.$children.find(c => {
                 return c.$el.id == block._id;
@@ -1239,6 +1231,21 @@ export default {
               }
               else
               {
+                if (block.type !== blockAfter.type) {
+                  this.doJoinBlocks.show = false;
+                  this.unableJoinMessage();
+                  return Promise.reject('type');
+                }
+                if (!this.parlist.has(this.parlistO.getOutId(block._id))) {
+                  this.doJoinBlocks.show = false;
+                  this.unableJoinMessage();
+                  return Promise.reject('type');
+                }
+                if (block.voicework !== blockAfter.voicework) {
+                  this.doJoinBlocks.show = false;
+                  this.unableToJoinVoiceworkMessage();
+                  return Promise.reject('type');
+                }
                 this.doJoinBlocks.block = {};
                 let currBlockRef = this.$refs.blocks.find((blockRef)=>{
                   return blockRef.blockId == block._id;
