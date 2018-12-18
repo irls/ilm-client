@@ -920,22 +920,6 @@ export default {
       isCompleted: { cache: false,
         get() {
           return this.block ? this.tc_isCompleted(this.block) : true;
-          if (this._is('editor', true) && (
-                  this.tc_hasTask('content_cleanup') ||
-                  (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')
-                )) return false;
-          if (this._is('editor', true)) {
-            let flags_summary = this.block.calcFlagsSummary();
-            if (!this.block.status || this.block.status.assignee !== 'proofer') {
-              if (flags_summary && flags_summary.stat === 'open' && ['editor', 'narrator'].indexOf(flags_summary.dir) !== -1) {
-                return false;
-              }
-            }
-            if (this.isCanApproveWithoutTask) {
-              return false;
-            }
-          }
-          return this.tc_getBlockTask(this.block._id) ? false : true;
         }
       },
       displaySelectionStart() {
