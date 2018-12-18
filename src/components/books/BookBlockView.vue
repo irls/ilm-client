@@ -63,7 +63,7 @@
         </template>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
-        <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + block.language]"
+        <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + (block.language || 'undefined')]"
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">

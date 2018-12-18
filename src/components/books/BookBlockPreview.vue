@@ -8,7 +8,7 @@
       <div class="table-row check-row"></div>
     </div>
     <!--<div :class="['table-cell', 'controls-left']">-->
-    <div :class="['table-cell']">
+    <div :class="['table-cell', {'completed': isCompleted}]">
       <div :class="['table-body', '-content']">
         <div class="table-row-flex controls-top"></div>
         <!--<div class="table-row-flex controls-top">-->
@@ -44,11 +44,12 @@
         </div>
         <!--<div :class="['table-row ilm-block']">-->
 
-        <div class="table-row content-footnotes">
+        <div class="table-row content-footnotes"
+          v-if="block.footnotes.length > 0 && mode !== 'narrate'">
           <div class="table-body footnote"
             v-for="(footnote, ftnIdx) in block.footnotes">
 
-            <div class="table-row controls-top">
+            <div :class="['table-row controls-top', {'completed': isCompleted}]">
             </div>
 
             <div class="table-row">
@@ -164,6 +165,26 @@ import access             from '../../mixins/access.js';
           }
         }
       },
+      isCompleted: { cache: false,
+        get() {
+          if (this._is('editor', true) && (
+                  this.tc_hasTask('content_cleanup') ||
+                  (this.tc_hasTask('audio_mastering') && this.block.status && this.block.status.stage === 'audio_mastering')
+                )) return false;
+          if (this._is('editor', true)) {
+            let flags_summary = this.block.calcFlagsSummary();
+            if (!this.block.status || this.block.status.assignee !== 'proofer') {
+              if (flags_summary && flags_summary.stat === 'open' && ['editor', 'narrator'].indexOf(flags_summary.dir) !== -1) {
+                return false;
+              }
+            }
+            if (this.isCanApproveWithoutTask) {
+              return false;
+            }
+          }
+          return this.tc_getBlockTask(this.block._id) ? false : true;
+        }
+      },
       isIllustrationChanged: { cache: true,
         get() {
           return this.block.isIllustrationChanged;
@@ -222,18 +243,32 @@ import access             from '../../mixins/access.js';
 
   .table-row.controls-top {
     height: 28px;
+    &.completed {
+      height: 20px;
+    }
   }
 
   /*.ilm-book-styles.global-ocean*/
   .ilm-block {
-    .content-wrap-preview.header {
-      margin: 4px;
+    .content-wrap-preview {
+      &.header {
+        margin: 4px;
+      }
+      &.title {
+        margin-top: 6px;
+      }
     }
   }
 
   .content-wrap-footn-preview {
     p {
       margin: 0;
+    }
+  }
+
+  .table-body.footnote {
+    .content-wrap-footn-preview.-text {
+      padding-right: 160px;
     }
   }
 }
