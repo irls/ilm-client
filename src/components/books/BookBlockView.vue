@@ -221,9 +221,9 @@
             </div>
             <!--<div class="table-row-flex controls-top">-->
 
-            <div style="" class="preloader-container">
+            <!-- <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
-            </div>
+            </div> -->
 
             <div :class="['table-row ilm-block', block.markedAsDone && !hasChanges ? '-marked':'']">
                 <hr v-if="block.type=='hr'"
@@ -701,6 +701,9 @@ export default {
   computed: {
       isLocked: function () {
         if (this.isSaving) {
+          return true;
+        }
+        if (this.isUpdating) {
           return true;
         }
         return this.block ? this.isBlockLocked(this.block._id) : false;
@@ -1891,6 +1894,7 @@ export default {
       },
       audPlayFromSelection() {
         if (this.player) {
+          this.player.loadBlock(this.block._id);
           let startElement = this._getParent(this.range.startContainer, 'w');
           if (startElement) {
             this.isAudStarted = true;
@@ -1901,6 +1905,7 @@ export default {
       audPlaySelection() {
         if (this.player) {
           this.audStop(this.block._id);
+          this.player.loadBlock(this.block._id);
           let startElement = this._getParent(this.range.startContainer, 'w');
           let endElement = this._getParent(this.range.endContainer, 'w');
           let startRange = this._getClosestAligned(startElement, 1);
