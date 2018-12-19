@@ -758,20 +758,7 @@ export default {
     },
     blocksToApproveCounter: {
       get() {
-        if (this.tc_allowEditingComplete() || this.tc_allowFinishMastering()) {
-          if (this.tc_allowEditingComplete()) {
-              return this.currentBookCounters.not_marked_blocks;
-          }
-          if (this.tc_allowFinishMastering()) {
-            if (this.currentBookCounters.not_proofed_audio_blocks === 0) {
-              return 0;
-            } else {
-              return this.currentBookCounters.not_marked_blocks;
-            }
-          }
-        } else {
-          return this.tc_currentBookTasks.tasks.length;
-        }
+        return this.tc_blocksToApproveCount();
       }
     },
     selectionStart() {
