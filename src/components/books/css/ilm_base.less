@@ -576,12 +576,12 @@
     margin-bottom: -5px;*/
   }
 
-  .blockquote { // these must always be within a div.par, not <p>
+  .blockquote, .prayer { // these must always be within a div.par, not <p>
     padding-left: 3em; padding-right: 1em;
     /*&:before, &:after {content:'';} // no fake quotation marks*/
   }
   .content-wrap {
-    &.blockquote:hover {
+    &.blockquote:hover, &.prayer:hover {
       padding-left: 2.95em; padding-right: 0.95em;
     }
   }
@@ -708,7 +708,7 @@
     }
   }
 
-  &.blockquote {
+  &.blockquote, &.prayer {
     .ilm-block {
       .par { // these must always be within a div.par, not <p>
         padding-left: 3em; padding-right: 1em;
@@ -717,7 +717,7 @@
     }
   }
 
-  &.blockquote {
+  &.blockquote, &.prayer {
     .ilm-block {
       .par.content-wrap:hover {
         padding-left: 2.95em; padding-right: 0.95em;
