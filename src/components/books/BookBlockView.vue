@@ -1798,9 +1798,10 @@ export default {
                 break;
             }
           }
-
+          this.isSaving = true;
           this.tc_approveBookTask(task)
           .then(response => {
+            this.isSaving = false;
             //this.isApproving = false;
             if (response.status == 200) {
               if (typeof response.data._id !== 'undefined') {
@@ -1812,6 +1813,7 @@ export default {
             }
           })
           .catch(err => {
+            this.isSaving = false;
             //this.isApproving = false;
           });
         });

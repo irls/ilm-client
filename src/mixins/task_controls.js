@@ -240,6 +240,27 @@ export default {
       },
       tc_isProofreadUnassigned() {
         return this.currentJobInfo.is_proofread_unassigned;
+      },
+      tc_blocksToApproveCount() {
+        if (this.tc_allowEditingComplete() || this.tc_allowFinishMastering()) {
+          if (this.tc_allowEditingComplete()) {
+              return this.currentBookCounters.not_marked_blocks;
+          }
+          if (this.tc_allowFinishMastering()) {
+            if (this.currentBookCounters.not_proofed_audio_blocks === 0) {
+              return 0;
+            } else {
+              return this.currentBookCounters.not_marked_blocks;
+            }
+          }
+        } else {
+          let count = this.tc_currentBookTasks.tasks.length;
+          let can_approve_count = this.currentJobInfo.can_resolve_tasks.filter(t => {
+            return typeof t.blockid !== 'undefined' && t.blockid;
+          });
+          count+= can_approve_count ? can_approve_count.length : 0;
+          return count;
+        }
       }
     },
     computed: {
