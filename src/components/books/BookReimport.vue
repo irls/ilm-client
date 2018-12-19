@@ -40,7 +40,7 @@
                   <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip,.docx,.md" multiple="false" @change="onFilesChange($event)">
 
                 </label>
-                <span class="help-block">Book file or ZIP with files and images, Docx or Markdown with text</span>
+                <span class="help-block">Book file or ZIP with files and images, Docx, txt or Markdown with text</span>
               </div>
 
             </div>
