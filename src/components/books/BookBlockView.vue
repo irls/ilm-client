@@ -1680,6 +1680,11 @@ export default {
           return api.post(api_url, data, {})
             .then(response => {
               if (response.status == 200) {
+                if (this.isCompleted) {
+                  this.tc_loadBookTask();
+                  this.getCurrentJobInfo();
+                  this.getTotalBookTasks();
+                }
 
                 if (this.block.markedAsDone != response.data.markedAsDone) {
                   this.block.markedAsDone = response.data.markedAsDone;

@@ -213,17 +213,17 @@ export default {
         return tasks;
       },
       tc_showBlockAudioEdit(blockid) {
-        if (this._is('editor', true) && (this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering)) {
+        if (this._is('editor', true) && !this.currentJobInfo.published) {
           return true;
         }
-        if (this.adminOrLibrarian && (this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering || this.currentJobInfo.published)) {
+        if (this.adminOrLibrarian) {
           return true;
         }
         //if (!this.$store.state.tc_tasksByBlock[blockid]) {
           //return false;
         //}
         let taskByType = this.$store.state.tc_tasksByBlock[blockid] ? this.$store.state.tc_tasksByBlock[blockid].find(t => {
-          return ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block'].indexOf(t.type) !== -1;
+          return ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-published-block', 'approve-new-published-block'].indexOf(t.type) !== -1;
         }) : false;
         if (taskByType) {
           return true;
