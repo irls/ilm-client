@@ -1033,7 +1033,14 @@ export default {
           //this.$root.$emit('from-book-meta:upd-toc', true);
         }
         //console.log('success DB update: ', doc)
-        return this.updateBookVersion({minor: true})
+        let updateVersion = {minor: true};
+        switch(key) {
+          case 'styles':
+          case 'numeration':
+            updateVersion = {major: true};
+            break;
+        }
+        return this.updateBookVersion(updateVersion)
           .then(() => {
             //this.unfreeze('updateBookMeta');
             return BPromise.resolve(doc);
@@ -1393,7 +1400,7 @@ export default {
                 pBlock.checked = true;
               } else {
                 pBlock.partUpdate = true;
-                this.putBlock(pBlock).then(()=>{
+                this.putBlock({_id: pBlock._id, classes: pBlock.classes}).then(()=>{
                   if (updateToc) {
                     this.$root.$emit('from-book-meta:upd-toc', true);
                   }
@@ -1401,6 +1408,7 @@ export default {
               }
             }
           })
+          this.updateBookVersion({major: true});
         }
         //this.$root.$emit('from-meta-edit:set-num');
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
@@ -1504,6 +1512,7 @@ export default {
             } else {
               this.$root.$emit('from-meta-edit:set-num');
             }
+            this.updateBookVersion({major: true})
           })
         }
 
