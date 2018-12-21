@@ -261,6 +261,75 @@ export default {
           count+= can_approve_count ? can_approve_count.length : 0;
           return count;
         }
+      },
+      tc_allowMetadataEdit() {
+        if (this.adminOrLibrarian) {
+          return true;
+        }
+        if (this._is('editor', true)) {
+          if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
+            return true;
+          }
+          if (!this.currentJobInfo.published) {
+            return true;
+          }
+        }
+        return false;
+      },
+      tc_displayAudiointegrationTab() {
+        if ([
+          'CollectionBookEditDisplay',
+          'BookEditDisplay',
+          'BooksGrid',
+          'CollectionBook'
+        ].indexOf(this.$route.name) !== -1) {
+          return false;
+        }
+        if (this.adminOrLibrarian) {
+          return true;
+        }
+        if (this._is('editor', true)) {
+          if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
+            return true;
+          }
+          if (!this.currentJobInfo.published) {
+            return true;
+          }
+        }
+        return false;
+      },
+      tc_displayStylesTab() {
+        if ([
+          'CollectionBookEditDisplay',
+          'BookEditDisplay',
+          'BooksGrid',
+          'CollectionBook'
+        ].indexOf(this.$route.name) !== -1) {
+          return false;
+        }
+        if (this.adminOrLibrarian) {
+          return true;
+        }
+        if (this._is('editor', true)) {
+          if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
+            return true;
+          }
+          if (!this.currentJobInfo.published) {
+            return true;
+          }
+        }
+        return false;
+      },
+      tc_allowMetadataActions() {
+        if ([
+          'CollectionBookEditDisplay',
+          'BookEditDisplay',
+          'BooksGrid',
+          'CollectionBook'
+        ].indexOf(this.$route.name) !== -1) {
+          return false;
+        }
+        return true;
       }
     },
     computed: {
