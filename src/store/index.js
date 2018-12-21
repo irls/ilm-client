@@ -1122,27 +1122,20 @@ export const store = new Vuex.Store({
               versions[0] = (parseInt(versions[0]) + 1);
               versions[1] = 0;
             }
-            state.metaRemoteDB.get(state.currentBookMeta._id)
-              .then(meta => {
-                //console.log('FROM REMOTE', meta);
-                //console.log('LOCAL', test);
-                meta['version'] = versions[0] + '.' + versions[1];
-                meta['pubType'] = 'Unpublished';
-                meta['published'] = false;
-                meta['status'] = 'staging';
-                meta['demo'] = false;
-                state.metaRemoteDB.put(meta)
-                  .then(() => {
-                    //dispatch('reloadBookMeta');
-                    state.currentBookMeta.version = meta['version'];
-                    state.currentBookMeta.pubType = meta['pubType'];
-                    state.currentBookMeta.published = meta['published'];
-                    state.currentBookMeta.status = meta['status'];
-                    state.currentBookMeta.demo = meta['demo'];
-                    if (meta.collection_id) {
-                      dispatch('updateCollectionVersion', Object.assign({id: meta.collection_id}, update));
-                    }
-                  });
+            let upd = {
+              'version': versions[0] + '.' + versions[1],
+              'pubType': 'Unpublished',
+              'published': false,
+              //'status': 'staging',
+              //'demo': false,
+              'isInTheQueueOfPublication': false,
+              'isIntheProcessOfPublication': false
+            };
+            dispatch('updateBookMeta', upd)
+              .then((meta) => {
+                if (meta.collection_id) {
+                  dispatch('updateCollectionVersion', Object.assign({id: meta.collection_id}, update));
+                }
               });
           }
         } else {
@@ -1150,6 +1143,19 @@ export const store = new Vuex.Store({
           // dispatch('reloadBookMeta');
         }
       }
+    },
+    updateBookMeta({state, dispatch, commit}, update) {
+      return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id,
+          update)
+            .then(meta => {
+              //console.log(meta);
+              //state.currentBookMeta = meta.data;
+              commit('SET_CURRENTBOOK_META', meta.data)
+              return Promise.resolve(meta.data);
+            })
+            .catch(err => {
+              return Promise.reject(err);
+            })
     },
 
     loadCollection({commit, state, dispatch}, id) {
@@ -1515,7 +1521,10 @@ export const store = new Vuex.Store({
     },
 
     putBlock ({commit, state, dispatch}, block) {
-        let cleanBlock = block.clean();
+        let cleanBlock = Object.assign({}, block);
+        if (typeof block.clean === 'function') {
+          cleanBlock = block.clean();
+        }
         commit('set_blocker', 'putBlock');
         //console.log('putBlock', cleanBlock);
         /*return dispatch('getBlock', cleanBlock._id)
@@ -1549,6 +1558,9 @@ export const store = new Vuex.Store({
             .then(response => {
               commit('clear_blocker', 'putBlock');
               block._rev = response.data.rev;
+              dispatch('tc_loadBookTask');
+              dispatch('getCurrentJobInfo');
+              dispatch('getTotalBookTasks');
               return Promise.resolve(response.data);
             })
             .catch(err => {

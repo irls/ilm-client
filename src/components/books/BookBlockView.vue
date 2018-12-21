@@ -1125,7 +1125,8 @@ export default {
         'loadBookToc',
         'tc_loadBookTask',
         'getCurrentJobInfo',
-        'getTotalBookTasks'
+        'getTotalBookTasks',
+        'updateBookVersion'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -3018,6 +3019,7 @@ export default {
           if (['header', 'title'].indexOf(this.block.type) !== -1) {
             this.loadBookToc({bookId: this.block.bookid, isWait: true});
           }
+          this.updateBookVersion({major: true});
         });
       }, 1000),
 
