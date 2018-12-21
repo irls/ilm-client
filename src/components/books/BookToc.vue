@@ -73,8 +73,16 @@ export default {
 
     goToBlock(blockId, ev) {
       //console.log('goToBlock', blockId, this.$route.name);
-      this.$router.push({name: this.$route.name, params: {}});
-      this.$router.push({name: this.$route.name, params:  { block: blockId }});
+      /*if ([
+        'CollectionBookEdit', 
+        'CollectionBookEditDisplay',
+        'BookEdit',
+        'BookEditDisplay',
+        'BookNarrate', 
+        'CollectionBookNarrate'].indexOf(this.$route.name) !== -1) {*/
+        this.$router.push({name: this.$route.name, params: {}});
+        this.$router.push({name: this.$route.name, params:  { block: blockId }});
+      //}
     },
     loadBookTocProxy(isWait = false) {
       //if (!isWait) this.freeze('loadBookToc');

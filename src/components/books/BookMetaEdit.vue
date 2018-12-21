@@ -34,7 +34,7 @@
         :allowDownload="false" />
 
       <div class="book-listing">
-        <div class="row">
+        <div class="row" v-if="tc_allowMetadataActions()">
           <template v-if="tc_allowEditingComplete() || tc_allowFinishMastering()">
             <template v-if="tc_allowEditingComplete()">
               <div v-if="!textCleanupProcess" class="editing-wrapper">
@@ -79,39 +79,6 @@
           </template>
         </div>
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
-          <vue-tab title="TOC" id="book-toc">
-            <BookToc ref="bookToc"
-              :bookId="currentBook.bookid"
-            ></BookToc>
-          </vue-tab>
-          <vue-tab title="Audio Integration" id="audio-integration">
-            <div class="t-box">
-              <template>
-                <div class="btn-switch" @click="toggleMastering()">
-                  <i class="fa fa-toggle-on" v-if="currentBook.masteringRequired"></i>
-                  <i class="fa fa-toggle-off" v-else></i>
-                  <span class="s-label"> Mastering required</span>
-                </div>
-              </template>
-              <a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
-                Export Audio
-              </a>
-              <button v-else class="btn btn-primary btn-small btn-export-audio" v-on:click="startGenerateAudiofile()">
-                Export Audio
-              </button>
-            </div>
-            <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
-              {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
-              <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
-              <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
-            </div>
-            <div v-else class="t-box red-message">Define block range</div>
-            <BookAudioIntegration ref="audioIntegration"
-                :isActive="activeTabIndex == 1"
-                @onTtsSelect="ttsUpdate"
-                @uploadAudio="showModal_audio = true"
-              ></BookAudioIntegration>
-          </vue-tab>
           <vue-tab title="Book Content" id="book-content">
             <fieldset>
               <legend>Book Metadata </legend>
@@ -251,8 +218,41 @@
             <a v-if="currentBook.published" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()" -->
           </template>
         </vue-tab>
+          <vue-tab title="TOC" id="book-toc">
+            <BookToc ref="bookToc"
+              :bookId="currentBook.bookid"
+            ></BookToc>
+          </vue-tab>
+          <vue-tab title="Audio Integration" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
+            <div class="t-box">
+              <template>
+                <div class="btn-switch" @click="toggleMastering()">
+                  <i class="fa fa-toggle-on" v-if="currentBook.masteringRequired"></i>
+                  <i class="fa fa-toggle-off" v-else></i>
+                  <span class="s-label"> Mastering required</span>
+                </div>
+              </template>
+              <a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
+                Export Audio
+              </a>
+              <button v-else class="btn btn-primary btn-small btn-export-audio" v-on:click="startGenerateAudiofile()">
+                Export Audio
+              </button>
+            </div>
+            <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
+              {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
+              <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
+              <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+            </div>
+            <div v-else class="t-box red-message">Define block range</div>
+            <BookAudioIntegration ref="audioIntegration"
+                :isActive="activeTabIndex == 1"
+                @onTtsSelect="ttsUpdate"
+                @uploadAudio="showModal_audio = true"
+              ></BookAudioIntegration>
+          </vue-tab>
 
-        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!allowMetadataEdit">
+        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab()">
         <!--<accordion :one-at-atime="true" ref="accordionStyles">
 
           <panel :is-open="true" header="Selected blocks styles"
@@ -651,7 +651,6 @@ export default {
       approveMetadataComment: '',
       showSharePrivateBookModal: false,
       showAudioMasteringModal: false,
-      allowMetadataEdit: false,
       textCleanupProcess: false,
       finishPublishedProcess: false,
       //audiobook: {},
@@ -766,14 +765,17 @@ export default {
     },
     selectionEnd() {
       return this.blockSelection.end._id ? this.blockSelection.end._id : false;
+    },
+    allowMetadataEdit: {
+      get() {
+        return this.tc_allowMetadataEdit();
+      }
     }
   },
 
   mixins: [task_controls, api_config, access],
 
   mounted() {
-    //this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor || this.isAdmin
-    this.allowMetadataEdit = this.isEditor || this.isAdmin
     let self = this;
     //this.loadAudiobook(true)
     this.getAudioBook(this.currentBookid)
@@ -912,6 +914,35 @@ export default {
     'currentBook.isInTheQueueOfPublication': {
       handler(val) {
         this.isPublishingQueue = !!val;
+      }
+    },
+    '$route': {
+      handler(val) {
+        //console.log('ROUTE CHANGE')
+        let newIndex = false;
+        
+        switch (this.activeTabIndex) {
+          case 0:
+            break;
+          case 1:
+            break;
+          case 2:
+            if (!this.tc_displayAudiointegrationTab()) {
+              newIndex = 0;
+              //console.log('HERE')
+            }
+            break;
+          case 3:
+            if (!this.tc_displayStylesTab()) {
+              newIndex = 0;
+            }
+            break;
+        }
+        if (newIndex !== false) {
+          this.activeTabIndex = newIndex;
+          this.$refs.panelTabs.findTabAndActivate(newIndex);
+        }
+        this.$forceUpdate();
       }
     }
 
@@ -1877,6 +1908,16 @@ export default {
         text-transform: capitalize;
       }
     }*/
+  }
+  li.tab {
+      &.disabled {
+          display: none;
+      }
+  }
+  section.tab-container {
+    li.tab {
+      display: block;
+    }
   }
 
 </style>
