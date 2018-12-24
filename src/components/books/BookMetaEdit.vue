@@ -246,7 +246,7 @@
             </div>
             <div v-else class="t-box red-message">Define block range</div>
             <BookAudioIntegration ref="audioIntegration"
-                :isActive="activeTabIndex == 1"
+                :isActive="activeTabIndex == 2"
                 @onTtsSelect="ttsUpdate"
                 @uploadAudio="showModal_audio = true"
               ></BookAudioIntegration>
