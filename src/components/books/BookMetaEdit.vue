@@ -88,6 +88,14 @@
                   <td>Book Id</td>
                   <td class='disabled'>{{currentBook.bookid}}</td>
                 </tr>
+                
+                <tr class="extid">
+                  <td>External Book Id</td>
+                  <td>
+                    <input v-model="currentBook.extid" @input="updateExtid($event)" :disabled="!allowMetadataEdit" :class="[{'has-error': validationErrors['extid']}]"/>
+                           <span class="validation-error" v-if="validationErrors['extid']">{{validationErrors['extid']}}</span>
+                  </td>
+                </tr>
 
                 <tr class='title'>
                   <td>Title</td>
@@ -666,7 +674,8 @@ export default {
       activeTabIndex: 0,
       isPublishing: false,
       isPublishingQueue: false,
-      publicationStatus: false
+      publicationStatus: false,
+      validationErrors: {extid: false}
     }
   },
 
@@ -1584,6 +1593,15 @@ export default {
           return false;
         });
     },
+    
+    updateExtid: _.debounce(function(event) {
+      if (event.target.value && event.target.value.length < 36) {
+        this.validationErrors['extid'] = 'Minimum length is 36 symbols'
+      } else {
+        this.validationErrors['extid'] = false;
+        this.liveUpdate('extid', event.target.value);
+      }
+    }, 500),
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks'])
   }
@@ -1891,6 +1909,15 @@ export default {
   }
   .red-message {
       color: red;
+  }
+  table.properties {
+    .has-error {
+        border: 1px solid red;
+    }
+    .validation-error {
+        width: 100%;
+        color: red;
+    }
   }
 </style>
 
