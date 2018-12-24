@@ -1556,6 +1556,8 @@ export default {
     updateExtid: _.debounce(function(event) {
       if (event.target.value && event.target.value.length < 36) {
         this.validationErrors['extid'] = 'Minimum length is 36 symbols'
+      } else if (/[^\w\d]+/.test(event.target.value)) {
+        this.validationErrors['extid'] = 'Only letters and digits'
       } else {
         this.validationErrors['extid'] = false;
         this.liveUpdate('extid', event.target.value);
