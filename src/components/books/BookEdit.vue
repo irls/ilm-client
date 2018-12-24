@@ -272,7 +272,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters']),
+    'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'deleteBlockToc']),
 
     test() {
         window.scrollTo(0, document.body.scrollHeight-500);
@@ -1021,6 +1021,9 @@ export default {
       api.delete(api_url, {})
       .then((response)=>{
         //this.setBlockSelection({start: {}, end: {}});
+        if (['header', 'title'].indexOf(block.type) !== -1) {
+          this.deleteBlockToc({blockid: block._id, bookid: block.bookid});
+        }
         if (response.data) {
 
           let newStartId = this.parlistO.delBlock(response.data);

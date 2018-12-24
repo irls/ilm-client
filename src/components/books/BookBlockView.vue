@@ -1120,7 +1120,8 @@ export default {
         'addBlockLock',
         'getAlignCount',
         'recountApprovedInRange',
-        'loadBookToc'
+        'loadBookToc',
+        'updateBlockToc'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1560,6 +1561,11 @@ export default {
           }
           if (recount_marked) {
             this.setCurrentBookCounters(['not_marked_blocks']);
+          }
+          if (is_content_changed) {
+            if (['title', 'header'].indexOf(this.block.type) !== -1) {
+              this.updateBlockToc({blockid: this.block._id, bookid: this.block.bookid});
+            }
           }
 
           this.blockO.status = Object.assign(this.blockO.status, {
