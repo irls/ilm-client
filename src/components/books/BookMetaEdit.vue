@@ -119,8 +119,8 @@
                 <tr class="extid">
                   <td>External Book Id</td>
                   <td>
-                    <input v-model="currentBook.extid" @input="updateExtid($event)" :disabled="!allowMetadataEdit" :class="[{'has-error': validationErrors['extid']}]"/>
-                           <span class="validation-error" v-if="validationErrors['extid']">{{validationErrors['extid']}}</span>
+                    <input v-model="currentBook.extid" @input="updateExtid($event)" :disabled="!allowMetadataEdit" :class="[{'has-error': validationErrors['extid'].length}]"/>
+                           <span class="validation-error" v-for="err in validationErrors['extid']">{{err}}</span>
                   </td>
                 </tr>
 
@@ -669,7 +669,7 @@ export default {
       isPublishing: false,
       isPublishingQueue: false,
       publicationStatus: false,
-      validationErrors: {extid: false}
+      validationErrors: {extid: []}
     }
   },
 
@@ -1554,12 +1554,12 @@ export default {
     },
     
     updateExtid: _.debounce(function(event) {
-      if (event.target.value && event.target.value.length < 36) {
-        this.validationErrors['extid'] = 'Minimum length is 36 symbols'
-      } else if (/[^\w\d]+/.test(event.target.value)) {
-        this.validationErrors['extid'] = 'Only letters and digits'
+      if (event.target.value && event.target.value.length != 32) {
+        this.validationErrors['extid'] = ['Length must be equal to 32 symbols.']
+      } else if (/[^a-z\d]+/.test(event.target.value)) {
+        this.validationErrors['extid'] = ['Only lowercase letters (a-z) and numbers.']
       } else {
-        this.validationErrors['extid'] = false;
+        this.validationErrors['extid'] = [];
         this.liveUpdate('extid', event.target.value);
       }
     }, 500),
