@@ -2976,13 +2976,20 @@ export default {
         }, {})
           .then(response => {
             this.voiceworkUpdating = false;
+            if (this.isCompleted) {
+              this.tc_loadBookTask();
+              this.getCurrentJobInfo();
+              this.getTotalBookTasks();
+            }
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
               this.getAlignCount();
-              response.data.updField = 'voicework';
-              this.$root.$emit('bookBlocksUpdates', response.data);
-              this.block.voicework = this.voiceworkChange;
-              //this.setCurrentBookBlocksLeft(this.block.bookid);
+              if (response && response.data) {
+                response.data.updField = 'voicework';
+                this.$root.$emit('bookBlocksUpdates', response.data);
+                this.block.voicework = this.voiceworkChange;
+                //this.setCurrentBookBlocksLeft(this.block.bookid);
+              }
             }
             this.voiceworkChange = false;
           })
@@ -3199,6 +3206,11 @@ export default {
           }
           if (val === false) {
             this.$parent.refreshTmpl();
+            if (this.isCompleted) {
+              this.tc_loadBookTask();
+              this.getCurrentJobInfo();
+              this.getTotalBookTasks();
+            }
           }
         }
       },
