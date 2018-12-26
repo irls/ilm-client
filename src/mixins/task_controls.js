@@ -106,7 +106,7 @@ export default {
           return true;
         }
         if ((this.currentJobInfo.mastering || this.currentJobInfo.published) && this.adminOrLibrarian) {
-          return block.voicework !== 'narration' ? true : false;
+          return true;
         }
         return this.tc_hasBlockTask(block._id, 'approve-new-block') || this.tc_hasBlockTask(block._id, 'approve-modified-block');
       },
