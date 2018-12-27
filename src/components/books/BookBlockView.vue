@@ -291,8 +291,8 @@
                     :toggleHideArchParts="toggleHideArchParts"
                     :countArchParts="countArchParts"
                 >
-
-                  <template v-if="flagsSel" v-for="(part, partIdx) in flagsSel.parts">
+                  <template v-if="flagsSel">
+                  <template v-for="(part, partIdx) in flagsSel.parts">
                     <template v-if="part.status!=='hidden' || !isHideArchFlags || !isHideArchParts">
                     <li>
 
@@ -378,6 +378,7 @@
                     <!--<li class="separator"></li>-->
 
                     </template>
+                  </template>
                   </template>
 
                 </block-flag-popup>
@@ -2053,6 +2054,16 @@ export default {
 
       addFlag: function(ev, type = 'editor') {
         if (window.getSelection) {
+          let startPos = this.$refs.blockContent.compareDocumentPosition(this.range.startContainer);
+          let endPos = this.$refs.blockContent.compareDocumentPosition(this.range.endContainer);
+          if (startPos != 20) {
+            this.range.setStart(this.$refs.blockContent.childNodes[0], 0);
+          }
+          if (endPos != 20) {
+            let endNode = this.$refs.blockContent.lastChild;
+            let selectionLength = endNode.nodeType == 3 ? endNode.textContent.length: 1;
+            this.range.setEnd(endNode, selectionLength);
+          }
           let flag = document.createElement(this.flagEl);
           let existsFlag = this.detectExistingFlag();
           if (!existsFlag) {
@@ -2061,10 +2072,10 @@ export default {
             flag.appendChild(this.range.extractContents());
             this.range.insertNode(flag);
             flag.addEventListener('click', this.handleFlagClick);
-            this.handleFlagClick({target: flag});
+            this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
           } else {
             this.block.addFlag(existsFlag.dataset.flag, this.range, type);
-            this.handleFlagClick({target: existsFlag});
+            this.handleFlagClick({target: existsFlag, layerY: ev.layerY, clientY: ev.clientY});
           }
           this.$refs.blockFlagPopup.scrollBottom();
           this.isChanged = true;
