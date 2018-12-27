@@ -1021,9 +1021,6 @@ export default {
       api.delete(api_url, {})
       .then((response)=>{
         //this.setBlockSelection({start: {}, end: {}});
-        if (['header', 'title'].indexOf(block.type) !== -1) {
-          this.loadBookToc({isWait: true, bookId: block.bookid});
-        }
         if (response.data) {
 
           let newStartId = this.parlistO.delBlock(response.data);
@@ -1035,7 +1032,12 @@ export default {
           this.parlist.delete(block._id);
         }
 
-        this.putNumBlockOBatchProxy({bookId: block.bookid});
+        this.putNumBlockOBatchProxy({bookId: block.bookid})
+          .then(() => {
+            if (['header', 'title'].indexOf(block.type) !== -1) {
+              this.loadBookToc({isWait: true, bookId: block.bookid});
+            }
+          });
 
         this.unfreeze('deleteBlock');
         //this.refreshTmpl();
@@ -1170,7 +1172,12 @@ export default {
                           this.parlistO.delBlock(response.data.blocks[2]);
                         }
 
-                        this.putNumBlockOBatchProxy({bookId: block.bookid});
+                        this.putNumBlockOBatchProxy({bookId: block.bookid})
+                          .then(() => {
+                            if (['header', 'title'].indexOf(block.type) !== -1) {
+                              this.loadBookToc({bookId: block.bookid, isWait: true})
+                            }
+                          });
                         this.refreshTmpl();
                         this.unfreeze('joinBlocks');
                         return Promise.resolve();
@@ -1292,7 +1299,12 @@ export default {
                           this.parlistO.delBlock(response.data.blocks[2]);
                         }
 
-                        this.putNumBlockOBatchProxy({bookId: block.bookid});
+                        this.putNumBlockOBatchProxy({bookId: block.bookid})
+                          .then(() => {
+                            if (['header', 'title'].indexOf(block.type) !== -1) {
+                              this.loadBookToc({bookId: block.bookid, isWait: true});
+                            }
+                          });
                         //this.refreshTmpl();
                         this.unfreeze('joinBlocks');
                         return Promise.resolve();
@@ -1607,7 +1619,10 @@ export default {
 
     listenSetNum(bookId, numMask, blockRid) {
       //console.log('listenSetNum', bookId, numMask);
-      if (bookId) this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask, blockRid: blockRid});
+      if (bookId) this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask, blockRid: blockRid})
+              .then(() => {
+                this.loadBookToc({bookId: this.meta._id, isWait: true});
+              });
       else this.updateVisibleBlocks();
       //this.refreshTmpl();
     },
