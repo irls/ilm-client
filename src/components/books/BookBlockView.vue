@@ -1178,7 +1178,8 @@ export default {
         'tc_loadBookTask',
         'getCurrentJobInfo',
         'getTotalBookTasks',
-        'updateBookVersion'
+        'updateBookVersion',
+        'updateBlockToc'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1609,6 +1610,7 @@ export default {
             this.getTotalBookTasks();
           }
           let is_content_changed = this.hasChange('content');
+          let is_type_changed = this.hasChange('type');
           this.isChanged = false;
           if (this.blockAudio.map) {
             this.blockAudio.map = this.block.content;
@@ -1628,6 +1630,13 @@ export default {
           }
           if (recount_marked) {
             this.setCurrentBookCounters(['not_marked_blocks']);
+          }
+          if (is_content_changed) {
+            if (['title', 'header'].indexOf(this.block.type) !== -1) {
+              this.updateBlockToc({blockid: this.block._id, bookid: this.block.bookid});
+            }
+          } else if (is_type_changed) {
+            this.loadBookToc({bookId: this.block.bookid, isWait: true});
           }
 
           this.blockO.status = Object.assign(this.blockO.status, {
