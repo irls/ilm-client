@@ -123,6 +123,9 @@ export default {
         return false;
       },
       tc_allowFinishPublished() {
+        if (this.currentJobInfo.mastering || this.currentJobInfo.proofing || this.currentJobInfo.text_cleanup) {
+          return false;
+        }
         if (this.adminOrLibrarian) {
           let t = this.currentJobInfo.can_resolve_tasks.find(t => {
             return t.type === 'approve-published-book';
