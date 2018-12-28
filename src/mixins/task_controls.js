@@ -38,10 +38,151 @@ export default {
         return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 6
       },
       tc_isShowEdit(blockid) {
-        return this._is('editor', true)
+        if (this.adminOrLibrarian) {
+          return true;
+        }
+        if (this._is('editor', true)) {
+          let published = typeof this.currentJobInfo.published !== 'undefined' && this.currentJobInfo.published;
+          if (published) {
+            return this.tc_getBlockTask(blockid);
+          } else {
+            return true;
+          }
+        }
+        return false;
       },
-      tc_isShowApproveContentFixAction(blockid) {
-        return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 7;
+      tc_isCompleted(block) {
+        if (this.tc_getBlockTask(block._id) || this.tc_getBlockTaskOtherRole(block._id)) {
+          return false;
+        }
+        if (this.adminOrLibrarian || this._is('editor', true)) {
+          if (this.currentJobInfo.text_cleanup) {
+            return false;
+          }
+          if (this.currentJobInfo.mastering && block.status) {
+            return block.status.stage !== 'audio_mastering';
+          }
+          return !this.tc_getBlockTask(block._id) && !this.tc_getBlockTaskOtherRole(block._id);
+        }
+        return true;
+      },
+      tc_enableMarkAsDone(block) {
+        if (this.tc_getBlockTask(block._id) || this.tc_getBlockTaskOtherRole(block._id)) {
+          return false;
+        }
+        if (this.adminOrLibrarian || this._is('editor', true)) {
+          return this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering;
+        }
+        return false;
+      },
+      tc_isSpotCheckDisabled(block) {
+        if (!block.audiosrc || (!this._is('editor', true) && !this.adminOrLibrarian)) {
+          return true;
+        }
+        if (block.isAudioChanged) {
+          return false;
+        }
+        if (this.tc_getBlockTask(block._id)) {
+          return false;
+        }
+        if ((this.currentJobInfo.text_cleanup || (this.currentJobInfo.mastering && block.status && block.status.stage === 'audio_mastering')) && !block.markedAsDone) {
+          return false;
+        }
+        if (this.adminOrLibrarian) {
+          let canResolveTask = this.currentJobInfo.can_resolve_tasks.find(t => {
+            return t.blockid == block._id;
+          });
+          if (canResolveTask) {
+            return false;
+          }
+        }
+        return true;
+      },
+      tc_allowVoiceworkChange(block) {
+        if (block.type == 'illustration' || block.type == 'hr') {
+          return false;
+        }
+        if (this.currentJobInfo.text_cleanup && (this._is('editor', true) || this.adminOrLibrarian)) {
+          return true;
+        }
+        if ((this.currentJobInfo.mastering || this.currentJobInfo.published) && this.adminOrLibrarian) {
+          return true;
+        }
+        return this.tc_hasBlockTask(block._id, 'approve-new-block') || this.tc_hasBlockTask(block._id, 'approve-modified-block');
+      },
+      tc_allowEditingComplete() {
+        if (this._is('editor', true) || this.adminOrLibrarian) {
+          return this.currentJobInfo.text_cleanup;
+        }
+        return false;
+      },
+      tc_allowFinishMastering() {
+        if (this._is('editor', true) || this.adminOrLibrarian) {
+          return this.currentJobInfo.mastering;
+        }
+        return false;
+      },
+      tc_allowFinishPublished() {
+        if (this.currentJobInfo.mastering || this.currentJobInfo.proofing || this.currentJobInfo.text_cleanup) {
+          return false;
+        }
+        if (this.adminOrLibrarian) {
+          let t = this.currentJobInfo.can_resolve_tasks.find(t => {
+            return t.type === 'approve-published-book';
+          })
+          if (!t) {
+            return false;
+          }
+          return this.currentJobInfo.can_resolve_tasks.length === 1 && this.tc_currentBookTasks.tasks.length == 0 ? true : false;
+        }
+        return false;
+      },
+      tc_allowToggleMetaMastering() {
+        return this._is('editor', true) || this.adminOrLibrarian;
+      },
+      tc_createApproveModifiedBlock(blockid) {
+        if (!this.currentJobInfo.text_cleanup && !this.currentJobInfo.mastering &&
+                  !this.tc_getBlockTask(blockid) && this._is('editor', true)) {
+          return true;
+        }
+        if (this.adminOrLibrarian && !this.currentJobInfo.text_cleanup && !this.currentJobInfo.mastering && !this.tc_getBlockTask(blockid)) {
+          return true;
+        }
+        return false;
+      },
+      tc_createApproveRevokedBlock(blockid) {
+        if (this._is('proofer', true)) {
+          return !this.tc_getBlockTask(blockid);
+        }
+        return false;
+      },
+      tc_canResolveFlagPart(part) {
+        let result = false;
+        if (part.creator === this.auth.getSession().user_id) {
+          result = true;
+          /*if (part.comments.length) part.comments.forEach((comment)=>{
+            if (comment.creator !== part.creator) result = false;
+          });*/
+        } else {
+          if (this._is(part.type, true) && this.tc_getBlockTask(this.block._id)) {
+            result = true;
+          }
+          if (!result && part.type === 'narrator' && (this._is('editor', true) || this.adminOrLibrarian)) {
+            result = true;
+          }
+          if (!result && part.type === 'editor' && this.adminOrLibrarian) {
+            result = true;
+          }
+        }
+        return result;
+      },
+      tc_allowAdminFlagging(block, flagType = false) {
+        if (block && this.adminOrLibrarian && (!flagType || flagType === 'narrator')) {
+          if (block && block.status) {
+            return block.status.assignee === 'proofer' && block.status.proofed === false && block.status.stage === 'audio_integration';
+          }
+        }
+        return false;
       },
       tc_showBlockNarrate(block_id) {
         if (!this.$store.state.tc_tasksByBlock[block_id]) {
@@ -60,32 +201,141 @@ export default {
         });
       },
       tc_getBlockTaskOtherRole(blockid) {
+        let tasks = false;
         if (this.$store.state.tc_currentBookTasks.can_resolve_tasks) {
-          let tasks = this.$store.state.tc_currentBookTasks.can_resolve_tasks.find((t) => {
+          tasks = this.$store.state.tc_currentBookTasks.can_resolve_tasks.find((t) => {
             return t.blockid == blockid;
           })
-          if (tasks && tasks.isArray) return tasks[0];
-          return tasks;
-        } else {
-          return false;
         }
+        if (!tasks && this.currentJobInfo.can_resolve_tasks) {
+          tasks = this.currentJobInfo.can_resolve_tasks.find(t => {
+            return t.blockid == blockid;
+          });
+        }
+        //if (tasks && tasks.isArray) return tasks[0];
+        return tasks;
       },
       tc_showBlockAudioEdit(blockid) {
-        if (this._is('editor', true) || this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering')) {
+        if (this._is('editor', true) && !this.currentJobInfo.published) {
           return true;
         }
-        if (!this.$store.state.tc_tasksByBlock[blockid]) {
-          return false;
+        if (this.adminOrLibrarian) {
+          return true;
         }
-        return this.$store.state.tc_tasksByBlock[blockid].find(t => {
-          return ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block'].indexOf(t.type) !== -1;
-        });
+        //if (!this.$store.state.tc_tasksByBlock[blockid]) {
+          //return false;
+        //}
+        let taskByType = this.$store.state.tc_tasksByBlock[blockid] ? this.$store.state.tc_tasksByBlock[blockid].find(t => {
+          return ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-published-block', 'approve-new-published-block'].indexOf(t.type) !== -1;
+        }) : false;
+        if (taskByType) {
+          return true;
+        }
+        if (this.adminOrLibrarian) {
+          let canResolveTask = this.currentJobInfo.can_resolve_tasks.find(t => {
+            return t.blockid == blockid;
+          });
+          if (canResolveTask) {
+            return true;
+          }
+        }
+        return false;
       },
       tc_isProofreadUnassigned() {
-        return this.$store.state.tc_currentBookTasks.is_proofread_unassigned;
+        return this.currentJobInfo.is_proofread_unassigned;
+      },
+      tc_blocksToApproveCount() {
+        if (this.tc_allowEditingComplete() || this.tc_allowFinishMastering()) {
+          if (this.tc_allowEditingComplete()) {
+              return this.currentBookCounters.not_marked_blocks;
+          }
+          if (this.tc_allowFinishMastering()) {
+            if (this.currentBookCounters.not_proofed_audio_blocks === 0) {
+              return 0;
+            } else {
+              return this.currentBookCounters.not_marked_blocks;
+            }
+          }
+        } else {
+          let count = this.tc_currentBookTasks.tasks.length;
+          let can_approve_count = this.currentJobInfo.can_resolve_tasks.filter(t => {
+            return typeof t.blockid !== 'undefined' && t.blockid;
+          });
+          count+= can_approve_count ? can_approve_count.length : 0;
+          return count;
+        }
+      },
+      tc_allowMetadataEdit() {
+        if (this.adminOrLibrarian) {
+          return true;
+        }
+        if (this._is('editor', true)) {
+          if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
+            return true;
+          }
+          if (!this.currentJobInfo.published) {
+            return true;
+          }
+        }
+        return false;
+      },
+      tc_displayAudiointegrationTab() {
+        if ([
+          'CollectionBookEditDisplay',
+          'BookEditDisplay',
+          'BooksGrid',
+          'CollectionBook'
+        ].indexOf(this.$route.name) !== -1) {
+          return false;
+        }
+        if (this.adminOrLibrarian) {
+          return true;
+        }
+        if (this._is('editor', true)) {
+          if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
+            return true;
+          }
+          if (!this.currentJobInfo.published) {
+            return true;
+          }
+        }
+        return false;
+      },
+      tc_displayStylesTab() {
+        if ([
+          'CollectionBookEditDisplay',
+          'BookEditDisplay',
+          'BooksGrid',
+          'CollectionBook'
+        ].indexOf(this.$route.name) !== -1) {
+          return false;
+        }
+        if (this.adminOrLibrarian) {
+          return true;
+        }
+        if (this._is('editor', true)) {
+          if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
+            return true;
+          }
+          if (!this.currentJobInfo.published) {
+            return true;
+          }
+        }
+        return false;
+      },
+      tc_allowMetadataActions() {
+        if ([
+          'CollectionBookEditDisplay',
+          'BookEditDisplay',
+          'BooksGrid',
+          'CollectionBook'
+        ].indexOf(this.$route.name) !== -1) {
+          return false;
+        }
+        return true;
       }
     },
     computed: {
-      ...mapGetters(['currentBookMeta'])
+      ...mapGetters(['currentBookMeta', 'adminOrLibrarian', 'currentJobInfo'])
     }
 }

@@ -34,9 +34,9 @@
         :allowDownload="false" />
 
       <div class="book-listing">
-        <div class="row">
-          <template v-if="tc_hasTask('metadata_cleanup') || tc_hasTask('audio_mastering')">
-            <template v-if="tc_hasTask('metadata_cleanup')">
+        <div class="row" v-if="tc_allowMetadataActions()">
+          <template v-if="tc_allowEditingComplete() || tc_allowFinishMastering()">
+            <template v-if="tc_allowEditingComplete()">
               <div v-if="!textCleanupProcess" class="editing-wrapper">
                 <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Editing complete</button>
                 <div class="col-sm-8 blocks-counter">
@@ -45,7 +45,7 @@
               </div>
               <div v-else class="preloader-small"></div>
             </template>
-            <template v-if="tc_hasTask('audio_mastering')">
+            <template v-if="tc_allowFinishMastering()">
               <div v-if="currentBookCounters.not_proofed_audio_blocks === 0">
                 <div v-if="!audioMasteringProcess" class="editing-wrapper">
                   <div class="col-sm-8 blocks-counter">
@@ -64,6 +64,12 @@
               </template>
             </template>
           </template>
+          <template v-else-if="tc_allowFinishPublished()">
+            <div v-if="!finishPublishedProcess" class="editing-wrapper">
+              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="finishPublished()">Editing complete</button>
+            </div>
+            <div v-else class="preloader-small"></div>
+          </template>
           <template v-else>
             <div class="editing-wrapper">
               <div class="col-sm-8 blocks-counter">
@@ -73,39 +79,6 @@
           </template>
         </div>
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
-          <vue-tab title="TOC" id="book-toc">
-            <BookToc ref="bookToc"
-              :bookId="currentBook.bookid"
-            ></BookToc>
-          </vue-tab>
-          <vue-tab title="Audio Integration" id="audio-integration">
-            <div class="t-box">
-              <template>
-                <div class="btn-switch" @click="toggleMastering()">
-                  <i class="fa fa-toggle-on" v-if="currentBook.masteringRequired"></i>
-                  <i class="fa fa-toggle-off" v-else></i>
-                  <span class="s-label"> Mastering required</span>
-                </div>
-              </template>
-              <a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
-                Export Audio
-              </a>
-              <button v-else class="btn btn-primary btn-small btn-export-audio" v-on:click="startGenerateAudiofile()">
-                Export Audio
-              </button>
-            </div>
-            <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
-              {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
-              <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
-              <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
-            </div>
-            <div v-else class="t-box red-message">Define block range</div>
-            <BookAudioIntegration ref="audioIntegration"
-                :isActive="activeTabIndex == 1"
-                @onTtsSelect="ttsUpdate"
-                @uploadAudio="showModal_audio = true"
-              ></BookAudioIntegration>
-          </vue-tab>
           <vue-tab title="Book Content" id="book-content">
             <fieldset>
               <legend>Book Metadata </legend>
@@ -114,6 +87,14 @@
                 <tr class='bookid'>
                   <td>Book Id</td>
                   <td class='disabled'>{{currentBook.bookid}}</td>
+                </tr>
+                
+                <tr class="extid">
+                  <td>External Book Id</td>
+                  <td>
+                    <input v-model="currentBook.extid" @input="updateExtid($event)" :disabled="!allowMetadataEdit" :class="[{'has-error': validationErrors['extid'].length}]"/>
+                           <span class="validation-error" v-for="err in validationErrors['extid']">{{err}}</span>
+                  </td>
                 </tr>
 
                 <tr class='title'>
@@ -245,8 +226,41 @@
             <a v-if="currentBook.published" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()" -->
           </template>
         </vue-tab>
+          <vue-tab title="TOC" id="book-toc">
+            <BookToc ref="bookToc"
+              :bookId="currentBook.bookid"
+            ></BookToc>
+          </vue-tab>
+          <vue-tab title="Audio Integration" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
+            <div class="t-box">
+              <template>
+                <div class="btn-switch" @click="toggleMastering()">
+                  <i class="fa fa-toggle-on" v-if="currentBook.masteringRequired"></i>
+                  <i class="fa fa-toggle-off" v-else></i>
+                  <span class="s-label"> Mastering required</span>
+                </div>
+              </template>
+              <a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
+                Export Audio
+              </a>
+              <button v-else class="btn btn-primary btn-small btn-export-audio" v-on:click="startGenerateAudiofile()">
+                Export Audio
+              </button>
+            </div>
+            <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
+              {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
+              <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
+              <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+            </div>
+            <div v-else class="t-box red-message">Define block range</div>
+            <BookAudioIntegration ref="audioIntegration"
+                :isActive="activeTabIndex == 2"
+                @onTtsSelect="ttsUpdate"
+                @uploadAudio="showModal_audio = true"
+              ></BookAudioIntegration>
+          </vue-tab>
 
-        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!allowMetadataEdit">
+        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab()">
         <!--<accordion :one-at-atime="true" ref="accordionStyles">
 
           <panel :is-open="true" header="Selected blocks styles"
@@ -633,7 +647,6 @@ export default {
       showModal_audio: false,
       bookEditCoverModalActive: false,
       currentBook: {},
-      cleanupTask: {},
       masteringTask: {},
       importTask: {},
       linkTaskError: '',
@@ -645,8 +658,8 @@ export default {
       approveMetadataComment: '',
       showSharePrivateBookModal: false,
       showAudioMasteringModal: false,
-      allowMetadataEdit: false,
       textCleanupProcess: false,
+      finishPublishedProcess: false,
       //audiobook: {},
       unlinkCollectionWarning: false,
       blockTypes: BlockTypes,
@@ -660,7 +673,8 @@ export default {
       activeTabIndex: 0,
       isPublishing: false,
       isPublishingQueue: false,
-      publicationStatus: false
+      publicationStatus: false,
+      validationErrors: {extid: []}
     }
   },
 
@@ -708,10 +722,10 @@ export default {
 
     isAllowExportAudio: {
       get() {
-        if (!this._is('editor')) {
+        if (!this._is('editor') && !this.adminOrLibrarian) {
           return false;
         }
-        if (this.tc_hasTask('audio_mastering')) {
+        if (this.currentJobInfo.mastering) {
           return true;
         }
         return false;
@@ -719,11 +733,11 @@ export default {
     },
     isAllowEditingComplete: {
       get() {
-        if (this.tc_hasTask('metadata_cleanup')) {
+        if (this.tc_allowEditingComplete()) {
           if (this.currentBookCounters.not_marked_blocks === 0) {
             return true;
           }
-        } else if (this.tc_hasTask('audio_mastering')) {
+        } else if (this.tc_allowFinishMastering()) {
           if (this.currentBookCounters.not_marked_blocks === 0) {
             return true;
           }
@@ -751,20 +765,7 @@ export default {
     },
     blocksToApproveCounter: {
       get() {
-        if (this.tc_hasTask('metadata_cleanup') || this.tc_hasTask('audio_mastering')) {
-          if (this.tc_hasTask('metadata_cleanup')) {
-              return this.currentBookCounters.not_marked_blocks;
-          }
-          if (this.tc_hasTask('audio_mastering')) {
-            if (this.currentBookCounters.not_proofed_audio_blocks === 0) {
-              return 0;
-            } else {
-              return this.currentBookCounters.not_marked_blocks;
-            }
-          }
-        } else {
-          return this.tc_currentBookTasks.tasks.length;
-        }
+        return this.tc_blocksToApproveCount();
       }
     },
     selectionStart() {
@@ -772,14 +773,17 @@ export default {
     },
     selectionEnd() {
       return this.blockSelection.end._id ? this.blockSelection.end._id : false;
+    },
+    allowMetadataEdit: {
+      get() {
+        return this.tc_allowMetadataEdit();
+      }
     }
   },
 
   mixins: [task_controls, api_config, access],
 
   mounted() {
-    //this.allowMetadataEdit = (this.isLibrarian && this.currentBook && this.currentBook.private == false) || this.isEditor || this.isAdmin
-    this.allowMetadataEdit = this.isEditor || this.isAdmin
     let self = this;
     //this.loadAudiobook(true)
     this.getAudioBook(this.currentBookid)
@@ -919,6 +923,35 @@ export default {
       handler(val) {
         this.isPublishingQueue = !!val;
       }
+    },
+    '$route': {
+      handler(val) {
+        //console.log('ROUTE CHANGE')
+        let newIndex = false;
+        
+        switch (this.activeTabIndex) {
+          case 0:
+            break;
+          case 1:
+            break;
+          case 2:
+            if (!this.tc_displayAudiointegrationTab()) {
+              newIndex = 0;
+              //console.log('HERE')
+            }
+            break;
+          case 3:
+            if (!this.tc_displayStylesTab()) {
+              newIndex = 0;
+            }
+            break;
+        }
+        if (newIndex !== false) {
+          this.activeTabIndex = newIndex;
+          this.$refs.panelTabs.findTabAndActivate(newIndex);
+        }
+        this.$forceUpdate();
+      }
     }
 
   },
@@ -932,9 +965,7 @@ export default {
     init () {
       for (let id in this.$store.state.tc_currentBookTasks.tasks) {
         let record = this.$store.state.tc_currentBookTasks.tasks[id]
-        if (record.type == 'text-cleanup') {
-         this.cleanupTask = record
-        } else if (record.type == 'import-book') {
+        if (record.type == 'import-book') {
           this.importTask = record
         } else if (record.type === 'master-audio') {
           this.masteringTask = record;
@@ -1041,7 +1072,14 @@ export default {
           //this.$root.$emit('from-book-meta:upd-toc', true);
         }
         //console.log('success DB update: ', doc)
-        return this.updateBookVersion({minor: true})
+        let updateVersion = {minor: true};
+        switch(key) {
+          case 'styles':
+          case 'numeration':
+            updateVersion = {major: true};
+            break;
+        }
+        return this.updateBookVersion(updateVersion)
           .then(() => {
             //this.unfreeze('updateBookMeta');
             return BPromise.resolve(doc);
@@ -1087,38 +1125,21 @@ export default {
       this.showModal_audio = true
     },
 
-    linkTask() {
-      let self = this
-      self.linkTaskError = ''
-      if (!self.cleanupTask._id) {
-        self.linkTaskError = 'Required'
-      } else {
-        axios.put(self.API_URL + 'task/' + self.cleanupTask._id + '/link_book', {book_id: self.currentBook._id})
-          .then((response) => {
-            //self.getTasks()
-            self.$emit('task_linked')
-          })
-          .catch((err) => {})
-      }
-    },
     sharePrivateBook() {
       this.textCleanupProcess = true
       var self = this
       self.showSharePrivateBookModal = false
-      if (!self.cleanupTask._id) {
-        self.errorMessage = 'No linked task, please link task'
-        self.textCleanupProcess = false
-      } else {
         //axios.put(API_URL + 'books/' + self.currentBook._id + '/share_private')
         self.liveUpdate('private', false)
           .then((doc) => {
-            axios.put(self.API_URL + 'task/' + self.cleanupTask._id + '/finish_cleanup')
+            axios.put(self.API_URL + 'task/' + self.currentBook._id + '/finish_cleanup')
               .then((doc) => {
                 self.textCleanupProcess = false
                 if (!doc.data.error) {
                   self.currentBook.private = false
                   self.tc_currentBookTasks.assignments.splice(self.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
                   self.$store.dispatch('tc_loadBookTask')
+                  self.$store.dispatch('getCurrentJobInfo');
                   self.infoMessage = 'Text cleanup task finished'
                 } else {
                   self.liveUpdate('private', true)
@@ -1133,17 +1154,17 @@ export default {
           .catch((err) => {
             self.textCleanupProcess = false
           })
-      }
     },
     completeAudioMastering() {
       this.audioMasteringProcess = true;
       var self = this;
       self.showAudioMasteringModal = false;
-      axios.put(self.API_URL + 'task/' + self.masteringTask._id + '/finish_mastering')
+      axios.put(self.API_URL + 'task/' + self.currentBook._id + '/finish_mastering')
         .then((doc) => {
           self.audioMasteringProcess = false
           if (!doc.data.error) {
             self.$store.dispatch('tc_loadBookTask')
+            self.$store.dispatch('getCurrentJobInfo');
             self.infoMessage = 'Mastering task finished'
           } else {
             self.errorMessage = doc.data.error
@@ -1248,7 +1269,7 @@ export default {
       return route;
     },
     toggleMastering() {
-      if (this._is('editor', true)) {
+      if (this.tc_allowToggleMetaMastering()) {
         this.liveUpdate('masteringRequired',  !this.currentBook.masteringRequired)
       }
     },
@@ -1407,7 +1428,7 @@ export default {
                 pBlock.checked = true;
               } else {
                 pBlock.partUpdate = true;
-                this.putBlock(pBlock).then(()=>{
+                this.putBlock({_id: pBlock._id, classes: pBlock.classes}).then(()=>{
                   if (updateToc) {
                     this.$root.$emit('from-book-meta:upd-toc', true);
                   }
@@ -1415,6 +1436,7 @@ export default {
               }
             }
           })
+          this.updateBookVersion({major: true});
         }
         //this.$root.$emit('from-meta-edit:set-num');
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
@@ -1518,6 +1540,7 @@ export default {
             } else {
               this.$root.$emit('from-meta-edit:set-num');
             }
+            this.updateBookVersion({major: true})
           })
         }
 
@@ -1543,8 +1566,34 @@ export default {
         return val;
       }
     },
+    finishPublished() {
+      this.finishPublishedProcess = true;
+      return axios.post(this.API_URL + 'task/' + this.currentBook._id + '/finish_published')
+        .then(response => {
+          this.finishPublishedProcess = false;
+          this.updateBookVersion({major: true})
+          this.tc_loadBookTask();
+          this.getCurrentJobInfo();
+          this.getTotalBookTasks();
+        })
+        .catch(err => {
+          this.finishPublishedProcess = false;
+          return false;
+        });
+    },
+    
+    updateExtid: _.debounce(function(event) {
+      if (event.target.value && event.target.value.length != 32) {
+        this.validationErrors['extid'] = ['Length must be equal to 32 symbols.']
+      } else if (/[^a-z\d]+/.test(event.target.value)) {
+        this.validationErrors['extid'] = ['Only lowercase letters (a-z) and numbers.']
+      } else {
+        this.validationErrors['extid'] = [];
+        this.liveUpdate('extid', event.target.value);
+      }
+    }, 500),
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks'])
   }
 }
 </script>
@@ -1851,6 +1900,15 @@ export default {
   .red-message {
       color: red;
   }
+  table.properties {
+    .has-error {
+        border: 1px solid red;
+    }
+    .validation-error {
+        width: 100%;
+        color: red;
+    }
+  }
 </style>
 
 <style lang="less">
@@ -1867,6 +1925,16 @@ export default {
         text-transform: capitalize;
       }
     }*/
+  }
+  li.tab {
+      &.disabled {
+          display: none;
+      }
+  }
+  section.tab-container {
+    li.tab {
+      display: block;
+    }
   }
 
 </style>
