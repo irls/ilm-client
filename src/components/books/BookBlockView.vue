@@ -1035,14 +1035,9 @@ export default {
         return false;
       }
   },
-  beforeDestroy:  function() {
-    if (this.editor) this.editor.destroy();
-    this.$root.$off('block-state-refresh-' + this.block._id);
-  },
   mounted: function() {
       //this.initEditor();
       //console.log('mounted', this.block._id);
-      this.$root.$emit('reload-block-' + this.block._id);
       this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
       if (!this.player && this.blockAudio.src) {
           this.initPlayer();
@@ -1098,9 +1093,7 @@ export default {
       this.initEditor();
       this.addContentListeners();
 
-      this.$root.$on('block-state-refresh-' + this.block._id, () => {
-        this.$forceUpdate();
-      });
+      this.$root.$on('block-state-refresh-' + this.block._id, this.$forceUpdate);
       this.$root.$on('saved-block:' + this.block._id, () => {
         this.isChanged = false;
         this.isAudioChanged = false;
@@ -1108,14 +1101,69 @@ export default {
         this.recountApprovedInRange();
       });
       this.$root.$on('prepare-alignment', this._saveContent);
-      this.$root.$on('reload-block-' + this.block._id, () => {
-        this.audioEditorEventsOff();
-      });
-
 
 //       Vue.nextTick(() => {
 //
 //       });
+  },
+  beforeDestroy: function () {
+//     console.log('beforeDestroy', this.block._id);
+//     console.log('this.isChanged', this.isChanged);
+    this.audioEditorEventsOff();
+
+    if (this.$refs.illustrationInput) {
+      // a trick to avoid console warning about incorrect resizeCanvas
+      // because somehow VuePictureInput does not destroyed in normal way
+      // and window.listener for 'resize' stil exists
+      this.$refs.illustrationInput.$refs.container = {};
+    }
+    this.$root.$off('block-state-refresh-' + this.block._id, this.$forceUpdate);
+
+    if (this.check_id) {
+      this.block.check_id = this.check_id;
+    }
+    if (this.footnoteIdx) {
+      this.block.footnoteIdx = this.footnoteIdx;
+    }
+    if (this.isAudioEditing) {
+      this.block.isAudioEditing = this.isAudioEditing;
+    }
+    if (this.block && this.isChanged) {
+        this.block.changes = this.changes;
+        switch (this.block.type) { // part from assembleBlock: function()
+          case 'illustration':
+            this.block.description = this.$refs.blockDescription.innerHTML;
+            this.block.voicework = 'no_audio';
+          case 'hr':
+            this.block.content = '';
+            this.block.voicework = 'no_audio';
+            break;
+          default:
+            this._saveContent();
+            break;
+        }
+    }
+
+    if (this.$refs.blockContent) {
+      this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+        flag.removeEventListener('click', this.handleFlagClick);
+      });
+    }
+  },
+  destroyed: function () {
+    this.$root.$off('playBlockFootnote');
+    this.$root.$off('playBlock');
+
+    if(this.block) {
+
+      this.$root.$off('saved-block:' + this.block._id);
+
+      this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+
+    }
+
+    this.destroyEditor();
+    this.$root.$off('prepare-alignment', this._saveContent);
   },
   methods: {
       ...mapActions([
@@ -2655,7 +2703,7 @@ export default {
           this.audioEditorEventsOff();
         }
 
-        //console.log('stop events', this.block._id);
+        console.log('stop events', this.block._id);
 
       },
       evFromAudioeditorBlockLoaded(blockId) {
@@ -3475,55 +3523,6 @@ export default {
           //console.log(this.block._id, 'approveWaiting', val);
         }
       }
-  },
-  beforeDestroy: function () {
-//      console.log('beforeDestroy', this.block._id);
-//     console.log('this.isChanged', this.isChanged);
-    if (this.check_id) {
-      this.block.check_id = this.check_id;
-    }
-    if (this.footnoteIdx) {
-      this.block.footnoteIdx = this.footnoteIdx;
-    }
-    if (this.isAudioEditing) {
-      this.block.isAudioEditing = this.isAudioEditing;
-    }
-    if (this.block && this.isChanged) {
-        this.block.changes = this.changes;
-        switch (this.block.type) { // part from assembleBlock: function()
-          case 'illustration':
-            this.block.description = this.$refs.blockDescription.innerHTML;
-            this.block.voicework = 'no_audio';
-          case 'hr':
-            this.block.content = '';
-            this.block.voicework = 'no_audio';
-            break;
-          default:
-            this._saveContent();
-            break;
-        }
-    }
-
-    if (this.$refs.blockContent) {
-      this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-        flag.removeEventListener('click', this.handleFlagClick);
-      });
-    }
-  },
-  destroyed: function () {
-    this.$root.$off('playBlockFootnote');
-    this.$root.$off('playBlock');
-
-    if(this.block) {
-
-      this.$root.$off('saved-block:' + this.block._id);
-
-      this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
-
-    }
-
-    this.destroyEditor();
-    this.$root.$off('prepare-alignment', this._saveContent);
   }
 }
 </script>

@@ -188,8 +188,8 @@
         this.audioContext = new (window.AudioContext || window.webkitAudioContext);
         this.$root.$on('for-audioeditor:load-and-play', this.load);
         this.$root.$on('for-audioeditor:load', this.setAudio);
-        this.$root.$on('for-audioeditor:reload-text', this._setText);
-        this.$root.$on('for-audioeditor:select', this.select);
+        //this.$root.$on('for-audioeditor:reload-text', this._setText);
+        //this.$root.$on('for-audioeditor:select', this.select);
         this.$root.$on('for-audioeditor:close', this.close);
         this.$root.$on('for-audioeditor:force-close', this.forceClose);
         this.$root.$on('start-align', () => {
@@ -226,6 +226,10 @@
         load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
           //console.log('load', audio, text, block, autostart, bookAudiofile, reloadOnChange);
           let blockId = block ? block._id : null;
+
+          this.$root.$on('for-audioeditor:select', this.select);
+          this.$root.$on('for-audioeditor:reload-text', this._setText);
+
           //if (bookAudiofile && bookAudiofile.blockMap) {
             //this.blockMap = bookAudiofile.blockMap;
           //} else {
@@ -333,6 +337,13 @@
               timescale: true,
               linkEndpoints: true
             });
+//             var _this15 = this.audiosourceEditor;
+//             this.audiosourceEditor.drawRequest = function (){
+//               console.log('drawRequest', blockId);
+//               if (_this15) {
+//                 _this15.draw(_this15.render());
+//               }
+//            }
           } else if (changeZoomLevel) {
             if (this.mode == 'file') {
               let zoom = this.zoomOut();// if previously loaded block audio - set zoom level to max zoom out
@@ -369,6 +380,7 @@
             }
           ])
           .then(() => {
+            this.audiosourceEditor.stopAnimation();
             if (this.audiosourceEditor.tracks.length > 1) {
               this.audiosourceEditor.getEventEmitter().emit('clear');
               this.load(audio, text, block, autostart, bookAudiofile);
@@ -380,7 +392,7 @@
                 if ($('.annotation-resize-pos').length == 0) {
                   $('.annotations').prepend('<div class="annotation-resize-pos"></div>')
                 }
-                if ((rh.data.direction === 'left' && rh.data.index == 0) || 
+                if ((rh.data.direction === 'left' && rh.data.index == 0) ||
                         (rh.data.direction === 'right' && rh.data.index == this.annotations.length - 1)) {
                   return;
                 }
@@ -446,6 +458,7 @@
               //this.plEventEmitter.emit('automaticscroll', true);
             }
             this.plEventEmitter.on('timeupdate', function(position) {
+              //console.log('this.plEventEmitter.on(timeupdate');
               if (self.mode == 'block') {
                 if ((!self.isSingleWordPlaying && !self.isPlaying) || self.currentWord && self.currentWord.start <= position && self.currentWord.end > position) {
                   return;
@@ -473,6 +486,7 @@
                           cursor_position < waveform_position ||
                           cursor_position > waveform_position + waveform_width)) {
                       let scrollPosition = cursor_position > waveform_position + waveform_width ? waveform_position + waveform_width / 2 : cursor_position;
+                      console.log("$('.playlist-tracks').scrollLeft(scrollPosition);");
                       $('.playlist-tracks').scrollLeft(scrollPosition);// scrolls to start, changes scroll on click
                   }
                 }
@@ -493,12 +507,12 @@
                 self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
                 return;
               }
-              if (self.mode === 'file' && Math.abs(end - start) < 0.2 && 
-                      typeof self.selection.start !== 'undefined' && 
-                      typeof self.selection.end !== 'undefined' && 
-                      (self.selection.start != start || 
+              if (self.mode === 'file' && Math.abs(end - start) < 0.2 &&
+                      typeof self.selection.start !== 'undefined' &&
+                      typeof self.selection.end !== 'undefined' &&
+                      (self.selection.start != start ||
                       self.selection.end != end)) {
-                
+
                 self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
                 return;
               }
@@ -605,25 +619,7 @@
             } else if (autostart) {
               this.play();
             }
-            $('#' + this.blockId).on('click', '#content-' + this.blockId + ' w', function() {
-              let index = $('#content-' + self.blockId).find('w[data-map]').index($(this));
-              let show_selection = true;
-              if (typeof index =='undefined' || index === false || index < 0) {
-                let index_no_data = $('#content-' + self.blockId).find('w:not([data-map])').index($(this));
-                let total_index = $('#content-' + self.blockId).find('w').index($(this));
-                index = total_index - index_no_data;
-                show_selection = false;
-              }
-              if (!self.isAnnotationVisible(index)) {
-                self.scrollPlayerToAnnotation(index, 'middle');
-              }
-              if (show_selection) {
-                self.blockSelectionEmit = true;
-                self._setWordSelection(index, true);
-              } else {
-                self._clearWordSelection();
-              }
-            });
+            $('#' + this.blockId).find('#content-' + this.blockId).on('click', 'w', {blockId: this.blockId}, this.showSelection);
           })
           .catch(err => {
             //console.log(err)
@@ -642,9 +638,7 @@
             this.smoothDrag(ev);
           });
 
-          $('body').on('mouseup', '.playlist-overlay.state-select', () => {
-            this._showSelectionBorders();
-          });
+          $('body').on('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
 
           $('body').on('click', '.playlist-overlay', (e) => {
             if (typeof this.audiosourceEditor !== 'undefined') {
@@ -721,6 +715,26 @@
                 })
               }
             }, 500);
+          }
+        },
+        showSelection (event) {
+          let blockId = event.data.blockId;
+          let index = $('#content-' + blockId).find('w[data-map]').index($(event.target));
+          let show_selection = true;
+          if (typeof index =='undefined' || index === false || index < 0) {
+            let index_no_data = $('#content-' + blockId).find('w:not([data-map])').index($(event.target));
+            let total_index = $('#content-' + blockId).find('w').index($(event.target));
+            index = total_index - index_no_data;
+            show_selection = false;
+          }
+          if (!this.isAnnotationVisible(index)) {
+            this.scrollPlayerToAnnotation(index, 'middle');
+          }
+          if (show_selection) {
+            this.blockSelectionEmit = true;
+            this._setWordSelection(index, true);
+          } else {
+            this._clearWordSelection();
           }
         },
         setAudio(audio, text, saveToHistory) {
@@ -896,6 +910,8 @@
           return !this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0;
         },
         close(autosave = true) {
+          //console.log('AudioEditor close', autosave);
+          if (this.audiosourceEditor) this.audiosourceEditor.stopAnimation();
           if (this.isModifiedComputed && this.mode === 'block') {
             this.showModal('onExitMessage');
           } else {
@@ -910,17 +926,27 @@
             this._setDefaults();
             this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
             this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
+            console.log('AudioEditor close this.blockId', this.blockId);
+            $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
+            $('#' + this.blockId).find('#content-' + this.blockId).off('click', 'w', this.showSelection);
+            this.$root.$off('for-audioeditor:select', this.select);
+            this.$root.$off('for-audioeditor:reload-text', this._setText);
           }
         },
         forceClose() {
+          if (this.audiosourceEditor) this.audiosourceEditor.stopAnimation();
           if (this.plEventEmitter) {
             this.plEventEmitter.emit('automaticscroll', false);
             this.plEventEmitter.emit('clear');
             this._clearWordSelection();
           }
+          //console.log('forceClose');
           this._setDefaults();
           this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
           this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
+          $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
+          $('#' + this.blockId).find('#content-' + this.blockId).off('click', 'w', this.showSelection);
+          this.$root.$off('for-audioeditor:select', this.select);
         },
         addSilence() {
           if (this.silenceLength > 0 && this.cursorPosition >= 0) {
@@ -1059,6 +1085,11 @@
           precision = typeof precision == 'undefined' ? 1 : precision;
           let step = parseInt('1' + '0'.repeat(precision));
           return Math.round(val * step) / step;
+        },
+        _showSelectionBordersOnClick(ev) {
+          ev.preventDefault();
+          this._showSelectionBorders(false);
+          return false;
         },
         _showSelectionBorders(scroll_to_selection = false) {
           setTimeout(() => {
@@ -1270,8 +1301,8 @@
             //self.audiosourceEditor.annotationList.renderResizeLeft(annotations.length - 1);
         },
         _isAnnotationsEditable() {
-          return (!this.currentBookMeta.masteringRequired || this.currentBookMeta.isMastered) || 
-                  (this.block && this.block.voicework === 'tts' || 
+          return (!this.currentBookMeta.masteringRequired || this.currentBookMeta.isMastered) ||
+                  (this.block && this.block.voicework === 'tts' ||
                   (this.block && this.block.status && this.block.status.proofed === false && this.tc_hasTask('audio_mastering') && this.block.status.stage === 'audio_mastering'));
         },
         _setBlocksSelection() {
@@ -1436,10 +1467,10 @@
           }
           let map = [];
           let direction = '';
-          
+
           let shiftedAnnotation = null;
           let shiftedIndex = null;
-          
+
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {// find the shifted annotation, find shift direction
             if (this.annotations[i]) {
               if (this.annotations[i].begin == al.start && this.annotations[i].end != al.end) {
@@ -1460,7 +1491,7 @@
             }
           });
           let shifted = false;
-          
+
           if (shiftedAnnotation) {
             if (shiftedAnnotation.end - shiftedAnnotation.start < this.minWordSize) {// find words with length less than minimum
               let shift = this.minWordSize - (shiftedAnnotation.end - shiftedAnnotation.start);
@@ -1710,10 +1741,10 @@
           }
         },
         ...mapGetters({
-          currentBookMeta: 'currentBookMeta', 
-          blkSelection: 'blockSelection', 
-          alignCounter: 'alignCounter', 
-          hasLocks: 'hasLocks', 
+          currentBookMeta: 'currentBookMeta',
+          blkSelection: 'blockSelection',
+          alignCounter: 'alignCounter',
+          hasLocks: 'hasLocks',
           currentAudiobook: 'currentAudiobook'})
       },
       watch: {
@@ -1755,7 +1786,7 @@
         'blockSelection.start._id': {
           handler(val, oldVal) {
             //console.log('blockSelection CHANGED', val)
-            if ((!val) && 
+            if ((!val) &&
                     (this.blockMap && this.blockMap[oldVal])) {
               if (this.mode === 'file' && this.origFilePositions) {
                 this.selection.start = this._round(this.origFilePositions.start, 2);
@@ -1798,12 +1829,13 @@
           }
         },
         '$route' () {
-          if (this.$route.params.hasOwnProperty('bookid') && this.mode === 'block') {
-            if (!this.currentBookMeta || this.$route.path.indexOf(this.currentBookMeta._id + '/edit' === -1)) {
-              this._setDefaults();
-              this.close();
-            }
-          }
+//           console.log('$route', this.mode);
+//           if (this.$route.params.hasOwnProperty('bookid') && this.mode === 'block') {
+//             if (!this.currentBookMeta || this.$route.path.indexOf(this.currentBookMeta._id + '/edit' === -1)) {
+//               this._setDefaults();
+//               this.close();
+//             }
+//           }
         },
         'currentBookMeta._id': {
           handler(val, oldVal) {
