@@ -1,6 +1,6 @@
 <template>
-<section :class="['-langblock-' + block.language]">
-  <div v-if="loaded === true || blockO.loaded === true" ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', blockOutPaddings]">
+<section>
+  <div v-if="loaded === true || blockO.loaded === true" ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', '-langblock-' + blockView.language, blockOutPaddings]">
 
       <div v-if="blockO.type == 'illustration'" :class="getClass">
         <img :class="getClass" :src="getIllustration"/>
@@ -24,7 +24,7 @@
           :class="[getClass, 'hide-archive']"
           :id="blockId"
           :data-parnum="parnum"
-          :lang="blockView.language || lang"
+          :lang="blockView.language"
           :data-type="blockO.type"
           v-html="blockView.content">
         </div>
@@ -108,7 +108,7 @@ import { mapGetters, mapState, mapActions } from 'vuex'
       },
       blockView: function () {
         if (this.block) {
-          let viewObj = { footnotes: this.block.footnotes, language: this.block.language };//new BookBlock(this.block);//Object.assign({}, this.parlist.get(blockId));
+          let viewObj = { footnotes: this.block.footnotes, language: this.block.language || this.lang };//new BookBlock(this.block);//Object.assign({}, this.parlist.get(blockId));
           viewObj.content = this.block.content.replace(
             /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/mig,
             '<span data-pg="$1"></span>'
@@ -142,7 +142,7 @@ import { mapGetters, mapState, mapActions } from 'vuex'
             }
           );
           return viewObj;
-        } else return { footnotes: [], language: 'en' };
+        } else return { footnotes: [], language: this.block.language || this.lang };
       }
     },
     methods: {
