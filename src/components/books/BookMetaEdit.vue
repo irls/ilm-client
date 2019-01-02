@@ -192,6 +192,17 @@
             <legend>Long Description </legend>
             <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
           </fieldset>
+          <fieldset class='Export'>
+            <legend>Export </legend>
+              <div>
+                <a class="btn btn-primary" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
+                <button class="btn btn-primary" :disabled="1==1" ><i class="fa fa-download" style="color:white"></i> Flac ZIP</button>
+                <button class="btn btn-primary" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>
+                <!--<button class="btn btn-primary" v-on:click="downloadDemo()" ><i class="fa fa-link" style="color:white"></i> Rebuild</button>-->
+                <a class="btn btn-primary" :href="downloadDemo()" target="_blank"> Rebuild</a>
+                <span v-if="isPublishing" class="align-preloader -small"></span>
+              </div>
+          </fieldset>
           <fieldset class="publish">
             <!-- Fieldset Legend -->
             <template>
@@ -1221,6 +1232,23 @@ export default {
     publishContent() {
       return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
     },
+
+    /* *** */
+    /*
+    export() {
+      // this.isPublishing = false;
+      this.isPublishingQueue = true;
+      return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish')
+      .then(resp => {
+        console.log(resp);
+      });
+    },
+    exportContent() {
+      return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
+    },
+    */
+    /* *** */
+
     goToUnresolved(with_task = false) {
 
       let route = {
@@ -1528,7 +1556,10 @@ export default {
     downloadDemo() {
         return this.API_URL + 'books/' + this.currentBook._id + '/demo';
     },
-
+    downloadExportMp3() {
+        console.log('call export mp3');
+        return this.API_URL + 'books/' + this.currentBook._id + '/exportMp3';
+    },
     styleCaption(type, key) {
       if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {
         let caption = this.styleTitles[`${type}_${key}`];
