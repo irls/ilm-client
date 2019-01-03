@@ -55,6 +55,12 @@ export default {
         if (this.tc_getBlockTask(block._id) || this.tc_getBlockTaskOtherRole(block._id)) {
           return false;
         }
+        if (this.adminOrLibrarian) {
+          let flags_summary = block.calcFlagsSummary();
+          if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir === 'narrator') {
+            return false;
+          }
+        }
         if (this.adminOrLibrarian || this._is('editor', true)) {
           if (this.currentJobInfo.text_cleanup) {
             return false;

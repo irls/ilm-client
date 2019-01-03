@@ -833,6 +833,10 @@ export default {
           }
           let flagsSummary = this.block.calcFlagsSummary();
           if (this.adminOrLibrarian && flagsSummary.dir === 'narrator' && flagsSummary.stat === 'open') {
+            let narratorTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'fix-block-narration' && t.blockid == this.block._id);
+            if (!narratorTask) {
+              return false;
+            }
             let approveTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'approve-modified-block');
             if (approveTask) {
               return false;
