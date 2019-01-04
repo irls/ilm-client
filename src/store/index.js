@@ -140,7 +140,8 @@ export const store = new Vuex.Store({
       published: null,
       text_cleanup: null,
       is_proofread_unassigned: null
-    }
+    },
+    taskTypes: {tasks: [], categories: []}
   },
 
   getters: {
@@ -272,7 +273,8 @@ export const store = new Vuex.Store({
     approveBlocksList: state => state.approveBlocksList,
     taskTypes: state => state.taskTypes,
     adminOrLibrarian: state => state.adminOrLibrarian,
-    currentJobInfo: state => state.currentJobInfo
+    currentJobInfo: state => state.currentJobInfo,
+    taskTypes: state => state.taskTypes
   },
 
   mutations: {
@@ -2308,6 +2310,15 @@ export const store = new Vuex.Store({
         .catch(err => {
           console.log(err);
         })
+    },
+    getTaskTypes({state}) {
+      return axios.get(state.API_URL + 'tasks/types').then(types => {
+        state.taskTypes = types.data
+        return Promise.resolve(state.taskTypes)
+      })
+      .catch(error => {
+        return Promise.reject({})
+      })
     }
   }
 })
