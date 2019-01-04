@@ -2146,6 +2146,39 @@ export default {
             flag.dataset.flag = this.block.newFlag(this.range, type);
             flag.dataset.status = 'open';
             flag.appendChild(this.range.extractContents());
+            flag.childNodes.forEach((n, i) => {
+              if (n.dataset && n.dataset.map) {
+                let ch = this.$refs.blockContent.querySelector('[data-map="' + n.dataset.map + '"]');
+                if (ch) {
+                  //if (i == 0) {
+                    //n.innerHTML = ch.innerHTML+n.innerHTML
+                  //} else {
+                    //n.innerHTML+= ch.innerHTML
+                  //}
+                  if (!ch.innerHTML) {
+                    this.$refs.blockContent.removeChild(ch);
+                  } else if (!ch.innerHTML.trim()) {
+                    ch.dataset.map = ''
+                  } else {
+                    let map = n.dataset.map.split(',');
+                    map[0] = parseInt(map[0]);
+                    let half = parseInt(map[1]) / 2;
+                    let secondHalf = half;
+                    if (parseInt(secondHalf) != secondHalf) {
+                      half+=0.5;
+                      secondHalf-=0.5
+                    }
+                    if (i == 0) {
+                      ch.dataset.map = map[0] + ',' + half;
+                      n.dataset.map = map[0] + half + ',' + secondHalf;
+                    } else {
+                      n.dataset.map = map[0] + ',' + half;
+                      ch.dataset.map = map[0] + half + ',' + secondHalf;
+                    }
+                  }
+                }
+              }
+            });
             this.range.insertNode(flag);
             flag.addEventListener('click', this.handleFlagClick);
             this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
