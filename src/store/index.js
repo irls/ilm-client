@@ -2140,9 +2140,9 @@ export const store = new Vuex.Store({
             let hasTask = state.tc_currentBookTasks.tasks.find((t) => {
               return t.blockid == block._id;
             })
-            if (!hasAssignment && state.adminOrLibrarian) {
-              hasAssignment = state.currentJobInfo.completed;
-            }
+            //if (!hasAssignment && state.adminOrLibrarian) {
+              //hasAssignment = state.currentJobInfo.completed;
+            //}
             if (!hasTask && state.adminOrLibrarian) {
               hasTask = state.currentJobInfo.can_resolve_tasks.find((t) => {
                 return t.blockid == block._id;

@@ -891,6 +891,9 @@ export default {
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.isRecording || this.isUpdating) {
             return true;
           }
+          if (this.block && ['tts', 'audio_file'].indexOf(this.block.voicework) !== -1 && !this.block.audiosrc) {
+            return true;
+          }
           let flags_summary = this.block.calcFlagsSummary();
             if (this.isCanApproveWithoutTask) {
               if (flags_summary.stat === 'open') {
