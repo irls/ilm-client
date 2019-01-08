@@ -87,12 +87,12 @@
                   <span class="s-label"> Mastering required</span>
                 </div>
               </template>
-              <a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
+              <!--<a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
                 Export Audio
               </a>
               <button v-else class="btn btn-primary btn-small btn-export-audio" v-on:click="startGenerateAudiofile()">
                 Export Audio
-              </button>
+              </button>-->
             </div>
             <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
               {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
@@ -197,12 +197,14 @@
               <div>
                 <a class="btn btn-primary" :disabled="!currentBook.demo" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
                 <a class="btn btn-primary" :disabled="!currentBook.demo" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Flac</a>
-                <button class="btn btn-primary" :disabled="!currentBook.demo" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>
+                <button class="btn btn-primary" :disabled="!currentBook.demo" v-clipboard="getCurrentBookUrl('zip')" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>
+                <!--<button class="btn btn-primary" :disabled="!currentBook.demo" v-clipboard="this.SERVER_URL + currentBook.demo" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>-->
                 <!--<button class="btn btn-primary" v-on:click="downloadDemo()" ><i class="fa fa-link" style="color:white"></i> Rebuild</button>-->
                 <a class="btn btn-primary" v-if="!currentBook.demo" :href="downloadDemo()" target="_blank">Build</a>
                 <a class="btn btn-primary" v-else target="_blank" :href="downloadDemo()" >Rebuild</a>
                 <span v-if="isPublishing" class="align-preloader -small"></span>
               </div>
+              <div v-if="currentBook.demo_time">Last generated as: {{currentBook.demo_time}}</div>
           </fieldset>
           <fieldset class="publish">
             <!-- Fieldset Legend -->
@@ -964,6 +966,9 @@ export default {
 
         });*/
     },
+    getCurrentBookUrl(format) {
+      return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/download/" + format;
+    },
     updateCollection(event) {
       if (event && event.target.value) {
         let collectionId = event.target.value;
@@ -1558,7 +1563,6 @@ export default {
         return this.API_URL + 'books/' + this.currentBook._id + '/demo';
     },
     downloadExportMp3() {
-        console.log('call export mp3');
         return this.API_URL + 'books/' + this.currentBook._id + '/exportMp3';
     },
     styleCaption(type, key) {

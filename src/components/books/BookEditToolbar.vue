@@ -17,7 +17,7 @@
     </button>
 
     <template v-if="tc_hasTask('content_cleanup')">
-      <dropdown text="Download" type="default">
+      <!--<dropdown text="Download" type="default">
           <li>
             <a :href="getCurrentBookUrl('html')"
               target="_blank" class="" >As HTML</a>
@@ -26,7 +26,7 @@
             <a :href="getCurrentBookUrl('zip')"
               target="_blank" class="">As ZIP</a>
           </li>
-      </dropdown>
+      </dropdown>-->
 
       <button class="btn btn-default" @click="showBookReimport = true">Re-Import</button>
 
