@@ -727,7 +727,7 @@ export const store = new Vuex.Store({
         state.storeList = new Map();
       }
 
-      state.storeList.set(blockObj._id, blockObj);
+      state.storeList.set(blockObj.blockid, blockObj);
     },
 
     clear_storeList (state) {
@@ -1298,6 +1298,15 @@ export const store = new Vuex.Store({
     },
 
     getBlocks ({commit, state, dispatch}, blocksIds) {
+      return axios.get(state.API_URL + 'books/blocks_data/' + state.currentBookid + '?ids=' + blocksIds.join(','))
+        .then(res => {
+          let result = [];
+          res.data.forEach(b => {
+            result.push(b);
+          });
+          return result;
+        })
+        .catch(err => console.log(err));
       return state.contentRemoteDB
       .query('filters_byId/byId', {
           keys: blocksIds,

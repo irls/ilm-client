@@ -210,7 +210,7 @@ export default {
             if (!this.parlist.has(el._id)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
-              this.parlistO.setLoaded(el._id);
+              this.parlistO.setLoaded(el.blockid);
               resIdsArray.push(el._id);
             }
           });
@@ -253,7 +253,7 @@ export default {
             if (!this.parlist.has(el._id)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
-              this.parlistO.setLoaded(el._id);
+              this.parlistO.setLoaded(el.blockid);
               //this.updateScrollSlider(false);
             }
           });
@@ -306,9 +306,9 @@ export default {
                     if (!this.parlist.has(el._id)) {
                       let newBlock = new BookBlock(el);
                       this.$store.commit('set_storeList', newBlock);
-                      this.parlistO.setLoaded(el._id);
+                      this.parlistO.setLoaded(el.blockid);
                     } else {
-                      this.parlistO.setLoaded(el._id);
+                      this.parlistO.setLoaded(el.blockid);
                     }
                   });
                 }
