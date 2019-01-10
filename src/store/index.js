@@ -1287,7 +1287,7 @@ export const store = new Vuex.Store({
     },
 
     getBlock ({commit, state, dispatch}, block_id) {
-        return axios.get(state.API_URL + 'book/block/' + block_id)
+        return axios.get(state.API_URL + 'book/' + state.currentBookid + '/block/' + block_id)
           .then(response => {
               return Promise.resolve(response.data);
             })
@@ -1564,7 +1564,7 @@ export const store = new Vuex.Store({
               console.log('Block save error:', err);
             }
         });*/
-        return axios.put(state.API_URL + 'book/block/' + block._id,
+        return axios.put(state.API_URL + 'book/' + state.currentBookid + '/block/' + block._id,
           {
             'block': cleanBlock,
           })
