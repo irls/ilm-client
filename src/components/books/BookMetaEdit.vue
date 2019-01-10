@@ -195,8 +195,8 @@
           <fieldset class='Export'>
             <legend>Export </legend>
               <div>
-                <a class="btn btn-primary" :disabled="!currentBook.demo" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
                 <a class="btn btn-primary" :disabled="!currentBook.demo" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
+                <a class="btn btn-primary" :disabled="!currentBook.demo" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
                 <button class="btn btn-primary" :disabled="!currentBook.demo" v-clipboard="getBookDemoUrl()" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>
                 <!--<button class="btn btn-primary" :disabled="!currentBook.demo" v-clipboard="this.SERVER_URL + currentBook.demo" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>-->
                 <!--<button class="btn btn-primary" v-on:click="downloadDemo()" ><i class="fa fa-link" style="color:white"></i> Rebuild</button>-->
@@ -1565,6 +1565,10 @@ export default {
     downloadExportMp3() {
         return this.API_URL + 'books/' + this.currentBook._id + '/exportMp3';
     },
+    downloadExportFlac() {
+        return this.API_URL + 'books/' + this.currentBook._id + '/exportFlac';
+    },
+
     getBookDemoUrl(){
 
         //let url = this.currentBook.demo;
