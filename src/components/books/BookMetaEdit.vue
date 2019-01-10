@@ -173,6 +173,20 @@
             <legend>Long Description </legend>
             <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
           </fieldset>
+          <fieldset class='Export'>
+            <legend>Export </legend>
+              <div>
+                <a class="btn btn-primary" :disabled="!currentBook.demo" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
+                <a class="btn btn-primary" :disabled="!currentBook.demo" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
+                <button class="btn btn-primary" :disabled="!currentBook.demo" v-clipboard="getBookDemoUrl()" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>
+                <!--<button class="btn btn-primary" :disabled="!currentBook.demo" v-clipboard="this.SERVER_URL + currentBook.demo" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>-->
+                <!--<button class="btn btn-primary" v-on:click="downloadDemo()" ><i class="fa fa-link" style="color:white"></i> Rebuild</button>-->
+                <a class="btn btn-primary" v-if="!currentBook.demo" :href="downloadDemo()" target="_blank">Build</a>
+                <a class="btn btn-primary" v-else target="_blank" :href="downloadDemo()" >Rebuild</a>
+                <span v-if="isPublishing" class="align-preloader -small"></span>
+              </div>
+              <div v-if="currentBook.demo_time">Last generated as: {{currentBook.demo_time}}</div>
+          </fieldset>
           <fieldset class="publish">
             <!-- Fieldset Legend -->
             <template>
@@ -222,9 +236,9 @@
               </template>
             </table> -->
           </fieldset>
-          <template v-if="isAdmin || isLibrarian || _is('editor', true)">
-            <a v-if="currentBook.published" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()" -->
-          </template>
+          <!--<template v-if="isAdmin || isLibrarian || _is('editor', true)">
+            <a v-if="currentBook.published" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()"-->
+          <!--</template>-->
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
@@ -984,6 +998,9 @@ export default {
 
         });*/
     },
+    getCurrentBookUrl(format) {
+      return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/download/" + format;
+    },
     updateCollection(event) {
       if (event && event.target.value) {
         let collectionId = event.target.value;
@@ -1243,6 +1260,23 @@ export default {
     publishContent() {
       return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
     },
+
+    /* *** */
+    /*
+    export() {
+      // this.isPublishing = false;
+      this.isPublishingQueue = true;
+      return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish')
+      .then(resp => {
+        console.log(resp);
+      });
+    },
+    exportContent() {
+      return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
+    },
+    */
+    /* *** */
+
     goToUnresolved(with_task = false) {
 
       let route = {
@@ -1565,7 +1599,20 @@ export default {
     downloadDemo() {
         return this.API_URL + 'books/' + this.currentBook._id + '/demo';
     },
+    downloadExportMp3() {
+        return this.API_URL + 'books/' + this.currentBook._id + '/exportMp3';
+    },
+    downloadExportFlac() {
+        return this.API_URL + 'books/' + this.currentBook._id + '/exportFlac';
+    },
 
+    getBookDemoUrl(){
+
+        //let url = this.currentBook.demo;
+        //url = url.replace('/books_publish', '');
+        //console.log(url);
+        return this.SERVER_URL + this.currentBook.demo;
+    },
     styleCaption(type, key) {
       if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {
         let caption = this.styleTitles[`${type}_${key}`];

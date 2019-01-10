@@ -929,7 +929,7 @@ export const store = new Vuex.Store({
 //              dispatch('updateLibrariesList');
 //            });*/
 //          });
-          
+
           dispatch('getTaskTypes');
     },
 
@@ -1115,7 +1115,7 @@ export const store = new Vuex.Store({
         return err;
       })
     },
-    
+
     updateBlockToc({state, dispatch}, params) {
       dispatch('freeze', 'loadBookToc');
       return axios.put(state.API_URL + `books/toc/${params.bookid}/block/${params.blockid}`)
