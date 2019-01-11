@@ -225,7 +225,7 @@
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
 
-            <div :class="['table-row ilm-block', block.markedAsDone && !hasChanges ? '-marked':'']">
+            <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
@@ -802,7 +802,7 @@ export default {
         set(val) {
           if (val && val !== this.block.voicework) {
             this.voiceworkChange = val;
-            if (!this.block.markedAsDone && this.currentJobInfo.text_cleanup) {
+            if (!this.block.status.marked && this.currentJobInfo.text_cleanup) {
               this.showModal('voicework-change');
             } else {
               this.voiceworkUpdateType = 'single';
@@ -877,7 +877,7 @@ export default {
               }
             });
           }
-          return this.block.markedAsDone ||
+          return this.block.status.marked ||
                   (this.block.status && this.block.status.proofed === true) ||
                   disable_audio;
         }
@@ -1580,12 +1580,12 @@ export default {
             break;
         }
         this.block.classes = [this.block.classes];
-        let recount_marked = this.block.markedAsDone === true && this._is('editor', true);
-        if (this.block.markedAsDone === true) {
-          this.block.markedAsDone = false;
+        let recount_marked = this.block.status.marked === true && this._is('editor', true);
+        if (this.block.status.marked === true) {
+          this.block.status.marked = false;
         }
         if (this.block._markedAsDone) {
-          this.block.markedAsDone = true;
+          this.block.status.marked = true;
           delete this.block._markedAsDone;
         }
 
@@ -1630,7 +1630,7 @@ export default {
             this.setCurrentBookCounters(['not_marked_blocks']);
           }
 
-          this.blockO.status = Object.assign(this.blockO.status, {
+          /*this.blockO.status = Object.assign(this.blockO.status, {
             marked: this.block.markedAsDone,
             assignee: this.block.status.assignee,
             proofed: this.block.status.proofed,
@@ -1640,8 +1640,8 @@ export default {
             rid: this.blockO.rid,
             type: this.block.type,
             status: this.blockO.status,
-          }
-          this.putBlockO(upd).then(()=>{
+          }*/
+          //this.putBlockO(upd).then(()=>{
             if (this.block.type !== this.blockO.type) {
               //if (this.block.type == 'header' || this.block.type == 'par') {
                 this.putNumBlockO({
@@ -1659,7 +1659,7 @@ export default {
                 });
               //}
             }
-          });
+          //});
         });
       },
       clearBlockContent: function(content) {
@@ -1739,8 +1739,8 @@ export default {
                   this.getTotalBookTasks();
                 }
 
-                if (this.block.markedAsDone != response.data.markedAsDone) {
-                  this.block.markedAsDone = response.data.markedAsDone;
+                if (this.block.status.marked != response.data.status.marked) {
+                  this.block.status.marked = response.data.status.marked;
                   this.setCurrentBookCounters(['not_marked_blocks']);
                 }
                 this.$emit('blockUpdated', this.block._id);
@@ -1793,8 +1793,8 @@ export default {
       },
 
       unmarkBlock: function(ev) {
-        if (this.block.markedAsDone) {
-          this.block.markedAsDone = false;
+        if (this.block.status.marked) {
+          this.block.status.marked = false;
           this.assembleBlock(ev)
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
@@ -3376,7 +3376,7 @@ export default {
       'blockAudio.map' (newVal, oldVal) {
 
       },
-      'block.markedAsDone': {
+      'block.status.marked': {
         handler(val) {
           if (this.block) {
             this.setCurrentBookCounters(['not_marked_blocks']);
