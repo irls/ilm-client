@@ -1023,7 +1023,7 @@ export default {
     deleteBlock(block, block_Idx) {
       //console.log('deleteBlock', block._id);
       this.freeze('deleteBlock');
-      let api_url = this.API_URL + 'book/' + block.bookid + '/block/' + block._id;
+      let api_url = this.API_URL + 'book/block/' + block._id;
       let api = this.$store.state.auth.getHttp();
       api.delete(api_url, {})
       .then((response)=>{
