@@ -1945,13 +1945,9 @@ export const store = new Vuex.Store({
     _setNotMarkedAsDoneBlocksCounter({state, commit}) {
       if (state.currentBookid) {
         let bookid = state.currentBookid;
-        state.contentRemoteDB.query('filters_notMarkedAsDone/notMarkedAsDone', {
-              key: bookid,
-              reduce: true,
-              group: true
-            })
+        axios.get(state.API_URL + 'books/' + bookid + '/not_marked', {})
               .then(response => {
-                commit('SET_CURRENTBOOK_COUNTER', {name: 'not_marked_blocks', value: typeof response.rows[0] === 'undefined' ? 0 : response.rows[0].value});
+                commit('SET_CURRENTBOOK_COUNTER', {name: 'not_marked_blocks', value: response.data ? response.data.count : '0'});
               })
               .catch(err => {
                 commit('SET_CURRENTBOOK_COUNTER', {name: 'not_marked_blocks', value: '0'})

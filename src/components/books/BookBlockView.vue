@@ -1580,13 +1580,14 @@ export default {
             break;
         }
         this.block.classes = [this.block.classes];
-        let recount_marked = this.block.status.marked === true && this._is('editor', true);
+        let recount_marked = false;
         if (this.block.status.marked === true) {
           this.block.status.marked = false;
         }
         if (this.block._markedAsDone) {
           this.block.status.marked = true;
           delete this.block._markedAsDone;
+          recount_marked = true;
         }
 
         this.checkBlockContentFlags();
@@ -3049,7 +3050,7 @@ export default {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
               this.getAlignCount();
               if (response && response.data) {
-                response.data.updField = 'voicework';
+                //response.data.updField = 'voicework';
                 this.$root.$emit('bookBlocksUpdates', response.data);
                 this.block.voicework = this.voiceworkChange;
                 //this.setCurrentBookBlocksLeft(this.block.bookid);
@@ -3376,10 +3377,12 @@ export default {
       'blockAudio.map' (newVal, oldVal) {
 
       },
-      'block.status.marked': {
-        handler(val) {
+      'block.status': {
+        handler(val, oldVal) {
           if (this.block) {
-            this.setCurrentBookCounters(['not_marked_blocks']);
+            if (val.marked != oldVal.marked) {
+              this.setCurrentBookCounters(['not_marked_blocks']);
+            }
           }
         }
       },
