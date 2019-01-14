@@ -1610,6 +1610,7 @@ export default {
             this.getTotalBookTasks();
           }
           let is_content_changed = this.hasChange('content');
+          let is_type_changed = this.hasChange('type');
           this.isChanged = false;
           if (this.blockAudio.map) {
             this.blockAudio.map = this.block.content;
@@ -1643,7 +1644,7 @@ export default {
             status: this.blockO.status,
           }*/
           //this.putBlockO(upd).then(()=>{
-            if (this.block.type !== this.blockO.type) {
+            if (is_type_changed) {
               //if (this.block.type == 'header' || this.block.type == 'par') {
                 this.putNumBlockO({
                   bookId: this.block.bookid,
