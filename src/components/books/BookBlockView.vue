@@ -707,7 +707,7 @@ export default {
         if (this.isUpdating) {
           return true;
         }
-        return this.block ? this.isBlockLocked(this.block._id) : false;
+        return this.block ? this.isBlockLocked(this.block.blockid) : false;
       },
       isChecked: { cache: false,
       get: function () {

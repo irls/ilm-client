@@ -26,10 +26,9 @@ let defBlock = [
   'description',
   'voicework',
   'language',
-  'markedAsDone',
   'status',
   'audiosrc_ver',
-  'realigned',
+  'blockid',
 ]
 
 let BlockTypes = {

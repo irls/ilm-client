@@ -576,7 +576,7 @@ export const store = new Vuex.Store({
       if (data.block) {
         if (typeof localStorage !== 'undefined') {
           data.set_at = Date.now()
-          let lock = localStorage.getItem('lock_' + data.block._id);
+          let lock = localStorage.getItem('lock_' + data.block.blockid);
           if (lock) {
             try {
               lock = JSON.parse(lock);
@@ -597,18 +597,18 @@ export const store = new Vuex.Store({
           } else {
             lock = data;
           }
-          localStorage.setItem('lock_' + data.block._id, JSON.stringify(lock));
-          let r = state.lockedBlocks.find(l => l._id === data.block._id);
+          localStorage.setItem('lock_' + data.block.blockid, JSON.stringify(lock));
+          let r = state.lockedBlocks.find(l => l._id === data.block.blockid);
           if (!r) {
-            state.lockedBlocks.push({_id: data.block._id, type: lock.type});
+            state.lockedBlocks.push({_id: data.block.blockid, type: lock.type});
           }
         }
       }
     },
     clear_block_lock(state, data) {
-      if (data.block._id) {
+      if (data.block.blockid) {
         let remove_lock = () => {
-          let r = state.lockedBlocks.find(l => l._id === data.block._id);
+          let r = state.lockedBlocks.find(l => l._id === data.block.blockid);
           if (r) {
             state.lockedBlocks.splice(state.lockedBlocks.indexOf(r), 1);
           }
@@ -620,12 +620,12 @@ export const store = new Vuex.Store({
               delete state.blockLocks[data.block._id];
             }
           }*/
-          let lock = localStorage.getItem('lock_' + data.block._id);
+          let lock = localStorage.getItem('lock_' + data.block.blockid);
           if (lock) {
             try {
               lock = JSON.parse(lock);
             } catch(err) {
-              localStorage.removeItem('lock_' + data.block._id);
+              localStorage.removeItem('lock_' + data.block.blockid);
               //if (typeof state.lockedBlocks[data.block._id] !== 'undefined') {
                 //delete state.lockedBlocks[data.block._id];
               //}
@@ -638,7 +638,7 @@ export const store = new Vuex.Store({
               return;
             }
             if (data.force) {
-              localStorage.removeItem('lock_' + data.block._id)
+              localStorage.removeItem('lock_' + data.block.blockid)
               //if (typeof state.lockedBlocks[data.block._id] !== 'undefined') {
                 //delete state.lockedBlocks[data.block._id];
               //}
@@ -655,22 +655,22 @@ export const store = new Vuex.Store({
               });
               lock.watch = watch;
               if (lock.watch.length == 0) {
-                localStorage.removeItem('lock_' + data.block._id);
+                localStorage.removeItem('lock_' + data.block.blockid);
                 //if (typeof state.lockedBlocks[data.block._id] !== 'undefined') {
                   //delete state.lockedBlocks[data.block._id];
                 //}
                 //state.lockedBlocks = [];
                 remove_lock();
               } else {
-                localStorage.setItem('lock_' + data.block._id, JSON.stringify(lock));
+                localStorage.setItem('lock_' + data.block.blockid, JSON.stringify(lock));
                 //state.lockedBlocks[data.block._id] = {type: lock.type};
-                let r = state.lockedBlocks.find(l => l._id === data.block._id);
+                let r = state.lockedBlocks.find(l => l._id === data.block.blockid);
                 if (!r) {
-                  state.lockedBlocks.push({_id: data.block._id, type: lock.type});
+                  state.lockedBlocks.push({_id: data.block.blockid, type: lock.type});
                 }
               }
             } else if (lock.block._rev !== data.block._rev) {
-              localStorage.removeItem('lock_' + data.block._id);
+              localStorage.removeItem('lock_' + data.block.blockid);
               //if (typeof state.lockedBlocks[data.block._id] !== 'undefined') {
                 //delete state.lockedBlocks[data.block._id];
               //}
@@ -678,7 +678,7 @@ export const store = new Vuex.Store({
               remove_lock();
             }
             if (lock.set_at && Date.now() - lock.set_at > 30 * 60 * 1000) {
-              localStorage.removeItem('lock_' + data.block._id);
+              localStorage.removeItem('lock_' + data.block.blockid);
               //if (typeof state.lockedBlocks[data.block._id] !== 'undefined') {
                 //delete state.lockedBlocks[data.block._id];
               //}
@@ -692,16 +692,16 @@ export const store = new Vuex.Store({
       }
     },
     check_block_lock (state, data) {
-      if (data.block && data.block._id) {
+      if (data.block && data.block.blockid) {
         if (typeof localStorage !== 'undefined') {
-          if (localStorage.hasOwnProperty('lock_' + data.block._id)) {
+          if (localStorage.hasOwnProperty('lock_' + data.block.blockid)) {
             try {
-              let item = localStorage.getItem('lock_' + data.block._id);
+              let item = localStorage.getItem('lock_' + data.block.blockid);
               item = JSON.parse(item);
               //state.lockedBlocks[data.block._id] = {type: item.type};
-              let r = state.lockedBlocks.find(l => l._id === data.block._id);
+              let r = state.lockedBlocks.find(l => l._id === data.block.blockid);
               if (!r) {
-                state.lockedBlocks.push({_id: data.block._id, type: item.type});
+                state.lockedBlocks.push({_id: data.block.blockid, type: item.type});
               }
             } catch(err) {
 
