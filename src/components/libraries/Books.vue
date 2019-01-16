@@ -447,7 +447,6 @@
           libraryFilters: {
             category: '', status: ''
           },
-          repositoryCategoriesList: ['Stories', 'Verse', 'History', 'Ideas', 'Science'],
           statusList: {'new': 'New', 'published': 'Published', 'unpublished': 'Unpublished'},
           repositoryBooks: [],
           booksGridHeaders: [
@@ -977,7 +976,12 @@
           }
           return 'Unpublished';
         },
-        ...mapGetters(['libraries', 'isAdmin', 'user'])
+        ...mapGetters({
+          libraries: 'libraries', 
+          isAdmin: 'isAdmin', 
+          user: 'user',
+          repositoryCategoriesList: 'bookCategories'
+        })
       },
       watch: {
         'libraries': {
