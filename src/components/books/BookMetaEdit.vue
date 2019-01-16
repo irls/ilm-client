@@ -647,9 +647,6 @@ export default {
       pubTypes: [
         'Public', 'Hidden', 'Encumbered', 'Research', 'Private'
       ],
-      subjectCategories: [
-        'Stories', 'Verse', 'History', 'Ideas', 'Science'
-      ],
       styleTitles: {
         'title_style': 'type'
       },
@@ -718,7 +715,9 @@ export default {
       storeListO: 'storeListO',
       blockSelection: 'blockSelection',
       alignCounter: 'alignCounter',
-      audiobook: 'currentAudiobook'}),
+      audiobook: 'currentAudiobook',
+      subjectCategories: 'bookCategories'
+    }),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
