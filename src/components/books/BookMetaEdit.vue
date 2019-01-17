@@ -195,16 +195,16 @@
           <fieldset class='Export'>
             <legend>Export </legend>
               <div>
-                <a class="btn btn-primary" :disabled="!currentBook.demo" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
-                <a class="btn btn-primary" :disabled="!currentBook.demo" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
-                <button class="btn btn-primary" :disabled="!currentBook.demo" v-clipboard="getBookDemoUrl()" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>
+                <a class="btn btn-primary" :disabled="!currentBook.demo_time" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
+                <a class="btn btn-primary" :disabled="!currentBook.demo_time" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
+                <!--<button class="btn btn-primary" :disabled="!currentBook.demo_time" v-clipboard="this.SERVER_URL + this.currentBook.demo" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>-->
                 <!--<button class="btn btn-primary" :disabled="!currentBook.demo" v-clipboard="this.SERVER_URL + currentBook.demo" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>-->
                 <!--<button class="btn btn-primary" v-on:click="downloadDemo()" ><i class="fa fa-link" style="color:white"></i> Rebuild</button>-->
-                <a class="btn btn-primary" v-if="!currentBook.demo" :href="downloadDemo()" target="_blank">Build</a>
+                <a class="btn btn-primary" v-if="!currentBook.demo_time" :href="downloadDemo()" target="_blank">Build</a>
                 <a class="btn btn-primary" v-else target="_blank" :href="downloadDemo()" >Rebuild</a>
                 <span v-if="isPublishing" class="align-preloader -small"></span>
               </div>
-              <div v-if="currentBook.demo_time">Last generated as: {{currentBook.demo_time}}</div>
+              <div v-if="currentBook.demo_time">Last build: {{currentBook.demo_time}}</div>
           </fieldset>
           <fieldset class="publish">
             <!-- Fieldset Legend -->
@@ -1567,14 +1567,6 @@ export default {
     },
     downloadExportFlac() {
         return this.API_URL + 'books/' + this.currentBook._id + '/exportFlac';
-    },
-
-    getBookDemoUrl(){
-
-        //let url = this.currentBook.demo;
-        //url = url.replace('/books_publish', '');
-        //console.log(url);
-        return this.SERVER_URL + this.currentBook.demo;
     },
     styleCaption(type, key) {
       if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {
