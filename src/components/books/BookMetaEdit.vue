@@ -121,7 +121,11 @@
                   <td>Category</td>
                   <td>
                     <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
-                      <option v-for="(value, index) in subjectCategories" :value="value">{{ value }}</option>
+                      <template v-for="(data, index) in subjectCategories">
+                        <optgroup :label="data.group">
+                          <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
+                        </optgroup>
+                      </template>
                     </select>
                   </td>
                 </tr>
