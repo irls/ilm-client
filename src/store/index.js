@@ -143,7 +143,18 @@ export const store = new Vuex.Store({
     },
     taskTypes: {tasks: [], categories: []},
     bookCategories: [
-      'Bahá’í', 'Buddhist', 'Christian', 'Confucian', 'Hindu', 'History', 'Ideas', 'Islam', 'Judaism', 'Science', 'Sikh', 'Stories', 'Tao', 'Verse', 'Zoroastrian'
+      {
+        group: 'Reader',
+        categories: [
+          'History', 'Ideas', 'Science', 'Stories', 'Verse'
+        ]
+      },
+      {
+        group: 'Ocean',
+        categories: [
+          'Bahá’í', 'Buddhist', 'Christian', 'Confucian', 'Hindu', 'Islam', 'Judaism', 'Sikh', 'Tao', 'Zoroastrian'
+        ]
+      }
     ]
   },
 
