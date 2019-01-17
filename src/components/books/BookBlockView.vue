@@ -1583,6 +1583,7 @@ export default {
         let recount_marked = false;
         if (this.block.status.marked === true) {
           this.block.status.marked = false;
+          recount_marked = true;
         }
         if (this.block._markedAsDone) {
           this.block.status.marked = true;

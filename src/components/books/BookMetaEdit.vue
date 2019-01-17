@@ -1262,7 +1262,7 @@ export default {
 
         if (with_task) {
           route.params.task_type = true;
-          if (this.tc_hasTask('content_cleanup')) route.params.task_type = 'text-cleanup';
+          if (this.currentJobInfo.text_cleanup) route.params.task_type = 'text-cleanup';
         }
       //this.$router.push({name: this.$route.name, params:  params});
       }
