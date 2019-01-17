@@ -48,7 +48,7 @@ import Vue from 'vue';
 var modal = require('vue-js-modal');
 
 Vue.use(modal, {dialog: true});
-Vue.use(Clipboard);
+Vue.use(Clipboard)
 
 
 export default {
