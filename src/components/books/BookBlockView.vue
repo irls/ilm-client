@@ -2265,11 +2265,13 @@ export default {
 
         if (foundBlockFlag.length == 0) {
           if (this.allowBlockFlag) {
-            if (type === 'editor' && this._is('editor', true)) {
-              type = 'narrator';
-            }
-            if (type === 'editor' && this.tc_allowAdminFlagging(this.block)) {
-              type = 'narrator';
+            if (this.block && this.block.voicework === 'narration') {
+              if (type === 'editor' && this._is('editor', true)) {
+                type = 'narrator';
+              }
+              if (type === 'editor' && this.tc_allowAdminFlagging(this.block)) {
+                type = 'narrator';
+              }
             }
             flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
             this.$refs.blockFlagControl.dataset.status = 'open';
