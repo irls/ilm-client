@@ -180,14 +180,13 @@
           <fieldset class='Export'>
             <legend>Export </legend>
               <div>
-                <a class="btn btn-primary" :disabled="!currentBook.demo_time" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
-                <a class="btn btn-primary" :disabled="!currentBook.demo_time" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
-                <!--<button class="btn btn-primary" :disabled="!currentBook.demo_time" v-clipboard="this.SERVER_URL + this.currentBook.demo" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>-->
+                <a class="btn btn-primary" :disabled="!currentBook.demo_time || !isAllowExportAudio" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
+                <a class="btn btn-primary" :disabled="!currentBook.demo_time || !isAllowExportAudio" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
+                <!--<button class="btn btn-primary" :disabled="!currentBook.demo_time || !isAllowExportAudio" v-clipboard="this.SERVER_URL + this.currentBook.demo" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>-->
                 <!--<button class="btn btn-primary" :disabled="!currentBook.demo" v-clipboard="this.SERVER_URL + currentBook.demo" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>-->
                 <!--<button class="btn btn-primary" v-on:click="downloadDemo()" ><i class="fa fa-link" style="color:white"></i> Rebuild</button>-->
-                <a class="btn btn-primary" v-if="!currentBook.demo_time" :href="downloadDemo()" target="_blank">Build</a>
-                <a class="btn btn-primary" v-else target="_blank" :href="downloadDemo()" >Rebuild</a>
-                <span v-if="isPublishing" class="align-preloader -small"></span>
+                <a class="btn btn-primary" v-if="!currentBook.demo_time" :href="downloadDemo()" target="_blank" :disabled="!isAllowExportAudio">Build</a>
+                <a class="btn btn-primary" v-else target="_blank" :href="downloadDemo()" :disabled="!isAllowExportAudio">Rebuild</a>                
               </div>
               <div v-if="currentBook.demo_time">Last build: {{currentBook.demo_time}}</div>
           </fieldset>
@@ -740,7 +739,10 @@ export default {
 
     isAllowExportAudio: {
       get() {
-        if (!this._is('editor') && !this.adminOrLibrarian) {
+        if (this._is('admin') || this._is('librarian')) {
+          return true;
+        }
+        if (!this._is('editor')){
           return false;
         }
         if (this.currentJobInfo.mastering) {
