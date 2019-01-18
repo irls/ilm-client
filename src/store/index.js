@@ -1392,8 +1392,8 @@ export const store = new Vuex.Store({
 
       requests.push(defer());
 
-      let metadata_cleanup = state.tc_currentBookTasks.assignments && state.tc_currentBookTasks.assignments.indexOf('metadata_cleanup') !== -1;
-      let audio_mastering = state.tc_currentBookTasks.assignments && state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1;
+      let metadata_cleanup = state.currentJobInfo.text_cleanup;
+      let audio_mastering = state.currentJobInfo.mastering;
       //console.log('searchBlocksChain 1', task_type, params);
       //console.log('searchBlocksChain 2', metadata_cleanup, audio_mastering);
 
@@ -1962,6 +1962,13 @@ export const store = new Vuex.Store({
       if (state.currentBookid) {
         let tasks = [];
         let bookid = state.currentBookid;
+        return axios.get(state.API_URL + 'books/' + bookid + '/counter/not_proofed_audio')
+          .then(response => {
+            commit('SET_CURRENTBOOK_COUNTER', {name: 'not_proofed_audio_blocks', value: response.data.count});
+          })
+          .catch(err => {
+            
+          });
         tasks.push(state.contentRemoteDB.query('filters_byStatus/byStatus', {
               start_key: [bookid, 'editor', false, 1],
               end_key: [bookid, 'editor', false, 1, {}],
