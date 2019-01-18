@@ -1402,6 +1402,7 @@ export default {
     selectStyle(blockType, styleKey, styleVal)
     {
       let updateToc = (styleKey == 'table of contents' || (blockType == 'title' && styleKey == 'style') );
+      let updatePromises = [];
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
@@ -1431,16 +1432,18 @@ export default {
                 pBlock.checked = true;
               } else {
                 pBlock.partUpdate = true;
-                this.putBlock({_id: pBlock._id, classes: pBlock.classes}).then(()=>{
-                  if (updateToc) {
-                    this.$root.$emit('from-book-meta:upd-toc', true);
-                  }
-                });
+                updatePromises.push(this.putBlock(pBlock));
               }
             }
           })
           this.updateBookVersion({major: true});
         }
+        Promise.all(updatePromises)
+          .then(()=>{
+            if (updateToc) {
+              this.$root.$emit('from-book-meta:upd-toc', true);
+            }
+          })
         //this.$root.$emit('from-meta-edit:set-num');
         this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
@@ -1458,6 +1461,7 @@ export default {
 
     selSecNum (blockType, valKey, currVal) {
       console.log('selSecNum', blockType, valKey, currVal);
+      let updatePromises = [];
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let putBlockOpromise = [];
@@ -1524,24 +1528,22 @@ export default {
               if (pBlock.isChanged || pBlock.isAudioChanged) {
               } else {
                 pBlock.partUpdate = true;
-                this.putBlock(pBlock).then(()=>{
-                  if (valKey == 'secNum' || valKey == 'secHide') {
-                    // TODO create other method
-                    //this.$root.$emit('from-book-meta:upd-toc', true);
-                  }
-                });
+                updatePromises.push(this.putBlock(pBlock));
 
               }
             }
 
           });
 
-          Promise.all(putBlockOpromise).then((res)=>{
+          Promise.all([putBlockOpromise, updatePromises]).then((res)=>{
             if (valKey == 'secNum' || valKey == 'parNum') {
               let blockO = this.storeListO.getBlock(this.blockSelection.start._id);
               this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration, blockO.rid)
             } else {
               this.$root.$emit('from-meta-edit:set-num');
+            }
+            if (valKey == 'secHide' && blockType == 'header') {
+              this.$root.$emit('from-book-meta:upd-toc', true);
             }
             this.updateBookVersion({major: true})
           })

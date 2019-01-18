@@ -1128,6 +1128,21 @@ export const store = new Vuex.Store({
         return err;
       })
     },
+    
+    updateBlockToc({state, dispatch}, params) {
+      dispatch('freeze', 'loadBookToc');
+      return axios.put(state.API_URL + `books/toc/${params.bookid}/block/${params.blockid}`)
+      .then((response) => {
+        //state.currentBookToc.bookId = params.bookId;
+        state.currentBookToc.data = response.data;
+        dispatch('unfreeze', 'loadBookToc');
+        return response;
+      })
+      .catch(err => {
+        dispatch('unfreeze', 'loadBookToc')
+        return err;
+      })
+    },
 
     updateBookVersion({state, dispatch}, update) {
       if (state.currentBookMeta._id) {
