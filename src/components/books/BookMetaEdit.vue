@@ -87,6 +87,12 @@
                   <span class="s-label"> Mastering required</span>
                 </div>
               </template>
+              <a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
+                Export Audio
+              </a>
+              <button v-else class="btn btn-primary btn-small btn-export-audio" v-on:click="startGenerateAudiofile()">
+                Export Audio
+              </button>
             </div>
             <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
               {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
