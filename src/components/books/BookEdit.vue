@@ -997,9 +997,9 @@ export default {
         });
     },
     blockUpdated(blockid) {
-      if (this._is('editor', true) && !this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') && !this.tc_getBlockTask(blockid)) {
+      if (this._is('editor', true) && !this.currentJobInfo.text_cleanup && !this.currentJobInfo.mastering && !this.tc_getBlockTask(blockid) && !this.tc_getBlockTaskOtherRole(blockid)) {
         this.createBlockSubtask(blockid, 'approve-modified-block', 'editor');
-      } else if (this._is('proofer', true) && !this.tc_getBlockTask(blockid) && !this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering')) {
+      } else if (this._is('proofer', true) && !this.tc_getBlockTask(blockid) && !this.tc_getBlockTaskOtherRole(blockid) && !this.currentJobInfo.text_cleanup && !this.currentJobInfo.mastering) {
         this.createBlockSubtask(blockid, 'approve-revoked-block', 'proofer');
       }
     },
