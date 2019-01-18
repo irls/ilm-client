@@ -833,6 +833,10 @@ export default {
           }
           let flagsSummary = this.block.calcFlagsSummary();
           if (this.adminOrLibrarian && flagsSummary.dir === 'narrator' && flagsSummary.stat === 'open') {
+            let narratorTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'fix-block-narration' && t.blockid == this.block._id);
+            if (!narratorTask) {
+              return false;
+            }
             let approveTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'approve-modified-block');
             if (approveTask) {
               return false;
@@ -885,6 +889,9 @@ export default {
       isApproveDisabled: { cache: false,
         get() {
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.isRecording || this.isUpdating) {
+            return true;
+          }
+          if (this.block && ['tts', 'audio_file'].indexOf(this.block.voicework) !== -1 && !this.block.audiosrc) {
             return true;
           }
           let flags_summary = this.block.calcFlagsSummary();
@@ -2225,11 +2232,13 @@ export default {
 
         if (foundBlockFlag.length == 0) {
           if (this.allowBlockFlag) {
-            if (type === 'editor' && this._is('editor', true)) {
-              type = 'narrator';
-            }
-            if (type === 'editor' && this.tc_allowAdminFlagging(this.block)) {
-              type = 'narrator';
+            if (this.block && this.block.voicework === 'narration') {
+              if (type === 'editor' && this._is('editor', true)) {
+                type = 'narrator';
+              }
+              if (type === 'editor' && this.tc_allowAdminFlagging(this.block)) {
+                type = 'narrator';
+              }
             }
             flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
             this.$refs.blockFlagControl.dataset.status = 'open';
