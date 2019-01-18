@@ -833,6 +833,10 @@ export default {
           }
           let flagsSummary = this.block.calcFlagsSummary();
           if (this.adminOrLibrarian && flagsSummary.dir === 'narrator' && flagsSummary.stat === 'open') {
+            let narratorTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'fix-block-narration' && t.blockid == this.block._id);
+            if (!narratorTask) {
+              return false;
+            }
             let approveTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'approve-modified-block');
             if (approveTask) {
               return false;
@@ -841,7 +845,7 @@ export default {
           if (!this.tc_getBlockTask(this.block._id)) {
             return true;
           }
-          
+
           let executors = this.tc_currentBookTasks.job.executors;
           if (executors[flagsSummary.dir] ==  this.auth.getSession().user_id) {
             if (this._is('proofer', true) &&
@@ -887,6 +891,9 @@ export default {
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.isRecording || this.isUpdating) {
             return true;
           }
+          if (this.block && ['tts', 'audio_file'].indexOf(this.block.voicework) !== -1 && !this.block.audiosrc) {
+            return true;
+          }
           let flags_summary = this.block.calcFlagsSummary();
             if (this.isCanApproveWithoutTask) {
               if (flags_summary.stat === 'open') {
@@ -917,7 +924,7 @@ export default {
       isSpotCheckDisabled: {
         cache: false,
         get() {
-          
+
           return this.mode != 'edit' || !this.block || this.tc_isSpotCheckDisabled(this.block);
         }
       },
@@ -1175,6 +1182,7 @@ export default {
         'getAlignCount',
         'recountApprovedInRange',
         'loadBookToc',
+        'updateBlockToc',
         'tc_loadBookTask',
         'getCurrentJobInfo',
         'getTotalBookTasks',
@@ -1595,7 +1603,7 @@ export default {
         return this.putBlock(this.block).then(()=>{
           this.isSaving = false;
           /*if (this.tc_createApproveModifiedBlock(this.block._id)) {
-            if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) || 
+            if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) ||
                     this.tc_allowAdminFlagging(this.block)) {
               this.createBlockSubtask(this.block._id, 'approve-modified-block', 'editor');
             }
@@ -1609,6 +1617,7 @@ export default {
             this.getTotalBookTasks();
           }
           let is_content_changed = this.hasChange('content');
+          let is_type_changed = this.hasChange('type');
           this.isChanged = false;
           if (this.blockAudio.map) {
             this.blockAudio.map = this.block.content;
@@ -1628,6 +1637,13 @@ export default {
           }
           if (recount_marked) {
             this.setCurrentBookCounters(['not_marked_blocks']);
+          }
+          if (is_content_changed) {
+            if (['title', 'header'].indexOf(this.block.type) !== -1) {
+              this.updateBlockToc({blockid: this.block._id, bookid: this.block.bookid});
+            }
+          } else if (is_type_changed) {
+            this.loadBookToc({bookId: this.block.bookid, isWait: true});
           }
 
           this.blockO.status = Object.assign(this.blockO.status, {
@@ -2146,6 +2162,39 @@ export default {
             flag.dataset.flag = this.block.newFlag(this.range, type);
             flag.dataset.status = 'open';
             flag.appendChild(this.range.extractContents());
+            flag.childNodes.forEach((n, i) => {
+              if (n.dataset && n.dataset.map) {
+                let ch = this.$refs.blockContent.querySelector('[data-map="' + n.dataset.map + '"]');
+                if (ch) {
+                  //if (i == 0) {
+                    //n.innerHTML = ch.innerHTML+n.innerHTML
+                  //} else {
+                    //n.innerHTML+= ch.innerHTML
+                  //}
+                  if (!ch.innerHTML) {
+                    this.$refs.blockContent.removeChild(ch);
+                  } else if (!ch.innerHTML.trim()) {
+                    ch.dataset.map = ''
+                  } else {
+                    let map = n.dataset.map.split(',');
+                    map[0] = parseInt(map[0]);
+                    let half = parseInt(map[1]) / 2;
+                    let secondHalf = half;
+                    if (parseInt(secondHalf) != secondHalf) {
+                      half+=0.5;
+                      secondHalf-=0.5
+                    }
+                    if (i == 0) {
+                      ch.dataset.map = map[0] + ',' + half;
+                      n.dataset.map = map[0] + half + ',' + secondHalf;
+                    } else {
+                      n.dataset.map = map[0] + ',' + half;
+                      ch.dataset.map = map[0] + half + ',' + secondHalf;
+                    }
+                  }
+                }
+              }
+            });
             this.range.insertNode(flag);
             flag.addEventListener('click', this.handleFlagClick);
             this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
@@ -2216,11 +2265,13 @@ export default {
 
         if (foundBlockFlag.length == 0) {
           if (this.allowBlockFlag) {
-            if (type === 'editor' && this._is('editor', true)) {
-              type = 'narrator';
-            }
-            if (type === 'editor' && this.tc_allowAdminFlagging(this.block)) {
-              type = 'narrator';
+            if (this.block && this.block.voicework === 'narration') {
+              if (type === 'editor' && this._is('editor', true)) {
+                type = 'narrator';
+              }
+              if (type === 'editor' && this.tc_allowAdminFlagging(this.block)) {
+                type = 'narrator';
+              }
             }
             flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
             this.$refs.blockFlagControl.dataset.status = 'open';
@@ -2270,7 +2321,7 @@ export default {
           }
           return result;
       },
-      
+
       delFlagPart: function(ev, partIdx) {
         if (this.canDeleteFlagPart(this.flagsSel.parts[partIdx])) {
 

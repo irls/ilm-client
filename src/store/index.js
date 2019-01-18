@@ -1128,6 +1128,21 @@ export const store = new Vuex.Store({
         return err;
       })
     },
+    
+    updateBlockToc({state, dispatch}, params) {
+      dispatch('freeze', 'loadBookToc');
+      return axios.put(state.API_URL + `books/toc/${params.bookid}/block/${params.blockid}`)
+      .then((response) => {
+        //state.currentBookToc.bookId = params.bookId;
+        state.currentBookToc.data = response.data;
+        dispatch('unfreeze', 'loadBookToc');
+        return response;
+      })
+      .catch(err => {
+        dispatch('unfreeze', 'loadBookToc')
+        return err;
+      })
+    },
 
     updateBookVersion({state, dispatch}, update) {
       if (state.currentBookMeta._id) {
@@ -2138,9 +2153,9 @@ export const store = new Vuex.Store({
             let hasTask = state.tc_currentBookTasks.tasks.find((t) => {
               return t.blockid == block._id;
             })
-            if (!hasAssignment && state.adminOrLibrarian) {
-              hasAssignment = state.currentJobInfo.completed;
-            }
+            //if (!hasAssignment && state.adminOrLibrarian) {
+              //hasAssignment = state.currentJobInfo.completed;
+            //}
             if (!hasTask && state.adminOrLibrarian) {
               hasTask = state.currentJobInfo.can_resolve_tasks.find((t) => {
                 return t.blockid == block._id;

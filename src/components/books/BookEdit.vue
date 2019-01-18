@@ -998,9 +998,9 @@ export default {
         });
     },
     blockUpdated(blockid) {
-      if (this._is('editor', true) && !this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering') && !this.tc_getBlockTask(blockid)) {
+      if (this._is('editor', true) && !this.currentJobInfo.text_cleanup && !this.currentJobInfo.mastering && !this.tc_getBlockTask(blockid) && !this.tc_getBlockTaskOtherRole(blockid)) {
         this.createBlockSubtask(blockid, 'approve-modified-block', 'editor');
-      } else if (this._is('proofer', true) && !this.tc_getBlockTask(blockid) && !this.tc_hasTask('content_cleanup') && !this.tc_hasTask('audio_mastering')) {
+      } else if (this._is('proofer', true) && !this.tc_getBlockTask(blockid) && !this.tc_getBlockTaskOtherRole(blockid) && !this.currentJobInfo.text_cleanup && !this.currentJobInfo.mastering) {
         this.createBlockSubtask(blockid, 'approve-revoked-block', 'proofer');
       }
     },
@@ -1039,7 +1039,12 @@ export default {
           this.parlist.delete(block._id);
         }
 
-        this.putNumBlockOBatchProxy({bookId: block.bookid});
+        this.putNumBlockOBatchProxy({bookId: block.bookid})
+          .then(() => {
+            if (['header', 'title'].indexOf(block.type) !== -1) {
+              this.loadBookToc({isWait: true, bookId: block.bookid});
+            }
+          });
 
         this.unfreeze('deleteBlock');
         this.updateBookVersion({major: true})
@@ -1178,7 +1183,12 @@ export default {
                           this.parlistO.delBlock(response.data.blocks[2]);
                         }
 
-                        this.putNumBlockOBatchProxy({bookId: block.bookid});
+                        this.putNumBlockOBatchProxy({bookId: block.bookid})
+                          .then(() => {
+                            if (['header', 'title'].indexOf(block.type) !== -1) {
+                              this.loadBookToc({bookId: block.bookid, isWait: true})
+                            }
+                          });
                         this.refreshTmpl();
                         this.unfreeze('joinBlocks');
                         return Promise.resolve();
@@ -1304,7 +1314,12 @@ export default {
                           this.parlistO.delBlock(response.data.blocks[2]);
                         }
 
-                        this.putNumBlockOBatchProxy({bookId: block.bookid});
+                        this.putNumBlockOBatchProxy({bookId: block.bookid})
+                          .then(() => {
+                            if (['header', 'title'].indexOf(block.type) !== -1) {
+                              this.loadBookToc({bookId: block.bookid, isWait: true});
+                            }
+                          });
                         //this.refreshTmpl();
                         this.unfreeze('joinBlocks');
                         return Promise.resolve();
@@ -1619,7 +1634,10 @@ export default {
 
     listenSetNum(bookId, numMask, blockRid) {
       //console.log('listenSetNum', bookId, numMask);
-      if (bookId) this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask, blockRid: blockRid});
+      if (bookId) this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask, blockRid: blockRid})
+              .then(() => {
+                this.loadBookToc({bookId: this.meta._id, isWait: true});
+              });
       else this.updateVisibleBlocks();
       //this.refreshTmpl();
     },
