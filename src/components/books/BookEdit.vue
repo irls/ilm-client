@@ -360,7 +360,7 @@ export default {
       if (!this.isBlocked && (this.isNeedUp || this.isNeedDown)) {
         switch(this.lazyLoaderDir) {
           case 'down' : {
-            this.isNeedDown = this.parlistO.getNextIds(this.isNeedDown, 200);
+            this.isNeedDown = this.parlistO.getNextIds(this.isNeedDown, 100);
             //console.log('this.isNeedDown', this.isNeedDown);
             if (this.isNeedDown.length > 0)
             {
@@ -393,7 +393,7 @@ export default {
 
           } break;
           case 'up' : {
-            this.isNeedUp = this.parlistO.getPrevIds(this.isNeedUp, 200);
+            this.isNeedUp = this.parlistO.getPrevIds(this.isNeedUp, 100);
             //console.log('this.isNeedUp', this.isNeedUp);
             if (this.isNeedUp.length > 0)
             {
@@ -1213,7 +1213,7 @@ export default {
             });
             return getNextBlock
             .then((blockAfter)=>{
-              
+
               let chainId = this.parlistO.getOutId(block._id);
               let elBlock = this.$children.find(c => {
                 return c.$el.id == block._id;
@@ -1655,6 +1655,7 @@ export default {
         let firstVisible = false;
         let lastVisible = false;
         let loadIdsArray = [];
+        let loadCount = 5;
         for (let blockRef of this.$refs.viewBlocks) {
           let visible = this.checkVisible(blockRef.$refs.viewBlock);
           if (visible) {
@@ -1669,6 +1670,12 @@ export default {
             else if (this.parlistO.get(blockRef.blockRid).loaded === false) {
               this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
               loadIdsArray.push(blockRef.blockId);
+            }
+          } else if (firstVisible && loadCount > 0) {
+            if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
+              loadCount--;
+              this.parlistO.setLoaded(blockRef.blockRid);
+              blockRef.$forceUpdate();
             }
           }
         }
