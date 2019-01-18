@@ -1929,6 +1929,7 @@ export const store = new Vuex.Store({
       commit('SET_CURRENTBOOK_COUNTER', {name: 'narration_blocks', value: '0'});
       if (state.currentBookid) {
         let bookid = state.currentBookid;
+        return axios.get(state.API_URL + 'books/' + bookid + '/counter/narration_blocks');
         state.contentRemoteDB.query('filters_byVoiceworkAndBook/byVoiceworkAndBook', {
           start_key: [bookid, 'narration'],
           end_key: [bookid, 'narration', {}],
@@ -1969,33 +1970,6 @@ export const store = new Vuex.Store({
           .catch(err => {
             
           });
-        tasks.push(state.contentRemoteDB.query('filters_byStatus/byStatus', {
-              start_key: [bookid, 'editor', false, 1],
-              end_key: [bookid, 'editor', false, 1, {}],
-              reduce: true,
-              group: true
-            }));
-            tasks.push(state.contentRemoteDB.query('filters_byStatus/byStatus', {
-              start_key: [bookid, 'narrator'],
-              end_key: [bookid, 'narrator', {}],
-              reduce: true,
-              group: true
-            }));
-            tasks.push(state.contentRemoteDB.query('filters_byStatus/byStatus', {
-              start_key: [bookid, 'proofer', false, 1],
-              end_key: [bookid, 'proofer', false, 1, {}],
-              reduce: true,
-              group: true
-            }));
-        return Promise.all(tasks)
-            .then(results => {
-              let not_proofed_blocks = 0;
-              not_proofed_blocks+=typeof results[0].rows[0] === 'undefined' ? 0 : results[0].rows[0].value;
-              not_proofed_blocks+=typeof results[1].rows[0] === 'undefined' ? 0 : results[1].rows[0].value;
-              not_proofed_blocks+=typeof results[2].rows[0] === 'undefined' ? 0 : results[2].rows[0].value;
-              commit('SET_CURRENTBOOK_COUNTER', {name: 'not_proofed_audio_blocks', value: not_proofed_blocks});
-            })
-            .catch(err => console.log(err));
       }
     },
 
