@@ -140,7 +140,21 @@ export const store = new Vuex.Store({
       text_cleanup: null,
       is_proofread_unassigned: null
     },
-    taskTypes: {tasks: [], categories: []}
+    taskTypes: {tasks: [], categories: []},
+    bookCategories: [
+      {
+        group: 'Reader',
+        categories: [
+          'History', 'Ideas', 'Science', 'Stories', 'Verse'
+        ]
+      },
+      {
+        group: 'Ocean',
+        categories: [
+          'Bahá’í', 'Buddhist', 'Christian', 'Confucian', 'Hindu', 'Islam', 'Judaism', 'Sikh', 'Tao', 'Zoroastrian'
+        ]
+      }
+    ]
   },
 
   getters: {
@@ -272,7 +286,8 @@ export const store = new Vuex.Store({
     approveBlocksList: state => state.approveBlocksList,
     adminOrLibrarian: state => state.adminOrLibrarian,
     currentJobInfo: state => state.currentJobInfo,
-    taskTypes: state => state.taskTypes
+    taskTypes: state => state.taskTypes,
+    bookCategories: state => state.bookCategories
   },
 
   mutations: {

@@ -121,7 +121,11 @@
                   <td>Category</td>
                   <td>
                     <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
-                      <option v-for="(value, index) in subjectCategories" :value="value">{{ value }}</option>
+                      <template v-for="(data, index) in subjectCategories">
+                        <optgroup :label="data.group">
+                          <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
+                        </optgroup>
+                      </template>
                     </select>
                   </td>
                 </tr>
@@ -633,9 +637,6 @@ export default {
       pubTypes: [
         'Public', 'Hidden', 'Encumbered', 'Research', 'Private'
       ],
-      subjectCategories: [
-        'Stories', 'Verse', 'History', 'Ideas', 'Science'
-      ],
       styleTitles: {
         'title_style': 'type'
       },
@@ -703,7 +704,9 @@ export default {
       storeListO: 'storeListO',
       blockSelection: 'blockSelection',
       alignCounter: 'alignCounter',
-      audiobook: 'currentAudiobook'}),
+      audiobook: 'currentAudiobook',
+      subjectCategories: 'bookCategories'
+    }),
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
