@@ -3,22 +3,22 @@
     <accordion :one-at-atime="true" ref="accordionAudio" class="audio-integration-accordion">
       <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
-          <div class="file-catalogue-buttons">
-            <div class="" v-if="_is('admin') || _is('editor')">
+          <div class="file-catalogue-buttons" v-if="allowEditing">
+            <div class="" v-if="allowEditing">
               <label class="checkbox-container">
                 <input type="checkbox" v-model="checkAllState"/>
                 <span class="checkmark"></span>
               </label>
             </div>
-            <div v-if="_is('editor')" class="upload-audio">
+            <div class="upload-audio">
               <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload btn-small">
                 Import Audio
               </button>
             </div>
             <div class="delete-audio">
-              <button class="btn btn-danger btn-small" :disabled="selectionLength == 0 || !_is('editor')" v-on:click="deleteAudio()">Delete<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
+              <button class="btn btn-danger btn-small" :disabled="selectionLength == 0" v-on:click="deleteAudio()">Delete<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
             </div>
-            <dropdown text="Mark" type="default" :disabled="selectionLength == 0 || !_is('editor', true)" ref="allAudioDropdown" class="all-audio-dropdown">
+            <dropdown text="Mark" type="default" :disabled="selectionLength == 0" ref="allAudioDropdown" class="all-audio-dropdown">
                 <li>
                   <span v-on:click="markSelected()" class="mark-done">Mark done</span>
                 </li>
@@ -42,7 +42,7 @@
                   </div>
                 </template>
                 <template v-else>
-                  <div v-if="_is('editor', true) || _is('admin')"
+                  <div v-if="allowEditing"
                            class="audiofile-options">
                     <label class="checkbox-container">
                       <input type="checkbox" :checked="selections.indexOf(audiofile.id) !== -1"
@@ -484,7 +484,7 @@
         }
       }, 500),
       playPreview(id, preview) {
-        if (!this._is('editor', true) && !this._is('admin')) {
+        if (!this.allowEditing) {
           return;
         }
         if (id === this.playing) {
@@ -563,7 +563,7 @@
         this.deleting = false;
       },
       play(id, autostart) {
-        if (!this._is('editor')) {
+        if (!this.allowEditing) {
           return;
         }
         if (id === this.playing) {
@@ -705,7 +705,7 @@
         let api = this.$store.state.auth.getHttp()
         let self = this;
         //this.alignmentProcess = true;
-        let realign = this.tc_hasTask('audio_mastering');
+        let realign = this.currentJobInfo.mastering;
         let update = this.saveAudiobook()
           .then((updated) => Promise.resolve(updated))
           .catch((err) => Promise.resolve({error: true, err: err}));
@@ -1053,6 +1053,9 @@
         let blocks = this.alignCounter.count - this.alignCounter.countTTS;
         return blocks >=0 ? blocks : 0;
       },
+      allowEditing: function() {
+        return this._is('editor', true) || this.adminOrLibrarian;
+      },
       ...mapGetters({
         currentBookCounters: 'currentBookCounters', 
         ttsVoices: 'ttsVoices', 
@@ -1062,7 +1065,9 @@
         alignCounter: 'alignCounter', 
         hasLocks: 'hasLocks', 
         lockedBlocks: 'lockedBlocks', 
-        audiobook: 'currentAudiobook'})
+        audiobook: 'currentAudiobook',
+        currentJobInfo: 'currentJobInfo',
+        adminOrLibrarian: 'adminOrLibrarian'})
     },
     watch: {
       'audiobook': {

@@ -40,7 +40,11 @@
               <label>Category</label>
               <select v-model="repositoryFilters.category">
                 <option></option>
-                <option v-for="c in repositoryCategoriesList" :value="c">{{c}}</option>
+                <template v-for="(data, index) in repositoryCategoriesList">
+                  <optgroup :label="data.group">
+                    <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
+                  </optgroup>
+                </template>
               </select>
               <label>
                 <input type="checkbox" v-model="repositoryFilters.allBooks"/>
@@ -447,7 +451,6 @@
           libraryFilters: {
             category: '', status: ''
           },
-          repositoryCategoriesList: ['Stories', 'Verse', 'History', 'Ideas', 'Science'],
           statusList: {'new': 'New', 'published': 'Published', 'unpublished': 'Unpublished'},
           repositoryBooks: [],
           booksGridHeaders: [
@@ -977,7 +980,12 @@
           }
           return 'Unpublished';
         },
-        ...mapGetters(['libraries', 'isAdmin', 'user'])
+        ...mapGetters({
+          libraries: 'libraries', 
+          isAdmin: 'isAdmin', 
+          user: 'user',
+          repositoryCategoriesList: 'bookCategories'
+        })
       },
       watch: {
         'libraries': {

@@ -1,6 +1,6 @@
 <template>
   <fieldset class="toc-items-list">
-    <legend>Table of contents </legend>
+    <legend>Table of contents <i class="fa fa-refresh refresh-toc" v-on:click="loadBookTocProxy(true)"></i></legend>
     <template v-if="isBlocked && blockers.indexOf('loadBookToc') >-1">
       <div class="preloader-spinner"></div>
     </template>
@@ -55,7 +55,8 @@ export default {
 
   data () {
     return {
-      currBookId: this.bookId
+      currBookId: this.bookId,
+      loading: false
     }
   },
 
@@ -73,16 +74,30 @@ export default {
 
     goToBlock(blockId, ev) {
       //console.log('goToBlock', blockId, this.$route.name);
-      this.$router.push({name: this.$route.name, params: {}});
-      this.$router.push({name: this.$route.name, params:  { block: blockId }});
+      /*if ([
+        'CollectionBookEdit', 
+        'CollectionBookEditDisplay',
+        'BookEdit',
+        'BookEditDisplay',
+        'BookNarrate', 
+        'CollectionBookNarrate'].indexOf(this.$route.name) !== -1) {*/
+        this.$router.push({name: this.$route.name, params: {}});
+        this.$router.push({name: this.$route.name, params:  { block: blockId }});
+      //}
     },
     loadBookTocProxy(isWait = false) {
       //if (!isWait) this.freeze('loadBookToc');
+      if (this.loading) {
+        return false;
+      }
+      this.loading = true;
       this.loadBookToc({bookId: this.currBookId, isWait: isWait})
       .then((res)=>{
+        this.loading = false;
         this.unfreeze('loadBookToc');
       })
       .catch((err)=>{
+        this.loading = false;
         this.unfreeze('loadBookToc');
       });
     }
@@ -157,6 +172,14 @@ export default {
           text-decoration: underline;
           color: #337ab7;
         }
+      }
+    }
+    legend {
+      .refresh-toc {
+        margin: 0px 3px;
+        color: #329adf;
+        cursor: pointer;
+        vertical-align: middle;
       }
     }
   }

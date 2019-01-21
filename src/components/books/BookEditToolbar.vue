@@ -16,7 +16,7 @@
       <i class="fa fa-chevron-left fa-lg"></i> Back <i class="fa fa-book "></i>
     </button>
 
-    <template v-if="tc_hasTask('content_cleanup')">
+    <template v-if="tc_allowEditingComplete()">
       <!--<dropdown text="Download" type="default">
           <li>
             <a :href="getCurrentBookUrl('html')"

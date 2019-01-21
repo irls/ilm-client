@@ -310,9 +310,15 @@ export default {
       this.createdJob = null
       this.createdJob = {}
       if (process.env.NODE_ENV === 'development') {
-        this.roles['editor']   = this.users['editor'][0]._id;
-        this.roles['proofer']  = this.users['proofer'][0]._id;
-        this.roles['narrator'] = this.users['narrator'][0]._id;
+        if (this.users['editor'] && this.users['editor'][0]) {
+          this.roles['editor']   = this.users['editor'][0]._id;
+        }
+        if (this.users['proofer'] && this.users['proofer'][0]) {
+          this.roles['proofer']  = this.users['proofer'][0]._id;
+        }
+        if (this.users['narrator'] && this.users['narrator'][0]) {
+          this.roles['narrator'] = this.users['narrator'][0]._id;
+        }
         //this.roles['engineer'] = this.users['engineer'][0]._id;
       }
     },

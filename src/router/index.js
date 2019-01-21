@@ -28,6 +28,7 @@ export default new Router({
     {
       path: '/books',
       component: Books,
+      name: 'BooksList',
       children: [
         { path: '', component: BooksGrid }
       ]
@@ -35,8 +36,9 @@ export default new Router({
     {
       path: '/books/:bookid',
       component: Books,
+      name: 'Book',
       children: [
-        { path: '', component: BooksGrid },
+        { path: '', component: BooksGrid, name: 'BooksGrid' },
         {
           path: 'edit/:block?/:task_type?', name: 'BookEdit',
           component: BookEdit, meta: { mode: 'edit' }, props: { mode: 'edit' }
@@ -95,13 +97,15 @@ export default new Router({
     {
       path: '/collections',
       component: Collections,
+      name: 'CollectionsList',
       props: { mode: 'edit1' }
     },
     {
       path: '/collections/:collectionid',
       component: Collections,
+      name: 'Collection'
     },
-    {path: '/collections/:collectionid/:bookid', component: Collections},
+    {path: '/collections/:collectionid/:bookid', component: Collections, name: 'CollectionBook'},
     {
       path: '/collections/:collectionid/:bookid/edit/:block?/:task_type?', name: 'CollectionBookEdit',
       component: Collections, meta: { mode: 'edit' }, props: { mode: 'edit' }

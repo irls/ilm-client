@@ -67,15 +67,13 @@ export default {
       },
       url: '',
       all_users: false,
-      submissions: 0,
-      task_types: []
+      submissions: 0
     }
   },
 
   name: 'taskHistory',
 
   props: [
-    '_task_types',
     'current_user',
     'user_id',
     'in_modal'
@@ -92,21 +90,13 @@ export default {
   ],
 
   computed: mapGetters([
-    'isAdmin', 'allBooks'
+    'isAdmin', 'allBooks', 'taskTypes'
   ]),
 
   mounted() {
     this.all_users = !this.current_user && !this.user_id && this.isAdmin
     this.url = !this.all_users ? (this.user_id ? this.API_URL + 'tasks/history/user/' + this.user_id : this.API_URL + 'tasks/history/my') : this.API_URL + 'tasks/history'
-    if (!this._task_types.length) {
-      this.getTaskTypes()
-        .then(tt => {
-          this.getWorkHistory()
-        })
-    } else {
-      this.task_types = this._task_types
-      this.getWorkHistory()
-    }
+    this.getWorkHistory()
   },
 
   watch: {
@@ -153,7 +143,7 @@ export default {
           book._id = bookid;
           for (let taskid in _book.tasks) {
             let task = _book.tasks[taskid]
-            let _task = this.task_types.tasks.find(t => {
+            let _task = this.taskTypes.tasks.find(t => {
               return t._id == taskid
             })
             task.title = _task ? _task.title : '<task>'
@@ -190,15 +180,6 @@ export default {
     },
     filterChanged() {
       console.log(this.filter)
-    },
-    getTaskTypes() {
-      return axios.get(this.API_URL + 'tasks/types').then(types => {
-        this.task_types = types.data
-        return BPromise.resolve(this.task_types)
-      })
-      .catch(error => {
-        return BPromise.reject({})
-      })
     }
   }
 }
