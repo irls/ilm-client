@@ -239,9 +239,9 @@
               </template>
             </table> -->
           </fieldset>
-          <!--<template v-if="isAdmin || isLibrarian || _is('editor', true)">
-            <a v-if="currentBook.published" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()"-->
-          <!--</template>-->
+          <template v-if="isAdmin || isLibrarian || _is('editor', true)">
+            <a v-if="currentBook.published" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()" -->
+          </template>
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
@@ -257,12 +257,12 @@
                   <span class="s-label"> Mastering required</span>
                 </div>
               </template>
-              <a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
+              <!--<a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
                 Export Audio
               </a>
               <button v-else class="btn btn-primary btn-small btn-export-audio" v-on:click="startGenerateAudiofile()">
                 Export Audio
-              </button>
+              </button>-->
             </div>
             <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
               {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
@@ -736,7 +736,6 @@ export default {
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
     },
-
     isAllowExportAudio: {
       get() {
         if (this._is('admin') || this._is('librarian')) {
@@ -745,7 +744,7 @@ export default {
         if (!this._is('editor')){
           return false;
         }
-        if (this.currentJobInfo.mastering) {
+        if (this.tc_hasTask('audio_mastering')) {
           return true;
         }
         return false;
@@ -1002,9 +1001,6 @@ export default {
         .then(() => {
 
         });*/
-    },
-    getCurrentBookUrl(format) {
-      return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/download/" + format;
     },
     updateCollection(event) {
       if (event && event.target.value) {
@@ -1265,23 +1261,6 @@ export default {
     publishContent() {
       return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
     },
-
-    /* *** */
-    /*
-    export() {
-      // this.isPublishing = false;
-      this.isPublishingQueue = true;
-      return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish')
-      .then(resp => {
-        console.log(resp);
-      });
-    },
-    exportContent() {
-      return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
-    },
-    */
-    /* *** */
-
     goToUnresolved(with_task = false) {
 
       let route = {

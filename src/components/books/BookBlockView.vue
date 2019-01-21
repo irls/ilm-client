@@ -845,7 +845,7 @@ export default {
           if (!this.tc_getBlockTask(this.block._id)) {
             return true;
           }
-          
+
           let executors = this.tc_currentBookTasks.job.executors;
           if (executors[flagsSummary.dir] ==  this.auth.getSession().user_id) {
             if (this._is('proofer', true) &&
@@ -924,7 +924,7 @@ export default {
       isSpotCheckDisabled: {
         cache: false,
         get() {
-          
+
           return this.mode != 'edit' || !this.block || this.tc_isSpotCheckDisabled(this.block);
         }
       },
@@ -1603,7 +1603,7 @@ export default {
         return this.putBlock(this.block).then(()=>{
           this.isSaving = false;
           /*if (this.tc_createApproveModifiedBlock(this.block._id)) {
-            if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) || 
+            if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) ||
                     this.tc_allowAdminFlagging(this.block)) {
               this.createBlockSubtask(this.block._id, 'approve-modified-block', 'editor');
             }
@@ -2321,7 +2321,7 @@ export default {
           }
           return result;
       },
-      
+
       delFlagPart: function(ev, partIdx) {
         if (this.canDeleteFlagPart(this.flagsSel.parts[partIdx])) {
 
