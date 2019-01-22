@@ -1298,6 +1298,9 @@ export const store = new Vuex.Store({
     },
 
     getBlocks ({commit, state, dispatch}, blocksIds) {
+      if (!blocksIds) {
+        return Promise.resolve([]);
+      }
       return axios.get(state.API_URL + 'books/blocks_data/' + state.currentBookid + '?ids=' + blocksIds.join(','))
         .then(res => {
           let result = [];
@@ -1929,15 +1932,9 @@ export const store = new Vuex.Store({
       commit('SET_CURRENTBOOK_COUNTER', {name: 'narration_blocks', value: '0'});
       if (state.currentBookid) {
         let bookid = state.currentBookid;
-        return axios.get(state.API_URL + 'books/' + bookid + '/counter/narration_blocks');
-        state.contentRemoteDB.query('filters_byVoiceworkAndBook/byVoiceworkAndBook', {
-          start_key: [bookid, 'narration'],
-          end_key: [bookid, 'narration', {}],
-          reduce: true,
-          group: true
-        })
-          .then(response => {
-            commit('SET_CURRENTBOOK_COUNTER', {name: 'narration_blocks', value: typeof response.rows[0] === 'undefined' ? 0 : response.rows[0].value});
+        return axios.get(state.API_URL + 'books/' + bookid + '/counter/narration_blocks')
+          .then(result => {
+            commit('SET_CURRENTBOOK_COUNTER', {name: 'narration_blocks', value: result.data.count});
           })
           .catch(err => console.log(err));
       }

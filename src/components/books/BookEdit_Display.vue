@@ -205,8 +205,8 @@ export default {
       return this.loopPreparedBlocksChain({ids: idsArray})
       .then((result)=>{
         let resIdsArray = [];
-        if (result.rows && result.rows.length > 0) {
-          result.rows.forEach((el, idx, arr)=>{
+        if (result && result.length > 0) {
+          result.forEach((el, idx, arr)=>{
             if (!this.parlist.has(el._id)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);

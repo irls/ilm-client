@@ -524,7 +524,7 @@ export default {
             this.startId = startId; // first load
           }
           this.unfreeze('loadBookDown');
-          let lastId = res.rows.length ? res.rows[res.rows.length-1]._id : false;
+          let lastId = res.length ? res[res.length-1]._id : false;
           this.lazyLoad(false, lastId);
           return Promise.resolve(res);
         }).catch(err=>{
@@ -612,7 +612,7 @@ export default {
                   if (this.parlist.has(result.blockId)) return resolve(result.blockId);
                   this.getBlocks(result.blockId)
                   .then((res)=>{
-                    let lastId = res.rows.length ? res.rows[res.rows.length-1]._id : false;
+                    let lastId = res.length ? res[res.length-1]._id : false;
                     this.lazyLoad(this.startId || this.meta.startBlock_id, lastId);
                     return resolve(result.blockId);
                   }).catch(err=>{
@@ -728,9 +728,10 @@ export default {
     putBlockProxy: function (block) {
       //console.log('putBlockProxy', block);
       return this.putBlock(block)
-      .then(()=>{
+      .then((updated)=>{
         this.updateVisibleBlocks();
-        this.refreshPreviewTmpl([block._id]);
+        this.refreshPreviewTmpl([block.blockid]);
+        this.$store.commit('set_storeList', new BookBlock(updated));
       })
       .catch((err)=>{})
     },
@@ -1887,17 +1888,16 @@ export default {
       //console.log('$route', toRoute, fromRoute);
       if (toRoute.params.hasOwnProperty('task_type') && toRoute.params.task_type) {
         let taskType = toRoute.params.task_type;
-        this.loadPartOfBookBlocks({
-          bookId: this.$route.params.bookid,
-          block: 'unresolved',
-          taskType: taskType,
-          onPage: 1
-        }).then((answer)=>{
-          //this.startId = answer.blocks[0].blockid;
-          //console.log('answer', answer);
-          this.scrollToBlock(answer.blocks[0].blockid);
-          this.$router.replace({name: this.$route.name, params: {}});
-        })
+        return this.$store.dispatch('searchBlocksChain', {
+            book_id: this.meta._id,
+            startId: this.startId || this.meta.startBlock_id,
+            search: {block_type: 'unresolved',  task_type: taskType}
+          }).then((result)=>{
+            if (result.blockId) {
+              this.scrollToBlock(result.blockId);
+            }
+            this.$router.replace({name: this.$route.name, params: {}});
+          });
       }
       if (this.$route.params.hasOwnProperty('block') && this.$route.params.block!=='unresolved') {
         this.scrollToBlock(this.$route.params.block);

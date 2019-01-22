@@ -620,7 +620,7 @@ import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
-import { BlockTypes, FootNote }     from '../../store/bookBlock'
+import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
 import VuePictureInput    from 'vue-picture-input'
 var BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
@@ -2940,7 +2940,7 @@ export default {
         formData.append('illustration', this.$refs.illustrationInput.file, this.$refs.illustrationInput.file.name);
         formData.append('block', JSON.stringify({'description': this.$refs.blockDescription.innerHTML}));
         let api = this.$store.state.auth.getHttp()
-        let api_url = this.API_URL + 'book/block/' + this.block._id + '/image';
+        let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
         api.post(api_url, formData, {}).then((response) => {
           if (response.status===200) {
