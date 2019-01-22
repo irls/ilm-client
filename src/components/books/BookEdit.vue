@@ -169,7 +169,6 @@ export default {
       ...mapGetters({
           book: 'currentBook',
           meta: 'currentBookMeta',
-          watchBlk: 'contentDBWatch',
           allBooks: 'allBooks',
           tc_tasksByBlock: 'tc_tasksByBlock',
           isBlocked: 'isBlocked',
@@ -273,7 +272,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion']),
 
     test() {
         window.scrollTo(0, document.body.scrollHeight-500);
@@ -1445,18 +1444,6 @@ export default {
     setUnCheckedRange() {
       this.parlistO.setUnCheckedRange()
     },
-    setBlockWatch() {
-      //console.log('!!! setBlockWatch');
-      setTimeout(()=>{
-        this.watchBlocks({book_id: this.meta._id})
-        .then(()=>{
-          this.watchBlk.on('change', (change) => {
-              this.$root.$emit('blockChange', change.doc);
-              this.refreshBlock(change);
-          });
-        });
-      }, 1000);
-    },
 
     smoothScrollContent: _.debounce(function (ev) {
       this.scrollContent(ev);
@@ -1762,7 +1749,6 @@ export default {
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
-                this.setBlockWatch();
                 this.loadBookToc({bookId: this.meta._id, isWait: true});
                 this.lazyLoad();
               });
@@ -1807,7 +1793,6 @@ export default {
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
                 this.lazyLoad();
-                this.setBlockWatch()
                 if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
                   this.$router.push({name: 'BookEdit', params: {}});
                 }
@@ -1881,7 +1866,7 @@ export default {
     },
     'allBooks': {
       handler() {
-        this.setBlockWatch();
+        
       }
     },
     '$route' (toRoute, fromRoute) {

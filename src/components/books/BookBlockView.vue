@@ -1169,7 +1169,6 @@ export default {
       ...mapActions([
         'putMetaAuthors',
         'tc_approveBookTask',
-        'setCurrentBookBlocksLeft',
         'setCurrentBookCounters',
         'addBlockLock',
         'getAlignCount',
