@@ -179,6 +179,7 @@
           </fieldset>
           <fieldset class='Export' v-if="isAllowExportAudio">
             <legend>Export </legend>
+              <div v-if="currentBook.demo_time">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
               <div>
                 <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
                 <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
@@ -186,7 +187,6 @@
                 <a class="btn btn-primary" v-if="!currentBook.demo_time" :href="downloadDemo()" target="_blank" :disabled="!isAllowExportAudio">Build</a>
                 <a class="btn btn-primary" v-else target="_blank" :href="downloadDemo()" :disabled="!isAllowExportAudio">Rebuild</a>                
               </div>
-              <div v-if="currentBook.demo_time">Last build: {{currentBook.demo_time}}</div>
           </fieldset>
           <fieldset class="publish">
             <!-- Fieldset Legend -->
@@ -1589,6 +1589,28 @@ export default {
       } else {
         return val;
       }
+    },
+    convertTime(dt) {
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+      var date = new Date(dt);
+      var toutc = date.toUTCString();
+      var locdate = new Date(toutc + " UTC");
+
+      var year = locdate.getFullYear(),
+      month = locdate.getMonth() + 1, // months are zero indexed
+      day = locdate.getDate(),
+      hour = locdate.getHours(),
+      minute = locdate.getMinutes(),
+      second = locdate.getSeconds(),
+      hourFormatted = hour % 12 || 12, // hour returned in 24 hour format
+      minuteFormatted = minute < 10 ? "0" + minute : minute,
+      morning = hour < 12 ? "am" : "pm";
+
+      //console.log(toutc, locdate);
+      return day + " " + monthNames[month] + " " + year ;
+            // + " " + hourFormatted + ":" + minuteFormatted + morning;
+
     },
     finishPublished() {
       this.finishPublishedProcess = true;
