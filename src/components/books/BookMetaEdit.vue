@@ -183,7 +183,7 @@
               <div>
                 <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
                 <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
-                <!--<button class="btn btn-primary" :disabled="!currentBook.demo" v-clipboard="this.SERVER_URL + currentBook.demo" ><i class="fa fa-link" style="color:white"></i> Copy Demo Link</button>-->
+                <button class="btn btn-primary" v-if="currentBook.demo_time" :disabled="!currentBook.demo" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
                 <a class="btn btn-primary" v-if="!currentBook.demo_time" :href="downloadDemo()" target="_blank" :disabled="!isAllowExportAudio">Build</a>
                 <a class="btn btn-primary" v-else target="_blank" :href="downloadDemo()" :disabled="!isAllowExportAudio">Rebuild</a>                
               </div>
