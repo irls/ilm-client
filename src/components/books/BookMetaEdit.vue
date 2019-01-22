@@ -177,15 +177,18 @@
             <legend>Long Description </legend>
             <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
           </fieldset>
-          <fieldset class='Export' v-if="isAllowExportAudio">
+          
+          <fieldset class='Export' :disabled="isExporting" :v-if="isAllowExportAudio">
             <legend>Export </legend>
-              <div v-if="currentBook.demo_time">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
+              
+              <div v-if="isExporting" class="align-preloader -small">&nbsp;</div>
+              <div v-if="currentBook.demo_time && !isExporting">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
               <div>
                 <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
                 <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
                 <button class="btn btn-primary" v-if="currentBook.demo_time" :disabled="!currentBook.demo" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
-                <a class="btn btn-primary" v-if="!currentBook.demo_time" :href="downloadDemo()" target="_blank" :disabled="!isAllowExportAudio">Build</a>
-                <a class="btn btn-primary" v-else target="_blank" :href="downloadDemo()" :disabled="!isAllowExportAudio">Rebuild</a>                
+                <a class="btn btn-primary" v-if="!currentBook.demo_time" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio">Build</a>
+                <a class="btn btn-primary" v-else target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio">Rebuild</a>
               </div>
           </fieldset>
           <fieldset class="publish">
@@ -237,9 +240,9 @@
               </template>
             </table> -->
           </fieldset>
-          <template v-if="isAdmin || isLibrarian || _is('editor', true)">
+          <!--<template v-if="isAdmin || isLibrarian || _is('editor', true)">
             <a v-if="currentBook.published" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()" -->
-          </template>
+          <!--</template>-->
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
@@ -686,6 +689,7 @@ export default {
       isPublishing: false,
       isPublishingQueue: false,
       publicationStatus: false,
+      isExporting:false,
       validationErrors: {extid: []}
     }
   },
@@ -1567,10 +1571,15 @@ export default {
     },
 
     downloadDemo() {
-        return this.API_URL + 'books/' + this.currentBook._id + '/demo';
+        this.isExporting = true;
+        return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/demo')
+               .then(resp => {
+                 this.isExporting = false;
+               });
+
+        //return this.API_URL + 'books/' + this.currentBook._id + '/demo';
     },
     downloadExportMp3() {
-        console.log('here');
         return this.API_URL + 'books/' + this.currentBook._id + '/exportMp3';
     },
     downloadExportFlac() {
@@ -1608,8 +1617,8 @@ export default {
       morning = hour < 12 ? "am" : "pm";
 
       //console.log(toutc, locdate);
-      return day + " " + monthNames[month] + " " + year ;
-            // + " " + hourFormatted + ":" + minuteFormatted + morning;
+      return day + " " + monthNames[month] + " " + year 
+             + " " + hourFormatted + ":" + minuteFormatted + morning;
 
     },
     finishPublished() {
