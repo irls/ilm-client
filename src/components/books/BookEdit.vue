@@ -1656,7 +1656,8 @@ export default {
         let lastVisible = false;
         let loadIdsArray = [];
         let loadCount = 5;
-        for (let blockRef of this.$refs.viewBlocks) {
+        for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
+          let blockRef = this.$refs.viewBlocks[i];
           let visible = this.checkVisible(blockRef.$refs.viewBlock);
           if (visible) {
             if (!firstVisible) {
@@ -1677,17 +1678,20 @@ export default {
               this.parlistO.setLoaded(blockRef.blockRid);
               blockRef.$forceUpdate();
             }
-          }
+          } else if (firstVisible) break;
         }
 
         if (loadIdsArray.length) {
           this.getBlocksArr(loadIdsArray)
           .then((resIdsArray)=>{
-            for (let blockRef of this.$refs.viewBlocks) {
-              if (resIdsArray.indexOf(blockRef.blockId) > -1) {
+            for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
+              let updCount = 0;
+              if (resIdsArray.indexOf(this.$refs.viewBlocks[i].blockId) > -1) {
                 //this.parlistO.setLoaded(blockRef.blockO.rid);
-                blockRef.$forceUpdate();
+                updCount++;
+                this.$refs.viewBlocks[i].$forceUpdate();
               }
+              if (updCount >= resIdsArray.length) break;
             }
             this.moveEditWrapper(firstVisible, lastVisible, force)
           })
