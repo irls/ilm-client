@@ -739,8 +739,8 @@ export default {
         if (this._is('admin') || this._is('librarian')) {
           return true;
         }
-        if (!this._is('editor')){
-          return false;
+        if (this._is('editor') && !this.currentBookMeta.published){
+          return true;
         }
         if (this.tc_hasTask('audio_mastering')) {
           return true;
