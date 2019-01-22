@@ -360,7 +360,7 @@ export default {
       if (!this.isBlocked && (this.isNeedUp || this.isNeedDown)) {
         switch(this.lazyLoaderDir) {
           case 'down' : {
-            this.isNeedDown = this.parlistO.getNextIds(this.isNeedDown, 200);
+            this.isNeedDown = this.parlistO.getNextIds(this.isNeedDown, 100);
             //console.log('this.isNeedDown', this.isNeedDown);
             if (this.isNeedDown.length > 0)
             {
@@ -393,7 +393,7 @@ export default {
 
           } break;
           case 'up' : {
-            this.isNeedUp = this.parlistO.getPrevIds(this.isNeedUp, 200);
+            this.isNeedUp = this.parlistO.getPrevIds(this.isNeedUp, 100);
             //console.log('this.isNeedUp', this.isNeedUp);
             if (this.isNeedUp.length > 0)
             {
@@ -1223,7 +1223,7 @@ export default {
             });
             return getNextBlock
             .then((blockAfter)=>{
-              
+
               let chainId = this.parlistO.getOutId(block._id);
               let elBlock = this.$children.find(c => {
                 return c.$el.id == block._id;
@@ -1673,7 +1673,9 @@ export default {
         let firstVisible = false;
         let lastVisible = false;
         let loadIdsArray = [];
-        for (let blockRef of this.$refs.viewBlocks) {
+        let loadCount = 5;
+        for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
+          let blockRef = this.$refs.viewBlocks[i];
           let visible = this.checkVisible(blockRef.$refs.viewBlock);
           if (visible) {
             if (!firstVisible) {
@@ -1688,17 +1690,26 @@ export default {
               this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
               loadIdsArray.push(blockRef.blockId);
             }
-          }
+          } else if (firstVisible && loadCount > 0) {
+            if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
+              loadCount--;
+              this.parlistO.setLoaded(blockRef.blockRid);
+              blockRef.$forceUpdate();
+            }
+          } else if (firstVisible) break;
         }
 
         if (loadIdsArray.length) {
           this.getBlocksArr(loadIdsArray)
           .then((resIdsArray)=>{
-            for (let blockRef of this.$refs.viewBlocks) {
-              if (resIdsArray.indexOf(blockRef.blockId) > -1) {
+            for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
+              let updCount = 0;
+              if (resIdsArray.indexOf(this.$refs.viewBlocks[i].blockId) > -1) {
                 //this.parlistO.setLoaded(blockRef.blockO.rid);
-                blockRef.$forceUpdate();
+                updCount++;
+                this.$refs.viewBlocks[i].$forceUpdate();
               }
+              if (updCount >= resIdsArray.length) break;
             }
             this.moveEditWrapper(firstVisible, lastVisible, force)
           })
