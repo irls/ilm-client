@@ -312,8 +312,9 @@ export const store = new Vuex.Store({
 //       state.currentBook_dirty = false
 //       state.currentBookMeta_dirty = false
       if (meta) {
-        state.currentBookMeta = meta
-        state.currentBookid = meta._id
+        state.currentBookMeta = meta;
+        state.currentBookMeta._id = meta.bookid;
+        state.currentBookid = meta.bookid
         if (!state.currentBookMeta.styles) {
           state.currentBookMeta.styles = {};
         }
@@ -911,7 +912,7 @@ export const store = new Vuex.Store({
 //              dispatch('updateLibrariesList');
 //            });*/
 //          });
-          
+
           dispatch('getTaskTypes');
     },
 
@@ -1039,9 +1040,11 @@ export const store = new Vuex.Store({
 
       if (book_id) {
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
-        let metaDB = state.metaRemoteDB;
-        return metaDB.get(book_id).then(meta => {
-          commit('SET_CURRENTBOOK_META', meta)
+        //let metaDB = state.metaRemoteDB;
+
+        return axios.get(state.API_URL + 'books/book_meta/' + book_id)
+        .then((answer) => {
+          commit('SET_CURRENTBOOK_META', answer.data.meta)
           commit('TASK_LIST_LOADED')
           dispatch('getTotalBookTasks');
           dispatch('setCurrentBookCounters');
@@ -1056,7 +1059,7 @@ export const store = new Vuex.Store({
           .catch((err)=>{
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
           })
-          return Promise.resolve(meta);
+          return Promise.resolve(answer.data.meta);
         }).catch((err)=>{
           console.log('metaDB.get Error: ', err);
           return err;
@@ -1752,7 +1755,7 @@ export const store = new Vuex.Store({
             commit('SET_CURRENTBOOK_COUNTER', {name: 'not_proofed_audio_blocks', value: response.data.count});
           })
           .catch(err => {
-            
+
           });
       }
     },
