@@ -985,6 +985,9 @@ export const store = new Vuex.Store({
       let url = state.API_URL + `books/blocks/${params.bookId}`;
       return axios.get(url)
       .then((response) => {
+        state.storeListO.startWatch(params.bookId, (data) => {
+          console.log(data);
+        });
         return response.data;
       })
       .catch(err => err)
