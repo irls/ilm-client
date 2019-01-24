@@ -1629,8 +1629,8 @@ export default {
       morning = hour < 12 ? "am" : "pm";
 
       //console.log(toutc, locdate);
-      return day + " " + monthNames[month] + " " + year 
-             + " " + hourFormatted + ":" + minuteFormatted + morning;
+      return day + " " + monthNames[month] + " " + year ;
+             //+ " " + hourFormatted + ":" + minuteFormatted + morning;
 
     },
     finishPublished() {
