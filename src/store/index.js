@@ -152,34 +152,38 @@ export const store = new Vuex.Store({
     isReader: state => state.isReader,
     allowPublishCurrentBook: state => state.allowPublishCurrentBook,
     allRolls: state => state.allRolls,
-    allBooks: state => {
-      if (state.adminOrLibrarian) {
-        return state.books_meta;
-      } else {
-        let books = [];
-        //console.log(state.tc_userTasks);
-        for (let i in state.books_meta){
-          if (state.books_meta[i].editor == state.user._id && state.books_meta[i].published == true){
-            books.push(state.books_meta[i]);
-          }
-        }
-        if (state.tc_userTasks && state.tc_userTasks.list) {
-          for (let t_id in state.tc_userTasks.list) {
-            if ((state.tc_userTasks.list[t_id].tasks && state.tc_userTasks.list[t_id].tasks.length > 0) || state.tc_userTasks.list[t_id].is_proofread_unassigned) {
-              let exists = books.find(_b => _b._id == state.tc_userTasks.list[t_id].bookid);
-              if (!exists) {
-                let b = state.books_meta.find(_b => state.tc_userTasks.list[t_id].bookid == _b._id);
-                if (b) {
-                  //console.log('Adding book', b._id);
-                  books.push(b);
-                }
-              }
-            }
-          };
-        }
-        return books;//state.books_meta
-      }
-    },
+    allBooks: state => state.books_meta || [],
+//     allBooks: state => {
+//       console.log('state.tc_userTasks', state.tc_userTasks);
+//       if (state.adminOrLibrarian) {
+//         return state.books_meta;
+//       } else {
+//         let books = [];
+//         //console.log(state.tc_userTasks);
+//         for (let i in state.books_meta){
+//           if (state.books_meta[i].editor == state.user._id && state.books_meta[i].published == true){
+//             books.push(state.books_meta[i]);
+//           }
+//         }
+//
+//         if (state.tc_userTasks && state.tc_userTasks.list) {
+//           for (let t_id in state.tc_userTasks.list) {
+//             let job = state.tc_userTasks.list[t_id];
+//             if ((job.tasks && job.tasks.length > 0) || job.is_proofread_unassigned) {
+//               let exists = books.find(_b => _b._id == job.bookid);
+//               if (!exists) {
+//                 let b = state.books_meta.find(_b => job.bookid == _b._id);
+//                 if (b) {
+//                   //console.log('Adding book', b._id);
+//                   books.push(b);
+//                 }
+//               }
+//             }
+//           };
+//         }
+//         return books;
+//       }
+//     },
     bookFilters: state => state.bookFilters,
     currentBookid: state => state.currentBookid,
     currentBook: state => state.currentBook,
@@ -755,7 +759,7 @@ export const store = new Vuex.Store({
   actions: {
 
     emptyDB (context) {
-      PouchDB('ilm_content_meta').destroy()
+      //PouchDB('ilm_content_meta').destroy()
     },
 
     // login event
@@ -777,25 +781,25 @@ export const store = new Vuex.Store({
         commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
 
 
-        state.metaDB.replicate.from(state.metaRemoteDB)
-        .on('complete', (info)=>{
-            state.metaDBcomplete = true;
-            dispatch('updateBooksList');
-            state.metaDB.sync(state.metaRemoteDB, {live: true, retry: true})
-            .on('change', (change)=>{
-                console.log('metaDB change', change);
-                dispatch('updateBooksList');
-                // try to avoid meta glitches while update
-                if (state.blockers.indexOf('updateBookMeta') > -1) {
-                  commit('clear_blocker', 'updateBookMeta');
-                }// else {
-                  dispatch('reloadBookMeta');
-                //}
-            })
-            .on('error', (err)=>{
-              // handle errors
-            })
-        });
+//         state.metaDB.replicate.from(state.metaRemoteDB)
+//         .on('complete', (info)=>{
+//             state.metaDBcomplete = true;
+//             dispatch('updateBooksList');
+//             state.metaDB.sync(state.metaRemoteDB, {live: true, retry: true})
+//             .on('change', (change)=>{
+//                 console.log('metaDB change', change);
+//                 dispatch('updateBooksList');
+//                 // try to avoid meta glitches while update
+//                 if (state.blockers.indexOf('updateBookMeta') > -1) {
+//                   commit('clear_blocker', 'updateBookMeta');
+//                 }// else {
+//                   dispatch('reloadBookMeta');
+//                 //}
+//             })
+//             .on('error', (err)=>{
+//               // handle errors
+//             })
+//         });
 
 //         state.contentDB.replicate.from(state.contentRemoteDB)
 //         .on('complete', (info)=>{
@@ -946,7 +950,7 @@ export const store = new Vuex.Store({
     disconnectDB ({ state, commit }) {
       axios.defaults.headers.common['Authorization'] = false;
       //window.setTimeout(() => {
-          if (state.metaDB) state.metaDB.destroy()
+          //if (state.metaDB) state.metaDB.destroy()
           //if (state.contentDB) state.contentDB.destroy()
           if (state.tasksDB) state.tasksDB.destroy()
           if (state.collectionsDB) state.collectionsDB.destroy()
@@ -956,11 +960,9 @@ export const store = new Vuex.Store({
     },
 
     updateBooksList ({state, commit, dispatch}) {
-      //console.log('updateBooksList');
-      let ilmLibraryMeta = state.metaDB.hoodieApi()
-      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted')))
-        .then(books => {
-          commit('SET_BOOKLIST', books)
+      return axios.get(state.API_URL + 'books')///user/' + state.auth.getSession().user_id
+        .then((answer) => {
+          commit('SET_BOOKLIST', answer.data.books)
           dispatch('tc_loadBookTask')
         })
     },
