@@ -1629,7 +1629,7 @@ export default {
       morning = hour < 12 ? "am" : "pm";
 
       //console.log(toutc, locdate);
-      return day + " " + monthNames[month] + " " + year ;
+      return day + " " + monthNames[month - 1] + " " + year ;
              //+ " " + hourFormatted + ":" + minuteFormatted + morning;
 
     },
