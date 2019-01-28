@@ -348,8 +348,11 @@ export const store = new Vuex.Store({
             }
           }
         }
-        if (!state.currentBookMeta.numeration) {
-          state.currentBookMeta.numeration = 'x_x';
+        if (!state.currentBookMeta.numbering) {
+          state.currentBookMeta.numbering = 'x_x';
+        }
+        if (meta.hasOwnProperty('collection_id') && meta.collection_id.length == 0) {
+          state.currentBookMeta.collection_id = false;
         }
       } else {
         state.currentBookMeta = {}
@@ -767,13 +770,13 @@ export const store = new Vuex.Store({
         state.adminOrLibrarian = superlogin.confirmRole('admin') || superlogin.confirmRole('librarian');
         commit('RESET_LOGIN_STATE');
 
-        commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
+        //commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         //commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
         commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
         commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
 
-        commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
+        //commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         //commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
         commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
         commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
@@ -1108,8 +1111,9 @@ export const store = new Vuex.Store({
 
     updateBookVersion({state, dispatch}, update) {
       if (state.currentBookMeta._id) {
-        if (typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion && state.currentBookMeta.published === true) {
-          let versions = state.currentBookMeta.version.split('.');
+        let currMeta = state.currentBookMeta;
+        if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
+          let versions = currMeta.version.split('.');
           if (versions && versions.length == 2) {
             if (update.minor) {
               versions[1] = (parseInt(versions[1]) + 1);
@@ -1140,18 +1144,25 @@ export const store = new Vuex.Store({
         }
       }
     },
+
     updateBookMeta({state, dispatch, commit}, update) {
-      return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id,
-          update)
-            .then(meta => {
-              //console.log(meta);
-              //state.currentBookMeta = meta.data;
-              commit('SET_CURRENTBOOK_META', meta.data)
-              return Promise.resolve(meta.data);
-            })
-            .catch(err => {
-              return Promise.reject(err);
-            })
+      update.bookid = state.currentBookMeta._id;
+      return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id, update)
+        .then(response => {
+          console.log('updateBookMeta response', response);
+          //state.currentBookMeta = response.data;
+          //commit('SET_CURRENTBOOK_META', response.data)
+          if (response.data == 1 && response.status == 200) {
+            let newMeta = Object.assign(state.currentBookMeta, update);
+            commit('SET_CURRENTBOOK_META', newMeta);
+            return Promise.resolve(response.data);
+          } else {
+            return Promise.reject(new Error('No data updated'));
+          }
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        })
     },
 
     loadCollection({commit, state, dispatch}, id) {
@@ -1275,18 +1286,25 @@ export const store = new Vuex.Store({
     },
 
     getBookMeta ({state}, bookid) {
-        return state.metaDB.get(bookid);
+        return axios.get(state.API_URL + 'meta/' + bookid)
+          .then(response => {
+            return Promise.resolve(response.data);
+          })
+          .catch(err => {
+            console.log(err);
+            return Promise.reject(err);
+          });
     },
 
     getBlock ({commit, state, dispatch}, block_id) {
         return axios.get(state.API_URL + 'book/block/' + block_id)
           .then(response => {
-              return Promise.resolve(response.data);
-            })
-            .catch(err => {
-              console.log(err);
-              return Promise.reject(err);
-            });
+            return Promise.resolve(response.data);
+          })
+          .catch(err => {
+            console.log(err);
+            return Promise.reject(err);
+          });
     },
 
     getBlocks ({commit, state, dispatch}, blocksIds) {
@@ -1534,12 +1552,8 @@ export const store = new Vuex.Store({
       authors.forEach((item)=>{
         metaAuthors.push({ name: item.text, color: item.color });
       })
-      state.metaDB.get(state.currentBookMeta._id).then(function(doc) {
-        doc.authors = metaAuthors;
-        return state.metaDB.put(doc);
-      }).catch((err) =>{
-        console.log('Meta save error:', err);
-      });
+      let upd = {authors: metaAuthors};
+      return dispatch('updateBookMeta', upd);
     },
 
     getAudioBook ({state, commit}, bookid) {
