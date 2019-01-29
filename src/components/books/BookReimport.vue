@@ -81,6 +81,7 @@
           import api_config from '../../mixins/api_config.js'
 
           const API_URL = process.env.ILM_API + '/api/v1/'
+          import { mapGetters, mapActions } from 'vuex'
 
   export default {
     data() {
@@ -123,7 +124,8 @@
         //console.log(this.uploadFiles.bookFiles, this.bookURL.length)
 
         return (this.uploadFile == false)
-      }
+      },
+      ...mapGetters(['liveDB'])
     },
     methods: {
       formReset() {
@@ -147,6 +149,7 @@
         if (Object.keys(this.errors).length > 0) {
           return false;
         }
+        this.liveDB.onBookReimport();
         let vu_this = this
         let api = this.$store.state.auth.getHttp()
 

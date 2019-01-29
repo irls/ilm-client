@@ -27,6 +27,9 @@ class liveDB {
         //console.log(data);
         callback.call(this, data);
       });
+      socket.on('stop-watch-all-' + key, (data) => {
+        this.stopWatch(data.class);
+      });
       socket.on('connect_error', (data) => {
         console.log('connect_error')
         socket.close();
@@ -45,6 +48,13 @@ class liveDB {
   stopWatchAll() {
     for (var k in this.keys) {
       socket.emit('stop-watch', {class: k, key: this.keys[k], subscriber: this.subscriber_id});
+    }
+  }
+  
+  onBookReimport() {
+    if (this.keys['blockV']) {
+      socket.emit('stop-watch-all', {class: 'blockV', key: this.keys['blockV']});
+      this.stopWatch('blockV');
     }
   }
 }

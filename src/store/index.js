@@ -269,7 +269,8 @@ export const store = new Vuex.Store({
     approveBlocksList: state => state.approveBlocksList,
     adminOrLibrarian: state => state.adminOrLibrarian,
     currentJobInfo: state => state.currentJobInfo,
-    taskTypes: state => state.taskTypes
+    taskTypes: state => state.taskTypes,
+    liveDB: state => state.liveDB
   },
 
   mutations: {
@@ -988,25 +989,31 @@ export const store = new Vuex.Store({
       let url = state.API_URL + `books/blocks/${params.bookId}`;
       return axios.get(url)
       .then((response) => {
-        state.liveDB.startWatch(params.bookId, 'blockV', {bookid: params.bookId}, (data) => {
+        dispatch('startBookWatch', params.bookId)
+        return response.data;
+      })
+      .catch(err => err)
+    },
+    
+    startBookWatch({state}, bookid) {
+      if (!bookid) {
+        bookid = state.currentBookid
+      }
+      if (bookid) {
+        state.liveDB.startWatch(bookid, 'blockV', {bookid: bookid}, (data) => {
           if (data) {
-            
+
             //state.storeListO.delBlock(data.block);
             if (data.action === 'insert') {
               state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
             } else {
-              let blk = state.storeListO.get(data.block.blockid)
-              let isVisible = blk.visible;
               state.storeListO.updBlockByRid(data.block.id, data.block)
-              state.storeListO.setVisible(data.block.blockid, !isVisible)
-              state.storeListO.setVisible(data.block.blockid, isVisible)
             }
             store.commit('set_storeList', new BookBlock(data.block));
+            state.storeListO.refresh();
           }
         });
-        return response.data;
-      })
-      .catch(err => err)
+      }
     },
 
     loadPartOfBookBlocks({commit, state, dispatch}, params) {

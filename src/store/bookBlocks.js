@@ -504,6 +504,12 @@ class BookBlocks {
     }
     this.listIdsCache.rid = false;
   }
+  
+  refresh() {
+    let tmp = this.listObjs;
+    this.listObjs = [];
+    this.listObjs = tmp;
+  }
 
 }
 
