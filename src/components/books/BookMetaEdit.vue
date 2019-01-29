@@ -178,7 +178,7 @@
             <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
           </fieldset>
           
-          <fieldset class='Export' :disabled="isExporting" :v-if="isAllowExportAudio">
+          <fieldset class='Export' :disabled="isExporting" v-if="isAllowExportAudio">
             <legend>Export </legend>
               
               <div v-if="isExporting" class="align-preloader -small">&nbsp;</div>
