@@ -5,6 +5,7 @@ import hoodie from 'pouchdb-hoodie-api'
 import PouchDB from 'pouchdb'
 import {BookBlock} from './bookBlock'
 import {BookBlocks} from './bookBlocks'
+import {liveDB} from './liveDB'
 const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
@@ -136,7 +137,8 @@ export const store = new Vuex.Store({
       text_cleanup: null,
       is_proofread_unassigned: null
     },
-    taskTypes: {tasks: [], categories: []}
+    taskTypes: {tasks: [], categories: []},
+    liveDB: new liveDB()
   },
 
   getters: {
@@ -271,7 +273,8 @@ export const store = new Vuex.Store({
     approveBlocksList: state => state.approveBlocksList,
     adminOrLibrarian: state => state.adminOrLibrarian,
     currentJobInfo: state => state.currentJobInfo,
-    taskTypes: state => state.taskTypes
+    taskTypes: state => state.taskTypes,
+    liveDB: state => state.liveDB
   },
 
   mutations: {
@@ -767,6 +770,7 @@ export const store = new Vuex.Store({
 
     // login event
     connectDB ({ state, commit, dispatch }, session) {
+        state.liveDB.setSubscriberId(state.auth.getSession().token);
         state.adminOrLibrarian = superlogin.confirmRole('admin') || superlogin.confirmRole('librarian');
         commit('RESET_LOGIN_STATE');
 
@@ -991,12 +995,31 @@ export const store = new Vuex.Store({
       let url = state.API_URL + `books/blocks/${params.bookId}`;
       return axios.get(url)
       .then((response) => {
-        state.storeListO.startWatch(params.bookId, (data) => {
-          console.log(data);
-        });
+        dispatch('startBookWatch', params.bookId)
         return response.data;
       })
       .catch(err => err)
+    },
+    
+    startBookWatch({state}, bookid) {
+      if (!bookid) {
+        bookid = state.currentBookid
+      }
+      if (bookid) {
+        state.liveDB.startWatch(bookid, 'blockV', {bookid: bookid}, (data) => {
+          if (data) {
+
+            //state.storeListO.delBlock(data.block);
+            if (data.action === 'insert') {
+              state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
+            } else {
+              state.storeListO.updBlockByRid(data.block.id, data.block)
+            }
+            store.commit('set_storeList', new BookBlock(data.block));
+            state.storeListO.refresh();
+          }
+        });
+      }
     },
 
     loadPartOfBookBlocks({commit, state, dispatch}, params) {
@@ -1046,6 +1069,7 @@ export const store = new Vuex.Store({
       if (book_id) {
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
         //let metaDB = state.metaRemoteDB;
+        state.liveDB.stopWatch('blockV');
 
         return axios.get(state.API_URL + 'books/book_meta/' + book_id)
         .then((answer) => {

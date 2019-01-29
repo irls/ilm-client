@@ -2,9 +2,6 @@ const _ = require('lodash');
 const _id = require('uniqid');
 import superlogin from 'superlogin-client';
 import { BookBlock }    from './bookBlock';
-import io from 'socket.io-client';
-
-const socket = io(process.env.LIVE_QUERY_URL);
 
 class LookupBlock {
   constructor(block) {
@@ -508,22 +505,10 @@ class BookBlocks {
     this.listIdsCache.rid = false;
   }
   
-  startWatch(bookid, callback) {
-    if (this.bookid !== bookid) {
-      this.bookid = bookid;
-
-      socket.emit('start-watch', {class: 'blockV', params: {bookid: this.bookid}});
-
-      socket.on('data-change', (data) => {
-        //console.log(data);
-        console.log('RECEIVED')
-        callback.call(this, data);
-      });
-      socket.on('connect_error', (data) => {
-        console.log('connect_error')
-        socket.close();
-      })
-    }
+  refresh() {
+    let tmp = this.listObjs;
+    this.listObjs = [];
+    this.listObjs = tmp;
   }
 
 }
