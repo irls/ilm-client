@@ -33,6 +33,7 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import Clipboard from 'v-clipboard'
 import BooksToolbar from './books/BooksToolbar'
 import BookEditToolbar from './books/BookEditToolbar'
 import BookMetaEdit from './books/BookMetaEdit'
@@ -47,6 +48,7 @@ import Vue from 'vue';
 var modal = require('vue-js-modal');
 
 Vue.use(modal, {dialog: true});
+Vue.use(Clipboard)
 
 
 export default {

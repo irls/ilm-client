@@ -177,6 +177,20 @@
             <legend>Long Description </legend>
             <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
           </fieldset>
+          
+          <fieldset class='Export' :disabled="isExporting || currentBook.demo_time < 0" v-if="isAllowExportAudio">
+            <legend>Export </legend>
+              
+              <div v-if="isExporting || currentBook.demo_time < 0" class="align-preloader -small">&nbsp;</div>
+              <div v-if="currentBook.demo_time && (!isExporting && currentBook.demo_time != -1)">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
+              <div>
+                <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
+                <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
+                <button class="btn btn-primary" v-if="currentBook.demo_time" :disabled="!currentBook.demo" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
+                <a class="btn btn-primary" v-if="!currentBook.demo_time" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio">Build</a>
+                <a class="btn btn-primary" v-else target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio">Rebuild</a>
+              </div>
+          </fieldset>
           <fieldset class="publish">
             <!-- Fieldset Legend -->
             <template>
@@ -226,9 +240,9 @@
               </template>
             </table> -->
           </fieldset>
-          <template v-if="isAdmin || isLibrarian || _is('editor', true)">
+          <!--<template v-if="isAdmin || isLibrarian || _is('editor', true)">
             <a v-if="currentBook.published" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()" -->
-          </template>
+          <!--</template>-->
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
@@ -244,12 +258,12 @@
                   <span class="s-label"> Mastering required</span>
                 </div>
               </template>
-              <a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
+              <!--<a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
                 Export Audio
               </a>
               <button v-else class="btn btn-primary btn-small btn-export-audio" v-on:click="startGenerateAudiofile()">
                 Export Audio
-              </button>
+              </button>-->
             </div>
             <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
               {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
@@ -675,6 +689,7 @@ export default {
       isPublishing: false,
       isPublishingQueue: false,
       publicationStatus: false,
+      isExporting:false,
       validationErrors: {extid: []}
     }
   },
@@ -722,13 +737,15 @@ export default {
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
     },
-
     isAllowExportAudio: {
       get() {
-        if (!this._is('editor') && !this.adminOrLibrarian) {
-          return false;
+        if (this._is('admin') || this._is('librarian')) {
+          return true;
         }
-        if (this.currentJobInfo.mastering) {
+        if (this._is('editor') && !this.currentBookMeta.published){
+          return true;
+        }
+        if (this.tc_hasTask('audio_mastering')) {
           return true;
         }
         return false;
@@ -1554,9 +1571,20 @@ export default {
     },
 
     downloadDemo() {
-        return this.API_URL + 'books/' + this.currentBook._id + '/demo';
-    },
+        this.isExporting = true;
+        return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/demo')
+               .then(resp => {
+                 this.isExporting = false;
+               });
 
+        //return this.API_URL + 'books/' + this.currentBook._id + '/demo';
+    },
+    downloadExportMp3() {
+        return this.API_URL + 'books/' + this.currentBook._id + '/exportMp3';
+    },
+    downloadExportFlac() {
+        return this.API_URL + 'books/' + this.currentBook._id + '/exportFlac';
+    },
     styleCaption(type, key) {
       if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {
         let caption = this.styleTitles[`${type}_${key}`];
@@ -1570,6 +1598,28 @@ export default {
       } else {
         return val;
       }
+    },
+    convertTime(dt) {
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+      var date = new Date(dt);
+      var toutc = date.toUTCString();
+      var locdate = new Date(toutc + " UTC");
+
+      var year = locdate.getFullYear(),
+      month = locdate.getMonth() + 1, // months are zero indexed
+      day = locdate.getDate(),
+      hour = locdate.getHours(),
+      minute = locdate.getMinutes(),
+      second = locdate.getSeconds(),
+      hourFormatted = hour % 12 || 12, // hour returned in 24 hour format
+      minuteFormatted = minute < 10 ? "0" + minute : minute,
+      morning = hour < 12 ? "am" : "pm";
+
+      //console.log(toutc, locdate);
+      return day + " " + monthNames[month - 1] + " " + year ;
+             //+ " " + hourFormatted + ":" + minuteFormatted + morning;
+
     },
     finishPublished() {
       this.finishPublishedProcess = true;
