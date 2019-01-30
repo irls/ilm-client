@@ -178,11 +178,11 @@
             <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
           </fieldset>
           
-          <fieldset class='Export' :disabled="isExporting" :v-if="isAllowExportAudio">
+          <fieldset class='Export' :disabled="isExporting || currentBook.demo_time < 0" v-if="isAllowExportAudio">
             <legend>Export </legend>
               
-              <div v-if="isExporting" class="align-preloader -small">&nbsp;</div>
-              <div v-if="currentBook.demo_time && !isExporting">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
+              <div v-if="isExporting || currentBook.demo_time < 0" class="align-preloader -small">&nbsp;</div>
+              <div v-if="currentBook.demo_time && (!isExporting && currentBook.demo_time != -1)">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
               <div>
                 <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
                 <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
