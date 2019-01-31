@@ -924,7 +924,10 @@ export const store = new Vuex.Store({
 //            });*/
 //          });
 
-          dispatch('getTaskTypes');
+          dispatch('getTaskTypes')
+            .then(() => {
+              dispatch('tc_loadBookTask');
+            });
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -1310,7 +1313,7 @@ export const store = new Vuex.Store({
     },
 
     getBookMeta ({state}, bookid) {
-        return axios.get(state.API_URL + 'meta/' + bookid)
+        return axios.get(state.API_URL + 'books/book_meta/' + bookid)
           .then(response => {
             return Promise.resolve(response.data);
           })
@@ -2054,6 +2057,7 @@ export const store = new Vuex.Store({
                   if (checks.length > 0) {
                     dispatch('_setNotMarkedAsDoneBlocksCounter');
                     dispatch('recountApprovedInRange');
+                    state.storeListO.refresh();
                   }
                 })
             }

@@ -1,6 +1,14 @@
 import io from 'socket.io-client';
 
 const socket = io(process.env.LIVE_QUERY_URL);
+let connection_attempts = 0;
+let max_connection_attempts = 5;
+socket.on('reconnect_error', () => {
+  ++connection_attempts;
+  if (connection_attempts >= max_connection_attempts) {
+    socket.close();
+  }
+})
 
 class liveDB {
   constructor() {
