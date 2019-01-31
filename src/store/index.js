@@ -1072,6 +1072,13 @@ export const store = new Vuex.Store({
       if (book_id) {
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
         //let metaDB = state.metaRemoteDB;
+        state.liveDB.stopWatch('metaV');
+        state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
+          if (data && data.meta) {
+            dispatch('getTotalBookTasks');
+            commit('SET_CURRENTBOOK_META', data.meta)
+          }
+        });
         state.liveDB.stopWatch('blockV');
 
         return axios.get(state.API_URL + 'books/book_meta/' + book_id)
