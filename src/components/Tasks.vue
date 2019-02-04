@@ -173,6 +173,9 @@ export default {
       for (let jobId in jobs) {
         jobs[jobId] = Object.assign({}, this.tc_userTasks.list[jobId]);
         this.getBookMeta(jobs[jobId].bookid).then(meta => {
+            if (meta && meta.meta) {
+              meta = meta.meta;
+            }
             jobs[jobId].title = meta.title;
             jobs[jobId].status = meta.status;
             jobs[jobId].meta = meta

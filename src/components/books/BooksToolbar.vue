@@ -85,7 +85,7 @@ export default {
       this.$store.commit('SET_CURRENTBOOK_FILTER', {importStatus: el.target.value})
     },
     bookCount () {
-      if (this.allBooks && this.allBooks) {
+      if (this.allBooks && this.allBooks.length) {
         let filtered = this.allBooks
                 .filter(m => !m.collection_id)
                 .filter(m => m.importStatus);

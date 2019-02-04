@@ -4,7 +4,7 @@
     <div v-if="isLocked" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
 
-        <div class="table-row" v-if="meta.numeration !== 'none'">
+        <div class="table-row" v-if="meta.numbering !== 'none'">
             <div v-if="false" class='par-ctrl -hidden'>
                 <i class="glyphicon glyphicon-volume-up"></i>
                 <i class="glyphicon glyphicon-volume-off"></i>
@@ -225,7 +225,7 @@
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
 
-            <div :class="['table-row ilm-block', block.markedAsDone && !hasChanges ? '-marked':'']">
+            <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
@@ -620,7 +620,7 @@ import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
-import { BlockTypes, FootNote }     from '../../store/bookBlock'
+import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
 import VuePictureInput    from 'vue-picture-input'
 var BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
@@ -707,7 +707,7 @@ export default {
         if (this.isUpdating) {
           return true;
         }
-        return this.block ? this.isBlockLocked(this.block._id) : false;
+        return this.block ? this.isBlockLocked(this.block.blockid) : false;
       },
       isChecked: { cache: false,
       get: function () {
@@ -802,7 +802,7 @@ export default {
         set(val) {
           if (val && val !== this.block.voicework) {
             this.voiceworkChange = val;
-            if (!this.block.markedAsDone && this.currentJobInfo.text_cleanup) {
+            if (!this.block.status.marked && this.currentJobInfo.text_cleanup) {
               this.showModal('voicework-change');
             } else {
               this.voiceworkUpdateType = 'single';
@@ -881,7 +881,7 @@ export default {
               }
             });
           }
-          return this.block.markedAsDone ||
+          return this.block.status.marked ||
                   (this.block.status && this.block.status.proofed === true) ||
                   disable_audio;
         }
@@ -1176,7 +1176,6 @@ export default {
       ...mapActions([
         'putMetaAuthors',
         'tc_approveBookTask',
-        'setCurrentBookBlocksLeft',
         'setCurrentBookCounters',
         'addBlockLock',
         'getAlignCount',
@@ -1588,13 +1587,15 @@ export default {
             break;
         }
         this.block.classes = [this.block.classes];
-        let recount_marked = this.block.markedAsDone === true && this._is('editor', true);
-        if (this.block.markedAsDone === true) {
-          this.block.markedAsDone = false;
+        let recount_marked = false;
+        if (this.block.status.marked === true) {
+          this.block.status.marked = false;
+          recount_marked = true;
         }
         if (this.block._markedAsDone) {
-          this.block.markedAsDone = true;
+          this.block.status.marked = true;
           delete this.block._markedAsDone;
+          recount_marked = true;
         }
 
         this.checkBlockContentFlags();
@@ -1646,7 +1647,7 @@ export default {
             this.loadBookToc({bookId: this.block.bookid, isWait: true});
           }
 
-          this.blockO.status = Object.assign(this.blockO.status, {
+          /*this.blockO.status = Object.assign(this.blockO.status, {
             marked: this.block.markedAsDone,
             assignee: this.block.status.assignee,
             proofed: this.block.status.proofed,
@@ -1656,9 +1657,9 @@ export default {
             rid: this.blockO.rid,
             type: this.block.type,
             status: this.blockO.status,
-          }
-          this.putBlockO(upd).then(()=>{
-            if (this.block.type !== this.blockO.type) {
+          }*/
+          //this.putBlockO(upd).then(()=>{
+            if (is_type_changed) {
               //if (this.block.type == 'header' || this.block.type == 'par') {
                 this.putNumBlockO({
                   bookId: this.block.bookid,
@@ -1675,7 +1676,7 @@ export default {
                 });
               //}
             }
-          });
+          //});
         });
       },
       clearBlockContent: function(content) {
@@ -1755,8 +1756,8 @@ export default {
                   this.getTotalBookTasks();
                 }
 
-                if (this.block.markedAsDone != response.data.markedAsDone) {
-                  this.block.markedAsDone = response.data.markedAsDone;
+                if (this.block.status.marked != response.data.status.marked) {
+                  this.block.status.marked = response.data.status.marked;
                   this.setCurrentBookCounters(['not_marked_blocks']);
                 }
                 this.$emit('blockUpdated', this.block._id);
@@ -1809,8 +1810,8 @@ export default {
       },
 
       unmarkBlock: function(ev) {
-        if (this.block.markedAsDone) {
-          this.block.markedAsDone = false;
+        if (this.block.status.marked) {
+          this.block.status.marked = false;
           this.assembleBlock(ev)
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
@@ -2988,7 +2989,7 @@ export default {
         formData.append('illustration', this.$refs.illustrationInput.file, this.$refs.illustrationInput.file.name);
         formData.append('block', JSON.stringify({'description': this.$refs.blockDescription.innerHTML}));
         let api = this.$store.state.auth.getHttp()
-        let api_url = this.API_URL + 'book/block/' + this.block._id + '/image';
+        let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
         api.post(api_url, formData, {}).then((response) => {
           if (response.status===200) {
@@ -3100,7 +3101,7 @@ export default {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
               this.getAlignCount();
               if (response && response.data) {
-                response.data.updField = 'voicework';
+                //response.data.updField = 'voicework';
                 this.$root.$emit('bookBlocksUpdates', response.data);
                 this.block.voicework = this.voiceworkChange;
                 //this.setCurrentBookBlocksLeft(this.block.bookid);
@@ -3427,10 +3428,12 @@ export default {
       'blockAudio.map' (newVal, oldVal) {
 
       },
-      'block.markedAsDone': {
-        handler(val) {
+      'block.status': {
+        handler(val, oldVal) {
           if (this.block) {
-            this.setCurrentBookCounters(['not_marked_blocks']);
+            if (val.marked != oldVal.marked) {
+              this.setCurrentBookCounters(['not_marked_blocks']);
+            }
           }
         }
       },

@@ -38,6 +38,7 @@ class BookBlocks {
     this.startId = false;
     this.startRId = false;
     this.startRIdStore = window.localStorage.getItem("startRId") || false;
+    this.bookid = null;
   }
 
   idsViewArray() {
@@ -502,6 +503,12 @@ class BookBlocks {
       }
     }
     this.listIdsCache.rid = false;
+  }
+  
+  refresh() {
+    let tmp = this.listObjs;
+    this.listObjs = [];
+    this.listObjs = tmp;
   }
 
 }

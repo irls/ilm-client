@@ -88,7 +88,7 @@
                   <td>Book Id</td>
                   <td class='disabled'>{{currentBook.bookid}}</td>
                 </tr>
-                
+
                 <tr class="extid">
                   <td>External Book Id</td>
                   <td>
@@ -320,32 +320,32 @@
                   <legend>Automatic numeration</legend>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numeration', 'x')">
-                      <i v-if="currentBook.numeration === 'x'"
+                      @click="liveUpdate('numbering', 'x')">
+                      <i v-if="currentBook.numbering === 'x'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                     x</label>
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numeration', 'x_x')">
-                      <i v-if="currentBook.numeration === 'x_x'"
+                      @click="liveUpdate('numbering', 'x_x')">
+                      <i v-if="currentBook.numbering === 'x_x'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                     x.x</label>
                   </div>
                   <!--<div>
                     <label class="style-label"
-                      @click="liveUpdate('numeration', 'auto')">
-                      <i v-if="currentBook.numeration === 'auto'"
+                      @click="liveUpdate('numbering', 'auto')">
+                      <i v-if="currentBook.numbering === 'auto'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                       Autoincrement</label>
                   </div>-->
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numeration', 'none')">
-                      <i v-if="currentBook.numeration === 'none'"
+                      @click="liveUpdate('numbering', 'none')">
+                      <i v-if="currentBook.numbering === 'none'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                       Off</label>
@@ -813,6 +813,7 @@ export default {
 
         }
       });
+
     this.$root.$on('from-bookblockview:voicework-type-changed', function() {
       self.setCurrentBookCounters(['narration_blocks', 'not_marked_blocks']);
       self.getAudioBook();
@@ -949,7 +950,7 @@ export default {
       handler(val) {
         //console.log('ROUTE CHANGE')
         let newIndex = false;
-        
+
         switch (this.activeTabIndex) {
           case 0:
             break;
@@ -1059,6 +1060,53 @@ export default {
     }, 500),
 
     liveUpdate (key, value) {
+      console.log('liveUpdate', key, value);
+
+      var keys = key.split('.');
+      key = keys[0];
+      if (keys.length > 1) {
+          this.currentBook[keys[0]][keys[1]] = value;
+          value = this.currentBook[keys[0]];
+      }
+
+      var update = {
+        [key]: value
+      }
+
+      // Batch updates
+      if (key === 'language') {
+        update.voices = {};
+      }
+
+      console.log('update', update);
+      return this.updateBookMeta(update)
+      .then((response)=>{
+        if (key == 'numbering') {
+          this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
+          //this.$root.$emit('from-book-meta:upd-toc', true);
+        }
+        let updateVersion = {minor: true};
+        switch(key) {
+          case 'styles':
+          case 'numbering':
+            updateVersion = {major: true};
+            break;
+        }
+        return this.updateBookVersion(updateVersion)
+        .then(() => {
+          return response;
+        })
+        .catch(err => err);
+        //return BPromise.resolve(response);
+      })
+      .catch(err => {
+        console.log(err);
+        return BPromise.reject(err);
+      });
+
+    },
+
+    liveUpdateOld (key, value) {
       var dbPath = superlogin.getDbUrl('ilm_content_meta')
       if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
 
@@ -1087,7 +1135,7 @@ export default {
       this.freeze('updateBookMeta');
       return api.update(this.currentBookid, update)
       .then(doc => {
-        if (key == 'numeration') {
+        if (key == 'numbering') {
           this.unfreeze('updateBookMeta');
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
           //this.$root.$emit('from-book-meta:upd-toc', true);
@@ -1096,7 +1144,7 @@ export default {
         let updateVersion = {minor: true};
         switch(key) {
           case 'styles':
-          case 'numeration':
+          case 'numbering':
             updateVersion = {major: true};
             break;
         }
@@ -1283,7 +1331,7 @@ export default {
 
         if (with_task) {
           route.params.task_type = true;
-          if (this.tc_hasTask('content_cleanup')) route.params.task_type = 'text-cleanup';
+          if (this.currentJobInfo.text_cleanup) route.params.task_type = 'text-cleanup';
         }
       //this.$router.push({name: this.$route.name, params:  params});
       }
@@ -1567,7 +1615,7 @@ export default {
           Promise.all([putBlockOpromise, updatePromises]).then((res)=>{
             if (valKey == 'secNum' || valKey == 'parNum') {
               let blockO = this.storeListO.getBlock(this.blockSelection.start._id);
-              this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration, blockO.rid)
+              this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numbering, blockO.rid)
             } else {
               this.$root.$emit('from-meta-edit:set-num');
             }
@@ -1648,7 +1696,7 @@ export default {
           return false;
         });
     },
-    
+
     updateExtid: _.debounce(function(event) {
       if (event.target.value && event.target.value.length != 32) {
         this.validationErrors['extid'] = ['Length must be equal to 32 symbols.']
@@ -1660,7 +1708,7 @@ export default {
       }
     }, 500),
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta'])
   }
 }
 </script>

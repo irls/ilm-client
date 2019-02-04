@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import Grid from '../generic/Grid'
 
 export default {
@@ -78,7 +78,7 @@ export default {
           path: 'pubType'
         }
       ],
-      idField: '_id',
+      idField: 'bookid',
       selectedBooks: []
     }
   },
@@ -91,6 +91,7 @@ export default {
     ]),
 
     books () { // filtered list of books
+      if (!this.allBooks.length) return [];
       let filteredbooks = this.allBooks
         .filter(book => (this.bookFilters.language == '' || book.language === this.bookFilters.language))
         .filter(book => book.importStatus === this.bookFilters.importStatus)
@@ -114,15 +115,20 @@ export default {
     this.selectedBooks = [this.$route.params.bookid]
   },
 
+  mounted () {
+    this.updateBooksList();
+  },
+
   watch: {
     '$route' () {
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.selectedBooks = [this.$route.params.bookid]
-      }
+      } else this.selectedBooks = [];
     }
   },
 
   methods: {
+    ...mapActions(['updateBooksList']),
     // A row in the table has been clicked. Returns Vue data object bound to the row.
     rowClick (ev) {
       let bookid = ev.bookid
