@@ -138,7 +138,21 @@ export const store = new Vuex.Store({
       is_proofread_unassigned: null
     },
     taskTypes: {tasks: [], categories: []},
-    liveDB: new liveDB()
+    liveDB: new liveDB(),
+    bookCategories: [
+      {
+        group: 'Reader',
+        categories: [
+          'History', 'Ideas', 'Science', 'Stories', 'Verse'
+        ]
+      },
+      {
+        group: 'Ocean',
+        categories: [
+          'Bahá’í', 'Buddhist', 'Christian', 'Confucian', 'Hindu', 'Islam', 'Judaism', 'Sikh', 'Tao', 'Zoroastrian'
+        ]
+      }
+    ]
   },
 
   getters: {
@@ -274,7 +288,8 @@ export const store = new Vuex.Store({
     adminOrLibrarian: state => state.adminOrLibrarian,
     currentJobInfo: state => state.currentJobInfo,
     taskTypes: state => state.taskTypes,
-    liveDB: state => state.liveDB
+    liveDB: state => state.liveDB,
+    bookCategories: state => state.bookCategories
   },
 
   mutations: {
@@ -1003,7 +1018,7 @@ export const store = new Vuex.Store({
       })
       .catch(err => err)
     },
-    
+
     startBookWatch({state}, bookid) {
       if (!bookid) {
         bookid = state.currentBookid
@@ -1133,6 +1148,21 @@ export const store = new Vuex.Store({
       return axios.get(state.API_URL + `books/toc/${params.bookId}` + (params.isWait ? '/wait':''))
       .then((response) => {
         state.currentBookToc.bookId = params.bookId;
+        state.currentBookToc.data = response.data;
+        dispatch('unfreeze', 'loadBookToc');
+        return response;
+      })
+      .catch(err => {
+        dispatch('unfreeze', 'loadBookToc')
+        return err;
+      })
+    },
+
+    updateBlockToc({state, dispatch}, params) {
+      dispatch('freeze', 'loadBookToc');
+      return axios.put(state.API_URL + `books/toc/${params.bookid}/block/${params.blockid}`)
+      .then((response) => {
+        //state.currentBookToc.bookId = params.bookId;
         state.currentBookToc.data = response.data;
         dispatch('unfreeze', 'loadBookToc');
         return response;
@@ -1946,9 +1976,9 @@ export const store = new Vuex.Store({
             let hasTask = state.tc_currentBookTasks.tasks.find((t) => {
               return t.blockid == block._id;
             })
-            if (!hasAssignment && state.adminOrLibrarian) {
-              hasAssignment = state.currentJobInfo.completed;
-            }
+            //if (!hasAssignment && state.adminOrLibrarian) {
+              //hasAssignment = state.currentJobInfo.completed;
+            //}
             if (!hasTask && state.adminOrLibrarian) {
               hasTask = state.currentJobInfo.can_resolve_tasks.find((t) => {
                 return t.blockid == block._id;
