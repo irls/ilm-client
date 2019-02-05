@@ -1110,7 +1110,7 @@ export const store = new Vuex.Store({
           .catch((err)=>{
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
           })
-          return Promise.resolve(answer.data.meta);
+          return Promise.resolve(answer);
         }).catch((err)=>{
           console.log('metaDB.get Error: ', err);
           return err;
@@ -1765,7 +1765,7 @@ export const store = new Vuex.Store({
     },
 
     setCurrentBookCounters({state, commit, dispatch}, counters = []) {
-      if (counters.length == 0 || counters.indexOf('narration_blocks') !== -1) {
+      /*if (counters.length == 0 || counters.indexOf('narration_blocks') !== -1) {
         dispatch('_setNarrationBlocksCounter');
       }
       if (counters.length == 0 || counters.indexOf('not_marked_blocks') !== -1) {
@@ -1773,11 +1773,30 @@ export const store = new Vuex.Store({
       }
       if (counters.length == 0 || counters.indexOf('not_proofed_audio_blocks') !== -1) {
         dispatch('_setNotProofedAudioBlocksCounter');
-      }
+      }*/
       if (counters.length == 0) {
-        //console.log('SET COUNTERS')
-        //commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_audio_in_range', value: '0'});
-        //commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_tts_in_range', value: '0'});
+        counters = ['narration_blocks', 'not_marked_blocks', 'not_proofed_audio'];
+      }
+      if (state.currentBookid) {
+        counters.forEach(c => {
+          //commit('SET_CURRENTBOOK_COUNTER', {name: c, value: '0'});
+        });
+        let bookid = state.currentBookid;
+        let params = '';
+        counters.forEach(c => {
+          params+='counters[]=' + c + '&';
+        });
+        return axios.get(state.API_URL + 'books/' + bookid + '/counter/?' + params)
+          .then(response => {
+            if (response.data && response.data.count && Object.keys(response.data.count).length > 0) {
+              Object.keys(response.data.count).forEach(k => {
+                commit('SET_CURRENTBOOK_COUNTER', {name: k, value: response.data.count[k]});
+              });
+            }
+          })
+          .catch(err => {
+
+          });
       }
     },
 
