@@ -172,17 +172,6 @@ export default {
       let jobs = Object.assign({}, this.tc_userTasks.list);
       for (let jobId in jobs) {
         jobs[jobId] = Object.assign({}, this.tc_userTasks.list[jobId]);
-        this.getBookMeta(jobs[jobId].bookid).then(meta => {
-            if (meta && meta.meta) {
-              meta = meta.meta;
-            }
-            jobs[jobId].title = meta.title;
-            jobs[jobId].status = meta.status;
-            jobs[jobId].meta = meta
-        }).catch(error => {});
-        //this.getAudioBook(jobs[jobId].bookid).then(audio => {
-          //jobs[jobId].audio = audio;
-        //})
 
         tasks_formatted.list.push(jobs[jobId]);
         jobs[jobId].total = jobs[jobId].tasks.length;
