@@ -903,7 +903,7 @@ export default {
               }
             }
             if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
-            if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1) return false;
+            if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1 && flags_summary.stat !== 'open' && !this._is(flags_summary.dir, true)) return false;
             if (this._is('editor', true) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
             if (this._is('proofer', true) && this.tc_hasBlockTask(this.block._id, 'approve-revoked-block') && flags_summary.stat !== 'open') return false;
             if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
