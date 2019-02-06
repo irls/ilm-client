@@ -152,7 +152,9 @@ export const store = new Vuex.Store({
           'Bahá’í', 'Buddhist', 'Christian', 'Confucian', 'Hindu', 'Islam', 'Judaism', 'Sikh', 'Tao', 'Zoroastrian'
         ]
       }
-    ]
+    ],
+    loadBookWait: null,
+    loadBookTaskWait: null
   },
 
   getters: {
@@ -988,7 +990,7 @@ export const store = new Vuex.Store({
       return axios.get(state.API_URL + 'books')///user/' + state.auth.getSession().user_id
         .then((answer) => {
           commit('SET_BOOKLIST', answer.data.books)
-          dispatch('tc_loadBookTask')
+          //dispatch('tc_loadBookTask')
         })
     },
 
@@ -1068,6 +1070,9 @@ export const store = new Vuex.Store({
     },
 
     loadBook ({commit, state, dispatch}, book_id) {
+      if (state.loadBookWait) {
+        return state.loadBookWait
+      }
       //console.log('loading currentBook: ', book_id)
       // if (!book_id) return  // if no currentbookid, exit
       // if (book_id === context.state.currentBookid) return // skip if already loaded
@@ -1108,8 +1113,10 @@ export const store = new Vuex.Store({
               });
           }
         });
+        state.loadBookWait = bookMeta
         return bookMeta
         .then((answer) => {
+          state.loadBookWait = null;
           commit('SET_CURRENTBOOK_META', answer)
           commit('TASK_LIST_LOADED')
           dispatch('getTotalBookTasks');
@@ -1127,6 +1134,7 @@ export const store = new Vuex.Store({
           })
           return Promise.resolve(answer);
         }).catch((err)=>{
+          state.loadBookWait = null;
           console.log('metaDB.get Error: ', err);
           return err;
         })
@@ -1665,23 +1673,23 @@ export const store = new Vuex.Store({
 
     tc_loadBookTask({state, commit, dispatch}) {
       //console.log('a1');
-      state.tasksXHR = Date.now();
-      let start = state.tasksXHR;
-      return axios.get(state.API_URL + 'tasks?start=' + start)
+      if (state.loadBookTaskWait) {
+        return state.loadBookTaskWait;
+      }
+      state.loadBookTaskWait = axios.get(state.API_URL + 'tasks')
+      return state.loadBookTaskWait
         .then((list) => {
           //console.log('a2');
-          if (start == state.tasksXHR) {
-            state.tc_tasksByBlock = {}
-            state.tc_userTasks = {list: list.data, total: 0}
-            commit('TASK_LIST_LOADED')
-            commit('PREPARE_BOOK_COLLECTIONS');
-            dispatch('recountApprovedInRange');
-            return list;
-          } else {
-            return Promise.resolve([]);
-          }
+          state.loadBookTaskWait = null;
+          state.tc_tasksByBlock = {}
+          state.tc_userTasks = {list: list.data, total: 0}
+          commit('TASK_LIST_LOADED')
+          commit('PREPARE_BOOK_COLLECTIONS');
+          dispatch('recountApprovedInRange');
+          return list;
         })
         .catch(err => {
+          state.loadBookTaskWait = null;
           console.log(err)
         })
     },
