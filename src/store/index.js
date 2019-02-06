@@ -793,14 +793,14 @@ export const store = new Vuex.Store({
 
         //commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         //commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
-        commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
+        //commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
         commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
 
         //commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         //commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
         commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
-        commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
+        //commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
         commit('set_remoteDB', { dbProp: 'collectionsRemoteDB', dbName: ILM_COLLECTIONS });
         commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
 
@@ -836,7 +836,7 @@ export const store = new Vuex.Store({
 //               // handle errors
 //             })
 //         });
-        state.replicatingDB.ilm_tasks = false;
+        /*state.replicatingDB.ilm_tasks = false;
         state.tasksDB.replicate.from(state.tasksRemoteDB)
         .on('complete', (info) => {
           state.replicatingDB.ilm_tasks = true;
@@ -869,7 +869,7 @@ export const store = new Vuex.Store({
               }
             }
           })
-        });
+        });*/
 
         state.collectionsDB.replicate.from(state.collectionsRemoteDB)
         .on('complete', (info) => {
@@ -954,14 +954,14 @@ export const store = new Vuex.Store({
 
         commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         //commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
-        commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
+        //commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
         commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
         commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
         state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false};
 
         if (state.metaDB) state.metaDB.destroy()
         //if (state.contentDB) state.contentDB.destroy()
-        if (state.tasksDB) state.tasksDB.destroy()
+        //if (state.tasksDB) state.tasksDB.destroy()
         if (state.collectionsDB) state.collectionsDB.destroy()
         if (state.librariesDB) state.librariesDB.destroy()
 
@@ -979,7 +979,7 @@ export const store = new Vuex.Store({
       //window.setTimeout(() => {
           //if (state.metaDB) state.metaDB.destroy()
           //if (state.contentDB) state.contentDB.destroy()
-          if (state.tasksDB) state.tasksDB.destroy()
+          //if (state.tasksDB) state.tasksDB.destroy()
           if (state.collectionsDB) state.collectionsDB.destroy()
           if (state.librariesDB) state.librariesDB.destroy()
           commit('RESET_LOGIN_STATE');
@@ -1097,10 +1097,22 @@ export const store = new Vuex.Store({
           }
         });
         state.liveDB.stopWatch('blockV');
-
-        return axios.get(state.API_URL + 'books/book_meta/' + book_id)
+        let bookMeta = new Promise((resolve, reject) => {
+          let bm = state.books_meta.find(m => {
+            return m.bookid == book_id;
+          });
+          if (bm) {
+            resolve(bm);
+          } else {
+            axios.get(state.API_URL + 'books/book_meta/' + book_id)
+              .then((answer) => {
+                resolve(answer.data.meta);
+              });
+          }
+        });
+        return bookMeta
         .then((answer) => {
-          commit('SET_CURRENTBOOK_META', answer.data.meta)
+          commit('SET_CURRENTBOOK_META', answer)
           commit('TASK_LIST_LOADED')
           dispatch('getTotalBookTasks');
           dispatch('setCurrentBookCounters');
@@ -1115,7 +1127,7 @@ export const store = new Vuex.Store({
           .catch((err)=>{
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
           })
-          return Promise.resolve(answer.data.meta);
+          return Promise.resolve(answer);
         }).catch((err)=>{
           console.log('metaDB.get Error: ', err);
           return err;
@@ -1202,6 +1214,7 @@ export const store = new Vuex.Store({
                 if (meta.collection_id) {
                   dispatch('updateCollectionVersion', Object.assign({id: meta.collection_id}, update));
                 }
+                dispatch('getTotalBookTasks');
               });
           }
         } else {
@@ -1661,7 +1674,7 @@ export const store = new Vuex.Store({
           //console.log('a2');
           if (start == state.tasksXHR) {
             state.tc_tasksByBlock = {}
-            state.tc_userTasks = {list: list.data.rows, total: 0}
+            state.tc_userTasks = {list: list.data, total: 0}
             commit('TASK_LIST_LOADED')
             commit('PREPARE_BOOK_COLLECTIONS');
             dispatch('recountApprovedInRange');
@@ -1699,7 +1712,7 @@ export const store = new Vuex.Store({
       return axios.post(state.API_URL + 'task/' + task.blockid + '/approve_block',
       {
         'bookId': task.bookid || false,
-        'taskId': task._id || false,
+        'taskId': task.id || false,
         'taskStep': task.nextStep || 'narrate-block',
         'taskType': task.type || false
       })
@@ -1784,7 +1797,7 @@ export const store = new Vuex.Store({
     },
 
     setCurrentBookCounters({state, commit, dispatch}, counters = []) {
-      if (counters.length == 0 || counters.indexOf('narration_blocks') !== -1) {
+      /*if (counters.length == 0 || counters.indexOf('narration_blocks') !== -1) {
         dispatch('_setNarrationBlocksCounter');
       }
       if (counters.length == 0 || counters.indexOf('not_marked_blocks') !== -1) {
@@ -1792,11 +1805,30 @@ export const store = new Vuex.Store({
       }
       if (counters.length == 0 || counters.indexOf('not_proofed_audio_blocks') !== -1) {
         dispatch('_setNotProofedAudioBlocksCounter');
-      }
+      }*/
       if (counters.length == 0) {
-        //console.log('SET COUNTERS')
-        //commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_audio_in_range', value: '0'});
-        //commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_tts_in_range', value: '0'});
+        counters = ['narration_blocks', 'not_marked_blocks', 'not_proofed_audio'];
+      }
+      if (state.currentBookid) {
+        counters.forEach(c => {
+          //commit('SET_CURRENTBOOK_COUNTER', {name: c, value: '0'});
+        });
+        let bookid = state.currentBookid;
+        let params = '';
+        counters.forEach(c => {
+          params+='counters[]=' + c + '&';
+        });
+        return axios.get(state.API_URL + 'books/' + bookid + '/counter/?' + params)
+          .then(response => {
+            if (response.data && response.data.count && Object.keys(response.data.count).length > 0) {
+              Object.keys(response.data.count).forEach(k => {
+                commit('SET_CURRENTBOOK_COUNTER', {name: k, value: response.data.count[k]});
+              });
+            }
+          })
+          .catch(err => {
+
+          });
       }
     },
 
