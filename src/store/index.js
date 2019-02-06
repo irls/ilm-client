@@ -135,7 +135,8 @@ export const store = new Vuex.Store({
       proofing: null,
       published: null,
       text_cleanup: null,
-      is_proofread_unassigned: null
+      is_proofread_unassigned: null,
+      tasks_counter: []
     },
     taskTypes: {tasks: [], categories: []},
     liveDB: new liveDB(),
@@ -291,7 +292,8 @@ export const store = new Vuex.Store({
     currentJobInfo: state => state.currentJobInfo,
     taskTypes: state => state.taskTypes,
     liveDB: state => state.liveDB,
-    bookCategories: state => state.bookCategories
+    bookCategories: state => state.bookCategories,
+    tasks_counter: state => state.currentJobInfo.tasks_counter
   },
 
   mutations: {

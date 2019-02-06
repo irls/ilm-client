@@ -34,7 +34,7 @@
         :allowDownload="false" />
 
       <div class="book-listing">
-        <div class="row" v-if="tc_allowMetadataActions()">
+        <!-- <div class="row" v-if="tc_allowMetadataActions()">
           <template v-if="tc_allowEditingComplete() || tc_allowFinishMastering()">
             <template v-if="tc_allowEditingComplete()">
               <div v-if="!textCleanupProcess" class="editing-wrapper">
@@ -77,9 +77,39 @@
               </div>
             </div>
           </template>
-        </div>
+        </div> -->
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
-          <vue-tab title="Book Content" id="book-content">
+          <vue-tab title="Assignments" id="assignments">
+            <div v-for="counter in tasks_counter">
+              <div v-if="counter.data.tasks.length > 0" class="counters-container">
+                <div class="counter-executor">
+                  <span v-if="counter.key == 'editor'">Editing:</span>
+                  <span v-if="counter.key == 'narrator'">Narrating:</span>
+                  <span v-if="counter.key == 'proofer'">Proofreader:</span>
+                  <span>{{counter.data.executor}}</span>
+                </div>
+                <table class="counters">
+                  <thead>
+                    <th>Task</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </thead>
+                  <tbody>
+                    <tr v-for="task in counter.data.tasks">
+                      <td>{{getTaskType(task.type)}}</td>
+                      <td :class="[{'go-to-block': task.count > 0}]" v-on:click="goToBlock(task.blockid)">
+                        <span v-if="task.complete">Closed</span>
+                        <span v-else>Open</span>
+                        <span v-if="task.count > 0">&nbsp;({{task.count}})</span>
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </vue-tab>
+          <vue-tab title="Meta" id="book-content">
             <fieldset>
               <legend>Book Metadata </legend>
               <table class='properties'>
@@ -249,7 +279,7 @@
               :bookId="currentBook.bookid"
             ></BookToc>
           </vue-tab>
-          <vue-tab title="Audio Integration" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
+          <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
             <div class="t-box">
               <template>
                 <div class="btn-switch" @click="toggleMastering()">
@@ -720,7 +750,9 @@ export default {
       blockSelection: 'blockSelection',
       alignCounter: 'alignCounter',
       audiobook: 'currentAudiobook',
-      subjectCategories: 'bookCategories'
+      subjectCategories: 'bookCategories',
+      tasks_counter: 'tasks_counter',
+      taskTypes: 'taskTypes'
     }),
     collectionsList: {
       get() {
@@ -1695,6 +1727,17 @@ export default {
         this.liveUpdate('extid', event.target.value);
       }
     }, 500),
+    
+    getTaskType(typeId) {
+      let t = this.taskTypes.tasks.find(_t => {
+        return _t._id === typeId;
+      });
+      if (t) {
+        return t.title;
+      } else {
+        return '';
+      }
+    },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta'])
   }
@@ -2010,6 +2053,48 @@ export default {
     .validation-error {
         width: 100%;
         color: red;
+    }
+  }
+  
+  .counters-container {
+    padding: 2px 5px;
+    .counter-executor {
+      float: right;
+      width: 100%;
+      span {
+        float: left;
+        width: auto;
+        padding: 2px 5px;
+      }
+    }
+    table.counters {
+      border: 1px solid black;
+      thead {
+        background-color: #c2c2c2;
+        th {
+          text-align: left;
+          padding: 1px 5px;
+          border: 1px solid black;
+        }
+      }
+      tr {
+        border: 1px solid black;
+        &:nth-child(even) {
+          background-color: #f2f2f2;
+        }
+        td {
+          text-align: left;
+          padding: 1px 5px;
+          border: 1px solid black;
+          height: 30px;
+          span {
+            float: none;
+          }
+          &.go-to-block {
+            cursor: pointer;
+          }
+        }
+      }
     }
   }
 </style>
