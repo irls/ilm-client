@@ -1628,10 +1628,10 @@ export default {
         //return this.API_URL + 'books/' + this.currentBook._id + '/demo';
     },
     downloadExportMp3() {
-        return this.API_URL + 'books/' + this.currentBook._id + '/exportMp3';
+        return this.API_URL + 'export/' + this.currentBook._id + '/exportMp3';
     },
     downloadExportFlac() {
-        return this.API_URL + 'books/' + this.currentBook._id + '/exportFlac';
+        return this.API_URL + 'export/' + this.currentBook._id + '/exportFlac';
     },
     styleCaption(type, key) {
       if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {
