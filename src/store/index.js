@@ -1239,8 +1239,8 @@ export const store = new Vuex.Store({
           console.log('updateBookMeta response', response);
           //state.currentBookMeta = response.data;
           //commit('SET_CURRENTBOOK_META', response.data)
-          if (response.data == 1 && response.status == 200) {
-            let newMeta = Object.assign(state.currentBookMeta, update);
+          if (response.data["@class"] && response.status == 200) {
+            let newMeta = Object.assign(state.currentBookMeta, response.data);
             commit('SET_CURRENTBOOK_META', newMeta);
             return Promise.resolve(response.data);
           } else {
