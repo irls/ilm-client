@@ -97,9 +97,9 @@
                   <tbody>
                     <tr v-for="task in counter.data.tasks">
                       <td>{{getTaskType(task.type)}}</td>
-                      <td :class="[{'go-to-block': task.count > 0}]" v-on:click="goToBlock(task.blockid)">
-                        <span v-if="task.complete">Closed</span>
-                        <span v-else>Open</span>
+                      <td :class="[{'go-to-block': task.count > 0}]" v-on:click="goToBlockCheck(task.blockid, counter.key)">
+                        <span v-if="task.complete" :class="[{'ready': task.ready}]">Closed</span>
+                        <span v-else :class="[{'ready': task.ready}]">Open</span>
                         <span v-if="task.count > 0">&nbsp;({{task.count}})</span>
                       </td>
                       <td></td>
@@ -752,7 +752,8 @@ export default {
       audiobook: 'currentAudiobook',
       subjectCategories: 'bookCategories',
       tasks_counter: 'tasks_counter',
-      taskTypes: 'taskTypes'
+      taskTypes: 'taskTypes',
+      adminOrLibrarian: 'adminOrLibrarian'
     }),
     collectionsList: {
       get() {
@@ -1555,6 +1556,12 @@ export default {
     goToBlock(id) {
       this.$root.$emit('for-bookedit:scroll-to-block', id);
     },
+    
+    goToBlockCheck(blockid, role) {
+      if (this._is(role, true) || (role === 'editor' && this.adminOrLibrarian)) {
+        return this.goToBlock(blockid);
+      }
+    },
 
     selSecNum (blockType, valKey, currVal) {
       console.log('selSecNum', blockType, valKey, currVal);
@@ -2089,6 +2096,9 @@ export default {
           height: 30px;
           span {
             float: none;
+            &.ready {
+              color: green;
+            }
           }
           &.go-to-block {
             cursor: pointer;
