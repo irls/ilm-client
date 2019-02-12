@@ -371,7 +371,7 @@ export const store = new Vuex.Store({
         if (!state.currentBookMeta.numbering) {
           state.currentBookMeta.numbering = 'x_x';
         }
-        if (meta.hasOwnProperty('collection_id') && meta.collection_id.length == 0) {
+        if (meta.hasOwnProperty('collection_id') && (!meta.collection_id || meta.collection_id === null || meta.collection_id.length == 0)) {
           state.currentBookMeta.collection_id = false;
         }
       } else {
