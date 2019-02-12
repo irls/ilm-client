@@ -225,7 +225,7 @@ export default {
       .catch(error => {})
     },
     importBook(task) {
-      this.import_book_task_id = task._id
+      this.import_book_task_id = task.id
       this.import_book_id = task.bookid
       this.show_import_book_modal = true
     },

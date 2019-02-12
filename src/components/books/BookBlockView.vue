@@ -2650,6 +2650,7 @@ export default {
         if (!this.blockReindexProcess) {
           this.deletePending = false;
           this.hideModal('delete-block-message');
+          this.isSaving = true;
           this.$emit('deleteBlock', this.block, this.blockId);
         } else {
           this.deletePending = true;
