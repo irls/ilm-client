@@ -320,6 +320,16 @@ class BookBlocks {
       let block = this.lookupList[iRId];
       if (!data.in) delete data.in;
       if (!data.out) delete data.out;
+      if (data.in) {
+        if (Array.isArray(data.in)) {
+          data.in = data.in[0];
+        }
+      }
+      if (data.out) {
+        if (Array.isArray(data.out)) {
+          data.out = data.out[0];
+        }
+      }
       if (typeof data.isHidden == 'undefined') delete data.isHidden;
       if (typeof data.isNumber == 'undefined') delete data.isNumber;
       this.lookupList[iRId] = Object.assign(block, data);
@@ -474,8 +484,8 @@ class BookBlocks {
 
   addBlock(block) {
     block.rid = block['@rid'];
-    block.in = block.in[0];
-    block.out = block.out[0];
+    block.in = Array.isArray(block.in) ? block.in[0] : block.in;
+    block.out = Array.isArray(block.out) ? block.out[0] : block.out;
     block.loaded = true;
     delete block['@type'];
     let listIdsIdx = -1;
