@@ -1039,7 +1039,24 @@ export const store = new Vuex.Store({
             } else if (data.action === 'delete') {
               
             }
-            if (data.block) {
+            
+            if (data.block && state.storeList.has(data.block.blockid)) {
+              let block = state.storeList.get(data.block.blockid);
+              if (block.isChanged) {
+                if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
+                    if (block.voicework != data.block.voicework) {
+                      block.voicework = data.block.voicework;
+                      block.audiosrc = data.block.audiosrc;
+                      block.audiosrc_ver = data.block.audiosrc_ver;
+                      store.commit('set_storeList', new BookBlock(block));
+                    }
+                  } else {
+                    store.commit('set_storeList', new BookBlock(data.block));
+                  }
+              } else {
+                store.commit('set_storeList', new BookBlock(data.block));
+              }
+            } else if (data.block) {
               store.commit('set_storeList', new BookBlock(data.block));
             }
             state.storeListO.refresh();
