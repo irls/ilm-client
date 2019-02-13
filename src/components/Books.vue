@@ -288,6 +288,10 @@ export default {
     direction: rtl; 
   }
 }
+/* Display mode */
+.-langblock-ar.ilm-block, .-langblock-fa.ilm-block {
+  direction: rtl; 
+}
 
 // for footnote settings:
 .-langftn-en, 
