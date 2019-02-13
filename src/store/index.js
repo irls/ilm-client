@@ -1101,17 +1101,10 @@ export const store = new Vuex.Store({
         });
         state.liveDB.stopWatch('blockV');
         let bookMeta = new Promise((resolve, reject) => {
-          let bm = state.books_meta.find(m => {
-            return m.bookid == book_id;
-          });
-          if (bm) {
-            resolve(bm);
-          } else {
-            axios.get(state.API_URL + 'books/book_meta/' + book_id)
-              .then((answer) => {
-                resolve(answer.data.meta);
-              });
-          }
+          axios.get(state.API_URL + 'books/book_meta/' + book_id)
+            .then((answer) => {
+              resolve(answer.data.meta);
+            });
         });
         state.loadBookWait = bookMeta
         return bookMeta

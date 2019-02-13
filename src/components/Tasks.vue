@@ -245,6 +245,7 @@ export default {
     },
     importBookClose(response) {
       if (response) {
+        this.$store.dispatch('tc_loadBookTask')
         this.$router.replace({ path: '/books/' + this.import_book_id })
         return
       }
