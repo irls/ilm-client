@@ -3,10 +3,6 @@
 
     <div id='bookmeta' v-if="currentBook" class="sidebar-bookmeta">
       <div class='booktopinfo'>
-        <div class='coverimg' @click="bookEditCoverModalActive = true">
-          <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
-          <div v-else class='coverimg-wrap'></div>
-        </div>
         <template v-if="isAdmin">
           <button class="hidden" v-on:click="removeBook()">Remove</button>
         </template>
@@ -167,6 +163,15 @@
 
               </table>
             </fieldset>
+
+          <fieldset class='description brief'>
+            <legend>Book Cover</legend>
+            <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
+              <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+              <div v-else class='coverimg-wrap'></div>
+            </div>
+            <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
+          </fieldset>
 
           <fieldset class='description brief'>
             <legend>Brief Description </legend>
