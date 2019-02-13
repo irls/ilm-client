@@ -1032,12 +1032,16 @@ export const store = new Vuex.Store({
           if (data) {
 
             //state.storeListO.delBlock(data.block);
-            if (data.action === 'insert') {
+            if (data.action === 'insert' && data.block) {
               state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
-            } else {
+            } else if (data.action === 'change' && data.block) {
               state.storeListO.updBlockByRid(data.block.id, data.block)
+            } else if (data.action === 'delete') {
+              
             }
-            store.commit('set_storeList', new BookBlock(data.block));
+            if (data.block) {
+              store.commit('set_storeList', new BookBlock(data.block));
+            }
             state.storeListO.refresh();
           }
         });
