@@ -3577,6 +3577,13 @@ export default {
         handler(val) {
           //console.log(this.block._id, 'approveWaiting', val);
         }
+      },
+      'block.audiosrc': {
+        handler(val) {
+          if (this.block) {
+            this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
+          }
+        }
       }
   }
 }
