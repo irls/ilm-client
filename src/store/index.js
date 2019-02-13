@@ -1037,7 +1037,7 @@ export const store = new Vuex.Store({
             } else if (data.action === 'change' && data.block) {
               state.storeListO.updBlockByRid(data.block.id, data.block)
             } else if (data.action === 'delete') {
-              
+
             }
             if (data.block) {
               store.commit('set_storeList', new BookBlock(data.block));
