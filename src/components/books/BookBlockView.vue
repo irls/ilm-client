@@ -3312,6 +3312,16 @@ export default {
           }
 
         }
+      },
+      refreshBlockAudio: function(map = true, src = true) {
+        if (this.block) {
+          if (map) {
+            this.blockAudio.map = this.block.content;
+          }
+          if (src) {
+            this.blockAudio.src = this.block.getAudiosrc('m4a');
+          }
+        }
       }
   },
   watch: {
@@ -3580,9 +3590,7 @@ export default {
       },
       'block.audiosrc': {
         handler(val) {
-          if (this.block) {
-            this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
-          }
+          this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
         }
       }
   }
