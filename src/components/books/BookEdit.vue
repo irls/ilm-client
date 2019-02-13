@@ -315,25 +315,31 @@ export default {
           .then((meta)=>{
             //console.log('loadBook then meta', meta);
             this.unfreeze('loadBookMeta');
-            return this.searchBlockUnresolved()
-            .then((blockId)=>{
-
-              let startBlock = blockId || this.$route.params.block || false;
-              let taskType = this.$route.params.task_type || false;
-
-              return this.loadPartOfBookBlocks({
-                bookId: this.$route.params.bookid,
-                block: startBlock,
-                taskType: taskType
+            return this.loadBookBlocks({
+                bookId: this.$route.params.bookid
               }).then((answer)=>{
-                this.parlistO.setLookupsList(this.meta._id, answer);
-                let rIdsArray = this.parlistO.rIdsArray();
-                this.isNeedUp = rIdsArray[0];
-                this.isNeedDown = rIdsArray[rIdsArray.length-1];
-                this.$router.replace({name: this.$route.name, params: {}});
                 return Promise.resolve(answer);
               })
-            })
+
+//             return this.searchBlockUnresolved()
+//             .then((blockId)=>{
+//
+//               let startBlock = blockId || this.$route.params.block || false;
+//               let taskType = this.$route.params.task_type || false;
+//
+//               return this.loadPartOfBookBlocks({
+//                 bookId: this.$route.params.bookid,
+//                 block: startBlock,
+//                 taskType: taskType
+//               }).then((answer)=>{
+//                 this.parlistO.setLookupsList(this.meta._id, answer);
+//                 let rIdsArray = this.parlistO.rIdsArray();
+//                 this.isNeedUp = rIdsArray[0];
+//                 this.isNeedDown = rIdsArray[rIdsArray.length-1];
+//                 this.$router.replace({name: this.$route.name, params: {}});
+//                 return Promise.resolve(answer);
+//               })
+//             })
           }).catch((err)=>{
             this.unfreeze('loadBookMeta');
             return Promise.reject(err);
@@ -1666,14 +1672,14 @@ export default {
               firstVisible = blockRef.blockO;
             }
             lastVisible =  blockRef.blockO;
-            if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
-              this.parlistO.setLoaded(blockRef.blockRid);
-              blockRef.$forceUpdate();
-            }
-            else if (this.parlistO.get(blockRef.blockRid).loaded === false) {
-              this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
-              loadIdsArray.push(blockRef.blockId);
-            }
+//             if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
+//               this.parlistO.setLoaded(blockRef.blockRid);
+//               blockRef.$forceUpdate();
+//             }
+//             else if (this.parlistO.get(blockRef.blockRid).loaded === false) {
+//               this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
+//               loadIdsArray.push(blockRef.blockId);
+//             }
           } else if (firstVisible && loadCount > 0) {
             if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
               loadCount--;
@@ -1773,15 +1779,17 @@ export default {
         if (this.meta._id) {
           this.tc_loadBookTask()
           .then(()=>{
-            this.loadPreparedBookDown(this.parlistO.idsArray(), 10).then(()=>{
-              this.startId = this.parlistO.idsArray()[0];
-              this.loadBookBlocks({bookId: this.meta._id})
-              .then((res)=>{
-                this.parlistO.updateLookupsList(this.meta._id, res);
-                this.loadBookToc({bookId: this.meta._id, isWait: true});
-                this.lazyLoad();
-              });
-            });
+            this.parlistO.setLookupsList(this.meta._id, initBlocks, this.parlist);
+            this.loadBookToc({bookId: this.meta._id, isWait: true});
+//             this.loadPreparedBookDown(this.parlistO.idsArray(), 10).then(()=>{
+//               this.startId = this.parlistO.idsArray()[0];
+//               this.loadBookBlocks({bookId: this.meta._id})
+//               .then((res)=>{
+//                 this.parlistO.updateLookupsList(this.meta._id, res);
+//                 this.loadBookToc({bookId: this.meta._id, isWait: true});
+//                 this.lazyLoad();
+//               });
+//             });
           });
         }
       });
@@ -1816,27 +1824,44 @@ export default {
         if (this.meta._id && initBlocks.blocks.length) {
           this.tc_loadBookTask()
           .then(()=>{
-            this.loadPreparedBookDown(this.parlistO.idsArray())
-            .then(()=>{
-              this.loadBookBlocks({bookId: this.meta._id})
-              .then((res)=>{
-                this.parlistO.updateLookupsList(this.meta._id, res);
-                this.lazyLoad();
-                if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
-                  this.$router.push({name: 'BookEdit', params: {}});
-                }
-              });
-            });
+            this.parlistO.setLookupsList(this.meta._id, initBlocks, this.parlist)
+            //console.log('initBlocks.blocks', initBlocks.blocks);
+//             initBlocks.blocks.forEach((el, idx, arr)=>{
+//             console.log(el, idx);
+//               if (!this.parlist.has(el.blockid)) {
+//                 let newBlock = new BookBlock(el);
+//                 this.$store.commit('set_storeList', newBlock);
+//                 //this.parlistO.setLoaded(el.blockid);
+//               }
+//             });
+//             if (this.startId === false) {
+//               this.startId = this.meta.startBlock_id; // first load
+//               this.parlistO.setStartId(this.startId);
+//             }
+
+
+
+//             this.loadPreparedBookDown(this.parlistO.idsArray())
+//             .then(()=>{
+//               this.loadBookBlocks({bookId: this.meta._id})
+//               .then((res)=>{
+//                 this.parlistO.updateLookupsList(this.meta._id, res);
+//                 this.lazyLoad();
+//                 if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
+//                   this.$router.push({name: 'BookEdit', params: {}});
+//                 }
+//               });
+//             });
           });
         } else {
 
-          if (this.$route.params.hasOwnProperty('block')) {
-            this.scrollToBlock(this.$route.params.block);
-            this.$router.replace({name: this.$route.name, params: {}});
-            //this.updateVisibleBlocks();
-          } else {
-            this.$router.replace({name: this.$route.name, params: {block: this.meta.startBlock_id}});// force view update when switching from display mode
-          }
+//           if (this.$route.params.hasOwnProperty('block')) {
+//             this.scrollToBlock(this.$route.params.block);
+//             this.$router.replace({name: this.$route.name, params: {}});
+//             //this.updateVisibleBlocks();
+//           } else {
+//             this.$router.replace({name: this.$route.name, params: {block: this.meta.startBlock_id}});// force view update when switching from display mode
+//           }
         }
       });
 
@@ -1896,7 +1921,7 @@ export default {
     },
     'allBooks': {
       handler() {
-        
+
       }
     },
     '$route' (toRoute, fromRoute) {
