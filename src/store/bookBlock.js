@@ -160,7 +160,15 @@ class BookBlock {
     this.markedAsDone = init.markedAsDone || false;
     this.language = init.language || false;
     this.status = init.status;
+    if (!this.status) {
+      this.status = {}
+    }
     this.audiosrc_ver = init.audiosrc_ver || {};
+    for (let k in this.audiosrc_ver) {
+      if (['m4a'].indexOf(k) === -1) {
+        delete this.audiosrc_ver[k];
+      }
+    }
 
     this.isUpdated = false;
     this.isChanged = init.isChanged || false;
