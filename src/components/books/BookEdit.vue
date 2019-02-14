@@ -9,7 +9,7 @@
         :key = "viewObj.blockRid"
         :id="'v-'+ viewObj.blockId">
 
-        <div class='col'>
+        <div class='col' v-if="parlistO.get(viewObj.blockRid)">
         <BookBlockPreview
           ref="viewBlocks"
           :blockRid = "viewObj.blockRid"
@@ -939,7 +939,9 @@ export default {
             this.refreshBlock({doc: b_old, deleted: false});
           }
           let blockO = response.data.new_block;
-          this.parlistO.addBlock(blockO);
+          if (!this.parlistO.get(blockO.blockid)) {
+            this.parlistO.addBlock(blockO);
+          }
 
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
