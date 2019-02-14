@@ -1765,7 +1765,7 @@ export default {
       this.$router.push({name: this.$route.name, params: {}});
       this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
-        if (this.meta._id) {
+        if (this.meta._id && initBlocks.blocks && initBlocks.blocks.length) {
           this.tc_loadBookTask()
           .then(()=>{
             this.parlistO.setLookupsList(this.meta._id, initBlocks, this.parlist);
@@ -1810,7 +1810,7 @@ export default {
       //console.log('book mounted', this.meta._id);
       this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
-        if (this.meta._id && initBlocks.blocks.length) {
+        if (this.meta._id && initBlocks.blocks && initBlocks.blocks.length) {
           this.tc_loadBookTask()
           .then(()=>{
             this.parlistO.setLookupsList(this.meta._id, initBlocks, this.parlist)
