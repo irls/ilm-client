@@ -135,7 +135,8 @@ export const store = new Vuex.Store({
       proofing: null,
       published: null,
       text_cleanup: null,
-      is_proofread_unassigned: null
+      is_proofread_unassigned: null,
+      executors: {editor: null, proofer: null, narrator: null}
     },
     taskTypes: {tasks: [], categories: []},
     liveDB: new liveDB(),
