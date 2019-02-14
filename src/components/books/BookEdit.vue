@@ -673,20 +673,17 @@ export default {
             this.refreshTmpl();
           } else {
             let newBlock = new BookBlock(change.doc);
-            if (oldBlock.isChanged || oldBlock.isAudioChanged || oldBlock.isIllustrationChanged) {
+            let el = this.$children.find(c => {
+              return c.$el.id == newBlock.blockid;
+            });
+            if (el && (el.isChanged || el.isAudioChanged || el.isIllustrationChanged)) {
               if (oldBlock.status && newBlock.status && oldBlock.status.assignee === newBlock.status.assignee) {
-                oldBlock._rev = change.doc._rev;
                 if (oldBlock.voicework != newBlock.voicework) {
                   oldBlock.voicework = newBlock.voicework;
                   oldBlock.audiosrc = newBlock.audiosrc;
                   oldBlock.audiosrc_ver = newBlock.audiosrc_ver;
+                  el.refreshBlockAudio(false);
                 }
-                if (oldBlock.chainid !== newBlock.chainid) {// next block was removed
-                  oldBlock.chainid = newBlock.chainid;
-                }
-                //if (oldBlock.realigned !== newBlock.realigned) {
-                  //this.clearBlockLock({block: change.doc});
-                //}
               } else {
                 this.$store.commit('set_storeList', newBlock);
               }
@@ -942,7 +939,9 @@ export default {
             this.refreshBlock({doc: b_old, deleted: false});
           }
           let blockO = response.data.new_block;
-          this.parlistO.addBlock(blockO);
+          if (!this.parlistO.get(blockO.blockid)) {
+            this.parlistO.addBlock(blockO);
+          }
 
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
