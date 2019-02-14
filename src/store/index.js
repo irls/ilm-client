@@ -2042,7 +2042,7 @@ export const store = new Vuex.Store({
                 return t.blockid == block._id;
               });
             }
-            if (block.markedAsDone || (!hasAssignment && !hasTask)) {
+            if ((block.status && block.status.marked) || (!hasAssignment && !hasTask)) {
               switch (block.voicework) {
                 case 'audio_file' :
                   ++approved;
@@ -2077,7 +2077,10 @@ export const store = new Vuex.Store({
             if (block._id == selection.end._id) {
               break;
             }
-            crossId = block.chainid;
+            crossId = state.storeListO.getOutId(block.blockid);
+            if (!crossId) {
+              break;
+            }
           } else break;
         }
       }
