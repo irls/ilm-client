@@ -132,7 +132,7 @@ export default {
         if (this.currentJobInfo.mastering || this.currentJobInfo.proofing || this.currentJobInfo.text_cleanup) {
           return false;
         }
-        if (this.adminOrLibrarian) {
+        if (this.adminOrLibrarian && this.currentJobInfo.can_resolve_tasks) {
           let t = this.currentJobInfo.can_resolve_tasks.find(t => {
             return t.type === 'approve-published-book';
           })

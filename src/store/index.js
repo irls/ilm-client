@@ -373,7 +373,7 @@ export const store = new Vuex.Store({
         if (!state.currentBookMeta.numbering) {
           state.currentBookMeta.numbering = 'x_x';
         }
-        if (meta.hasOwnProperty('collection_id') && meta.collection_id.length == 0) {
+        if (meta.hasOwnProperty('collection_id') && (!meta.collection_id || meta.collection_id === null || meta.collection_id.length == 0)) {
           state.currentBookMeta.collection_id = false;
         }
       } else {
@@ -1032,12 +1032,35 @@ export const store = new Vuex.Store({
           if (data) {
 
             //state.storeListO.delBlock(data.block);
-            if (data.action === 'insert') {
-              state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
-            } else {
+            if (data.action === 'insert' && data.block) {
+              if (!state.storeListO.get(data.block.id)) {
+                state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
+              }
+            } else if (data.action === 'change' && data.block) {
               state.storeListO.updBlockByRid(data.block.id, data.block)
+            } else if (data.action === 'delete') {
+              
             }
-            store.commit('set_storeList', new BookBlock(data.block));
+            
+            if (data.block && state.storeList.has(data.block.blockid)) {
+              let block = state.storeList.get(data.block.blockid);
+              if (block.isChanged) {
+                if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
+                    if (block.voicework != data.block.voicework) {
+                      block.voicework = data.block.voicework;
+                      block.audiosrc = data.block.audiosrc;
+                      block.audiosrc_ver = data.block.audiosrc_ver;
+                      store.commit('set_storeList', new BookBlock(block));
+                    }
+                  } else {
+                    store.commit('set_storeList', new BookBlock(data.block));
+                  }
+              } else {
+                store.commit('set_storeList', new BookBlock(data.block));
+              }
+            } else if (data.block) {
+              store.commit('set_storeList', new BookBlock(data.block));
+            }
             state.storeListO.refresh();
           }
         });
@@ -1103,17 +1126,10 @@ export const store = new Vuex.Store({
         });
         state.liveDB.stopWatch('blockV');
         let bookMeta = new Promise((resolve, reject) => {
-          let bm = state.books_meta.find(m => {
-            return m.bookid == book_id;
-          });
-          if (bm) {
-            resolve(bm);
-          } else {
-            axios.get(state.API_URL + 'books/book_meta/' + book_id)
-              .then((answer) => {
-                resolve(answer.data.meta);
-              });
-          }
+          axios.get(state.API_URL + 'books/book_meta/' + book_id)
+            .then((answer) => {
+              resolve(answer.data.meta);
+            });
         });
         state.loadBookWait = bookMeta
         return bookMeta
@@ -1239,8 +1255,8 @@ export const store = new Vuex.Store({
           console.log('updateBookMeta response', response);
           //state.currentBookMeta = response.data;
           //commit('SET_CURRENTBOOK_META', response.data)
-          if (response.data == 1 && response.status == 200) {
-            let newMeta = Object.assign(state.currentBookMeta, update);
+          if (response.data["@class"] && response.status == 200) {
+            let newMeta = Object.assign(state.currentBookMeta, response.data);
             commit('SET_CURRENTBOOK_META', newMeta);
             return Promise.resolve(response.data);
           } else {
@@ -2026,7 +2042,7 @@ export const store = new Vuex.Store({
                 return t.blockid == block._id;
               });
             }
-            if (block.markedAsDone || (!hasAssignment && !hasTask)) {
+            if ((block.status && block.status.marked) || (!hasAssignment && !hasTask)) {
               switch (block.voicework) {
                 case 'audio_file' :
                   ++approved;
@@ -2061,7 +2077,10 @@ export const store = new Vuex.Store({
             if (block._id == selection.end._id) {
               break;
             }
-            crossId = block.chainid;
+            crossId = state.storeListO.getOutId(block.blockid);
+            if (!crossId) {
+              break;
+            }
           } else break;
         }
       }

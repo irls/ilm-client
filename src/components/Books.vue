@@ -280,6 +280,9 @@ export default {
   .ilm-block {
     direction: ltr; 
   }
+  &.ilm-block {
+    direction: ltr; 
+  }
 }
 
 .-langblock-ar,
@@ -287,6 +290,10 @@ export default {
   .ilm-block {
     direction: rtl; 
   }
+}
+/* Display mode */
+.-langblock-ar.ilm-block, .-langblock-fa.ilm-block {
+  direction: rtl; 
 }
 
 // for footnote settings:

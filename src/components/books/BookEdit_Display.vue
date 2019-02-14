@@ -205,13 +205,15 @@ export default {
       return this.loopPreparedBlocksChain({ids: idsArray})
       .then((result)=>{
         let resIdsArray = [];
-        if (result && result.length > 0) {
-          result.forEach((el, idx, arr)=>{
-            if (!this.parlist.has(el._id)) {
+        if (result && result.rows && result.rows.length > 0) {
+          result.rows.forEach((el, idx, arr)=>{
+            if (!this.parlist.has(el.blockid)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
               this.parlistO.setLoaded(el.blockid);
-              resIdsArray.push(el._id);
+              resIdsArray.push(el.blockid);
+            } else {
+              this.parlistO.setLoaded(el.blockid);
             }
           });
         }
