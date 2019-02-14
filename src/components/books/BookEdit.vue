@@ -9,7 +9,7 @@
         :key = "viewObj.blockRid"
         :id="'v-'+ viewObj.blockId">
 
-        <div class='col' v-if="parlistO.get(viewObj.blockRid)">
+        <div class='col'>
         <BookBlockPreview
           ref="viewBlocks"
           :blockRid = "viewObj.blockRid"
