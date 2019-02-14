@@ -280,6 +280,9 @@ export default {
   .ilm-block {
     direction: ltr; 
   }
+  &.ilm-block {
+    direction: ltr; 
+  }
 }
 
 .-langblock-ar,

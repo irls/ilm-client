@@ -235,45 +235,53 @@
         }
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
-        let record = self.audiobook.importFiles.find(_f => {
-          return _f.id == id;
-        });
-        if (record) {
-          record.positions = selections;
-          self.saveAudiobook();
+        if (self.audiobook && self.audiobook.importFiles) {
+          let record = self.audiobook.importFiles.find(_f => {
+            return _f.id == id;
+          });
+          if (record) {
+            record.positions = selections;
+            self.saveAudiobook();
+          }
         }
       });
       this.$root.$on('from-audioeditor:align', function(id, selections = null) {
 
-        let record = self.audiobook.importFiles.find(_f => {
-          return _f.id == id;
-        });
-        if (record) {
-          if (selections) {
-            record.positions = selections;
-            self.saveAudiobook()
-              .then(() => {
-                self.align(id);
-              })
-              .catch(err => console.log(err));
-          } else {
-            self.align(id);
+        if (self.audiobook && self.audiobook.importFiles) {
+          let record = self.audiobook.importFiles.find(_f => {
+            return _f.id == id;
+          });
+          if (record) {
+            if (selections) {
+              record.positions = selections;
+              self.saveAudiobook()
+                .then(() => {
+                  self.align(id);
+                })
+                .catch(err => console.log(err));
+            } else {
+              self.align(id);
+            }
           }
         }
       });
       this.$root.$on('from-audioeditor:discard', function() {
-        let record = self.audiobook.importFiles.find(f => {
-          return f.id == self.playing;
-        })
-        if (record) {
-          self.$root.$emit('for-audioeditor:load-and-play', process.env.ILM_API + self.audiobook.importUrl + record.id, '', null, false, record)
+        if (self.audiobook && self.audiobook.importFiles) {
+          let record = self.audiobook.importFiles.find(f => {
+            return f.id == self.playing;
+          })
+          if (record) {
+            self.$root.$emit('for-audioeditor:load-and-play', process.env.ILM_API + self.audiobook.importUrl + record.id, '', null, false, record)
+          }
         }
       });
       this.$root.$on('from-audioeditor:audio-loaded', (id) => {
         this.audioOpening = false;
-        let record = this.audiobook.importFiles.find(f => f.id === id);
-        if (record) {
-          this.playing = id;
+        if (self.audiobook && self.audiobook.importFiles) {
+          let record = this.audiobook.importFiles.find(f => f.id === id);
+          if (record) {
+            this.playing = id;
+          }
         }
       });
       this.$root.$on('from-audioeditor:selection-change', (id, start, end) => {
@@ -281,12 +289,14 @@
           //console.log('FOR ', af)
           if (typeof start !== 'undefined' && typeof end !== 'undefined') {
             this.positions_tmp[this.playing] = {start: start, end: end};
-            let record = this.audiobook.importFiles.find(f => f.id == this.playing);
-            if (record) {
-              record.positions = {start: start, end: end};
-              this.$forceUpdate();
-            } else {
+            if (self.audiobook && self.audiobook.importFiles) {
+              let record = this.audiobook.importFiles.find(f => f.id == this.playing);
+              if (record) {
+                record.positions = {start: start, end: end};
+                this.$forceUpdate();
+              } else {
 
+              }
             }
           } else {
             delete this.positions_tmp[this.playing];
