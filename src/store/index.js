@@ -1033,7 +1033,9 @@ export const store = new Vuex.Store({
 
             //state.storeListO.delBlock(data.block);
             if (data.action === 'insert' && data.block) {
-              state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
+              if (!state.storeListO.get(data.block.id)) {
+                state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
+              }
             } else if (data.action === 'change' && data.block) {
               state.storeListO.updBlockByRid(data.block.id, data.block)
             } else if (data.action === 'delete') {
