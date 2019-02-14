@@ -155,7 +155,9 @@ export const store = new Vuex.Store({
       }
     ],
     loadBookWait: null,
-    loadBookTaskWait: null
+    loadBookTaskWait: null,
+    jobInfoRequest: null,
+    jobInfoTimer: null
   },
 
   getters: {
@@ -789,6 +791,7 @@ export const store = new Vuex.Store({
 
     // login event
     connectDB ({ state, commit, dispatch }, session) {
+        dispatch('startJobInfoTimer');
         state.liveDB.setSubscriberId(state.auth.getSession().token);
         state.adminOrLibrarian = superlogin.confirmRole('admin') || superlogin.confirmRole('librarian');
         commit('RESET_LOGIN_STATE');
@@ -2181,13 +2184,22 @@ export const store = new Vuex.Store({
         text_cleanup: null,
         is_proofread_unassigned: null
       };*/
-      return axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
-        .then(data => {
-          state.currentJobInfo = data.data;
-        })
-        .catch(err => {
-          console.log(err);
-        })
+      if (state.jobInfoRequest) {
+        return state.jobInfoRequest;
+      }
+      if (state.currentBookid) {
+        state.jobInfoRequest = axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
+        return state.jobInfoRequest
+          .then(data => {
+            state.jobInfoTimer = Date.now();
+            state.jobInfoRequest = null;
+            state.currentJobInfo = data.data;
+          })
+          .catch(err => {
+            state.jobInfoRequest = null;
+            console.log(err);
+          })
+      }
     },
     getTaskTypes({state}) {
       return axios.get(state.API_URL + 'tasks/types').then(types => {
@@ -2197,6 +2209,14 @@ export const store = new Vuex.Store({
       .catch(error => {
         return Promise.reject({})
       })
+    },
+    startJobInfoTimer({state, dispatch}) {
+      let interval = 60000;
+      setInterval(() => {
+        if (!state.jobInfoTimer || Date.now() - state.jobInfoTimer >= interval) {
+          dispatch('getCurrentJobInfo');
+        }
+      }, interval);
     }
   }
 })

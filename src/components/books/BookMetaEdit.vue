@@ -92,17 +92,30 @@
                   <thead>
                     <th>Task</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th v-if="_is('editor', true) || adminOrLibrarian">Action</th>
                   </thead>
                   <tbody>
                     <tr v-for="task in counter.data.tasks">
-                      <td>{{getTaskType(task.type)}}</td>
-                      <td :class="[{'go-to-block': task.count > 0}]" v-on:click="goToBlockCheck(task.blockid, counter.key)">
+                      <td class="task-type">{{getTaskType(task.type)}}</td>
+                      <td :class="[{'go-to-block': task.blockid != null}, 'task-counter']" v-on:click="goToBlockCheck(task.blockid, counter.key)">
                         <span v-if="task.complete" :class="[{'ready': task.ready}]">Closed</span>
                         <span v-else :class="[{'ready': task.ready}]">Open</span>
-                        <span v-if="task.count > 0">&nbsp;({{task.count}})</span>
+                        <span v-if="task.count > 0">({{task.count}})</span>
                       </td>
-                      <td></td>
+                      <td class="task-action" v-if="_is('editor', true) || adminOrLibrarian">
+                        <template v-for="action in task.actions">
+                          <div v-if="action=='complete_cleanup'">
+                            <button class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">complete</button>
+                          </div>
+                          <div v-if="action=='mastering_required'">
+                            <div class="btn-switch" @click="toggleMastering()">
+                              <i class="fa fa-toggle-on" v-if="!currentBook.masteringRequired"></i>
+                              <i class="fa fa-toggle-off" v-else></i>
+                              <span class="s-label"> Mastered</span>
+                            </div>
+                          </div>
+                        </template>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -1371,7 +1384,31 @@ export default {
     },
     toggleMastering() {
       if (this.tc_allowToggleMetaMastering()) {
-        this.liveUpdate('masteringRequired',  !this.currentBook.masteringRequired)
+        if (!this.currentBook.masteringRequired) {
+          this.$root.$emit('show-modal', {
+            title: 'Define the audio as unmastered?',
+            text: '',
+            buttons: [
+              {
+                title: 'CANCEL',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+              },
+              {
+                title: 'OK',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  this.liveUpdate('masteringRequired',  !this.currentBook.masteringRequired)
+                },
+                'class': 'btn btn-primary'
+              }
+            ],
+            class: ['align-modal']
+          });
+        } else {
+          this.liveUpdate('masteringRequired',  !this.currentBook.masteringRequired)
+        }
       }
     },
     setAllowExportAudio() {
@@ -2076,6 +2113,7 @@ export default {
     }
     table.counters {
       border: 1px solid black;
+      width: 80%;
       thead {
         background-color: #c2c2c2;
         th {
@@ -2102,6 +2140,9 @@ export default {
           }
           &.go-to-block {
             cursor: pointer;
+          }
+          &.task-counter {
+            width: 80px;
           }
         }
       }
