@@ -1063,7 +1063,8 @@ export default {
     },
 
     update: _.debounce(function (key, event) {
-      this.liveUpdate(key, key == 'author' ? this.currentBook.author : event.target.value)
+      let val = typeof event === 'string' ? event : event.target.value;
+      this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
     }, 500),
 
     liveUpdate (key, value) {
