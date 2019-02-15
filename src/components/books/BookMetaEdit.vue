@@ -6,12 +6,6 @@
         <template v-if="isAdmin">
           <button class="hidden" v-on:click="removeBook()">Remove</button>
         </template>
-        <h4 class='title'>{{ currentBook.title }}</h4>
-        <h5 class='subtitle' v-if='currentBook.subtitle'>{{ currentBook.subtitle }}</h5>
-        <h5 class='author'>{{ currentBook.author && Array.isArray(currentBook.author) ? currentBook.author.join(',') : currentBook.author }},
-        <span class="pages">{{ Math.round(currentBook.wordcount / 300) }} pages &nbsp;
-        </span></h5>
-        <div style='clear: both'> </div>
       </div>
 
       <div class="row">
@@ -113,6 +107,12 @@
                   </td>
                 </tr>
 
+                <tr class='pages'>
+                  <td>Size</td>
+                  <td class="disabled pull-left">{{ Math.round(currentBook.wordcount / 300) }} pages</td>
+                </tr>
+
+
                 <tr class='category'>
                   <td>Category</td>
                   <td>
@@ -175,12 +175,12 @@
 
           <fieldset class='description brief'>
             <legend>Brief Description </legend>
-            <textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit"></textarea>
+            <textarea-autosize v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit" :min-height="20" :max-height="200" ></textarea-autosize>
           </fieldset>
 
           <fieldset class='description long'>
             <legend>Long Description </legend>
-            <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
+            <textarea-autosize v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" :min-height="30" :max-height="200"></textarea-autosize>
           </fieldset>
           
           <fieldset class='Export' :disabled="isExporting || currentBook.demo_time < 0" v-if="isAllowExportAudio">
@@ -631,7 +631,10 @@ import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
 import { Languages } from "../../mixins/lang_config.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
+import VueTextareaAutosize from 'vue-textarea-autosize'
 var BPromise = require('bluebird');
+
+Vue.use(VueTextareaAutosize)
 
 export default {
 
@@ -1794,11 +1797,12 @@ export default {
 
   /* Edit area for book description */
   fieldset.description textarea {
-    width: 100%; padding: 0; margin:0; border: none; min-height: 180px;
+    width: 100%; padding: 0; margin:0; border: none; 
+    /*min-height: 180px;*/
     resize: vertical;
   }
   fieldset.description.brief textarea {
-    min-height: 50px;
+    /*min-height: 50px;*/
   }
   fieldset.approve-metadata textarea {
     width: 100%;

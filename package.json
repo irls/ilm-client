@@ -57,6 +57,7 @@
     "vue-router": "^2.2.0",
     "vue-slider-component": "^2.6.2",
     "vue-strap": "github:wffranco/vue-strap",
+    "vue-textarea-autosize": "^1.0.4",
     "vue2-dropzone": "^3.2.2",
     "vue2-filters": "^0.1.9",
     "vuedraggable": "^2.16.0",
