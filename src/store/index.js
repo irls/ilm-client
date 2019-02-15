@@ -1041,7 +1041,7 @@ export const store = new Vuex.Store({
             } else if (data.action === 'delete') {
 
             }
-            
+
             if (data.block && state.storeList.has(data.block.blockid)) {
               let block = state.storeList.get(data.block.blockid);
               if (block.isChanged) {
