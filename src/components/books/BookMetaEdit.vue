@@ -1637,6 +1637,7 @@ export default {
 
     downloadDemo() {
         this.isExporting = true;
+        this.currentBook.demo_time = -1;//do not save, flag will update on synchronization
         return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/demo')
                .then(resp => {
                  this.isExporting = false;

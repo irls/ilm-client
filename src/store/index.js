@@ -136,7 +136,8 @@ export const store = new Vuex.Store({
       proofing: null,
       published: null,
       text_cleanup: null,
-      is_proofread_unassigned: null
+      is_proofread_unassigned: null,
+      executors: {editor: null, proofer: null, narrator: null}
     },
     taskTypes: {tasks: [], categories: []},
     liveDB: new liveDB(),
@@ -1164,7 +1165,7 @@ export const store = new Vuex.Store({
 
     reloadBookMeta ({commit, state, dispatch}) {
         if (state.currentBookMeta._id) {
-            state.metaDB.get(state.currentBookMeta._id).then((meta) => {
+            dispatch('getBookMeta', state.currentBookMeta._id).then((meta) => {
                 commit('SET_CURRENTBOOK_META', meta)
                 dispatch('getTotalBookTasks');
                 state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
@@ -1173,6 +1174,17 @@ export const store = new Vuex.Store({
                 }).catch((err)=>{
                   commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
                 })
+            })
+        }
+    },
+    
+    reloadBookCover({commit, state}) {
+      if (state.currentBookMeta._id) {
+          state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
+            .then(fileBlob => {
+              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
+            }).catch((err)=>{
+              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
             })
         }
     },

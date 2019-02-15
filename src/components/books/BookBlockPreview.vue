@@ -1,13 +1,13 @@
 <template>
 <div ref="viewBlock" class="block-preview">
-  <div :class="['table-body -block', blockOutPaddings]">
+  <div v-if="block && (loaded === true || blockO.loaded === true)"
+    :class="['table-body -block', blockOutPaddings]">
 
     <div :class="['table-cell', 'controls-left']">
       <div class="table-row"></div>
       <div class="table-row check-row"></div>
     </div>
     <!--<div :class="['table-cell', 'controls-left']">-->
-
     <div :class="['table-cell', {'completed': isCompleted}]">
       <div :class="['table-body', '-content']">
         <div class="table-row-flex controls-top"></div>
@@ -82,6 +82,9 @@
 
   </div>
   <!--<div v-if="loaded === true || blockO.loaded === true"-->
+  <div v-else :class="['in-loading']">
+    <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
+  </div>
 </div>
 </template>
 
@@ -250,7 +253,7 @@ import access             from '../../mixins/access.js';
 
   .table-body.footnote {
     .content-wrap-footn-preview.-text {
-      padding-right: 150px;
+      padding-right: 160px;
     }
   }
 }

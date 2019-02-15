@@ -18,7 +18,7 @@ class LookupBlock {
     this.isHidden = block.isHidden  || false;
     this.index = block.index || -1;
     this.visible = false;
-    this.loaded = true;
+    this.loaded = false;
     this.checked = false;
   }
 }
@@ -190,7 +190,7 @@ class BookBlocks {
     return false
   }
 
-  setLookupsList(bookId, bookList, parlist) {
+  setLookupsList(bookId, bookList) {
     //console.log('setLookupsList', bookList);
     this.lookupList = {};
     this.blocksList = {};
@@ -199,18 +199,16 @@ class BookBlocks {
     this.listObjs = [];
     this.meta = bookList.meta;
     this.meta.rid = bookList.meta['@rid'];
-    console.time('setLookupsList');
     if (Array.isArray(bookList.blocks)) {
       bookList.blocks.forEach((block)=>{
         this.listIds.push(block.blockid);
         this.listRIds.push(block.rid);
         this.listObjs.push({blockRid: block.rid, blockId: block.blockid});
         this.lookupList[block.rid] = new LookupBlock(block);
-        parlist.set(block.blockid, new BookBlock(block));
+        //this.blocksList[block.blockid] = new BookBlock(block);
       })
       this.setStartId(bookList.blocks[0].rid)
     }
-    console.timeEnd('setLookupsList');
   }
 
   appendLookupsList(bookId, bookList) {
@@ -307,21 +305,6 @@ class BookBlocks {
       }
       if (rid && this.lookupList.hasOwnProperty(rid)) {
         return this.lookupList[rid];
-      }
-    }
-    return false;
-  }
-
-  getData(blockId){
-    if (blockId) {
-      let rid;
-      if (blockId.charAt(0) == '#') { // Orient RID
-        rid = blockId;
-      } else {
-        rid = this.getRIdById(blockId);
-      }
-      if (rid && this.blocksList.hasOwnProperty(rid)) {
-        return this.blocksList[rid];
       }
     }
     return false;
@@ -531,7 +514,7 @@ class BookBlocks {
     }
     this.listIdsCache.rid = false;
   }
-
+  
   refresh() {
     let tmp = this.listObjs;
     this.listObjs = [];
