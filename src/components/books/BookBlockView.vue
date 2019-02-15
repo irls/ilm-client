@@ -3494,6 +3494,7 @@ export default {
       },
       'block.content': {
         handler(val) {
+          this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
               this.addContentListeners();
