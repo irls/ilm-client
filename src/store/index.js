@@ -1177,7 +1177,7 @@ export const store = new Vuex.Store({
             })
         }
     },
-    
+
     reloadBookCover({commit, state}) {
       if (state.currentBookMeta._id) {
           state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
