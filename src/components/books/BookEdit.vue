@@ -388,7 +388,7 @@ export default {
                   if (Array.isArray(this.isNeedDown)) this.isNeedDown = this.isNeedDown.pop();
                   //else this.isNeedDown = false;
                   //Vue.nextTick(()=>{
-                    this.lazyLoad();
+                    //this.lazyLoad();
                   //})
                 }
               });
@@ -396,7 +396,7 @@ export default {
               this.isNeedDown = false;
               if (this.isNeedUp) this.lazyLoaderDir = 'up';
               //Vue.nextTick(()=>{
-                this.lazyLoad();
+                //this.lazyLoad();
               //})
             }
 
@@ -420,7 +420,7 @@ export default {
                   if (this.isNeedUp) this.lazyLoaderDir = 'down';
                   if (Array.isArray(this.isNeedUp)) this.isNeedUp = this.isNeedUp[0];
                   //Vue.nextTick(()=>{
-                    this.lazyLoad();
+                    //this.lazyLoad();
                   //})
                 }
               });
@@ -428,7 +428,7 @@ export default {
               this.isNeedUp = false;
               if (this.isNeedDown) this.lazyLoaderDir = 'down';
               //Vue.nextTick(()=>{
-                this.lazyLoad();
+                //this.lazyLoad();
               //})
             }
           } break;
@@ -509,7 +509,7 @@ export default {
           if (routeBlockId !== 'unresolved' && this.parlist.has(routeBlockId)) {
             this.startId = routeBlockId;
             this.screenTop = initialTopOffset;
-            this.lazyLoad();
+            //this.lazyLoad();
             return Promise.resolve(routeBlockId);
             //this.lazyLoad(false, lastId);
           }
@@ -523,7 +523,7 @@ export default {
             this.unfreeze('loadBookDown');
             //this.startId = blockId;
             this.scrollToBlock(blockId);
-            this.lazyLoad();
+            //this.lazyLoad();
             return Promise.resolve(blockId);
           }).catch(err=>{
             console.log('loadBookDown->getBloksUntil Error:', err);
@@ -1239,7 +1239,7 @@ export default {
             });
             return getNextBlock
             .then((blockAfter)=>{
-              
+
               let chainId = this.parlistO.getOutId(block.blockid);
               let elBlock = this.$children.find(c => {
                 return c.$el.id == block.blockid;
@@ -1787,8 +1787,17 @@ export default {
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
+                if (res.blocks && res.blocks.length > 0) {
+                  res.blocks.forEach((el, idx, arr)=>{
+                    if (!this.parlist.has(el._id)) {
+                      let newBlock = new BookBlock(el);
+                      this.$store.commit('set_storeList', newBlock);
+                    }
+                    //this.parlistO.setLoaded(el._id);
+                  });
+                }
                 this.loadBookToc({bookId: this.meta._id, isWait: true});
-                this.lazyLoad();
+                //this.lazyLoad();
               });
             });
           });
@@ -1830,7 +1839,17 @@ export default {
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
-                this.lazyLoad();
+                if (res.blocks && res.blocks.length > 0) {
+                  res.blocks.forEach((el, idx, arr)=>{
+                    if (!this.parlist.has(el._id)) {
+                      let newBlock = new BookBlock(el);
+                      this.$store.commit('set_storeList', newBlock);
+                    }
+                    //this.parlistO.setLoaded(el._id);
+                  });
+                }
+
+                //this.lazyLoad();
                 if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
                   this.$router.push({name: 'BookEdit', params: {}});
                 }
@@ -1904,7 +1923,7 @@ export default {
     },
     'allBooks': {
       handler() {
-        
+
       }
     },
     '$route' (toRoute, fromRoute) {
