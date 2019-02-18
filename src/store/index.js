@@ -1116,13 +1116,6 @@ export const store = new Vuex.Store({
       if (book_id) {
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
         //let metaDB = state.metaRemoteDB;
-        state.liveDB.stopWatch('metaV');
-        state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
-          if (data && data.meta) {
-            commit('SET_CURRENTBOOK_META', data.meta)
-            dispatch('getTotalBookTasks');
-          }
-        });
         state.liveDB.stopWatch('blockV');
         let bookMeta = new Promise((resolve, reject) => {
           axios.get(state.API_URL + 'books/book_meta/' + book_id)
@@ -1149,6 +1142,13 @@ export const store = new Vuex.Store({
           .catch((err)=>{
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
           })
+          state.liveDB.stopWatch('metaV');
+          state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
+            if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid) {
+              commit('SET_CURRENTBOOK_META', data.meta)
+              dispatch('getTotalBookTasks');
+            }
+          });
           return Promise.resolve(answer);
         }).catch((err)=>{
           state.loadBookWait = null;
