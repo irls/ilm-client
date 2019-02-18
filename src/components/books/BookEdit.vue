@@ -973,7 +973,9 @@ export default {
           this.refreshBlock({doc: b_new, deleted: false});
           this.refreshBlock({doc: b_old, deleted: false});
           let blockO = response.data.new_block;
-          this.parlistO.addBlock(blockO);
+          if (!this.parlistO.get(blockO.blockid)) {
+            this.parlistO.addBlock(blockO);
+          }
 
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
