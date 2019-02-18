@@ -1699,18 +1699,36 @@ export const store = new Vuex.Store({
         });
     },
 
-    tc_loadBookTask({state, commit, dispatch}) {
+    tc_loadBookTask({state, commit, dispatch}, bookid) {
       //console.log('a1');
       if (state.loadBookTaskWait) {
         return state.loadBookTaskWait;
       }
-      state.loadBookTaskWait = axios.get(state.API_URL + 'tasks')
+      let address = state.API_URL + 'tasks';
+      if (bookid) {
+        address+='?bookid=' + bookid
+      }
+      state.loadBookTaskWait = axios.get(address)
       return state.loadBookTaskWait
         .then((list) => {
           //console.log('a2');
           state.loadBookTaskWait = null;
           state.tc_tasksByBlock = {}
-          state.tc_userTasks = {list: list.data, total: 0}
+          if (!bookid || !state.tc_userTasks.list) {
+            state.tc_userTasks = {list: list.data, total: 0}
+          } else {
+            if (bookid && (!list.data || Object.keys(list.data).length === 0)) {
+              Object.keys(state.tc_userTasks.list).forEach(k => {
+                let t = state.tc_userTasks.list[k];
+                if (t && t.bookid === bookid) {
+                  delete state.tc_userTasks.list[k];
+                }
+              })
+            } else {
+              state.tc_userTasks.list = Object.assign(state.tc_userTasks.list, list.data);
+              console.log(state.tc_userTasks.list)
+            }
+          }
           commit('TASK_LIST_LOADED')
           commit('PREPARE_BOOK_COLLECTIONS');
           dispatch('recountApprovedInRange');
@@ -1774,7 +1792,7 @@ export const store = new Vuex.Store({
         }
         //state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": []};
         if (state.replicatingDB.ilm_tasks !== true) {
-          dispatch('tc_loadBookTask');
+          dispatch('tc_loadBookTask', task.bookid);
         }
         dispatch('getCurrentJobInfo');
         return Promise.resolve(list);

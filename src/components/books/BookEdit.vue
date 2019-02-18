@@ -338,6 +338,16 @@ export default {
             this.unfreeze('loadBookMeta');
             return Promise.reject(err);
           });
+        } else if (this.$route.params.task_type) {
+          this.freeze('loadBookMeta');
+          return this.searchBlockUnresolved()
+            .then((blockId)=>{
+              this.unfreeze('loadBookMeta');
+              if (blockId) {
+                this.scrollToBlock(blockId);
+              }
+              return Promise.resolve({ blocks:[] }); // already loaded
+            });
         } else {
           this.handleScroll(true);
           return Promise.resolve({ blocks:[] }); // already loaded
@@ -474,9 +484,15 @@ export default {
       if (!task_type && !this._is('editor')) {
         task_type = true;
       }
+      let meta = this.meta;
+      if (!meta.bookid) {
+        if (this.parlistO && this.parlistO.meta && this.parlistO.meta.bookid) {
+          meta = this.parlistO.meta;
+        }
+      }
       return this.$store.dispatch('searchBlocksChain', {
-        book_id: this.meta._id,
-        startId: this.startId || this.meta.startBlock_id,
+        book_id: meta.bookid,
+        startId: this.startId || meta.startBlock_id,
         search: {block_type: 'unresolved',  task_type: task_type}
       }).then((result)=>{
         return result.blockId;
