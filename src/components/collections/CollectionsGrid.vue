@@ -24,7 +24,7 @@
           @clickRow="selectBook"
           @orderChanged="moveBook(collection, $event)"
           :selected="selectedBooks"
-          :idField="'_id'"
+          :idField="'bookid'"
           :filter-key="''"
           :draggable="allowCollectionsEdit"
           :sortable="false"
@@ -36,7 +36,7 @@
 </template>
 <script>
   import Grid from '../generic/Grid';
-  import { mapGetters } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import Vue from 'vue';
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
@@ -98,14 +98,14 @@
           }
         },
         selectBook(book) {
-          this.selectedBooks = [book._id];
-          this.$emit('selectBook', book._id, book.collection_id);
+          this.selectedBooks = [book.bookid];
+          this.$emit('selectBook', book.bookid, book.collection_id);
         },
         isOpenPanel(collection) {
           if (this.currentCollection._id) {
             return this.currentCollection._id === collection._id;
           }
-          return collection.book_match || collection.books.indexOf(this.currentBookMeta._id) !== -1;
+          return collection.book_match || collection.books.indexOf(this.currentBookMeta.bookid) !== -1;
         },
         moveBook(collection, data) {
           if (this.allowCollectionsEdit &&
@@ -143,10 +143,11 @@
               })
               .catch(err => {});
           }
-        }
+        },
+        ...mapActions(['updateBooksList'])
       },
       mounted() {
-
+        this.updateBooksList();
       },
       computed: {
         ...mapGetters([
@@ -166,7 +167,7 @@
               let books = [];
               c.books.forEach(b => {
                 let book = this.allBooks.find(_b => {
-                  return _b._id === b;
+                  return _b.bookid === b;
                 });
                 if (book) {
                   books.push(book);
@@ -209,8 +210,8 @@
       watch: {
         currentBookMeta: {
           handler() {
-            if (this.currentBookMeta._id) {
-              this.selectedBooks = [this.currentBookMeta._id];
+            if (this.currentBookMeta.bookid) {
+              this.selectedBooks = [this.currentBookMeta.bookid];
             }
           },
           deep: true

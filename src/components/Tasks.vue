@@ -271,6 +271,9 @@ export default {
 
     bookUrl (bookId, task) {
       //console.log('task', task);
+      if (task.blockid) {
+        return '/books/' + bookId + '/edit/' + task.blockid;
+      }
       switch(task.type) {
         case 'master-audio' : {
           return '/books/' + bookId + '/edit';
