@@ -640,7 +640,7 @@ export default {
               });
             } break;
             default : {
-              this.getBlocks(startId)
+              this.getBlocks([startId])
               .then((res)=>{
                 return resolve(startId);
               }).catch((err)=>{
