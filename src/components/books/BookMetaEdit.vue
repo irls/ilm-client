@@ -699,7 +699,8 @@ export default {
       isPublishingQueue: false,
       publicationStatus: false,
       isExporting:false,
-      validationErrors: {extid: []}
+      validationErrors: {extid: []},
+      updateAllowed: false
     }
   },
 
@@ -835,6 +836,9 @@ export default {
     $('body').on('click', '.vue-tabs.meta-edit-tabs li.tab', () => {
       this.activeTabIndex = this.$refs.panelTabs ? this.$refs.panelTabs.activeTabIndex : null;
     });
+    setTimeout(() => {
+      this.updateAllowed = true;//autosize plugin send updates on initialization
+    }, 1000)
   },
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
@@ -1069,6 +1073,9 @@ export default {
     }, 500),
 
     liveUpdate (key, value) {
+      if (!this.updateAllowed) {
+        return;
+      }
       console.log('liveUpdate', key, value);
 
       var keys = key.split('.');
