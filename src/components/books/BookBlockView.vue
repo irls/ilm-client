@@ -2809,6 +2809,8 @@ export default {
             .then(() => {
               this.assembleBlockAudioEdit(this.footnoteIdx);
               this.flushChanges();
+              this.isChanged = false;
+              this.isAudioChanged = false;
             });
         }
       },
@@ -2823,6 +2825,8 @@ export default {
           this.audStop();
           this.assembleBlockAudioEdit(this.footnoteIdx);
           this.flushChanges();
+          this.isChanged = false;
+          this.isAudioChanged = false;
         }
       },
       evFromAudioeditorInsertSilence (blockId, position, length) {
