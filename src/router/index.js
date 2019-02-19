@@ -28,7 +28,7 @@ export default new Router({
     {
       path: '/books',
       component: Books,
-      name: 'BooksList',
+//       name: 'BooksList',
       children: [
         { path: '', component: BooksGrid }
       ]
@@ -36,7 +36,7 @@ export default new Router({
     {
       path: '/books/:bookid',
       component: Books,
-      name: 'Book',
+//       name: 'Book',
       children: [
         { path: '', component: BooksGrid, name: 'BooksGrid' },
         {
