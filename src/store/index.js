@@ -976,6 +976,7 @@ export const store = new Vuex.Store({
 
     // logout event
     disconnectDB ({ state, commit }) {
+      state.liveDB.stopWatchAll();
       axios.defaults.headers.common['Authorization'] = false;
       //window.setTimeout(() => {
           //if (state.metaDB) state.metaDB.destroy()
