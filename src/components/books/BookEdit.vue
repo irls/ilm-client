@@ -1847,6 +1847,11 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
+                    Vue.nextTick(() => {
+                      this.scrollToBlock(initBlocks.blocks[0].blockid);
+                    })
+                  }
                 }
 
                 //this.lazyLoad();
