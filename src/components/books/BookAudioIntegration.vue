@@ -1010,7 +1010,7 @@
       isAudiofileHighlighted(audiofile) {
         if (this.alignCounter && this.alignCounter.blocks && audiofile.blockMap) {
           let hasMap = this.alignCounter.blocks.find(b => {
-            return typeof audiofile.blockMap[b._id] !== 'undefined';
+            return typeof audiofile.blockMap[b.blockid] !== 'undefined';
           });
           return hasMap;
         } else {
