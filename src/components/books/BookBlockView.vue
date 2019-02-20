@@ -894,7 +894,7 @@ export default {
           if (this.block && ['tts', 'audio_file'].indexOf(this.block.voicework) !== -1 && !this.block.audiosrc) {
             return true;
           }
-          if (this._is('editor') || adminOrLibrarian) {
+          if (this._is('editor') || this.adminOrLibrarian) {
             if (this.block.footnotes && Array.isArray(this.block.footnotes)) {
               let notAlignedFootnote = this.block.footnotes.find(f => {
                 return !f.audiosrc && f.voicework === 'tts';
