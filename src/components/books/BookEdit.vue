@@ -1,13 +1,14 @@
 <template>
 <div :class="['content-scroll-wrapper', {'recording-background': recordingState == 'recording'}]"
-  v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="smoothHandleScroll($event); updatePositions();">
+  v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <div class="content-background">
       <div v-for="(viewObj, listIdx) in getListObjs"
         :class="['row content-scroll-item back']"
         :key = "viewObj.blockRid"
-        :id="'v-'+ viewObj.blockId">
+        :id="'v-'+ viewObj.blockId"
+        :data-rid="viewObj.blockRid">
 
         <div class='col'>
         <BookBlockPreview
@@ -274,8 +275,8 @@ export default {
 
     'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks']),
 
-    test() {
-        console.log('test');
+    test(ev) {
+        console.log('test', ev);
     },
 
     refreshTmpl() {
@@ -1627,8 +1628,12 @@ export default {
 
     scrollToBlock(blockId, force = false)
     {
+      //console.log('scrollToBlock', blockId);
       let vBlock = document.getElementById('v-'+ blockId);
-      if (vBlock) vBlock.scrollIntoView();
+      if (vBlock) {
+        vBlock.scrollIntoView();
+        //this.parlistO.setStartId(blockId)
+      }
     },
 
     scrollToBlockEnd(id) {
@@ -1654,10 +1659,9 @@ export default {
       //this.refreshTmpl();
     },
 
-    checkVisible(elm) {
+    checkVisible(elm, viewHeight) {
       var rect = elm.getBoundingClientRect();
-      var viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-      return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
+      return !(rect.bottom < initialTopOffset+1 || rect.top - viewHeight >= 0);
     },
 
     updatePositions() {
@@ -1685,8 +1689,9 @@ export default {
         let firstVisible = false;
         let lastVisible = false;
         let loadIdsArray = [];
+        let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
         for (let blockRef of this.$refs.viewBlocks) {
-          let visible = this.checkVisible(blockRef.$refs.viewBlock);
+          let visible = this.checkVisible(blockRef.$refs.viewBlock, viewHeight);
           if (visible) {
             if (!firstVisible) {
               firstVisible = blockRef.blockO;
@@ -1694,14 +1699,7 @@ export default {
             lastVisible =  blockRef.blockO;
             if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
               this.parlistO.setLoaded(blockRef.blockRid);
-
-              Vue.nextTick(()=>{
-                //this.scrollToBlock(firstVisible);
-                blockRef.$forceUpdate();
-//                 Vue.nextTick(()=>{
-//                   this.scrollToBlock(firstVisible);
-//                 });
-              })
+              blockRef.$forceUpdate();
             }
             else if (this.parlistO.get(blockRef.blockRid).loaded === false) {
               this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
@@ -1709,7 +1707,6 @@ export default {
             }
           }
         }
-
         if (loadIdsArray.length) {
           this.getBlocksArr(loadIdsArray)
           .then((resIdsArray)=>{
@@ -1745,18 +1742,24 @@ export default {
 
         if (checkUpp || checkDown || force) {
           this.startId = firstVisible.blockid;
-          let prevId = this.parlistO.getPrevIds(firstVisible.rid, 2);
-          if (prevId.length < 1) prevId = [firstVisible.blockid];
-          prevId = prevId.pop();
-          if (this.parlistO.setStartId(prevId)) {
-            let firstDomBlock = document.getElementById('v-'+prevId);
-            if (firstDomBlock) this.screenTop = firstDomBlock.offsetTop;
-//               this.$refs.blocks.forEach(($ref)=>{
-//                 $ref.addContentListeners();
-//               })
+//           let prevId = this.parlistO.getPrevIds(firstVisible.rid, 2);
+//           if (prevId.length < 1) prevId = [firstVisible.blockid];
+//           prevId = prevId.pop();
+          if (this.parlistO.setStartId(firstVisible.blockid)) {
+            let firstDomBlock = document.getElementById('v-'+firstVisible.blockid);
+            if (firstDomBlock) Vue.nextTick(()=>{
+              this.screenTop = firstDomBlock.offsetTop;
+            })
           }
         }
       }
+    },
+
+    correctEditWrapper() {
+      let firstDomBlock = document.getElementById('v-'+this.startId);
+      if (firstDomBlock) Vue.nextTick(()=>{
+        this.screenTop = firstDomBlock.offsetTop;
+      })
     },
 
     getBlocksArr(idsArray) {
@@ -1902,7 +1905,7 @@ export default {
       this.$root.$on('for-bookedit:scroll-to-block', this.scrollToBlock);
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
-      this.$root.$on('from-toolbar:toggle-meta', this.handleScroll);
+      this.$root.$on('from-toolbar:toggle-meta', this.correctEditWrapper);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -1924,7 +1927,7 @@ export default {
     this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
     this.$root.$off('book-reimported', this.bookReimported);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
-    this.$root.$off('from-toolbar:toggle-meta', this.handleScroll);
+    this.$root.$off('from-toolbar:toggle-meta', this.correctEditWrapper);
   },
   watch: {
     'meta._id': {
