@@ -1663,7 +1663,10 @@ export default {
 
     downloadDemo() {
         //this.isExporting = true;
-        //this.currentBook.demo_time = -1;//do not save, flag will update on synchronization
+
+
+        let currTime = new Date().getTime();
+        this.currentBook.demo_time = -1 * currTime;
         return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/demo')
                .then(resp => {
                  //this.isExporting = false;
