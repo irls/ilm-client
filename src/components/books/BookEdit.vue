@@ -272,10 +272,10 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks']),
 
     test() {
-        window.scrollTo(0, document.body.scrollHeight-500);
+        console.log('test');
     },
 
     refreshTmpl() {
@@ -338,6 +338,16 @@ export default {
             this.unfreeze('loadBookMeta');
             return Promise.reject(err);
           });
+        } else if (this.$route.params.task_type) {
+          this.freeze('loadBookMeta');
+          return this.searchBlockUnresolved()
+            .then((blockId)=>{
+              this.unfreeze('loadBookMeta');
+              if (blockId) {
+                this.scrollToBlock(blockId);
+              }
+              return Promise.resolve({ blocks:[] }); // already loaded
+            });
         } else {
           this.handleScroll(true);
           return Promise.resolve({ blocks:[] }); // already loaded
@@ -378,7 +388,7 @@ export default {
                   if (Array.isArray(this.isNeedDown)) this.isNeedDown = this.isNeedDown.pop();
                   //else this.isNeedDown = false;
                   //Vue.nextTick(()=>{
-                    this.lazyLoad();
+                    //this.lazyLoad();
                   //})
                 }
               });
@@ -386,7 +396,7 @@ export default {
               this.isNeedDown = false;
               if (this.isNeedUp) this.lazyLoaderDir = 'up';
               //Vue.nextTick(()=>{
-                this.lazyLoad();
+                //this.lazyLoad();
               //})
             }
 
@@ -410,7 +420,7 @@ export default {
                   if (this.isNeedUp) this.lazyLoaderDir = 'down';
                   if (Array.isArray(this.isNeedUp)) this.isNeedUp = this.isNeedUp[0];
                   //Vue.nextTick(()=>{
-                    this.lazyLoad();
+                    //this.lazyLoad();
                   //})
                 }
               });
@@ -418,7 +428,7 @@ export default {
               this.isNeedUp = false;
               if (this.isNeedDown) this.lazyLoaderDir = 'down';
               //Vue.nextTick(()=>{
-                this.lazyLoad();
+                //this.lazyLoad();
               //})
             }
           } break;
@@ -474,9 +484,15 @@ export default {
       if (!task_type && !this._is('editor')) {
         task_type = true;
       }
+      let meta = this.meta;
+      if (!meta.bookid) {
+        if (this.parlistO && this.parlistO.meta && this.parlistO.meta.bookid) {
+          meta = this.parlistO.meta;
+        }
+      }
       return this.$store.dispatch('searchBlocksChain', {
-        book_id: this.meta._id,
-        startId: this.startId || this.meta.startBlock_id,
+        book_id: meta.bookid,
+        startId: this.startId || meta.startBlock_id,
         search: {block_type: 'unresolved',  task_type: task_type}
       }).then((result)=>{
         return result.blockId;
@@ -493,7 +509,7 @@ export default {
           if (routeBlockId !== 'unresolved' && this.parlist.has(routeBlockId)) {
             this.startId = routeBlockId;
             this.screenTop = initialTopOffset;
-            this.lazyLoad();
+            //this.lazyLoad();
             return Promise.resolve(routeBlockId);
             //this.lazyLoad(false, lastId);
           }
@@ -507,7 +523,7 @@ export default {
             this.unfreeze('loadBookDown');
             //this.startId = blockId;
             this.scrollToBlock(blockId);
-            this.lazyLoad();
+            //this.lazyLoad();
             return Promise.resolve(blockId);
           }).catch(err=>{
             console.log('loadBookDown->getBloksUntil Error:', err);
@@ -624,7 +640,7 @@ export default {
               });
             } break;
             default : {
-              this.getBlocks(startId)
+              this.getBlocks([startId])
               .then((res)=>{
                 return resolve(startId);
               }).catch((err)=>{
@@ -944,8 +960,12 @@ export default {
             this.startId = blockO.blockid;
           }
           this.unfreeze('insertBlockBefore');
-          this.tc_loadBookTask();
+          this.tc_loadBookTask(block.bookid);
           this.getCurrentJobInfo();
+          this.setCurrentBookCounters(['not_marked_blocks']);
+          if (this.tc_hasTask('audio_mastering')) {
+            this.setCurrentBookCounters(['not_proofed_audio_blocks']);
+          }
           //this.refreshTmpl();
         })
         .catch(err => {
@@ -973,7 +993,9 @@ export default {
           this.refreshBlock({doc: b_new, deleted: false});
           this.refreshBlock({doc: b_old, deleted: false});
           let blockO = response.data.new_block;
-          this.parlistO.addBlock(blockO);
+          if (!this.parlistO.get(blockO.blockid)) {
+            this.parlistO.addBlock(blockO);
+          }
 
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
@@ -983,8 +1005,12 @@ export default {
             //this.startId = blockO.blockid;
           } //else this.refreshTmpl();
           this.unfreeze('insertBlockAfter');
-          this.tc_loadBookTask();
+          this.tc_loadBookTask(block.bookid);
           this.getCurrentJobInfo();
+          this.setCurrentBookCounters(['not_marked_blocks']);
+          if (this.tc_hasTask('audio_mastering')) {
+            this.setCurrentBookCounters(['not_proofed_audio_blocks']);
+          }
           //this.refreshTmpl();
         })
         .catch(err => {
@@ -1043,6 +1069,9 @@ export default {
 
         this.unfreeze('deleteBlock');
         this.updateBookVersion({major: true})
+        this.tc_loadBookTask();
+        this.getCurrentJobInfo();
+        this.getTotalBookTasks();
         //this.refreshTmpl();
       })
       .catch(err => {
@@ -1218,7 +1247,7 @@ export default {
             });
             return getNextBlock
             .then((blockAfter)=>{
-              
+
               let chainId = this.parlistO.getOutId(block.blockid);
               let elBlock = this.$children.find(c => {
                 return c.$el.id == block.blockid;
@@ -1667,7 +1696,14 @@ export default {
             lastVisible =  blockRef.blockO;
             if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
               this.parlistO.setLoaded(blockRef.blockRid);
-              blockRef.$forceUpdate();
+
+              Vue.nextTick(()=>{
+                //this.scrollToBlock(firstVisible);
+                blockRef.$forceUpdate();
+//                 Vue.nextTick(()=>{
+//                   this.scrollToBlock(firstVisible);
+//                 });
+              })
             }
             else if (this.parlistO.get(blockRef.blockRid).loaded === false) {
               this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
@@ -1707,7 +1743,7 @@ export default {
 //             params: { block: firstVisibleId }
 //           });
 //         }
-      } else this.onScrollEv = false;
+     } else this.onScrollEv = false;
     },
 
     moveEditWrapper(firstVisible, lastVisible, force) {
@@ -1777,8 +1813,17 @@ export default {
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
+                if (res.blocks && res.blocks.length > 0) {
+                  res.blocks.forEach((el, idx, arr)=>{
+                    if (!this.parlist.has(el._id)) {
+                      let newBlock = new BookBlock(el);
+                      this.$store.commit('set_storeList', newBlock);
+                    }
+                    //this.parlistO.setLoaded(el._id);
+                  });
+                }
                 this.loadBookToc({bookId: this.meta._id, isWait: true});
-                this.lazyLoad();
+                //this.lazyLoad();
               });
             });
           });
@@ -1820,7 +1865,24 @@ export default {
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
-                this.lazyLoad();
+                //console.log('res.blocks', res.blocks[0]);
+                if (res.blocks && res.blocks.length > 0) {
+                  res.blocks.forEach((el, idx, arr)=>{
+                    if (!this.parlist.has(el._id)) {
+                      let newBlock = new BookBlock(el);
+                      this.$store.commit('set_storeList', newBlock);
+                      //this.parlistO.setLoaded(el.rid);
+                    }
+                    //this.parlistO.setLoaded(el._id);
+                  });
+                  if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
+                    Vue.nextTick(() => {
+                      this.scrollToBlock(initBlocks.blocks[0].blockid);
+                    })
+                  }
+                }
+
+                //this.lazyLoad();
                 if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
                   this.$router.push({name: 'BookEdit', params: {}});
                 }
@@ -1851,6 +1913,7 @@ export default {
       this.$root.$on('for-bookedit:scroll-to-block', this.scrollToBlock);
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
+      this.$root.$on('from-toolbar:toggle-meta', this.handleScroll);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -1873,6 +1936,7 @@ export default {
     this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
     this.$root.$off('book-reimported', this.bookReimported);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
+    this.$root.$off('from-toolbar:toggle-meta', this.handleScroll);
   },
   watch: {
     'meta._id': {
@@ -1895,7 +1959,7 @@ export default {
     },
     'allBooks': {
       handler() {
-        
+
       }
     },
     '$route' (toRoute, fromRoute) {
@@ -2136,5 +2200,78 @@ export default {
       padding: 6px 12px;
   }
 
+</style>
 
+
+<style lang='less'>
+.block-preview {
+  .in-loading {
+    height: 150px;
+    background: url(/static/preloader-snake-small.gif);
+    width: 100%;
+    /*margin: 0 auto;*/
+    background-repeat: no-repeat;
+    text-align: center;
+    background-position: center;
+  }
+
+  .in-back {
+    visibility: hidden;
+    /*opacity: 0.5;*/
+    /*border-bottom: 1px red solid;*/
+  }
+
+  .preview-container {
+    height: 100px;
+  }
+
+  .table-row .illustration-block img {
+    border: solid white 2px;
+    max-width: 100%;
+  }
+
+  .content-wrap-desc.description {
+    min-height: 30px;
+  }
+
+  .content-wrap-preview {
+    padding: 10px;
+    margin: 6px auto 4px auto;
+  }
+
+  .table-row.controls-bottom {
+    height: 24px;
+  }
+
+  .table-row.controls-top {
+    height: 28px;
+    &.completed {
+      height: 20px;
+    }
+  }
+
+  /*.ilm-book-styles.global-ocean*/
+  .ilm-block {
+    .content-wrap-preview {
+      &.header {
+        margin: 4px;
+      }
+      &.title {
+        margin-top: 6px;
+      }
+    }
+  }
+
+  .content-wrap-footn-preview {
+    p {
+      margin: 0;
+    }
+  }
+
+  .table-body.footnote {
+    .content-wrap-footn-preview.-text {
+      padding-right: 150px;
+    }
+  }
+}
 </style>

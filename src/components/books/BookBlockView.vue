@@ -1613,7 +1613,7 @@ export default {
             this.createBlockSubtask(this.block._id, 'approve-revoked-block', 'proofer');
           }*/
           if (this.isCompleted) {
-            this.tc_loadBookTask();
+            this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
             this.getTotalBookTasks();
           }
@@ -1837,7 +1837,7 @@ export default {
 
             this.recountApprovedInRange();
             //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
-            this.getBloksUntil('unresolved', null, this.block._id)
+            //this.getBloksUntil('unresolved', null, this.block._id)
           });
         }
       },
@@ -1884,7 +1884,7 @@ export default {
               }
               //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
               this.recountApprovedInRange();
-              this.getBloksUntil('unresolved', true, this.block._id)
+              //this.getBloksUntil('unresolved', true, this.block._id)
             }
           })
           .catch(err => {
@@ -2809,6 +2809,8 @@ export default {
             .then(() => {
               this.assembleBlockAudioEdit(this.footnoteIdx);
               this.flushChanges();
+              this.isChanged = false;
+              this.isAudioChanged = false;
             });
         }
       },
@@ -2823,6 +2825,8 @@ export default {
           this.audStop();
           this.assembleBlockAudioEdit(this.footnoteIdx);
           this.flushChanges();
+          this.isChanged = false;
+          this.isAudioChanged = false;
         }
       },
       evFromAudioeditorInsertSilence (blockId, position, length) {
