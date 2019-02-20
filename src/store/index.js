@@ -340,7 +340,7 @@ export const store = new Vuex.Store({
         if (meta.publishedVersion === 'false') {
           meta.publishedVersion = false;
         }
-        if (Object.keys(meta.voices).length === 0) {
+        if (meta.voices && Object.keys(meta.voices).length === 0) {
           meta.voices = {
             'title': false,
             'header': false,
