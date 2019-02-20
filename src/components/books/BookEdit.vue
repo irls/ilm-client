@@ -275,7 +275,7 @@ export default {
     'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks']),
 
     test() {
-        window.scrollTo(0, document.body.scrollHeight-500);
+        console.log('test');
     },
 
     refreshTmpl() {
@@ -1694,7 +1694,14 @@ export default {
             lastVisible =  blockRef.blockO;
             if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
               this.parlistO.setLoaded(blockRef.blockRid);
-              blockRef.$forceUpdate();
+
+              Vue.nextTick(()=>{
+                //this.scrollToBlock(firstVisible);
+                blockRef.$forceUpdate();
+//                 Vue.nextTick(()=>{
+//                   this.scrollToBlock(firstVisible);
+//                 });
+              })
             }
             else if (this.parlistO.get(blockRef.blockRid).loaded === false) {
               this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
@@ -1725,7 +1732,7 @@ export default {
 //             params: { block: firstVisibleId }
 //           });
 //         }
-      } else this.onScrollEv = false;
+     } else this.onScrollEv = false;
     },
 
     moveEditWrapper(firstVisible, lastVisible, force) {
@@ -1847,11 +1854,13 @@ export default {
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
+                //console.log('res.blocks', res.blocks[0]);
                 if (res.blocks && res.blocks.length > 0) {
                   res.blocks.forEach((el, idx, arr)=>{
                     if (!this.parlist.has(el._id)) {
                       let newBlock = new BookBlock(el);
                       this.$store.commit('set_storeList', newBlock);
+                      //this.parlistO.setLoaded(el.rid);
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
@@ -1893,6 +1902,7 @@ export default {
       this.$root.$on('for-bookedit:scroll-to-block', this.scrollToBlock);
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
+      this.$root.$on('from-toolbar:toggle-meta', this.handleScroll);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -1914,6 +1924,7 @@ export default {
     this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
     this.$root.$off('book-reimported', this.bookReimported);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
+    this.$root.$off('from-toolbar:toggle-meta', this.handleScroll);
   },
   watch: {
     'meta._id': {
@@ -2177,5 +2188,78 @@ export default {
       padding: 6px 12px;
   }
 
+</style>
 
+
+<style lang='less'>
+.block-preview {
+  .in-loading {
+    height: 150px;
+    background: url(/static/preloader-snake-small.gif);
+    width: 100%;
+    /*margin: 0 auto;*/
+    background-repeat: no-repeat;
+    text-align: center;
+    background-position: center;
+  }
+
+  .in-back {
+    visibility: hidden;
+    /*opacity: 0.5;*/
+    /*border-bottom: 1px red solid;*/
+  }
+
+  .preview-container {
+    height: 100px;
+  }
+
+  .table-row .illustration-block img {
+    border: solid white 2px;
+    max-width: 100%;
+  }
+
+  .content-wrap-desc.description {
+    min-height: 30px;
+  }
+
+  .content-wrap-preview {
+    padding: 10px;
+    margin: 6px auto 4px auto;
+  }
+
+  .table-row.controls-bottom {
+    height: 24px;
+  }
+
+  .table-row.controls-top {
+    height: 28px;
+    &.completed {
+      height: 20px;
+    }
+  }
+
+  /*.ilm-book-styles.global-ocean*/
+  .ilm-block {
+    .content-wrap-preview {
+      &.header {
+        margin: 4px;
+      }
+      &.title {
+        margin-top: 6px;
+      }
+    }
+  }
+
+  .content-wrap-footn-preview {
+    p {
+      margin: 0;
+    }
+  }
+
+  .table-body.footnote {
+    .content-wrap-footn-preview.-text {
+      padding-right: 150px;
+    }
+  }
+}
 </style>
