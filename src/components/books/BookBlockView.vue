@@ -894,6 +894,16 @@ export default {
           if (this.block && ['tts', 'audio_file'].indexOf(this.block.voicework) !== -1 && !this.block.audiosrc) {
             return true;
           }
+          if (this._is('editor') || adminOrLibrarian) {
+            if (this.block.footnotes && Array.isArray(this.block.footnotes)) {
+              let notAlignedFootnote = this.block.footnotes.find(f => {
+                return !f.audiosrc && f.voicework === 'tts';
+              })
+              if (notAlignedFootnote) {
+                return true;
+              }
+            }
+          }
           let flags_summary = this.block.calcFlagsSummary();
             if (this.isCanApproveWithoutTask) {
               if (flags_summary.stat === 'open') {
