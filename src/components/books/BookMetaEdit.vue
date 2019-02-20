@@ -1643,10 +1643,10 @@ export default {
     },
 
     downloadDemo() {
-        this.isExporting = true;
+        //this.isExporting = true;
         return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/demo')
                .then(resp => {
-                 this.isExporting = false;
+                 //this.isExporting = false;
                });
 
         //return this.API_URL + 'books/' + this.currentBook._id + '/demo';
