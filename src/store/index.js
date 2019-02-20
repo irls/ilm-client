@@ -337,6 +337,17 @@ export const store = new Vuex.Store({
 //       state.currentBook_dirty = false
 //       state.currentBookMeta_dirty = false
       if (meta) {
+        if (meta.publishedVersion === 'false') {
+          meta.publishedVersion = false;
+        }
+        if (Object.keys(meta.voices).length === 0) {
+          meta.voices = {
+            'title': false,
+            'header': false,
+            'paragraph': false,
+            'footnote': false
+          };
+        }
         state.currentBookMeta = meta;
         state.currentBookMeta._id = meta.bookid;
         state.currentBookid = meta.bookid
@@ -1931,6 +1942,21 @@ export const store = new Vuex.Store({
       return axios.get(state.API_URL + 'tts/voices' + (lang ? `/${lang}` : ''))
       .then((response) => {
         commit('SET_TTS_VOICES', response.data);
+        if (state.currentBookMeta && state.currentBookMeta.language == 'en') {
+          let default_voice = null;
+          state.ttsVoices.forEach(group => {
+            if (!default_voice && group.children) {
+              default_voice = group.children.find(ch => ch.id == 'Brian');
+            }
+          });
+          if (default_voice && Object.keys(state.currentBookMeta.voices).length > 0) {
+            for (let type in state.currentBookMeta.voices) {
+              if (!state.currentBookMeta.voices[type]) {
+                state.currentBookMeta.voices[type] = default_voice.id
+              }
+            }
+          }
+        }
       })
       .catch(err => err)
     },
