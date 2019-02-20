@@ -1644,6 +1644,10 @@ export default {
 
     downloadDemo() {
         //this.isExporting = true;
+
+
+        let currTime = new Date().getTime();
+        this.currentBook.demo_time = -1 * currTime;
         return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/demo')
                .then(resp => {
                  //this.isExporting = false;
