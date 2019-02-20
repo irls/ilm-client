@@ -1821,6 +1821,7 @@ export default {
                     if (!this.parlist.has(el._id)) {
                       let newBlock = new BookBlock(el);
                       this.$store.commit('set_storeList', newBlock);
+                      if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
@@ -1874,7 +1875,7 @@ export default {
                     if (!this.parlist.has(el._id)) {
                       let newBlock = new BookBlock(el);
                       this.$store.commit('set_storeList', newBlock);
-                      //this.parlistO.setLoaded(el.rid);
+                      if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
