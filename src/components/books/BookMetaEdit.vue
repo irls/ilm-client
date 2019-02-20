@@ -183,17 +183,17 @@
             <textarea-autosize v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" :min-height="30" :max-height="200"></textarea-autosize>
           </fieldset>
           
-          <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus() == 'progress'">
+          <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
             <legend>Export </legend>
-              <div v-if="getDemoStatus() == 'progress' " class="align-preloader -small">&nbsp;</div>
-              <div v-if="getDemoStatus() == 'rebuild'">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
+              <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
+              <div v-if="getDemoStatus == 'rebuild'">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
               <div>
-                <a class="btn btn-primary"      v-if="getDemoStatus() == 'rebuild' || getDemoStatus() == 'progress'" :disabled="getDemoStatus() == 'progress'" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
-                <a class="btn btn-primary"      v-if="getDemoStatus() == 'rebuild' || getDemoStatus() == 'progress'" :disabled="getDemoStatus() == 'progress'" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
-                <button class="btn btn-primary" v-if="getDemoStatus() == 'rebuild' || getDemoStatus() == 'progress'" :disabled="getDemoStatus() == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
-                <a class="btn btn-primary" v-if="getDemoStatus() == 'build' || getDemoStatus() == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus() == 'progress'">Build</a>
-                <a class="btn btn-primary" v-if="getDemoStatus() == 'rebuild' || getDemoStatus() == 'progress'" target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus() == 'progress'">Rebuild</a>
-                <span v-if="getDemoStatus() == 'failed'"> Demo Book generation has failed. Please try again.</span>
+                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
+                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
+                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
+                <a class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</a>
+                <a class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</a>
+                <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
               </div>
           </fieldset>
           <fieldset class="publish">
@@ -741,7 +741,22 @@ export default {
         return list;
       }
     },
+    getDemoStatus(){ // build, rebuild, progress, failed
+        let errorGenerateTime = 1 * 60 * 60000;   // 1 hr * 60 min * 60000 msec;
+        let currTime = new Date().getTime();
 
+        if (!this.currentBook.demo_time) return 'build';
+
+        if (Number(this.currentBook.demo_time) < 0){
+            if (Number(currTime) + Number(this.currentBook.demo_time) > errorGenerateTime){
+              console.log('failed');
+              return 'failed';
+            } else {
+              return 'progress';
+            }
+        }
+        return 'rebuild';
+    },
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
     },
@@ -1011,21 +1026,6 @@ export default {
         .then(() => {
 
         });*/
-    },
-    getDemoStatus(){ // build, rebuild, progress, failed
-        let errorGenerateTime = 1 * 60 * 60000;   // 1 hr * 60 min * 60000 msec;
-        let currTime = new Date().getTime();
-
-        if (!this.currentBook.demo_time) return 'build';
-
-        if (Number(this.currentBook.demo_time) < 0){
-            if (Number(currTime) + Number(this.currentBook.demo_time) > errorGenerateTime){
-              return 'failed';
-            } else {
-              return 'progress';
-            }
-        }
-        return 'rebuild';
     },
     updateCollection(event) {
       if (event && event.target.value) {
