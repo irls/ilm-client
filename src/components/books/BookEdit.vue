@@ -1690,7 +1690,9 @@ export default {
         let lastVisible = false;
         let loadIdsArray = [];
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-        for (let blockRef of this.$refs.viewBlocks) {
+        //let loadCount = 5;
+        for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
+          let blockRef = this.$refs.viewBlocks[i];
           let visible = this.checkVisible(blockRef.$refs.viewBlock, viewHeight);
           if (visible) {
             if (!firstVisible) {
@@ -1705,7 +1707,13 @@ export default {
               this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
               loadIdsArray.push(blockRef.blockId);
             }
-          }
+          /*} else if (firstVisible && loadCount > 0) {
+            if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
+              loadCount--;
+              this.parlistO.setLoaded(blockRef.blockRid);
+              blockRef.$forceUpdate();
+            }*/
+          } else if (firstVisible) break;
         }
         if (loadIdsArray.length) {
           this.getBlocksArr(loadIdsArray)
