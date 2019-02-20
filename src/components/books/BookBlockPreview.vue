@@ -1,6 +1,6 @@
 <template>
 <div ref="viewBlock" class="block-preview">
-  <div v-if="block && (loaded === true || blockO.loaded === true)"
+  <div v-if="block && (block.type != 'par' || (loaded === true || blockO.loaded === true))"
     :class="['table-body -block', blockOutPaddings]">
 
     <div :class="['table-cell', 'controls-left']">
