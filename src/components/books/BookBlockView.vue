@@ -1613,7 +1613,7 @@ export default {
             this.createBlockSubtask(this.block._id, 'approve-revoked-block', 'proofer');
           }*/
           if (this.isCompleted) {
-            this.tc_loadBookTask();
+            this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
             this.getTotalBookTasks();
           }

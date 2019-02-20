@@ -960,8 +960,12 @@ export default {
             this.startId = blockO.blockid;
           }
           this.unfreeze('insertBlockBefore');
-          this.tc_loadBookTask();
+          this.tc_loadBookTask(block.bookid);
           this.getCurrentJobInfo();
+          this.setCurrentBookCounters(['not_marked_blocks']);
+          if (this.tc_hasTask('audio_mastering')) {
+            this.setCurrentBookCounters(['not_proofed_audio_blocks']);
+          }
           //this.refreshTmpl();
         })
         .catch(err => {
@@ -1001,8 +1005,12 @@ export default {
             //this.startId = blockO.blockid;
           } //else this.refreshTmpl();
           this.unfreeze('insertBlockAfter');
-          this.tc_loadBookTask();
+          this.tc_loadBookTask(block.bookid);
           this.getCurrentJobInfo();
+          this.setCurrentBookCounters(['not_marked_blocks']);
+          if (this.tc_hasTask('audio_mastering')) {
+            this.setCurrentBookCounters(['not_proofed_audio_blocks']);
+          }
           //this.refreshTmpl();
         })
         .catch(err => {

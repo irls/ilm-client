@@ -1583,7 +1583,7 @@ export const store = new Vuex.Store({
             .then(response => {
               commit('clear_blocker', 'putBlock');
               block._rev = response.data.rev;
-              dispatch('tc_loadBookTask');
+              dispatch('tc_loadBookTask', block.bookid);
               dispatch('getCurrentJobInfo');
               dispatch('getTotalBookTasks');
               return Promise.resolve(response.data);
