@@ -1050,9 +1050,9 @@ export const store = new Vuex.Store({
             } else if (data.action === 'change' && data.block) {
               state.storeListO.updBlockByRid(data.block.id, data.block)
             } else if (data.action === 'delete') {
-              
+
             }
-            
+
             if (data.block && state.storeList.has(data.block.blockid)) {
               let block = state.storeList.get(data.block.blockid);
               if (block.isChanged) {
@@ -1187,7 +1187,7 @@ export const store = new Vuex.Store({
             })
         }
     },
-    
+
     reloadBookCover({commit, state}) {
       if (state.currentBookMeta._id) {
           state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')

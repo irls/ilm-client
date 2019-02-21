@@ -107,9 +107,9 @@
                   </td>
                 </tr>
 
-                <tr class='pages'>
+                <tr >
                   <td>Size</td>
-                  <td class="disabled pull-left">{{ Math.round(currentBook.wordcount / 300) }} pages</td>
+                  <td class="pull-left">{{ Math.round(currentBook.wordcount / 300) }} pages</td>
                 </tr>
 
 
