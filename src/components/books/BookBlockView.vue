@@ -2785,11 +2785,13 @@ export default {
             }
             if (ref && ref.querySelectorAll) {
               ref.querySelectorAll('[data-map]').forEach(_w => {
-                let _m = map.shift();
-                    if (_m) {
-                      let w_map = _m.join()
-                      $(_w).attr('data-map', w_map)
-                    }
+                if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
+                  let _m = map.shift();
+                  if (_m) {
+                    let w_map = _m.join()
+                    $(_w).attr('data-map', w_map)
+                  }
+                }
               });
               this.audioEditFootnote.footnote.content = ref.innerHTML;
               this.pushChange('footnotes');
@@ -2798,11 +2800,13 @@ export default {
           } else {
             if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
               this.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
-                let _m = map.shift();
-                    if (_m) {
-                      let w_map = _m.join()
-                      $(_w).attr('data-map', w_map)
-                    }
+                if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
+                  let _m = map.shift();
+                  if (_m) {
+                    let w_map = _m.join()
+                    $(_w).attr('data-map', w_map)
+                  }
+                }
               });
               this.block.content = this.$refs.blockContent.innerHTML;
               this.blockAudio.map = this.block.content;
