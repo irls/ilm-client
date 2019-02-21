@@ -35,9 +35,9 @@
         </div>
         <!--<img v-if="block.illustration"-->
 
-        <div v-else v-cloak class="content-wrap-preview"
-        v-html="blockContent"
-        :class="[getClass]">
+        <div v-else v-cloak
+        :class="['content-wrap-preview', getClass, {'js-hidden': blockO.loaded !== true}]"
+        v-html="blockContent">
         </div>
         <!--<div class="content-wrap">-->
 
@@ -54,7 +54,8 @@
 
             <div class="table-row">
               <div class="table-cell -num">{{ftnIdx+1}}.</div>
-              <div class="content-wrap-footn-preview table-cell -text"
+              <div
+                :class="['content-wrap-footn-preview table-cell -text', {'js-hidden': blockO.loaded !== true}]"
                 v-html="footnote.content">
               </div>
               <div class="table-cell -control"></div>

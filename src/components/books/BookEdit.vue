@@ -1678,6 +1678,7 @@ export default {
 
     smoothHandleScroll: _.debounce(function (ev) {
       ev.stopPropagation();
+      //console.log('smoothHandleScroll', ev);
       this.handleScroll();
     }, 100),
 
@@ -1692,6 +1693,7 @@ export default {
       if (!this.onScrollEv) {
         let firstVisible = false;
         let lastVisible = false;
+        let fixJump = 'false';
         let loadIdsArray = [];
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
         //let loadCount = 5;
@@ -1704,12 +1706,15 @@ export default {
             }
             lastVisible =  blockRef.blockO;
             if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
+              if (fixJump === 'false') fixJump = 'true';
               this.parlistO.setLoaded(blockRef.blockRid);
               blockRef.$forceUpdate();
-            }
-            else if (this.parlistO.get(blockRef.blockRid).loaded === false) {
-              this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
-              loadIdsArray.push(blockRef.blockId);
+            } else {
+              if (fixJump === 'true') fixJump = blockRef.blockO;
+              if (this.parlistO.get(blockRef.blockRid).loaded === false) {
+                this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
+                loadIdsArray.push(blockRef.blockId);
+              }
             }
           /*} else if (firstVisible && loadCount > 0) {
             if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
@@ -1719,6 +1724,13 @@ export default {
             }*/
           } else if (firstVisible) break;
         }
+
+        /*if (fixJump !== 'true' && fixJump !== 'false') {
+          //this.scrollToBlock(fixJump.blockid);
+          this.scrollToBlock(this.parlistO.get(fixJump.in).blockid);
+          //return false;
+        }*/
+
         if (loadIdsArray.length) {
           this.getBlocksArr(loadIdsArray)
           .then((resIdsArray)=>{
@@ -2257,6 +2269,9 @@ export default {
   /*.ilm-book-styles.global-ocean*/
   .ilm-block {
     .content-wrap-preview {
+      &.js-hidden {
+        visibility: hidden;
+      }
       &.header {
         margin: 4px;
       }
@@ -2275,6 +2290,9 @@ export default {
   .table-body.footnote {
     .content-wrap-footn-preview.-text {
       padding-right: 150px;
+      &.js-hidden {
+        visibility: hidden;
+      }
     }
   }
 }
