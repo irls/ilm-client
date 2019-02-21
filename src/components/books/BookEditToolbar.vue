@@ -104,7 +104,7 @@ export default {
         return modes;
       }
     },
-    ...mapGetters(['currentBookMeta', 'currentBookid', 'currentBook', 'storeListO', 'isBlocked', 'blockSelection'])
+    ...mapGetters(['currentBookMeta', 'currentBookid', 'currentBook', 'storeListO', 'isBlocked', 'blockSelection', 'adminOrLibrarian'])
   },
   methods: {
 

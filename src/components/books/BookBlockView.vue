@@ -894,6 +894,16 @@ export default {
           if (this.block && ['tts', 'audio_file'].indexOf(this.block.voicework) !== -1 && !this.block.audiosrc) {
             return true;
           }
+          if (this._is('editor') || this.adminOrLibrarian) {
+            if (this.block.footnotes && Array.isArray(this.block.footnotes)) {
+              let notAlignedFootnote = this.block.footnotes.find(f => {
+                return !f.audiosrc && f.voicework === 'tts';
+              })
+              if (notAlignedFootnote) {
+                return true;
+              }
+            }
+          }
           let flags_summary = this.block.calcFlagsSummary();
             if (this.isCanApproveWithoutTask) {
               if (flags_summary.stat === 'open') {
@@ -1613,7 +1623,7 @@ export default {
             this.createBlockSubtask(this.block._id, 'approve-revoked-block', 'proofer');
           }*/
           if (this.isCompleted) {
-            this.tc_loadBookTask();
+            this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
             this.getTotalBookTasks();
           }
@@ -1837,7 +1847,7 @@ export default {
 
             this.recountApprovedInRange();
             //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
-            this.getBloksUntil('unresolved', null, this.block._id)
+            //this.getBloksUntil('unresolved', null, this.block._id)
           });
         }
       },
@@ -1884,7 +1894,7 @@ export default {
               }
               //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
               this.recountApprovedInRange();
-              this.getBloksUntil('unresolved', true, this.block._id)
+              //this.getBloksUntil('unresolved', true, this.block._id)
             }
           })
           .catch(err => {
@@ -2775,11 +2785,13 @@ export default {
             }
             if (ref && ref.querySelectorAll) {
               ref.querySelectorAll('[data-map]').forEach(_w => {
-                let _m = map.shift();
-                    if (_m) {
-                      let w_map = _m.join()
-                      $(_w).attr('data-map', w_map)
-                    }
+                if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
+                  let _m = map.shift();
+                  if (_m) {
+                    let w_map = _m.join()
+                    $(_w).attr('data-map', w_map)
+                  }
+                }
               });
               this.audioEditFootnote.footnote.content = ref.innerHTML;
               this.pushChange('footnotes');
@@ -2788,11 +2800,13 @@ export default {
           } else {
             if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
               this.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
-                let _m = map.shift();
-                    if (_m) {
-                      let w_map = _m.join()
-                      $(_w).attr('data-map', w_map)
-                    }
+                if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
+                  let _m = map.shift();
+                  if (_m) {
+                    let w_map = _m.join()
+                    $(_w).attr('data-map', w_map)
+                  }
+                }
               });
               this.block.content = this.$refs.blockContent.innerHTML;
               this.blockAudio.map = this.block.content;
@@ -2809,6 +2823,8 @@ export default {
             .then(() => {
               this.assembleBlockAudioEdit(this.footnoteIdx);
               this.flushChanges();
+              this.isChanged = false;
+              this.isAudioChanged = false;
             });
         }
       },
@@ -2823,6 +2839,8 @@ export default {
           this.audStop();
           this.assembleBlockAudioEdit(this.footnoteIdx);
           this.flushChanges();
+          this.isChanged = false;
+          this.isAudioChanged = false;
         }
       },
       evFromAudioeditorInsertSilence (blockId, position, length) {
@@ -3312,6 +3330,16 @@ export default {
           }
 
         }
+      },
+      refreshBlockAudio: function(map = true, src = true) {
+        if (this.block) {
+          if (map) {
+            this.blockAudio.map = this.block.content;
+          }
+          if (src) {
+            this.blockAudio.src = this.block.getAudiosrc('m4a');
+          }
+        }
       }
   },
   watch: {
@@ -3484,6 +3512,7 @@ export default {
       },
       'block.content': {
         handler(val) {
+          this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
               this.addContentListeners();
@@ -3580,9 +3609,7 @@ export default {
       },
       'block.audiosrc': {
         handler(val) {
-          if (this.block) {
-            this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
-          }
+          this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
         }
       }
   }
