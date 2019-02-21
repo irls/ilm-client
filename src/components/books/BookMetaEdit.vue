@@ -745,10 +745,10 @@ export default {
         let errorGenerateTime = 1 * 60 * 60000;   // 1 hr * 60 min * 60000 msec;
         let currTime = new Date().getTime();
 
-        if (!this.currentBook.demo_time) return 'build';
+        if (!this.currentBookMeta.demo_time) return 'build';
 
-        if (Number(this.currentBook.demo_time) < 0){
-            if (Number(currTime) + Number(this.currentBook.demo_time) > errorGenerateTime){
+        if (Number(this.currentBookMeta.demo_time) < 0){
+            if (Number(currTime) + Number(this.currentBookMeta.demo_time) > errorGenerateTime){
               console.log('failed');
               return 'failed';
             } else {
@@ -1647,7 +1647,7 @@ export default {
 
 
         let currTime = new Date().getTime();
-        this.currentBook.demo_time = -1 * currTime;
+        this.currentBookMeta.demo_time = -1 * currTime;
         return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/demo')
                .then(resp => {
                  //this.isExporting = false;
