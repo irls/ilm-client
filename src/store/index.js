@@ -1550,6 +1550,9 @@ export const store = new Vuex.Store({
         if (typeof block.clean === 'function') {
           cleanBlock = block.clean();
         }
+        delete cleanBlock.parnum;
+        delete cleanBlock.secnum;
+        delete cleanBlock.isNumber;
         commit('set_blocker', 'putBlock');
         //console.log('putBlock', cleanBlock);
         /*return dispatch('getBlock', cleanBlock._id)
@@ -1652,9 +1655,11 @@ export const store = new Vuex.Store({
           }
         }
         //console.log('response.data', response.data);
-        if (Array.isArray(response.data)) response.data.forEach((blockO)=>{
-          state.storeListO.updBlockByRid(blockO.rid, blockO);
-        })
+        if (Array.isArray(response.data)) {
+          response.data.forEach((blockO)=>{
+            state.storeListO.updBlockByRid(blockO.rid, blockO);
+          })
+        }
         return response.data;
       })
     },
