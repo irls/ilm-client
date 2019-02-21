@@ -96,8 +96,8 @@
                   </thead>
                   <tbody>
                     <tr v-for="task in counter.data.tasks">
-                      <td class="task-type">{{getTaskType(task.type)}}</td>
-                      <td :class="[{'go-to-block': task.blockid != null}, 'task-counter']" v-on:click="goToBlockCheck(task.blockid, counter.key)">
+                      <td :class="['task-type', {'go-to-block': task.blockid != null && !task.complete}]" v-on:click="goToBlockCheck(task.blockid, counter.key)">{{getTaskType(task.type)}}</td>
+                      <td :class="[{'go-to-block': task.blockid != null && !task.complete}, 'task-counter']" v-on:click="goToBlockCheck(task.blockid, counter.key)">
                         <span v-if="task.complete" :class="[{'ready': task.ready}]">Closed</span>
                         <span v-else :class="[{'ready': task.ready}]">Open</span>
                         <span v-if="task.count > 0">({{task.count}})</span>
@@ -105,13 +105,13 @@
                       <td class="task-action" v-if="_is('editor', true) || adminOrLibrarian">
                         <template v-for="action in task.actions">
                           <div v-if="action=='complete_cleanup'">
-                            <button class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">complete</button>
+                            <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">complete</button>
                           </div>
                           <div v-if="action=='mastering_required'">
                             <div class="btn-switch" @click="toggleMastering()">
                               <i class="fa fa-toggle-on" v-if="!currentBook.masteringRequired"></i>
                               <i class="fa fa-toggle-off" v-else></i>
-                              <span class="s-label"> Mastered</span>
+                              <span class="s-label">&nbsp;Mastered</span>
                             </div>
                           </div>
                         </template>
@@ -2113,7 +2113,7 @@ export default {
     }
     table.counters {
       border: 1px solid black;
-      width: 80%;
+      width: 94%;
       thead {
         background-color: #c2c2c2;
         th {
@@ -2143,6 +2143,12 @@ export default {
           }
           &.task-counter {
             width: 80px;
+          }
+          &.task-type {
+            &.go-to-block {
+                color: #3187d5;
+                text-decoration: underline;
+            }
           }
         }
       }
