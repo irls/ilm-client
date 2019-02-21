@@ -1659,8 +1659,9 @@ export default {
       //this.refreshTmpl();
     },
 
-    checkVisible(elm, viewHeight) {
+    checkVisible(elm, viewHeight = false) {
       var rect = elm.getBoundingClientRect();
+      if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
       return !(rect.bottom < initialTopOffset+1 || rect.top - viewHeight >= 0);
     },
 
@@ -1682,6 +1683,9 @@ export default {
 
     handleScroll(force = false) {
       if (this.recordingState == 'recording') {
+        return false;
+      }
+      if (!this.$refs.viewBlocks || !this.$refs.viewBlocks.length) {
         return false;
       }
       //console.log('handleScroll', (new Date()).toJSON());
