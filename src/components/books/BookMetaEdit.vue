@@ -827,9 +827,9 @@ export default {
     $('body').on('click', '.vue-tabs.meta-edit-tabs li.tab', () => {
       this.activeTabIndex = this.$refs.panelTabs ? this.$refs.panelTabs.activeTabIndex : null;
     });
-    setTimeout(() => {
-      this.updateAllowed = true;//autosize plugin send updates on initialization
-    }, 2000)
+    //setTimeout(() => {
+      //this.updateAllowed = true;//autosize plugin send updates on initialization
+    //}, 2000)
   },
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
@@ -988,6 +988,13 @@ export default {
   methods: {
 
     init () {
+      let checkId = this.currentBook.bookid;
+      this.updateAllowed = false;
+      setTimeout(() => {
+        if (this.currentBook.bookid === checkId) {
+          this.updateAllowed = true;//autosize plugin send updates on initialization
+        }
+      }, 1500)
       for (let id in this.$store.state.tc_currentBookTasks.tasks) {
         let record = this.$store.state.tc_currentBookTasks.tasks[id]
         if (record.type == 'import-book') {
