@@ -96,7 +96,7 @@
                   </thead>
                   <tbody>
                     <tr v-for="task in counter.data.tasks">
-                      <td :class="['task-type', {'go-to-block': task.blockid != null && !task.complete}]" v-on:click="goToBlockCheck(task.blockid, counter.key)">{{getTaskType(task.type)}}</td>
+                      <td :class="['task-type', {'go-to-block': task.blockid != null && !task.complete}]" v-on:click="goToBlockCheck(task.blockid, counter.key)">{{task.title}}</td>
                       <td :class="[{'go-to-block': task.blockid != null && !task.complete}, 'task-counter']" v-on:click="goToBlockCheck(task.blockid, counter.key)">
                         <span v-if="task.complete" :class="[{'ready': task.ready}]">Closed</span>
                         <span v-else :class="[{'ready': task.ready}]">Open</span>
@@ -113,6 +113,12 @@
                               <i class="fa fa-toggle-off" v-else></i>
                               <span class="s-label">&nbsp;Mastered</span>
                             </div>
+                          </div>
+                          <div v-if="action=='complete_mastering'">
+                            <div v-if="!audioMasteringProcess" class="editing-wrapper">
+                              <button class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">complete</button>
+                            </div>
+                            <div v-else class="preloader-small"></div>
                           </div>
                         </template>
                       </td>
@@ -1942,10 +1948,6 @@ export default {
 
   .editing-wrapper {
     margin-left: 15px;
-    .btn-edit-complete {
-      margin-bottom: 5px;
-
-    }
 
     .blocks-counter {
       vertical-align: middle;
@@ -2148,6 +2150,11 @@ export default {
             &.go-to-block {
                 color: #3187d5;
                 text-decoration: underline;
+            }
+          }
+          &.task-action {
+            .btn {
+                padding: 3px 12px;
             }
           }
         }
