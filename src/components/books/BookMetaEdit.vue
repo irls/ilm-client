@@ -3,19 +3,9 @@
 
     <div id='bookmeta' v-if="currentBook" class="sidebar-bookmeta">
       <div class='booktopinfo'>
-        <div class='coverimg' @click="bookEditCoverModalActive = true">
-          <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
-          <div v-else class='coverimg-wrap'></div>
-        </div>
         <template v-if="isAdmin">
           <button class="hidden" v-on:click="removeBook()">Remove</button>
         </template>
-        <h4 class='title'>{{ currentBook.title }}</h4>
-        <h5 class='subtitle' v-if='currentBook.subtitle'>{{ currentBook.subtitle }}</h5>
-        <h5 class='author'>{{ currentBook.author && Array.isArray(currentBook.author) ? currentBook.author.join(',') : currentBook.author }},
-        <span class="pages">{{ Math.round(currentBook.wordcount / 300) }} pages &nbsp;
-        </span></h5>
-        <div style='clear: both'> </div>
       </div>
 
       <div class="row">
@@ -88,7 +78,7 @@
                   <td>Book Id</td>
                   <td class='disabled'>{{currentBook.bookid}}</td>
                 </tr>
-                
+
                 <tr class="extid">
                   <td>External Book Id</td>
                   <td>
@@ -116,6 +106,12 @@
                     <button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button>
                   </td>
                 </tr>
+
+                <tr >
+                  <td>Size</td>
+                  <td class="pull-left">{{ Math.round(currentBook.wordcount / 300) }} pages</td>
+                </tr>
+
 
                 <tr class='category'>
                   <td>Category</td>
@@ -169,26 +165,35 @@
             </fieldset>
 
           <fieldset class='description brief'>
+            <legend>Book Cover</legend>
+            <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
+              <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+              <div v-else class='coverimg-wrap'></div>
+            </div>
+            <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
+          </fieldset>
+
+          <fieldset class='description brief'>
             <legend>Brief Description </legend>
-            <textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit"></textarea>
+            <textarea-autosize v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit" :min-height="20" :max-height="200" ></textarea-autosize>
           </fieldset>
 
           <fieldset class='description long'>
             <legend>Long Description </legend>
-            <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
+            <textarea-autosize v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" :min-height="30" :max-height="200"></textarea-autosize>
           </fieldset>
           
-          <fieldset class='Export' :disabled="isExporting || currentBook.demo_time < 0" v-if="isAllowExportAudio">
+          <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
             <legend>Export </legend>
-              
-              <div v-if="isExporting || currentBook.demo_time < 0" class="align-preloader -small">&nbsp;</div>
-              <div v-if="currentBook.demo_time && (!isExporting && currentBook.demo_time != -1)">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
+              <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
+              <div v-if="getDemoStatus == 'rebuild'">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
               <div>
-                <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
-                <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
-                <button class="btn btn-primary" v-if="currentBook.demo_time" :disabled="!currentBook.demo" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
-                <a class="btn btn-primary" v-if="!currentBook.demo_time" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio">Build</a>
-                <a class="btn btn-primary" v-else target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio">Rebuild</a>
+                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
+                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
+                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
+                <a class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</a>
+                <a class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</a>
+                <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
               </div>
           </fieldset>
           <fieldset class="publish">
@@ -320,32 +325,32 @@
                   <legend>Automatic numeration</legend>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numeration', 'x')">
-                      <i v-if="currentBook.numeration === 'x'"
+                      @click="liveUpdate('numbering', 'x')">
+                      <i v-if="currentBook.numbering === 'x'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                     x</label>
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numeration', 'x_x')">
-                      <i v-if="currentBook.numeration === 'x_x'"
+                      @click="liveUpdate('numbering', 'x_x')">
+                      <i v-if="currentBook.numbering === 'x_x'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                     x.x</label>
                   </div>
                   <!--<div>
                     <label class="style-label"
-                      @click="liveUpdate('numeration', 'auto')">
-                      <i v-if="currentBook.numeration === 'auto'"
+                      @click="liveUpdate('numbering', 'auto')">
+                      <i v-if="currentBook.numbering === 'auto'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                       Autoincrement</label>
                   </div>-->
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numeration', 'none')">
-                      <i v-if="currentBook.numeration === 'none'"
+                      @click="liveUpdate('numbering', 'none')">
+                      <i v-if="currentBook.numbering === 'none'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                       Off</label>
@@ -626,7 +631,10 @@ import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
 import { Languages } from "../../mixins/lang_config.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
+import VueTextareaAutosize from 'vue-textarea-autosize'
 var BPromise = require('bluebird');
+
+Vue.use(VueTextareaAutosize)
 
 export default {
 
@@ -690,7 +698,8 @@ export default {
       isPublishingQueue: false,
       publicationStatus: false,
       isExporting:false,
-      validationErrors: {extid: []}
+      validationErrors: {extid: []},
+      updateAllowed: false
     }
   },
 
@@ -733,7 +742,22 @@ export default {
         return list;
       }
     },
+    getDemoStatus(){ // build, rebuild, progress, failed
+        let errorGenerateTime = 1 * 60 * 60000;   // 1 hr * 60 min * 60000 msec;
+        let currTime = new Date().getTime();
 
+        if (!this.currentBookMeta.demo_time) return 'build';
+
+        if (Number(this.currentBookMeta.demo_time) < 0){
+            if (Number(currTime) + Number(this.currentBookMeta.demo_time) > errorGenerateTime){
+              console.log('failed');
+              return 'failed';
+            } else {
+              return 'progress';
+            }
+        }
+        return 'rebuild';
+    },
     suggestTranslatedId: function () {
       if (this.currentBook) return this.currentBook.bookid.split('-').slice(0, -1).join('-') + '-?'
     },
@@ -812,6 +836,7 @@ export default {
 
         }
       });
+
     this.$root.$on('from-bookblockview:voicework-type-changed', function() {
       self.setCurrentBookCounters(['narration_blocks', 'not_marked_blocks']);
       self.getAudioBook();
@@ -825,6 +850,9 @@ export default {
     $('body').on('click', '.vue-tabs.meta-edit-tabs li.tab', () => {
       this.activeTabIndex = this.$refs.panelTabs ? this.$refs.panelTabs.activeTabIndex : null;
     });
+    setTimeout(() => {
+      this.updateAllowed = true;//autosize plugin send updates on initialization
+    }, 2000)
   },
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
@@ -948,7 +976,7 @@ export default {
       handler(val) {
         //console.log('ROUTE CHANGE')
         let newIndex = false;
-        
+
         switch (this.activeTabIndex) {
           case 0:
             break;
@@ -1054,10 +1082,61 @@ export default {
     },
 
     update: _.debounce(function (key, event) {
-      this.liveUpdate(key, key == 'author' ? this.currentBook.author : event.target.value)
+      let val = typeof event === 'string' ? event : event.target.value;
+      this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
     }, 500),
 
     liveUpdate (key, value) {
+      if (!this.updateAllowed) {
+        return;
+      }
+      console.log('liveUpdate', key, value);
+
+      var keys = key.split('.');
+      key = keys[0];
+      if (keys.length > 1) {
+          this.currentBook[keys[0]][keys[1]] = value;
+          value = this.currentBook[keys[0]];
+      }
+
+      var update = {
+        [key]: value
+      }
+
+      // Batch updates
+      if (key === 'language') {
+        update.voices = {};
+      }
+
+      console.log('update', update);
+      return this.updateBookMeta(update)
+      .then((response)=>{
+        if (key == 'numbering') {
+          this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
+          //this.$root.$emit('from-book-meta:upd-toc', true);
+        }
+        let updateVersion = {minor: true};
+        switch(key) {
+          case 'styles':
+          case 'numbering':
+            updateVersion = {major: true};
+            break;
+        }
+        return this.updateBookVersion(updateVersion)
+        .then(() => {
+          return response;
+        })
+        .catch(err => err);
+        //return BPromise.resolve(response);
+      })
+      .catch(err => {
+        console.log(err);
+        return BPromise.reject(err);
+      });
+
+    },
+
+    liveUpdateOld (key, value) {
       var dbPath = superlogin.getDbUrl('ilm_content_meta')
       if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
 
@@ -1086,7 +1165,7 @@ export default {
       this.freeze('updateBookMeta');
       return api.update(this.currentBookid, update)
       .then(doc => {
-        if (key == 'numeration') {
+        if (key == 'numbering') {
           this.unfreeze('updateBookMeta');
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
           //this.$root.$emit('from-book-meta:upd-toc', true);
@@ -1095,7 +1174,7 @@ export default {
         let updateVersion = {minor: true};
         switch(key) {
           case 'styles':
-          case 'numeration':
+          case 'numbering':
             updateVersion = {major: true};
             break;
         }
@@ -1282,7 +1361,7 @@ export default {
 
         if (with_task) {
           route.params.task_type = true;
-          if (this.tc_hasTask('content_cleanup')) route.params.task_type = 'text-cleanup';
+          if (this.currentJobInfo.text_cleanup) route.params.task_type = 'text-cleanup';
         }
       //this.$router.push({name: this.$route.name, params:  params});
       }
@@ -1555,7 +1634,7 @@ export default {
           Promise.all([putBlockOpromise, updatePromises]).then((res)=>{
             if (valKey == 'secNum' || valKey == 'parNum') {
               let blockO = this.storeListO.getBlock(this.blockSelection.start._id);
-              this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numeration, blockO.rid)
+              this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numbering, blockO.rid)
             } else {
               this.$root.$emit('from-meta-edit:set-num');
             }
@@ -1571,19 +1650,23 @@ export default {
     },
 
     downloadDemo() {
-        this.isExporting = true;
+        //this.isExporting = true;
+
+
+        let currTime = new Date().getTime();
+        this.currentBookMeta.demo_time = -1 * currTime;
         return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/demo')
                .then(resp => {
-                 this.isExporting = false;
+                 //this.isExporting = false;
                });
 
         //return this.API_URL + 'books/' + this.currentBook._id + '/demo';
     },
     downloadExportMp3() {
-        return this.API_URL + 'books/' + this.currentBook._id + '/exportMp3';
+        return this.API_URL + 'export/' + this.currentBook._id + '/exportMp3';
     },
     downloadExportFlac() {
-        return this.API_URL + 'books/' + this.currentBook._id + '/exportFlac';
+        return this.API_URL + 'export/' + this.currentBook._id + '/exportFlac';
     },
     styleCaption(type, key) {
       if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {
@@ -1636,7 +1719,7 @@ export default {
           return false;
         });
     },
-    
+
     updateExtid: _.debounce(function(event) {
       if (event.target.value && event.target.value.length != 32) {
         this.validationErrors['extid'] = ['Length must be equal to 32 symbols.']
@@ -1648,7 +1731,7 @@ export default {
       }
     }, 500),
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta'])
   }
 }
 </script>
@@ -1728,11 +1811,12 @@ export default {
 
   /* Edit area for book description */
   fieldset.description textarea {
-    width: 100%; padding: 0; margin:0; border: none; min-height: 180px;
+    width: 100%; padding: 0; margin:0; border: none; 
+    /*min-height: 180px;*/
     resize: vertical;
   }
   fieldset.description.brief textarea {
-    min-height: 50px;
+    /*min-height: 50px;*/
   }
   fieldset.approve-metadata textarea {
     width: 100%;

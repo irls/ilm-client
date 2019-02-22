@@ -1,13 +1,14 @@
 <template>
 <div :class="['content-scroll-wrapper', {'recording-background': recordingState == 'recording'}]"
-  v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll="smoothHandleScroll($event); updatePositions();">
+  v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <div class="content-background">
       <div v-for="(viewObj, listIdx) in getListObjs"
         :class="['row content-scroll-item back']"
         :key = "viewObj.blockRid"
-        :id="'v-'+ viewObj.blockId">
+        :id="'v-'+ viewObj.blockId"
+        :data-rid="viewObj.blockRid">
 
         <div class='col'>
         <BookBlockPreview
@@ -169,7 +170,6 @@ export default {
       ...mapGetters({
           book: 'currentBook',
           meta: 'currentBookMeta',
-          watchBlk: 'contentDBWatch',
           allBooks: 'allBooks',
           tc_tasksByBlock: 'tc_tasksByBlock',
           isBlocked: 'isBlocked',
@@ -273,10 +273,10 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'watchBlocks', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'getBlockByChainId', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks']),
 
-    test() {
-        window.scrollTo(0, document.body.scrollHeight-500);
+    test(ev) {
+        console.log('test', ev);
     },
 
     refreshTmpl() {
@@ -339,6 +339,16 @@ export default {
             this.unfreeze('loadBookMeta');
             return Promise.reject(err);
           });
+        } else if (this.$route.params.task_type) {
+          this.freeze('loadBookMeta');
+          return this.searchBlockUnresolved()
+            .then((blockId)=>{
+              this.unfreeze('loadBookMeta');
+              if (blockId) {
+                this.scrollToBlock(blockId);
+              }
+              return Promise.resolve({ blocks:[] }); // already loaded
+            });
         } else {
           this.handleScroll(true);
           return Promise.resolve({ blocks:[] }); // already loaded
@@ -379,7 +389,7 @@ export default {
                   if (Array.isArray(this.isNeedDown)) this.isNeedDown = this.isNeedDown.pop();
                   //else this.isNeedDown = false;
                   //Vue.nextTick(()=>{
-                    this.lazyLoad();
+                    //this.lazyLoad();
                   //})
                 }
               });
@@ -387,7 +397,7 @@ export default {
               this.isNeedDown = false;
               if (this.isNeedUp) this.lazyLoaderDir = 'up';
               //Vue.nextTick(()=>{
-                this.lazyLoad();
+                //this.lazyLoad();
               //})
             }
 
@@ -411,7 +421,7 @@ export default {
                   if (this.isNeedUp) this.lazyLoaderDir = 'down';
                   if (Array.isArray(this.isNeedUp)) this.isNeedUp = this.isNeedUp[0];
                   //Vue.nextTick(()=>{
-                    this.lazyLoad();
+                    //this.lazyLoad();
                   //})
                 }
               });
@@ -419,7 +429,7 @@ export default {
               this.isNeedUp = false;
               if (this.isNeedDown) this.lazyLoaderDir = 'down';
               //Vue.nextTick(()=>{
-                this.lazyLoad();
+                //this.lazyLoad();
               //})
             }
           } break;
@@ -438,10 +448,10 @@ export default {
         if (result.rows && result.rows.length > 0) {
           //console.log('loadPreparedBookDown result', result.rows);
           result.rows.forEach((el, idx, arr)=>{
-            if (!this.parlist.has(el._id)) {
+            if (!this.parlist.has(el.blockid)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
-              this.parlistO.setLoaded(el._id);
+              this.parlistO.setLoaded(el.blockid);
             }
           });
           if (this.startId === false) {
@@ -449,8 +459,8 @@ export default {
             this.parlistO.setStartId(startId);
           }
           this.unfreeze('loadBook');
-          result.blockId = result.rows[result.rows.length-1]._id;
-          return Promise.resolve(res);
+          result.blockId = result.rows[result.rows.length-1].blockid;
+          return Promise.resolve(result);
         } else {
           this.unfreeze('loadBook');
           return Promise.reject();
@@ -475,9 +485,15 @@ export default {
       if (!task_type && !this._is('editor')) {
         task_type = true;
       }
+      let meta = this.meta;
+      if (!meta.bookid) {
+        if (this.parlistO && this.parlistO.meta && this.parlistO.meta.bookid) {
+          meta = this.parlistO.meta;
+        }
+      }
       return this.$store.dispatch('searchBlocksChain', {
-        book_id: this.meta._id,
-        startId: this.startId || this.meta.startBlock_id,
+        book_id: meta.bookid,
+        startId: this.startId || meta.startBlock_id,
         search: {block_type: 'unresolved',  task_type: task_type}
       }).then((result)=>{
         return result.blockId;
@@ -494,7 +510,7 @@ export default {
           if (routeBlockId !== 'unresolved' && this.parlist.has(routeBlockId)) {
             this.startId = routeBlockId;
             this.screenTop = initialTopOffset;
-            this.lazyLoad();
+            //this.lazyLoad();
             return Promise.resolve(routeBlockId);
             //this.lazyLoad(false, lastId);
           }
@@ -508,7 +524,7 @@ export default {
             this.unfreeze('loadBookDown');
             //this.startId = blockId;
             this.scrollToBlock(blockId);
-            this.lazyLoad();
+            //this.lazyLoad();
             return Promise.resolve(blockId);
           }).catch(err=>{
             console.log('loadBookDown->getBloksUntil Error:', err);
@@ -524,7 +540,7 @@ export default {
             this.startId = startId; // first load
           }
           this.unfreeze('loadBookDown');
-          let lastId = res.rows.length ? res.rows[res.rows.length-1]._id : false;
+          let lastId = res.length ? res[res.length-1]._id : false;
           this.lazyLoad(false, lastId);
           return Promise.resolve(res);
         }).catch(err=>{
@@ -612,7 +628,7 @@ export default {
                   if (this.parlist.has(result.blockId)) return resolve(result.blockId);
                   this.getBlocks(result.blockId)
                   .then((res)=>{
-                    let lastId = res.rows.length ? res.rows[res.rows.length-1]._id : false;
+                    let lastId = res.length ? res[res.length-1]._id : false;
                     this.lazyLoad(this.startId || this.meta.startBlock_id, lastId);
                     return resolve(result.blockId);
                   }).catch(err=>{
@@ -625,7 +641,7 @@ export default {
               });
             } break;
             default : {
-              this.getBlocks(startId)
+              this.getBlocks([startId])
               .then((res)=>{
                 return resolve(startId);
               }).catch((err)=>{
@@ -649,16 +665,16 @@ export default {
           if (f.audiosrc) {
             f.audiosrc = process.env.ILM_API + f.audiosrc +'?'+ (new Date()).toJSON();
           }*/
-      let oldBlock = this.parlist.get(change.doc._id);
+      let oldBlock = this.parlist.get(change.doc.blockid);
       let updField = change.updField || false;
       if (oldBlock) {
         if (change.deleted === true) {
-          this.parlist.delete(change.doc._id);
+          this.parlist.delete(change.doc.blockid);
           this.clearBlockLock({block: change.doc, force: true})
         } else {
           this.clearBlockLock({block: change.doc});
           if (oldBlock.partUpdate) {
-            oldBlock._rev = change.doc._rev;
+            //oldBlock._rev = change.doc._rev;
             this.$store.commit('set_storeList', new BookBlock(oldBlock));
             this.refreshTmpl();
           } else if (updField) {
@@ -668,28 +684,25 @@ export default {
             this.refreshTmpl();
           } else {
             let newBlock = new BookBlock(change.doc);
-            if (oldBlock.isChanged || oldBlock.isAudioChanged || oldBlock.isIllustrationChanged) {
+            let el = this.$children.find(c => {
+              return c.$el.id == newBlock.blockid;
+            });
+            if (el && (el.isChanged || el.isAudioChanged || el.isIllustrationChanged)) {
               if (oldBlock.status && newBlock.status && oldBlock.status.assignee === newBlock.status.assignee) {
-                oldBlock._rev = change.doc._rev;
                 if (oldBlock.voicework != newBlock.voicework) {
                   oldBlock.voicework = newBlock.voicework;
                   oldBlock.audiosrc = newBlock.audiosrc;
                   oldBlock.audiosrc_ver = newBlock.audiosrc_ver;
+                  el.refreshBlockAudio(false);
                 }
-                if (oldBlock.chainid !== newBlock.chainid) {// next block was removed
-                  oldBlock.chainid = newBlock.chainid;
-                }
-                //if (oldBlock.realigned !== newBlock.realigned) {
-                  //this.clearBlockLock({block: change.doc});
-                //}
               } else {
                 this.$store.commit('set_storeList', newBlock);
               }
             } else {
               this.$store.commit('set_storeList', newBlock);
-              this.refreshPreviewTmpl([newBlock._id]);
+              this.refreshPreviewTmpl([newBlock.blockid]);
               this.refreshTmpl();
-              if (newBlock.type == 'illustration') this.scrollToBlock(newBlock._id);
+              if (newBlock.type == 'illustration') this.scrollToBlock(newBlock.blockid);
             }
           }
         }
@@ -728,9 +741,10 @@ export default {
     putBlockProxy: function (block) {
       //console.log('putBlockProxy', block);
       return this.putBlock(block)
-      .then(()=>{
+      .then((updated)=>{
         this.updateVisibleBlocks();
-        this.refreshPreviewTmpl([block._id]);
+        this.refreshPreviewTmpl([block.blockid]);
+        this.$store.commit('set_storeList', new BookBlock(updated));
       })
       .catch((err)=>{})
     },
@@ -890,8 +904,8 @@ export default {
 
     createEmptyBlock(bookid, block_id) {
       let newBlock = {
-        _id: bookid + '_' + Date.now(),
-        _rev: '1-newrevisionnumber',
+        blockid: bookid + '_' + Date.now(),
+        //_rev: '1-newrevisionnumber',
         bookid: bookid,
         chainid: block_id,
         tag: 'p',
@@ -906,11 +920,11 @@ export default {
       }
       if (this.currentJobInfo.text_cleanup) {
         newBlock.status['stage'] = 'cleanup';
-        newBlock.markedAsDone = false;
+        newBlock.status['marked'] = false;
         newBlock.voicework = 'audio_file';
       } else {
         newBlock.status['not_process'] = true;
-        newBlock.markedAsDone = false;
+        newBlock.status['marked'] = false;
       }
 
       return new BookBlock(newBlock);
@@ -922,7 +936,7 @@ export default {
       let api_url = this.API_URL + 'book/block';
       let api = this.$store.state.auth.getHttp();
       api.post(api_url, {
-        block_id: block._id,
+        block_id: block.blockid,
         direction: 'before',
         block: newBlock
       })
@@ -930,25 +944,29 @@ export default {
           //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
-          this.$store.commit('set_storeList', newBlock);
+          this.$store.commit('set_storeList', new BookBlock(b_new));
           this.refreshBlock({doc: b_new, deleted: false});
           if (b_old) {
             this.refreshBlock({doc: b_old, deleted: false});
           }
-          if (response.data.blockO) {
-            let blockO = response.data.blockO;
+          let blockO = response.data.new_block;
+          if (!this.parlistO.get(blockO.blockid)) {
             this.parlistO.addBlock(blockO);
+          }
 
-            this.putNumBlockOBatchProxy({bookId: block.bookid});
+          this.putNumBlockOBatchProxy({bookId: block.bookid});
 
-            this.scrollBarBlocks = this.parlistO.idsArray();
-            if (!this.parlistO.getInId(blockO.blockid)) {
-              this.startId = blockO.blockid;
-            }
+          this.scrollBarBlocks = this.parlistO.idsArray();
+          if (!this.parlistO.getInId(blockO.blockid)) {
+            this.startId = blockO.blockid;
           }
           this.unfreeze('insertBlockBefore');
-          this.tc_loadBookTask();
+          this.tc_loadBookTask(block.bookid);
           this.getCurrentJobInfo();
+          this.setCurrentBookCounters(['not_marked_blocks']);
+          if (this.tc_hasTask('audio_mastering')) {
+            this.setCurrentBookCounters(['not_proofed_audio_blocks']);
+          }
           //this.refreshTmpl();
         })
         .catch(err => {
@@ -964,7 +982,7 @@ export default {
       let api_url = this.API_URL + 'book/block';
       let api = this.$store.state.auth.getHttp();
       api.post(api_url, {
-        block_id: block._id,
+        block_id: block.blockid,
         direction: 'after',
         block: newBlock
       })
@@ -972,24 +990,28 @@ export default {
           //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
-          this.$store.commit('set_storeList', newBlock);
+          this.$store.commit('set_storeList', new BookBlock(b_new));
           this.refreshBlock({doc: b_new, deleted: false});
           this.refreshBlock({doc: b_old, deleted: false});
-          if (response.data.blockO) {
-            let blockO = response.data.blockO;
+          let blockO = response.data.new_block;
+          if (!this.parlistO.get(blockO.blockid)) {
             this.parlistO.addBlock(blockO);
-
-            this.putNumBlockOBatchProxy({bookId: block.bookid});
-
-            if (!this.parlistO.getOutId(blockO.blockid)) {
-              let firstId = this.parlistO.idsViewArray()[0];
-              this.startId = this.parlistO.getOutId(firstId);
-              //this.startId = blockO.blockid;
-            } //else this.refreshTmpl();
           }
+
+          this.putNumBlockOBatchProxy({bookId: block.bookid});
+
+          if (!this.parlistO.getOutId(blockO.blockid)) {
+            let firstId = this.parlistO.idsViewArray()[0];
+            this.startId = this.parlistO.getOutId(firstId);
+            //this.startId = blockO.blockid;
+          } //else this.refreshTmpl();
           this.unfreeze('insertBlockAfter');
-          this.tc_loadBookTask();
+          this.tc_loadBookTask(block.bookid);
           this.getCurrentJobInfo();
+          this.setCurrentBookCounters(['not_marked_blocks']);
+          if (this.tc_hasTask('audio_mastering')) {
+            this.setCurrentBookCounters(['not_proofed_audio_blocks']);
+          }
           //this.refreshTmpl();
         })
         .catch(err => {
@@ -1048,6 +1070,9 @@ export default {
 
         this.unfreeze('deleteBlock');
         this.updateBookVersion({major: true})
+        this.tc_loadBookTask();
+        this.getCurrentJobInfo();
+        this.getTotalBookTasks();
         //this.refreshTmpl();
       })
       .catch(err => {
@@ -1073,7 +1098,7 @@ export default {
         switch(direction) {
           case 'previous' : {
             let getPrevBlock = new Promise((resolve, reject) => {
-              let _prevId = this.parlistO.getInId(block._id);
+              let _prevId = this.parlistO.getInId(block.blockid);
               let _prev = this.parlist.get(_prevId);
               if (_prev && (this.doJoinBlocks.show || this.doJoinBlocks.showAudio)) {
                 resolve(_prev);
@@ -1093,14 +1118,14 @@ export default {
 
 
               let elBlock = this.$children.find(c => {
-                return c.$el.id == block._id;
+                return c.$el.id == block.blockid;
               });
               let elNext = this.$children.find(c => {
-                return c.$el.id == blockBefore._id;
+                return c.$el.id == blockBefore.blockid;
               });
 
               if (!this.doJoinBlocks.show
-                  && (this.parlist.get(block._id).isChanged || this.parlist.get(blockBefore._id).isChanged))
+                  && (this.parlist.get(block.blockid).isChanged || this.parlist.get(blockBefore.blockid).isChanged))
               {
                 // save current block reference
                 // and show confirmation pop-up to save changes
@@ -1108,8 +1133,8 @@ export default {
                 this.doJoinBlocks.direction = direction;
                 this.doJoinBlocks.show = true;
               } else if (!this.doJoinBlocks.showAudio &&
-                      (this.parlist.get(block._id).isAudioChanged ||
-                      this.parlist.get(blockBefore._id).isAudioChanged ||
+                      (this.parlist.get(block.blockid).isAudioChanged ||
+                      this.parlist.get(blockBefore.blockid).isAudioChanged ||
                       (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
                       (elNext && elNext.audioEditFootnote.isAudioChanged))) {
                 this.doJoinBlocks.block = block;
@@ -1123,7 +1148,7 @@ export default {
                   this.unableJoinMessage();
                   return Promise.reject('type');
                 }
-                if (!this.parlist.has(blockBefore._id)) {
+                if (!this.parlist.has(blockBefore.blockid)) {
                   this.doJoinBlocks.show = false;
                   this.unableJoinMessage();
                   return Promise.reject('type');
@@ -1135,10 +1160,10 @@ export default {
                 }
                 this.doJoinBlocks.block = {};
                 let currBlockRef = this.$refs.blocks.find((blockRef)=>{
-                  return blockRef.blockId == block._id;
+                  return blockRef.blockId == block.blockid;
                 });
                 let prevBlockRef = this.$refs.blocks.find((blockRef)=>{
-                  return blockRef.blockId == blockBefore._id;
+                  return blockRef.blockId == blockBefore.blockid;
                 });
                 if (currBlockRef && prevBlockRef) {
                   this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
@@ -1146,20 +1171,20 @@ export default {
                   this.freeze('joinBlocks');
                   currBlockRef.isAudioChanged = false;
                   let el = this.$children.find(c => {
-                    return c.$el.id == currBlockRef._id;
+                    return c.$el.id == currBlockRef.blockid;
                   });
                   if (el) {
-                    el.evFromAudioeditorClosed(currBlockRef._id);
+                    el.evFromAudioeditorClosed(currBlockRef.blockid);
                   }
                   this.$root.$emit('for-audioeditor:force-close');
                   currBlockRef.assembleBlockProxy()
                   .then(()=>{
                     prevBlockRef.isAudioChanged = false;
                     let el = this.$children.find(c => {
-                      return c.$el.id == prevBlockRef._id;
+                      return c.$el.id == prevBlockRef.blockid;
                     });
                     if (el) {
-                      el.evFromAudioeditorClosed(prevBlockRef._id);
+                      el.evFromAudioeditorClosed(prevBlockRef.blockid);
                     }
                     prevBlockRef.assembleBlockProxy()
                     .then(()=>{
@@ -1167,8 +1192,8 @@ export default {
                       this.doJoinBlocks.showAudio = false;
                       this.doJoinBlocks.block = {};
                       return api.post(api_url, {
-                        resultBlock_id: blockBefore._id,
-                        donorBlock_id: block._id
+                        resultBlock_id: blockBefore.blockid,
+                        donorBlock_id: block.blockid
                       })
                       .then((response)=>{
                         //this.setBlockSelection({start: {}, end: {}});
@@ -1207,7 +1232,7 @@ export default {
           } break;
           case 'next' : {
             let getNextBlock = new Promise((resolve, reject) => {
-              let _nextId = this.parlistO.getOutId(block._id);
+              let _nextId = this.parlistO.getOutId(block.blockid);
               let _next = this.parlist.get(_nextId);
               if (_next) {
                 resolve(_next);
@@ -1223,23 +1248,23 @@ export default {
             });
             return getNextBlock
             .then((blockAfter)=>{
-              
-              let chainId = this.parlistO.getOutId(block._id);
+
+              let chainId = this.parlistO.getOutId(block.blockid);
               let elBlock = this.$children.find(c => {
-                return c.$el.id == block._id;
+                return c.$el.id == block.blockid;
               });
               let elNext = this.$children.find(c => {
                 return c.$el.id == chainId;
               });
               if (!this.doJoinBlocks.show
-              && (this.parlist.get(block._id).isChanged || this.parlist.get(chainId).isChanged))
+              && (this.parlist.get(block.blockid).isChanged || this.parlist.get(chainId).isChanged))
               {
                 this.doJoinBlocks.block = block;
                 this.doJoinBlocks.direction = direction;
                 this.doJoinBlocks.show = true;
 
               } else if (!this.doJoinBlocks.showAudio &&
-                      (this.parlist.get(block._id).isAudioChanged ||
+                      (this.parlist.get(block.blockid).isAudioChanged ||
                       this.parlist.get(chainId).isAudioChanged ||
                       (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
                       (elNext && elNext.audioEditFootnote.isAudioChanged))) {
@@ -1254,7 +1279,7 @@ export default {
                   this.unableJoinMessage();
                   return Promise.reject('type');
                 }
-                if (!this.parlist.has(this.parlistO.getOutId(block._id))) {
+                if (!this.parlist.has(this.parlistO.getOutId(block.blockid))) {
                   this.doJoinBlocks.show = false;
                   this.unableJoinMessage();
                   return Promise.reject('type');
@@ -1266,7 +1291,7 @@ export default {
                 }
                 this.doJoinBlocks.block = {};
                 let currBlockRef = this.$refs.blocks.find((blockRef)=>{
-                  return blockRef.blockId == block._id;
+                  return blockRef.blockId == block.blockid;
                 });
                 let nextBlockRef = this.$refs.blocks.find((blockRef)=>{
                   return blockRef.blockId == chainId;
@@ -1277,20 +1302,20 @@ export default {
                   this.addBlockLock({block: blockAfter, watch: ['realigned'], type: 'join'})
                   currBlockRef.isAudioChanged = false;
                   let el = this.$children.find(c => {
-                    return c.$el.id == currBlockRef._id;
+                    return c.$el.id == currBlockRef.blockid;
                   });
                   if (el) {
-                    el.evFromAudioeditorClosed(currBlockRef._id);
+                    el.evFromAudioeditorClosed(currBlockRef.blockid);
                   }
                   this.$root.$emit('for-audioeditor:force-close');
                   currBlockRef.assembleBlockProxy()
                   .then(()=>{
                     nextBlockRef.isAudioChanged = false;
                     let el = this.$children.find(c => {
-                      return c.$el.id == nextBlockRef._id;
+                      return c.$el.id == nextBlockRef.blockid;
                     });
                     if (el) {
-                      el.evFromAudioeditorClosed(nextBlockRef._id);
+                      el.evFromAudioeditorClosed(nextBlockRef.blockid);
                     }
                     nextBlockRef.assembleBlockProxy()
                     .then(()=>{
@@ -1298,8 +1323,8 @@ export default {
                       this.doJoinBlocks.showAudio = false;
                       this.doJoinBlocks.block = {};
                       return api.post(api_url, {
-                        resultBlock_id: block._id,
-                        donorBlock_id: blockAfter._id
+                        resultBlock_id: block.blockid,
+                        donorBlock_id: blockAfter.blockid
                       })
                       .then((response)=>{
                         //this.setBlockSelection({start: {}, end: {}});
@@ -1463,18 +1488,6 @@ export default {
     setUnCheckedRange() {
       this.parlistO.setUnCheckedRange()
     },
-    setBlockWatch() {
-      //console.log('!!! setBlockWatch');
-      setTimeout(()=>{
-        this.watchBlocks({book_id: this.meta._id})
-        .then(()=>{
-          this.watchBlk.on('change', (change) => {
-              this.$root.$emit('blockChange', change.doc);
-              this.refreshBlock(change);
-          });
-        });
-      }, 1000);
-    },
 
     smoothScrollContent: _.debounce(function (ev) {
       this.scrollContent(ev);
@@ -1615,8 +1628,12 @@ export default {
 
     scrollToBlock(blockId, force = false)
     {
+      //console.log('scrollToBlock', blockId);
       let vBlock = document.getElementById('v-'+ blockId);
-      if (vBlock) vBlock.scrollIntoView();
+      if (vBlock) {
+        vBlock.scrollIntoView();
+        //this.parlistO.setStartId(blockId)
+      }
     },
 
     scrollToBlockEnd(id) {
@@ -1642,10 +1659,10 @@ export default {
       //this.refreshTmpl();
     },
 
-    checkVisible(elm) {
+    checkVisible(elm, viewHeight = false) {
       var rect = elm.getBoundingClientRect();
-      var viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-      return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
+      if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+      return !(rect.bottom < initialTopOffset+1 || rect.top - viewHeight >= 0);
     },
 
     updatePositions() {
@@ -1661,6 +1678,7 @@ export default {
 
     smoothHandleScroll: _.debounce(function (ev) {
       ev.stopPropagation();
+      //console.log('smoothHandleScroll', ev);
       this.handleScroll();
     }, 100),
 
@@ -1668,28 +1686,50 @@ export default {
       if (this.recordingState == 'recording') {
         return false;
       }
+      if (!this.$refs.viewBlocks || !this.$refs.viewBlocks.length) {
+        return false;
+      }
       //console.log('handleScroll', (new Date()).toJSON());
       if (!this.onScrollEv) {
         let firstVisible = false;
         let lastVisible = false;
+        let fixJump = 'false';
         let loadIdsArray = [];
-        for (let blockRef of this.$refs.viewBlocks) {
-          let visible = this.checkVisible(blockRef.$refs.viewBlock);
+        let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+        //let loadCount = 5;
+        for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
+          let blockRef = this.$refs.viewBlocks[i];
+          let visible = this.checkVisible(blockRef.$refs.viewBlock, viewHeight);
           if (visible) {
             if (!firstVisible) {
               firstVisible = blockRef.blockO;
             }
             lastVisible =  blockRef.blockO;
             if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
+              if (fixJump === 'false') fixJump = 'true';
               this.parlistO.setLoaded(blockRef.blockRid);
               blockRef.$forceUpdate();
+            } else {
+              if (fixJump === 'true') fixJump = blockRef.blockO;
+              if (this.parlistO.get(blockRef.blockRid).loaded === false) {
+                this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
+                loadIdsArray.push(blockRef.blockId);
+              }
             }
-            else if (this.parlistO.get(blockRef.blockRid).loaded === false) {
-              this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
-              loadIdsArray.push(blockRef.blockId);
-            }
-          }
+          /*} else if (firstVisible && loadCount > 0) {
+            if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
+              loadCount--;
+              this.parlistO.setLoaded(blockRef.blockRid);
+              blockRef.$forceUpdate();
+            }*/
+          } else if (firstVisible) break;
         }
+
+        /*if (fixJump !== 'true' && fixJump !== 'false') {
+          //this.scrollToBlock(fixJump.blockid);
+          this.scrollToBlock(this.parlistO.get(fixJump.in).blockid);
+          //return false;
+        }*/
 
         if (loadIdsArray.length) {
           this.getBlocksArr(loadIdsArray)
@@ -1713,7 +1753,7 @@ export default {
 //             params: { block: firstVisibleId }
 //           });
 //         }
-      } else this.onScrollEv = false;
+     } else this.onScrollEv = false;
     },
 
     moveEditWrapper(firstVisible, lastVisible, force) {
@@ -1726,18 +1766,24 @@ export default {
 
         if (checkUpp || checkDown || force) {
           this.startId = firstVisible.blockid;
-          let prevId = this.parlistO.getPrevIds(firstVisible.rid, 2);
-          if (prevId.length < 1) prevId = [firstVisible.blockid];
-          prevId = prevId.pop();
-          if (this.parlistO.setStartId(prevId)) {
-            let firstDomBlock = document.getElementById('v-'+prevId);
-            if (firstDomBlock) this.screenTop = firstDomBlock.offsetTop;
-//               this.$refs.blocks.forEach(($ref)=>{
-//                 $ref.addContentListeners();
-//               })
+//           let prevId = this.parlistO.getPrevIds(firstVisible.rid, 2);
+//           if (prevId.length < 1) prevId = [firstVisible.blockid];
+//           prevId = prevId.pop();
+          if (this.parlistO.setStartId(firstVisible.blockid)) {
+            let firstDomBlock = document.getElementById('v-'+firstVisible.blockid);
+            if (firstDomBlock) Vue.nextTick(()=>{
+              this.screenTop = firstDomBlock.offsetTop;
+            })
           }
         }
       }
+    },
+
+    correctEditWrapper() {
+      let firstDomBlock = document.getElementById('v-'+this.startId);
+      if (firstDomBlock) Vue.nextTick(()=>{
+        this.screenTop = firstDomBlock.offsetTop;
+      })
     },
 
     getBlocksArr(idsArray) {
@@ -1749,7 +1795,7 @@ export default {
             if (!this.parlist.has(el._id)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
-              this.parlistO.setLoaded(el._id);
+              this.parlistO.setLoaded(el.blockid);
               resIdsArray.push(el._id);
             }
           });
@@ -1775,7 +1821,7 @@ export default {
       this.$router.push({name: this.$route.name, params: {}});
       this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
-        if (this.meta._id) {
+        if (this.meta._id && initBlocks.blocks && initBlocks.blocks.length) {
           this.tc_loadBookTask()
           .then(()=>{
             this.loadPreparedBookDown(this.parlistO.idsArray(), 10).then(()=>{
@@ -1783,9 +1829,18 @@ export default {
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
-                this.setBlockWatch();
+                if (res.blocks && res.blocks.length > 0) {
+                  res.blocks.forEach((el, idx, arr)=>{
+                    if (!this.parlist.has(el._id)) {
+                      let newBlock = new BookBlock(el);
+                      this.$store.commit('set_storeList', newBlock);
+                      if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
+                    }
+                    //this.parlistO.setLoaded(el._id);
+                  });
+                }
                 this.loadBookToc({bookId: this.meta._id, isWait: true});
-                this.lazyLoad();
+                //this.lazyLoad();
               });
             });
           });
@@ -1819,7 +1874,7 @@ export default {
       //console.log('book mounted', this.meta._id);
       this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
-        if (this.meta._id && initBlocks.blocks.length) {
+        if (this.meta._id && initBlocks.blocks && initBlocks.blocks.length) {
           this.tc_loadBookTask()
           .then(()=>{
             this.loadPreparedBookDown(this.parlistO.idsArray())
@@ -1827,8 +1882,24 @@ export default {
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
-                this.lazyLoad();
-                this.setBlockWatch()
+                //console.log('res.blocks', res.blocks[0]);
+                if (res.blocks && res.blocks.length > 0) {
+                  res.blocks.forEach((el, idx, arr)=>{
+                    if (!this.parlist.has(el._id)) {
+                      let newBlock = new BookBlock(el);
+                      this.$store.commit('set_storeList', newBlock);
+                      if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
+                    }
+                    //this.parlistO.setLoaded(el._id);
+                  });
+                  if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
+                    Vue.nextTick(() => {
+                      this.scrollToBlock(initBlocks.blocks[0].blockid);
+                    })
+                  }
+                }
+
+                //this.lazyLoad();
                 if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
                   this.$router.push({name: 'BookEdit', params: {}});
                 }
@@ -1859,6 +1930,7 @@ export default {
       this.$root.$on('for-bookedit:scroll-to-block', this.scrollToBlock);
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
+      this.$root.$on('from-toolbar:toggle-meta', this.correctEditWrapper);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -1880,6 +1952,7 @@ export default {
     this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
     this.$root.$off('book-reimported', this.bookReimported);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
+    this.$root.$off('from-toolbar:toggle-meta', this.correctEditWrapper);
   },
   watch: {
     'meta._id': {
@@ -1902,24 +1975,23 @@ export default {
     },
     'allBooks': {
       handler() {
-        this.setBlockWatch();
+
       }
     },
     '$route' (toRoute, fromRoute) {
       //console.log('$route', toRoute, fromRoute);
       if (toRoute.params.hasOwnProperty('task_type') && toRoute.params.task_type) {
         let taskType = toRoute.params.task_type;
-        this.loadPartOfBookBlocks({
-          bookId: this.$route.params.bookid,
-          block: 'unresolved',
-          taskType: taskType,
-          onPage: 1
-        }).then((answer)=>{
-          //this.startId = answer.blocks[0].blockid;
-          //console.log('answer', answer);
-          this.scrollToBlock(answer.blocks[0].blockid);
-          this.$router.replace({name: this.$route.name, params: {}});
-        })
+        return this.$store.dispatch('searchBlocksChain', {
+            book_id: this.meta._id,
+            startId: this.startId || this.meta.startBlock_id,
+            search: {block_type: 'unresolved',  task_type: taskType}
+          }).then((result)=>{
+            if (result.blockId) {
+              this.scrollToBlock(result.blockId);
+            }
+            this.$router.replace({name: this.$route.name, params: {}});
+          });
       }
       if (this.$route.params.hasOwnProperty('block') && this.$route.params.block!=='unresolved') {
         this.scrollToBlock(this.$route.params.block);
@@ -2144,5 +2216,84 @@ export default {
       padding: 6px 12px;
   }
 
+</style>
 
+
+<style lang='less'>
+.block-preview {
+  .in-loading {
+    height: 150px;
+    background: url(/static/preloader-snake-small.gif);
+    width: 100%;
+    /*margin: 0 auto;*/
+    background-repeat: no-repeat;
+    text-align: center;
+    background-position: center;
+  }
+
+  .in-back {
+    visibility: hidden;
+    /*opacity: 0.5;*/
+    /*border-bottom: 1px red solid;*/
+  }
+
+  .preview-container {
+    height: 100px;
+  }
+
+  .table-row .illustration-block img {
+    border: solid white 2px;
+    max-width: 100%;
+  }
+
+  .content-wrap-desc.description {
+    min-height: 30px;
+  }
+
+  .content-wrap-preview {
+    padding: 10px;
+    margin: 6px auto 4px auto;
+  }
+
+  .table-row.controls-bottom {
+    height: 24px;
+  }
+
+  .table-row.controls-top {
+    height: 28px;
+    &.completed {
+      height: 20px;
+    }
+  }
+
+  /*.ilm-book-styles.global-ocean*/
+  .ilm-block {
+    .content-wrap-preview {
+      &.js-hidden {
+        visibility: hidden;
+      }
+      &.header {
+        margin: 4px;
+      }
+      &.title {
+        margin-top: 6px;
+      }
+    }
+  }
+
+  .content-wrap-footn-preview {
+    p {
+      margin: 0;
+    }
+  }
+
+  .table-body.footnote {
+    .content-wrap-footn-preview.-text {
+      padding-right: 150px;
+      &.js-hidden {
+        visibility: hidden;
+      }
+    }
+  }
+}
 </style>

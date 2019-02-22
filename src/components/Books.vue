@@ -117,6 +117,11 @@ export default {
       this.metaAvailable = id
       this.metaVisible = !this.metaVisible
       if (!this.metaAvailable) this.metaVisible = false;
+
+      Vue.nextTick(()=>{
+        this.$root.$emit('from-toolbar:toggle-meta');
+      })
+
     },
     hasBookSelected () {
       return !!this.currentBook
@@ -227,93 +232,100 @@ export default {
 
    .-langftn-undefined,
    .-langftn-ar,
-   .-langftn-fa  { 
-     direction: rtl; 
+   .-langftn-fa  {
+     direction: rtl;
    }
 
 }
 
 
-.-lang-false, 
-.-lang-en, 
-.-lang-de, 
-.-lang-da, 
-.-lang-cy, 
-.-lang-es, 
-.-lang-fr, 
-.-lang-is, 
-.-lang-it, 
-.-lang-ko, 
-.-lang-ja, 
-.-lang-nb, 
-.-lang-nl, 
-.-lang-pl, 
-.-lang-pt, 
+.-lang-false,
+.-lang-en,
+.-lang-de,
+.-lang-da,
+.-lang-cy,
+.-lang-es,
+.-lang-fr,
+.-lang-is,
+.-lang-it,
+.-lang-ko,
+.-lang-ja,
+.-lang-nb,
+.-lang-nl,
+.-lang-pl,
+.-lang-pt,
 .-lang-ro,
 .-lang-ru,
 .-lang-sv,
-.-lang-tr  { 
-   .-langftn-undefined   { 
-     direction: ltr; 
+.-lang-tr  {
+   .-langftn-undefined   {
+     direction: ltr;
    }
 }
 
 // for block settings:
-.-langblock-en, 
-.-langblock-de, 
-.-langblock-da, 
-.-langblock-cy, 
-.-langblock-es, 
-.-langblock-fr, 
-.-langblock-is, 
-.-langblock-it, 
-.-langblock-ko, 
-.-langblock-ja, 
-.-langblock-nb, 
-.-langblock-nl, 
-.-langblock-pl, 
-.-langblock-pt, 
+.-langblock-en,
+.-langblock-de,
+.-langblock-da,
+.-langblock-cy,
+.-langblock-es,
+.-langblock-fr,
+.-langblock-is,
+.-langblock-it,
+.-langblock-ko,
+.-langblock-ja,
+.-langblock-nb,
+.-langblock-nl,
+.-langblock-pl,
+.-langblock-pt,
 .-langblock-ro,
 .-langblock-ru,
 .-langblock-sv,
-.-langblock-tr  { 
+.-langblock-tr  {
   .ilm-block {
-    direction: ltr; 
+    direction: ltr;
+  }
+  &.ilm-block {
+    direction: ltr;
   }
 }
 
 .-langblock-ar,
-.-langblock-fa  { 
+.-langblock-fa  {
   .ilm-block {
-    direction: rtl; 
+    direction: rtl;
   }
+}
+/* Display mode */
+.-langblock-ar.ilm-block, .-langblock-fa.ilm-block {
+  direction: rtl;
 }
 
 // for footnote settings:
-.-langftn-en, 
-.-langftn-de, 
-.-langftn-da, 
-.-langftn-cy, 
-.-langftn-es, 
-.-langftn-fr, 
-.-langftn-is, 
-.-langftn-it, 
-.-langftn-ko, 
-.-langftn-ja, 
-.-langftn-nb, 
-.-langftn-nl, 
-.-langftn-pl, 
-.-langftn-pt, 
+.-langftn-en,
+.-langftn-de,
+.-langftn-da,
+.-langftn-cy,
+.-langftn-es,
+.-langftn-fr,
+.-langftn-is,
+.-langftn-it,
+.-langftn-ko,
+.-langftn-ja,
+.-langftn-nb,
+.-langftn-nl,
+.-langftn-pl,
+.-langftn-pt,
 .-langftn-ro,
 .-langftn-ru,
 .-langftn-sv,
-.-langftn-tr  { 
-  direction: ltr; 
+.-langftn-tr  {
+  direction: ltr;
 }
 
 .-langftn-ar,
-.-langftn-fa  { 
-  direction: rtl; 
+.-langftn-fa  {
+  direction: rtl;
 }
 
 </style>

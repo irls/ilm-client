@@ -273,10 +273,19 @@ export default {
     removeBook(n) {
       this.name.splice(n, 1)
     },
+    cleanBookId(bookId) {
+      let cleanId = bookId.replace(/[\-\,\.]/g,'_');
+      if (cleanId.length > 50) {
+        var md5 = require('md5');
+        cleanId = cleanId.substr(0, 50) + md5(cleanId);
+      }
+      //console.log('cleanId', cleanId);
+      return cleanId;
+    },
     generateIds() {
       this.id = ['']
       for (let i in this.name) {
-        let _id = (getSlug(this.name[i])) + '_' + (this.lang ? this.lang : '')
+        let _id = this.cleanBookId((getSlug(this.name[i])) + '_' + (this.lang ? this.lang : ''))
         this.id[i] = _id
       }
     },

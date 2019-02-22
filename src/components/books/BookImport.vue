@@ -260,7 +260,7 @@ export default {
           // hide modal after one second
           vu_this.uploadProgress = "Upload Successful"
           if (vu_this.importTaskId && response.data instanceof Array && response.data[0] && response.data[0].ok == true) {
-            axios.put(API_URL + 'task/' + vu_this.importTaskId + '/book_imported', {})
+            axios.put(API_URL + 'task/' + encodeURIComponent(vu_this.importTaskId) + '/book_imported', {})
               .then((link_response) => {
                 vu_this.closeForm(true)
               })

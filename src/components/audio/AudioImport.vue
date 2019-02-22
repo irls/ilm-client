@@ -369,8 +369,8 @@ export default {
                 this.uploadErrors = response.data.errors;
               }
             }
-            if (this.importTask._id && response.data.audio && typeof response.data.audio._id !== 'undefined') {
-              api.put(this.API_URL + 'task/' + this.importTask._id + '/audio_imported', {})
+            if (this.importTask.id && response.data.audio && typeof response.data.audio._id !== 'undefined') {
+              api.put(this.API_URL + 'task/' + encodeURIComponent(this.importTask.id) + '/audio_imported', {})
                 .then((link_response) => {
                   //vm.closeForm(response)
                 })

@@ -172,14 +172,6 @@ export default {
       let jobs = Object.assign({}, this.tc_userTasks.list);
       for (let jobId in jobs) {
         jobs[jobId] = Object.assign({}, this.tc_userTasks.list[jobId]);
-        this.getBookMeta(jobs[jobId].bookid).then(meta => {
-            jobs[jobId].title = meta.title;
-            jobs[jobId].status = meta.status;
-            jobs[jobId].meta = meta
-        }).catch(error => {});
-        //this.getAudioBook(jobs[jobId].bookid).then(audio => {
-          //jobs[jobId].audio = audio;
-        //})
 
         tasks_formatted.list.push(jobs[jobId]);
         jobs[jobId].total = jobs[jobId].tasks.length;
@@ -233,7 +225,7 @@ export default {
       .catch(error => {})
     },
     importBook(task) {
-      this.import_book_task_id = task._id
+      this.import_book_task_id = task.id
       this.import_book_id = task.bookid
       this.show_import_book_modal = true
     },
@@ -253,6 +245,7 @@ export default {
     },
     importBookClose(response) {
       if (response) {
+        this.$store.dispatch('tc_loadBookTask')
         this.$router.replace({ path: '/books/' + this.import_book_id })
         return
       }
@@ -278,6 +271,9 @@ export default {
 
     bookUrl (bookId, task) {
       //console.log('task', task);
+      if (task.blockid) {
+        return '/books/' + bookId + '/edit/' + task.blockid;
+      }
       switch(task.type) {
         case 'master-audio' : {
           return '/books/' + bookId + '/edit';

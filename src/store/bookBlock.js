@@ -26,10 +26,9 @@ let defBlock = [
   'description',
   'voicework',
   'language',
-  'markedAsDone',
   'status',
   'audiosrc_ver',
-  'realigned',
+  'blockid',
 ]
 
 let BlockTypes = {
@@ -127,7 +126,7 @@ class BookBlock {
 //     this.blockid = init.blockid || '';
 
     // CouchDB properties
-    this._id = init._id || '';
+    this._id = init.blockid || '';
     this._rev = init._rev || '';
     this.bookid = init.bookid || '';
     this.chainid = init.chainid || '';
@@ -161,7 +160,15 @@ class BookBlock {
     this.markedAsDone = init.markedAsDone || false;
     this.language = init.language || false;
     this.status = init.status;
+    if (!this.status) {
+      this.status = {}
+    }
     this.audiosrc_ver = init.audiosrc_ver || {};
+    for (let k in this.audiosrc_ver) {
+      if (['m4a'].indexOf(k) === -1) {
+        delete this.audiosrc_ver[k];
+      }
+    }
 
     this.isUpdated = false;
     this.isChanged = init.isChanged || false;
@@ -182,6 +189,7 @@ class BookBlock {
 
     this.illustration_width = init.illustration_width || false;
     this.illustration_height = init.illustration_height || false;
+    this.blockid = init.blockid || false;
   }
 
   clean() {

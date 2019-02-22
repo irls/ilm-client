@@ -205,13 +205,15 @@ export default {
       return this.loopPreparedBlocksChain({ids: idsArray})
       .then((result)=>{
         let resIdsArray = [];
-        if (result.rows && result.rows.length > 0) {
+        if (result && result.rows && result.rows.length > 0) {
           result.rows.forEach((el, idx, arr)=>{
-            if (!this.parlist.has(el._id)) {
+            if (!this.parlist.has(el.blockid)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
-              this.parlistO.setLoaded(el._id);
-              resIdsArray.push(el._id);
+              this.parlistO.setLoaded(el.blockid);
+              resIdsArray.push(el.blockid);
+            } else {
+              this.parlistO.setLoaded(el.blockid);
             }
           });
         }
@@ -253,7 +255,7 @@ export default {
             if (!this.parlist.has(el._id)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
-              this.parlistO.setLoaded(el._id);
+              this.parlistO.setLoaded(el.blockid);
               //this.updateScrollSlider(false);
             }
           });
@@ -306,9 +308,9 @@ export default {
                     if (!this.parlist.has(el._id)) {
                       let newBlock = new BookBlock(el);
                       this.$store.commit('set_storeList', newBlock);
-                      this.parlistO.setLoaded(el._id);
+                      this.parlistO.setLoaded(el.blockid);
                     } else {
-                      this.parlistO.setLoaded(el._id);
+                      this.parlistO.setLoaded(el.blockid);
                     }
                   });
                 }
