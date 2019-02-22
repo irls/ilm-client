@@ -38,8 +38,8 @@ export default {
         return this.$store.state.auth.confirmRole(role);
       } else {
         let session = this.$store.state.auth.getSession();
-        if (this.$store.state.tc_currentBookTasks && this.$store.state.tc_currentBookTasks.job && this.$store.state.tc_currentBookTasks.job.executors && session && session.user_id) {
-          return this.$store.state.tc_currentBookTasks.job.executors[role] === session.user_id
+        if (this.$store.state.currentJobInfo && this.$store.state.currentJobInfo.executors && session && session.user_id) {
+          return this.$store.state.currentJobInfo.executors[role] === session.user_id
         }
       }
       return false;

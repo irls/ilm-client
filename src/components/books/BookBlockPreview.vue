@@ -1,6 +1,6 @@
 <template>
 <div ref="viewBlock" class="block-preview">
-  <div v-if="block && (loaded === true || blockO.loaded === true)"
+  <div v-if="block && (block.type != 'par' || (loaded === true || blockO.loaded === true))"
     :class="['table-body -block', blockOutPaddings]">
 
     <div :class="['table-cell', 'controls-left']">
@@ -35,9 +35,9 @@
         </div>
         <!--<img v-if="block.illustration"-->
 
-        <div v-else v-cloak class="content-wrap-preview"
-        v-html="blockContent"
-        :class="[getClass]">
+        <div v-else v-cloak
+        :class="['content-wrap-preview', getClass, {'js-hidden': blockO.loaded !== true}]"
+        v-html="blockContent">
         </div>
         <!--<div class="content-wrap">-->
 
@@ -54,7 +54,8 @@
 
             <div class="table-row">
               <div class="table-cell -num">{{ftnIdx+1}}.</div>
-              <div class="content-wrap-footn-preview table-cell -text"
+              <div
+                :class="['content-wrap-footn-preview table-cell -text', {'js-hidden': blockO.loaded !== true}]"
                 v-html="footnote.content">
               </div>
               <div class="table-cell -control"></div>
@@ -186,75 +187,3 @@ import access             from '../../mixins/access.js';
     }
   }
 </script>
-
-<style lang='less'>
-.block-preview {
-  .in-loading {
-    height: 150px;
-    background: url(/static/preloader-snake-small.gif);
-    width: 100%;
-    /*margin: 0 auto;*/
-    background-repeat: no-repeat;
-    text-align: center;
-    background-position: center;
-  }
-
-  .in-back {
-    visibility: hidden;
-    /*opacity: 0.5;*/
-    /*border-bottom: 1px red solid;*/
-  }
-
-  .preview-container {
-    height: 100px;
-  }
-
-  .table-row .illustration-block img {
-    border: solid white 2px;
-  }
-
-  .content-wrap-desc.description {
-    min-height: 30px;
-  }
-
-  .content-wrap-preview {
-    padding: 10px;
-    margin: 9px auto 4px auto;
-  }
-
-  .table-row.controls-bottom {
-    height: 24px;
-  }
-
-  .table-row.controls-top {
-    height: 28px;
-    &.completed {
-      height: 20px;
-    }
-  }
-
-  /*.ilm-book-styles.global-ocean*/
-  .ilm-block {
-    .content-wrap-preview {
-      &.header {
-        margin: 4px;
-      }
-      &.title {
-        margin-top: 6px;
-      }
-    }
-  }
-
-  .content-wrap-footn-preview {
-    p {
-      margin: 0;
-    }
-  }
-
-  .table-body.footnote {
-    .content-wrap-footn-preview.-text {
-      padding-right: 160px;
-    }
-  }
-}
-</style>
