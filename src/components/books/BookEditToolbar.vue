@@ -139,6 +139,11 @@ export default {
     clearRangeSelection() {
       this.setBlockSelection({start: {}, end: {}});
     },
+    evOnReimportModal() {
+      if (this.tc_allowEditingComplete()) {
+        this.showBookReimport = true;
+      }
+    },
     ...mapActions(['setBlockSelection'])
   },
   components: {
@@ -173,10 +178,13 @@ export default {
     },
   },
   mounted() {
-
+    this.$root.$on('book-reimport-modal', this.evOnReimportModal);
   },
   destroyed: function () {
 
+  },
+  beforeDestroy: function() {
+    this.$root.$off('book-reimport-modal', this.evOnReimportModal);
   }
 }
 </script>

@@ -27,8 +27,9 @@
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false" />
-      <AudioImport v-if="showModal_audio" @close="showModal_audio = false"
+      <AudioImport v-if="showModal_audio"
         @audiofilesUploaded="getAudioBook"
+        @close="checkAfterAudioImport"
         :book="currentBook"
         :importTask="importTask"
         :allowDownload="false" />
@@ -96,7 +97,21 @@
                   </thead>
                   <tbody>
                     <tr v-for="task in counter.data.tasks">
-                      <td :class="['task-type', {'go-to-block': task.blockid != null && !task.complete}]" v-on:click="goToBlockCheck(task.blockid, counter.key)">{{task.title}}</td>
+                      <td :class="['task-type', {'go-to-block': task.blockid != null && !task.complete}]" v-on:click="goToBlockCheck(task.blockid, counter.key)">
+                        <div v-if="task.link && !task.complete">
+                          <template v-for="link in task.link">
+                            <span v-if="link=='audio_dialog'" class="go-to-block" v-on:click="showModal_audio = true">
+                              {{task.title}}
+                            </span>
+                            <span v-else-if="link=='book_dialog'" class="go-to-block" v-on:click="$root.$emit('book-reimport-modal')">
+                              {{task.title}}
+                            </span>
+                          </template>
+                        </div>
+                        <div v-else>
+                          {{task.title}}
+                        </div>
+                      </td>
                       <td :class="[{'go-to-block': task.blockid != null && !task.complete}, 'task-counter']" v-on:click="goToBlockCheck(task.blockid, counter.key)">
                         <span v-if="task.complete" :class="[{'ready': task.ready}]">Closed</span>
                         <span v-else :class="[{'ready': task.ready}]">Open</span>
@@ -116,7 +131,7 @@
                           </div>
                           <div v-if="action=='complete_mastering'">
                             <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                              <button class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">complete</button>
+                              <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">complete</button>
                             </div>
                             <div v-else class="preloader-small"></div>
                           </div>
@@ -127,6 +142,40 @@
                 </table>
               </div>
             </div>
+          <fieldset class='Export' :disabled="isExporting || currentBook.demo_time < 0" v-if="isAllowExportAudio">
+            <legend>Export </legend>
+              
+              <div v-if="isExporting || currentBook.demo_time < 0" class="align-preloader -small">&nbsp;</div>
+              <div v-if="currentBook.demo_time && (!isExporting && currentBook.demo_time != -1)">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
+              <div>
+                <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
+                <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
+                <button class="btn btn-primary" v-if="currentBook.demo_time" :disabled="!currentBook.demo" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
+                <a class="btn btn-primary" v-if="!currentBook.demo_time" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio">Build</a>
+                <a class="btn btn-primary" v-else target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio">Rebuild</a>
+              </div>
+          </fieldset>
+          <fieldset class="publish">
+            <!-- Fieldset Legend -->
+            <template>
+              <legend>{{ currentBook.published ? 'Published' : 'Unpublished' }},
+              </legend>
+              <div>
+                Version #{{ currentBook.version ? currentBook.version : '1.0' }}
+              </div>
+              <div v-if="publicationStatus" >
+                Status #{{ publicationStatus }}
+              </div>
+              <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
+              <div v-if="allowPublishCurrentBook">
+                <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
+                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
+                <span v-if="isPublishing" class="align-preloader -small"></span>
+
+              </div>
+              <button class="btn btn-primary hidden" v-on:click="publishContent()">Publish Content</button>
+            </template>
+          </fieldset>
           </vue-tab>
           <vue-tab title="Meta" id="book-content">
             <fieldset>
@@ -188,11 +237,6 @@
                   </td>
                 </tr>
 
-<!--                <tr class='sections'>
-                  <td>Sections</td>
-                  <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)" :disabled="!allowMetadataEdit"></td>
-                </tr>-->
-
                 <tr class='trans'>
                   <td>Translator</td>
                   <td><input v-model='currentBook.translator' @input="update('translator', $event)" :disabled="!allowMetadataEdit"></td>
@@ -226,72 +270,6 @@
             <legend>Long Description </legend>
             <textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit"></textarea>
           </fieldset>
-          
-          <fieldset class='Export' :disabled="isExporting || currentBook.demo_time < 0" v-if="isAllowExportAudio">
-            <legend>Export </legend>
-              
-              <div v-if="isExporting || currentBook.demo_time < 0" class="align-preloader -small">&nbsp;</div>
-              <div v-if="currentBook.demo_time && (!isExporting && currentBook.demo_time != -1)">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
-              <div>
-                <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
-                <a class="btn btn-primary" v-if="currentBook.demo_time" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
-                <button class="btn btn-primary" v-if="currentBook.demo_time" :disabled="!currentBook.demo" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
-                <a class="btn btn-primary" v-if="!currentBook.demo_time" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio">Build</a>
-                <a class="btn btn-primary" v-else target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio">Rebuild</a>
-              </div>
-          </fieldset>
-          <fieldset class="publish">
-            <!-- Fieldset Legend -->
-            <template>
-              <legend>{{ currentBook.published ? 'Published' : 'Unpublished' }},
-              </legend>
-              <div>
-                Version #{{ currentBook.version ? currentBook.version : '1.0' }}
-              </div>
-              <div v-if="publicationStatus" >
-                Status #{{ publicationStatus }}
-              </div>
-              <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
-              <div v-if="allowPublishCurrentBook">
-                <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
-                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
-                <span v-if="isPublishing" class="align-preloader -small"></span>
-
-              </div>
-              <button class="btn btn-primary hidden" v-on:click="publishContent()">Publish Content</button>
-            </template>
-
-            <!-- Publication Options -->
-            <!-- <table class='properties publication'>
-              <template v-if="currentBook.importStatus == 'staging'">
-                <tr><td rowspan='2'>
-                  <button class="btn btn-primary sharebtn" @click="shareBook"> Move book to Library</button>
-                </td></tr>
-              </template>
-              <template v-else>
-
-                <tr><td>Published</td> <td class='published'>
-                  <i :class="[currentBook.published ? 'fa-toggle-on' : 'fa-toggle-off', 'fa pubtoggle']"
-                    @click='publishedToggle'
-                  ></i>
-                </td></tr>
-
-                <tr v-if="currentBook.published"><td>Type</td> <td class='pubtype'>
-                  <select class="form-control" v-model='currentBook.pubType'>
-                    <option v-for="(value, index) in pubTypes" :value="value">{{ value }}</option>
-                  </select>
-                </td></tr>
-
-                <tr v-if="currentBook.published"><td>Ver. #{{ currentBook.version }}</td> <td class='version'>
-                  <button class="btn btn-primary new-version" @click="newVersion"> Save New Version</button>
-                </td></tr>
-
-              </template>
-            </table> -->
-          </fieldset>
-          <!--<template v-if="isAdmin || isLibrarian || _is('editor', true)">
-            <a v-if="currentBook.published" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()" -->
-          <!--</template>-->
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
@@ -299,21 +277,6 @@
             ></BookToc>
           </vue-tab>
           <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
-            <div class="t-box">
-              <template>
-                <div class="btn-switch" @click="toggleMastering()">
-                  <i class="fa fa-toggle-on" v-if="currentBook.masteringRequired"></i>
-                  <i class="fa fa-toggle-off" v-else></i>
-                  <span class="s-label"> Mastering required</span>
-                </div>
-              </template>
-              <!--<a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
-                Export Audio
-              </a>
-              <button v-else class="btn btn-primary btn-small btn-export-audio" v-on:click="startGenerateAudiofile()">
-                Export Audio
-              </button>-->
-            </div>
             <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
               {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
               <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
@@ -321,7 +284,7 @@
             </div>
             <div v-else class="t-box red-message">Define block range</div>
             <BookAudioIntegration ref="audioIntegration"
-                :isActive="activeTabIndex == 2"
+                :isActive="activeTabIndex == 3"
                 @onTtsSelect="ttsUpdate"
                 @uploadAudio="showModal_audio = true"
               ></BookAudioIntegration>
@@ -1011,13 +974,13 @@ export default {
             break;
           case 1:
             break;
-          case 2:
+          case 3:
             if (!this.tc_displayAudiointegrationTab()) {
               newIndex = 0;
               //console.log('HERE')
             }
             break;
-          case 3:
+          case 4:
             if (!this.tc_displayStylesTab()) {
               newIndex = 0;
             }
@@ -1608,8 +1571,16 @@ export default {
     },
     
     goToBlockCheck(blockid, role) {
+      console.log(this.$route, role)
       if (this._is(role, true) || (role === 'editor' && this.adminOrLibrarian)) {
-        return this.goToBlock(blockid);
+        if (this.$route && this.$route.name === 'BookEdit') {
+          return this.goToBlock(blockid);
+        } else {
+          if (role === 'narrator') {
+            
+          }
+          this.$router.push({name: 'BookEdit', params: {bookid: this.currentBook.bookid, block: blockid}});
+        }
       }
     },
 
@@ -1794,6 +1765,15 @@ export default {
         return t.title;
       } else {
         return '';
+      }
+    },
+    
+    checkAfterAudioImport() {
+      this.showModal_audio = false
+      if (this.activeTabIndex !== 3) {
+        this.activeTabIndex = 3;
+        this.$refs.panelTabs.findTabAndActivate(3);
+        this.$forceUpdate();
       }
     },
 
@@ -2155,9 +2135,10 @@ export default {
             width: 80px;
           }
           &.task-type {
-            &.go-to-block {
+            &.go-to-block, span.go-to-block {
                 color: #3187d5;
                 text-decoration: underline;
+                cursor: pointer;
             }
           }
           &.task-action {
