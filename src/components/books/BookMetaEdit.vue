@@ -175,12 +175,12 @@
 
           <fieldset class='description brief'>
             <legend>Brief Description </legend>
-            <textarea-autosize v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit" :min-height="20" :max-height="200" ></textarea-autosize>
+            <textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit"  ></textarea>
           </fieldset>
 
           <fieldset class='description long'>
             <legend>Long Description </legend>
-            <textarea-autosize v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" :min-height="30" :max-height="200"></textarea-autosize>
+            <textarea style="min-height: 100px;" v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" ></textarea>
           </fieldset>
           
           <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
