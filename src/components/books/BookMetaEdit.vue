@@ -991,7 +991,7 @@ export default {
       let checkId = this.currentBook.bookid;
       this.updateAllowed = false;
       setTimeout(() => {
-        if (this.currentBook.bookid === checkId) {
+        if (!checkId || this.currentBook.bookid === checkId) {
           this.updateAllowed = true;//autosize plugin send updates on initialization
         }
       }, 1500)
@@ -1070,9 +1070,9 @@ export default {
     }, 500),
 
     liveUpdate (key, value) {
-      if (!this.updateAllowed) {
-        return;
-      }
+      //if (!this.updateAllowed) {
+        //return Promise.resolve();
+      //}
       console.log('liveUpdate', key, value);
 
       var keys = key.split('.');
