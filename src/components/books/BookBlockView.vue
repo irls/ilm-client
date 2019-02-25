@@ -1456,7 +1456,7 @@ export default {
 
           if (this.$refs.blockContent) {
             this.$refs.blockContent.innerHTML = block.content;
-            this.$refs.blockContent.focus();
+            //this.$refs.blockContent.focus();
           }
           if (this.$refs.blockFlagPopup) {
             this.$refs.blockFlagPopup.close();
