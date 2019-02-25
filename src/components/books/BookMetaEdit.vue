@@ -1571,15 +1571,16 @@ export default {
     },
     
     goToBlockCheck(blockid, role) {
-      console.log(this.$route, role)
+      console.log(this.$route, blockid, role)
       if (this._is(role, true) || (role === 'editor' && this.adminOrLibrarian)) {
         if (this.$route && this.$route.name === 'BookEdit') {
           return this.goToBlock(blockid);
         } else {
+          let params = {name: 'BookEdit', params: {bookid: this.currentBook.bookid, block: blockid}};
           if (role === 'narrator') {
-            
+            params.name = 'BookNarrate';
           }
-          this.$router.push({name: 'BookEdit', params: {bookid: this.currentBook.bookid, block: blockid}});
+          this.$router.push(params);
         }
       }
     },
