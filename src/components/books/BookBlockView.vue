@@ -3035,7 +3035,8 @@ export default {
           } else {
 
           }
-          if (this.blockO.type !== this.block.type) {
+
+          //if (this.blockO.type !== this.block.type) {
             this.blockO.status = Object.assign(this.blockO.status, {
               marked: this.block.markedAsDone,
               assignee: this.block.status.assignee,
@@ -3061,7 +3062,7 @@ export default {
                 //})
               });
             });
-          }
+          //}
         }).catch((err) => {
           console.log(err)
         });
