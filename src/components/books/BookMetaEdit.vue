@@ -426,7 +426,7 @@
                     <label class="block-style-label"
                       @click="selSecNum(blockType, 'parNum', numProps.get(blockType).get('parNum'))">
                       <template v-if="numProps.get(blockType).get('parNum') == 'mixed'">
-                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                        <i class="fa fa-square-o" aria-hidden="true"></i>
                       </template>
                       <template v-else>
                         <i v-if="numProps.get(blockType).get('parNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
@@ -1419,6 +1419,8 @@ export default {
         //console.log('blockId', blockId);
 
           let pBlock = this.storeList.get(blockId);
+          let pBlockO = this.storeListO.get(blockId);
+          
           if (pBlock) {
             if (!result.has(pBlock.type)) result.set(pBlock.type, new Map());
 
@@ -1435,8 +1437,10 @@ export default {
               nums.set(pBlock.type, new Map([
                 ['secNum',  !(pBlock.secnum === false)],
                 ['secHide', !(pBlock.secHide === false)],
-                ['parNum',  !(pBlock.parnum === false)],
-                ['parHide', !(pBlock.parHide === false)],
+                ['parNum',  !(pBlockO.isNumber === false)],
+                ['parHide', !(pBlockO.isHidden === false)],
+                /*['parNum',  !(pBlock.parnum === false)],
+                ['parHide', !(pBlock.parHide === false)],*/
               ]));
 
             //console.log('nums.get(pBlock.type)', nums.get(pBlock.type), !(pBlock.secnum === false));
