@@ -1418,7 +1418,7 @@ export default {
         }
       },
       update: function() {
-        console.log('update');
+        //console.log('update');
         //this.isChanged = true;
         //Vue.set(this, 'isChanged', true);
       },
@@ -3051,13 +3051,14 @@ export default {
               this.putNumBlockO({
                 bookId: this.block.bookid,
                 rid: this.blockO.rid,
+                type: this.block.type,
                 secnum: '',
                 parnum: ''
               }).then((blocks)=>{
                 //console.log('assembleBlock putNumBlockO', blocks[0]);
-                this.storeListO.updBlockByRid(this.blockO.rid, {
-                  type: this.block.type
-                })
+                //this.storeListO.updBlockByRid(this.blockO.rid, {
+                //  type: this.block.type
+                //})
               });
             });
           }
