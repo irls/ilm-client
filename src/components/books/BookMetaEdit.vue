@@ -175,12 +175,12 @@
 
           <fieldset class='description brief'>
             <legend>Brief Description </legend>
-            <textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit"  ></textarea>
+            <resizable-textarea><textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full"></textarea></resizable-textarea>
           </fieldset>
 
           <fieldset class='description long'>
             <legend>Long Description </legend>
-            <textarea style="min-height: 100px;" v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" ></textarea>
+            <resizable-textarea><textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full" ></textarea></resizable-textarea>
           </fieldset>
           
           <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
@@ -631,10 +631,10 @@ import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
 import { Languages } from "../../mixins/lang_config.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
-import VueTextareaAutosize from 'vue-textarea-autosize'
+//import VueTextareaAutosize from 'vue-textarea-autosize'
 var BPromise = require('bluebird');
 
-Vue.use(VueTextareaAutosize)
+//Vue.use(VueTextareaAutosize)
 
 export default {
 
@@ -1754,6 +1754,30 @@ export default {
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta'])
   }
 }
+
+
+Vue.component('resizable-textarea', {
+  methods: {
+    resizeTextarea (event) {
+      event.target.style.height = 'auto'
+      event.target.style.height = (event.target.scrollHeight) + 'px'
+    },
+  },
+  mounted () {
+    this.$nextTick(() => {
+      this.$el.setAttribute('style', 'height:' + (this.$el.scrollHeight) + 'px;overflow-y:hidden;')
+    })
+
+    this.$el.addEventListener('input', this.resizeTextarea)
+  },
+  beforeDestroy () {
+    this.$el.removeEventListener('input', this.resizeTextarea)
+  },
+  render () {
+    return this.$slots.default[0]
+  },
+});
+
 </script>
 
 
@@ -2094,6 +2118,10 @@ export default {
     li.tab {
       display: block;
     }
+  }
+
+  .outline-0 {
+    outline: 0;
   }
 
 </style>
