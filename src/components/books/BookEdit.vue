@@ -1812,10 +1812,7 @@ export default {
       this.setBlockSelection({start: {}, end: {}});
       this.scrollToBlock(this.parlistO.idsArray()[0]);
       this.screenTop = initialTopOffset;
-      this.$store.commit('clear_storeList');
-      this.$store.commit('clear_storeListO');
       this.startId = false;
-      this.setCurrentBookCounters(['not_marked_blocks']);
       this.refreshTmpl();
 
       this.$router.push({name: this.$route.name, params: {}});
@@ -1892,8 +1889,10 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  //this.parlistO.refresh();
                   if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
                     Vue.nextTick(() => {
+                      this.handleScroll();
                       this.scrollToBlock(initBlocks.blocks[0].blockid);
                     })
                   }

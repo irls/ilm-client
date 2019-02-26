@@ -29,11 +29,12 @@
       <BookDownload v-if="showModal" @close="showModal = false" />
       <AudioImport v-if="showModal_audio"
         @audiofilesUploaded="getAudioBook"
-        @close="checkAfterAudioImport"
+        @close="showModal_audio = false"
+        @closeOk="checkAfterAudioImport"
         :book="currentBook"
         :importTask="importTask"
         :allowDownload="false" />
-
+      
       <div class="book-listing">
         <!-- <div class="row" v-if="tc_allowMetadataActions()">
           <template v-if="tc_allowEditingComplete() || tc_allowFinishMastering()">
@@ -284,7 +285,7 @@
             </div>
             <div v-else class="t-box red-message">Define block range</div>
             <BookAudioIntegration ref="audioIntegration"
-                :isActive="activeTabIndex == 3"
+                :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
                 @uploadAudio="showModal_audio = true"
               ></BookAudioIntegration>
@@ -495,76 +496,6 @@
               </vue-tabs>
 
             </div>
-            <!--<div class="styles-catalogue">-->
-          <!--</panel>
-
-          <panel :is-open="false" header="Book styles"
-            v-bind:key="'book-styles'" ref="panelBookStyles">
-
-            <div class="styles-catalogue">
-
-              <vue-tabs ref="stylesTabs">
-
-                <vue-tab title="Styles" :id="'global-styles-switcher'">
-                  <div>
-                    <input type="radio" :id="'gs-default'" :value="''" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-default'" class="style-label">ILM</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'gs-ocean'" :value="'global-ocean'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-ocean'" class="style-label">Ocean</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'gs-ffa'" :value="'global-ffa'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-ffa'" class="style-label">FFA</label>
-                  </div>
-                </vue-tab>
-                <vue-tab title="Fonts" :id="'fonts-styles-switcher'">
-                  <div>
-                    <input type="radio" :id="'ft-default'" :value="''" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                    <label :for="'ft-default'" class="style-label">default</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'ft-typewriter'" :value="'typewriter'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                    <label :for="'ft-typewriter'" class="style-label">typewriter</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'ft-monospace'" :value="'monospace'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                    <label :for="'ft-monospace'" class="style-label">monospace</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'ft-oldbook'" :value="'oldbook'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                    <label :for="'ft-oldbook'" class="style-label">oldbook</label>
-                  </div>
-                </vue-tab>
-                <vue-tab title="Align" :id="'align-styles-switcher'">
-
-                  <div v-for="(align, key) in blockTypes.par['align']" >
-                    <input type="radio" :id="'pt-'+align" :value="align" v-model="currentBook.styles.align" @change="update('styles.align', $event)">
-                    <label :for="'pt-'+align" class="style-label">{{align.length ? align : 'default'}}</label>
-                  </div>
-                </vue-tab>
-                <vue-tab title="Par" :id="'paragraphs-styles-switcher'">
-                  <div v-for="(type, key) in blockTypes.par['paragraph type']" >
-                    <input type="radio" :id="'pt-'+type" :value="type" v-model="currentBook.styles.parType" @change="update('styles.parType', $event)">
-                    <label :for="'pt-'+type" class="style-label">{{type.length ? type : 'default'}}</label>
-                  </div>
-                </vue-tab>
-                <vue-tab title="HR" :id="'hr-styles-switcher'">
-                  <div v-for="(size, key) in blockTypes.hr['size']" >
-                    <input type="radio" :id="'pt-'+size" :value="(size.length ?'global-hr-':'')+ size" v-model="currentBook.styles.hrSize" @change="update('styles.hrSize', $event)">
-                    <label :for="'pt-'+size" class="style-label">{{size.length ? size : 'default'}}</label>
-                  </div>
-                </vue-tab>
-
-            </vue-tabs>
-
-            </div>
-            <!--<div class="styles-catalogue">-->
-          <!--</panel>
-
-        </accordion>-->
-
         </vue-tab>
       </vue-tabs>
       </div>
@@ -591,9 +522,6 @@
     <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Complete" cancel-text="Close" title="" @ok="sharePrivateBook()">
       <div v-html="sharePrivateBookMessage"></div>
     </modal>
-    <!-- <modal v-model="unlinkCollectionWarning" effect="fade" ok-text="Remove" cancel-text="Cancel" @ok="updateCollection()" @cancel="cancelCollectionUpdate">
-      <p>Remove book from collection?</p>
-    </modal> -->
     <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="completeAudioMastering()">
       <p>Complete mastering?</p>
     </modal>
@@ -703,7 +631,12 @@ export default {
       publicationStatus: false,
       isExporting:false,
       validationErrors: {extid: []},
-      updateAllowed: false
+      updateAllowed: false,
+      TAB_ASSIGNMENT_INDEX: 0,
+      TAB_META_INDEX: 1,
+      TAB_TOC_INDEX: 2,
+      TAB_AUDIO_INDEX: 3,
+      TAB_STYLE_INDEX: 4
     }
   },
 
@@ -970,19 +903,19 @@ export default {
         let newIndex = false;
 
         switch (this.activeTabIndex) {
-          case 0:
+          case this.TAB_ASSIGNMENT_INDEX:
             break;
-          case 1:
+          case this.TAB_META_INDEX:
             break;
-          case 3:
+          case this.TAB_AUDIO_INDEX:
             if (!this.tc_displayAudiointegrationTab()) {
-              newIndex = 0;
+              newIndex = this.TAB_ASSIGNMENT_INDEX;
               //console.log('HERE')
             }
             break;
-          case 4:
+          case this.TAB_STYLE_INDEX:
             if (!this.tc_displayStylesTab()) {
-              newIndex = 0;
+              newIndex = this.TAB_ASSIGNMENT_INDEX;
             }
             break;
         }
@@ -1264,53 +1197,6 @@ export default {
           self.audioMasteringProcess = false;
         })
     },
-    /*loadAudiobook(set_tab = false) {
-      let self = this;
-      this.getAudioBook(this.currentBookMeta.bookid).then(audio => {
-        self.setAudiobook(audio);//
-        //console.log(self.audiobook)
-        self.setAllowSetMastered();
-        if (false && set_tab) {
-          if (self.audiobook.bookid) {
-            self.$refs.panelTabs.findTabAndActivate('Audio Integration');
-          } else {
-            self.$refs.panelTabs.findTabAndActivate('Book Content');
-          }
-        }
-      })
-      .catch(err => this.setAudiobook({}))
-    },
-    setAudiobook(audiobook) {
-      if (audiobook._id && audiobook._id != this.audiobook._id) {
-        if (this.audiobookChecker) {
-          clearInterval(this.audiobookChecker);
-        }
-        this.audiobookChecker = setInterval(() => {
-            var dbPath = superlogin.getDbUrl('ilm_content')
-            var db = new PouchDB(dbPath)
-            db.get(audiobook._id)
-              .then((a) => {
-                //console.log(a)
-                if (a) {
-                  this.setAudiobook(a)
-                }
-              })
-              .catch(err => console.log(err))
-          }, 20000);
-      }
-      if (!audiobook._id) {
-        if (this.audiobookChecker) {
-          clearInterval(this.audiobookChecker);
-        }
-      }
-      this.audiobook = audiobook;
-    },
-    onAudiobookUpdate(audio) {
-      this.audiobook = {};
-      Vue.nextTick(() => {
-        this.audiobook = audio;
-      })
-    },*/
     addAuthor() {
       this.currentBook.author.push('');
       this.liveUpdate('author', this.currentBook.author);
@@ -1571,7 +1457,9 @@ export default {
     },
     
     goToBlockCheck(blockid, role) {
-      console.log(this.$route, blockid, role)
+      if (!blockid) {
+        return;
+      }
       if (this._is(role, true) || (role === 'editor' && this.adminOrLibrarian)) {
         if (this.$route && this.$route.name === 'BookEdit') {
           return this.goToBlock(blockid);
@@ -1771,9 +1659,9 @@ export default {
     
     checkAfterAudioImport() {
       this.showModal_audio = false
-      if (this.activeTabIndex !== 3) {
-        this.activeTabIndex = 3;
-        this.$refs.panelTabs.findTabAndActivate(3);
+      if (this.activeTabIndex !== this.TAB_AUDIO_INDEX && this.$refs.panelTabs && this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX] && !this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX].disabled) {
+        this.activeTabIndex = this.TAB_AUDIO_INDEX;
+        this.$refs.panelTabs.findTabAndActivate(this.TAB_AUDIO_INDEX);
         this.$forceUpdate();
       }
     },

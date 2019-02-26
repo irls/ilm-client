@@ -352,6 +352,16 @@ export const store = new Vuex.Store({
             'footnote': false
           };
         }
+        if (state.books_meta && Array.isArray(state.books_meta) && state.books_meta.length > 0) {
+          let index = state.books_meta.findIndex(obj => {
+            return obj.bookid === meta.bookid;
+          });
+          if (index) {
+            state.books_meta[index] = meta;
+            state.books_meta.push(meta)
+            state.books_meta.pop();// force re draw lists
+          }
+        }
         state.currentBookMeta = meta;
         state.currentBookMeta._id = meta.bookid;
         state.currentBookid = meta.bookid
@@ -1150,7 +1160,7 @@ export const store = new Vuex.Store({
           dispatch('setCurrentBookCounters');
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
-          dispatch('getCurrentJobInfo');
+          dispatch('getCurrentJobInfo', true);
           //dispatch('loadBookToc', {bookId: book_id});
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
@@ -2237,7 +2247,7 @@ export const store = new Vuex.Store({
         dispatch('getAudioBook')
       }, 15000);
     },
-    getCurrentJobInfo({state}) {
+    getCurrentJobInfo({state}, clear) {
       /*state.currentJobInfo = {
         can_resolve_tasks: [],
         mastering: null,
@@ -2251,6 +2261,9 @@ export const store = new Vuex.Store({
       }
       if (state.currentBookid) {
         state.jobInfoRequest = axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
+        if (clear) {
+          state.currentJobInfo.tasks_counter = [];
+        }
         return state.jobInfoRequest
           .then(data => {
             state.jobInfoTimer = Date.now();
@@ -2279,6 +2292,26 @@ export const store = new Vuex.Store({
           dispatch('getCurrentJobInfo');
         }
       }, interval);
+    },
+    reimportBook({state, commit, dispatch}, data) {
+      if (!state.currentBookid) {
+        return Promise.reject({err: {response: {data: {message: 'Book is not selected'}}}});
+      }
+      return axios.post(state.API_URL + 'books/' + state.currentBookid + '/reimport', data.data, data.config).then((response) => {
+          if (response.status === 200) {
+            commit('clear_storeList');
+            commit('clear_storeListO');
+            let bookid = state.currentBookid;
+            state.currentBookid = null;
+            return dispatch('loadBook', bookid)
+              .then(() => {
+                return Promise.resolve(response);
+              });
+          }
+          return Promise.resolve(response);
+        }).catch((err) => {
+          return Promise.reject(err);
+        });
     }
   }
 })
