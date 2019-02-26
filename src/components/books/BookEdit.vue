@@ -370,7 +370,7 @@ export default {
       if (!this.isBlocked && (this.isNeedUp || this.isNeedDown)) {
         switch(this.lazyLoaderDir) {
           case 'down' : {
-            this.isNeedDown = this.parlistO.getNextIds(this.isNeedDown, 200);
+            this.isNeedDown = this.parlistO.getNextIds(this.isNeedDown, 100);
             //console.log('this.isNeedDown', this.isNeedDown);
             if (this.isNeedDown.length > 0)
             {
@@ -403,7 +403,7 @@ export default {
 
           } break;
           case 'up' : {
-            this.isNeedUp = this.parlistO.getPrevIds(this.isNeedUp, 200);
+            this.isNeedUp = this.parlistO.getPrevIds(this.isNeedUp, 100);
             //console.log('this.isNeedUp', this.isNeedUp);
             if (this.isNeedUp.length > 0)
             {
@@ -1734,11 +1734,14 @@ export default {
         if (loadIdsArray.length) {
           this.getBlocksArr(loadIdsArray)
           .then((resIdsArray)=>{
-            for (let blockRef of this.$refs.viewBlocks) {
-              if (resIdsArray.indexOf(blockRef.blockId) > -1) {
+            for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
+              let updCount = 0;
+              if (resIdsArray.indexOf(this.$refs.viewBlocks[i].blockId) > -1) {
                 //this.parlistO.setLoaded(blockRef.blockO.rid);
-                blockRef.$forceUpdate();
+                updCount++;
+                this.$refs.viewBlocks[i].$forceUpdate();
               }
+              if (updCount >= resIdsArray.length) break;
             }
             this.moveEditWrapper(firstVisible, lastVisible, force)
           })
@@ -1941,6 +1944,7 @@ export default {
   },
 
   beforeDestroy:  function() {
+    this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
     this.setBlockSelection({start: {}, end: {}});
     this.isNeedUp = false;

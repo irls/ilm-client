@@ -1191,11 +1191,11 @@ export default {
         'getAlignCount',
         'recountApprovedInRange',
         'loadBookToc',
-        'updateBlockToc',
         'tc_loadBookTask',
         'getCurrentJobInfo',
         'getTotalBookTasks',
-        'updateBookVersion'
+        'updateBookVersion',
+        'updateBlockToc'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {

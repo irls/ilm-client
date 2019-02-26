@@ -426,7 +426,7 @@
                     <label class="block-style-label"
                       @click="selSecNum(blockType, 'parNum', numProps.get(blockType).get('parNum'))">
                       <template v-if="numProps.get(blockType).get('parNum') == 'mixed'">
-                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                        <i class="fa fa-square-o" aria-hidden="true"></i>
                       </template>
                       <template v-else>
                         <i v-if="numProps.get(blockType).get('parNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
@@ -662,6 +662,7 @@ export default {
       styleTitles: {
         'title_style': 'type'
       },
+      styleNotNumbered: ['sitalcent', 'editor-note', 'signature', 'reference'],
       languages: Languages,
       dirty: {
       },
@@ -850,9 +851,6 @@ export default {
     $('body').on('click', '.vue-tabs.meta-edit-tabs li.tab', () => {
       this.activeTabIndex = this.$refs.panelTabs ? this.$refs.panelTabs.activeTabIndex : null;
     });
-    //setTimeout(() => {
-      //this.updateAllowed = true;//autosize plugin send updates on initialization
-    //}, 2000)
   },
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
@@ -1425,6 +1423,8 @@ export default {
         //console.log('blockId', blockId);
 
           let pBlock = this.storeList.get(blockId);
+          let pBlockO = this.storeListO.get(blockId);
+          
           if (pBlock) {
             if (!result.has(pBlock.type)) result.set(pBlock.type, new Map());
 
@@ -1441,8 +1441,10 @@ export default {
               nums.set(pBlock.type, new Map([
                 ['secNum',  !(pBlock.secnum === false)],
                 ['secHide', !(pBlock.secHide === false)],
-                ['parNum',  !(pBlock.parnum === false)],
-                ['parHide', !(pBlock.parHide === false)],
+                ['parNum',  !(pBlockO.isNumber === false)],
+                ['parHide', !(pBlockO.isHidden === false)],
+                /*['parNum',  !(pBlock.parnum === false)],
+                ['parHide', !(pBlock.parHide === false)],*/
               ]));
 
             //console.log('nums.get(pBlock.type)', nums.get(pBlock.type), !(pBlock.secnum === false));
@@ -1520,8 +1522,19 @@ export default {
               pBlock.classes['style'] = '';
             }
 
+            if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) == -1 && this.styleNotNumbered.indexOf(styleVal) != -1){
+                pBlock.parnum = false;
+                pBlock.isNumber = false;
+              }
+
+            if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) != -1 && this.styleNotNumbered.indexOf(styleVal) == -1){
+                pBlock.parnum = true;
+                pBlock.isNumber = true;
+              }
+
             if (pBlock && pBlock.type == blockType) {
                 if (styleVal.length) {
+
                   pBlock.classes[styleKey] = styleVal;
                   if (blockType === 'header' && styleKey === 'level') {
                     updateToc = true;
@@ -1535,7 +1548,7 @@ export default {
                 pBlock.checked = true;
               } else {
                 pBlock.partUpdate = true;
-                updatePromises.push(this.putBlock(pBlock));
+                updatePromises.push(this.putBlock({_id: pBlock._id, classes: pBlock.classes}));
               }
             }
           })
@@ -1645,10 +1658,10 @@ export default {
             } else {
               this.$root.$emit('from-meta-edit:set-num');
             }
+            this.updateBookVersion({major: true})
             if (valKey == 'secHide' && blockType == 'header') {
               this.$root.$emit('from-book-meta:upd-toc', true);
             }
-            this.updateBookVersion({major: true})
           })
         }
 

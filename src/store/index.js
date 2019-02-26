@@ -128,6 +128,7 @@ export const store = new Vuex.Store({
     tasksXHR: 0,
     approveBlocksList: [],
     replicatingDB: {},
+    taskTypes: {tasks: [], categories: []},
     adminOrLibrarian: false,
     currentJobInfo: {
       can_resolve_tasks: [],
@@ -288,6 +289,7 @@ export const store = new Vuex.Store({
     currentAudiobook: state => state.currentAudiobook,
     currentBookToc: state => state.currentBookToc,
     approveBlocksList: state => state.approveBlocksList,
+    taskTypes: state => state.taskTypes,
     adminOrLibrarian: state => state.adminOrLibrarian,
     currentJobInfo: state => state.currentJobInfo,
     taskTypes: state => state.taskTypes,
@@ -2231,6 +2233,15 @@ export const store = new Vuex.Store({
       state.audiobookWatch = setInterval(() => {
         dispatch('getAudioBook')
       }, 15000);
+    },
+    getTaskTypes({state}) {
+      return axios.get(state.API_URL + 'tasks/types').then(types => {
+        state.taskTypes = types.data
+        return Promise.resolve(state.taskTypes)
+      })
+      .catch(error => {
+        return Promise.reject({})
+      })
     },
     getCurrentJobInfo({state}) {
       /*state.currentJobInfo = {
