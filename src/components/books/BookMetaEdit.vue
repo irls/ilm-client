@@ -1095,7 +1095,7 @@ export default {
       //if (!this.updateAllowed) {
         //return Promise.resolve();
       //}
-      console.log('liveUpdate', key, value);
+      //console.log('liveUpdate', key, value);
 
       var keys = key.split('.');
       key = keys[0];
@@ -1113,25 +1113,25 @@ export default {
         update.voices = {};
       }
 
-      console.log('update', update);
+      //console.log('update', update);
       return this.updateBookMeta(update)
       .then((response)=>{
         if (key == 'numbering') {
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
           //this.$root.$emit('from-book-meta:upd-toc', true);
         }
-        let updateVersion = {minor: true};
-        switch(key) {
-          case 'styles':
-          case 'numbering':
-            updateVersion = {major: true};
-            break;
-        }
-        return this.updateBookVersion(updateVersion)
-        .then(() => {
+//         let updateVersion = {minor: true};
+//         switch(key) {
+//           case 'styles':
+//           case 'numbering':
+//             updateVersion = {major: true};
+//             break;
+//         }
+//         return this.updateBookVersion(updateVersion)
+//         .then(() => {
           return response;
-        })
-        .catch(err => err);
+//         })
+//         .catch(err => err);
         //return BPromise.resolve(response);
       })
       .catch(err => {

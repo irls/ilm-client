@@ -173,37 +173,6 @@ export const store = new Vuex.Store({
     allowPublishCurrentBook: state => state.allowPublishCurrentBook,
     allRolls: state => state.allRolls,
     allBooks: state => state.books_meta || [],
-//     allBooks: state => {
-//       console.log('state.tc_userTasks', state.tc_userTasks);
-//       if (state.adminOrLibrarian) {
-//         return state.books_meta;
-//       } else {
-//         let books = [];
-//         //console.log(state.tc_userTasks);
-//         for (let i in state.books_meta){
-//           if (state.books_meta[i].editor == state.user._id && state.books_meta[i].published == true){
-//             books.push(state.books_meta[i]);
-//           }
-//         }
-//
-//         if (state.tc_userTasks && state.tc_userTasks.list) {
-//           for (let t_id in state.tc_userTasks.list) {
-//             let job = state.tc_userTasks.list[t_id];
-//             if ((job.tasks && job.tasks.length > 0) || job.is_proofread_unassigned) {
-//               let exists = books.find(_b => _b._id == job.bookid);
-//               if (!exists) {
-//                 let b = state.books_meta.find(_b => job.bookid == _b._id);
-//                 if (b) {
-//                   //console.log('Adding book', b._id);
-//                   books.push(b);
-//                 }
-//               }
-//             }
-//           };
-//         }
-//         return books;
-//       }
-//     },
     bookFilters: state => state.bookFilters,
     currentBookid: state => state.currentBookid,
     currentBook: state => state.currentBook,
@@ -1158,7 +1127,12 @@ export const store = new Vuex.Store({
           })
           state.liveDB.stopWatch('metaV');
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
-            if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid) {
+            if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
+              console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
+              let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
+              if (bookMetaIdx > -1) {
+                state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
+              }
               commit('SET_CURRENTBOOK_META', data.meta)
               dispatch('getTotalBookTasks');
             }
@@ -1273,15 +1247,58 @@ export const store = new Vuex.Store({
     },
 
     updateBookMeta({state, dispatch, commit}, update) {
+
       update.bookid = state.currentBookMeta._id;
+
+      let updateVersion = {minor: true};
+      if (update['styles'] || update['numbering']) {
+        updateVersion = {major: true};
+      }
+      let currMeta = state.currentBookMeta;
+
+      if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
+        let versions = currMeta.version.split('.');
+        if (versions && versions.length == 2) {
+          if (updateVersion.minor) {
+            versions[1] = (parseInt(versions[1]) + 1);
+          }
+          if (updateVersion.major) {
+            versions[0] = (parseInt(versions[0]) + 1);
+            versions[1] = 0;
+          }
+
+          update['version'] = versions[0] + '.' + versions[1];
+          update['pubType'] = 'Unpublished';
+          update['published'] = false;
+            //'status': 'staging',
+            //'demo': false,
+          update['isInTheQueueOfPublication'] = false;
+          update['isIntheProcessOfPublication'] = false;
+        }
+      }
+
+      let newMeta = Object.assign(state.currentBookMeta, update);
+      commit('SET_CURRENTBOOK_META', newMeta);
+
+
       return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id, update)
         .then(response => {
-          console.log('updateBookMeta response', response);
-          //state.currentBookMeta = response.data;
-          //commit('SET_CURRENTBOOK_META', response.data)
           if (response.data["@class"] && response.status == 200) {
-            let newMeta = Object.assign(state.currentBookMeta, response.data);
-            commit('SET_CURRENTBOOK_META', newMeta);
+            console.log('updateBookMeta @version', response.data['@version']);
+            //let newMeta = Object.assign(state.currentBookMeta, response.data);
+            //commit('SET_CURRENTBOOK_META', newMeta);
+            state.currentBookMeta['@version'] = response.data['@version'];
+            let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==update.bookid);
+            if (bookMetaIdx > -1) {
+              update['@version'] = response.data['@version'];
+              state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], update);
+            }
+
+            if (update['version'] && response.data.collection_id) {
+              dispatch('updateCollectionVersion', Object.assign({id: response.data.collection_id}, update));
+            }
+            dispatch('getTotalBookTasks');
+
             return Promise.resolve(response.data);
           } else {
             return Promise.reject(new Error('No data updated'));
