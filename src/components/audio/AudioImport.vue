@@ -102,7 +102,7 @@
              </ul>
             <div v-for="err in uploadErrors" class="upload-error">{{err.error}}</div>
             <div v-if="uploadFinished">
-              <button class="btn btn-default" v-on:click="$emit('close')">OK</button>
+              <button class="btn btn-default" v-on:click="$emit('closeOk')">OK</button>
             </div>
           </div>
           </div>

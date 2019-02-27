@@ -345,10 +345,12 @@ export default {
       this.loadBookMounted();
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
       this.$root.$on('book-reimported', this.bookReimported);
+      this.$root.$on('for-bookedit:scroll-to-block', this.scrollToBlock);
   },
   beforeDestroy:  function() {
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
     this.$root.$off('book-reimported', this.bookReimported);
+    this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
   },
   watch: {
     '$route' (toRoute, fromRoute) {

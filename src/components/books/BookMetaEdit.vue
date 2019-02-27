@@ -10,66 +10,74 @@
 
       <div class="row">
       <div class="download-area col-sm-6">
-        <!-- <button id="show-modal" @click="downloadBook" class="btn btn-primary btn_download">
-          <img src='/static/download.png' class='bookstack'/>
-        </button> -->
       </div>
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false" />
-      <AudioImport v-if="showModal_audio" @close="showModal_audio = false"
+      <AudioImport v-if="showModal_audio"
         @audiofilesUploaded="getAudioBook"
+        @close="showModal_audio = false"
+        @closeOk="checkAfterAudioImport"
         :book="currentBook"
         :importTask="importTask"
         :allowDownload="false" />
-
+      
       <div class="book-listing">
-        <div class="row" v-if="tc_allowMetadataActions()">
-          <template v-if="tc_allowEditingComplete() || tc_allowFinishMastering()">
-            <template v-if="tc_allowEditingComplete()">
-              <div v-if="!textCleanupProcess" class="editing-wrapper">
-                <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Editing complete</button>
-                <div class="col-sm-8 blocks-counter">
-                  <router-link :to="goToUnresolved(true)"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
-                </div>
-              </div>
-              <div v-else class="preloader-small"></div>
-            </template>
-            <template v-if="tc_allowFinishMastering()">
-              <div v-if="currentBookCounters.not_proofed_audio_blocks === 0">
-                <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                  <div class="col-sm-8 blocks-counter">
-                    <span class="blocks-counter-value">0</span>Blocks need your approval
-                  </div>
-                </div>
-              </div>
-              <template v-else>
-                <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                  <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Mastering complete</button>
-                  <div class="col-sm-8 blocks-counter">
-                    <router-link :to="goToUnresolved()"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
-                  </div>
-                </div>
-                <div v-else class="preloader-small"></div>
-              </template>
-            </template>
-          </template>
-          <template v-else-if="tc_allowFinishPublished()">
-            <div v-if="!finishPublishedProcess" class="editing-wrapper">
-              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="finishPublished()">Editing complete</button>
-            </div>
-            <div v-else class="preloader-small"></div>
-          </template>
-          <template v-else>
+        <template v-if="tc_allowFinishPublished()">
+          <div v-if="!finishPublishedProcess" class="row">
             <div class="editing-wrapper">
-              <div class="col-sm-8 blocks-counter">
-                <router-link :to="goToUnresolved(true)"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
-              </div>
+              <button class="btn btn-primary btn-edit-complete" v-on:click="finishPublished()">Editing complete</button>
             </div>
-          </template>
-        </div>
+          </div>
+          <div v-else class="preloader-small"></div>
+        </template>
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
-          <vue-tab title="Book Content" id="book-content">
+          <vue-tab title="Assignments" id="assignments">
+            <BookAssignments
+              @setInfoMessage="setInfoMessage"
+              @setErrorMessage="setErrorMessage"
+              @showModal_audio="showModal_audio = true"
+              ></BookAssignments>
+          <fieldset class='description brief'>
+            <legend>Description </legend>
+            <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!allowMetadataEdit"></textarea>
+          </fieldset>
+          <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
+            <legend>Export </legend>
+              <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
+              <div v-if="getDemoStatus == 'rebuild'">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
+              <div>
+                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
+                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
+                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
+                <a class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</a>
+                <a class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</a>
+                <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
+              </div>
+          </fieldset>
+          <fieldset class="publish">
+            <!-- Fieldset Legend -->
+            <template>
+              <legend>{{ currentBook.published ? 'Published' : 'Unpublished' }},
+              </legend>
+              <div>
+                Version #{{ currentBook.version ? currentBook.version : '1.0' }}
+              </div>
+              <div v-if="publicationStatus" >
+                Status #{{ publicationStatus }}
+              </div>
+              <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
+              <div v-if="allowPublishCurrentBook">
+                <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
+                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
+                <span v-if="isPublishing" class="align-preloader -small"></span>
+
+              </div>
+              <button class="btn btn-primary hidden" v-on:click="publishContent()">Publish Content</button>
+            </template>
+          </fieldset>
+          </vue-tab>
+          <vue-tab title="Meta" id="book-content">
             <fieldset>
               <legend>Book Metadata </legend>
               <table class='properties'>
@@ -135,11 +143,6 @@
                   </td>
                 </tr>
 
-<!--                <tr class='sections'>
-                  <td>Sections</td>
-                  <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)" :disabled="!allowMetadataEdit"></td>
-                </tr>-->
-
                 <tr class='trans'>
                   <td>Translator</td>
                   <td><input v-model='currentBook.translator' @input="update('translator', $event)" :disabled="!allowMetadataEdit"></td>
@@ -182,94 +185,13 @@
             <legend>Long Description </legend>
             <resizable-textarea><textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full" ></textarea></resizable-textarea>
           </fieldset>
-          
-          <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
-            <legend>Export </legend>
-              <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
-              <div v-if="getDemoStatus == 'rebuild'">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
-              <div>
-                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
-                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
-                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
-                <a class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</a>
-                <a class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</a>
-                <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
-              </div>
-          </fieldset>
-          <fieldset class="publish">
-            <!-- Fieldset Legend -->
-            <template>
-              <legend>{{ currentBook.published ? 'Published' : 'Unpublished' }},
-              </legend>
-              <div>
-                Version #{{ currentBook.version ? currentBook.version : '1.0' }}
-              </div>
-              <div v-if="publicationStatus" >
-                Status #{{ publicationStatus }}
-              </div>
-              <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
-              <div v-if="allowPublishCurrentBook">
-                <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
-                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
-                <span v-if="isPublishing" class="align-preloader -small"></span>
-
-              </div>
-              <button class="btn btn-primary hidden" v-on:click="publishContent()">Publish Content</button>
-            </template>
-
-            <!-- Publication Options -->
-            <!-- <table class='properties publication'>
-              <template v-if="currentBook.importStatus == 'staging'">
-                <tr><td rowspan='2'>
-                  <button class="btn btn-primary sharebtn" @click="shareBook"> Move book to Library</button>
-                </td></tr>
-              </template>
-              <template v-else>
-
-                <tr><td>Published</td> <td class='published'>
-                  <i :class="[currentBook.published ? 'fa-toggle-on' : 'fa-toggle-off', 'fa pubtoggle']"
-                    @click='publishedToggle'
-                  ></i>
-                </td></tr>
-
-                <tr v-if="currentBook.published"><td>Type</td> <td class='pubtype'>
-                  <select class="form-control" v-model='currentBook.pubType'>
-                    <option v-for="(value, index) in pubTypes" :value="value">{{ value }}</option>
-                  </select>
-                </td></tr>
-
-                <tr v-if="currentBook.published"><td>Ver. #{{ currentBook.version }}</td> <td class='version'>
-                  <button class="btn btn-primary new-version" @click="newVersion"> Save New Version</button>
-                </td></tr>
-
-              </template>
-            </table> -->
-          </fieldset>
-          <!--<template v-if="isAdmin || isLibrarian || _is('editor', true)">
-            <a v-if="currentBook.published" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()" -->
-          <!--</template>-->
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
               :bookId="currentBook.bookid"
             ></BookToc>
           </vue-tab>
-          <vue-tab title="Audio Integration" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
-            <div class="t-box">
-              <template>
-                <div class="btn-switch" @click="toggleMastering()">
-                  <i class="fa fa-toggle-on" v-if="currentBook.masteringRequired"></i>
-                  <i class="fa fa-toggle-off" v-else></i>
-                  <span class="s-label"> Mastering required</span>
-                </div>
-              </template>
-              <!--<a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
-                Export Audio
-              </a>
-              <button v-else class="btn btn-primary btn-small btn-export-audio" v-on:click="startGenerateAudiofile()">
-                Export Audio
-              </button>-->
-            </div>
+          <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
             <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
               {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
               <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
@@ -277,17 +199,13 @@
             </div>
             <div v-else class="t-box red-message">Define block range</div>
             <BookAudioIntegration ref="audioIntegration"
-                :isActive="activeTabIndex == 2"
+                :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
                 @uploadAudio="showModal_audio = true"
               ></BookAudioIntegration>
           </vue-tab>
 
         <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab()">
-        <!--<accordion :one-at-atime="true" ref="accordionStyles">
-
-          <panel :is-open="true" header="Selected blocks styles"
-            v-bind:key="'block-styles'" ref="panelBlockStyles">-->
             <div class="styles-catalogue">
 
               <vue-tabs ref="blockTypesTabs" class="block-style-tabs">
@@ -298,7 +216,7 @@
                   <div>
                     <label class="style-label"
                       @click="$event.target.value = ''; update('styles.global', $event)">
-                      <i v-if="!currentBook.styles.global || currentBook.styles.global === ''"
+                      <i v-if="!currentBook.styles || !currentBook.styles.global || currentBook.styles.global === ''"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                     ILM</label>
@@ -306,7 +224,7 @@
                   <div>
                     <label class="style-label"
                       @click="$event.target.value = 'global-ocean'; update('styles.global', $event)">
-                      <i v-if="currentBook.styles.global === 'global-ocean'"
+                      <i v-if="currentBook.styles && currentBook.styles.global === 'global-ocean'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                     Ocean</label>
@@ -314,7 +232,7 @@
                   <div>
                     <label class="style-label"
                       @click="$event.target.value = 'global-ffa'; update('styles.global', $event)">
-                      <i v-if="currentBook.styles.global === 'global-ffa'"
+                      <i v-if="currentBook.styles && currentBook.styles.global === 'global-ffa'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                       FFA</label>
@@ -339,14 +257,6 @@
                       <i v-else class="fa fa-circle-o"></i>
                     x.x</label>
                   </div>
-                  <!--<div>
-                    <label class="style-label"
-                      @click="liveUpdate('numbering', 'auto')">
-                      <i v-if="currentBook.numbering === 'auto'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                      Autoincrement</label>
-                  </div>-->
                   <div>
                     <label class="style-label"
                       @click="liveUpdate('numbering', 'none')">
@@ -488,76 +398,6 @@
               </vue-tabs>
 
             </div>
-            <!--<div class="styles-catalogue">-->
-          <!--</panel>
-
-          <panel :is-open="false" header="Book styles"
-            v-bind:key="'book-styles'" ref="panelBookStyles">
-
-            <div class="styles-catalogue">
-
-              <vue-tabs ref="stylesTabs">
-
-                <vue-tab title="Styles" :id="'global-styles-switcher'">
-                  <div>
-                    <input type="radio" :id="'gs-default'" :value="''" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-default'" class="style-label">ILM</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'gs-ocean'" :value="'global-ocean'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-ocean'" class="style-label">Ocean</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'gs-ffa'" :value="'global-ffa'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-ffa'" class="style-label">FFA</label>
-                  </div>
-                </vue-tab>
-                <vue-tab title="Fonts" :id="'fonts-styles-switcher'">
-                  <div>
-                    <input type="radio" :id="'ft-default'" :value="''" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                    <label :for="'ft-default'" class="style-label">default</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'ft-typewriter'" :value="'typewriter'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                    <label :for="'ft-typewriter'" class="style-label">typewriter</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'ft-monospace'" :value="'monospace'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                    <label :for="'ft-monospace'" class="style-label">monospace</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'ft-oldbook'" :value="'oldbook'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                    <label :for="'ft-oldbook'" class="style-label">oldbook</label>
-                  </div>
-                </vue-tab>
-                <vue-tab title="Align" :id="'align-styles-switcher'">
-
-                  <div v-for="(align, key) in blockTypes.par['align']" >
-                    <input type="radio" :id="'pt-'+align" :value="align" v-model="currentBook.styles.align" @change="update('styles.align', $event)">
-                    <label :for="'pt-'+align" class="style-label">{{align.length ? align : 'default'}}</label>
-                  </div>
-                </vue-tab>
-                <vue-tab title="Par" :id="'paragraphs-styles-switcher'">
-                  <div v-for="(type, key) in blockTypes.par['paragraph type']" >
-                    <input type="radio" :id="'pt-'+type" :value="type" v-model="currentBook.styles.parType" @change="update('styles.parType', $event)">
-                    <label :for="'pt-'+type" class="style-label">{{type.length ? type : 'default'}}</label>
-                  </div>
-                </vue-tab>
-                <vue-tab title="HR" :id="'hr-styles-switcher'">
-                  <div v-for="(size, key) in blockTypes.hr['size']" >
-                    <input type="radio" :id="'pt-'+size" :value="(size.length ?'global-hr-':'')+ size" v-model="currentBook.styles.hrSize" @change="update('styles.hrSize', $event)">
-                    <label :for="'pt-'+size" class="style-label">{{size.length ? size : 'default'}}</label>
-                  </div>
-                </vue-tab>
-
-            </vue-tabs>
-
-            </div>
-            <!--<div class="styles-catalogue">-->
-          <!--</panel>
-
-        </accordion>-->
-
         </vue-tab>
       </vue-tabs>
       </div>
@@ -580,16 +420,6 @@
 
       <p>{{infoMessage}}.</p>
     </alert>
-
-    <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Complete" cancel-text="Close" title="" @ok="sharePrivateBook()">
-      <div v-html="sharePrivateBookMessage"></div>
-    </modal>
-    <!-- <modal v-model="unlinkCollectionWarning" effect="fade" ok-text="Remove" cancel-text="Cancel" @ok="updateCollection()" @cancel="cancelCollectionUpdate">
-      <p>Remove book from collection?</p>
-    </modal> -->
-    <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="completeAudioMastering()">
-      <p>Complete mastering?</p>
-    </modal>
     <modal v-model="generatingAudiofile" :backdrop="false" effect="fade">
       <div slot="modal-header" class="modal-header">
         <h4>Export audio</h4>
@@ -632,6 +462,7 @@ import access from '../../mixins/access.js'
 import { Languages } from "../../mixins/lang_config.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
 //import VueTextareaAutosize from 'vue-textarea-autosize'
+import BookAssignments from './details/BookAssignments';
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -651,7 +482,8 @@ export default {
     alert,
     modal,
     accordion,
-    panel
+    panel,
+    BookAssignments
   },
 
   data () {
@@ -681,13 +513,11 @@ export default {
       infoMessage: '',//to display info on action finished
       approveMetadataComment: '',
       showSharePrivateBookModal: false,
-      showAudioMasteringModal: false,
       textCleanupProcess: false,
       finishPublishedProcess: false,
       //audiobook: {},
       unlinkCollectionWarning: false,
       blockTypes: BlockTypes,
-      audioMasteringProcess: false,
       generatingAudiofile: false,
       audiobookChecker: false,
 
@@ -700,7 +530,12 @@ export default {
       publicationStatus: false,
       isExporting:false,
       validationErrors: {extid: []},
-      updateAllowed: false
+      updateAllowed: false,
+      TAB_ASSIGNMENT_INDEX: 0,
+      TAB_META_INDEX: 1,
+      TAB_TOC_INDEX: 2,
+      TAB_AUDIO_INDEX: 3,
+      TAB_STYLE_INDEX: 4
     }
   },
 
@@ -730,7 +565,10 @@ export default {
       blockSelection: 'blockSelection',
       alignCounter: 'alignCounter',
       audiobook: 'currentAudiobook',
-      subjectCategories: 'bookCategories'
+      subjectCategories: 'bookCategories',
+      tasks_counter: 'tasks_counter',
+      taskTypes: 'taskTypes',
+      adminOrLibrarian: 'adminOrLibrarian'
     }),
     collectionsList: {
       get() {
@@ -774,29 +612,6 @@ export default {
           return true;
         }
         return false;
-      }
-    },
-    isAllowEditingComplete: {
-      get() {
-        if (this.tc_allowEditingComplete()) {
-          if (this.currentBookCounters.not_marked_blocks === 0) {
-            return true;
-          }
-        } else if (this.tc_allowFinishMastering()) {
-          if (this.currentBookCounters.not_marked_blocks === 0) {
-            return true;
-          }
-        }
-        return false;
-      }
-    },
-    sharePrivateBookMessage: {
-      get() {
-        if (this.currentBookCounters.narration_blocks > 0) {
-          return 'Complete editing and request narration for ' + this.currentBookCounters.narration_blocks + ' blocks?'
-        } else {
-          return 'Complete editing?';
-        }
       }
     },
     mergedAudiofileLink: {
@@ -976,19 +791,19 @@ export default {
         let newIndex = false;
 
         switch (this.activeTabIndex) {
-          case 0:
+          case this.TAB_ASSIGNMENT_INDEX:
             break;
-          case 1:
+          case this.TAB_META_INDEX:
             break;
-          case 2:
+          case this.TAB_AUDIO_INDEX:
             if (!this.tc_displayAudiointegrationTab()) {
-              newIndex = 0;
+              newIndex = this.TAB_ASSIGNMENT_INDEX;
               //console.log('HERE')
             }
             break;
-          case 3:
+          case this.TAB_STYLE_INDEX:
             if (!this.tc_displayStylesTab()) {
-              newIndex = 0;
+              newIndex = this.TAB_ASSIGNMENT_INDEX;
             }
             break;
         }
@@ -1262,72 +1077,6 @@ export default {
             self.textCleanupProcess = false
           })
     },
-    completeAudioMastering() {
-      this.audioMasteringProcess = true;
-      var self = this;
-      self.showAudioMasteringModal = false;
-      axios.put(self.API_URL + 'task/' + self.currentBook._id + '/finish_mastering')
-        .then((doc) => {
-          self.audioMasteringProcess = false
-          if (!doc.data.error) {
-            self.$store.dispatch('tc_loadBookTask')
-            self.$store.dispatch('getCurrentJobInfo');
-            self.infoMessage = 'Mastering task finished'
-          } else {
-            self.errorMessage = doc.data.error
-          }
-        })
-        .catch((err, test) => {
-          self.audioMasteringProcess = false;
-        })
-    },
-    /*loadAudiobook(set_tab = false) {
-      let self = this;
-      this.getAudioBook(this.currentBookMeta.bookid).then(audio => {
-        self.setAudiobook(audio);//
-        //console.log(self.audiobook)
-        self.setAllowSetMastered();
-        if (false && set_tab) {
-          if (self.audiobook.bookid) {
-            self.$refs.panelTabs.findTabAndActivate('Audio Integration');
-          } else {
-            self.$refs.panelTabs.findTabAndActivate('Book Content');
-          }
-        }
-      })
-      .catch(err => this.setAudiobook({}))
-    },
-    setAudiobook(audiobook) {
-      if (audiobook._id && audiobook._id != this.audiobook._id) {
-        if (this.audiobookChecker) {
-          clearInterval(this.audiobookChecker);
-        }
-        this.audiobookChecker = setInterval(() => {
-            var dbPath = superlogin.getDbUrl('ilm_content')
-            var db = new PouchDB(dbPath)
-            db.get(audiobook._id)
-              .then((a) => {
-                //console.log(a)
-                if (a) {
-                  this.setAudiobook(a)
-                }
-              })
-              .catch(err => console.log(err))
-          }, 20000);
-      }
-      if (!audiobook._id) {
-        if (this.audiobookChecker) {
-          clearInterval(this.audiobookChecker);
-        }
-      }
-      this.audiobook = audiobook;
-    },
-    onAudiobookUpdate(audio) {
-      this.audiobook = {};
-      Vue.nextTick(() => {
-        this.audiobook = audio;
-      })
-    },*/
     addAuthor() {
       this.currentBook.author.push('');
       this.liveUpdate('author', this.currentBook.author);
@@ -1378,11 +1127,6 @@ export default {
       //this.$router.push({name: this.$route.name, params:  params});
       }
       return route;
-    },
-    toggleMastering() {
-      if (this.tc_allowToggleMetaMastering()) {
-        this.liveUpdate('masteringRequired',  !this.currentBook.masteringRequired)
-      }
     },
     setAllowExportAudio() {
       this.allowExportAudio = false;
@@ -1578,10 +1322,6 @@ export default {
       }
     },
 
-    goToBlock(id) {
-      this.$root.$emit('for-bookedit:scroll-to-block', id);
-    },
-
     selSecNum (blockType, valKey, currVal) {
       console.log('selSecNum', blockType, valKey, currVal);
       let updatePromises = [];
@@ -1757,8 +1497,39 @@ export default {
         this.liveUpdate('extid', event.target.value);
       }
     }, 500),
+    
+    getTaskType(typeId) {
+      let t = this.taskTypes.tasks.find(_t => {
+        return _t._id === typeId;
+      });
+      if (t) {
+        return t.title;
+      } else {
+        return '';
+      }
+    },
+    
+    checkAfterAudioImport() {
+      this.showModal_audio = false
+      if (this.activeTabIndex !== this.TAB_AUDIO_INDEX && this.$refs.panelTabs && this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX] && !this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX].disabled) {
+        this.activeTabIndex = this.TAB_AUDIO_INDEX;
+        this.$refs.panelTabs.findTabAndActivate(this.TAB_AUDIO_INDEX);
+        this.$forceUpdate();
+      }
+    },
+    
+    updateJobDescription: _.debounce(function(event) {
+      this.updateJob({id: this.currentJobInfo.id, description: event.target.value});
+    }, 500),
+    
+    setInfoMessage(msg) {
+      this.infoMessage = msg;
+    },
+    setErrorMessage(msg) {
+      this.errorMessage = msg;
+    },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta', 'updateJob'])
   }
 }
 
@@ -1942,10 +1713,6 @@ Vue.component('resizable-textarea', {
 
   .editing-wrapper {
     margin-left: 15px;
-    .btn-edit-complete {
-      margin-bottom: 5px;
-
-    }
 
     .blocks-counter {
       vertical-align: middle;

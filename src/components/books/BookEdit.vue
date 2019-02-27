@@ -1697,8 +1697,8 @@ export default {
         let loadIdsArray = [];
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
         //let loadCount = 5;
-        for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
-          let blockRef = this.$refs.viewBlocks[i];
+        for (var i = 0; i < this.parlistO.listObjs.length; i++) {
+          let blockRef = this.$refs.viewBlocks.find(v => v.blockId === this.parlistO.listObjs[i].blockId);
           let visible = this.checkVisible(blockRef.$refs.viewBlock, viewHeight);
           if (visible) {
             if (!firstVisible) {
@@ -1815,10 +1815,7 @@ export default {
       this.setBlockSelection({start: {}, end: {}});
       this.scrollToBlock(this.parlistO.idsArray()[0]);
       this.screenTop = initialTopOffset;
-      this.$store.commit('clear_storeList');
-      this.$store.commit('clear_storeListO');
       this.startId = false;
-      this.setCurrentBookCounters(['not_marked_blocks']);
       this.refreshTmpl();
 
       this.$router.push({name: this.$route.name, params: {}});
@@ -1895,8 +1892,10 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  //this.parlistO.refresh();
                   if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
                     Vue.nextTick(() => {
+                      this.handleScroll();
                       this.scrollToBlock(initBlocks.blocks[0].blockid);
                     })
                   }

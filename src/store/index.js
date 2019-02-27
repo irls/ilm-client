@@ -137,7 +137,10 @@ export const store = new Vuex.Store({
       published: null,
       text_cleanup: null,
       is_proofread_unassigned: null,
-      executors: {editor: null, proofer: null, narrator: null}
+      tasks_counter: [],
+      executors: {editor: null, proofer: null, narrator: null},
+      description: '',
+      id: null
     },
     taskTypes: {tasks: [], categories: []},
     liveDB: new liveDB(),
@@ -156,7 +159,9 @@ export const store = new Vuex.Store({
       }
     ],
     loadBookWait: null,
-    loadBookTaskWait: null
+    loadBookTaskWait: null,
+    jobInfoRequest: null,
+    jobInfoTimer: null
   },
 
   getters: {
@@ -191,6 +196,7 @@ export const store = new Vuex.Store({
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
     currentCollectionFiles: state => state.currentCollectionFiles,
+    currentCollectionId: state => state.currentCollectionId,
     collectionsFilter: state => state.collectionsFilter,
     allowPublishCurrentCollection: state => state.allowPublishCurrentCollection,
     authors: state => {
@@ -263,7 +269,8 @@ export const store = new Vuex.Store({
     currentJobInfo: state => state.currentJobInfo,
     taskTypes: state => state.taskTypes,
     liveDB: state => state.liveDB,
-    bookCategories: state => state.bookCategories
+    bookCategories: state => state.bookCategories,
+    tasks_counter: state => state.currentJobInfo.tasks_counter
   },
 
   mutations: {
@@ -318,6 +325,16 @@ export const store = new Vuex.Store({
             'paragraph': false,
             'footnote': false
           };
+        }
+        if (state.books_meta && Array.isArray(state.books_meta) && state.books_meta.length > 0) {
+          let index = state.books_meta.findIndex(obj => {
+            return obj.bookid === meta.bookid;
+          });
+          if (index) {
+            state.books_meta[index] = meta;
+            state.books_meta.push(meta)
+            state.books_meta.pop();// force re draw lists
+          }
         }
         state.currentBookMeta = meta;
         state.currentBookMeta._id = meta.bookid;
@@ -770,6 +787,7 @@ export const store = new Vuex.Store({
 
     // login event
     connectDB ({ state, commit, dispatch }, session) {
+        dispatch('startJobInfoTimer');
         state.liveDB.setSubscriberId(state.auth.getSession().token);
         state.adminOrLibrarian = superlogin.confirmRole('admin') || superlogin.confirmRole('librarian');
         commit('RESET_LOGIN_STATE');
@@ -1086,6 +1104,7 @@ export const store = new Vuex.Store({
 
       // if currentbook exists, check if currrent book needs saving
       if (book_id != state.currentBookid) {
+        state.jobInfoRequest = null;// force reload tasks
         commit('set_currentAudiobook', {});
       }
       //let oldBook = (state.currentBook && state.currentBook._id)
@@ -1116,7 +1135,7 @@ export const store = new Vuex.Store({
           dispatch('setCurrentBookCounters');
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
-          dispatch('getCurrentJobInfo');
+          dispatch('getCurrentJobInfo', true);
           //dispatch('loadBookToc', {bookId: book_id});
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
@@ -2251,16 +2270,7 @@ export const store = new Vuex.Store({
         dispatch('getAudioBook')
       }, 15000);
     },
-    getTaskTypes({state}) {
-      return axios.get(state.API_URL + 'tasks/types').then(types => {
-        state.taskTypes = types.data
-        return Promise.resolve(state.taskTypes)
-      })
-      .catch(error => {
-        return Promise.reject({})
-      })
-    },
-    getCurrentJobInfo({state}) {
+    getCurrentJobInfo({state}, clear) {
       /*state.currentJobInfo = {
         can_resolve_tasks: [],
         mastering: null,
@@ -2269,13 +2279,25 @@ export const store = new Vuex.Store({
         text_cleanup: null,
         is_proofread_unassigned: null
       };*/
-      return axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
-        .then(data => {
-          state.currentJobInfo = data.data;
-        })
-        .catch(err => {
-          console.log(err);
-        })
+      if (state.jobInfoRequest) {
+        return state.jobInfoRequest;
+      }
+      if (state.currentBookid) {
+        state.jobInfoRequest = axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
+        if (clear) {
+          state.currentJobInfo.tasks_counter = [];
+        }
+        return state.jobInfoRequest
+          .then(data => {
+            state.jobInfoTimer = Date.now();
+            state.jobInfoRequest = null;
+            state.currentJobInfo = data.data;
+          })
+          .catch(err => {
+            state.jobInfoRequest = null;
+            console.log(err);
+          })
+      }
     },
     getTaskTypes({state}) {
       return axios.get(state.API_URL + 'tasks/types').then(types => {
@@ -2285,6 +2307,88 @@ export const store = new Vuex.Store({
       .catch(error => {
         return Promise.reject({})
       })
+    },
+    startJobInfoTimer({state, dispatch}) {
+      let interval = 60000;
+      setInterval(() => {
+        if (!state.jobInfoTimer || Date.now() - state.jobInfoTimer >= interval) {
+          dispatch('getCurrentJobInfo');
+        }
+      }, interval);
+    },
+    reimportBook({state, commit, dispatch}, data) {
+      if (!state.currentBookid) {
+        return Promise.reject({err: {response: {data: {message: 'Book is not selected'}}}});
+      }
+      return axios.post(state.API_URL + 'books/' + state.currentBookid + '/reimport', data.data, data.config).then((response) => {
+          if (response.status === 200) {
+            commit('clear_storeList');
+            commit('clear_storeListO');
+            let bookid = state.currentBookid;
+            state.currentBookid = null;
+            return dispatch('loadBook', bookid)
+              .then(() => {
+                return Promise.resolve(response);
+              });
+          }
+          return Promise.resolve(response);
+        }).catch((err) => {
+          return Promise.reject(err);
+        });
+    },
+    updateJob({state}, update) {
+      return axios.put(state.API_URL + 'jobs/' + encodeURIComponent(update.id), update)
+        .then(() => {
+          return Promise.resolve();
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    completeTextCleanup({state, dispatch}) {
+      if (!state.currentBookMeta.bookid) {
+        return Promise.reject({error: 'Book is not selected'});
+      }
+      return dispatch('updateBookMeta', {private: false})
+        .then((doc) => {
+          return axios.put(state.API_URL + 'task/' + state.currentBookMeta.bookid + '/finish_cleanup')
+            .then((doc) => {
+              if (!doc.data.error) {
+                state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
+                dispatch('tc_loadBookTask')
+                dispatch('getCurrentJobInfo');
+                state.currentBookMeta.private = false;
+              } else {
+                dispatch('updateBookMeta', {private: true})
+              }
+              return Promise.resolve(doc);
+            })
+            .catch((err) => {
+              dispatch('updateBookMeta', {private: true});
+              return Promise.reject(err);
+            })
+        })
+        .catch((err) => {
+          return Promise.reject(err);
+        })
+    },
+    completeAudioMastering({state, dispatch}) {
+      if (!state.currentBookMeta.bookid) {
+        return Promise.reject({error: 'Book is not selected'});
+      }
+      return axios.put(state.API_URL + 'task/' + state.currentBookMeta.bookid + '/finish_mastering')
+        .then((doc) => {
+          if (!doc.data.error) {
+            dispatch('tc_loadBookTask')
+            dispatch('getCurrentJobInfo');
+          } else {
+            
+          }
+          return Promise.resolve(doc);
+        })
+        .catch((err) => {
+          return Promise.reject(err);
+        })
     }
   }
 })
