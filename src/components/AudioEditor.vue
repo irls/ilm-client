@@ -1973,10 +1973,10 @@
             background-color: white;
         }
         .channel-progress {
-            background: yellow;
+            background: #b4b3b3;/*#53dbfe*/
         }
         .channel {
-            background: gray;
+            background: #2e2e2e;/*#0000ba*/
             max-height: @waveform-height;
             canvas {
                 /*max-height: @waveform-height;*/
