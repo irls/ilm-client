@@ -137,7 +137,9 @@ export const store = new Vuex.Store({
       text_cleanup: null,
       is_proofread_unassigned: null,
       tasks_counter: [],
-      executors: {editor: null, proofer: null, narrator: null}
+      executors: {editor: null, proofer: null, narrator: null},
+      description: '',
+      id: null
     },
     taskTypes: {tasks: [], categories: []},
     liveDB: new liveDB(),
@@ -224,6 +226,7 @@ export const store = new Vuex.Store({
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
     currentCollectionFiles: state => state.currentCollectionFiles,
+    currentCollectionId: state => state.currentCollectionId,
     collectionsFilter: state => state.collectionsFilter,
     allowPublishCurrentCollection: state => state.allowPublishCurrentCollection,
     authors: state => {
@@ -1130,6 +1133,7 @@ export const store = new Vuex.Store({
 
       // if currentbook exists, check if currrent book needs saving
       if (book_id != state.currentBookid) {
+        state.jobInfoRequest = null;// force reload tasks
         commit('set_currentAudiobook', {});
       }
       //let oldBook = (state.currentBook && state.currentBook._id)
@@ -2312,6 +2316,60 @@ export const store = new Vuex.Store({
         }).catch((err) => {
           return Promise.reject(err);
         });
+    },
+    updateJob({state}, update) {
+      return axios.put(state.API_URL + 'jobs/' + encodeURIComponent(update.id), update)
+        .then(() => {
+          return Promise.resolve();
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    completeTextCleanup({state, dispatch}) {
+      if (!state.currentBookMeta.bookid) {
+        return Promise.reject({error: 'Book is not selected'});
+      }
+      return dispatch('updateBookMeta', {private: false})
+        .then((doc) => {
+          return axios.put(state.API_URL + 'task/' + state.currentBookMeta.bookid + '/finish_cleanup')
+            .then((doc) => {
+              if (!doc.data.error) {
+                state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
+                dispatch('tc_loadBookTask')
+                dispatch('getCurrentJobInfo');
+                state.currentBookMeta.private = false;
+              } else {
+                dispatch('updateBookMeta', {private: true})
+              }
+              return Promise.resolve(doc);
+            })
+            .catch((err) => {
+              dispatch('updateBookMeta', {private: true});
+              return Promise.reject(err);
+            })
+        })
+        .catch((err) => {
+          return Promise.reject(err);
+        })
+    },
+    completeAudioMastering({state, dispatch}) {
+      if (!state.currentBookMeta.bookid) {
+        return Promise.reject({error: 'Book is not selected'});
+      }
+      return axios.put(state.API_URL + 'task/' + state.currentBookMeta.bookid + '/finish_mastering')
+        .then((doc) => {
+          if (!doc.data.error) {
+            dispatch('tc_loadBookTask')
+            dispatch('getCurrentJobInfo');
+          } else {
+            
+          }
+          return Promise.resolve(doc);
+        })
+        .catch((err) => {
+          return Promise.reject(err);
+        })
     }
   }
 })

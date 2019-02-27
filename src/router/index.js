@@ -29,6 +29,7 @@ export default new Router({
       path: '/books',
       component: Books,
 //       name: 'BooksList',
+      props: {listing: 'books'},
       children: [
         { path: '', component: BooksGrid }
       ]
@@ -36,20 +37,21 @@ export default new Router({
     {
       path: '/books/:bookid',
       component: Books,
+      props: {listing: 'books'},
 //       name: 'Book',
       children: [
-        { path: '', component: BooksGrid, name: 'BooksGrid' },
+        { path: '', component: BooksGrid, name: 'BooksGrid', props: {listing: 'books'} },
         {
           path: 'edit/:block?/:task_type?', name: 'BookEdit',
-          component: BookEdit, meta: { mode: 'edit' }, props: { mode: 'edit' }
+          component: BookEdit, meta: { mode: 'edit' }, props: { mode: 'edit', listing: 'books' }
         },
         {
           path: 'display/:block?/:task_type?', name: 'BookEditDisplay',
-          component: BookEditDisplay, meta: { mode: 'edit' }
+          component: BookEditDisplay, meta: { mode: 'edit' }, props: {listing: 'books'}
         },
         {
           path: 'narrate/:block?/:task_type?', name: 'BookNarrate',
-          component: BookEdit, meta: { mode: 'narrate' }, props: { mode: 'narrate' }
+          component: BookEdit, meta: { mode: 'narrate' }, props: { mode: 'narrate', listing: 'books' }
         }
       ]
     },
@@ -96,27 +98,36 @@ export default new Router({
     },
     {
       path: '/collections',
-      component: Collections,
-      name: 'CollectionsList',
-      props: { mode: 'edit1' }
-    },
-    {
-      path: '/collections/:collectionid',
-      component: Collections,
-      name: 'Collection'
-    },
-    {path: '/collections/:collectionid/:bookid', component: Collections, name: 'CollectionBook'},
-    {
-      path: '/collections/:collectionid/:bookid/edit/:block?/:task_type?', name: 'CollectionBookEdit',
-      component: Collections, meta: { mode: 'edit' }, props: { mode: 'edit' }
-    },
-    {
-      path: '/collections/:collectionid/:bookid/display/:block?', name: 'CollectionBookEditDisplay',
-      component: Collections, meta: { mode: 'edit' }
-    },
-    {
-      path: '/collections/:collectionid/:bookid/narrate/:block?/:task_type?', name: 'CollectionBookNarrate',
-      component: Collections, meta: { mode: 'narrate' }, props: { mode: 'narrate' }
+      component: Books,
+      props: {listing: 'collections'},
+      children: [
+        {
+          path: '',
+          component: Collections,
+          name: 'CollectionsList',
+          props: { mode: 'edit1' }
+        },
+        {
+          path: '/collections/:collectionid',
+          component: Collections,
+          name: 'Collection'
+        },
+        {
+          path: '/collections/:collectionid/:bookid', component: Collections, name: 'CollectionBook'
+        },
+        {
+          path: '/collections/:collectionid/:bookid/edit/:block?/:task_type?', name: 'CollectionBookEdit',
+          component: BookEdit, meta: { mode: 'edit' }, props: { mode: 'edit' }
+        },
+        {
+          path: '/collections/:collectionid/:bookid/display/:block?', name: 'CollectionBookEditDisplay',
+          component: BookEditDisplay, meta: { mode: 'edit' }
+        },
+        {
+          path: '/collections/:collectionid/:bookid/narrate/:block?/:task_type?', name: 'CollectionBookNarrate',
+          component: BookEdit, meta: { mode: 'narrate' }, props: { mode: 'narrate' }
+        }
+      ]
     },
     { path: '*', redirect: '/books' }
   ]

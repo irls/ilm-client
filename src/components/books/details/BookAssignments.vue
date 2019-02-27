@@ -1,0 +1,277 @@
+<template>
+  <div>
+    <div v-for="counter in tasks_counter">
+      <div v-if="counter.data.tasks.length > 0" class="counters-container">
+        <div class="counter-executor">
+          <span v-if="counter.key == 'editor'">Editing:</span>
+          <span v-if="counter.key == 'narrator'">Narrating:</span>
+          <span v-if="counter.key == 'proofer'">Proofreader:</span>
+          <span>{{counter.data.executor}}</span>
+        </div>
+        <table class="counters">
+          <thead>
+            <th>Task</th>
+            <th>Status</th>
+            <th v-if="_is('editor', true) || adminOrLibrarian">Action</th>
+          </thead>
+          <tbody>
+            <tr v-for="task in counter.data.tasks">
+              <td :class="['task-type', {'go-to-block': task.blockid != null && !task.complete}]" v-on:click="goToBlockCheck(task.blockid, counter.key)">
+                <div v-if="task.link && !task.complete">
+                  <template v-for="link in task.link">
+                    <span v-if="link=='audio_dialog'" class="go-to-block" v-on:click="$emit('showModal_audio')">
+                      {{task.title}}
+                    </span>
+                    <span v-else-if="link=='book_dialog'" class="go-to-block" v-on:click="$root.$emit('book-reimport-modal')">
+                      {{task.title}}
+                    </span>
+                  </template>
+                </div>
+                <div v-else>
+                  {{task.title}}
+                </div>
+              </td>
+              <td :class="[{'go-to-block': task.blockid != null && !task.complete}, 'task-counter']" v-on:click="goToBlockCheck(task.blockid, counter.key)">
+                <span v-if="task.complete" :class="[{'ready': task.ready}]">Closed</span>
+                <span v-else :class="[{'ready': task.ready}]">Open</span>
+                <span v-if="task.count > 0">({{task.count}})</span>
+              </td>
+              <td class="task-action" v-if="_is('editor', true) || adminOrLibrarian">
+                <template v-for="action in task.actions">
+                  <div v-if="action=='complete_cleanup'">
+                    <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">complete</button>
+                  </div>
+                  <div v-if="action=='mastering_required'">
+                    <div class="btn-switch" @click="toggleMastering()">
+                      <i class="fa fa-toggle-on" v-if="!currentBookMeta.masteringRequired"></i>
+                      <i class="fa fa-toggle-off" v-else></i>
+                      <span class="s-label">&nbsp;Mastered</span>
+                    </div>
+                  </div>
+                  <div v-if="action=='complete_mastering'">
+                    <div v-if="!audioMasteringProcess" class="editing-wrapper">
+                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">complete</button>
+                    </div>
+                    <div v-else class="preloader-small"></div>
+                  </div>
+                </template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Complete" cancel-text="Close" title="" @ok="finishTextCleanup()">
+      <div v-html="sharePrivateBookMessage"></div>
+    </modal>
+    <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="finishAudioMastering()">
+      <p>Complete mastering?</p>
+    </modal>
+  </div>
+</template>
+<script>
+  import task_controls from '../../../mixins/task_controls.js';
+  import access from '../../../mixins/access.js';
+  import { mapGetters, mapActions } from 'vuex';
+  import { modal } from 'vue-strap'
+  export default {
+    name: 'BookAssignments',
+    data() {
+      return {
+        textCleanupProcess: false,
+        showSharePrivateBookModal: false,
+        audioMasteringProcess: false,
+        showAudioMasteringModal: false
+      }
+    },
+    mixins: [access, task_controls],
+    components: {
+      modal
+    },
+    computed: {
+      sharePrivateBookMessage: {
+        get() {
+          if (this.currentBookCounters.narration_blocks > 0) {
+            return 'Complete editing and request narration for ' + this.currentBookCounters.narration_blocks + ' blocks?'
+          } else {
+            return 'Complete editing?';
+          }
+        }
+      },
+      isAllowEditingComplete: {
+        get() {
+          if (this.tc_allowEditingComplete()) {
+            if (this.currentBookCounters.not_marked_blocks === 0) {
+              return true;
+            }
+          } else if (this.tc_allowFinishMastering()) {
+            if (this.currentBookCounters.not_marked_blocks === 0) {
+              return true;
+            }
+          }
+          return false;
+        }
+      },
+      ...mapGetters({
+        tasks_counter: 'tasks_counter',
+        adminOrLibrarian: 'adminOrLibrarian',
+        currentBookCounters: 'currentBookCounters',
+        currentBookMeta: 'currentBookMeta'
+      })
+    },
+    methods: {
+      goToBlock(id) {
+        this.$root.$emit('for-bookedit:scroll-to-block', id);
+      },
+
+      goToBlockCheck(blockid, role) {
+        if (!blockid) {
+          return;
+        }
+        if (this._is(role, true) || (role === 'editor' && this.adminOrLibrarian)) {
+          if (this.$route && ([
+            'BookEdit', 'BookEditDisplay', 'BookNarrate', 
+            'CollectionBookEdit', 'CollectionBookEditDisplay', 'CollectionBookNarrate'
+          ].indexOf(this.$route.name) !== -1)) {
+            return this.goToBlock(blockid);
+          } else {
+            let params = {params: {bookid: this.currentBookMeta.bookid, block: blockid}};
+            params.name = role === 'narrator' ? 'BookNarrate' : 'BookEdit';
+            if (this.currentCollectionId) {
+              params.name = role === 'narrator' ? 'CollectionBookNarrate' : 'CollectionBookEdit';
+            }
+            this.$router.push(params);
+          }
+        }
+      },
+      finishTextCleanup() {
+        this.textCleanupProcess = true;
+        this.showSharePrivateBookModal = false;
+        this.completeTextCleanup()
+          .then((doc) => {
+            this.textCleanupProcess = false;
+            if (!doc.data.error) {
+              //this.currentBook.private = false;
+              this.$emit('setInfoMessage', 'Text cleanup task finished');
+            } else {
+              this.$emit('setErrorMessage', doc.data.error);
+            }
+          })
+          .catch((err) => {
+            this.textCleanupProcess = false;
+          });
+      },
+      finishAudioMastering() {
+        this.audioMasteringProcess = true;
+        this.showAudioMasteringModal = false;
+        this.completeAudioMastering()
+          .then((doc) => {
+            this.audioMasteringProcess = false
+            if (!doc.data.error) {
+              this.$emit('setInfoMessage', 'Mastering task finished');
+            } else {
+              this.$emit('setErrorMessage', doc.data.error);
+            }
+          })
+          .catch((err) => {
+            this.audioMasteringProcess = false;
+          });
+      },
+      toggleMastering() {
+        if (this.tc_allowToggleMetaMastering()) {
+          if (!this.currentBookMeta.masteringRequired) {
+            this.$root.$emit('show-modal', {
+              title: 'Define the audio as unmastered?',
+              text: '',
+              buttons: [
+                {
+                  title: 'CANCEL',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                  },
+                },
+                {
+                  title: 'OK',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                    this.updateBookMeta({'masteringRequired': !this.currentBookMeta.masteringRequired})
+                  },
+                  'class': 'btn btn-primary'
+                }
+              ],
+              class: ['align-modal']
+            });
+          } else {
+            this.updateBookMeta({'masteringRequired': !this.currentBookMeta.masteringRequired})
+          }
+        }
+      },
+      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering']),
+    },
+    mounted() {
+      
+    }
+  }
+</script>
+<style scoped lang="less">
+  .counters-container {
+    padding: 2px 5px;
+    .counter-executor {
+      float: right;
+      width: 100%;
+      span {
+        float: left;
+        width: auto;
+        padding: 2px 5px;
+      }
+    }
+    table.counters {
+      border: 1px solid black;
+      width: 94%;
+      thead {
+        background-color: #c2c2c2;
+        th {
+          text-align: left;
+          padding: 1px 5px;
+          border: 1px solid black;
+        }
+      }
+      tr {
+        border: 1px solid black;
+        &:nth-child(even) {
+          background-color: #f2f2f2;
+        }
+        td {
+          text-align: left;
+          padding: 1px 5px;
+          border: 1px solid black;
+          height: 30px;
+          span {
+            float: none;
+            &.ready {
+              color: green;
+            }
+          }
+          &.go-to-block {
+            cursor: pointer;
+          }
+          &.task-counter {
+            width: 80px;
+          }
+          &.task-type {
+            &.go-to-block, span.go-to-block {
+                color: #3187d5;
+                text-decoration: underline;
+                cursor: pointer;
+            }
+          }
+          &.task-action {
+            .btn {
+                padding: 3px 12px;
+            }
+          }
+        }
+      }
+    }
+  }
+</style>

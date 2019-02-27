@@ -23,7 +23,7 @@
         </button>
 
         <button v-if='hasItemSelected' class='btn btn-default btn-meta' @click='toggleMetaVisible'>
-          <i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>&nbsp;Meta
+          <i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>&nbsp;Details
         </button>
 
   </div>

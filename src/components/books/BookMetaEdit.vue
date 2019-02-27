@@ -20,9 +20,6 @@
 
       <div class="row">
       <div class="download-area col-sm-6">
-        <!-- <button id="show-modal" @click="downloadBook" class="btn btn-primary btn_download">
-          <img src='/static/download.png' class='bookstack'/>
-        </button> -->
       </div>
       </div>
 
@@ -36,113 +33,25 @@
         :allowDownload="false" />
       
       <div class="book-listing">
-        <!-- <div class="row" v-if="tc_allowMetadataActions()">
-          <template v-if="tc_allowEditingComplete() || tc_allowFinishMastering()">
-            <template v-if="tc_allowEditingComplete()">
-              <div v-if="!textCleanupProcess" class="editing-wrapper">
-                <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Editing complete</button>
-                <div class="col-sm-8 blocks-counter">
-                  <router-link :to="goToUnresolved(true)"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
-                </div>
-              </div>
-              <div v-else class="preloader-small"></div>
-            </template>
-            <template v-if="tc_allowFinishMastering()">
-              <div v-if="currentBookCounters.not_proofed_audio_blocks === 0">
-                <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                  <div class="col-sm-8 blocks-counter">
-                    <span class="blocks-counter-value">0</span>Blocks need your approval
-                  </div>
-                </div>
-              </div>
-              <template v-else>
-                <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                  <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Mastering complete</button>
-                  <div class="col-sm-8 blocks-counter">
-                    <router-link :to="goToUnresolved()"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
-                  </div>
-                </div>
-                <div v-else class="preloader-small"></div>
-              </template>
-            </template>
-          </template>
-          <template v-else-if="tc_allowFinishPublished()">
-            <div v-if="!finishPublishedProcess" class="editing-wrapper">
-              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="finishPublished()">Editing complete</button>
-            </div>
-            <div v-else class="preloader-small"></div>
-          </template>
-          <template v-else>
+        <template v-if="tc_allowFinishPublished()">
+          <div v-if="!finishPublishedProcess" class="row">
             <div class="editing-wrapper">
-              <div class="col-sm-8 blocks-counter">
-                <router-link :to="goToUnresolved(true)"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
-              </div>
+              <button class="btn btn-primary btn-edit-complete" v-on:click="finishPublished()">Editing complete</button>
             </div>
-          </template>
-        </div> -->
+          </div>
+          <div v-else class="preloader-small"></div>
+        </template>
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="Assignments" id="assignments">
-            <div v-for="counter in tasks_counter">
-              <div v-if="counter.data.tasks.length > 0" class="counters-container">
-                <div class="counter-executor">
-                  <span v-if="counter.key == 'editor'">Editing:</span>
-                  <span v-if="counter.key == 'narrator'">Narrating:</span>
-                  <span v-if="counter.key == 'proofer'">Proofreader:</span>
-                  <span>{{counter.data.executor}}</span>
-                </div>
-                <table class="counters">
-                  <thead>
-                    <th>Task</th>
-                    <th>Status</th>
-                    <th v-if="_is('editor', true) || adminOrLibrarian">Action</th>
-                  </thead>
-                  <tbody>
-                    <tr v-for="task in counter.data.tasks">
-                      <td :class="['task-type', {'go-to-block': task.blockid != null && !task.complete}]" v-on:click="goToBlockCheck(task.blockid, counter.key)">
-                        <div v-if="task.link && !task.complete">
-                          <template v-for="link in task.link">
-                            <span v-if="link=='audio_dialog'" class="go-to-block" v-on:click="showModal_audio = true">
-                              {{task.title}}
-                            </span>
-                            <span v-else-if="link=='book_dialog'" class="go-to-block" v-on:click="$root.$emit('book-reimport-modal')">
-                              {{task.title}}
-                            </span>
-                          </template>
-                        </div>
-                        <div v-else>
-                          {{task.title}}
-                        </div>
-                      </td>
-                      <td :class="[{'go-to-block': task.blockid != null && !task.complete}, 'task-counter']" v-on:click="goToBlockCheck(task.blockid, counter.key)">
-                        <span v-if="task.complete" :class="[{'ready': task.ready}]">Closed</span>
-                        <span v-else :class="[{'ready': task.ready}]">Open</span>
-                        <span v-if="task.count > 0">({{task.count}})</span>
-                      </td>
-                      <td class="task-action" v-if="_is('editor', true) || adminOrLibrarian">
-                        <template v-for="action in task.actions">
-                          <div v-if="action=='complete_cleanup'">
-                            <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">complete</button>
-                          </div>
-                          <div v-if="action=='mastering_required'">
-                            <div class="btn-switch" @click="toggleMastering()">
-                              <i class="fa fa-toggle-on" v-if="!currentBook.masteringRequired"></i>
-                              <i class="fa fa-toggle-off" v-else></i>
-                              <span class="s-label">&nbsp;Mastered</span>
-                            </div>
-                          </div>
-                          <div v-if="action=='complete_mastering'">
-                            <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                              <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">complete</button>
-                            </div>
-                            <div v-else class="preloader-small"></div>
-                          </div>
-                        </template>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <BookAssignments
+              @setInfoMessage="setInfoMessage"
+              @setErrorMessage="setErrorMessage"
+              @showModal_audio="showModal_audio = true"
+              ></BookAssignments>
+          <fieldset class='description brief'>
+            <legend>Description </legend>
+            <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!allowMetadataEdit"></textarea>
+          </fieldset>
           <fieldset class='Export' :disabled="isExporting || currentBook.demo_time < 0" v-if="isAllowExportAudio">
             <legend>Export </legend>
               
@@ -292,10 +201,6 @@
           </vue-tab>
 
         <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab()">
-        <!--<accordion :one-at-atime="true" ref="accordionStyles">
-
-          <panel :is-open="true" header="Selected blocks styles"
-            v-bind:key="'block-styles'" ref="panelBlockStyles">-->
             <div class="styles-catalogue">
 
               <vue-tabs ref="blockTypesTabs" class="block-style-tabs">
@@ -347,14 +252,6 @@
                       <i v-else class="fa fa-circle-o"></i>
                     x.x</label>
                   </div>
-                  <!--<div>
-                    <label class="style-label"
-                      @click="liveUpdate('numbering', 'auto')">
-                      <i v-if="currentBook.numbering === 'auto'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                      Autoincrement</label>
-                  </div>-->
                   <div>
                     <label class="style-label"
                       @click="liveUpdate('numbering', 'none')">
@@ -518,13 +415,6 @@
 
       <p>{{infoMessage}}.</p>
     </alert>
-
-    <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Complete" cancel-text="Close" title="" @ok="sharePrivateBook()">
-      <div v-html="sharePrivateBookMessage"></div>
-    </modal>
-    <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="completeAudioMastering()">
-      <p>Complete mastering?</p>
-    </modal>
     <modal v-model="generatingAudiofile" :backdrop="false" effect="fade">
       <div slot="modal-header" class="modal-header">
         <h4>Export audio</h4>
@@ -566,6 +456,7 @@ import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
 import { Languages } from "../../mixins/lang_config.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
+import BookAssignments from './details/BookAssignments';
 var BPromise = require('bluebird');
 
 export default {
@@ -583,7 +474,8 @@ export default {
     alert,
     modal,
     accordion,
-    panel
+    panel,
+    BookAssignments
   },
 
   data () {
@@ -612,13 +504,11 @@ export default {
       infoMessage: '',//to display info on action finished
       approveMetadataComment: '',
       showSharePrivateBookModal: false,
-      showAudioMasteringModal: false,
       textCleanupProcess: false,
       finishPublishedProcess: false,
       //audiobook: {},
       unlinkCollectionWarning: false,
       blockTypes: BlockTypes,
-      audioMasteringProcess: false,
       generatingAudiofile: false,
       audiobookChecker: false,
 
@@ -669,7 +559,8 @@ export default {
       subjectCategories: 'bookCategories',
       tasks_counter: 'tasks_counter',
       taskTypes: 'taskTypes',
-      adminOrLibrarian: 'adminOrLibrarian'
+      adminOrLibrarian: 'adminOrLibrarian',
+      currentCollectionId: 'currentCollectionId'
     }),
     collectionsList: {
       get() {
@@ -698,29 +589,6 @@ export default {
           return true;
         }
         return false;
-      }
-    },
-    isAllowEditingComplete: {
-      get() {
-        if (this.tc_allowEditingComplete()) {
-          if (this.currentBookCounters.not_marked_blocks === 0) {
-            return true;
-          }
-        } else if (this.tc_allowFinishMastering()) {
-          if (this.currentBookCounters.not_marked_blocks === 0) {
-            return true;
-          }
-        }
-        return false;
-      }
-    },
-    sharePrivateBookMessage: {
-      get() {
-        if (this.currentBookCounters.narration_blocks > 0) {
-          return 'Complete editing and request narration for ' + this.currentBookCounters.narration_blocks + ' blocks?'
-        } else {
-          return 'Complete editing?';
-        }
       }
     },
     mergedAudiofileLink: {
@@ -1178,25 +1046,6 @@ export default {
             self.textCleanupProcess = false
           })
     },
-    completeAudioMastering() {
-      this.audioMasteringProcess = true;
-      var self = this;
-      self.showAudioMasteringModal = false;
-      axios.put(self.API_URL + 'task/' + self.currentBook._id + '/finish_mastering')
-        .then((doc) => {
-          self.audioMasteringProcess = false
-          if (!doc.data.error) {
-            self.$store.dispatch('tc_loadBookTask')
-            self.$store.dispatch('getCurrentJobInfo');
-            self.infoMessage = 'Mastering task finished'
-          } else {
-            self.errorMessage = doc.data.error
-          }
-        })
-        .catch((err, test) => {
-          self.audioMasteringProcess = false;
-        })
-    },
     addAuthor() {
       this.currentBook.author.push('');
       this.liveUpdate('author', this.currentBook.author);
@@ -1243,35 +1092,6 @@ export default {
       //this.$router.push({name: this.$route.name, params:  params});
       }
       return route;
-    },
-    toggleMastering() {
-      if (this.tc_allowToggleMetaMastering()) {
-        if (!this.currentBook.masteringRequired) {
-          this.$root.$emit('show-modal', {
-            title: 'Define the audio as unmastered?',
-            text: '',
-            buttons: [
-              {
-                title: 'CANCEL',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                },
-              },
-              {
-                title: 'OK',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                  this.liveUpdate('masteringRequired',  !this.currentBook.masteringRequired)
-                },
-                'class': 'btn btn-primary'
-              }
-            ],
-            class: ['align-modal']
-          });
-        } else {
-          this.liveUpdate('masteringRequired',  !this.currentBook.masteringRequired)
-        }
-      }
     },
     setAllowExportAudio() {
       this.allowExportAudio = false;
@@ -1449,27 +1269,6 @@ export default {
     listenSetStyle () {
       if (this.selectionStart && this.selectionEnd) {
         this.collectCheckedStyles(this.selectionStart, this.selectionEnd, false);
-      }
-    },
-
-    goToBlock(id) {
-      this.$root.$emit('for-bookedit:scroll-to-block', id);
-    },
-    
-    goToBlockCheck(blockid, role) {
-      if (!blockid) {
-        return;
-      }
-      if (this._is(role, true) || (role === 'editor' && this.adminOrLibrarian)) {
-        if (this.$route && this.$route.name === 'BookEdit') {
-          return this.goToBlock(blockid);
-        } else {
-          let params = {name: 'BookEdit', params: {bookid: this.currentBook.bookid, block: blockid}};
-          if (role === 'narrator') {
-            params.name = 'BookNarrate';
-          }
-          this.$router.push(params);
-        }
       }
     },
 
@@ -1665,8 +1464,19 @@ export default {
         this.$forceUpdate();
       }
     },
+    
+    updateJobDescription: _.debounce(function(event) {
+      this.updateJob({id: this.currentJobInfo.id, description: event.target.value});
+    }, 500),
+    
+    setInfoMessage(msg) {
+      this.infoMessage = msg;
+    },
+    setErrorMessage(msg) {
+      this.errorMessage = msg;
+    },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta', 'updateJob'])
   }
 }
 </script>
@@ -1976,67 +1786,6 @@ export default {
     .validation-error {
         width: 100%;
         color: red;
-    }
-  }
-  
-  .counters-container {
-    padding: 2px 5px;
-    .counter-executor {
-      float: right;
-      width: 100%;
-      span {
-        float: left;
-        width: auto;
-        padding: 2px 5px;
-      }
-    }
-    table.counters {
-      border: 1px solid black;
-      width: 94%;
-      thead {
-        background-color: #c2c2c2;
-        th {
-          text-align: left;
-          padding: 1px 5px;
-          border: 1px solid black;
-        }
-      }
-      tr {
-        border: 1px solid black;
-        &:nth-child(even) {
-          background-color: #f2f2f2;
-        }
-        td {
-          text-align: left;
-          padding: 1px 5px;
-          border: 1px solid black;
-          height: 30px;
-          span {
-            float: none;
-            &.ready {
-              color: green;
-            }
-          }
-          &.go-to-block {
-            cursor: pointer;
-          }
-          &.task-counter {
-            width: 80px;
-          }
-          &.task-type {
-            &.go-to-block, span.go-to-block {
-                color: #3187d5;
-                text-decoration: underline;
-                cursor: pointer;
-            }
-          }
-          &.task-action {
-            .btn {
-                padding: 3px 12px;
-            }
-          }
-        }
-      }
     }
   }
 </style>

@@ -7,7 +7,7 @@
       :hasBookSelected="hasBookSelected"
       :metaVisible="metaVisible"/>
 
-      <BooksToolbar v-else
+      <BooksToolbar v-else-if="listing=='books'"
       @import_finished="bookImportFinished"
       :toggleMetaVisible="toggleMetaVisible"
       :hasBookSelected="hasBookSelected"
@@ -93,7 +93,7 @@ export default {
 //     }
     'currentBookMeta': {
       handler(val, old_val) {
-        if (!old_val._id && this.currentBookMeta && this.currentBookMeta.collection_id) {
+        if (this.$route.path.indexOf('/collections') !== 0 && !old_val._id && this.currentBookMeta && this.currentBookMeta.collection_id) {
           this.$router.replace({ path: '/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta.bookid });
         } else if (this.metaVisible && !this.currentBookMeta._id) {
           this.metaVisible = false;
@@ -103,6 +103,7 @@ export default {
     }
   },
   mixins: [api_config, task_controls],
+  props: ['listing'],
 
   mounted() {
         // load intial book
@@ -134,7 +135,7 @@ export default {
 
     },
     hasBookSelected () {
-      return !!this.currentBook
+      return !!this.currentBookMeta.bookid
     },
     isEditMode () {
       return this.$route.matched.some(record => {
