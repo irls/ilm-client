@@ -1208,38 +1208,23 @@ export const store = new Vuex.Store({
     },
 
     updateBookVersion({state, dispatch}, update) {
-      if (state.currentBookMeta._id) {
-        let currMeta = state.currentBookMeta;
-        if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
-          let versions = currMeta.version.split('.');
-          if (versions && versions.length == 2) {
-            if (update.minor) {
-              versions[1] = (parseInt(versions[1]) + 1);
+      let currMeta = state.currentBookMeta;
+      if (currMeta.bookid) {
+        if (currMeta.published === true) {
+          console.log('updateBookVersion published', update);
+          return dispatch('updateBookMeta', update)
+        } else if (update.major && update.major == true) {
+          if (typeof currMeta.version !== 'undefined') {
+            let cVers = currMeta.version.split('.');
+            let pVers = currMeta.publishedVersion.split('.');
+            if (cVers && cVers.length == 2 && pVers && pVers.length == 2)
+            if (parseInt(cVers[0]) === parseInt(pVers[0])) {
+              delete update['major'];
+              update['version'] = (parseInt(cVers[0]) + 1) + '.0';
+              console.log('updateBookVersion unpublished', update);
+              return dispatch('updateBookMeta', update);
             }
-            if (update.major) {
-              versions[0] = (parseInt(versions[0]) + 1);
-              versions[1] = 0;
-            }
-            let upd = {
-              'version': versions[0] + '.' + versions[1],
-              'pubType': 'Unpublished',
-              'published': false,
-              //'status': 'staging',
-              //'demo': false,
-              'isInTheQueueOfPublication': false,
-              'isIntheProcessOfPublication': false
-            };
-            dispatch('updateBookMeta', upd)
-              .then((meta) => {
-                if (meta.collection_id) {
-                  dispatch('updateCollectionVersion', Object.assign({id: meta.collection_id}, update));
-                }
-                dispatch('getTotalBookTasks');
-              });
           }
-        } else {
-          // olku: Because it`s happening every time when we try to update meta fields
-          // dispatch('reloadBookMeta');
         }
       }
     },
@@ -1248,14 +1233,19 @@ export const store = new Vuex.Store({
 
       update.bookid = state.currentBookMeta._id;
 
+      let currMeta = state.currentBookMeta;
+
       let updateVersion = {minor: true};
       if (update['styles'] || update['numbering']) {
+        // add meta changes in flow of versioning
         updateVersion = {major: true};
+      } else {
+        if (update.major && update.major == true) updateVersion = {major: true}
       }
-      let currMeta = state.currentBookMeta;
 
       if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
         let versions = currMeta.version.split('.');
+
         if (versions && versions.length == 2) {
           if (updateVersion.minor) {
             versions[1] = (parseInt(versions[1]) + 1);
@@ -1273,18 +1263,26 @@ export const store = new Vuex.Store({
           update['isInTheQueueOfPublication'] = false;
           update['isIntheProcessOfPublication'] = false;
         }
+      } else if (updateVersion.major && updateVersion.major == true) {
+        if (typeof currMeta.version !== 'undefined') {
+          let cVers = currMeta.version.split('.');
+          let pVers = currMeta.publishedVersion.split('.');
+          if (cVers && cVers.length == 2 && pVers && pVers.length == 2)
+          if (parseInt(cVers[0]) === parseInt(pVers[0])) {
+            delete update['major'];
+            update['version'] = (parseInt(cVers[0]) + 1) + '.0';
+            console.log('updateBookMeta unpublished', update);
+          }
+        }
       }
 
       let newMeta = Object.assign(state.currentBookMeta, update);
       commit('SET_CURRENTBOOK_META', newMeta);
 
-
       return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id, update)
         .then(response => {
           if (response.data["@class"] && response.status == 200) {
-            console.log('updateBookMeta @version', response.data['@version']);
-            //let newMeta = Object.assign(state.currentBookMeta, response.data);
-            //commit('SET_CURRENTBOOK_META', newMeta);
+            console.log('updateBookMeta @version', response.data['@version'], update);
             state.currentBookMeta['@version'] = response.data['@version'];
             let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==update.bookid);
             if (bookMetaIdx > -1) {
@@ -1299,7 +1297,7 @@ export const store = new Vuex.Store({
 
             return Promise.resolve(response.data);
           } else {
-            return Promise.reject(new Error('No data updated'));
+            return Promise.resolve('No data updated');
           }
         })
         .catch(err => {
@@ -1760,7 +1758,7 @@ export const store = new Vuex.Store({
               })
             } else {
               state.tc_userTasks.list = Object.assign(state.tc_userTasks.list, list.data);
-              console.log(state.tc_userTasks.list)
+              //console.log(state.tc_userTasks.list)
             }
           }
           commit('TASK_LIST_LOADED')
