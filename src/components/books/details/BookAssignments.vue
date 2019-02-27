@@ -116,7 +116,8 @@
         tasks_counter: 'tasks_counter',
         adminOrLibrarian: 'adminOrLibrarian',
         currentBookCounters: 'currentBookCounters',
-        currentBookMeta: 'currentBookMeta'
+        currentBookMeta: 'currentBookMeta',
+        currentCollectionId: 'currentCollectionId'
       })
     },
     methods: {

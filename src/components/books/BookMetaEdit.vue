@@ -211,7 +211,7 @@
                   <div>
                     <label class="style-label"
                       @click="$event.target.value = ''; update('styles.global', $event)">
-                      <i v-if="!currentBook.styles.global || currentBook.styles.global === ''"
+                      <i v-if="!currentBook.styles || !currentBook.styles.global || currentBook.styles.global === ''"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                     ILM</label>
@@ -219,7 +219,7 @@
                   <div>
                     <label class="style-label"
                       @click="$event.target.value = 'global-ocean'; update('styles.global', $event)">
-                      <i v-if="currentBook.styles.global === 'global-ocean'"
+                      <i v-if="currentBook.styles && currentBook.styles.global === 'global-ocean'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                     Ocean</label>
@@ -227,7 +227,7 @@
                   <div>
                     <label class="style-label"
                       @click="$event.target.value = 'global-ffa'; update('styles.global', $event)">
-                      <i v-if="currentBook.styles.global === 'global-ffa'"
+                      <i v-if="currentBook.styles && currentBook.styles.global === 'global-ffa'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                       FFA</label>
@@ -559,8 +559,7 @@ export default {
       subjectCategories: 'bookCategories',
       tasks_counter: 'tasks_counter',
       taskTypes: 'taskTypes',
-      adminOrLibrarian: 'adminOrLibrarian',
-      currentCollectionId: 'currentCollectionId'
+      adminOrLibrarian: 'adminOrLibrarian'
     }),
     collectionsList: {
       get() {

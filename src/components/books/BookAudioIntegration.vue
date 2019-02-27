@@ -102,7 +102,7 @@
           <tr>
             <td>Title</td>
             <td><select-tts-voice
-              :pre_selected="currentBookMeta.voices.title"
+              :pre_selected="currentBookMeta.voices ? currentBookMeta.voices.title : ''"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
               @onSelect="onTtsSelect('title', $event)"
@@ -111,7 +111,7 @@
           <tr>
             <td>Header</td>
             <td><select-tts-voice
-              :pre_selected="currentBookMeta.voices.header"
+              :pre_selected="currentBookMeta.voices ? currentBookMeta.voices.header : ''"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
               @onSelect="onTtsSelect('header', $event)"
@@ -128,7 +128,7 @@
           <tr>
             <td>Paragraph</td>
             <td><select-tts-voice
-              :pre_selected="currentBookMeta.voices.paragraph"
+              :pre_selected="currentBookMeta.voices ? currentBookMeta.voices.paragraph : ''"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
               @onSelect="onTtsSelect('paragraph', $event)"
@@ -137,7 +137,7 @@
           <tr>
             <td>Footnote</td>
             <td><select-tts-voice
-              :pre_selected="currentBookMeta.voices.footnote"
+              :pre_selected="currentBookMeta.voices ? currentBookMeta.voices.footnote : ''"
               :pre_volume="pre_volume"
               :pre_options="pre_options"
               @onSelect="onTtsSelect('footnote', $event)"

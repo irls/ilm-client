@@ -1697,8 +1697,8 @@ export default {
         let loadIdsArray = [];
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
         //let loadCount = 5;
-        for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
-          let blockRef = this.$refs.viewBlocks[i];
+        for (var i = 0; i < this.parlistO.listObjs.length; i++) {
+          let blockRef = this.$refs.viewBlocks.find(v => v.blockId === this.parlistO.listObjs[i].blockId);
           let visible = this.checkVisible(blockRef.$refs.viewBlock, viewHeight);
           if (visible) {
             if (!firstVisible) {
