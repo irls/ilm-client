@@ -666,10 +666,14 @@ export default {
     $('body').on('click', '.vue-tabs.meta-edit-tabs li.tab', () => {
       this.activeTabIndex = this.$refs.panelTabs ? this.$refs.panelTabs.activeTabIndex : null;
       if (this.activeTabIndex === 1 && this.$refs.descriptionShort) {
-        this.$refs.descriptionShort.initSize();
+        Vue.nextTick(() => {
+          this.$refs.descriptionShort.initSize();
+        });
       }
       if (this.activeTabIndex === 1 && this.$refs.descriptionLong) {
-        this.$refs.descriptionLong.initSize();
+        Vue.nextTick(() => {
+          this.$refs.descriptionLong.initSize();
+        });
       }
     });
   },
