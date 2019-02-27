@@ -175,12 +175,12 @@
 
           <fieldset class='description brief'>
             <legend>Brief Description </legend>
-            <resizable-textarea><textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full"></textarea></resizable-textarea>
+            <resizable-textarea ref="descriptionShort"><textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full"></textarea></resizable-textarea>
           </fieldset>
 
           <fieldset class='description long'>
             <legend>Long Description </legend>
-            <resizable-textarea><textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full" ></textarea></resizable-textarea>
+            <resizable-textarea ref="descriptionLong"><textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full" ></textarea></resizable-textarea>
           </fieldset>
           
           <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
@@ -850,6 +850,12 @@ export default {
     }
     $('body').on('click', '.vue-tabs.meta-edit-tabs li.tab', () => {
       this.activeTabIndex = this.$refs.panelTabs ? this.$refs.panelTabs.activeTabIndex : null;
+      if (this.activeTabIndex === 1 && this.$refs.descriptionShort) {
+        this.$refs.descriptionShort.initSize();
+      }
+      if (this.activeTabIndex === 1 && this.$refs.descriptionLong) {
+        this.$refs.descriptionLong.initSize();
+      }
     });
     setTimeout(() => {
       this.updateAllowed = true;//autosize plugin send updates on initialization
@@ -1758,10 +1764,13 @@ Vue.component('resizable-textarea', {
       event.target.style.height = 'auto'
       event.target.style.height = (event.target.scrollHeight) + 'px'
     },
+    initSize() {
+      this.$el.setAttribute('style', 'height:' + (this.$el.scrollHeight) + 'px;overflow-y:hidden;')
+    }
   },
   mounted () {
     this.$nextTick(() => {
-      this.$el.setAttribute('style', 'height:' + (this.$el.scrollHeight) + 'px;overflow-y:hidden;')
+      this.initSize();
     })
 
     this.$el.addEventListener('input', this.resizeTextarea)
