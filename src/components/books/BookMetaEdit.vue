@@ -1089,7 +1089,10 @@ export default {
     update: _.debounce(function (key, event) {
       let val = typeof event === 'string' ? event : event.target.value;
       this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
-    }, 500),
+    }, 1500, {
+      'leading': false,
+      'trailing': true
+    }),
 
     liveUpdate (key, value) {
       //if (!this.updateAllowed) {
@@ -1337,9 +1340,13 @@ export default {
     },
     publish() {
       // this.isPublishing = false;
-      this.isPublishingQueue = true;
+      // this.isPublishingQueue = true;
       return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish')
       .then(resp => {
+        if (resp.status == 200 && resp.data.ok) {
+          this.currentBook.isInTheQueueOfPublication = true;
+          this.currentBookMeta.isInTheQueueOfPublication = true;
+        }
         console.log(resp);
       });
     },
