@@ -264,9 +264,12 @@ export default {
           }
         } else {
           let count = this.tc_currentBookTasks.tasks.length;
-          let can_approve_count = this.currentJobInfo.can_resolve_tasks.filter(t => {
-            return typeof t.blockid !== 'undefined' && t.blockid;
-          });
+          let can_approve_count = 0
+          if (this.currentJobInfo && this.currentJobInfo.can_resolve_tasks) {
+            can_approve_count = this.currentJobInfo.can_resolve_tasks.filter(t => {
+              return typeof t.blockid !== 'undefined' && t.blockid;
+            });
+          }
           count+= can_approve_count ? can_approve_count.length : 0;
           return count;
         }
