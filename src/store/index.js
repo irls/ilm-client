@@ -301,10 +301,11 @@ export const store = new Vuex.Store({
     },
 
     SET_CURRENTBOOK_META (state, meta) {
+      // console.log('SET_CURRENTBOOK_META', state.currentBookMeta, meta);
       // state.currentBookid = meta._id
       // state.currentBook = book
-//       state.currentBook_dirty = false
-//       state.currentBookMeta_dirty = false
+      // state.currentBook_dirty = false
+      // state.currentBookMeta_dirty = false
       if (meta) {
         if (meta.publishedVersion === 'false') {
           meta.publishedVersion = false;
@@ -1214,7 +1215,7 @@ export const store = new Vuex.Store({
           console.log('updateBookVersion published', update);
           return dispatch('updateBookMeta', update)
         } else if (update.major && update.major == true) {
-          if (typeof currMeta.version !== 'undefined') {
+          if (typeof currMeta.version !== 'undefined' && currMeta.publishedVersion) {
             let cVers = currMeta.version.split('.');
             let pVers = currMeta.publishedVersion.split('.');
             if (cVers && cVers.length == 2 && pVers && pVers.length == 2)
@@ -1264,7 +1265,7 @@ export const store = new Vuex.Store({
           update['isIntheProcessOfPublication'] = false;
         }
       } else if (updateVersion.major && updateVersion.major == true) {
-        if (typeof currMeta.version !== 'undefined') {
+        if (typeof currMeta.version !== 'undefined' && currMeta.publishedVersion) {
           let cVers = currMeta.version.split('.');
           let pVers = currMeta.publishedVersion.split('.');
           if (cVers && cVers.length == 2 && pVers && pVers.length == 2)
