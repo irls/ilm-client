@@ -1145,6 +1145,9 @@
           }
         },
         _setWordSelection(index, select_range, autoplay = false) {
+          if (this.wordSelectionMode !== false && this.wordSelectionMode !== index) {
+            return;
+          }
           select_range = typeof select_range == 'undefined' ? false : select_range;
           this._clearWordSelection();
           let annotations = $('.annotations-boxes .annotation-box');
