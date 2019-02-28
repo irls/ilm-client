@@ -181,7 +181,8 @@
           },
           alignProcess: false,
           annotations: [],
-          minWordSize: 0.05
+          minWordSize: 0.05,
+          wordSelectionMode: false
         }
       },
       mounted() {
@@ -534,6 +535,7 @@
 
                   limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
                   onDrag: function(element, x, y, event) {
+                    self.wordSelectionMode = false;
                     if ($('[id="resize-selection-left"]').position().left >= x) {
                       let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
                       self.selection.start = start-1;
@@ -565,6 +567,7 @@
                 self.dragLeft = new Draggable (document.getElementById('resize-selection-left'), {
                   limit: {x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
                   onDrag: function(element, x, y, event) {
+                    self.wordSelectionMode = false;
                     if ($('[id="resize-selection-right"]').position().left <= x) {
                       let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
                       self.selection.end = start+1;
@@ -629,10 +632,11 @@
           });
           let self = this;
           $('.wf-playlist').on('click', '.annotations-boxes .annotation-box', function(e) {
+            self.wordSelectionMode = false;
             let index = $('.annotations-boxes .annotation-box').index($(this));
             self.blockSelectionEmit = true;
-            self._setWordSelection(index, true);
-            ;
+            self._setWordSelection(index, true, true);
+            self.wordSelectionMode = index;
           });
           $('.wf-playlist').on('dragend', '.annotations-boxes .annotation-box .resize-handle', (ev)=>{
             this.smoothDrag(ev);
@@ -753,7 +757,7 @@
           if (typeof cursorPosition === 'undefined') {
             if (this.cursorPosition !== false) {
               cursorPosition = this.cursorPosition;
-            } else if (!this.selection.start && this.mode === 'block') {
+            } else if (!this.selection.start && this.selection.start !== 0 && this.mode === 'block') {
               //this.cursorPosition = 0;
               this.audiosourceEditor.setTimeSelection(0);
               cursorPosition = 0;
@@ -1092,19 +1096,22 @@
           return false;
         },
         _showSelectionBorders(scroll_to_selection = false) {
-          setTimeout(() => {
-            let selection = $('.selection.segment')[0];
-            if (selection) {
-              $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
-              $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft);
-            } else {
-              $('[id="resize-selection-right"]').hide().css('left', 0);
-              $('[id="resize-selection-left"]').hide().css('left', 0);
-            }
-            if (scroll_to_selection) {
-              this._scrollToCursor();
-            }
-          }, 50);
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              let selection = $('.selection.segment')[0];
+              if (selection) {
+                $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
+                $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft);
+              } else {
+                $('[id="resize-selection-right"]').hide().css('left', 0);
+                $('[id="resize-selection-left"]').hide().css('left', 0);
+              }
+              if (scroll_to_selection) {
+                this._scrollToCursor();
+              }
+              resolve();
+            }, 50);
+          })
         },
         _scrollToCursor() {
           if (this.cursorPosition && this.cursorPosition > 0) {
@@ -1132,10 +1139,12 @@
           }
         },
         _clearWordSelection() {
-          $(this.contentContainer).find('w').removeClass('selected');
-          $('.annotations-boxes .annotation-box').removeClass('selected');
+          if (!this.wordSelectionMode) {
+            $(this.contentContainer).find('w').removeClass('selected');
+            $('.annotations-boxes .annotation-box').removeClass('selected');
+          }
         },
-        _setWordSelection(index, select_range) {
+        _setWordSelection(index, select_range, autoplay = false) {
           select_range = typeof select_range == 'undefined' ? false : select_range;
           this._clearWordSelection();
           let annotations = $('.annotations-boxes .annotation-box');
@@ -1152,7 +1161,15 @@
             });
             if (word) {
               this.plEventEmitter.emit('select', word.start, word.end);
-              this._showSelectionBorders();
+              this._showSelectionBorders()
+                .then(() => {
+                  if (autoplay) {
+                    this.cursorPosition = false;
+                    Vue.nextTick(() => {
+                      this.stop().then(() => this.play());
+                    });
+                  }
+                });
             }
           }
         },
@@ -1595,6 +1612,15 @@
           this.audiosourceEditor.drawRequest();
           this.$root.$emit('from-audioeditor:word-realign', map, this.blockId);
           this.isModified = true;
+          if (this.wordSelectionMode !== false) {
+            if (shiftedIndex === this.wordSelectionMode || 
+                    (shiftedIndex - 1 === this.wordSelectionMode && direction === 'right') || 
+                    (shiftedIndex + 1 === this.wordSelectionMode && direction === 'left')) {
+              Vue.nextTick(() => {
+                this._setWordSelection(this.wordSelectionMode, true, true);
+              });
+            }
+          }
         }, 30),
 
       },
@@ -1843,6 +1869,13 @@
               if (oldVal) {
                 this.close();
               }
+            }
+          }
+        },
+        'wordSelectionMode': {
+          handler(val) {
+            if (val === false) {
+              this._clearWordSelection();
             }
           }
         }
