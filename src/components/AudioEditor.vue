@@ -266,6 +266,7 @@
             this.isModified = false;
             this.playlistScrollPosition = 0;
             this.selection = {};
+            this.wordSelectionMode = false;
             this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
             this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
             this._clearWordSelection();
@@ -670,6 +671,7 @@
                   }
                 }
               } else {
+                this.wordSelectionMode = false;
                 if (this.isPlaying) {
                   this.cursorPosition = pos;
                 } else {
@@ -899,6 +901,7 @@
           }
         },
         clearSelection() {
+          this.wordSelectionMode = false;
           let restart = this.isPlaying;
           this.pause()
             .then(() => {
@@ -1061,6 +1064,7 @@
           this.words = [];
           this.currentWord = null;
           this.selection = {};
+          this.wordSelectionMode = false;
           this.isModified = false;
           this.isAudioModified = false;
           this.history = [];
