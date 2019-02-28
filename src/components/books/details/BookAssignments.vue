@@ -39,7 +39,12 @@
               <td class="task-action" v-if="_is('editor', true) || adminOrLibrarian">
                 <template v-for="action in task.actions">
                   <div v-if="action=='complete_cleanup'">
-                    <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">complete</button>
+                    <template v-if="!textCleanupProcess">
+                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">complete</button>
+                    </template>
+                    <template v-else>
+                      <div class="preloader-task"></div>
+                    </template>
                   </div>
                   <div v-if="action=='mastering_required'">
                     <div class="btn-switch" @click="toggleMastering()">
@@ -52,7 +57,7 @@
                     <div v-if="!audioMasteringProcess" class="editing-wrapper">
                       <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">complete</button>
                     </div>
-                    <div v-else class="preloader-small"></div>
+                    <div v-else class="preloader-task"></div>
                   </div>
                 </template>
               </td>
@@ -274,5 +279,16 @@
         }
       }
     }
+  }
+  .preloader-task {
+      background: url(/static/preloader-snake-small.gif);
+      width: 100%;
+      height: 100%;
+      left: 0;
+      top: 0;
+      position: absolute;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-color: #8080807d;
   }
 </style>
