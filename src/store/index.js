@@ -2354,8 +2354,9 @@ export const store = new Vuex.Store({
             .then((doc) => {
               if (!doc.data.error) {
                 state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
-                dispatch('tc_loadBookTask')
+                dispatch('tc_loadBookTask', state.currentBookMeta.bookid);
                 dispatch('getCurrentJobInfo');
+                dispatch('getTotalBookTasks');
                 state.currentBookMeta.private = false;
               } else {
                 dispatch('updateBookMeta', {private: true})
@@ -2378,8 +2379,9 @@ export const store = new Vuex.Store({
       return axios.put(state.API_URL + 'task/' + state.currentBookMeta.bookid + '/finish_mastering')
         .then((doc) => {
           if (!doc.data.error) {
-            dispatch('tc_loadBookTask')
+            dispatch('tc_loadBookTask', state.currentBookMeta.bookid)
             dispatch('getCurrentJobInfo');
+            dispatch('getTotalBookTasks');
           } else {
             
           }
