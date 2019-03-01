@@ -862,39 +862,25 @@ export default {
         });*/
     },
     updateCollection(event) {
-      if (event && event.target.value) {
-        let collectionId = event.target.value;
-        let api_url = this.API_URL + 'collection/' + collectionId + '/link_books';
-        let api = this.$store.state.auth.getHttp();
-        let self = this;
-        api.post(api_url, {books_ids: [this.currentBook._id]}, {}).then(function(response){
-          self.unlinkCollectionWarning = false;
-          if (response.status===200) {
-            self.$router.push('/books');
-            self.visible = false;
-          } else {
-
-          }
-        }).catch((err) => {
-          self.unlinkCollectionWarning = false;
-        });
-      } else if (event) {
+      let collectionId = event && event.target.value ? event.target.value : null;
+      if (event && !collectionId) {
         this.unlinkCollectionWarning = true;
       } else {
-        let collection_id = this.currentBookMeta.collection_id;
-        let api_url = this.API_URL + 'collection/' + collection_id + '/unlink_books';
-        let api = this.$store.state.auth.getHttp();
-        let self = this;
-        api.post(api_url, {books_ids: [this.currentBook._id]}, {}).then(function(response){
-          self.unlinkCollectionWarning = false;
-          if (response.status===200) {
-            self.$router.push('/collections/' + collection_id);
-          } else {
-
-          }
-        }).catch((err) => {
-          self.unlinkCollectionWarning = false;
-        });
+        return this.updateBookCollection(collectionId)
+          .then(response => {
+            this.unlinkCollectionWarning = false;
+            if (response.status === 200) {
+              if (collectionId) {
+                this.$router.replace({path: '/collections/' + collectionId + '/' + this.currentBook.bookid});
+              } else {
+                this.$router.replace({path: '/books'});
+              }
+            }
+          })
+          .catch(err => {
+            this.unlinkCollectionWarning = false;
+            console.log(err);
+          })
       }
     },
 
@@ -1539,7 +1525,7 @@ export default {
       this.errorMessage = msg;
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta', 'updateJob'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta', 'updateJob', 'updateBookCollection'])
   }
 }
 
