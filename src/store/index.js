@@ -319,12 +319,17 @@ export const store = new Vuex.Store({
         if (meta.publishedVersion === 'false') {
           meta.publishedVersion = false;
         }
-        if (meta.voices && Object.keys(meta.voices).length === 0) {
+        if (!meta.voices || (meta.voices && Object.keys(meta.voices).length === 0)) {
           meta.voices = {
             'title': false,
             'header': false,
             'paragraph': false,
             'footnote': false
+          };
+        }
+        if (!meta.styles || (meta.styles && Object.keys(meta.styles).length === 0)) {
+          meta.styles = {
+            global: ''
           };
         }
         if (state.books_meta && Array.isArray(state.books_meta) && state.books_meta.length > 0) {
@@ -340,19 +345,8 @@ export const store = new Vuex.Store({
         state.currentBookMeta = meta;
         state.currentBookMeta._id = meta.bookid;
         state.currentBookid = meta.bookid
-        if (!state.currentBookMeta.styles) {
-          state.currentBookMeta.styles = {};
-        }
         if (!state.currentBookMeta.isMastered) {
           state.currentBookMeta.isMastered = false;
-        }
-        if (!state.currentBookMeta.voices) {
-          state.currentBookMeta.voices = {
-            title: '',
-            header: '',
-            paragraph: '',
-            footnote: ''
-          };
         }
         if (state.currentBookMeta.language == 'en') {
           let default_voice = null;
