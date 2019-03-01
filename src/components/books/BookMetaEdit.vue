@@ -873,7 +873,9 @@ export default {
               if (collectionId) {
                 this.$router.replace({path: '/collections/' + collectionId + '/' + this.currentBook.bookid});
               } else {
-                this.$router.replace({path: '/books'});
+                Vue.nextTick(() => {
+                  this.$router.replace({path: '/books'});
+                });
               }
             }
           })
