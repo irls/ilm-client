@@ -197,17 +197,19 @@ class BookBlocks {
     this.listIds = [];
     this.listRIds = [];
     this.listObjs = [];
-    this.meta = bookList.meta;
-    this.meta.rid = bookList.meta['@rid'];
-    if (Array.isArray(bookList.blocks)) {
-      bookList.blocks.forEach((block)=>{
-        this.listIds.push(block.blockid);
-        this.listRIds.push(block.rid);
-        this.listObjs.push({blockRid: block.rid, blockId: block.blockid});
-        this.lookupList[block.rid] = new LookupBlock(block);
-        //this.blocksList[block.blockid] = new BookBlock(block);
-      })
-      this.setStartId(bookList.blocks[0].rid)
+    if (bookList.meta && bookList.meta['@rid'] && bookList.blocks && bookList.blocks.length) {
+      this.meta = bookList.meta;
+      this.meta.rid = bookList.meta['@rid'];
+      if (Array.isArray(bookList.blocks)) {
+        bookList.blocks.forEach((block)=>{
+          this.listIds.push(block.blockid);
+          this.listRIds.push(block.rid);
+          this.listObjs.push({blockRid: block.rid, blockId: block.blockid});
+          this.lookupList[block.rid] = new LookupBlock(block);
+          //this.blocksList[block.blockid] = new BookBlock(block);
+        })
+        this.setStartId(bookList.blocks[0].rid)
+      }
     }
   }
 
