@@ -34,7 +34,7 @@
               <td :class="[{'go-to-block': task.blockid != null && !task.complete}, 'task-counter']" v-on:click="goToBlockCheck(task.blockid, counter.key)">
                 <span v-if="task.complete" :class="[{'ready': task.ready}]">Closed</span>
                 <span v-else :class="[{'ready': task.ready}]">Open</span>
-                <span v-if="task.count > 0">({{task.count}})</span>
+                <span v-if="!task.complete && typeof task.count !== 'undefined'">({{task.count}})</span>
               </td>
               <td class="task-action" v-if="_is('editor', true) || adminOrLibrarian">
                 <template v-for="action in task.actions">
