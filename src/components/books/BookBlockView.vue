@@ -1706,6 +1706,8 @@ export default {
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
         content = content.replace(/<span[^>]*>([\s\S]*?)<\/span>/gm, '$1')
+        content = content.replace(/<br[\/]?><br[\/]?>/gm, '<br>');
+        content = content.replace(/^<br[\/]?>/, '');
         return content;
       },
 
