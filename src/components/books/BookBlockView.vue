@@ -3247,15 +3247,17 @@ export default {
             flag.addEventListener('click', this.handleFlagClick);
           });
         }
-        if (this.block && this.block.footnotes) {
-          for (let i in this.block.footnotes) {
-            let ref = this.$refs['footnoteContent_' + i];
-            if (ref) {
-              ref = ref[0];
-              ref.addEventListener("mouseup", () => {
-                //console.log('Selection changed.');
-                handler(this.block._id + '_' + i, ref);
-              });
+        if (this.mode !== 'narrate') {
+          if (this.block && this.block.footnotes) {
+            for (let i in this.block.footnotes) {
+              let ref = this.$refs['footnoteContent_' + i];
+              if (ref && ref[0]) {
+                ref = ref[0];
+                ref.addEventListener("mouseup", () => {
+                  //console.log('Selection changed.');
+                  handler(this.block._id + '_' + i, ref);
+                });
+              }
             }
           }
         }
