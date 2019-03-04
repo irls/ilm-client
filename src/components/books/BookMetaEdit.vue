@@ -210,7 +210,7 @@
                   <legend>Book styles</legend>
                   <div>
                     <label class="style-label"
-                      @click="$event.target.value = ''; update('styles.global', $event)">
+                      @click="liveUpdate('styles.global', '')">
                       <i v-if="!currentBook.styles || !currentBook.styles.global || currentBook.styles.global === ''"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -218,7 +218,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="$event.target.value = 'global-ocean'; update('styles.global', $event)">
+                      @click="liveUpdate('styles.global', 'global-ocean')">
                       <i v-if="currentBook.styles && currentBook.styles.global === 'global-ocean'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -226,7 +226,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="$event.target.value = 'global-ffa'; update('styles.global', $event)">
+                      @click="liveUpdate('styles.global', 'global-ffa')">
                       <i v-if="currentBook.styles && currentBook.styles.global === 'global-ffa'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
