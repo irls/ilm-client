@@ -40,7 +40,7 @@
               ></BookAssignments>
           <fieldset class='description brief'>
             <legend>Description </legend>
-            <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!allowMetadataEdit"></textarea>
+            <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian"></textarea>
           </fieldset>
           <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
             <legend>Export </legend>
