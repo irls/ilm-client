@@ -139,7 +139,11 @@ export const store = new Vuex.Store({
       tasks_counter: [],
       executors: {editor: null, proofer: null, narrator: null},
       description: '',
-      id: null
+      id: null,
+      workflow: {
+        status: null,
+        archived: null
+      }
     },
     taskTypes: {tasks: [], categories: []},
     liveDB: new liveDB(),
@@ -2261,6 +2265,8 @@ export const store = new Vuex.Store({
         state.jobInfoRequest = axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
         if (clear) {
           state.currentJobInfo.tasks_counter = [];
+          state.currentJobInfo.workflow.status = null;
+          state.currentJobInfo.workflow.archived = null;
         }
         return state.jobInfoRequest
           .then(data => {
@@ -2364,6 +2370,21 @@ export const store = new Vuex.Store({
           return Promise.resolve(doc);
         })
         .catch((err) => {
+          return Promise.reject(err);
+        })
+    },
+    setJobStatus({state, dispatch}, status) {
+      if (!state.currentJobInfo.id) {
+        return Promise.reject({error: 'Book is not selected'});
+      }
+      return axios.post(state.API_URL + '/jobs/' + encodeURIComponent(state.currentJobInfo.id) + '/status/' + status)
+        .then(() => {
+          if (state.currentBookMeta.bookid) {
+            dispatch('tc_loadBookTask', state.currentBookMeta.bookid);
+          }
+          return Promise.resolve();
+        })
+        .catch(err => {
           return Promise.reject(err);
         })
     }

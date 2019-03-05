@@ -1036,7 +1036,7 @@ export default {
         }
       })
         .then((response) => {
-          this.tc_loadBookTask();
+          this.tc_loadBookTask(this.meta._id);
           this.getCurrentJobInfo();
         })
         .catch((err) => {})
@@ -1070,7 +1070,7 @@ export default {
 
         this.unfreeze('deleteBlock');
         this.updateBookVersion({major: true})
-        this.tc_loadBookTask();
+        this.tc_loadBookTask(block.bookid);
         this.getCurrentJobInfo();
         this.getTotalBookTasks();
         //this.refreshTmpl();
@@ -1819,7 +1819,7 @@ export default {
       this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
         if (this.meta._id && initBlocks.blocks && initBlocks.blocks.length) {
-          this.tc_loadBookTask()
+          this.tc_loadBookTask(this.meta._id)
           .then(()=>{
             this.loadPreparedBookDown(this.parlistO.idsArray(), 10).then(()=>{
               this.startId = this.parlistO.idsArray()[0];

@@ -52,6 +52,7 @@
             <legend>Description </legend>
             <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!allowMetadataEdit"></textarea>
           </fieldset>
+            <BookWorkflow v-if="adminOrLibrarian"></BookWorkflow>
           <fieldset class='Export' :disabled="isExporting || currentBook.demo_time < 0" v-if="isAllowExportAudio">
             <legend>Export </legend>
               
@@ -457,6 +458,7 @@ import access from '../../mixins/access.js'
 import { Languages } from "../../mixins/lang_config.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
 import BookAssignments from './details/BookAssignments';
+import BookWorkflow from './details/BookWorkflow';
 var BPromise = require('bluebird');
 
 export default {
@@ -475,7 +477,8 @@ export default {
     modal,
     accordion,
     panel,
-    BookAssignments
+    BookAssignments,
+    BookWorkflow
   },
 
   data () {
