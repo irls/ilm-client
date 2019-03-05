@@ -1563,57 +1563,39 @@ export default {
     },
 
     selSecNum (blockType, valKey, currVal) {
-      console.log('selSecNum', blockType, valKey, currVal);
+      //console.log('selSecNum', blockType, valKey, currVal);
       let updatePromises = [];
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let putBlockOpromise = [];
-          let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
+          let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
           let pBlock, oBlock;
 
-          idsArrayRange.forEach((blockId)=>{
-            pBlock = this.storeList.get(blockId);
-            //oBlock = this.storeListO.getBlock(blockId);
-            oBlock = { rid: this.storeListO.getRIdById(blockId) };
-
-            if (pBlock && pBlock.type == blockType) {
+          idsArrayRange.forEach((blockRid)=>{
+            oBlock = this.storeListO.get(blockRid);
+            if (oBlock && oBlock.type == blockType) {
               switch(valKey) {
-                  case 'secNum' : {
-                    if (currVal == 'mixed' || currVal === false) {
-                      if (pBlock.secVal) pBlock.secnum = pBlock.secVal;
-                      else pBlock.secnum = '';
-                      oBlock.isNumber = true;
-                    } else {
-                      pBlock.secVal = pBlock.secnum;
-                      pBlock.secnum = false;
-                      oBlock.isNumber = false;
-                    }
-                  } break;
                   case 'secHide' : {
                     if (currVal == 'mixed' || currVal === false) {
-                      pBlock.secHide = true;
                       oBlock.isHidden = true;
                     } else {
-                      pBlock.secHide = false;
                       oBlock.isHidden = false;
                     }
                   } break;
-                  case 'parNum' : {
+
+                  case 'secNum' : {
                     if (currVal == 'mixed' || currVal === false) {
-                      pBlock.parnum = '';
                       oBlock.isNumber = true;
                     } else {
-                      pBlock.parnum = false;
                       oBlock.isNumber = false;
                     }
                   } break;
-                  case 'parHide' : {
+
+                  case 'parNum' : {
                     if (currVal == 'mixed' || currVal === false) {
-                      pBlock.parHide = true;
-                      oBlock.isHidden = true;
+                      oBlock.isNumber = true;
                     } else {
-                      pBlock.parHide = false;
-                      oBlock.isHidden = false;
+                      oBlock.isNumber = false;
                     }
                   } break;
                   default : {
@@ -1621,24 +1603,17 @@ export default {
               };
 
               if (oBlock.rid) {
-                putBlockOpromise.push(this.putBlockO(oBlock));
-                this.storeListO.updBlockByRid(oBlock.rid, {
+                let upd = {
+                  rid: oBlock.rid,
                   isHidden: oBlock.isHidden,
                   isNumber: oBlock.isNumber
-                })
-              }
-
-              if (pBlock.isChanged || pBlock.isAudioChanged) {
-              } else {
-                pBlock.partUpdate = true;
-                updatePromises.push(this.putBlock(pBlock));
-
+                }
+                putBlockOpromise.push(this.putBlockO(upd));
               }
             }
-
           });
 
-          Promise.all([putBlockOpromise, updatePromises]).then((res)=>{
+          Promise.all([putBlockOpromise]).then((res)=>{
             if (valKey == 'secNum' || valKey == 'parNum') {
               let blockO = this.storeListO.getBlock(this.blockSelection.start._id);
               this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numbering, blockO.rid)
