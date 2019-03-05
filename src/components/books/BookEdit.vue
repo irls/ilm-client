@@ -1216,6 +1216,7 @@ export default {
                           });
                         this.refreshTmpl();
                         this.unfreeze('joinBlocks');
+                        this.getCurrentJobInfo();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
@@ -1347,6 +1348,7 @@ export default {
                           });
                         //this.refreshTmpl();
                         this.unfreeze('joinBlocks');
+                        this.getCurrentJobInfo();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
