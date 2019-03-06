@@ -82,7 +82,7 @@ export const store = new Vuex.Store({
     currentBookToc: {bookId: '', data: []},
     currentAudiobook: {},
 
-    bookFilters: {filter: '', language: '', importStatus: 'staging'},
+    bookFilters: {filter: '', language: '', importStatus: 'active'},
     editMode: 'Editor',
     allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
@@ -91,7 +91,7 @@ export const store = new Vuex.Store({
     API_URL: process.env.ILM_API + '/api/v1/',
     bookCollectionsAll: [],
     bookCollections: [],
-    collectionsFilter: {title: '', language: ''},
+    collectionsFilter: {title: '', language: '', importStatus: 'active'},
     currentCollection: {},
     currentCollectionFiles: { coverimg: false },
     currentCollectionId: false,
@@ -2382,6 +2382,7 @@ export const store = new Vuex.Store({
           if (state.currentBookMeta.bookid) {
             dispatch('tc_loadBookTask', state.currentBookMeta.bookid);
           }
+          dispatch('updateBooksList');
           return Promise.resolve();
         })
         .catch(err => {
