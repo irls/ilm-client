@@ -79,9 +79,33 @@ class BookBlocks {
   }
 
   idsArrayRange(startId, endId) {
-    let startIdx = this.listIds.indexOf(startId);
-    let endIdx = this.listIds.indexOf(endId);
+    let startIdx, endIdx;
+    if (startId.charAt(0) == '#') { // Orient RID
+      startIdx = this.listRIds.indexOf(startId)
+    } else {
+      startIdx = this.listIds.indexOf(startId)
+    }
+    if (endId.charAt(0) == '#') { // Orient RID
+      endIdx = this.listRIds.indexOf(endId)
+    } else {
+      endIdx = this.listIds.indexOf(endId)
+    }
     return this.listIds.slice(startIdx, endIdx+1);
+  }
+
+  ridsArrayRange(startId, endId) {
+    let startIdx, endIdx;
+    if (startId.charAt(0) == '#') { // Orient RID
+      startIdx = this.listRIds.indexOf(startId)
+    } else {
+      startIdx = this.listIds.indexOf(startId)
+    }
+    if (endId.charAt(0) == '#') { // Orient RID
+      endIdx = this.listRIds.indexOf(endId)
+    } else {
+      endIdx = this.listIds.indexOf(endId)
+    }
+    return this.listRIds.slice(startIdx, endIdx+1);
   }
 
   checkFirst() {
