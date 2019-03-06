@@ -1420,64 +1420,68 @@ export default {
       let nums = new Map();
 
       if (this.storeListO.getBlock(startId)) {
-        let idsArrayRange = this.storeListO.idsArrayRange(startId, endId);
-        idsArrayRange.forEach((blockId)=>{
+        let idsArrayRange = this.storeListO.ridsArrayRange(startId, endId);
+        idsArrayRange.forEach((blockRid)=>{
         //console.log('blockId', blockId);
 
-          let pBlock = this.storeList.get(blockId);
-          if (pBlock) {
-            if (!result.has(pBlock.type)) result.set(pBlock.type, new Map());
+          let oBlock = this.storeListO.get(blockRid);
 
-            for (let styleKey in this.blockTypes[pBlock.type]) {
-              if (!result.get(pBlock.type).has(styleKey)) result.get(pBlock.type).set(styleKey, new Map());
-              if (pBlock.classes[styleKey]) {
-                result.get(pBlock.type).get(styleKey).set(pBlock.classes[styleKey], true);
-              } else {
-                result.get(pBlock.type).get(styleKey).set('none', true);
-              }
-            }
+          if (oBlock) {
+            let pBlock = this.storeList.get(oBlock.blockid);
+            if (pBlock) {
+              if (!result.has(oBlock.type)) result.set(oBlock.type, new Map());
 
-            if (!nums.has(pBlock.type))
-              nums.set(pBlock.type, new Map([
-                ['secNum',  !(pBlock.secnum === false)],
-                ['secHide', !(pBlock.secHide === false)],
-                ['parNum',  !(pBlock.parnum === false)],
-                ['parHide', !(pBlock.parHide === false)],
-              ]));
-
-            //console.log('nums.get(pBlock.type)', nums.get(pBlock.type), !(pBlock.secnum === false));
-
-            if (nums.get(pBlock.type).get('secNum') !== 'mixed') {
-              if (pBlock.hasOwnProperty('secnum')) {
-                if (!(pBlock.secnum === false) !== nums.get(pBlock.type).get('secNum')) {
-                  nums.get(pBlock.type).set('secNum', 'mixed');
+              for (let styleKey in this.blockTypes[oBlock.type]) {
+                if (!result.get(oBlock.type).has(styleKey)) result.get(oBlock.type).set(styleKey, new Map());
+                if (pBlock.classes[styleKey]) {
+                  result.get(oBlock.type).get(styleKey).set(pBlock.classes[styleKey], true);
                 } else {
-                  nums.get(pBlock.type).set('secNum', !(pBlock.secnum === false));
+                  result.get(oBlock.type).get(styleKey).set('none', true);
                 }
-              } else {
-                nums.get(pBlock.type).set('secNum', false);
               }
-            }
-            if (nums.get(pBlock.type).get('secHide') !== 'mixed') {
-              if (pBlock.hasOwnProperty('secHide')) {
-                if (!(pBlock.secHide === false) !== nums.get(pBlock.type).get('secHide')) {
-                  nums.get(pBlock.type).set('secHide', 'mixed');
+
+              if (!nums.has(oBlock.type))
+                nums.set(oBlock.type, new Map([
+                  ['secNum',  !(oBlock.isNumber === false)],
+                  ['secHide', !(oBlock.isHidden === false)],
+                  ['parNum',  !(oBlock.isNumber === false)],
+                  ['parHide', !(oBlock.isHidden === false)],
+                ]));
+
+              //console.log('nums.get(pBlock.type)', nums.get(pBlock.type), !(pBlock.secnum === false));
+
+              if (nums.get(oBlock.type).get('secNum') !== 'mixed') {
+                if (oBlock.hasOwnProperty('secnum')) {
+                  if (!(oBlock.isNumber === false) !== nums.get(oBlock.type).get('secNum')) {
+                    nums.get(oBlock.type).set('secNum', 'mixed');
+                  } else {
+                    nums.get(oBlock.type).set('secNum', !(oBlock.isNumber === false));
+                  }
                 } else {
-                  nums.get(pBlock.type).set('secHide', !(pBlock.secHide === false));
+                  nums.get(oBlock.type).set('secNum', false);
                 }
-              } else {
-                nums.get(pBlock.type).set('secHide', false);
               }
-            }
-            if (nums.get(pBlock.type).get('parNum') !== 'mixed') {
-              if (pBlock.hasOwnProperty('parnum')) {
-                if (!(pBlock.parnum === false) !== nums.get(pBlock.type).get('parNum')) {
-                  nums.get(pBlock.type).set('parNum', 'mixed');
+              if (nums.get(oBlock.type).get('secHide') !== 'mixed') {
+                if (oBlock.hasOwnProperty('isHidden')) {
+                  if (!(oBlock.isHidden === false) !== nums.get(oBlock.type).get('secHide')) {
+                    nums.get(oBlock.type).set('secHide', 'mixed');
+                  } else {
+                    nums.get(oBlock.type).set('secHide', !(oBlock.isHidden === false));
+                  }
                 } else {
-                  nums.get(pBlock.type).set('parNum', !(pBlock.parnum === false));
+                  nums.get(oBlock.type).set('secHide', false);
                 }
-              } else {
-                nums.get(pBlock.type).set('parNum', false);
+              }
+              if (nums.get(oBlock.type).get('parNum') !== 'mixed') {
+                if (oBlock.hasOwnProperty('isNumber')) {
+                  if (!(oBlock.isNumber === false) !== nums.get(oBlock.type).get('parNum')) {
+                    nums.get(oBlock.type).set('parNum', 'mixed');
+                  } else {
+                    nums.get(oBlock.type).set('parNum', !(oBlock.isNumber === false));
+                  }
+                } else {
+                  nums.get(oBlock.type).set('parNum', false);
+                }
               }
             }
           }
@@ -1569,7 +1573,7 @@ export default {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let putBlockOpromise = [];
           let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
-          let pBlock, oBlock;
+          let oBlock;
 
           idsArrayRange.forEach((blockRid)=>{
             oBlock = this.storeListO.get(blockRid);
