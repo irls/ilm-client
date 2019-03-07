@@ -50,7 +50,7 @@
               ></BookAssignments>
           <fieldset class='description brief'>
             <legend>Description </legend>
-            <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian"></textarea>
+            <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
           </fieldset>
           <fieldset class='Export' :disabled="isExporting || currentBook.demo_time < 0" v-if="isAllowExportAudio">
             <legend>Export </legend>

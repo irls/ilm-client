@@ -3,16 +3,16 @@
     <div v-for="counter in tasks_counter">
       <div v-if="counter.data.tasks.length > 0" class="counters-container">
         <div class="counter-executor">
-          <span v-if="counter.key == 'editor'">Editing:</span>
-          <span v-if="counter.key == 'narrator'">Narrating:</span>
-          <span v-if="counter.key == 'proofer'">Proofreader:</span>
+          <span v-if="counter.key == 'editor'"><i>Editor:</i></span>
+          <span v-if="counter.key == 'narrator'"><i>Narrator:</i></span>
+          <span v-if="counter.key == 'proofer'"><i>Proofreader:</i></span>
           <span>{{counter.data.executor}}</span>
         </div>
         <table class="counters">
           <thead>
             <th>Task</th>
             <th>Status</th>
-            <th v-if="_is('editor', true) || adminOrLibrarian">Action</th>
+            <th v-if="counter.key == 'editor'">Action</th>
           </thead>
           <tbody>
             <tr v-for="task in counter.data.tasks">
@@ -31,12 +31,12 @@
                   {{task.title}}
                 </div>
               </td>
-              <td :class="[{'go-to-block': task.blockid != null && !task.complete}, 'task-counter']" v-on:click="goToBlockCheck(task.blockid, counter.key)">
+              <td :class="[{'go-to-block': task.blockid != null && !task.complete}, 'task-counter', '-' + counter.key]" v-on:click="goToBlockCheck(task.blockid, counter.key)">
                 <span v-if="task.complete" :class="[{'ready': task.ready}]">Closed</span>
                 <span v-else :class="[{'ready': task.ready}]">Open</span>
                 <span v-if="!task.complete && typeof task.count !== 'undefined'">({{task.count}})</span>
               </td>
-              <td class="task-action" v-if="_is('editor', true) || adminOrLibrarian">
+              <td class="task-action" v-if="counter.key == 'editor'">
                 <template v-for="action in task.actions">
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
@@ -187,8 +187,13 @@
         if (this.tc_allowToggleMetaMastering()) {
           if (!this.currentBookMeta.masteringRequired) {
             this.$root.$emit('show-modal', {
-              title: 'Define the audio as unmastered?',
-              text: '',
+              title: ``,
+              text: `<ol>
+<li>The book is edited, aligned with unmastered audio and proofread.</li>
+<li>The audio from the book is exported, mastered and imported back in ILM.</li>
+<li>The book is realigned with the mastered audio and proofread.</li>
+</ol>
+<div class="bottom">Define the audio as unmastered?</div>`,
               buttons: [
                 {
                   title: 'CANCEL',
@@ -205,7 +210,7 @@
                   'class': 'btn btn-primary'
                 }
               ],
-              class: ['align-modal']
+              class: ['align-modal', 'master-switcher-warning']
             });
           } else {
             this.updateBookMeta({'masteringRequired': !this.currentBookMeta.masteringRequired})
@@ -262,7 +267,10 @@
             cursor: pointer;
           }
           &.task-counter {
-            width: 80px;
+            &.-editor {
+              width: 80px;
+            }
+            width: 210px;
           }
           &.task-type {
             &.go-to-block, span.go-to-block {
@@ -272,6 +280,7 @@
             }
           }
           &.task-action {
+            width: 130px;
             .btn {
                 padding: 3px 12px;
             }
@@ -290,5 +299,17 @@
       background-repeat: no-repeat;
       background-position: center;
       background-color: #8080807d;
+  }
+  .master-switcher-warning {
+    div {
+      text-align: center;
+    }
+  }
+</style>
+<style lang="less">
+  .master-switcher-warning {
+    div.bottom {
+      text-align: center;
+    }
   }
 </style>
