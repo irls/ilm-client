@@ -78,7 +78,7 @@ export default {
           path: 'pubType'
         }
       ],
-      idField: 'bookid',
+      idField: 'alias',
       selectedBooks: []
     }
   },
@@ -96,7 +96,7 @@ export default {
         .filter(book => (this.bookFilters.language == '' || book.language === this.bookFilters.language))
         .filter(book => this.bookFilters.importStatus ? book.job_status === this.bookFilters.importStatus : true)
         .filter(book => {
-          let str = `${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}`.toLowerCase()
+          let str = `${book.title} ${book.alias} ${book.category} ${book.description} ${book.subtitle} ${book.author}`.toLowerCase()
           let find = this.bookFilters.filter.toLowerCase().trim()
           return (str.indexOf(find) > -1)
         })
@@ -131,9 +131,9 @@ export default {
     ...mapActions(['updateBooksList']),
     // A row in the table has been clicked. Returns Vue data object bound to the row.
     rowClick (ev) {
-      let bookid = ev.bookid
-      if (bookid) {
-        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
+      let bookalias = ev.alias
+      if (bookalias) {
+        this.$router.replace({ path: '/books/' + bookalias }) // this triggers update to loadBook
       }
     }
   }

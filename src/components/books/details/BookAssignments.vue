@@ -141,7 +141,7 @@
           ].indexOf(this.$route.name) !== -1)) {
             return this.goToBlock(blockid);
           } else {
-            let params = {params: {bookid: this.currentBookMeta.bookid, block: blockid}};
+            let params = {params: {bookid: this.currentBookMeta.alias, block: blockid}};
             params.name = role === 'narrator' ? 'BookNarrate' : 'BookEdit';
             if (this.currentCollectionId) {
               params.name = role === 'narrator' ? 'CollectionBookNarrate' : 'CollectionBookEdit';

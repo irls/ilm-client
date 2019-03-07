@@ -59,7 +59,7 @@
                     <i class="fa fa-file-audio-o"></i>Import audio
                   </button>
                 </div>
-                <router-link v-else :to="bookUrl(job.bookid, task)"><a>{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a></router-link>
+                <router-link v-else :to="bookUrl(job.meta.alias, task)"><a>{{job.meta.alias}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a></router-link>
               </div>
             </div>
           </div>

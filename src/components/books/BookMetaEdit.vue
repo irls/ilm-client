@@ -95,7 +95,7 @@
 
                 <tr class='bookid'>
                   <td>Book Id</td>
-                  <td class='disabled'>{{currentBook.bookid}}</td>
+                  <td class='disabled'>{{currentBook.alias}}</td>
                 </tr>
 
                 <tr class="extid">
