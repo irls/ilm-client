@@ -100,7 +100,7 @@ export default {
       }
     },
     editBook () {
-      this.$router.push('/books/' + this.$store.state.currentBookMeta.alias + '/edit')
+      this.$router.push('/books/' + this.$store.state.currentBookMeta._id + '/edit')
     },
     importBook () {
       console.log('event ok')

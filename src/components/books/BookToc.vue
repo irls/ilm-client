@@ -55,17 +55,18 @@ export default {
 
   data () {
     return {
+      currBookId: this.bookId,
       loading: false
     }
   },
 
   props: [
-    
+    'bookId',
   ],
 
 
   computed: {
-    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc', 'currentBookid'])
+    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc'])
   },
 
   methods: {
@@ -90,7 +91,7 @@ export default {
         return false;
       }
       this.loading = true;
-      this.loadBookToc({bookId: this.currentBookid, isWait: isWait})
+      this.loadBookToc({bookId: this.currBookId, isWait: isWait})
       .then((res)=>{
         this.loading = false;
         this.unfreeze('loadBookToc');
@@ -109,10 +110,13 @@ export default {
   },
 
   watch: {
-    'currentBookid' () {
+    '$route' () {
       //console.log('$route', this.currBookId, this.$route.params.bookid);
       if (this.$route.params.hasOwnProperty('bookid')) {
-        this.loadBookTocProxy();
+        if (this.currBookId !== this.$route.params.bookid) {
+          this.currBookId = this.$route.params.bookid;
+          this.loadBookTocProxy();
+        }
       }
     }
   },
