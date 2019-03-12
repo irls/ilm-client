@@ -273,7 +273,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks', 'insertBlock', 'blocksJoin', 'removeBlock']),
 
     test(ev) {
         console.log('test', ev);
@@ -731,9 +731,6 @@ export default {
     insertBlockBelow: function (block) {
       alert('Inserting new Block after '+block.id)
     },
-    removeBlock: function(block) {
-      alert('Merging block into '+block.id)
-    },
     editBlockId: function(block) {
       alert('Editing block id '+block.id)
     },
@@ -933,12 +930,10 @@ export default {
     insertBlockBefore(block, block_Idx) {
       this.freeze('insertBlockBefore');
       let newBlock = this.createEmptyBlock(block.bookid, block._id).clean();
-      let api_url = this.API_URL + 'book/block';
-      let api = this.$store.state.auth.getHttp();
-      api.post(api_url, {
-        block_id: block.blockid,
+      this.insertBlock({
+        blockid: block.blockid,
         direction: 'before',
-        block: newBlock
+        newBlock: newBlock
       })
         .then((response)=>{
           //this.setBlockSelection({start: {}, end: {}});
@@ -979,12 +974,10 @@ export default {
       //this.insertBlock(block_id, 'after');
       this.freeze('insertBlockAfter');
       let newBlock = this.createEmptyBlock(block.bookid, block.chainid).clean();
-      let api_url = this.API_URL + 'book/block';
-      let api = this.$store.state.auth.getHttp();
-      api.post(api_url, {
-        block_id: block.blockid,
+      this.insertBlock({
+        blockid: block.blockid,
         direction: 'after',
-        block: newBlock
+        newBlock: newBlock
       })
         .then((response)=>{
           //this.setBlockSelection({start: {}, end: {}});
@@ -1045,9 +1038,7 @@ export default {
     deleteBlock(block, block_Idx) {
       //console.log('deleteBlock', block._id);
       this.freeze('deleteBlock');
-      let api_url = this.API_URL + 'book/block/' + block._id;
-      let api = this.$store.state.auth.getHttp();
-      api.delete(api_url, {})
+      this.removeBlock(block._id)
       .then((response)=>{
         //this.setBlockSelection({start: {}, end: {}});
         if (response.data) {
@@ -1082,9 +1073,6 @@ export default {
 
     },
     joinBlocks(block, block_Idx, direction) {
-
-      let api_url = this.API_URL + 'book/block_join/';
-      let api = this.$store.state.auth.getHttp();
 
       block = block || this.doJoinBlocks.block;
       direction = direction || this.doJoinBlocks.direction;
@@ -1191,7 +1179,7 @@ export default {
                       this.doJoinBlocks.show = false;
                       this.doJoinBlocks.showAudio = false;
                       this.doJoinBlocks.block = {};
-                      return api.post(api_url, {
+                      return this.blocksJoin({
                         resultBlock_id: blockBefore.blockid,
                         donorBlock_id: block.blockid
                       })
@@ -1322,7 +1310,7 @@ export default {
                       this.doJoinBlocks.show = false;
                       this.doJoinBlocks.showAudio = false;
                       this.doJoinBlocks.block = {};
-                      return api.post(api_url, {
+                      return this.blocksJoin({
                         resultBlock_id: block.blockid,
                         donorBlock_id: blockAfter.blockid
                       })

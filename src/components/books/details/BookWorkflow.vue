@@ -1,17 +1,22 @@
 <template>
   <fieldset class="job-workflow">
     <legend>Workflow</legend>
-    <div v-if="archiveInProcess" class="preloader-small"></div>
-    <template v-else>
-      <div v-if="status == 'active'">
-        <div class="status-name">{{statusName}}</div>
-        <button class="btn btn-primary" v-on:click="archive()">Archive</button>
-      </div>
-      <div v-else-if="status == 'archived'">
-        <div class="status-name">{{statusName}}: {{archived}}</div>
-        <button class="btn btn-primary" v-on:click="archive()">Unarchive</button>
-      </div>
+    <template v-if="!currentJobInfo.published">
+      <div v-if="archiveInProcess" class="preloader-small"></div>
+      <template v-else>
+        <div v-if="status == 'active'">
+          <div class="status-name">{{statusName}}</div>
+          <button class="btn btn-primary" v-on:click="archive()">Archive</button>
+        </div>
+        <div v-else-if="status == 'archived'">
+          <div class="status-name">{{statusName}}: {{archived}}</div>
+          <button class="btn btn-primary" v-on:click="archive()">Unarchive</button>
+        </div>
+      </template>
     </template>
+    <div v-else class="status-name">
+      {{statusName}}
+    </div>
   </fieldset>
 </template>
 <script>

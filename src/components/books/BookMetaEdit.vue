@@ -52,7 +52,9 @@
             <legend>Description </legend>
             <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!allowMetadataEdit"></textarea>
           </fieldset>
-            <BookWorkflow v-if="adminOrLibrarian"></BookWorkflow>
+            <BookWorkflow 
+              v-if="adminOrLibrarian"
+              ></BookWorkflow>
           <fieldset class='Export' :disabled="isExporting || currentBook.demo_time < 0" v-if="isAllowExportAudio">
             <legend>Export </legend>
               
@@ -78,7 +80,7 @@
                 Status #{{ publicationStatus }}
               </div>
               <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
-              <div v-if="allowPublishCurrentBook">
+              <div v-if="allowPublishCurrentBook && currentBookMeta.job_status === 'active'">
                 <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
                 <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
                 <span v-if="isPublishing" class="align-preloader -small"></span>

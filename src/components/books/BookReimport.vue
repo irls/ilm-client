@@ -172,6 +172,7 @@
           } else {
             // not sure what we should be doing here
             vu_this.formReset()
+            vu_this.closeForm(true)
           }
         }).catch((err) => {
           console.log(err)

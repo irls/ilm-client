@@ -83,7 +83,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters']),
+    ...mapGetters(['bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters', 'jobStatusError', 'adminOrLibrarian']),
   },
 
   watch: {
@@ -98,6 +98,34 @@ export default {
         } else if (this.metaVisible && !this.currentBookMeta._id) {
           this.metaVisible = false;
           this.metaAvailable = false;
+        }
+      }
+    },
+    'jobStatusError': {
+      handler(val) {
+        if (val) {
+          this.tc_loadBookTask(this.currentBookMeta.bookid);
+          this.getCurrentJobInfo();
+          this.getTotalBookTasks();
+          this.showModal({
+            title: 'Book preparation is stopped. Further modifications are not allowed',
+            text: '',
+            buttons: [
+              {
+                title: 'OK',
+                handler: () => {
+                  this.$store.commit('set_job_status_error', '');
+                  if (!this.adminOrLibrarian) {
+                    this.$router.push({name: 'Assignments'});
+                  } else {
+                    this.hideModal();
+                  }
+                },
+                'class': 'btn btn-primary'
+              }
+            ],
+            class: ['align-modal']
+          });
         }
       }
     }
@@ -177,7 +205,7 @@ export default {
       return this.$store.state.currentBookid
     },
 
-    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection'])
+    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks'])
   },
 
   destroyed: function () {
