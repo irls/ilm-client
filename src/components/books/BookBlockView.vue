@@ -435,7 +435,7 @@
                     </template>
                   </div>
                   <div class="table-cell -audio -right">
-                    <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && (isEditor && tc_isShowEdit(block._id))"> <!--&& !isAudioChanged"-->
+                    <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && ((_is('editor', true) || adminOrLibrarian) && tc_isShowEdit(block._id))"> <!--&& !isAudioChanged"-->
                       <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor(footnote, ftnIdx, $event)"></i>
                     </template>
                     <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
@@ -1741,7 +1741,7 @@ export default {
       },
 
       assembleBlockAudioEdit: function(footnoteIdx = null) {// to save changes from audio editor
-        if ((this.blockAudio.map && this.blockAudio.src) || (footnoteIdx && this.audioEditFootnote.footnote)) {
+        if ((this.blockAudio.map && this.blockAudio.src) || (typeof footnoteIdx !== 'undefined' && footnoteIdx !== null && this.audioEditFootnote.footnote)) {
           let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
           let api = this.$store.state.auth.getHttp();
           let data = {};
@@ -2490,12 +2490,12 @@ export default {
         }
       },
       doReAlign(footnoteIdx = null) {
-        if (this.block.audiosrc) {
+        if ((this.block.audiosrc) || (typeof footnoteIdx !== 'undefined' && footnoteIdx !== null && this.audioEditFootnote.footnote)) {
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/realign';
         let api = this.$store.state.auth.getHttp();
         let formData = new FormData();
         if (footnoteIdx !== null){
-          api_url = this.API_URL + 'book/block/' + this.block._id + '/footnote/' + footnoteIdx + 'realign'
+          api_url = this.API_URL + 'book/block/' + this.block._id + '/footnote/' + footnoteIdx + '/realign'
           formData.append('footnote_idx', footnoteIdx);
           formData.append('audio', [this.block.getAudiosrcFootnote(footnoteIdx, false, false)]);
         } else {
@@ -2819,7 +2819,7 @@ export default {
       evFromAudioeditorSaveAndRealign (blockId) {
         if (blockId == this.check_id) {
           this.audStop();
-          this.doReAlign()
+          this.doReAlign(this.footnoteIdx)
             .then(() => {
               this.assembleBlockAudioEdit(this.footnoteIdx);
               this.flushChanges();
