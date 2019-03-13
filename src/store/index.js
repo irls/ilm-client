@@ -1193,10 +1193,7 @@ export const store = new Vuex.Store({
         }).catch((err)=>{
           state.loadBookWait = null;
           //console.log('metaDB.get Error: ', err);
-          if (err && err.job_status_error) {
-            commit('set_job_status_error', err.job_status_error);
-          }
-          return Promise.reject(err);
+          return dispatch('checkError', err);
         })
       } else {
         commit('SET_CURRENTBOOK_META', false);
@@ -1317,10 +1314,7 @@ export const store = new Vuex.Store({
           }
         })
         .catch(err => {
-          if (err && err.response && err.response.data && err.response.data.job_status_error) {
-            commit('set_job_status_error', err.response.data.job_status_error);
-          }
-          return Promise.reject(err);
+          return dispatch('checkError', err);
         })
     },
 
@@ -1626,10 +1620,7 @@ export const store = new Vuex.Store({
               return Promise.resolve(response.data);
             })
             .catch(err => {
-              if (err && err.response && err.response.data && err.response.data.job_status_error) {
-                commit('set_job_status_error', err.response.data.job_status_error);
-              }
-              console.log(err);
+              dispatch('checkError', err);
             });
     },
 
@@ -2400,12 +2391,16 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         })
     },
-    setJobStatus({state, dispatch}, status) {
+    setJobStatus({state, dispatch, commit}, status) {
       if (!state.currentJobInfo.id) {
         return Promise.reject({error: 'Book is not selected'});
       }
       return axios.post(state.API_URL + '/jobs/' + encodeURIComponent(state.currentJobInfo.id) + '/status/' + status)
         .then(() => {
+          if (state.currentBookMeta.bookid) {
+            state.currentBookMeta.job_status = status;
+            commit('SET_CURRENTBOOK_FILTER', {importStatus: status})
+          }
           dispatch('updateBooksList');
           if (state.currentBookMeta.bookid) {
             dispatch('tc_loadBookTask', state.currentBookMeta.bookid);
@@ -2421,7 +2416,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         })
     },
-    insertBlock({state, commit}, data) {
+    insertBlock({state, commit, dispatch}, data) {
       return axios.post(state.API_URL + 'book/block', {
           block_id: data.blockid,
           direction: data.direction,
@@ -2438,39 +2433,52 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    blocksJoin({state, commit}, data) {
+    blocksJoin({state, commit, dispatch}, data) {
       return axios.post(state.API_URL + 'book/block_join/', {
           resultBlock_id: data.resultBlock_id,
           donorBlock_id: data.donorBlock_id
         })
         .then(response => {
-          if (response && response.data && response.data.job_status_error) {
-            commit('set_job_status_error', response.data.job_status_error);
-            return Promise.reject(response);
-          } else {
-            return Promise.resolve(response);
-          }
+          return dispatch('checkResponse', response);
         })
         .catch(err => {
           return Promise.reject(err);
         })
     },
-    removeBlock({state, commit}, blockid) {
+    removeBlock({state, commit, dispatch}, blockid) {
       return axios.delete(state.API_URL + 'book/block/' + blockid)
         .then(response => {
-          if (response && response.data && response.data.job_status_error) {
-            commit('set_job_status_error', response.data.job_status_error);
-            return Promise.reject(response);
-          } else {
-            return Promise.resolve(response);
-          }
+          return dispatch('checkResponse', response);
         })
         .catch(err => {
-          if (err && err.response && err.response.data && err.response.data.job_status_error) {
-            commit('set_job_status_error', err.response.data.job_status_error);
-          }
-          return Promise.reject(err);
+          return dispatch('checkError', err);
         })
+    },
+    saveNarrated({state, commit, dispatch}, data) {
+      return axios.post(state.API_URL + 'book/block/' + data.blockid + '/audio', data, {})
+        .then(response => {
+          //console.log(response);
+          return Promise.resolve(response);
+        })
+        .catch(err => {
+          return dispatch('checkError', err);
+        });
+    },
+    checkError({state, commit}, err) {
+      if (err && err.response && err.response.data && err.response.data.job_status_error) {
+        commit('set_job_status_error', err.response.data.job_status_error);
+      } else if (err && err.job_status_error) {
+        commit('set_job_status_error', err.job_status_error);
+      }
+      return Promise.reject(err);
+    },
+    checkResponse({state, commit}, response) {
+      if (response && response.data && response.data.job_status_error) {
+        commit('set_job_status_error', response.data.job_status_error);
+        return Promise.reject(response);
+      } else {
+        return Promise.resolve(response);
+      }
     }
   }
 })

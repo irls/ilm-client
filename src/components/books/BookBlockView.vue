@@ -1196,7 +1196,9 @@ export default {
         'tc_loadBookTask',
         'getCurrentJobInfo',
         'getTotalBookTasks',
-        'updateBookVersion'
+        'updateBookVersion',
+        'saveNarrated',
+        'checkError'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1799,7 +1801,10 @@ export default {
                 }
               }
             })
-            .catch(err => BPromise.reject(err));
+            .catch(err => {
+              this.checkError(err);
+              BPromise.reject(err)
+            });
         } else {
           return BPromise.reject();
         }
@@ -2013,6 +2018,7 @@ export default {
             }
           })
           .catch(err => {
+            this.checkError(err);
             this.isUpdating = false;
           });
       },
@@ -2055,6 +2061,7 @@ export default {
             }
           })
           .catch(err => {
+            this.checkError(err);
             this.isUpdating = false;
           });
       },
@@ -2456,11 +2463,12 @@ export default {
             if (start_next) {
               self.stopRecordingAndNext();
             }
-            let formData = new FormData();
-            formData.append('audio', dataURL.split(',').pop());
-            formData.append('position', self.reRecordPosition);
-            formData.append('isTemp', self.isAudioChanged);
-            api.post(api_url, formData, {})
+            self.saveNarrated({
+              'audio': dataURL.split(',').pop(),
+              'position': self.reRecordPosition,
+              'isTemp': self.isAudioChanged,
+              'blockid': self.block.blockid
+            })
               .then(response => {
                 self.isUpdating = false;
                 if (response.status == 200) {

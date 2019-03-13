@@ -119,6 +119,9 @@ export default {
                     this.$router.push({name: 'Assignments'});
                   } else {
                     this.hideModal();
+                    if (this.$route && ['BookNarrate'].indexOf(this.$route.name) !== -1) {
+                      this.$router.push({name: 'BookEdit'});
+                    }
                   }
                 },
                 'class': 'btn btn-primary'

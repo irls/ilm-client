@@ -49,6 +49,7 @@ class liveDB {
     if (this.keys[className]) {
       //console.log(socket)
       socket.emit('stop-watch', {class: className, key: this.keys[className], subscriber: this.subscriber_id});
+      delete this.keys[className];
       //socket.close();
     }
   }
