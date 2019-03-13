@@ -1171,6 +1171,7 @@ export const store = new Vuex.Store({
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);
+          commit('SET_CURRENTBOOK_FILTER', {importStatus: answer.job_status});
           //dispatch('loadBookToc', {bookId: book_id});
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
@@ -1180,15 +1181,23 @@ export const store = new Vuex.Store({
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
           })
           state.liveDB.stopWatch('metaV');
+          state.liveDB.stopWatch('job');
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid) {
-              if (data.meta.job_status != 'active' && state.currentBookMeta.job_status == 'active') {
-                commit('set_job_status_error', data.meta.job_status);
-              }
+              
               commit('SET_CURRENTBOOK_META', data.meta)
               dispatch('getTotalBookTasks');
             }
           });
+          state.liveDB.startWatch(book_id + '-job', 'job', {bookid: book_id}, (data) => {
+            if (data && data.job && data.job.bookid === state.currentBookMeta.bookid) {
+              if (data.job.status != 'active' && state.currentBookMeta.job_status == 'active') {
+                console.log('SET STATUS BY LIVE S', state.currentBookMeta.job_status)
+                commit('set_job_status_error', data.job.status);
+                dispatch('tc_loadBookTask', state.currentBookMeta.bookid);
+              }
+            }
+          })
           return Promise.resolve(answer);
         }).catch((err)=>{
           state.loadBookWait = null;
@@ -2395,6 +2404,8 @@ export const store = new Vuex.Store({
       if (!state.currentJobInfo.id) {
         return Promise.reject({error: 'Book is not selected'});
       }
+      let oldStatus = state.currentBookMeta.job_status;
+      state.currentBookMeta.job_status = status;
       return axios.post(state.API_URL + '/jobs/' + encodeURIComponent(state.currentJobInfo.id) + '/status/' + status)
         .then(() => {
           if (state.currentBookMeta.bookid) {
@@ -2413,6 +2424,7 @@ export const store = new Vuex.Store({
           return Promise.resolve();
         })
         .catch(err => {
+          state.currentBookMeta.job_status = oldStatus;
           return Promise.reject(err);
         })
     },
