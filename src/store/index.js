@@ -1025,6 +1025,7 @@ export const store = new Vuex.Store({
         .then((answer) => {
           commit('SET_BOOKLIST', answer.data.books)
           //dispatch('tc_loadBookTask')
+          return Promise.resolve();
         })
     },
 
@@ -2406,11 +2407,15 @@ export const store = new Vuex.Store({
       }
       let oldStatus = state.currentBookMeta.job_status;
       state.currentBookMeta.job_status = status;
-      return axios.post(state.API_URL + '/jobs/' + encodeURIComponent(state.currentJobInfo.id) + '/status/' + status)
+      return axios.post(state.API_URL + 'jobs/' + encodeURIComponent(state.currentJobInfo.id) + '/status/' + status)
         .then(() => {
           if (state.currentBookMeta.bookid) {
             state.currentBookMeta.job_status = status;
-            commit('SET_CURRENTBOOK_FILTER', {importStatus: status})
+            if (state.currentCollectionId) {
+              commit('SET_COLLECTIONS_FILTER', {importStatus: status});
+            } else {
+              commit('SET_CURRENTBOOK_FILTER', {importStatus: status})
+            }
           }
           dispatch('updateBooksList');
           if (state.currentBookMeta.bookid) {

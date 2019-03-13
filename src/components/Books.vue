@@ -116,7 +116,22 @@ export default {
                 handler: () => {
                   this.$store.commit('set_job_status_error', '');
                   if (!this.adminOrLibrarian) {
-                    this.$router.push({name: 'Assignments'});
+                    if (this.$route && ['BooksGrid', 'CollectionBook'].indexOf(this.$route.name) !== -1) {
+                      this.updateBooksList()
+                        .then(() => {
+                          switch(this.$route.name) {
+                            case 'BooksGrid':
+                              this.$router.push('/books');
+                              break;
+                            case 'CollectionBook':
+                              this.$router.push({name: 'Collection', params: {collectionid: this.$route.params.collectionid}});
+                              break;
+                          }
+                          this.hideModal();
+                        });
+                    } else {
+                      this.$router.push({name: 'Assignments'});
+                    }
                   } else {
                     this.hideModal();
                     if (this.$route && ['BookNarrate'].indexOf(this.$route.name) !== -1) {

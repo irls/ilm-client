@@ -54,6 +54,7 @@
           </fieldset>
             <BookWorkflow 
               v-if="adminOrLibrarian"
+              :isPublishingQueue="isPublishingQueue"
               ></BookWorkflow>
           <fieldset class='Export' :disabled="isExporting || currentBook.demo_time < 0" v-if="isAllowExportAudio">
             <legend>Export </legend>

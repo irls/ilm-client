@@ -1,7 +1,7 @@
 <template>
   <fieldset class="job-workflow">
     <legend>Workflow</legend>
-    <template v-if="!currentJobInfo.published">
+    <template v-if="!currentJobInfo.published && !isPublishingQueue">
       <div v-if="archiveInProcess" class="preloader-small"></div>
       <template v-else>
         <div v-if="status == 'active'">
@@ -28,6 +28,7 @@
         archiveInProcess: false
       }
     },
+    props: ['isPublishingQueue'],
     computed: {
       status: {
         get: function() {
