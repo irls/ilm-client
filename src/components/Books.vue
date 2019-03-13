@@ -83,7 +83,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters']),
+    ...mapGetters(['bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters', 'jobStatusError', 'adminOrLibrarian']),
   },
 
   watch: {
@@ -98,6 +98,52 @@ export default {
         } else if (this.metaVisible && !this.currentBookMeta._id) {
           this.metaVisible = false;
           this.metaAvailable = false;
+        }
+      }
+    },
+    'jobStatusError': {
+      handler(val) {
+        if (val) {
+          this.tc_loadBookTask(this.currentBookMeta.bookid);
+          this.getCurrentJobInfo();
+          this.getTotalBookTasks();
+          this.showModal({
+            title: 'Book preparation is stopped. Further modifications are not allowed',
+            text: '',
+            buttons: [
+              {
+                title: 'OK',
+                handler: () => {
+                  this.$store.commit('set_job_status_error', '');
+                  if (!this.adminOrLibrarian) {
+                    if (this.$route && ['BooksGrid', 'CollectionBook'].indexOf(this.$route.name) !== -1) {
+                      this.updateBooksList()
+                        .then(() => {
+                          switch(this.$route.name) {
+                            case 'BooksGrid':
+                              this.$router.push('/books');
+                              break;
+                            case 'CollectionBook':
+                              this.$router.push({name: 'Collection', params: {collectionid: this.$route.params.collectionid}});
+                              break;
+                          }
+                          this.hideModal();
+                        });
+                    } else {
+                      this.$router.push({name: 'Assignments'});
+                    }
+                  } else {
+                    this.hideModal();
+                    if (this.$route && ['BookNarrate'].indexOf(this.$route.name) !== -1) {
+                      this.$router.push({name: 'BookEdit'});
+                    }
+                  }
+                },
+                'class': 'btn btn-primary'
+              }
+            ],
+            class: ['align-modal']
+          });
         }
       }
     }
@@ -177,7 +223,7 @@ export default {
       return this.$store.state.currentBookid
     },
 
-    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection'])
+    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks'])
   },
 
   destroyed: function () {

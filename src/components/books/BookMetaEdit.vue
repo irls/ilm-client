@@ -42,6 +42,10 @@
             <legend>Description </legend>
             <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
           </fieldset>
+            <BookWorkflow 
+              v-if="adminOrLibrarian"
+              :isPublishingQueue="isPublishingQueue"
+              ></BookWorkflow>
           <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
             <legend>Export </legend>
               <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
@@ -67,7 +71,7 @@
                 Status #{{ publicationStatus }}
               </div>
               <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
-              <div v-if="allowPublishCurrentBook">
+              <div v-if="allowPublishCurrentBook && currentBookMeta.job_status === 'active'">
                 <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
                 <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
                 <span v-if="isPublishing" class="align-preloader -small"></span>
@@ -463,6 +467,7 @@ import { Languages } from "../../mixins/lang_config.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments from './details/BookAssignments';
+import BookWorkflow from './details/BookWorkflow';
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -483,7 +488,8 @@ export default {
     modal,
     accordion,
     panel,
-    BookAssignments
+    BookAssignments,
+    BookWorkflow
   },
 
   data () {

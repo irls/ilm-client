@@ -77,6 +77,7 @@ export default new Router({
       component: Libraries
     },
     {
+      name: 'Assignments',
       path: '/assignments',
       component: Tasks
     },

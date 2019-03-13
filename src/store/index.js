@@ -82,7 +82,7 @@ export const store = new Vuex.Store({
     currentBookToc: {bookId: '', data: []},
     currentAudiobook: {},
 
-    bookFilters: {filter: '', language: '', importStatus: 'staging'},
+    bookFilters: {filter: '', language: '', importStatus: 'active'},
     editMode: 'Editor',
     allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
@@ -91,7 +91,7 @@ export const store = new Vuex.Store({
     API_URL: process.env.ILM_API + '/api/v1/',
     bookCollectionsAll: [],
     bookCollections: [],
-    collectionsFilter: {title: '', language: ''},
+    collectionsFilter: {title: '', language: '', importStatus: 'active'},
     currentCollection: {},
     currentCollectionFiles: { coverimg: false },
     currentCollectionId: false,
@@ -140,7 +140,11 @@ export const store = new Vuex.Store({
       tasks_counter: [],
       executors: {editor: null, proofer: null, narrator: null},
       description: '',
-      id: null
+      id: null,
+      workflow: {
+        status: null,
+        archived: null
+      }
     },
     taskTypes: {tasks: [], categories: []},
     liveDB: new liveDB(),
@@ -161,7 +165,8 @@ export const store = new Vuex.Store({
     loadBookWait: null,
     loadBookTaskWait: null,
     jobInfoRequest: null,
-    jobInfoTimer: null
+    jobInfoTimer: null,
+    jobStatusError: ''
   },
 
   getters: {
@@ -270,7 +275,8 @@ export const store = new Vuex.Store({
     taskTypes: state => state.taskTypes,
     liveDB: state => state.liveDB,
     bookCategories: state => state.bookCategories,
-    tasks_counter: state => state.currentJobInfo.tasks_counter
+    tasks_counter: state => state.currentJobInfo.tasks_counter,
+    jobStatusError: state => state.jobStatusError
   },
 
   mutations: {
@@ -771,6 +777,9 @@ export const store = new Vuex.Store({
       state.alignCounter.blocks = typeof counter.blocks !== 'undefined' ? counter.blocks : [];
       //let countAudio = state.alignCounter.count - state.alignCounter.countTTS;
       //state.alignCounter.countAudio = countAudio >= 0 ? countAudio : 0;
+    },
+    set_job_status_error(state, error) {
+      state.jobStatusError = error;
     }
   },
 
@@ -988,6 +997,7 @@ export const store = new Vuex.Store({
         .then((answer) => {
           commit('SET_BOOKLIST', answer.data.books)
           //dispatch('tc_loadBookTask')
+          return Promise.resolve();
         })
     },
 
@@ -1124,6 +1134,9 @@ export const store = new Vuex.Store({
         return bookMeta
         .then((answer) => {
           state.loadBookWait = null;
+          if (answer.job_status_error) {
+            return Promise.reject(answer);
+          }
           commit('SET_CURRENTBOOK_META', answer)
           commit('TASK_LIST_LOADED')
           dispatch('getTotalBookTasks');
@@ -1131,6 +1144,7 @@ export const store = new Vuex.Store({
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);
+          commit('SET_CURRENTBOOK_FILTER', {importStatus: answer.job_status});
           //dispatch('loadBookToc', {bookId: book_id});
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
@@ -1140,6 +1154,7 @@ export const store = new Vuex.Store({
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
           })
           state.liveDB.stopWatch('metaV');
+          state.liveDB.stopWatch('job');
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
               console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
@@ -1151,11 +1166,20 @@ export const store = new Vuex.Store({
               dispatch('getTotalBookTasks');
             }
           });
+          state.liveDB.startWatch(book_id + '-job', 'job', {bookid: book_id}, (data) => {
+            if (data && data.job && data.job.bookid === state.currentBookMeta.bookid) {
+              if (data.job.status != 'active' && state.currentBookMeta.job_status == 'active') {
+                console.log('SET STATUS BY LIVE S', state.currentBookMeta.job_status)
+                commit('set_job_status_error', data.job.status);
+                dispatch('tc_loadBookTask', state.currentBookMeta.bookid);
+              }
+            }
+          })
           return Promise.resolve(answer);
         }).catch((err)=>{
           state.loadBookWait = null;
-          console.log('metaDB.get Error: ', err);
-          return err;
+          //console.log('metaDB.get Error: ', err);
+          return dispatch('checkError', err);
         })
       } else {
         commit('SET_CURRENTBOOK_META', false);
@@ -1317,7 +1341,7 @@ export const store = new Vuex.Store({
           }
         })
         .catch(err => {
-          return Promise.reject(err);
+          return dispatch('checkError', err);
         })
     },
 
@@ -1623,7 +1647,7 @@ export const store = new Vuex.Store({
               return Promise.resolve(response.data);
             })
             .catch(err => {
-              console.log(err);
+              dispatch('checkError', err);
             });
     },
 
@@ -2279,6 +2303,8 @@ export const store = new Vuex.Store({
         state.jobInfoRequest = axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
         if (clear) {
           state.currentJobInfo.tasks_counter = [];
+          state.currentJobInfo.workflow.status = null;
+          state.currentJobInfo.workflow.archived = null;
         }
         return state.jobInfoRequest
           .then(data => {
@@ -2326,6 +2352,13 @@ export const store = new Vuex.Store({
           }
           return Promise.resolve(response);
         }).catch((err) => {
+          if (err && err.job_status_error) { 
+            commit('set_job_status_error', err.job_status_error);
+            return Promise.resolve({});
+          } else if (err && err.response && err.response.data && err.response.data.job_status_error) {
+            commit('set_job_status_error', err.response.data.job_status_error);
+            return Promise.resolve({});
+          }
           return Promise.reject(err);
         });
     },
@@ -2423,6 +2456,102 @@ export const store = new Vuex.Store({
         }).catch((err) => {
           return Promise.reject(err);
         });
+      }
+    },
+    setJobStatus({state, dispatch, commit}, status) {
+      if (!state.currentJobInfo.id) {
+        return Promise.reject({error: 'Book is not selected'});
+      }
+      let oldStatus = state.currentBookMeta.job_status;
+      state.currentBookMeta.job_status = status;
+      return axios.post(state.API_URL + 'jobs/' + encodeURIComponent(state.currentJobInfo.id) + '/status/' + status)
+        .then(() => {
+          if (state.currentBookMeta.bookid) {
+            state.currentBookMeta.job_status = status;
+            if (state.currentCollectionId) {
+              commit('SET_COLLECTIONS_FILTER', {importStatus: status});
+            } else {
+              commit('SET_CURRENTBOOK_FILTER', {importStatus: status})
+            }
+          }
+          dispatch('updateBooksList');
+          if (state.currentBookMeta.bookid) {
+            dispatch('tc_loadBookTask', state.currentBookMeta.bookid);
+            state.currentBookid = null;
+            return dispatch('loadBook', state.currentBookMeta.bookid)
+              .then(() => {
+                return Promise.resolve();
+              });
+          }
+          return Promise.resolve();
+        })
+        .catch(err => {
+          state.currentBookMeta.job_status = oldStatus;
+          return Promise.reject(err);
+        })
+    },
+    insertBlock({state, commit, dispatch}, data) {
+      return axios.post(state.API_URL + 'book/block', {
+          block_id: data.blockid,
+          direction: data.direction,
+          block: data.newBlock
+        })
+        .then(response => {
+          if (response && response.data && response.data.block && response.data.block.job_status_error) {
+            commit('set_job_status_error', response.data.block.job_status_error);
+          } else {
+            return Promise.resolve(response);
+          }
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    blocksJoin({state, commit, dispatch}, data) {
+      return axios.post(state.API_URL + 'book/block_join/', {
+          resultBlock_id: data.resultBlock_id,
+          donorBlock_id: data.donorBlock_id
+        })
+        .then(response => {
+          return dispatch('checkResponse', response);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        })
+    },
+    removeBlock({state, commit, dispatch}, blockid) {
+      return axios.delete(state.API_URL + 'book/block/' + blockid)
+        .then(response => {
+          return dispatch('checkResponse', response);
+        })
+        .catch(err => {
+          return dispatch('checkError', err);
+        })
+    },
+    saveNarrated({state, commit, dispatch}, data) {
+      return axios.post(state.API_URL + 'book/block/' + data.blockid + '/audio', data, {})
+        .then(response => {
+          //console.log(response);
+          return Promise.resolve(response);
+        })
+        .catch(err => {
+          return dispatch('checkError', err);
+        });
+    },
+    checkError({state, commit}, err) {
+      if (err && err.response && err.response.data && err.response.data.job_status_error) {
+        commit('set_job_status_error', err.response.data.job_status_error);
+      } else if (err && err.job_status_error) {
+        commit('set_job_status_error', err.job_status_error);
+      }
+      return Promise.reject(err);
+    },
+    checkResponse({state, commit}, response) {
+      if (response && response.data && response.data.job_status_error) {
+        commit('set_job_status_error', response.data.job_status_error);
+        return Promise.reject(response);
+      } else {
+        return Promise.resolve(response);
       }
     }
   }

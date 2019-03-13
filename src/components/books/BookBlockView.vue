@@ -914,7 +914,8 @@ export default {
             }
             if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
             if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1 && flags_summary.stat !== 'open' && !this._is(flags_summary.dir, true)) return false;
-            if (this._is('editor', true) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
+            if ((this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
+            if ((this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasBlockTask(this.block._id, 'approve-modified-block')) return false;
             if (this._is('proofer', true) && this.tc_hasBlockTask(this.block._id, 'approve-revoked-block') && flags_summary.stat !== 'open') return false;
             if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
             if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
@@ -1195,7 +1196,9 @@ export default {
         'getCurrentJobInfo',
         'getTotalBookTasks',
         'updateBookVersion',
-        'updateBlockToc'
+        'updateBlockToc',
+        'saveNarrated',
+        'checkError'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1802,7 +1805,10 @@ export default {
                 }
               }
             })
-            .catch(err => BPromise.reject(err));
+            .catch(err => {
+              this.checkError(err);
+              BPromise.reject(err)
+            });
         } else {
           return BPromise.reject();
         }
@@ -2016,6 +2022,7 @@ export default {
             }
           })
           .catch(err => {
+            this.checkError(err);
             this.isUpdating = false;
           });
       },
@@ -2058,6 +2065,7 @@ export default {
             }
           })
           .catch(err => {
+            this.checkError(err);
             this.isUpdating = false;
           });
       },
@@ -2459,11 +2467,12 @@ export default {
             if (start_next) {
               self.stopRecordingAndNext();
             }
-            let formData = new FormData();
-            formData.append('audio', dataURL.split(',').pop());
-            formData.append('position', self.reRecordPosition);
-            formData.append('isTemp', self.isAudioChanged);
-            api.post(api_url, formData, {})
+            self.saveNarrated({
+              'audio': dataURL.split(',').pop(),
+              'position': self.reRecordPosition,
+              'isTemp': self.isAudioChanged,
+              'blockid': self.block.blockid
+            })
               .then(response => {
                 self.isUpdating = false;
                 if (response.status == 200) {

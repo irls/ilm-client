@@ -19,7 +19,7 @@ Features:
     </thead>
     <tbody>
     <!--  {{ key.render(entry[key.path]) }} -->
-      <tr v-for="entry in limitedData" @click="rowEvent(entry, $event)" class="grid-row" :data-id="entry[idField]" :class='{selected : isSelected(entry[idField])}' >
+      <tr v-for="entry in limitedData" @click="rowEvent(entry, $event)" class="grid-row" :data-id="entry[idField]" :class='[{selected : isSelected(entry[idField])}, {"status-archived": entry.job_status === "archived"}]' >
         <td v-for="key in columns" :class="[key.addClass]" class="grid-cell">
           <template v-if="key.render">{{ key.render(entry[key.path]) }}</template>
           <template v-else-if="key.html"> <span v-html="key.html(entry[key.path])"></span> </template>
@@ -247,4 +247,7 @@ Features:
     border-top: 4px solid #fff;
   }
   th {vertical-align: top !important;}
+  .grid-row.status-archived {
+    color: gray;
+  }
 </style>
