@@ -2330,10 +2330,18 @@ export const store = new Vuex.Store({
             .then((doc) => {
               if (!doc.data.error) {
                 state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
-                dispatch('tc_loadBookTask', state.currentBookMeta.bookid);
-                dispatch('getCurrentJobInfo');
-                dispatch('getTotalBookTasks');
-                state.currentBookMeta.private = false;
+                return Promise.all([dispatch('tc_loadBookTask', state.currentBookMeta.bookid),
+                  dispatch('getCurrentJobInfo'),
+                  dispatch('getTotalBookTasks'),
+                  dispatch('setCurrentBookCounters')])
+                  .then(() => {
+                    state.currentBookMeta.private = false;
+                    return Promise.resolve(doc);
+                  })
+                  .catch(err => {
+                    state.currentBookMeta.private = false;
+                    return Promise.resolve(doc);
+                  })
               } else {
                 dispatch('updateBookMeta', {private: true})
               }
