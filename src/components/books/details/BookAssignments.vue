@@ -40,7 +40,7 @@
                 <template v-for="action in task.actions">
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
-                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">complete</button>
+                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Complete</button>
                     </template>
                     <template v-else>
                       <div class="preloader-task"></div>
@@ -55,7 +55,7 @@
                   </div>
                   <div v-if="action=='complete_mastering'">
                     <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">complete</button>
+                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Complete</button>
                     </div>
                     <div v-else class="preloader-task"></div>
                   </div>
@@ -188,7 +188,8 @@
           if (!this.currentBookMeta.masteringRequired) {
             this.$root.$emit('show-modal', {
               title: ``,
-              text: `<ol>
+              text: `<div class="bottom"><h5>Unmastered audio flow:</h5></div>
+<ol>
 <li>The book is edited, aligned with unmastered audio and proofread.</li>
 <li>The audio from the book is exported, mastered and imported back in ILM.</li>
 <li>The book is realigned with the mastered audio and proofread.</li>
