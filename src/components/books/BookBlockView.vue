@@ -837,7 +837,7 @@ export default {
             if (!narratorTask) {
               return false;
             }
-            let approveTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'approve-modified-block');
+            let approveTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'approve-modified-block' && t.blockid == this.block._id);
             if (approveTask) {
               return false;
             }
