@@ -188,7 +188,8 @@
           if (!this.currentBookMeta.masteringRequired) {
             this.$root.$emit('show-modal', {
               title: ``,
-              text: `<ol>
+              text: `<div class="bottom"><h5>Unmastered audio flow:</h5></div>
+<ol>
 <li>The book is edited, aligned with unmastered audio and proofread.</li>
 <li>The audio from the book is exported, mastered and imported back in ILM.</li>
 <li>The book is realigned with the mastered audio and proofread.</li>
