@@ -1642,7 +1642,12 @@ export const store = new Vuex.Store({
               commit('clear_blocker', 'putBlock');
               block._rev = response.data.rev;
               dispatch('tc_loadBookTask', block.bookid);
-              dispatch('getCurrentJobInfo');
+              dispatch('getCurrentJobInfo')
+                .then(() => {
+                  if (state.currentJobInfo && state.currentJobInfo.published) {
+                    dispatch('updateBookVersion', {major: true});
+                  }
+                });
               dispatch('getTotalBookTasks');
               return Promise.resolve(response.data);
             })
@@ -2311,10 +2316,12 @@ export const store = new Vuex.Store({
             state.jobInfoTimer = Date.now();
             state.jobInfoRequest = null;
             state.currentJobInfo = data.data;
+            return Promise.resolve();
           })
           .catch(err => {
             state.jobInfoRequest = null;
             console.log(err);
+            return Promise.reject(err);
           })
       }
     },
