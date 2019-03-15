@@ -623,7 +623,13 @@
             } else if (autostart) {
               this.play();
             }
-            $('#' + this.blockId).find('#content-' + this.blockId).on('click', 'w', {blockId: this.blockId}, this.showSelection);
+            $('#' + this.blockId).find('#content-' + this.blockId).on('click', 'w', {blockId: this.blockId}, (event) => {
+              this.wordSelectionMode = false;
+              let index = $('#content-' + this.blockId + ' w[data-map]').index(event.target);
+              this.blockSelectionEmit = true;
+              this._setWordSelection(index, true, true);
+              this.wordSelectionMode = index;
+            });
           })
           .catch(err => {
             //console.log(err)
