@@ -239,7 +239,6 @@ export default {
         name: 'BookEditDisplay', params: {}
       });
       this.loadBookMounted();
-      this.setCurrentBookCounters(['not_marked_blocks']);
       this.loadBookToc({bookId: this.meta._id, isWait: true});
     },
     loadPreparedBookDown(idsArray) { // mostly first page load

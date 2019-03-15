@@ -630,7 +630,6 @@ export default {
       });
 
     this.$root.$on('from-bookblockview:voicework-type-changed', function() {
-      self.setCurrentBookCounters(['narration_blocks', 'not_marked_blocks']);
       self.getAudioBook();
     });
     this.setCurrentBookCounters();

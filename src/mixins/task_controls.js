@@ -339,6 +339,28 @@ export default {
           return false;
         }
         return true;
+      },
+      tc_notMarkedBlocksCount() {
+        if (!this._is('editor', true) && !this.adminOrLibrarian) {
+          return null;
+        }
+        let task = null;
+        if (this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering) {
+          let target_type = this.currentJobInfo.text_cleanup ? 'text-cleanup' : 'master-audio';
+          let editor = this.currentJobInfo.tasks_counter.find(tc => {
+            return tc.key === 'editor';
+          });
+          if (editor && editor.data && editor.data.tasks && Array.isArray(editor.data.tasks)) {
+            task = editor.data.tasks.find(t => {
+              return t.type === target_type;
+            })
+          }
+        }
+        if (task) {
+          return parseInt(task.count);
+        } else {
+          return null;
+        }
       }
     },
     computed: {
