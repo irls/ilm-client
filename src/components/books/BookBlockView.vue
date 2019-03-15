@@ -3104,9 +3104,9 @@ export default {
             this.voiceworkUpdating = false;
             if (this.isCompleted) {
               this.tc_loadBookTask();
-              this.getCurrentJobInfo();
               this.getTotalBookTasks();
             }
+            this.getCurrentJobInfo();
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
               this.getAlignCount();
