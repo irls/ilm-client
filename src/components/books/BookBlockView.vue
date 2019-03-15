@@ -1895,6 +1895,9 @@ export default {
               }
               //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
               this.recountApprovedInRange();
+              if (this.adminOrLibrarian) {
+                this.getTotalBookTasks();
+              }
               //this.getBloksUntil('unresolved', true, this.block._id)
             }
           })
