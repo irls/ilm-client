@@ -105,16 +105,7 @@
       },
       isAllowEditingComplete: {
         get() {
-          if (this.tc_allowEditingComplete()) {
-            if (this.currentBookCounters.not_marked_blocks === 0) {
-              return true;
-            }
-          } else if (this.tc_allowFinishMastering()) {
-            if (this.currentBookCounters.not_marked_blocks === 0) {
-              return true;
-            }
-          }
-          return false;
+          return this.tc_notMarkedBlocksCount() === 0;
         }
       },
       ...mapGetters({

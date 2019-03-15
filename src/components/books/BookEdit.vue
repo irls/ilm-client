@@ -958,7 +958,6 @@ export default {
           this.unfreeze('insertBlockBefore');
           this.tc_loadBookTask(block.bookid);
           this.getCurrentJobInfo();
-          this.setCurrentBookCounters(['not_marked_blocks']);
           if (this.tc_hasTask('audio_mastering')) {
             this.setCurrentBookCounters(['not_proofed_audio_blocks']);
           }
@@ -1001,7 +1000,6 @@ export default {
           this.unfreeze('insertBlockAfter');
           this.tc_loadBookTask(block.bookid);
           this.getCurrentJobInfo();
-          this.setCurrentBookCounters(['not_marked_blocks']);
           if (this.tc_hasTask('audio_mastering')) {
             this.setCurrentBookCounters(['not_proofed_audio_blocks']);
           }
@@ -1051,6 +1049,7 @@ export default {
           } //else this.refreshTmpl();
           this.parlist.delete(block._id);
         }
+        this.getCurrentJobInfo();
 
         this.putNumBlockOBatchProxy({bookId: block.bookid})
           .then(() => {

@@ -1602,15 +1602,12 @@ export default {
             break;
         }
         this.block.classes = [this.block.classes];
-        let recount_marked = false;
         if (this.block.status.marked === true) {
           this.block.status.marked = false;
-          recount_marked = true;
         }
         if (this.block._markedAsDone) {
           this.block.status.marked = true;
           delete this.block._markedAsDone;
-          recount_marked = true;
         }
 
         this.checkBlockContentFlags();
@@ -1650,9 +1647,6 @@ export default {
             this.$refs.blockContent.dataset.has_suggestion = false;
           } else if (is_content_changed && this.block.audiosrc) {
             this.doReAlign();
-          }
-          if (recount_marked) {
-            this.setCurrentBookCounters(['not_marked_blocks']);
           }
           if (is_content_changed) {
             if (['title', 'header'].indexOf(this.block.type) !== -1) {
@@ -1775,7 +1769,6 @@ export default {
 
                 if (this.block.status.marked != response.data.status.marked) {
                   this.block.status.marked = response.data.status.marked;
-                  this.setCurrentBookCounters(['not_marked_blocks']);
                 }
                 this.$emit('blockUpdated', this.block._id);
                 if (footnoteIdx === null) {
@@ -1835,7 +1828,6 @@ export default {
           this.assembleBlock(ev)
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
-            this.setCurrentBookCounters(['not_marked_blocks']);
             this.recountApprovedInRange();
           });
         }
@@ -1850,7 +1842,6 @@ export default {
           this.assembleBlock(ev)
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
-            this.setCurrentBookCounters(['not_marked_blocks']);
             if (this.tc_hasTask('audio_mastering')) {
               this.setCurrentBookCounters(['not_proofed_audio_blocks']);
             }
@@ -3128,9 +3119,9 @@ export default {
             this.voiceworkUpdating = false;
             if (this.isCompleted) {
               this.tc_loadBookTask();
-              this.getCurrentJobInfo();
               this.getTotalBookTasks();
             }
+            this.getCurrentJobInfo();
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
               this.getAlignCount();
@@ -3473,15 +3464,6 @@ export default {
       },
       'blockAudio.map' (newVal, oldVal) {
 
-      },
-      'block.status': {
-        handler(val, oldVal) {
-          if (this.block) {
-            if (val.marked != oldVal.marked) {
-              this.setCurrentBookCounters(['not_marked_blocks']);
-            }
-          }
-        }
       },
       'isCompleted': {
         handler(val, oldVal) {
