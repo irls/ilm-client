@@ -1587,7 +1587,12 @@ export const store = new Vuex.Store({
               commit('clear_blocker', 'putBlock');
               block._rev = response.data.rev;
               dispatch('tc_loadBookTask', block.bookid);
-              dispatch('getCurrentJobInfo');
+              dispatch('getCurrentJobInfo')
+                .then(() => {
+                  if (state.currentJobInfo && state.currentJobInfo.published) {
+                    dispatch('updateBookVersion', {major: true});
+                  }
+                });
               dispatch('getTotalBookTasks');
               return Promise.resolve(response.data);
             })
@@ -2244,9 +2249,11 @@ export const store = new Vuex.Store({
       return axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
         .then(data => {
           state.currentJobInfo = data.data;
+          return Promise.resolve();
         })
         .catch(err => {
           console.log(err);
+          return Promise.reject(err);
         })
     },
     getTaskTypes({state}) {
