@@ -1139,7 +1139,6 @@ export const store = new Vuex.Store({
           }
           commit('SET_CURRENTBOOK_META', answer)
           commit('TASK_LIST_LOADED')
-          dispatch('getTotalBookTasks');
           dispatch('setCurrentBookCounters');
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
@@ -1162,9 +1161,8 @@ export const store = new Vuex.Store({
               if (bookMetaIdx > -1) {
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
               }
-              commit('SET_CURRENTBOOK_META', data.meta)
-              dispatch('getTotalBookTasks');
             }
+            dispatch('getCurrentJobInfo');
           });
           state.liveDB.startWatch(book_id + '-job', 'job', {bookid: book_id}, (data) => {
             if (data && data.job && data.job.bookid === state.currentBookMeta.bookid) {
@@ -1191,7 +1189,6 @@ export const store = new Vuex.Store({
         if (state.currentBookMeta._id) {
             dispatch('getBookMeta', state.currentBookMeta._id).then((meta) => {
                 commit('SET_CURRENTBOOK_META', meta)
-                dispatch('getTotalBookTasks');
                 state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
                 .then(fileBlob => {
                   commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
@@ -1648,7 +1645,6 @@ export const store = new Vuex.Store({
                     dispatch('updateBookVersion', {major: true});
                   }
                 });
-              dispatch('getTotalBookTasks');
               return Promise.resolve(response.data);
             })
             .catch(err => {
@@ -2292,7 +2288,7 @@ export const store = new Vuex.Store({
         dispatch('getAudioBook')
       }, 15000);
     },
-    getCurrentJobInfo({state}, clear) {
+    getCurrentJobInfo({state, commit}, clear) {
       /*state.currentJobInfo = {
         can_resolve_tasks: [],
         mastering: null,
@@ -2304,6 +2300,7 @@ export const store = new Vuex.Store({
       if (state.jobInfoRequest) {
         return state.jobInfoRequest;
       }
+      commit('SET_ALLOW_BOOK_PUBLISH', false);
       if (state.currentBookid) {
         state.jobInfoRequest = axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
         if (clear) {
@@ -2316,6 +2313,21 @@ export const store = new Vuex.Store({
             state.jobInfoTimer = Date.now();
             state.jobInfoRequest = null;
             state.currentJobInfo = data.data;
+            if (state.currentJobInfo.completed && state.adminOrLibrarian && state.currentJobInfo.tasks_counter && Array.isArray(state.currentJobInfo.tasks_counter)) {
+              if (!(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion)) {
+                let count = 0;
+                state.currentJobInfo.tasks_counter.forEach(tc => {
+                  if (tc && tc.data && tc.data.tasks && Array.isArray(tc.data.tasks)) {
+                    tc.data.tasks.forEach(t => {
+                      count+= t.count ? parseInt(t.count) : 0;
+                    });
+                  }
+                });
+                if (count === 0) {
+                  commit('SET_ALLOW_BOOK_PUBLISH', true);
+                }
+              }
+            }
             return Promise.resolve();
           })
           .catch(err => {
@@ -2390,7 +2402,6 @@ export const store = new Vuex.Store({
                 state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
                 return Promise.all([dispatch('tc_loadBookTask', state.currentBookMeta.bookid),
                   dispatch('getCurrentJobInfo'),
-                  dispatch('getTotalBookTasks'),
                   dispatch('setCurrentBookCounters')])
                   .then(() => {
                     state.currentBookMeta.private = false;
@@ -2423,7 +2434,6 @@ export const store = new Vuex.Store({
           if (!doc.data.error) {
             dispatch('tc_loadBookTask', state.currentBookMeta.bookid)
             dispatch('getCurrentJobInfo');
-            dispatch('getTotalBookTasks');
           } else {
             
           }

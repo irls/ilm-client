@@ -1627,7 +1627,6 @@ export default {
           if (this.isCompleted) {
             this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
-            this.getTotalBookTasks();
           }
           let is_content_changed = this.hasChange('content');
           let is_type_changed = this.hasChange('type');
@@ -1764,7 +1763,6 @@ export default {
                 if (this.isCompleted) {
                   this.tc_loadBookTask();
                   this.getCurrentJobInfo();
-                  this.getTotalBookTasks();
                 }
 
                 if (this.block.status.marked != response.data.status.marked) {
@@ -3122,7 +3120,6 @@ export default {
             this.voiceworkUpdating = false;
             if (this.isCompleted) {
               this.tc_loadBookTask();
-              this.getTotalBookTasks();
             }
             this.getCurrentJobInfo();
             if (response.status == 200) {
@@ -3365,7 +3362,6 @@ export default {
             if (this.isCompleted) {
               this.tc_loadBookTask();
               this.getCurrentJobInfo();
-              this.getTotalBookTasks();
             }
           }
         }

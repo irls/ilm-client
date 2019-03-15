@@ -1062,7 +1062,6 @@ export default {
         this.updateBookVersion({major: true})
         this.tc_loadBookTask(block.bookid);
         this.getCurrentJobInfo();
-        this.getTotalBookTasks();
         //this.refreshTmpl();
       })
       .catch(err => {
