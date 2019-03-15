@@ -1424,7 +1424,6 @@ export default {
           this.updateBookVersion({major: true})
           this.tc_loadBookTask();
           this.getCurrentJobInfo();
-          this.getTotalBookTasks();
         })
         .catch(err => {
           this.finishPublishedProcess = false;
