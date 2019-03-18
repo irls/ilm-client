@@ -369,10 +369,11 @@ export default {
                 this.uploadErrors = response.data.errors;
               }
             }
-            if (this.importTask.id && response.data.audio && typeof response.data.audio._id !== 'undefined') {
-              api.put(this.API_URL + 'task/' + encodeURIComponent(this.importTask.id) + '/audio_imported', {})
+            if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
+              api.put(this.API_URL + 'task/' + this.book.bookid + '/audio_imported', {})
                 .then((link_response) => {
                   //vm.closeForm(response)
+                  this.tc_loadBookTask(this.book.bookid);
                 })
                 .catch((err) => {
                   //vm.closeForm(response)
@@ -443,7 +444,7 @@ export default {
     onUploadError() {
       console.log(arguments);
     },
-    ...mapActions(['getAudioBook'])
+    ...mapActions(['getAudioBook', 'tc_loadBookTask'])
 
   },
   watch: {
