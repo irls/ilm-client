@@ -1762,8 +1762,8 @@ export default {
               if (response.status == 200) {
                 if (this.isCompleted) {
                   this.tc_loadBookTask();
-                  this.getCurrentJobInfo();
                 }
+                this.getCurrentJobInfo();
 
                 if (this.block.status.marked != response.data.status.marked) {
                   this.block.status.marked = response.data.status.marked;
