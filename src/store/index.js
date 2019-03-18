@@ -2305,14 +2305,26 @@ export const store = new Vuex.Store({
         state.jobInfoRequest = axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
         if (clear) {
           state.currentJobInfo.tasks_counter = [];
-          state.currentJobInfo.workflow.status = null;
-          state.currentJobInfo.workflow.archived = null;
+          state.currentJobInfo.workflow = {status: null, archived: null};
         }
         return state.jobInfoRequest
           .then(data => {
             state.jobInfoTimer = Date.now();
             state.jobInfoRequest = null;
-            state.currentJobInfo = data.data;
+            state.currentJobInfo = data.data.id ? data.data : {can_resolve_tasks: [],
+              mastering: null,
+              proofing: null,
+              published: null,
+              text_cleanup: null,
+              is_proofread_unassigned: null,
+              tasks_counter: [],
+              executors: {editor: null, proofer: null, narrator: null},
+              description: '',
+              id: null,
+              workflow: {
+                status: null,
+                archived: null
+              }};
             if (state.currentJobInfo.completed && state.adminOrLibrarian && state.currentJobInfo.tasks_counter && Array.isArray(state.currentJobInfo.tasks_counter)) {
               if (!(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion)) {
                 let count = 0;

@@ -263,7 +263,7 @@ export default {
       this.import_book_id = ''
       this.task_audiobook = {}
       //this.getTasks()
-      this.$store.dispatch('tc_loadBookTask')
+      //this.$store.dispatch('tc_loadBookTask')
     },
     onTabChange() {
       return true
