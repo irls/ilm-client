@@ -3124,6 +3124,9 @@ export default {
             if (this.isCompleted) {
               this.tc_loadBookTask();
             }
+            if (this.currentJobInfo && this.currentJobInfo.published) {
+              this.updateBookVersion({major: true});
+            }
             this.getCurrentJobInfo();
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
