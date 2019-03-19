@@ -1308,17 +1308,10 @@
             }
           });
           //console.log(self.audiosourceEditor.annotationList.renderResizeLeft);
-          if (self.audiosourceEditor.getEventEmitter().__ee__ && self.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
+          if (self.audiosourceEditor && self.audiosourceEditor.getEventEmitter().__ee__ && self.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
             self.audiosourceEditor.getEventEmitter().off('dragged', self.audiosourceEditor.getEventEmitter().__ee__['dragged']);
           }
           if (self.audiosourceEditor) {
-            if (self.audiosourceEditor.annotationList.annotations.length > 0) {
-              $('.annotation-box').each(function(i, el) {
-                if(typeof annotations[i] !== 'undefined') {
-                  $(el).find('span.id').html(annotations[i].id);// workaround, waveform editor does not update text in annotations by annotations change
-                }
-              });
-            }
             //annotations = annotations.splice(annotations.length - 10);
             self.annotations = annotations;
             self.audiosourceEditor.setAnnotations({
@@ -1327,8 +1320,20 @@
                 isContinuousPlay: false,
                 linkEndpoints: true
               });
+            if (self.audiosourceEditor.annotationList.annotations.length > 0) {
+              $('.annotation-box').each(function(i, el) {
+                if(typeof annotations[i] !== 'undefined') {
+                  $(el).find('span.id').html(annotations[i].id);// workaround, waveform editor does not update text in annotations by annotations change
+                }
+              });
+              //$('.channel-wrapper.block-audio').scroll();
             }
+          }
             //self.audiosourceEditor.annotationList.renderResizeLeft(annotations.length - 1);
+          $('.channel-wrapper.block-audio').trigger('scroll');
+          $('.playlist-tracks').scrollLeft(0);
+          $('.playlist-tracks').scrollLeft(this.playlistScrollPosition || 0);
+          //this.$forceUpdate();
         },
         _isAnnotationsEditable() {
           return (!this.currentBookMeta.masteringRequired || this.currentBookMeta.isMastered) ||
