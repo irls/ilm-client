@@ -2514,6 +2514,9 @@ export default {
               this.block.setContentFootnote(footnoteIdx, response.data.content);
               this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
             }
+            if (this.isAudioEditing) {
+              this.$root.$emit('for-audioeditor:reload-text', response.data.content);
+            }
           }
           this.reRecordPosition = false;
           return BPromise.resolve();
