@@ -1308,7 +1308,7 @@
             }
           });
           //console.log(self.audiosourceEditor.annotationList.renderResizeLeft);
-          if (self.audiosourceEditor.getEventEmitter().__ee__ && self.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
+          if (self.audiosourceEditor && self.audiosourceEditor.getEventEmitter().__ee__ && self.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
             self.audiosourceEditor.getEventEmitter().off('dragged', self.audiosourceEditor.getEventEmitter().__ee__['dragged']);
           }
           if (self.audiosourceEditor) {
