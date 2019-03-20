@@ -219,6 +219,7 @@
             this.blockSelectionEmit = true;
             this.selection.start = start / 1000;
             this.selection.end = end / 1000;
+            this.wordSelectionMode = false;
             this._clearWordSelection();
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
             this._showSelectionBorders(true);
@@ -623,13 +624,7 @@
             } else if (autostart) {
               this.play();
             }
-            $('#' + this.blockId).find('#content-' + this.blockId).on('click', 'w', {blockId: this.blockId}, (event) => {
-              this.wordSelectionMode = false;
-              let index = $('#content-' + this.blockId + ' w[data-map]').index(event.target);
-              this.blockSelectionEmit = true;
-              this._setWordSelection(index, true, true);
-              this.wordSelectionMode = index;
-            });
+            $('#' + this.blockId).find('#content-' + this.blockId).on('click', 'w', {blockId: this.blockId}, this.showSelection)
           })
           .catch(err => {
             //console.log(err)
@@ -730,24 +725,18 @@
           }
         },
         showSelection (event) {
+          this.wordSelectionMode = false;
           let blockId = event.data.blockId;
           let index = $('#content-' + blockId).find('w[data-map]').index($(event.target));
-          let show_selection = true;
           if (typeof index =='undefined' || index === false || index < 0) {
             let index_no_data = $('#content-' + blockId).find('w:not([data-map])').index($(event.target));
             let total_index = $('#content-' + blockId).find('w').index($(event.target));
             index = total_index - index_no_data;
-            show_selection = false;
           }
           if (!this.isAnnotationVisible(index)) {
             this.scrollPlayerToAnnotation(index, 'middle');
           }
-          if (show_selection) {
-            this.blockSelectionEmit = true;
-            this._setWordSelection(index, true);
-          } else {
-            this._clearWordSelection();
-          }
+          this._clearWordSelection();
         },
         setAudio(audio, text, saveToHistory) {
           if (this.plEventEmitter) {
