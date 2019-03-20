@@ -1161,8 +1161,9 @@ export const store = new Vuex.Store({
               if (bookMetaIdx > -1) {
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
               }
+              commit('SET_CURRENTBOOK_META', data.meta)
+              dispatch('getCurrentJobInfo');
             }
-            dispatch('getCurrentJobInfo');
           });
           state.liveDB.startWatch(book_id + '-job', 'job', {bookid: book_id}, (data) => {
             if (data && data.job && data.job.bookid === state.currentBookMeta.bookid) {
