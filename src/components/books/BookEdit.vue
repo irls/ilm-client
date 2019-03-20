@@ -1651,11 +1651,12 @@ export default {
 
     listenSetNum(bookId, numMask, blockRid) {
       //console.log('listenSetNum', bookId, numMask);
-      if (bookId) this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask, blockRid: blockRid})
-              .then(() => {
-                this.loadBookToc({bookId: this.meta._id, isWait: true});
-              });
-      else this.updateVisibleBlocks();
+      if (bookId) {
+        this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask, blockRid: blockRid})
+        .then(() => {
+          this.loadBookToc({bookId: this.meta._id, isWait: true});
+        });
+      } else this.updateVisibleBlocks();
       //this.refreshTmpl();
     },
 

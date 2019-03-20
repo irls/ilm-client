@@ -1509,37 +1509,51 @@ export default {
     selectStyle(blockType, styleKey, styleVal)
     {
       let updateToc = (styleKey == 'table of contents' || (blockType == 'title' && styleKey == 'style') );
-      let updatePromises = [];
+      let updateNum = !(styleKey == 'paragraph type' && ['sitalcent', 'editor-note', 'reference', 'signature'].indexOf(styleVal) >-1);
+      let updatePromises = [], updateNums = [];
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
-          let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
-          idsArrayRange.forEach((blockId)=>{
-            let pBlock = this.storeList.get(blockId);
+          let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
+          idsArrayRange.forEach((blockRid)=>{
+            let oBlock = this.storeListO.get(blockRid);
+            if (oBlock) {
+              let pBlock = this.storeList.get(oBlock.blockid);
 
-            if (pBlock && blockType == 'title' && styleKey == 'style' && styleVal != ''){
-              pBlock.classes['table of contents'] = '';
-            }
+              if (pBlock && blockType == 'title' && styleKey == 'style' && styleVal != ''){
+                pBlock.classes['table of contents'] = '';
+              }
 
-            if (pBlock && blockType == 'title' && styleKey == 'table of contents' && styleVal != ''){
-              pBlock.classes['style'] = '';
-            }
+              if (pBlock && blockType == 'title' && styleKey == 'table of contents' && styleVal != ''){
+                pBlock.classes['style'] = '';
+              }
 
-            if (pBlock && pBlock.type == blockType) {
-                if (styleVal.length) {
-                  pBlock.classes[styleKey] = styleVal;
-                  if (blockType === 'header' && styleKey === 'level') {
-                    updateToc = true;
-                    pBlock.classes['table of contents'] = 'toc' + styleVal.replace(/\D/, '');
+              if (pBlock && pBlock.type == blockType) {
+                  if (styleVal.length) {
+                    pBlock.classes[styleKey] = styleVal;
+                    if (blockType === 'header' && styleKey === 'level') {
+                      updateToc = true;
+                      pBlock.classes['table of contents'] = 'toc' + styleVal.replace(/\D/, '');
+                    }
+                  }
+                else pBlock.classes[styleKey] = '';
+                //console.log(oBlock.blockid, 'isNumber', oBlock.isNumber,  'updateNum', updateNum);
+                if (pBlock.isChanged || pBlock.isAudioChanged) {
+                  pBlock.checked = false;
+                  pBlock.checked = true;
+                  if (oBlock.isNumber !== updateNum) {
+                    oBlock.isNumber = updateNum;
+                  }
+                } else {
+                  pBlock.partUpdate = true;
+                  if (oBlock.isNumber !== updateNum) {
+                    updateNums.push(oBlock.rid);
+                    pBlock.isNumber = updateNum;
+                    oBlock.isNumber = updateNum;
+                    updatePromises.push(this.putNumBlock(pBlock));
+                  } else {
+                    updatePromises.push(this.putBlock(pBlock));
                   }
                 }
-              else pBlock.classes[styleKey] = '';
-
-              if (pBlock.isChanged || pBlock.isAudioChanged) {
-                pBlock.checked = false;
-                pBlock.checked = true;
-              } else {
-                pBlock.partUpdate = true;
-                updatePromises.push(this.putBlock(pBlock));
               }
             }
           })
@@ -1547,12 +1561,23 @@ export default {
         }
         Promise.all(updatePromises)
           .then(()=>{
-            if (updateToc) {
-              this.$root.$emit('from-book-meta:upd-toc', true);
+            if (updateNums.length > 0) {
+              this.putNumBlockOBatch({bookId: this.currentBookid})
+              .then(()=>{
+                this.$root.$emit('from-meta-edit:set-num');
+                console.log("$emit('from-meta-edit:set-num')");
+                if (updateToc) {
+                  this.$root.$emit('from-book-meta:upd-toc', true);
+                }
+                this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+              });
+            } else {
+              if (updateToc) {
+                this.$root.$emit('from-book-meta:upd-toc', true);
+              }
+              this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
             }
           })
-        //this.$root.$emit('from-meta-edit:set-num');
-        this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
     },
 
@@ -1717,7 +1742,7 @@ export default {
       }
     }, 500),
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putNumBlock', 'putBlockO', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta'])
   }
 }
 </script>
