@@ -1168,9 +1168,9 @@ export const store = new Vuex.Store({
           })
           state.liveDB.stopWatch('metaV');
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
-            dispatch('getCurrentJobInfo');
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid) {
               commit('SET_CURRENTBOOK_META', data.meta)
+              dispatch('getCurrentJobInfo');
             }
           });
           return Promise.resolve(answer);
