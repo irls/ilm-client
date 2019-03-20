@@ -1603,58 +1603,67 @@ export const store = new Vuex.Store({
     },
 
     putBlock ({commit, state, dispatch}, block) {
-        let cleanBlock = Object.assign({}, block);
-        if (typeof block.clean === 'function') {
-          cleanBlock = block.clean();
-        }
-        delete cleanBlock.parnum;
-        delete cleanBlock.secnum;
-        delete cleanBlock.isNumber;
-        commit('set_blocker', 'putBlock');
-        //console.log('putBlock', cleanBlock);
-        /*return dispatch('getBlock', cleanBlock._id)
-        .then(function(doc) {
-          cleanBlock._rev = doc._rev;
-          return dispatch('_putBlock', cleanBlock)
-          .then((response) => {
-            // handle response
-            commit('clear_blocker', 'putBlock');
-            return Promise.resolve(response);
-          });
+      let cleanBlock = Object.assign({}, block);
+      if (typeof block.clean === 'function') {
+        cleanBlock = block.clean();
+      }
+      delete cleanBlock.parnum;
+      delete cleanBlock.secnum;
+      delete cleanBlock.isNumber;
+      commit('set_blocker', 'putBlock');
+      return axios.put(state.API_URL + 'book/block/' + block._id,
+        {
+          'block': cleanBlock,
         })
-        .catch((err) => {
-            console.log('putBlock getBlock err', err);
-            if (err.status == 404) {
-              return dispatch('_putBlock', cleanBlock)
-              .then((response) => {
-                // handle response
-                commit('clear_blocker', 'putBlock');
-                return Promise.resolve(response);
+          .then(response => {
+            commit('clear_blocker', 'putBlock');
+            block._rev = response.data.rev;
+            dispatch('tc_loadBookTask', block.bookid);
+            dispatch('getCurrentJobInfo')
+              .then(() => {
+                if (state.currentJobInfo && state.currentJobInfo.published) {
+                  dispatch('updateBookVersion', {major: true});
+                }
               });
-            } else {
-              commit('clear_blocker', 'putBlock');
-              console.log('Block save error:', err);
-            }
-        });*/
-        return axios.put(state.API_URL + 'book/block/' + block._id,
-          {
-            'block': cleanBlock,
+            return Promise.resolve(response.data);
           })
-            .then(response => {
-              commit('clear_blocker', 'putBlock');
-              block._rev = response.data.rev;
-              dispatch('tc_loadBookTask', block.bookid);
-              dispatch('getCurrentJobInfo')
-                .then(() => {
-                  if (state.currentJobInfo && state.currentJobInfo.published) {
-                    dispatch('updateBookVersion', {major: true});
-                  }
-                });
-              return Promise.resolve(response.data);
-            })
-            .catch(err => {
-              dispatch('checkError', err);
-            });
+          .catch(err => {
+            commit('clear_blocker', 'putBlock');
+            dispatch('checkError', err);
+            return Promise.reject(err);
+          });
+    },
+
+    putNumBlock ({commit, state, dispatch}, block) {
+      let cleanBlock;
+      if (typeof block.clean === 'function') {
+        cleanBlock = block.clean();
+      } else {
+        cleanBlock = Object.assign({}, block);
+      }
+      commit('set_blocker', 'putNumBlock');
+      return axios.put(state.API_URL + 'book/block/' + block._id,
+        {
+          'block': cleanBlock,
+        })
+          .then(response => {
+            commit('clear_blocker', 'putNumBlock');
+            block._rev = response.data.rev;
+            dispatch('tc_loadBookTask', block.bookid);
+            dispatch('getCurrentJobInfo')
+              .then(() => {
+                if (state.currentJobInfo && state.currentJobInfo.published) {
+                  dispatch('updateBookVersion', {major: true});
+                }
+              });
+            //dispatch('getTotalBookTasks');
+            return Promise.resolve(response.data);
+          })
+          .catch(err => {
+            commit('clear_blocker', 'putNumBlock');
+            dispatch('checkError', err);
+            return Promise.reject(err);
+          });
     },
 
     putBlockPart ({commit, state, dispatch}, blockData) {
@@ -2388,7 +2397,7 @@ export const store = new Vuex.Store({
           }
           return Promise.resolve(response);
         }).catch((err) => {
-          if (err && err.job_status_error) { 
+          if (err && err.job_status_error) {
             commit('set_job_status_error', err.job_status_error);
             return Promise.resolve({});
           } else if (err && err.response && err.response.data && err.response.data.job_status_error) {
@@ -2452,7 +2461,7 @@ export const store = new Vuex.Store({
             dispatch('tc_loadBookTask', state.currentBookMeta.bookid)
             dispatch('getCurrentJobInfo');
           } else {
-            
+
           }
           return Promise.resolve(doc);
         })
