@@ -1280,37 +1280,41 @@ export const store = new Vuex.Store({
         if (update.major && update.major == true) updateVersion = {major: true}
       }
 
-      if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
-        let versions = currMeta.version.split('.');
+      if (!(Object.keys(update).length === 2 && typeof update.authors !== 'undefined' && typeof update.bookid !== 'undefined')) {// updating authors from quote
+        if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
+          let versions = currMeta.version.split('.');
 
-        if (versions && versions.length == 2) {
-          if (updateVersion.minor) {
-            versions[1] = (parseInt(versions[1]) + 1);
-          }
-          if (updateVersion.major) {
-            versions[0] = (parseInt(versions[0]) + 1);
-            versions[1] = 0;
-          }
+          if (versions && versions.length == 2) {
+            if (updateVersion.minor) {
+              versions[1] = (parseInt(versions[1]) + 1);
+            }
+            if (updateVersion.major) {
+              versions[0] = (parseInt(versions[0]) + 1);
+              versions[1] = 0;
+            }
 
-          update['version'] = versions[0] + '.' + versions[1];
-          update['pubType'] = 'Unpublished';
-          update['published'] = false;
-            //'status': 'staging',
-            //'demo': false,
-          update['isInTheQueueOfPublication'] = false;
-          update['isIntheProcessOfPublication'] = false;
-        }
-      } else if (updateVersion.major && updateVersion.major == true) {
-        if (typeof currMeta.version !== 'undefined' && currMeta.publishedVersion) {
-          let cVers = currMeta.version.split('.');
-          let pVers = currMeta.publishedVersion.split('.');
-          if (cVers && cVers.length == 2 && pVers && pVers.length == 2)
-          if (parseInt(cVers[0]) === parseInt(pVers[0])) {
-            delete update['major'];
-            update['version'] = (parseInt(cVers[0]) + 1) + '.0';
-            console.log('updateBookMeta unpublished', update);
+            update['version'] = versions[0] + '.' + versions[1];
+            update['pubType'] = 'Unpublished';
+            update['published'] = false;
+              //'status': 'staging',
+              //'demo': false,
+            update['isInTheQueueOfPublication'] = false;
+            update['isIntheProcessOfPublication'] = false;
+          }
+        } else if (updateVersion.major && updateVersion.major == true) {
+          if (typeof currMeta.version !== 'undefined' && currMeta.publishedVersion) {
+            let cVers = currMeta.version.split('.');
+            let pVers = currMeta.publishedVersion.split('.');
+            if (cVers && cVers.length == 2 && pVers && pVers.length == 2)
+            if (parseInt(cVers[0]) === parseInt(pVers[0])) {
+              delete update['major'];
+              update['version'] = (parseInt(cVers[0]) + 1) + '.0';
+              console.log('updateBookMeta unpublished', update);
+            }
           }
         }
+      } else {
+        delete update.major;
       }
 
       let newMeta = Object.assign(state.currentBookMeta, update);
