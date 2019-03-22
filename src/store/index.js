@@ -1172,7 +1172,6 @@ export const store = new Vuex.Store({
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);
-          commit('SET_CURRENTBOOK_FILTER', {importStatus: answer.job_status});
           //dispatch('loadBookToc', {bookId: book_id});
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
           .then(fileBlob => {
@@ -2423,11 +2422,6 @@ export const store = new Vuex.Store({
         .then(() => {
           if (state.currentBookMeta.bookid) {
             state.currentBookMeta.job_status = status;
-            if (state.currentCollectionId) {
-              commit('SET_COLLECTIONS_FILTER', {importStatus: status});
-            } else {
-              commit('SET_CURRENTBOOK_FILTER', {importStatus: status})
-            }
           }
           dispatch('updateBooksList');
           if (state.currentBookMeta.bookid) {
