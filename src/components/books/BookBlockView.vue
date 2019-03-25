@@ -1741,7 +1741,7 @@ export default {
       },
 
       assembleBlockAudioEdit: function(footnoteIdx = null) {// to save changes from audio editor
-        if ((this.blockAudio.map && this.blockAudio.src) || (footnoteIdx && this.audioEditFootnote.footnote)) {
+        if ((this.blockAudio.map && this.blockAudio.src) || (typeof footnoteIdx !== 'undefined' && footnoteIdx !== null && this.audioEditFootnote.footnote)) {
           let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
           let api = this.$store.state.auth.getHttp();
           let data = {};
