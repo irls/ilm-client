@@ -163,7 +163,7 @@
         }
 
         this.isUploading = true
-        api.post(this.API_URL + 'books/' + this.bookId + '/reimport', this.formData, config).then(function (response) {
+        this.reimportBook({data: this.formData, config: config}).then(function (response) {
           if (response.status === 200) {
             // hide modal after one second
             vu_this.uploadProgress = "Upload Successful"
@@ -172,6 +172,7 @@
           } else {
             // not sure what we should be doing here
             vu_this.formReset()
+            vu_this.closeForm(true)
           }
         }).catch((err) => {
           console.log(err)
@@ -212,7 +213,8 @@
           this.errors['bookType'] = false;
           delete this.errors['bookType'];
         //}
-      }
+      },
+      ...mapActions(['reimportBook'])
     },
     watch: {
 

@@ -199,6 +199,18 @@ export default {
         });
       },
       tc_hasBlockTask(block_id, type) {
+        if (this.adminOrLibrarian) {
+          if (this.currentJobInfo.workflow.status === 'archived') {
+            if (this.currentJobInfo.can_resolve_tasks) {
+              let task = this.currentJobInfo.can_resolve_tasks.find(t => {
+                return t.blockid === block_id && t.type === type;
+              });
+              if (task) {
+                return true;
+              }
+            }
+          }
+        }
         if (!this.$store.state.tc_tasksByBlock[block_id]) {
           return false;
         }
@@ -264,9 +276,12 @@ export default {
           }
         } else {
           let count = this.tc_currentBookTasks.tasks.length;
-          let can_approve_count = this.currentJobInfo.can_resolve_tasks.filter(t => {
-            return typeof t.blockid !== 'undefined' && t.blockid;
-          });
+          let can_approve_count = 0
+          if (this.currentJobInfo && this.currentJobInfo.can_resolve_tasks) {
+            can_approve_count = this.currentJobInfo.can_resolve_tasks.filter(t => {
+              return typeof t.blockid !== 'undefined' && t.blockid;
+            });
+          }
           count+= can_approve_count ? can_approve_count.length : 0;
           return count;
         }
@@ -339,6 +354,28 @@ export default {
           return false;
         }
         return true;
+      },
+      tc_notMarkedBlocksCount() {
+        if (!this._is('editor', true) && !this.adminOrLibrarian) {
+          return null;
+        }
+        let task = null;
+        if (this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering) {
+          let target_type = this.currentJobInfo.text_cleanup ? 'text-cleanup' : 'master-audio';
+          let editor = this.currentJobInfo.tasks_counter.find(tc => {
+            return tc.key === 'editor';
+          });
+          if (editor && editor.data && editor.data.tasks && Array.isArray(editor.data.tasks)) {
+            task = editor.data.tasks.find(t => {
+              return t.type === target_type;
+            })
+          }
+        }
+        if (task) {
+          return parseInt(task.count);
+        } else {
+          return null;
+        }
       }
     },
     computed: {

@@ -10,66 +10,78 @@
 
       <div class="row">
       <div class="download-area col-sm-6">
-        <!-- <button id="show-modal" @click="downloadBook" class="btn btn-primary btn_download">
-          <img src='/static/download.png' class='bookstack'/>
-        </button> -->
       </div>
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false" />
-      <AudioImport v-if="showModal_audio" @close="showModal_audio = false"
+      <AudioImport v-if="showModal_audio"
         @audiofilesUploaded="getAudioBook"
+        @close="showModal_audio = false"
+        @closeOk="checkAfterAudioImport"
         :book="currentBook"
         :importTask="importTask"
         :allowDownload="false" />
-
+      
       <div class="book-listing">
-        <div class="row" v-if="tc_allowMetadataActions()">
-          <template v-if="tc_allowEditingComplete() || tc_allowFinishMastering()">
-            <template v-if="tc_allowEditingComplete()">
-              <div v-if="!textCleanupProcess" class="editing-wrapper">
-                <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Editing complete</button>
-                <div class="col-sm-8 blocks-counter">
-                  <router-link :to="goToUnresolved(true)"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
-                </div>
-              </div>
-              <div v-else class="preloader-small"></div>
-            </template>
-            <template v-if="tc_allowFinishMastering()">
-              <div v-if="currentBookCounters.not_proofed_audio_blocks === 0">
-                <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                  <div class="col-sm-8 blocks-counter">
-                    <span class="blocks-counter-value">0</span>Blocks need your approval
-                  </div>
-                </div>
-              </div>
-              <template v-else>
-                <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                  <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Mastering complete</button>
-                  <div class="col-sm-8 blocks-counter">
-                    <router-link :to="goToUnresolved()"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
-                  </div>
-                </div>
-                <div v-else class="preloader-small"></div>
-              </template>
-            </template>
-          </template>
-          <template v-else-if="tc_allowFinishPublished()">
-            <div v-if="!finishPublishedProcess" class="editing-wrapper">
-              <button class="col-sm-4 btn btn-primary btn-edit-complete" v-on:click="finishPublished()">Editing complete</button>
-            </div>
-            <div v-else class="preloader-small"></div>
-          </template>
-          <template v-else>
+        <template v-if="tc_allowFinishPublished()">
+          <div v-if="!finishPublishedProcess" class="row">
             <div class="editing-wrapper">
-              <div class="col-sm-8 blocks-counter">
-                <router-link :to="goToUnresolved(true)"><span class="blocks-counter-value">{{blocksToApproveCounter}}</span>Blocks need your approval</router-link>
-              </div>
+              <button class="btn btn-primary btn-edit-complete" v-on:click="finishPublished()">Editing complete</button>
             </div>
-          </template>
-        </div>
+          </div>
+          <div v-else class="preloader-small"></div>
+        </template>
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
-          <vue-tab title="Book Content" id="book-content">
+          <vue-tab title="Assignments" id="assignments">
+            <BookAssignments
+              @setInfoMessage="setInfoMessage"
+              @setErrorMessage="setErrorMessage"
+              @showModal_audio="showModal_audio = true"
+              ></BookAssignments>
+          <fieldset class='description brief'>
+            <legend>Description </legend>
+            <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
+          </fieldset>
+            <BookWorkflow 
+              v-if="adminOrLibrarian"
+              :isPublishingQueue="isPublishingQueue"
+              ></BookWorkflow>
+          <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
+            <legend>Export </legend>
+              <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
+              <div v-if="getDemoStatus == 'rebuild'">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
+              <div>
+                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
+                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
+                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
+                <a class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</a>
+                <a class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</a>
+                <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
+              </div>
+          </fieldset>
+          <fieldset class="publish">
+            <!-- Fieldset Legend -->
+            <template>
+              <legend>{{ currentBook.published ? 'Published' : 'Unpublished' }},
+              </legend>
+              <div>
+                Version #{{ currentBook.version ? currentBook.version : '1.0' }}
+              </div>
+              <div v-if="publicationStatus" >
+                Status #{{ publicationStatus }}
+              </div>
+              <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
+              <div v-if="allowPublishCurrentBook && currentBookMeta.job_status === 'active'">
+                <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
+                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
+                <span v-if="isPublishing" class="align-preloader -small"></span>
+
+              </div>
+              <button class="btn btn-primary hidden" v-on:click="publishContent()">Publish Content</button>
+            </template>
+          </fieldset>
+          </vue-tab>
+          <vue-tab title="Meta" id="book-content">
             <fieldset>
               <legend>Book Metadata </legend>
               <table class='properties'>
@@ -135,11 +147,6 @@
                   </td>
                 </tr>
 
-<!--                <tr class='sections'>
-                  <td>Sections</td>
-                  <td><input v-model='currentBook.sectionName' @input="update('sectionName', $event)" :disabled="!allowMetadataEdit"></td>
-                </tr>-->
-
                 <tr class='trans'>
                   <td>Translator</td>
                   <td><input v-model='currentBook.translator' @input="update('translator', $event)" :disabled="!allowMetadataEdit"></td>
@@ -175,101 +182,20 @@
 
           <fieldset class='description brief'>
             <legend>Brief Description </legend>
-            <textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit"  ></textarea>
+            <resizable-textarea ref="descriptionShort"><textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full"></textarea></resizable-textarea>
           </fieldset>
 
           <fieldset class='description long'>
             <legend>Long Description </legend>
-            <textarea style="min-height: 100px;" v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" ></textarea>
+            <resizable-textarea ref="descriptionLong"><textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full" ></textarea></resizable-textarea>
           </fieldset>
-          
-          <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
-            <legend>Export </legend>
-              <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
-              <div v-if="getDemoStatus == 'rebuild'">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
-              <div>
-                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
-                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
-                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
-                <a class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</a>
-                <a class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</a>
-                <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
-              </div>
-          </fieldset>
-          <fieldset class="publish">
-            <!-- Fieldset Legend -->
-            <template>
-              <legend>{{ currentBook.published ? 'Published' : 'Unpublished' }},
-              </legend>
-              <div>
-                Version #{{ currentBook.version ? currentBook.version : '1.0' }}
-              </div>
-              <div v-if="publicationStatus" >
-                Status #{{ publicationStatus }}
-              </div>
-              <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
-              <div v-if="allowPublishCurrentBook">
-                <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
-                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
-                <span v-if="isPublishing" class="align-preloader -small"></span>
-
-              </div>
-              <button class="btn btn-primary hidden" v-on:click="publishContent()">Publish Content</button>
-            </template>
-
-            <!-- Publication Options -->
-            <!-- <table class='properties publication'>
-              <template v-if="currentBook.importStatus == 'staging'">
-                <tr><td rowspan='2'>
-                  <button class="btn btn-primary sharebtn" @click="shareBook"> Move book to Library</button>
-                </td></tr>
-              </template>
-              <template v-else>
-
-                <tr><td>Published</td> <td class='published'>
-                  <i :class="[currentBook.published ? 'fa-toggle-on' : 'fa-toggle-off', 'fa pubtoggle']"
-                    @click='publishedToggle'
-                  ></i>
-                </td></tr>
-
-                <tr v-if="currentBook.published"><td>Type</td> <td class='pubtype'>
-                  <select class="form-control" v-model='currentBook.pubType'>
-                    <option v-for="(value, index) in pubTypes" :value="value">{{ value }}</option>
-                  </select>
-                </td></tr>
-
-                <tr v-if="currentBook.published"><td>Ver. #{{ currentBook.version }}</td> <td class='version'>
-                  <button class="btn btn-primary new-version" @click="newVersion"> Save New Version</button>
-                </td></tr>
-
-              </template>
-            </table> -->
-          </fieldset>
-          <!--<template v-if="isAdmin || isLibrarian || _is('editor', true)">
-            <a v-if="currentBook.published" class="btn btn-default" :href="downloadDemo()" target="_blank">Download demo HTML</a><!-- download :href="'/books/' + currentBook._id + '/edit'" v-on:click="downloadDemo()" -->
-          <!--</template>-->
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
               :bookId="currentBook.bookid"
             ></BookToc>
           </vue-tab>
-          <vue-tab title="Audio Integration" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
-            <div class="t-box">
-              <template>
-                <div class="btn-switch" @click="toggleMastering()">
-                  <i class="fa fa-toggle-on" v-if="currentBook.masteringRequired"></i>
-                  <i class="fa fa-toggle-off" v-else></i>
-                  <span class="s-label"> Mastering required</span>
-                </div>
-              </template>
-              <!--<a v-if="!isAllowExportAudio" class="btn btn-primary btn-small btn-export-audio -disabled">
-                Export Audio
-              </a>
-              <button v-else class="btn btn-primary btn-small btn-export-audio" v-on:click="startGenerateAudiofile()">
-                Export Audio
-              </button>-->
-            </div>
+          <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
             <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
               {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
               <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
@@ -277,17 +203,13 @@
             </div>
             <div v-else class="t-box red-message">Define block range</div>
             <BookAudioIntegration ref="audioIntegration"
-                :isActive="activeTabIndex == 2"
+                :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
                 @uploadAudio="showModal_audio = true"
               ></BookAudioIntegration>
           </vue-tab>
 
         <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab()">
-        <!--<accordion :one-at-atime="true" ref="accordionStyles">
-
-          <panel :is-open="true" header="Selected blocks styles"
-            v-bind:key="'block-styles'" ref="panelBlockStyles">-->
             <div class="styles-catalogue">
 
               <vue-tabs ref="blockTypesTabs" class="block-style-tabs">
@@ -297,24 +219,24 @@
                   <legend>Book styles</legend>
                   <div>
                     <label class="style-label"
-                      @click="$event.target.value = ''; update('styles.global', $event)">
-                      <i v-if="!currentBook.styles.global || currentBook.styles.global === ''"
+                      @click="liveUpdate('styles.global', '')">
+                      <i v-if="!currentBook.styles || !currentBook.styles.global || currentBook.styles.global === ''"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                     ILM</label>
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="$event.target.value = 'global-ocean'; update('styles.global', $event)">
-                      <i v-if="currentBook.styles.global === 'global-ocean'"
+                      @click="liveUpdate('styles.global', 'global-ocean')">
+                      <i v-if="currentBook.styles && currentBook.styles.global === 'global-ocean'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                     Ocean</label>
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="$event.target.value = 'global-ffa'; update('styles.global', $event)">
-                      <i v-if="currentBook.styles.global === 'global-ffa'"
+                      @click="liveUpdate('styles.global', 'global-ffa')">
+                      <i v-if="currentBook.styles && currentBook.styles.global === 'global-ffa'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
                       FFA</label>
@@ -339,14 +261,6 @@
                       <i v-else class="fa fa-circle-o"></i>
                     x.x</label>
                   </div>
-                  <!--<div>
-                    <label class="style-label"
-                      @click="liveUpdate('numbering', 'auto')">
-                      <i v-if="currentBook.numbering === 'auto'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                      Autoincrement</label>
-                  </div>-->
                   <div>
                     <label class="style-label"
                       @click="liveUpdate('numbering', 'none')">
@@ -426,7 +340,7 @@
                     <label class="block-style-label"
                       @click="selSecNum(blockType, 'parNum', numProps.get(blockType).get('parNum'))">
                       <template v-if="numProps.get(blockType).get('parNum') == 'mixed'">
-                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                        <i class="fa fa-square-o" aria-hidden="true"></i>
                       </template>
                       <template v-else>
                         <i v-if="numProps.get(blockType).get('parNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
@@ -488,76 +402,6 @@
               </vue-tabs>
 
             </div>
-            <!--<div class="styles-catalogue">-->
-          <!--</panel>
-
-          <panel :is-open="false" header="Book styles"
-            v-bind:key="'book-styles'" ref="panelBookStyles">
-
-            <div class="styles-catalogue">
-
-              <vue-tabs ref="stylesTabs">
-
-                <vue-tab title="Styles" :id="'global-styles-switcher'">
-                  <div>
-                    <input type="radio" :id="'gs-default'" :value="''" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-default'" class="style-label">ILM</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'gs-ocean'" :value="'global-ocean'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-ocean'" class="style-label">Ocean</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'gs-ffa'" :value="'global-ffa'" v-model="currentBook.styles.global" @change="update('styles.global', $event)">
-                    <label :for="'gs-ffa'" class="style-label">FFA</label>
-                  </div>
-                </vue-tab>
-                <vue-tab title="Fonts" :id="'fonts-styles-switcher'">
-                  <div>
-                    <input type="radio" :id="'ft-default'" :value="''" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                    <label :for="'ft-default'" class="style-label">default</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'ft-typewriter'" :value="'typewriter'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                    <label :for="'ft-typewriter'" class="style-label">typewriter</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'ft-monospace'" :value="'monospace'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                    <label :for="'ft-monospace'" class="style-label">monospace</label>
-                  </div>
-                  <div>
-                    <input type="radio" :id="'ft-oldbook'" :value="'oldbook'" v-model="currentBook.styles.font" @change="update('styles.font', $event)">
-                    <label :for="'ft-oldbook'" class="style-label">oldbook</label>
-                  </div>
-                </vue-tab>
-                <vue-tab title="Align" :id="'align-styles-switcher'">
-
-                  <div v-for="(align, key) in blockTypes.par['align']" >
-                    <input type="radio" :id="'pt-'+align" :value="align" v-model="currentBook.styles.align" @change="update('styles.align', $event)">
-                    <label :for="'pt-'+align" class="style-label">{{align.length ? align : 'default'}}</label>
-                  </div>
-                </vue-tab>
-                <vue-tab title="Par" :id="'paragraphs-styles-switcher'">
-                  <div v-for="(type, key) in blockTypes.par['paragraph type']" >
-                    <input type="radio" :id="'pt-'+type" :value="type" v-model="currentBook.styles.parType" @change="update('styles.parType', $event)">
-                    <label :for="'pt-'+type" class="style-label">{{type.length ? type : 'default'}}</label>
-                  </div>
-                </vue-tab>
-                <vue-tab title="HR" :id="'hr-styles-switcher'">
-                  <div v-for="(size, key) in blockTypes.hr['size']" >
-                    <input type="radio" :id="'pt-'+size" :value="(size.length ?'global-hr-':'')+ size" v-model="currentBook.styles.hrSize" @change="update('styles.hrSize', $event)">
-                    <label :for="'pt-'+size" class="style-label">{{size.length ? size : 'default'}}</label>
-                  </div>
-                </vue-tab>
-
-            </vue-tabs>
-
-            </div>
-            <!--<div class="styles-catalogue">-->
-          <!--</panel>
-
-        </accordion>-->
-
         </vue-tab>
       </vue-tabs>
       </div>
@@ -580,16 +424,6 @@
 
       <p>{{infoMessage}}.</p>
     </alert>
-
-    <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Complete" cancel-text="Close" title="" @ok="sharePrivateBook()">
-      <div v-html="sharePrivateBookMessage"></div>
-    </modal>
-    <!-- <modal v-model="unlinkCollectionWarning" effect="fade" ok-text="Remove" cancel-text="Cancel" @ok="updateCollection()" @cancel="cancelCollectionUpdate">
-      <p>Remove book from collection?</p>
-    </modal> -->
-    <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="completeAudioMastering()">
-      <p>Complete mastering?</p>
-    </modal>
     <modal v-model="generatingAudiofile" :backdrop="false" effect="fade">
       <div slot="modal-header" class="modal-header">
         <h4>Export audio</h4>
@@ -631,10 +465,12 @@ import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
 import { Languages } from "../../mixins/lang_config.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
-import VueTextareaAutosize from 'vue-textarea-autosize'
+//import VueTextareaAutosize from 'vue-textarea-autosize'
+import BookAssignments from './details/BookAssignments';
+import BookWorkflow from './details/BookWorkflow';
 var BPromise = require('bluebird');
 
-Vue.use(VueTextareaAutosize)
+//Vue.use(VueTextareaAutosize)
 
 export default {
 
@@ -651,7 +487,9 @@ export default {
     alert,
     modal,
     accordion,
-    panel
+    panel,
+    BookAssignments,
+    BookWorkflow
   },
 
   data () {
@@ -662,6 +500,7 @@ export default {
       styleTitles: {
         'title_style': 'type'
       },
+      styleNotNumbered: ['sitalcent', 'editor-note', 'signature', 'reference'],
       languages: Languages,
       dirty: {
       },
@@ -680,13 +519,11 @@ export default {
       infoMessage: '',//to display info on action finished
       approveMetadataComment: '',
       showSharePrivateBookModal: false,
-      showAudioMasteringModal: false,
       textCleanupProcess: false,
       finishPublishedProcess: false,
       //audiobook: {},
       unlinkCollectionWarning: false,
       blockTypes: BlockTypes,
-      audioMasteringProcess: false,
       generatingAudiofile: false,
       audiobookChecker: false,
 
@@ -699,7 +536,12 @@ export default {
       publicationStatus: false,
       isExporting:false,
       validationErrors: {extid: []},
-      updateAllowed: false
+      updateAllowed: false,
+      TAB_ASSIGNMENT_INDEX: 0,
+      TAB_META_INDEX: 1,
+      TAB_TOC_INDEX: 2,
+      TAB_AUDIO_INDEX: 3,
+      TAB_STYLE_INDEX: 4
     }
   },
 
@@ -729,7 +571,10 @@ export default {
       blockSelection: 'blockSelection',
       alignCounter: 'alignCounter',
       audiobook: 'currentAudiobook',
-      subjectCategories: 'bookCategories'
+      subjectCategories: 'bookCategories',
+      tasks_counter: 'tasks_counter',
+      taskTypes: 'taskTypes',
+      adminOrLibrarian: 'adminOrLibrarian'
     }),
     collectionsList: {
       get() {
@@ -775,29 +620,6 @@ export default {
         return false;
       }
     },
-    isAllowEditingComplete: {
-      get() {
-        if (this.tc_allowEditingComplete()) {
-          if (this.currentBookCounters.not_marked_blocks === 0) {
-            return true;
-          }
-        } else if (this.tc_allowFinishMastering()) {
-          if (this.currentBookCounters.not_marked_blocks === 0) {
-            return true;
-          }
-        }
-        return false;
-      }
-    },
-    sharePrivateBookMessage: {
-      get() {
-        if (this.currentBookCounters.narration_blocks > 0) {
-          return 'Complete editing and request narration for ' + this.currentBookCounters.narration_blocks + ' blocks?'
-        } else {
-          return 'Complete editing?';
-        }
-      }
-    },
     mergedAudiofileLink: {
       get() {
         if (this.currentBook.mergedAudiofile) {
@@ -838,7 +660,6 @@ export default {
       });
 
     this.$root.$on('from-bookblockview:voicework-type-changed', function() {
-      self.setCurrentBookCounters(['narration_blocks', 'not_marked_blocks']);
       self.getAudioBook();
     });
     this.setCurrentBookCounters();
@@ -849,10 +670,17 @@ export default {
     }
     $('body').on('click', '.vue-tabs.meta-edit-tabs li.tab', () => {
       this.activeTabIndex = this.$refs.panelTabs ? this.$refs.panelTabs.activeTabIndex : null;
+      if (this.activeTabIndex === 1 && this.$refs.descriptionShort) {
+        Vue.nextTick(() => {
+          this.$refs.descriptionShort.initSize();
+        });
+      }
+      if (this.activeTabIndex === 1 && this.$refs.descriptionLong) {
+        Vue.nextTick(() => {
+          this.$refs.descriptionLong.initSize();
+        });
+      }
     });
-    //setTimeout(() => {
-      //this.updateAllowed = true;//autosize plugin send updates on initialization
-    //}, 2000)
   },
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
@@ -978,19 +806,19 @@ export default {
         let newIndex = false;
 
         switch (this.activeTabIndex) {
-          case 0:
+          case this.TAB_ASSIGNMENT_INDEX:
             break;
-          case 1:
+          case this.TAB_META_INDEX:
             break;
-          case 2:
+          case this.TAB_AUDIO_INDEX:
             if (!this.tc_displayAudiointegrationTab()) {
-              newIndex = 0;
+              newIndex = this.TAB_ASSIGNMENT_INDEX;
               //console.log('HERE')
             }
             break;
-          case 3:
+          case this.TAB_STYLE_INDEX:
             if (!this.tc_displayStylesTab()) {
-              newIndex = 0;
+              newIndex = this.TAB_ASSIGNMENT_INDEX;
             }
             break;
         }
@@ -1039,39 +867,27 @@ export default {
         });*/
     },
     updateCollection(event) {
-      if (event && event.target.value) {
-        let collectionId = event.target.value;
-        let api_url = this.API_URL + 'collection/' + collectionId + '/link_books';
-        let api = this.$store.state.auth.getHttp();
-        let self = this;
-        api.post(api_url, {books_ids: [this.currentBook._id]}, {}).then(function(response){
-          self.unlinkCollectionWarning = false;
-          if (response.status===200) {
-            self.$router.push('/books');
-            self.visible = false;
-          } else {
-
-          }
-        }).catch((err) => {
-          self.unlinkCollectionWarning = false;
-        });
-      } else if (event) {
+      let collectionId = event && event.target.value ? event.target.value : null;
+      if (event && !collectionId) {
         this.unlinkCollectionWarning = true;
       } else {
-        let collection_id = this.currentBookMeta.collection_id;
-        let api_url = this.API_URL + 'collection/' + collection_id + '/unlink_books';
-        let api = this.$store.state.auth.getHttp();
-        let self = this;
-        api.post(api_url, {books_ids: [this.currentBook._id]}, {}).then(function(response){
-          self.unlinkCollectionWarning = false;
-          if (response.status===200) {
-            self.$router.push('/collections/' + collection_id);
-          } else {
-
-          }
-        }).catch((err) => {
-          self.unlinkCollectionWarning = false;
-        });
+        return this.updateBookCollection(collectionId)
+          .then(response => {
+            this.unlinkCollectionWarning = false;
+            if (response.status === 200) {
+              if (collectionId) {
+                this.$router.replace({path: '/collections/' + collectionId + '/' + this.currentBook.bookid});
+              } else {
+                Vue.nextTick(() => {
+                  this.$router.replace({path: '/books'});
+                });
+              }
+            }
+          })
+          .catch(err => {
+            this.unlinkCollectionWarning = false;
+            console.log(err);
+          })
       }
     },
 
@@ -1091,13 +907,16 @@ export default {
     update: _.debounce(function (key, event) {
       let val = typeof event === 'string' ? event : event.target.value;
       this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
-    }, 500),
+    }, 1500, {
+      'leading': false,
+      'trailing': true
+    }),
 
     liveUpdate (key, value) {
       //if (!this.updateAllowed) {
         //return Promise.resolve();
       //}
-      console.log('liveUpdate', key, value);
+      //console.log('liveUpdate', key, value);
 
       var keys = key.split('.');
       key = keys[0];
@@ -1115,25 +934,25 @@ export default {
         update.voices = {};
       }
 
-      console.log('update', update);
+      //console.log('update', update);
       return this.updateBookMeta(update)
       .then((response)=>{
         if (key == 'numbering') {
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
           //this.$root.$emit('from-book-meta:upd-toc', true);
         }
-        let updateVersion = {minor: true};
-        switch(key) {
-          case 'styles':
-          case 'numbering':
-            updateVersion = {major: true};
-            break;
-        }
-        return this.updateBookVersion(updateVersion)
-        .then(() => {
+//         let updateVersion = {minor: true};
+//         switch(key) {
+//           case 'styles':
+//           case 'numbering':
+//             updateVersion = {major: true};
+//             break;
+//         }
+//         return this.updateBookVersion(updateVersion)
+//         .then(() => {
           return response;
-        })
-        .catch(err => err);
+//         })
+//         .catch(err => err);
         //return BPromise.resolve(response);
       })
       .catch(err => {
@@ -1261,72 +1080,6 @@ export default {
             self.textCleanupProcess = false
           })
     },
-    completeAudioMastering() {
-      this.audioMasteringProcess = true;
-      var self = this;
-      self.showAudioMasteringModal = false;
-      axios.put(self.API_URL + 'task/' + self.currentBook._id + '/finish_mastering')
-        .then((doc) => {
-          self.audioMasteringProcess = false
-          if (!doc.data.error) {
-            self.$store.dispatch('tc_loadBookTask')
-            self.$store.dispatch('getCurrentJobInfo');
-            self.infoMessage = 'Mastering task finished'
-          } else {
-            self.errorMessage = doc.data.error
-          }
-        })
-        .catch((err, test) => {
-          self.audioMasteringProcess = false;
-        })
-    },
-    /*loadAudiobook(set_tab = false) {
-      let self = this;
-      this.getAudioBook(this.currentBookMeta.bookid).then(audio => {
-        self.setAudiobook(audio);//
-        //console.log(self.audiobook)
-        self.setAllowSetMastered();
-        if (false && set_tab) {
-          if (self.audiobook.bookid) {
-            self.$refs.panelTabs.findTabAndActivate('Audio Integration');
-          } else {
-            self.$refs.panelTabs.findTabAndActivate('Book Content');
-          }
-        }
-      })
-      .catch(err => this.setAudiobook({}))
-    },
-    setAudiobook(audiobook) {
-      if (audiobook._id && audiobook._id != this.audiobook._id) {
-        if (this.audiobookChecker) {
-          clearInterval(this.audiobookChecker);
-        }
-        this.audiobookChecker = setInterval(() => {
-            var dbPath = superlogin.getDbUrl('ilm_content')
-            var db = new PouchDB(dbPath)
-            db.get(audiobook._id)
-              .then((a) => {
-                //console.log(a)
-                if (a) {
-                  this.setAudiobook(a)
-                }
-              })
-              .catch(err => console.log(err))
-          }, 20000);
-      }
-      if (!audiobook._id) {
-        if (this.audiobookChecker) {
-          clearInterval(this.audiobookChecker);
-        }
-      }
-      this.audiobook = audiobook;
-    },
-    onAudiobookUpdate(audio) {
-      this.audiobook = {};
-      Vue.nextTick(() => {
-        this.audiobook = audio;
-      })
-    },*/
     addAuthor() {
       this.currentBook.author.push('');
       this.liveUpdate('author', this.currentBook.author);
@@ -1339,9 +1092,13 @@ export default {
     },
     publish() {
       // this.isPublishing = false;
-      this.isPublishingQueue = true;
+      // this.isPublishingQueue = true;
       return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish')
       .then(resp => {
+        if (resp.status == 200 && resp.data.ok) {
+          this.currentBook.isInTheQueueOfPublication = true;
+          this.currentBookMeta.isInTheQueueOfPublication = true;
+        }
         console.log(resp);
       });
     },
@@ -1373,11 +1130,6 @@ export default {
       //this.$router.push({name: this.$route.name, params:  params});
       }
       return route;
-    },
-    toggleMastering() {
-      if (this.tc_allowToggleMetaMastering()) {
-        this.liveUpdate('masteringRequired',  !this.currentBook.masteringRequired)
-      }
     },
     setAllowExportAudio() {
       this.allowExportAudio = false;
@@ -1420,64 +1172,68 @@ export default {
       let nums = new Map();
 
       if (this.storeListO.getBlock(startId)) {
-        let idsArrayRange = this.storeListO.idsArrayRange(startId, endId);
-        idsArrayRange.forEach((blockId)=>{
+        let idsArrayRange = this.storeListO.ridsArrayRange(startId, endId);
+        idsArrayRange.forEach((blockRid)=>{
         //console.log('blockId', blockId);
 
-          let pBlock = this.storeList.get(blockId);
-          if (pBlock) {
-            if (!result.has(pBlock.type)) result.set(pBlock.type, new Map());
+          let oBlock = this.storeListO.get(blockRid);
 
-            for (let styleKey in this.blockTypes[pBlock.type]) {
-              if (!result.get(pBlock.type).has(styleKey)) result.get(pBlock.type).set(styleKey, new Map());
-              if (pBlock.classes[styleKey]) {
-                result.get(pBlock.type).get(styleKey).set(pBlock.classes[styleKey], true);
-              } else {
-                result.get(pBlock.type).get(styleKey).set('none', true);
-              }
-            }
+          if (oBlock) {
+            let pBlock = this.storeList.get(oBlock.blockid);
+            if (pBlock) {
+              if (!result.has(oBlock.type)) result.set(oBlock.type, new Map());
 
-            if (!nums.has(pBlock.type))
-              nums.set(pBlock.type, new Map([
-                ['secNum',  !(pBlock.secnum === false)],
-                ['secHide', !(pBlock.secHide === false)],
-                ['parNum',  !(pBlock.parnum === false)],
-                ['parHide', !(pBlock.parHide === false)],
-              ]));
-
-            //console.log('nums.get(pBlock.type)', nums.get(pBlock.type), !(pBlock.secnum === false));
-
-            if (nums.get(pBlock.type).get('secNum') !== 'mixed') {
-              if (pBlock.hasOwnProperty('secnum')) {
-                if (!(pBlock.secnum === false) !== nums.get(pBlock.type).get('secNum')) {
-                  nums.get(pBlock.type).set('secNum', 'mixed');
+              for (let styleKey in this.blockTypes[oBlock.type]) {
+                if (!result.get(oBlock.type).has(styleKey)) result.get(oBlock.type).set(styleKey, new Map());
+                if (pBlock.classes[styleKey]) {
+                  result.get(oBlock.type).get(styleKey).set(pBlock.classes[styleKey], true);
                 } else {
-                  nums.get(pBlock.type).set('secNum', !(pBlock.secnum === false));
+                  result.get(oBlock.type).get(styleKey).set('none', true);
                 }
-              } else {
-                nums.get(pBlock.type).set('secNum', false);
               }
-            }
-            if (nums.get(pBlock.type).get('secHide') !== 'mixed') {
-              if (pBlock.hasOwnProperty('secHide')) {
-                if (!(pBlock.secHide === false) !== nums.get(pBlock.type).get('secHide')) {
-                  nums.get(pBlock.type).set('secHide', 'mixed');
+
+              if (!nums.has(oBlock.type))
+                nums.set(oBlock.type, new Map([
+                  ['secNum',  !(oBlock.isNumber === false)],
+                  ['secHide', !(oBlock.isHidden === false)],
+                  ['parNum',  !(oBlock.isNumber === false)],
+                  ['parHide', !(oBlock.isHidden === false)],
+                ]));
+
+              //console.log('nums.get(pBlock.type)', nums.get(pBlock.type), !(pBlock.secnum === false));
+
+              if (nums.get(oBlock.type).get('secNum') !== 'mixed') {
+                if (oBlock.hasOwnProperty('secnum')) {
+                  if (!(oBlock.isNumber === false) !== nums.get(oBlock.type).get('secNum')) {
+                    nums.get(oBlock.type).set('secNum', 'mixed');
+                  } else {
+                    nums.get(oBlock.type).set('secNum', !(oBlock.isNumber === false));
+                  }
                 } else {
-                  nums.get(pBlock.type).set('secHide', !(pBlock.secHide === false));
+                  nums.get(oBlock.type).set('secNum', false);
                 }
-              } else {
-                nums.get(pBlock.type).set('secHide', false);
               }
-            }
-            if (nums.get(pBlock.type).get('parNum') !== 'mixed') {
-              if (pBlock.hasOwnProperty('parnum')) {
-                if (!(pBlock.parnum === false) !== nums.get(pBlock.type).get('parNum')) {
-                  nums.get(pBlock.type).set('parNum', 'mixed');
+              if (nums.get(oBlock.type).get('secHide') !== 'mixed') {
+                if (oBlock.hasOwnProperty('isHidden')) {
+                  if (!(oBlock.isHidden === false) !== nums.get(oBlock.type).get('secHide')) {
+                    nums.get(oBlock.type).set('secHide', 'mixed');
+                  } else {
+                    nums.get(oBlock.type).set('secHide', !(oBlock.isHidden === false));
+                  }
                 } else {
-                  nums.get(pBlock.type).set('parNum', !(pBlock.parnum === false));
+                  nums.get(oBlock.type).set('secHide', false);
                 }
-              } else {
-                nums.get(pBlock.type).set('parNum', false);
+              }
+              if (nums.get(oBlock.type).get('parNum') !== 'mixed') {
+                if (oBlock.hasOwnProperty('isNumber')) {
+                  if (!(oBlock.isNumber === false) !== nums.get(oBlock.type).get('parNum')) {
+                    nums.get(oBlock.type).set('parNum', 'mixed');
+                  } else {
+                    nums.get(oBlock.type).set('parNum', !(oBlock.isNumber === false));
+                  }
+                } else {
+                  nums.get(oBlock.type).set('parNum', false);
+                }
               }
             }
           }
@@ -1505,37 +1261,62 @@ export default {
     selectStyle(blockType, styleKey, styleVal)
     {
       let updateToc = (styleKey == 'table of contents' || (blockType == 'title' && styleKey == 'style') );
-      let updatePromises = [];
+      let updateNum = !(styleKey == 'paragraph type' && ['sitalcent', 'editor-note', 'reference', 'signature'].indexOf(styleVal) >-1);
+      let updatePromises = [], updateNums = [];
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
-          let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
-          idsArrayRange.forEach((blockId)=>{
-            let pBlock = this.storeList.get(blockId);
+          let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
+          idsArrayRange.forEach((blockRid)=>{
+            let oBlock = this.storeListO.get(blockRid);
+            if (oBlock) {
+              let pBlock = this.storeList.get(oBlock.blockid);
 
-            if (pBlock && blockType == 'title' && styleKey == 'style' && styleVal != ''){
-              pBlock.classes['table of contents'] = '';
-            }
+              if (pBlock && blockType == 'title' && styleKey == 'style' && styleVal != ''){
+                pBlock.classes['table of contents'] = '';
+              }
 
-            if (pBlock && blockType == 'title' && styleKey == 'table of contents' && styleVal != ''){
-              pBlock.classes['style'] = '';
-            }
+              if (pBlock && blockType == 'title' && styleKey == 'table of contents' && styleVal != ''){
+                pBlock.classes['style'] = '';
+              }
 
-            if (pBlock && pBlock.type == blockType) {
-                if (styleVal.length) {
-                  pBlock.classes[styleKey] = styleVal;
-                  if (blockType === 'header' && styleKey === 'level') {
-                    updateToc = true;
-                    pBlock.classes['table of contents'] = 'toc' + styleVal.replace(/\D/, '');
+            if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) == -1 && this.styleNotNumbered.indexOf(styleVal) != -1){
+                pBlock.parnum = false;
+                pBlock.isNumber = false;
+              }
+
+            if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) != -1 && this.styleNotNumbered.indexOf(styleVal) == -1){
+                pBlock.parnum = true;
+                pBlock.isNumber = true;
+              }
+
+              if (pBlock && pBlock.type == blockType) {
+                  if (styleVal.length) {
+
+                    pBlock.classes[styleKey] = styleVal;
+                    if (blockType === 'header' && styleKey === 'level') {
+                      updateToc = true;
+                      pBlock.classes['table of contents'] = 'toc' + styleVal.replace(/\D/, '');
+                    }
+                  }
+                else pBlock.classes[styleKey] = '';
+                //console.log(oBlock.blockid, 'isNumber', oBlock.isNumber,  'updateNum', updateNum);
+                if (pBlock.isChanged || pBlock.isAudioChanged) {
+                  pBlock.checked = false;
+                  pBlock.checked = true;
+                  if (oBlock.isNumber !== updateNum) {
+                    oBlock.isNumber = updateNum;
+                  }
+                } else {
+                  pBlock.partUpdate = true;
+                  if (oBlock.isNumber !== updateNum) {
+                    updateNums.push(oBlock.rid);
+                    pBlock.isNumber = updateNum;
+                    oBlock.isNumber = updateNum;
+                    updatePromises.push(this.putNumBlock(pBlock));
+                  } else {
+                    updatePromises.push(this.putBlock(pBlock));
                   }
                 }
-              else pBlock.classes[styleKey] = '';
-
-              if (pBlock.isChanged || pBlock.isAudioChanged) {
-                pBlock.checked = false;
-                pBlock.checked = true;
-              } else {
-                pBlock.partUpdate = true;
-                updatePromises.push(this.putBlock(pBlock));
               }
             }
           })
@@ -1543,12 +1324,23 @@ export default {
         }
         Promise.all(updatePromises)
           .then(()=>{
-            if (updateToc) {
-              this.$root.$emit('from-book-meta:upd-toc', true);
+            if (updateNums.length > 0) {
+              this.putNumBlockOBatch({bookId: this.currentBookid})
+              .then(()=>{
+                this.$root.$emit('from-meta-edit:set-num');
+                console.log("$emit('from-meta-edit:set-num')");
+                if (updateToc) {
+                  this.$root.$emit('from-book-meta:upd-toc', true);
+                }
+                this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+              });
+            } else {
+              if (updateToc) {
+                this.$root.$emit('from-book-meta:upd-toc', true);
+              }
+              this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
             }
           })
-        //this.$root.$emit('from-meta-edit:set-num');
-        this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
       }
     },
 
@@ -1558,62 +1350,40 @@ export default {
       }
     },
 
-    goToBlock(id) {
-      this.$root.$emit('for-bookedit:scroll-to-block', id);
-    },
-
     selSecNum (blockType, valKey, currVal) {
-      console.log('selSecNum', blockType, valKey, currVal);
+      //console.log('selSecNum', blockType, valKey, currVal);
       let updatePromises = [];
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let putBlockOpromise = [];
-          let idsArrayRange = this.storeListO.idsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
-          let pBlock, oBlock;
+          let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
+          let oBlock;
 
-          idsArrayRange.forEach((blockId)=>{
-            pBlock = this.storeList.get(blockId);
-            //oBlock = this.storeListO.getBlock(blockId);
-            oBlock = { rid: this.storeListO.getRIdById(blockId) };
-
-            if (pBlock && pBlock.type == blockType) {
+          idsArrayRange.forEach((blockRid)=>{
+            oBlock = this.storeListO.get(blockRid);
+            if (oBlock && oBlock.type == blockType) {
               switch(valKey) {
-                  case 'secNum' : {
-                    if (currVal == 'mixed' || currVal === false) {
-                      if (pBlock.secVal) pBlock.secnum = pBlock.secVal;
-                      else pBlock.secnum = '';
-                      oBlock.isNumber = true;
-                    } else {
-                      pBlock.secVal = pBlock.secnum;
-                      pBlock.secnum = false;
-                      oBlock.isNumber = false;
-                    }
-                  } break;
                   case 'secHide' : {
                     if (currVal == 'mixed' || currVal === false) {
-                      pBlock.secHide = true;
                       oBlock.isHidden = true;
                     } else {
-                      pBlock.secHide = false;
                       oBlock.isHidden = false;
                     }
                   } break;
-                  case 'parNum' : {
+
+                  case 'secNum' : {
                     if (currVal == 'mixed' || currVal === false) {
-                      pBlock.parnum = '';
                       oBlock.isNumber = true;
                     } else {
-                      pBlock.parnum = false;
                       oBlock.isNumber = false;
                     }
                   } break;
-                  case 'parHide' : {
+
+                  case 'parNum' : {
                     if (currVal == 'mixed' || currVal === false) {
-                      pBlock.parHide = true;
-                      oBlock.isHidden = true;
+                      oBlock.isNumber = true;
                     } else {
-                      pBlock.parHide = false;
-                      oBlock.isHidden = false;
+                      oBlock.isNumber = false;
                     }
                   } break;
                   default : {
@@ -1621,34 +1391,27 @@ export default {
               };
 
               if (oBlock.rid) {
-                putBlockOpromise.push(this.putBlockO(oBlock));
-                this.storeListO.updBlockByRid(oBlock.rid, {
+                let upd = {
+                  rid: oBlock.rid,
                   isHidden: oBlock.isHidden,
                   isNumber: oBlock.isNumber
-                })
-              }
-
-              if (pBlock.isChanged || pBlock.isAudioChanged) {
-              } else {
-                pBlock.partUpdate = true;
-                updatePromises.push(this.putBlock(pBlock));
-
+                }
+                putBlockOpromise.push(this.putBlockO(upd));
               }
             }
-
           });
 
-          Promise.all([putBlockOpromise, updatePromises]).then((res)=>{
+          Promise.all([putBlockOpromise]).then((res)=>{
             if (valKey == 'secNum' || valKey == 'parNum') {
               let blockO = this.storeListO.getBlock(this.blockSelection.start._id);
               this.$root.$emit('from-meta-edit:set-num', this.currentBookid, this.currentBook.numbering, blockO.rid)
             } else {
               this.$root.$emit('from-meta-edit:set-num');
             }
+            this.updateBookVersion({major: true})
             if (valKey == 'secHide' && blockType == 'header') {
               this.$root.$emit('from-book-meta:upd-toc', true);
             }
-            this.updateBookVersion({major: true})
           })
         }
 
@@ -1719,7 +1482,6 @@ export default {
           this.updateBookVersion({major: true})
           this.tc_loadBookTask();
           this.getCurrentJobInfo();
-          this.getTotalBookTasks();
         })
         .catch(err => {
           this.finishPublishedProcess = false;
@@ -1737,10 +1499,68 @@ export default {
         this.liveUpdate('extid', event.target.value);
       }
     }, 500),
+    
+    getTaskType(typeId) {
+      let t = this.taskTypes.tasks.find(_t => {
+        return _t._id === typeId;
+      });
+      if (t) {
+        return t.title;
+      } else {
+        return '';
+      }
+    },
+    
+    checkAfterAudioImport() {
+      this.showModal_audio = false
+      if (this.activeTabIndex !== this.TAB_AUDIO_INDEX && this.$refs.panelTabs && this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX] && !this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX].disabled) {
+        this.activeTabIndex = this.TAB_AUDIO_INDEX;
+        this.$refs.panelTabs.findTabAndActivate(this.TAB_AUDIO_INDEX);
+        this.$forceUpdate();
+      }
+    },
+    
+    updateJobDescription: _.debounce(function(event) {
+      this.updateJob({id: this.currentJobInfo.id, description: event.target.value});
+    }, 500),
+    
+    setInfoMessage(msg) {
+      this.infoMessage = msg;
+    },
+    setErrorMessage(msg) {
+      this.errorMessage = msg;
+    },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta', 'updateJob', 'updateBookCollection'])
   }
 }
+
+
+Vue.component('resizable-textarea', {
+  methods: {
+    resizeTextarea (event) {
+      event.target.style.height = 'auto'
+      event.target.style.height = (event.target.scrollHeight) + 'px'
+    },
+    initSize() {
+      this.$el.setAttribute('style', 'height:' + (this.$el.scrollHeight) + 'px;overflow-y:hidden;')
+    }
+  },
+  mounted () {
+    this.$nextTick(() => {
+      this.initSize();
+    })
+
+    this.$el.addEventListener('input', this.resizeTextarea)
+  },
+  beforeDestroy () {
+    this.$el.removeEventListener('input', this.resizeTextarea)
+  },
+  render () {
+    return this.$slots.default[0]
+  },
+});
+
 </script>
 
 
@@ -1898,10 +1718,6 @@ export default {
 
   .editing-wrapper {
     margin-left: 15px;
-    .btn-edit-complete {
-      margin-bottom: 5px;
-
-    }
 
     .blocks-counter {
       vertical-align: middle;
@@ -2081,6 +1897,10 @@ export default {
     li.tab {
       display: block;
     }
+  }
+
+  .outline-0 {
+    outline: 0;
   }
 
 </style>

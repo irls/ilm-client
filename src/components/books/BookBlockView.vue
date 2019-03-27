@@ -435,7 +435,7 @@
                     </template>
                   </div>
                   <div class="table-cell -audio -right">
-                    <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && (isEditor && tc_isShowEdit(block._id))"> <!--&& !isAudioChanged"-->
+                    <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && ((_is('editor', true) || adminOrLibrarian) && tc_isShowEdit(block._id))"> <!--&& !isAudioChanged"-->
                       <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor(footnote, ftnIdx, $event)"></i>
                     </template>
                     <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
@@ -837,7 +837,7 @@ export default {
             if (!narratorTask) {
               return false;
             }
-            let approveTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'approve-modified-block');
+            let approveTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'approve-modified-block' && t.blockid == this.block._id);
             if (approveTask) {
               return false;
             }
@@ -914,7 +914,8 @@ export default {
             }
             if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
             if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1 && flags_summary.stat !== 'open' && !this._is(flags_summary.dir, true)) return false;
-            if (this._is('editor', true) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
+            if ((this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
+            if ((this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasBlockTask(this.block._id, 'approve-modified-block')) return false;
             if (this._is('proofer', true) && this.tc_hasBlockTask(this.block._id, 'approve-revoked-block') && flags_summary.stat !== 'open') return false;
             if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
             if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
@@ -1191,11 +1192,13 @@ export default {
         'getAlignCount',
         'recountApprovedInRange',
         'loadBookToc',
-        'updateBlockToc',
         'tc_loadBookTask',
         'getCurrentJobInfo',
         'getTotalBookTasks',
-        'updateBookVersion'
+        'updateBookVersion',
+        'updateBlockToc',
+        'saveNarrated',
+        'checkError'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1418,7 +1421,7 @@ export default {
         }
       },
       update: function() {
-        console.log('update');
+        //console.log('update');
         //this.isChanged = true;
         //Vue.set(this, 'isChanged', true);
       },
@@ -1456,7 +1459,7 @@ export default {
 
           if (this.$refs.blockContent) {
             this.$refs.blockContent.innerHTML = block.content;
-            this.$refs.blockContent.focus();
+            //this.$refs.blockContent.focus();
           }
           if (this.$refs.blockFlagPopup) {
             this.$refs.blockFlagPopup.close();
@@ -1589,23 +1592,22 @@ export default {
             break;
           default:
             this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
-            if (this.block.footnotes && this.block.footnotes.length) {
-              this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-                this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
-              });
+            if (this.mode !== 'narrate') {
+              if (this.block.footnotes && this.block.footnotes.length) {
+                this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+                  this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
+                });
+              }
             }
             break;
         }
         this.block.classes = [this.block.classes];
-        let recount_marked = false;
         if (this.block.status.marked === true) {
           this.block.status.marked = false;
-          recount_marked = true;
         }
         if (this.block._markedAsDone) {
           this.block.status.marked = true;
           delete this.block._markedAsDone;
-          recount_marked = true;
         }
 
         this.checkBlockContentFlags();
@@ -1625,7 +1627,6 @@ export default {
           if (this.isCompleted) {
             this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
-            this.getTotalBookTasks();
           }
           let is_content_changed = this.hasChange('content');
           let is_type_changed = this.hasChange('type');
@@ -1645,9 +1646,6 @@ export default {
             this.$refs.blockContent.dataset.has_suggestion = false;
           } else if (is_content_changed && this.block.audiosrc) {
             this.doReAlign();
-          }
-          if (recount_marked) {
-            this.setCurrentBookCounters(['not_marked_blocks']);
           }
           if (is_content_changed) {
             if (['title', 'header'].indexOf(this.block.type) !== -1) {
@@ -1706,6 +1704,8 @@ export default {
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
         content = content.replace(/<span[^>]*>([\s\S]*?)<\/span>/gm, '$1')
+        content = content.replace(/<br[\/]?><br[\/]?>/gm, '<br>');
+        content = content.replace(/^<br[\/]?>/, '');
         return content;
       },
 
@@ -1762,13 +1762,11 @@ export default {
               if (response.status == 200) {
                 if (this.isCompleted) {
                   this.tc_loadBookTask();
-                  this.getCurrentJobInfo();
-                  this.getTotalBookTasks();
                 }
+                this.getCurrentJobInfo();
 
                 if (this.block.status.marked != response.data.status.marked) {
                   this.block.status.marked = response.data.status.marked;
-                  this.setCurrentBookCounters(['not_marked_blocks']);
                 }
                 this.$emit('blockUpdated', this.block._id);
                 if (footnoteIdx === null) {
@@ -1798,7 +1796,10 @@ export default {
                 }
               }
             })
-            .catch(err => BPromise.reject(err));
+            .catch(err => {
+              this.checkError(err);
+              BPromise.reject(err)
+            });
         } else {
           return BPromise.reject();
         }
@@ -1825,7 +1826,6 @@ export default {
           this.assembleBlock(ev)
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
-            this.setCurrentBookCounters(['not_marked_blocks']);
             this.recountApprovedInRange();
           });
         }
@@ -1840,7 +1840,6 @@ export default {
           this.assembleBlock(ev)
           .then(()=>{
             //this.setCurrentBookBlocksLeft(this.block.bookid);
-            this.setCurrentBookCounters(['not_marked_blocks']);
             if (this.tc_hasTask('audio_mastering')) {
               this.setCurrentBookCounters(['not_proofed_audio_blocks']);
             }
@@ -1894,6 +1893,9 @@ export default {
               }
               //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
               this.recountApprovedInRange();
+              if (this.adminOrLibrarian) {
+                this.getTotalBookTasks();
+              }
               //this.getBloksUntil('unresolved', true, this.block._id)
             }
           })
@@ -2012,6 +2014,7 @@ export default {
             }
           })
           .catch(err => {
+            this.checkError(err);
             this.isUpdating = false;
           });
       },
@@ -2054,6 +2057,7 @@ export default {
             }
           })
           .catch(err => {
+            this.checkError(err);
             this.isUpdating = false;
           });
       },
@@ -2455,11 +2459,12 @@ export default {
             if (start_next) {
               self.stopRecordingAndNext();
             }
-            let formData = new FormData();
-            formData.append('audio', dataURL.split(',').pop());
-            formData.append('position', self.reRecordPosition);
-            formData.append('isTemp', self.isAudioChanged);
-            api.post(api_url, formData, {})
+            self.saveNarrated({
+              'audio': dataURL.split(',').pop(),
+              'position': self.reRecordPosition,
+              'isTemp': self.isAudioChanged,
+              'blockid': self.block.blockid
+            })
               .then(response => {
                 self.isUpdating = false;
                 if (response.status == 200) {
@@ -2490,12 +2495,12 @@ export default {
         }
       },
       doReAlign(footnoteIdx = null) {
-        if (this.block.audiosrc) {
+        if ((this.block.audiosrc) || (typeof footnoteIdx !== 'undefined' && footnoteIdx !== null && this.audioEditFootnote.footnote)) {
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/realign';
         let api = this.$store.state.auth.getHttp();
         let formData = new FormData();
         if (footnoteIdx !== null){
-          api_url = this.API_URL + 'book/block/' + this.block._id + '/footnote/' + footnoteIdx + 'realign'
+          api_url = this.API_URL + 'book/block/' + this.block._id + '/footnote/' + footnoteIdx + '/realign'
           formData.append('footnote_idx', footnoteIdx);
           formData.append('audio', [this.block.getAudiosrcFootnote(footnoteIdx, false, false)]);
         } else {
@@ -2513,6 +2518,9 @@ export default {
             } else {
               this.block.setContentFootnote(footnoteIdx, response.data.content);
               this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
+            }
+            if (this.isAudioEditing) {
+              this.$root.$emit('for-audioeditor:reload-text', response.data.content);
             }
           }
           this.reRecordPosition = false;
@@ -2819,7 +2827,7 @@ export default {
       evFromAudioeditorSaveAndRealign (blockId) {
         if (blockId == this.check_id) {
           this.audStop();
-          this.doReAlign()
+          this.doReAlign(this.footnoteIdx)
             .then(() => {
               this.assembleBlockAudioEdit(this.footnoteIdx);
               this.flushChanges();
@@ -3035,7 +3043,8 @@ export default {
           } else {
 
           }
-          if (this.blockO.type !== this.block.type) {
+
+          //if (this.blockO.type !== this.block.type) {
             this.blockO.status = Object.assign(this.blockO.status, {
               marked: this.block.markedAsDone,
               assignee: this.block.status.assignee,
@@ -3051,16 +3060,17 @@ export default {
               this.putNumBlockO({
                 bookId: this.block.bookid,
                 rid: this.blockO.rid,
+                type: this.block.type,
                 secnum: '',
                 parnum: ''
               }).then((blocks)=>{
                 //console.log('assembleBlock putNumBlockO', blocks[0]);
-                this.storeListO.updBlockByRid(this.blockO.rid, {
-                  type: this.block.type
-                })
+                //this.storeListO.updBlockByRid(this.blockO.rid, {
+                //  type: this.block.type
+                //})
               });
             });
-          }
+          //}
         }).catch((err) => {
           console.log(err)
         });
@@ -3113,9 +3123,11 @@ export default {
             this.voiceworkUpdating = false;
             if (this.isCompleted) {
               this.tc_loadBookTask();
-              this.getCurrentJobInfo();
-              this.getTotalBookTasks();
             }
+            if (this.currentJobInfo && this.currentJobInfo.published) {
+              this.updateBookVersion({major: true});
+            }
+            this.getCurrentJobInfo();
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
               this.getAlignCount();
@@ -3241,15 +3253,17 @@ export default {
             flag.addEventListener('click', this.handleFlagClick);
           });
         }
-        if (this.block && this.block.footnotes) {
-          for (let i in this.block.footnotes) {
-            let ref = this.$refs['footnoteContent_' + i];
-            if (ref) {
-              ref = ref[0];
-              ref.addEventListener("mouseup", () => {
-                //console.log('Selection changed.');
-                handler(this.block._id + '_' + i, ref);
-              });
+        if (this.mode !== 'narrate') {
+          if (this.block && this.block.footnotes) {
+            for (let i in this.block.footnotes) {
+              let ref = this.$refs['footnoteContent_' + i];
+              if (ref && ref[0]) {
+                ref = ref[0];
+                ref.addEventListener("mouseup", () => {
+                  //console.log('Selection changed.');
+                  handler(this.block._id + '_' + i, ref);
+                });
+              }
             }
           }
         }
@@ -3354,7 +3368,6 @@ export default {
             if (this.isCompleted) {
               this.tc_loadBookTask();
               this.getCurrentJobInfo();
-              this.getTotalBookTasks();
             }
           }
         }
@@ -3456,15 +3469,6 @@ export default {
       },
       'blockAudio.map' (newVal, oldVal) {
 
-      },
-      'block.status': {
-        handler(val, oldVal) {
-          if (this.block) {
-            if (val.marked != oldVal.marked) {
-              this.setCurrentBookCounters(['not_marked_blocks']);
-            }
-          }
-        }
       },
       'isCompleted': {
         handler(val, oldVal) {

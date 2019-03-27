@@ -18,8 +18,10 @@ let defBlock = [
   '_deleted',
   'parnum',
   'secnum',
-  'secVal',
-  'secHide',
+  /*'secVal',
+  'secHide',*/
+  'isHidden',
+  'isNumber',
   'illustration',
   'illustration_width',
   'illustration_height',

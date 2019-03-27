@@ -90,7 +90,7 @@
           headers: [
             {
               title: '',
-              path: '_id',
+              path: 'bookid',
               html (val) {
                 return `<i class="fa fa-check-square toggle-select"></i><i class="fa fa-square toggle-select"></i><input type="checkbox" class="link-book-select-toggle" name="select-link-${val}"/>`
               }
@@ -124,7 +124,7 @@
               }
             }
           ],
-          idField: '_id',
+          idField: 'bookid',
           selected: [],
           booksFilter: {title: '', language: 'en', collection: 'not-linked', published: ''},
           relinkCount: 0
@@ -191,7 +191,7 @@
                 self.allSelected = false;
               } else {
                 self.selected.forEach((s, i) => {
-                  let b = books.find(_b => _b._id === s);
+                  let b = books.find(_b => _b.bookid === s);
                   if (!b) {
                     self.selected.splice(i, 1);
                   }
@@ -220,8 +220,8 @@
           set(val) {
             if (val === true) {
               this.linkBooksList.forEach(b => {
-                if (this.selected.indexOf(b._id) === -1) {
-                  this.selected.push(b._id);
+                if (this.selected.indexOf(b.bookid) === -1) {
+                  this.selected.push(b.bookid);
                 }
               });
             } else if (val === false) {
@@ -234,8 +234,8 @@
       methods: {
         rowClick(item, event) {
           if (event && event.target && event.target.className.indexOf('toggle-select') !== -1) {
-            if (item && item._id) {
-              $('[name="select-link-' + item._id + '"]').trigger('click');
+            if (item && item.bookid) {
+              $('[name="select-link-' + item.bookid + '"]').trigger('click');
             }
           }
         },
@@ -250,7 +250,7 @@
           if (check === true) {
             this.relinkCount = 0;
             this.selected.forEach(s => {
-              let b = this.allBooks.find(_b => _b._id === s);
+              let b = this.allBooks.find(_b => _b.bookid === s);
               if (b && b.collection_id) {
                 ++this.relinkCount;
               }
