@@ -73,7 +73,7 @@
       </div>
       <div class="form-group">
         <label>Description</label>
-        <textarea v-model="description" class="form-control job-descr" rows="5"></textarea>
+        <textarea v-model="description" class="form-control job-descr" rows="5" maxlength="2000"></textarea>
         <div v-if="errors.description" v-for="err in errors.description" class="error-message" v-text="err"></div>
       </div>
     </div>

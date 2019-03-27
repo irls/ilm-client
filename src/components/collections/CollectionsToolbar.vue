@@ -7,6 +7,13 @@
 
 
         <input type="text" @keyup="filterChange('title', $event)" class="form-control" placeholder="Search by author or title" v-model="collectionsFilter['title']"></input>
+        <template v-if="adminOrLibrarian">
+          <select @change="filterChange('importStatus', $event)" v-model="collectionsFilter.importStatus">
+            <option value="">Not filtered</option>
+            <option value="active">Active</option>
+            <option value="archived">Archived</option>
+          </select> &nbsp;
+        </template>
         <select @change="filterChange('language', $event)" v-model="collectionsFilter['language']">
           <option v-for="(name, code) in languages" :value="code">{{name}}</option>
         </select>
@@ -23,7 +30,7 @@
         </button>
 
         <button v-if='hasItemSelected' class='btn btn-default btn-meta' @click='toggleMetaVisible'>
-          <i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>&nbsp;Meta
+          <i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>&nbsp;Details
         </button>
 
   </div>
@@ -105,7 +112,7 @@
     },
     computed: {
 
-      ...mapGetters(['bookCollections', 'collectionsFilter', 'allowCollectionsEdit', 'allowBookEditMode', 'currentBookMeta'])
+      ...mapGetters(['bookCollections', 'collectionsFilter', 'allowCollectionsEdit', 'allowBookEditMode', 'currentBookMeta', 'adminOrLibrarian'])
     }
   }
 </script>

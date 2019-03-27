@@ -32,7 +32,7 @@ class liveDB {
       socket.emit('start-watch', {class: className, params: params, key: key, subscriber: this.subscriber_id});
 
       socket.on('data-change-' + key, (data) => {
-        //console.log(data);
+        //console.log('data-change-' + key, data);
         callback.call(this, data);
       });
       socket.on('stop-watch-all-' + key, (data) => {
@@ -49,6 +49,7 @@ class liveDB {
     if (this.keys[className]) {
       //console.log(socket)
       socket.emit('stop-watch', {class: className, key: this.keys[className], subscriber: this.subscriber_id});
+      delete this.keys[className];
       //socket.close();
     }
   }

@@ -25,7 +25,7 @@
       <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose"
                   :importTaskId="import_book_task_id"
                   :bookId="import_book_id" />
-      <AudioImport v-if="show_import_audio_modal" @close="importAudioClose"
+      <AudioImport v-if="show_import_audio_modal" @closeOk="importAudioClose" @close="importAudioClose"
                   :book="import_book"
                   :importTask="import_audio_task"
                   :audiobook="task_audiobook"
@@ -263,7 +263,7 @@ export default {
       this.import_book_id = ''
       this.task_audiobook = {}
       //this.getTasks()
-      this.$store.dispatch('tc_loadBookTask')
+      //this.$store.dispatch('tc_loadBookTask')
     },
     onTabChange() {
       return true
