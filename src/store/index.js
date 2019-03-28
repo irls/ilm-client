@@ -133,6 +133,7 @@ export const store = new Vuex.Store({
     currentJobInfo: {
       can_resolve_tasks: [],
       mastering: null,
+      mastering_complete: null,
       proofing: null,
       published: null,
       text_cleanup: null,
