@@ -273,7 +273,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks', 'insertBlock', 'blocksJoin', 'removeBlock']),
 
     test(ev) {
         console.log('test', ev);
@@ -370,7 +370,7 @@ export default {
       if (!this.isBlocked && (this.isNeedUp || this.isNeedDown)) {
         switch(this.lazyLoaderDir) {
           case 'down' : {
-            this.isNeedDown = this.parlistO.getNextIds(this.isNeedDown, 200);
+            this.isNeedDown = this.parlistO.getNextIds(this.isNeedDown, 100);
             //console.log('this.isNeedDown', this.isNeedDown);
             if (this.isNeedDown.length > 0)
             {
@@ -403,7 +403,7 @@ export default {
 
           } break;
           case 'up' : {
-            this.isNeedUp = this.parlistO.getPrevIds(this.isNeedUp, 200);
+            this.isNeedUp = this.parlistO.getPrevIds(this.isNeedUp, 100);
             //console.log('this.isNeedUp', this.isNeedUp);
             if (this.isNeedUp.length > 0)
             {
@@ -731,9 +731,6 @@ export default {
     insertBlockBelow: function (block) {
       alert('Inserting new Block after '+block.id)
     },
-    removeBlock: function(block) {
-      alert('Merging block into '+block.id)
-    },
     editBlockId: function(block) {
       alert('Editing block id '+block.id)
     },
@@ -933,12 +930,10 @@ export default {
     insertBlockBefore(block, block_Idx) {
       this.freeze('insertBlockBefore');
       let newBlock = this.createEmptyBlock(block.bookid, block._id).clean();
-      let api_url = this.API_URL + 'book/block';
-      let api = this.$store.state.auth.getHttp();
-      api.post(api_url, {
-        block_id: block.blockid,
+      this.insertBlock({
+        blockid: block.blockid,
         direction: 'before',
-        block: newBlock
+        newBlock: newBlock
       })
         .then((response)=>{
           //this.setBlockSelection({start: {}, end: {}});
@@ -963,7 +958,6 @@ export default {
           this.unfreeze('insertBlockBefore');
           this.tc_loadBookTask(block.bookid);
           this.getCurrentJobInfo();
-          this.setCurrentBookCounters(['not_marked_blocks']);
           if (this.tc_hasTask('audio_mastering')) {
             this.setCurrentBookCounters(['not_proofed_audio_blocks']);
           }
@@ -979,12 +973,10 @@ export default {
       //this.insertBlock(block_id, 'after');
       this.freeze('insertBlockAfter');
       let newBlock = this.createEmptyBlock(block.bookid, block.chainid).clean();
-      let api_url = this.API_URL + 'book/block';
-      let api = this.$store.state.auth.getHttp();
-      api.post(api_url, {
-        block_id: block.blockid,
+      this.insertBlock({
+        blockid: block.blockid,
         direction: 'after',
-        block: newBlock
+        newBlock: newBlock
       })
         .then((response)=>{
           //this.setBlockSelection({start: {}, end: {}});
@@ -1008,7 +1000,6 @@ export default {
           this.unfreeze('insertBlockAfter');
           this.tc_loadBookTask(block.bookid);
           this.getCurrentJobInfo();
-          this.setCurrentBookCounters(['not_marked_blocks']);
           if (this.tc_hasTask('audio_mastering')) {
             this.setCurrentBookCounters(['not_proofed_audio_blocks']);
           }
@@ -1036,7 +1027,7 @@ export default {
         }
       })
         .then((response) => {
-          this.tc_loadBookTask();
+          this.tc_loadBookTask(this.meta._id);
           this.getCurrentJobInfo();
         })
         .catch((err) => {})
@@ -1045,9 +1036,7 @@ export default {
     deleteBlock(block, block_Idx) {
       //console.log('deleteBlock', block._id);
       this.freeze('deleteBlock');
-      let api_url = this.API_URL + 'book/block/' + block._id;
-      let api = this.$store.state.auth.getHttp();
-      api.delete(api_url, {})
+      this.removeBlock(block._id)
       .then((response)=>{
         //this.setBlockSelection({start: {}, end: {}});
         if (response.data) {
@@ -1060,6 +1049,7 @@ export default {
           } //else this.refreshTmpl();
           this.parlist.delete(block._id);
         }
+        this.getCurrentJobInfo();
 
         this.putNumBlockOBatchProxy({bookId: block.bookid})
           .then(() => {
@@ -1070,9 +1060,8 @@ export default {
 
         this.unfreeze('deleteBlock');
         this.updateBookVersion({major: true})
-        this.tc_loadBookTask();
+        this.tc_loadBookTask(block.bookid);
         this.getCurrentJobInfo();
-        this.getTotalBookTasks();
         //this.refreshTmpl();
       })
       .catch(err => {
@@ -1082,9 +1071,6 @@ export default {
 
     },
     joinBlocks(block, block_Idx, direction) {
-
-      let api_url = this.API_URL + 'book/block_join/';
-      let api = this.$store.state.auth.getHttp();
 
       block = block || this.doJoinBlocks.block;
       direction = direction || this.doJoinBlocks.direction;
@@ -1191,7 +1177,7 @@ export default {
                       this.doJoinBlocks.show = false;
                       this.doJoinBlocks.showAudio = false;
                       this.doJoinBlocks.block = {};
-                      return api.post(api_url, {
+                      return this.blocksJoin({
                         resultBlock_id: blockBefore.blockid,
                         donorBlock_id: block.blockid
                       })
@@ -1216,6 +1202,7 @@ export default {
                           });
                         this.refreshTmpl();
                         this.unfreeze('joinBlocks');
+                        this.getCurrentJobInfo();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
@@ -1322,7 +1309,7 @@ export default {
                       this.doJoinBlocks.show = false;
                       this.doJoinBlocks.showAudio = false;
                       this.doJoinBlocks.block = {};
-                      return api.post(api_url, {
+                      return this.blocksJoin({
                         resultBlock_id: block.blockid,
                         donorBlock_id: blockAfter.blockid
                       })
@@ -1347,6 +1334,7 @@ export default {
                           });
                         //this.refreshTmpl();
                         this.unfreeze('joinBlocks');
+                        this.getCurrentJobInfo();
                         return Promise.resolve();
                       })
                       .catch((err)=>{
@@ -1651,11 +1639,12 @@ export default {
 
     listenSetNum(bookId, numMask, blockRid) {
       //console.log('listenSetNum', bookId, numMask);
-      if (bookId) this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask, blockRid: blockRid})
-              .then(() => {
-                this.loadBookToc({bookId: this.meta._id, isWait: true});
-              });
-      else this.updateVisibleBlocks();
+      if (bookId) {
+        this.putNumBlockOBatchProxy({bookId: bookId, bookNum: numMask, blockRid: blockRid})
+        .then(() => {
+          this.loadBookToc({bookId: this.meta._id, isWait: true});
+        });
+      } else this.updateVisibleBlocks();
       //this.refreshTmpl();
     },
 
@@ -1697,8 +1686,8 @@ export default {
         let loadIdsArray = [];
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
         //let loadCount = 5;
-        for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
-          let blockRef = this.$refs.viewBlocks[i];
+        for (var i = 0; i < this.parlistO.listObjs.length; i++) {
+          let blockRef = this.$refs.viewBlocks.find(v => v.blockId === this.parlistO.listObjs[i].blockId);
           let visible = this.checkVisible(blockRef.$refs.viewBlock, viewHeight);
           if (visible) {
             if (!firstVisible) {
@@ -1734,11 +1723,14 @@ export default {
         if (loadIdsArray.length) {
           this.getBlocksArr(loadIdsArray)
           .then((resIdsArray)=>{
-            for (let blockRef of this.$refs.viewBlocks) {
-              if (resIdsArray.indexOf(blockRef.blockId) > -1) {
+            for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
+              let updCount = 0;
+              if (resIdsArray.indexOf(this.$refs.viewBlocks[i].blockId) > -1) {
                 //this.parlistO.setLoaded(blockRef.blockO.rid);
-                blockRef.$forceUpdate();
+                updCount++;
+                this.$refs.viewBlocks[i].$forceUpdate();
               }
+              if (updCount >= resIdsArray.length) break;
             }
             this.moveEditWrapper(firstVisible, lastVisible, force)
           })
@@ -1812,17 +1804,14 @@ export default {
       this.setBlockSelection({start: {}, end: {}});
       this.scrollToBlock(this.parlistO.idsArray()[0]);
       this.screenTop = initialTopOffset;
-      this.$store.commit('clear_storeList');
-      this.$store.commit('clear_storeListO');
       this.startId = false;
-      this.setCurrentBookCounters(['not_marked_blocks']);
       this.refreshTmpl();
 
       this.$router.push({name: this.$route.name, params: {}});
       this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
         if (this.meta._id && initBlocks.blocks && initBlocks.blocks.length) {
-          this.tc_loadBookTask()
+          this.tc_loadBookTask(this.meta._id)
           .then(()=>{
             this.loadPreparedBookDown(this.parlistO.idsArray(), 10).then(()=>{
               this.startId = this.parlistO.idsArray()[0];
@@ -1892,8 +1881,10 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  //this.parlistO.refresh();
                   if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
                     Vue.nextTick(() => {
+                      this.handleScroll();
                       this.scrollToBlock(initBlocks.blocks[0].blockid);
                     })
                   }
@@ -1941,6 +1932,7 @@ export default {
   },
 
   beforeDestroy:  function() {
+    this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
     this.setBlockSelection({start: {}, end: {}});
     this.isNeedUp = false;

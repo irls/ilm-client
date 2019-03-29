@@ -79,9 +79,33 @@ class BookBlocks {
   }
 
   idsArrayRange(startId, endId) {
-    let startIdx = this.listIds.indexOf(startId);
-    let endIdx = this.listIds.indexOf(endId);
+    let startIdx, endIdx;
+    if (startId.charAt(0) == '#') { // Orient RID
+      startIdx = this.listRIds.indexOf(startId)
+    } else {
+      startIdx = this.listIds.indexOf(startId)
+    }
+    if (endId.charAt(0) == '#') { // Orient RID
+      endIdx = this.listRIds.indexOf(endId)
+    } else {
+      endIdx = this.listIds.indexOf(endId)
+    }
     return this.listIds.slice(startIdx, endIdx+1);
+  }
+
+  ridsArrayRange(startId, endId) {
+    let startIdx, endIdx;
+    if (startId.charAt(0) == '#') { // Orient RID
+      startIdx = this.listRIds.indexOf(startId)
+    } else {
+      startIdx = this.listIds.indexOf(startId)
+    }
+    if (endId.charAt(0) == '#') { // Orient RID
+      endIdx = this.listRIds.indexOf(endId)
+    } else {
+      endIdx = this.listIds.indexOf(endId)
+    }
+    return this.listRIds.slice(startIdx, endIdx+1);
   }
 
   checkFirst() {
@@ -197,17 +221,19 @@ class BookBlocks {
     this.listIds = [];
     this.listRIds = [];
     this.listObjs = [];
-    this.meta = bookList.meta;
-    this.meta.rid = bookList.meta['@rid'];
-    if (Array.isArray(bookList.blocks)) {
-      bookList.blocks.forEach((block)=>{
-        this.listIds.push(block.blockid);
-        this.listRIds.push(block.rid);
-        this.listObjs.push({blockRid: block.rid, blockId: block.blockid});
-        this.lookupList[block.rid] = new LookupBlock(block);
-        //this.blocksList[block.blockid] = new BookBlock(block);
-      })
-      this.setStartId(bookList.blocks[0].rid)
+    if (bookList.meta && bookList.meta['@rid'] && bookList.blocks && bookList.blocks.length) {
+      this.meta = bookList.meta;
+      this.meta.rid = bookList.meta['@rid'];
+      if (Array.isArray(bookList.blocks)) {
+        bookList.blocks.forEach((block)=>{
+          this.listIds.push(block.blockid);
+          this.listRIds.push(block.rid);
+          this.listObjs.push({blockRid: block.rid, blockId: block.blockid});
+          this.lookupList[block.rid] = new LookupBlock(block);
+          //this.blocksList[block.blockid] = new BookBlock(block);
+        })
+        this.setStartId(bookList.blocks[0].rid)
+      }
     }
   }
 

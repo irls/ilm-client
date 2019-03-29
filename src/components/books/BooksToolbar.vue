@@ -15,10 +15,13 @@
   <!-- Meta Filter -->
   <input type="text" @keyup="booksFilterChange" class="form-control" placeholder="Filter"></input> &nbsp;
 
-  <select @change="booksTypeChange">
-    <option value="staging">Staging</option>
-    <option value="shared">Shared</option>
-  </select> &nbsp;
+  <template v-if="adminOrLibrarian">
+    <select @change="booksTypeChange" v-model="bookFilters.importStatus">
+      <option value="">Not filtered</option>
+      <option value="active">Active</option>
+      <option value="archived">Archived</option>
+    </select> &nbsp;
+  </template>
 
   <!-- Language Dropdown -->
   <select @change="booksLanguageChange">
@@ -26,7 +29,7 @@
     <option v-for="(name, code) in languages" :value="code">{{name}}</option>
   </select>
 
-  <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Meta</button>
+  <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
 
   </div>
 
@@ -70,7 +73,9 @@ export default {
     'isEditor',
     'isLibrarian',
     'allowBookEditMode',
-    'allBooks'
+    'allBooks',
+    'adminOrLibrarian',
+    'bookFilters'
   ]),
 
   methods: {

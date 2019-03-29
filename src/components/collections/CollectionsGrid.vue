@@ -200,6 +200,14 @@
                       return item.language == filter;
                     });
                     break;
+                  case 'importStatus':
+                    collections = collections.filter(item => {
+                      item.books_list = item.books_list.filter(b => {
+                        return b.job_status === filter;
+                      });
+                      return item.books_list.length > 0;
+                    });
+                    break;
                 }
               }
             }

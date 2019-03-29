@@ -181,7 +181,8 @@
           },
           alignProcess: false,
           annotations: [],
-          minWordSize: 0.05
+          minWordSize: 0.05,
+          wordSelectionMode: false
         }
       },
       mounted() {
@@ -218,6 +219,7 @@
             this.blockSelectionEmit = true;
             this.selection.start = start / 1000;
             this.selection.end = end / 1000;
+            this.wordSelectionMode = false;
             this._clearWordSelection();
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
             this._showSelectionBorders(true);
@@ -265,6 +267,7 @@
             this.isModified = false;
             this.playlistScrollPosition = 0;
             this.selection = {};
+            this.wordSelectionMode = false;
             this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
             this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
             this._clearWordSelection();
@@ -534,6 +537,7 @@
 
                   limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
                   onDrag: function(element, x, y, event) {
+                    self.wordSelectionMode = false;
                     if ($('[id="resize-selection-left"]').position().left >= x) {
                       let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
                       self.selection.start = start-1;
@@ -565,6 +569,7 @@
                 self.dragLeft = new Draggable (document.getElementById('resize-selection-left'), {
                   limit: {x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
                   onDrag: function(element, x, y, event) {
+                    self.wordSelectionMode = false;
                     if ($('[id="resize-selection-right"]').position().left <= x) {
                       let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
                       self.selection.end = start+1;
@@ -619,7 +624,7 @@
             } else if (autostart) {
               this.play();
             }
-            $('#' + this.blockId).find('#content-' + this.blockId).on('click', 'w', {blockId: this.blockId}, this.showSelection);
+            $('#' + this.blockId).find('#content-' + this.blockId).on('click', 'w', {blockId: this.blockId}, this.showSelection)
           })
           .catch(err => {
             //console.log(err)
@@ -629,10 +634,11 @@
           });
           let self = this;
           $('.wf-playlist').on('click', '.annotations-boxes .annotation-box', function(e) {
+            self.wordSelectionMode = false;
             let index = $('.annotations-boxes .annotation-box').index($(this));
             self.blockSelectionEmit = true;
-            self._setWordSelection(index, true);
-            ;
+            self._setWordSelection(index, true, true);
+            self.wordSelectionMode = index;
           });
           $('.wf-playlist').on('dragend', '.annotations-boxes .annotation-box .resize-handle', (ev)=>{
             this.smoothDrag(ev);
@@ -666,6 +672,7 @@
                   }
                 }
               } else {
+                this.wordSelectionMode = false;
                 if (this.isPlaying) {
                   this.cursorPosition = pos;
                 } else {
@@ -718,24 +725,18 @@
           }
         },
         showSelection (event) {
+          this.wordSelectionMode = false;
           let blockId = event.data.blockId;
           let index = $('#content-' + blockId).find('w[data-map]').index($(event.target));
-          let show_selection = true;
           if (typeof index =='undefined' || index === false || index < 0) {
             let index_no_data = $('#content-' + blockId).find('w:not([data-map])').index($(event.target));
             let total_index = $('#content-' + blockId).find('w').index($(event.target));
             index = total_index - index_no_data;
-            show_selection = false;
           }
           if (!this.isAnnotationVisible(index)) {
             this.scrollPlayerToAnnotation(index, 'middle');
           }
-          if (show_selection) {
-            this.blockSelectionEmit = true;
-            this._setWordSelection(index, true);
-          } else {
-            this._clearWordSelection();
-          }
+          this._clearWordSelection();
         },
         setAudio(audio, text, saveToHistory) {
           if (this.plEventEmitter) {
@@ -753,7 +754,7 @@
           if (typeof cursorPosition === 'undefined') {
             if (this.cursorPosition !== false) {
               cursorPosition = this.cursorPosition;
-            } else if (!this.selection.start && this.mode === 'block') {
+            } else if (!this.selection.start && this.selection.start !== 0 && this.mode === 'block') {
               //this.cursorPosition = 0;
               this.audiosourceEditor.setTimeSelection(0);
               cursorPosition = 0;
@@ -895,6 +896,7 @@
           }
         },
         clearSelection() {
+          this.wordSelectionMode = false;
           let restart = this.isPlaying;
           this.pause()
             .then(() => {
@@ -1057,6 +1059,7 @@
           this.words = [];
           this.currentWord = null;
           this.selection = {};
+          this.wordSelectionMode = false;
           this.isModified = false;
           this.isAudioModified = false;
           this.history = [];
@@ -1092,19 +1095,22 @@
           return false;
         },
         _showSelectionBorders(scroll_to_selection = false) {
-          setTimeout(() => {
-            let selection = $('.selection.segment')[0];
-            if (selection) {
-              $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
-              $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft);
-            } else {
-              $('[id="resize-selection-right"]').hide().css('left', 0);
-              $('[id="resize-selection-left"]').hide().css('left', 0);
-            }
-            if (scroll_to_selection) {
-              this._scrollToCursor();
-            }
-          }, 50);
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              let selection = $('.selection.segment')[0];
+              if (selection) {
+                $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
+                $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft);
+              } else {
+                $('[id="resize-selection-right"]').hide().css('left', 0);
+                $('[id="resize-selection-left"]').hide().css('left', 0);
+              }
+              if (scroll_to_selection) {
+                this._scrollToCursor();
+              }
+              resolve();
+            }, 50);
+          })
         },
         _scrollToCursor() {
           if (this.cursorPosition && this.cursorPosition > 0) {
@@ -1132,10 +1138,15 @@
           }
         },
         _clearWordSelection() {
-          $(this.contentContainer).find('w').removeClass('selected');
-          $('.annotations-boxes .annotation-box').removeClass('selected');
+          if (!this.wordSelectionMode) {
+            $(this.contentContainer).find('w').removeClass('selected');
+            $('.annotations-boxes .annotation-box').removeClass('selected');
+          }
         },
-        _setWordSelection(index, select_range) {
+        _setWordSelection(index, select_range, autoplay = false) {
+          if (this.wordSelectionMode !== false && this.wordSelectionMode !== index) {
+            return;
+          }
           select_range = typeof select_range == 'undefined' ? false : select_range;
           this._clearWordSelection();
           let annotations = $('.annotations-boxes .annotation-box');
@@ -1152,7 +1163,15 @@
             });
             if (word) {
               this.plEventEmitter.emit('select', word.start, word.end);
-              this._showSelectionBorders();
+              this._showSelectionBorders()
+                .then(() => {
+                  if (autoplay) {
+                    this.cursorPosition = false;
+                    Vue.nextTick(() => {
+                      this.stop().then(() => this.play());
+                    });
+                  }
+                });
             }
           }
         },
@@ -1278,17 +1297,10 @@
             }
           });
           //console.log(self.audiosourceEditor.annotationList.renderResizeLeft);
-          if (self.audiosourceEditor.getEventEmitter().__ee__ && self.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
+          if (self.audiosourceEditor && self.audiosourceEditor.getEventEmitter().__ee__ && self.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
             self.audiosourceEditor.getEventEmitter().off('dragged', self.audiosourceEditor.getEventEmitter().__ee__['dragged']);
           }
           if (self.audiosourceEditor) {
-            if (self.audiosourceEditor.annotationList.annotations.length > 0) {
-              $('.annotation-box').each(function(i, el) {
-                if(typeof annotations[i] !== 'undefined') {
-                  $(el).find('span.id').html(annotations[i].id);// workaround, waveform editor does not update text in annotations by annotations change
-                }
-              });
-            }
             //annotations = annotations.splice(annotations.length - 10);
             self.annotations = annotations;
             self.audiosourceEditor.setAnnotations({
@@ -1297,8 +1309,20 @@
                 isContinuousPlay: false,
                 linkEndpoints: true
               });
+            if (self.audiosourceEditor.annotationList.annotations.length > 0) {
+              $('.annotation-box').each(function(i, el) {
+                if(typeof annotations[i] !== 'undefined') {
+                  $(el).find('span.id').html(annotations[i].id);// workaround, waveform editor does not update text in annotations by annotations change
+                }
+              });
+              //$('.channel-wrapper.block-audio').scroll();
             }
+          }
             //self.audiosourceEditor.annotationList.renderResizeLeft(annotations.length - 1);
+          $('.channel-wrapper.block-audio').trigger('scroll');
+          $('.playlist-tracks').scrollLeft(0);
+          $('.playlist-tracks').scrollLeft(this.playlistScrollPosition || 0);
+          //this.$forceUpdate();
         },
         _isAnnotationsEditable() {
           return (!this.currentBookMeta.masteringRequired || this.currentBookMeta.isMastered) ||
@@ -1595,6 +1619,15 @@
           this.audiosourceEditor.drawRequest();
           this.$root.$emit('from-audioeditor:word-realign', map, this.blockId);
           this.isModified = true;
+          if (this.wordSelectionMode !== false) {
+            if (shiftedIndex === this.wordSelectionMode || 
+                    (shiftedIndex - 1 === this.wordSelectionMode && direction === 'right') || 
+                    (shiftedIndex + 1 === this.wordSelectionMode && direction === 'left')) {
+              Vue.nextTick(() => {
+                this._setWordSelection(this.wordSelectionMode, true, true);
+              });
+            }
+          }
         }, 30),
 
       },
@@ -1845,6 +1878,13 @@
               }
             }
           }
+        },
+        'wordSelectionMode': {
+          handler(val) {
+            if (val === false) {
+              this._clearWordSelection();
+            }
+          }
         }
       }
   }
@@ -1973,10 +2013,10 @@
             background-color: white;
         }
         .channel-progress {
-            background: yellow;
+            background: #b4b3b3;/*#53dbfe*/
         }
         .channel {
-            background: gray;
+            background: #2e2e2e;/*#0000ba*/
             max-height: @waveform-height;
             canvas {
                 /*max-height: @waveform-height;*/

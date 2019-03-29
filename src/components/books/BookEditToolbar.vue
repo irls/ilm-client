@@ -28,17 +28,12 @@
           </li>
       </dropdown>-->
 
-      <button class="btn btn-default" @click="showBookReimport = true">Re-Import</button>
-
-      <BookReimport v-if="showBookReimport"
-        :multiple="false"
-        @close_modal="reimportBookClose"
-        :bookId="getBookid()" />
+      <button class="btn btn-default" @click="$root.$emit('book-reimport-modal')">Re-Import</button>
     </template>
 
     <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
-    <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Meta</button>
+    <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
 
   </div>
 </div>
@@ -50,7 +45,6 @@ import access from "../../mixins/access.js"
 import taskControls from '../../mixins/task_controls.js';
 import apiConfig from '../../mixins/api_config.js'
 import { dropdown } from 'vue-strap';
-import BookReimport from './BookReimport'
 import {mapGetters, mapActions} from 'vuex';
 
 export default {
@@ -62,8 +56,7 @@ export default {
         //'JSON': 'JSON',
         'BookNarrate': 'Narrate',
         'BookEditDisplay': 'Display'
-      },
-      showBookReimport: false
+      }
     }
   },
   mixins: [access, taskControls, apiConfig],
@@ -130,12 +123,6 @@ export default {
     getCurrentBookUrl(format) {
       return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/download/" + format;
     },
-    getBookid() {
-      return this.$store.state.currentBookid
-    },
-    reimportBookClose() {
-      this.showBookReimport = false;
-    },
     clearRangeSelection() {
       this.setBlockSelection({start: {}, end: {}});
     },
@@ -143,8 +130,7 @@ export default {
   },
   components: {
     ButtonRadioGroup,
-    dropdown,
-    BookReimport
+    dropdown
   },
   // watch: {
   //   'this.editMode' () {
@@ -173,10 +159,13 @@ export default {
     },
   },
   mounted() {
-
+    
   },
   destroyed: function () {
 
+  },
+  beforeDestroy: function() {
+    
   }
 }
 </script>

@@ -576,22 +576,22 @@
     margin-bottom: -5px;*/
   }
 
-  .blockquote { // these must always be within a div.par, not <p>
+  .blockquote, .prayer { // these must always be within a div.par, not <p>
     padding-left: 3em; padding-right: 1em;
     /*&:before, &:after {content:'';} // no fake quotation marks*/
   }
   .content-wrap {
-    &.blockquote:hover {
+    &.blockquote:hover, &.prayer:hover {
       padding-left: 2.95em; padding-right: 0.95em;
     }
   }
 
   .sitalcent {
-    font-style: italic; padding-left: 3em;
+    font-style: italic; /* padding-left: 3em; */
   }
   .content-wrap {
     &.sitalcent:hover {
-      padding-left: 2.95em;
+      /* padding-left: 2.95em; */
     }
   }
 
@@ -607,6 +607,20 @@
 
   .signature, .reference {
     text-align:right;
+  }
+
+  .signature  {
+    padding-right: 3em;
+  }
+  .content-wrap {
+    &.signature:hover {
+       padding-right: 2.95em;
+    }
+  }
+
+
+  .reference {
+    font-size: 24px;
   }
 
   .preamble, .prayer {
@@ -708,7 +722,7 @@
     }
   }
 
-  &.blockquote {
+  &.blockquote, &.prayer {
     .ilm-block {
       .par { // these must always be within a div.par, not <p>
         padding-left: 3em; padding-right: 1em;
@@ -717,7 +731,7 @@
     }
   }
 
-  &.blockquote {
+  &.blockquote, &.prayer {
     .ilm-block {
       .par.content-wrap:hover {
         padding-left: 2.95em; padding-right: 0.95em;
@@ -954,6 +968,7 @@
         font-size: @font_title_copyright;
         line-height: @font_title_copyright;
         color: @grayed_color;
+        font-weight: bold;
       }
     }
 
@@ -979,7 +994,7 @@
         font-family: Garamond1689;
         /*font-size: 24pt;*/
         line-height: 1em;
-        font-weight: normal;
+        /*font-weight: normal;*/
         page-break-after: avoid;
         color: @secondary_color;
         /*text-transform: uppercase;*/
