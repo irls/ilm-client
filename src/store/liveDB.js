@@ -16,11 +16,11 @@ class liveDB {
     this.subscriber_id = null;
     //this.className = null;
   }
-  
+
   setSubscriberId(subscriber_id) {
     this.subscriber_id = subscriber_id;
   }
-  
+
   startWatch(key, className, params, callback) {
     if (this.keys[className] && this.keys[className] != key) {
       this.stopWatch(className);
@@ -44,7 +44,7 @@ class liveDB {
       })
     }
   }
-  
+
   stopWatch(className) {
     if (this.keys[className]) {
       //console.log(socket)
@@ -53,13 +53,13 @@ class liveDB {
       //socket.close();
     }
   }
-  
+
   stopWatchAll() {
     for (var k in this.keys) {
       socket.emit('stop-watch', {class: k, key: this.keys[k], subscriber: this.subscriber_id});
     }
   }
-  
+
   onBookReimport() {
     if (this.keys['blockV']) {
       socket.emit('stop-watch-all', {class: 'blockV', key: this.keys['blockV']});
