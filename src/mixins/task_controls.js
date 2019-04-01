@@ -42,7 +42,7 @@ export default {
           return true;
         }
         if (this._is('editor', true)) {
-          return this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering || this.tc_getBlockTask(blockid);
+          return !this.currentJobInfo.complete || this.tc_getBlockTask(blockid);
         }
         return false;
       },
