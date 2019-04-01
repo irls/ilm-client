@@ -145,11 +145,18 @@
 
           <fieldset class='description brief'>
             <legend>Book Cover</legend>
-            <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
-              <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
-              <div v-else class='coverimg-wrap'></div>
-            </div>
-            <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
+            <template v-if="allowMetadataEdit">
+              <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
+                <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+                <div v-else class='coverimg-wrap'></div>
+              </div>
+              <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
+            </template>
+            <template v-else>
+              <div class="coverimg pull-right">
+                <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+              </div>
+            </template>
           </fieldset>
 
           <fieldset class='description brief'>

@@ -755,30 +755,22 @@ export default {
         }
       },
       blockVoiceworksSel: function() {
-        if (this.currentJobInfo.text_cleanup) {
+        if (this.currentJobInfo.text_cleanup || (!this.currentJobInfo.mastering_complete && !this.currentJobInfo.published && !this.currentJobInfo.mastering)) {
           return this.blockVoiceworks;
         }
         let voiceworks = {};
-        if (this.adminOrLibrarian) {
-          let allowed = [];
-          switch (this.block.voicework) {
-            case 'narration':
-              allowed = Object.keys(this.blockVoiceworks);
-              break;
-            default:
-              allowed = ['audio_file', 'tts', 'no_audio'];
-              break;
-          }
-          for (let k in this.blockVoiceworks) {
-            if (allowed.indexOf(k) !== -1) {
-              voiceworks[k] = this.blockVoiceworks[k];
-            }
-          }
-        } else {
-          for (let k in this.blockVoiceworks) {
-            if (['tts', 'no_audio'].indexOf(k) !== -1) {
-              voiceworks[k] = this.blockVoiceworks[k];
-            }
+        let allowed = [];
+        switch (this.block.voicework) {
+          case 'narration':
+            allowed = Object.keys(this.blockVoiceworks);
+            break;
+          default:
+            allowed = ['audio_file', 'tts', 'no_audio'];
+            break;
+        }
+        for (let k in this.blockVoiceworks) {
+          if (allowed.indexOf(k) !== -1) {
+            voiceworks[k] = this.blockVoiceworks[k];
           }
         }
         return voiceworks;

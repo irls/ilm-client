@@ -2352,6 +2352,8 @@ export const store = new Vuex.Store({
             let allowEdit = false;
             if (state.adminOrLibrarian) {
               allowEdit = true;
+            } else if (state.auth.getSession().user_id === state.currentJobInfo.executors.editor) {
+              allowEdit = state.currentJobInfo.workflow.status === 'active';
             } else {
               allowEdit = state.currentJobInfo.completed === false;
             }

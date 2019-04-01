@@ -42,7 +42,7 @@ export default {
           return true;
         }
         if (this._is('editor', true)) {
-          return !this.currentJobInfo.completed || this.tc_getBlockTask(blockid);
+          return this.currentJobInfo.workflow.status === 'active';
         }
         return false;
       },
@@ -106,7 +106,7 @@ export default {
         if (this.currentJobInfo.text_cleanup && (this._is('editor', true) || this.adminOrLibrarian)) {
           return true;
         }
-        if (!this.currentJobInfo.completed || this.adminOrLibrarian) {
+        if (this.currentJobInfo.workflow.status === 'active' || this.adminOrLibrarian) {
           return true;
         }
         return this.tc_hasBlockTask(block._id, 'approve-new-block') || this.tc_hasBlockTask(block._id, 'approve-modified-block');
@@ -229,7 +229,7 @@ export default {
         return tasks;
       },
       tc_showBlockAudioEdit(blockid) {
-        if (this._is('editor', true) && !this.currentJobInfo.completed) {
+        if (this._is('editor', true) && this.currentJobInfo.workflow.status === 'active') {
           return true;
         }
         if (this.adminOrLibrarian) {
