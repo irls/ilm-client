@@ -141,6 +141,7 @@ export const store = new Vuex.Store({
       executors: {editor: null, proofer: null, narrator: null},
       description: '',
       id: null,
+      completed: null,
       workflow: {
         status: null,
         archived: null
@@ -191,7 +192,7 @@ export const store = new Vuex.Store({
     currentBookBlocksLeft: state => state.currentBookBlocksLeft,
     currentBookBlocksLeftId: state => state.currentBookBlocksLeftId,
     bookEditMode: state => state.editMode,
-    allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode) && state.currentBookMeta.status != 'import_text',
+    allowBookEditMode: state => state.currentBookid && state.allowBookEditMode,
     allowArchiving: state => state.isProofer,
     tc_currentBookTasks: state => state.tc_currentBookTasks,
     tc_tasksByBlock: state => state.tc_tasksByBlock,
@@ -509,7 +510,6 @@ export const store = new Vuex.Store({
         }
       }
       state.tc_userTasks.total = tc_userTasks;
-      state.allowBookEditMode = state.tc_currentBookTasks.tasks.length > 0 || state.tc_currentBookTasks.is_proofread_unassigned;
     },
     PREPARE_BOOK_COLLECTIONS(state) {
       if (state.isAdmin || state.isLibrarian) {
@@ -1162,7 +1162,7 @@ export const store = new Vuex.Store({
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
               }
               commit('SET_CURRENTBOOK_META', data.meta)
-              let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+              let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian;
               commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
               dispatch('getCurrentJobInfo');
             }
@@ -1338,7 +1338,7 @@ export const store = new Vuex.Store({
               dispatch('updateCollectionVersion', Object.assign({id: response.data.collection_id}, update));
             }
             //dispatch('getTotalBookTasks');
-            let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+            let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian;
             commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
 
             return Promise.resolve(response.data);
@@ -1846,7 +1846,6 @@ export const store = new Vuex.Store({
           state.tc_currentBookTasks = {job: job, tasks: job.tasks, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : [], is_proofread_unassigned: job.is_proofread_unassigned ? job.is_proofread_unassigned : false}
         }
       }
-      commit('ALLOW_BOOK_EDIT_MODE', state.tc_currentBookTasks.tasks.length > 0);
     },
 
     tc_approveBookTask({state, commit, dispatch}, task) {
@@ -2340,15 +2339,23 @@ export const store = new Vuex.Store({
               executors: {editor: null, proofer: null, narrator: null},
               description: '',
               id: null,
+              completed: null,
               workflow: {
                 status: null,
                 archived: null
               }};
             if (state.currentJobInfo.workflow.status === 'active' && state.currentJobInfo.text_cleanup === false && state.adminOrLibrarian) {
-              if (!(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion)) {
+              if (!(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian) {
                 commit('SET_ALLOW_BOOK_PUBLISH', true);
               }
             }
+            let allowEdit = false;
+            if (state.adminOrLibrarian) {
+              allowEdit = true;
+            } else {
+              allowEdit = state.currentJobInfo.completed === false;
+            }
+            commit('ALLOW_BOOK_EDIT_MODE', allowEdit);
             return Promise.resolve();
           })
           .catch(err => {

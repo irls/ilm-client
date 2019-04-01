@@ -1768,7 +1768,7 @@ export default {
                 if (this.block.status.marked != response.data.status.marked) {
                   this.block.status.marked = response.data.status.marked;
                 }
-                this.$emit('blockUpdated', this.block._id);
+                //this.$emit('blockUpdated', this.block._id);
                 if (footnoteIdx === null) {
                   this.block.content = response.data.content;
                   this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
