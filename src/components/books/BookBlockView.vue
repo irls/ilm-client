@@ -1836,17 +1836,16 @@ export default {
           if (!this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts')) {
             return false;
           }
-          this.block._markedAsDone = true;
-          this.assembleBlock(ev)
+          let status = Object.assign(this.block.status, {marked: true});
+          this.isSaving = true;
+          this.putBlockPart({blockid: this.block.blockid, status: status})
           .then(()=>{
-            //this.setCurrentBookBlocksLeft(this.block.bookid);
+            this.isSaving = false;
             if (this.tc_hasTask('audio_mastering')) {
               this.setCurrentBookCounters(['not_proofed_audio_blocks']);
             }
 
             this.recountApprovedInRange();
-            //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
-            //this.getBloksUntil('unresolved', null, this.block._id)
           });
         }
       },

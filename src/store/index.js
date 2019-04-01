@@ -1111,6 +1111,7 @@ export const store = new Vuex.Store({
       if (book_id != state.currentBookid) {
         state.jobInfoRequest = null;// force reload tasks
         commit('set_currentAudiobook', {});
+        commit('SET_ALLOW_BOOK_PUBLISH', false);
       }
       //let oldBook = (state.currentBook && state.currentBook._id)
 
@@ -1161,6 +1162,8 @@ export const store = new Vuex.Store({
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
               }
               commit('SET_CURRENTBOOK_META', data.meta)
+              let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+              commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
               dispatch('getCurrentJobInfo');
             }
           });
@@ -1334,7 +1337,9 @@ export const store = new Vuex.Store({
             if (update['version'] && response.data.collection_id) {
               dispatch('updateCollectionVersion', Object.assign({id: response.data.collection_id}, update));
             }
-            dispatch('getTotalBookTasks');
+            //dispatch('getTotalBookTasks');
+            let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+            commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
 
             return Promise.resolve(response.data);
           } else {
@@ -1665,28 +1670,29 @@ export const store = new Vuex.Store({
           });
     },
 
-    putBlockPart ({commit, state, dispatch}, blockData) {
-      let cleanBlock = blockData.block.cleanField(blockData.field);
-      blockData.block.partUpdate = true;
-      //console.log('putBlockPart', cleanBlock);
-      if (cleanBlock) {
-        commit('set_blocker', 'putBlockPart');
-        return dispatch('getBlock', cleanBlock._id)
-        .then(function(doc) {
-          return dispatch('_putBlock', _.merge(doc, cleanBlock))
-          .then((response) => {
-            commit('clear_blocker', 'putBlockPart');
-            return Promise.resolve(response)
-          })
-        })
-        .catch((err) => {
-          console.log('Block save error:', err);
-          commit('clear_blocker', 'putBlock');
-          return Promise.reject(err);
-        });
-      } else {
-        return Promise.resolve();
+    putBlockPart ({commit, state, dispatch}, update) {
+      let cleanBlock = Object.assign({}, update);
+      delete cleanBlock.parnum;
+      delete cleanBlock.secnum;
+      delete cleanBlock.isNumber;
+      if (!cleanBlock.blockid) {
+        return Promise.reject(new Error('blockid is not set'));
       }
+      commit('set_blocker', 'putBlock');
+      return axios.put(state.API_URL + 'book/block/' + cleanBlock.blockid,
+        {
+          'block': cleanBlock,
+        })
+          .then(response => {
+            commit('clear_blocker', 'putBlock');
+            dispatch('getCurrentJobInfo');
+            return Promise.resolve(response.data);
+          })
+          .catch(err => {
+            commit('clear_blocker', 'putBlock');
+            dispatch('checkError', err);
+            return Promise.reject(err);
+          });
     },
 
     putBlockO({commit, state}, params) {
@@ -2313,7 +2319,7 @@ export const store = new Vuex.Store({
       if (state.jobInfoRequest) {
         return state.jobInfoRequest;
       }
-      commit('SET_ALLOW_BOOK_PUBLISH', false);
+      //commit('SET_ALLOW_BOOK_PUBLISH', false);
       if (state.currentBookid) {
         state.jobInfoRequest = axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
         if (clear) {
@@ -2338,19 +2344,9 @@ export const store = new Vuex.Store({
                 status: null,
                 archived: null
               }};
-            if (state.currentJobInfo.completed && state.adminOrLibrarian && state.currentJobInfo.tasks_counter && Array.isArray(state.currentJobInfo.tasks_counter)) {
+            if (state.currentJobInfo.workflow.status === 'active' && state.currentJobInfo.text_cleanup === false && state.adminOrLibrarian) {
               if (!(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion)) {
-                let count = 0;
-                state.currentJobInfo.tasks_counter.forEach(tc => {
-                  if (tc && tc.data && tc.data.tasks && Array.isArray(tc.data.tasks)) {
-                    tc.data.tasks.forEach(t => {
-                      count+= t.count ? parseInt(t.count) : 0;
-                    });
-                  }
-                });
-                if (count === 0) {
-                  commit('SET_ALLOW_BOOK_PUBLISH', true);
-                }
+                commit('SET_ALLOW_BOOK_PUBLISH', true);
               }
             }
             return Promise.resolve();

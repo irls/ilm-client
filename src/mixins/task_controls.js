@@ -42,12 +42,7 @@ export default {
           return true;
         }
         if (this._is('editor', true)) {
-          let published = typeof this.currentJobInfo.published !== 'undefined' && this.currentJobInfo.published;
-          if (published) {
-            return this.tc_getBlockTask(blockid);
-          } else {
-            return true;
-          }
+          return this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering || this.tc_getBlockTask(blockid);
         }
         return false;
       },
@@ -111,7 +106,7 @@ export default {
         if (this.currentJobInfo.text_cleanup && (this._is('editor', true) || this.adminOrLibrarian)) {
           return true;
         }
-        if ((this.currentJobInfo.mastering || this.currentJobInfo.published) && this.adminOrLibrarian) {
+        if (this.currentJobInfo.mastering && this.adminOrLibrarian) {
           return true;
         }
         return this.tc_hasBlockTask(block._id, 'approve-new-block') || this.tc_hasBlockTask(block._id, 'approve-modified-block');
@@ -234,7 +229,7 @@ export default {
         return tasks;
       },
       tc_showBlockAudioEdit(blockid) {
-        if (this._is('editor', true) && !this.currentJobInfo.published) {
+        if (this._is('editor', true) && !this.currentJobInfo.complete) {
           return true;
         }
         if (this.adminOrLibrarian) {
@@ -294,7 +289,7 @@ export default {
           if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
             return true;
           }
-          if (!this.currentJobInfo.published) {
+          if (!this.currentJobInfo.complete) {
             return true;
           }
         }
@@ -316,7 +311,7 @@ export default {
           if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
             return true;
           }
-          if (!this.currentJobInfo.published) {
+          if (!this.currentJobInfo.complete) {
             return true;
           }
         }
@@ -338,7 +333,7 @@ export default {
           if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
             return true;
           }
-          if (!this.currentJobInfo.published) {
+          if (!this.currentJobInfo.complete) {
             return true;
           }
         }
