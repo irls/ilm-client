@@ -273,10 +273,15 @@ export default {
       display: flex;
       flex-direction: row;
       justify-content: space-between;
+      flex-shrink: 0;
       align-items: center;
       box-shadow: 0px 2px 3px 0px rgba(178, 191, 224, 0.53);
       padding-left: 4px;
       margin-bottom: 3px;
+
+      .pull-right {
+        min-width: 460px;
+      }
     }
 
     .scroll-wrapper {
