@@ -87,6 +87,14 @@
     computed: {
       ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'currentJobInfo'])
     },
+    mounted() {
+      if (this.currentBookMeta && this.currentBookMeta.isInTheQueueOfPublication) {
+        this.isPublishingQueue = this.currentBookMeta.isInTheQueueOfPublication;
+      }
+      if (this.currentBookMeta && this.currentBookMeta.isIntheProcessOfPublication) {
+        this.isPublishing = this.currentBookMeta.isIntheProcessOfPublication;
+      }
+    },
     watch: {
       'currentBookMeta.publicationStatus': {
         handler(val) {
