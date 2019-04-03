@@ -1283,7 +1283,9 @@ export const store = new Vuex.Store({
         if (update.major && update.major == true) updateVersion = {major: true}
       }
 
-      if (!(Object.keys(update).length === 2 && typeof update.authors !== 'undefined' && typeof update.bookid !== 'undefined')) {// updating authors from quote
+      if (!(Object.keys(update).length === 2 && 
+              (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined') && 
+              typeof update.bookid !== 'undefined')) {// updating authors from quote or masteringRequired
         if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
           let versions = currMeta.version.split('.');
 
@@ -1615,7 +1617,7 @@ export const store = new Vuex.Store({
       delete cleanBlock.secnum;
       delete cleanBlock.isNumber;
       commit('set_blocker', 'putBlock');
-      return axios.put(state.API_URL + 'book/block/' + block._id,
+      return axios.put(state.API_URL + 'book/block/' + block.blockid,
         {
           'block': cleanBlock,
         })

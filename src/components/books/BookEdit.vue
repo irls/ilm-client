@@ -749,7 +749,11 @@ export default {
     putBlockPartProxy: function (blockData) {
       //console.log('putBlockPartProxy', blockData);
       return this.putBlockPart(blockData)
-      .then(()=>{})
+      .then((updated)=>{
+        this.updateVisibleBlocks();
+        this.refreshPreviewTmpl([updated.blockid]);
+        this.$store.commit('set_storeList', new BookBlock(updated));
+      })
       .catch((err)=>{})
     },
 
