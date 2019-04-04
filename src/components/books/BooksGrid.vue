@@ -24,60 +24,6 @@ export default {
 
   data () {
     return {
-      headers: [
-        {
-          title: 'Book Title',
-          path: 'title',
-          addClass: 'booktitle',
-          html (val) {
-            return `<i class='fa fa-book'></i>&nbsp;&nbsp;${val}`
-          }
-        },
-        {
-          title: 'Author',
-          path: 'author',
-          addClass: 'author',
-          render(val) {
-            return val && Array.isArray(val) ? val.join(', ') : val;
-          }
-        },
-        // {
-        //   title: 'BookID',
-        //   path: 'bookid',
-        //   addClass: 'bookid'
-        // },
-
-        // {
-        //   title: 'Subject',
-        //   path: 'category',
-        //   addClass: 'category'
-        // },
-        {
-          title: 'Size',
-          path: 'wordcount',
-          render (val) {
-            // return '~'+Math.round(val / 300) +'pg'
-            return `${Math.round(val / 300)} pages`
-          }
-        },
-        // {
-        //   title: 'Difficulty',
-        //   path: 'difficulty'
-        // },
-        {
-          title: 'Published',
-          path: 'published',
-          html (val) {
-            // return `<i class='fa ${(val ? 'fa-check-square-o' : 'fa-square-o')}></i>`
-            // return "<i class='fa "+ (val ? "fa-check-square-o" : "fa-square-o") + "'></i>"
-            return '<i class="fa ' + (val ? 'fa-check-square-o' : 'fa-square-o') + '"></i>'
-          }
-        },
-        {
-          title: 'Type',
-          path: 'pubType'
-        }
-      ],
       idField: 'bookid',
       selectedBooks: []
     }
@@ -87,7 +33,8 @@ export default {
 
     ...mapGetters([
       'bookFilters',
-      'allBooks'
+      'allBooks',
+      'adminOrLibrarian'
     ]),
 
     books () { // filtered list of books
@@ -106,8 +53,83 @@ export default {
 
     booksMeta () { // because our grid does not work with nested values
       let result = []
-      for (let book of this.books) result.push(book)
+      for (let book of this.books) { 
+        result.push(book)
+      }
       return result
+    },
+    headers: {
+      get() {
+        let headers = [
+          {
+            title: 'Book Title',
+            path: 'title',
+            addClass: 'booktitle',
+            html (val) {
+              return `<i class='fa fa-book'></i>&nbsp;&nbsp;${val}`
+            }
+          },
+          {
+            title: 'Author',
+            path: 'author',
+            addClass: 'author',
+            render(val) {
+              return val && Array.isArray(val) ? val.join(', ') : val;
+            }
+          },
+          {
+            title: 'Pub. Ver.',
+            path: 'pub_ver'
+          },
+          {
+            title: 'Current Ver.',
+            path: 'cur_ver'
+          },
+          {
+            title: 'Status',
+            path: 'importStatus',
+            render(val) {
+              switch (val) {
+                case 'staging':
+                  return 'Text Cleanup';
+                  break;
+                case 'narrating':
+                  return 'Narration';
+                  break;
+                case 'proofing':
+                  return 'Proofreading';
+                  break;
+                case 'mastering':
+                  return 'Mastering';
+                  break;
+                case 'completed':
+                  return 'Completed';
+                  break;
+                default:
+                  return val;
+              }
+            }
+          }
+        ];
+        if (this.adminOrLibrarian) {
+          headers.push({
+            title: 'State',
+            path: 'job_status',
+            render(val) {
+              switch (val) {
+                case 'active':
+                  return 'Active';
+                case 'archived':
+                  return 'Archived';
+                default:
+                  return val;
+              }
+            }
+          });
+        }
+        return headers;
+      },
+      cache: false
     }
   },
 
