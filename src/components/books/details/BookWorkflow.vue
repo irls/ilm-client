@@ -109,11 +109,11 @@
                 .then(() => {
                   if (this.$route && ['BooksGrid', 'CollectionBook'].indexOf(this.$route.name) !== -1)
                   if (!this.currentCollectionId) {
-                    if (this.bookFilters.importStatus !== '') {
+                    if (this.bookFilters.jobStatus !== '') {
                       this.$router.replace({path: '/books', params: {}});
                     }
                   } else {
-                    if (this.collectionsFilter.importStatus !== '') {
+                    if (this.collectionsFilter.jobStatus !== '') {
                       this.$router.replace({name: 'Collection', params: {collectionid: this.currentCollectionId}});
                     }
                   }

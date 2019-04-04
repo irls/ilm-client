@@ -41,7 +41,7 @@ export default {
       if (!this.allBooks.length) return [];
       let filteredbooks = this.allBooks
         .filter(book => (this.bookFilters.language == '' || book.language === this.bookFilters.language))
-        .filter(book => this.bookFilters.importStatus ? book.job_status === this.bookFilters.importStatus : true)
+        .filter(book => this.bookFilters.jobStatus ? book.job_status === this.bookFilters.jobStatus : true)
         .filter(book => {
           let str = `${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}`.toLowerCase()
           let find = this.bookFilters.filter.toLowerCase().trim()
