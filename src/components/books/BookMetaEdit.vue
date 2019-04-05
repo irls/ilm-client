@@ -71,7 +71,7 @@
                 Status #{{ publicationStatus }}
               </div>
               <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
-              <div v-if="allowPublishCurrentBook && currentBookMeta.job_status === 'active'">
+              <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'">
                 <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
                 <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
                 <span v-if="isPublishing" class="align-preloader -small"></span>
