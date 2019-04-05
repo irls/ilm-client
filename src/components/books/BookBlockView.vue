@@ -865,6 +865,9 @@ export default {
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
             return true;
           }
+          if (this.block && this.block.voicework === 'no_audio') {
+            return this.block.status.marked ? true : false;
+          }
           let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
           if (this.block.footnotes) {
             this.block.footnotes.forEach(f => {
