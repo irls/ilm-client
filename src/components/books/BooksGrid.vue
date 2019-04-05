@@ -121,6 +121,10 @@ export default {
                   return 'Active';
                 case 'archived':
                   return 'Archived';
+                case 'completed':
+                  return 'Completed';
+                case 'suspended':
+                  return 'Suspended';
                 default:
                   return val;
               }
