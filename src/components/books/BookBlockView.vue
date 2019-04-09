@@ -2012,6 +2012,7 @@ export default {
                 this.audioEditFootnote.isAudioChanged = true;
               }
             } else {
+              this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
               this.$root.$emit('for-audioeditor:set-process-run', false);
             }
           })
@@ -2019,6 +2020,7 @@ export default {
             this.checkError(err);
             this.isUpdating = false;
             this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           });
       },
       insertSilence(position, length, footnoteIdx = null) {
@@ -2058,6 +2060,7 @@ export default {
                 this.audioEditFootnote.isAudioChanged = true;
               }
             } else {
+              this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
               this.$root.$emit('for-audioeditor:set-process-run', false);
             }
           })
@@ -2065,6 +2068,7 @@ export default {
             this.checkError(err);
             this.isUpdating = false;
             this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           });
       },
       audCleanClasses: function(block_id, ev) {
@@ -2530,6 +2534,7 @@ export default {
             }
           } else {
             this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           }
           this.reRecordPosition = false;
           return BPromise.resolve();
@@ -2538,6 +2543,7 @@ export default {
           this.reRecordPosition = false;
           this.isUpdating = false;
           this.$root.$emit('for-audioeditor:set-process-run', false);
+          this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           return BPromise.reject();
         });
         } else {
