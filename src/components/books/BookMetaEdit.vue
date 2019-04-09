@@ -34,8 +34,6 @@
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="Assignments" id="assignments">
             <BookAssignments
-              @setInfoMessage="setInfoMessage"
-              @setErrorMessage="setErrorMessage"
               @showModal_audio="showModal_audio = true"
               ></BookAssignments>
           <fieldset class='description brief'>
@@ -413,17 +411,6 @@
       :img="currentBook"
     ></book-edit-cover-modal>
 
-    <alert v-model="hasError" placement="top" type="danger" width="400px" :dismissable="true">
-      <span class="icon-ok-circled alert-icon-float-left"></span>
-
-      <p>{{errorMessage}}.</p>
-    </alert>
-
-    <alert v-model="hasMessage" placement="top" :duration="3000" type="info" width="400px">
-      <span class="icon-ok-circled alert-icon-float-left"></span>
-
-      <p>{{infoMessage}}.</p>
-    </alert>
     <modal v-model="generatingAudiofile" :backdrop="false" effect="fade">
       <div slot="modal-header" class="modal-header">
         <h4>Export audio</h4>
@@ -459,7 +446,7 @@ import BookToc from './BookToc'
 import _ from 'lodash'
 import PouchDB from 'pouchdb'
 import axios from 'axios'
-import { alert, modal, accordion, panel } from 'vue-strap'
+import { modal, accordion, panel } from 'vue-strap'
 import task_controls from '../../mixins/task_controls.js'
 import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
@@ -484,7 +471,6 @@ export default {
     BookAudioIntegration,
     'vue-tabs': VueTabs,
     'vue-tab': VTab,
-    alert,
     modal,
     accordion,
     panel,
@@ -513,10 +499,6 @@ export default {
       importTask: {},
       linkTaskError: '',
       isOwner: false,
-      errorMessage: '',//to display validation errors for some cases, e.g. on sharing book
-      hasError: false,//has some validation error, e.g. on sharing book
-      hasMessage: false,//has some info message
-      infoMessage: '',//to display info on action finished
       approveMetadataComment: '',
       showSharePrivateBookModal: false,
       textCleanupProcess: false,
@@ -701,34 +683,6 @@ export default {
     currentBookFiles: {
       handler (val) {
         this.currentBook.coverimg = this.currentBookFiles.coverimg
-      },
-      deep: true
-    },
-    errorMessage: {
-      handler(val) {
-        this.hasError = val.length > 0
-      },
-      deep: true
-    },
-    hasError: {
-      handler(val) {
-        if (val === false) {
-          this.errorMessage = ''
-        }
-      },
-      deep: true
-    },
-    infoMessage: {
-      handler(val) {
-        this.hasMessage = val.length > 0
-      },
-      deep: true
-    },
-    hasMessage: {
-      handler(val) {
-        if (val === false) {
-          this.infoMessage = ''
-        }
       },
       deep: true
     },
@@ -1065,10 +1019,10 @@ export default {
                   self.tc_currentBookTasks.assignments.splice(self.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
                   self.$store.dispatch('tc_loadBookTask')
                   self.$store.dispatch('getCurrentJobInfo');
-                  self.infoMessage = 'Text cleanup task finished'
+                  self.$root.$emit('set-alert', 'Text cleanup task finished')
                 } else {
                   self.liveUpdate('private', true)
-                  self.errorMessage = doc.data.error
+                  this.$root.$emit('set-error-alert', doc.data.error);
                 }
               })
               .catch((err, test) => {
@@ -1523,13 +1477,6 @@ export default {
     updateJobDescription: _.debounce(function(event) {
       this.updateJob({id: this.currentJobInfo.id, description: event.target.value});
     }, 500),
-    
-    setInfoMessage(msg) {
-      this.infoMessage = msg;
-    },
-    setErrorMessage(msg) {
-      this.errorMessage = msg;
-    },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta', 'updateJob', 'updateBookCollection'])
   }
@@ -1679,9 +1626,6 @@ Vue.component('resizable-textarea', {
       background: url(/static/preloader-snake-small.gif);
       width: 34px;
       height: 34px;
-  }
-  .alert.top {
-    top: 120px;
   }
 
   .nav-tabs-navigation {
