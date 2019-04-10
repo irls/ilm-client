@@ -53,7 +53,7 @@
               :allowSetEnd="allowSetEnd"
               :prevId="parlistO.getInId(viewObj.blockRid)"
               :mode="mode"
-              :createBlockSubtask="createBlockSubtask"
+              :putBlockProofread="putBlockProofreadProxy"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
@@ -273,7 +273,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks', 'insertBlock', 'blocksJoin', 'removeBlock']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread']),
 
     test(ev) {
         console.log('test', ev);
@@ -762,6 +762,18 @@ export default {
         return Promise.resolve(blocks)
       })
       .catch((err)=>{})
+    },
+    
+    putBlockProofreadProxy: function(block) {
+      return this.putBlockProofread(block)
+        .then(response => {
+          this.updateVisibleBlocks();
+          this.refreshPreviewTmpl([block.blockid]);
+          this.$store.commit('set_storeList', new BookBlock(response));
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     },
 
     putNumBlockOProxy: function (blockData) {
@@ -1842,8 +1854,26 @@ export default {
       if (Array.isArray(data.blocks)) data.blocks.forEach((res)=>{
         this.refreshBlock({doc: res, deleted: res.deleted || false, updField: updField});
       })
+    },
+    checkMode() {
+      if (this.currentJobInfo.id) {
+        let allowed = false;
+        switch (this.mode) {
+          case 'edit':
+            allowed = this.tc_showEditTab();
+            break;
+          case 'proofread':
+            allowed = this.tc_showProofreadTab();
+            break;
+          case 'narrate':
+            allowed = this.tc_showNarrateTab();
+            break;
+        }
+        if (!allowed) {
+          this.$router.push({name: 'BookEditDisplay', params: {}});
+        }
+      }
     }
-
   },
   events: {
       currentEditingBlock_id : function (key) {
@@ -1861,6 +1891,7 @@ export default {
   mounted: function() {
       //this.onScrollBookDown();
       //console.log('book mounted', this.meta._id);
+      this.checkMode();
       this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
         if (this.meta._id && initBlocks.blocks && initBlocks.blocks.length) {

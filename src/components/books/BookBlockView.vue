@@ -201,7 +201,7 @@
               <div class="par-ctrl -audio -hidden"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
-                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating"></i>
+                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating && mode === 'edit'"></i>
                       <i class="fa fa-play-circle-o"
                         @click="audPlay(block._id, $event)"></i>
                       <i class="fa fa-stop-circle-o disabled"></i>
@@ -697,7 +697,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'createBlockSubtask'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -1219,6 +1219,9 @@ export default {
           switch(flagType) {
             case 'editor' : {
               if (this._is('editor', true)) canFlag = false;
+              if (this.mode === 'edit') {
+                canFlag = false;
+              }
             } break;
             case 'narrator' : {
               if (this.block.voicework !== 'narration') {
@@ -1235,7 +1238,7 @@ export default {
         return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
       },
       isProofreadUnassigned: function() {
-        if (this._is('proofer', true)) {
+        if (this._is('proofer', true) && this.mode === 'proofread') {
           if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned()) {
             return true;
           }
@@ -1324,7 +1327,9 @@ export default {
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
     //       this.editor.subscribe('positionToolbar', ()=>{})
-        }  else if (this.editor) this.editor.setup();
+        }  else if (this.editor) { 
+          this.editor.setup();
+        }
 
         if ((!this.editorDescr || force === true) && this.block.type == 'illustration') {
           let extensions = {};
@@ -1568,6 +1573,9 @@ export default {
       },
 
       assembleBlockProxy: function (ev) {
+        if (this.mode === 'proofread') {
+          return this.assembleBlockProofread();
+        }
         if (this.block.type == 'illustration') {
           if (this.isIllustrationChanged) {
             return this.uploadIllustration();
@@ -1615,15 +1623,6 @@ export default {
         this.isSaving = true;
         return this.putBlock(this.block).then(()=>{
           this.isSaving = false;
-          /*if (this.tc_createApproveModifiedBlock(this.block._id)) {
-            if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) ||
-                    this.tc_allowAdminFlagging(this.block)) {
-              this.createBlockSubtask(this.block._id, 'approve-modified-block', 'editor');
-            }
-          } else if (this.tc_createApproveRevokedBlock(this.block._id) &&
-                  this.changes.indexOf('flags') !== -1) {
-            this.createBlockSubtask(this.block._id, 'approve-revoked-block', 'proofer');
-          }*/
           if (this.isCompleted) {
             this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
@@ -1686,6 +1685,18 @@ export default {
             }
           //});
         });
+      },
+      assembleBlockProofread() {
+        return this.putBlockProofread(this.block)
+          .then(() => {
+            if (this.isCompleted) {
+              this.tc_loadBookTask(this.block.bookid);
+              this.getCurrentJobInfo();
+            }
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
       },
       clearBlockContent: function(content) {
         //console.log(content)
@@ -1856,53 +1867,50 @@ export default {
           return;
         }
         //this.isApproving = true;
-        this.assembleBlockProxy(ev)
-        .then(()=>{
-          let task = this.tc_getBlockTask(this.block._id);
+        let task = this.tc_getBlockTask(this.block._id);
 
-          if (!task) {
-            let other_task = this.tc_getBlockTaskOtherRole(this.block._id);
-              if (other_task) {
-                task = Object.assign({}, other_task);
-              } else {
-              task = {
-                blockid: this.block._id,
-                bookid: this.block.bookid
-              }
+        if (!task) {
+          let other_task = this.tc_getBlockTaskOtherRole(this.block.blockid);
+            if (other_task) {
+              task = Object.assign({}, other_task);
+            } else {
+            task = {
+              blockid: this.block.blockid,
+              bookid: this.block.bookid
             }
           }
+        }
 
-          let blockSummary = this.block.calcFlagsSummary();
-          task.nextStep = blockSummary.dir;
+        let blockSummary = this.block.calcFlagsSummary();
+        task.nextStep = blockSummary.dir;
 
-          if (task.nextStep == 'proofer' && !this.block.hasAudio()) {
-            switch (this.block.voicework) {
-              case 'narration':
-                task.nextStep = 'narrator';
-                break;
-            }
+        if (task.nextStep == 'proofer' && !this.block.hasAudio()) {
+          switch (this.block.voicework) {
+            case 'narration':
+              task.nextStep = 'narrator';
+              break;
           }
-          this.isSaving = true;
-          this.tc_approveBookTask(task)
-          .then(response => {
-            this.isSaving = false;
-            //this.isApproving = false;
-            if (response.status == 200) {
-              if (typeof response.data._id !== 'undefined') {
-                this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
-              }
-              //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
-              this.recountApprovedInRange();
-              if (this.adminOrLibrarian) {
-                this.getTotalBookTasks();
-              }
-              //this.getBloksUntil('unresolved', true, this.block._id)
+        }
+        this.isSaving = true;
+        this.tc_approveBookTask(task)
+        .then(response => {
+          this.isSaving = false;
+          //this.isApproving = false;
+          if (response.status == 200) {
+            if (typeof response.data._id !== 'undefined') {
+              this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
             }
-          })
-          .catch(err => {
-            this.isSaving = false;
-            //this.isApproving = false;
-          });
+            //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
+            this.recountApprovedInRange();
+            if (this.adminOrLibrarian) {
+              this.getTotalBookTasks();
+            }
+            //this.getBloksUntil('unresolved', true, this.block._id)
+          }
+        })
+        .catch(err => {
+          this.isSaving = false;
+          //this.isApproving = false;
         });
 
         this.$root.$emit('closeFlagPopup', true);
@@ -3548,8 +3556,14 @@ export default {
       'allowEditing': {
         handler(newVal, oldVal) {
           // because after page loaded tasks may be late
-          if (newVal === true && !this.editor) this.initEditor();
-          else this.destroyEditor();
+          if (newVal === true) {
+            if (!this.editor || !this.editor.isActive) {
+              this.initEditor();
+            }
+          }
+          else {
+            this.destroyEditor();
+          }
         }
       },
       'mode': {
@@ -3557,7 +3571,7 @@ export default {
           //if (val === 'narrate') {
             //this.destroyEditor();
           //} else if (oldVal === 'narrate') {
-            this.initEditor(true);
+            //this.initEditor(true);
           //}
         }
       },

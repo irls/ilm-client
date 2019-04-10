@@ -17,17 +17,6 @@
     </button>
 
     <template v-if="tc_allowEditingComplete()">
-      <!--<dropdown text="Download" type="default">
-          <li>
-            <a :href="getCurrentBookUrl('html')"
-              target="_blank" class="" >As HTML</a>
-          </li>
-          <li>
-            <a :href="getCurrentBookUrl('zip')"
-              target="_blank" class="">As ZIP</a>
-          </li>
-      </dropdown>-->
-
       <button class="btn btn-default" @click="$root.$emit('book-reimport-modal')">Re-Import</button>
     </template>
 
@@ -52,9 +41,8 @@ export default {
     return {
       editModes: {
         'BookEdit': 'Edit' ,
-        //'HTML': 'HTML',
-        //'JSON': 'JSON',
         'BookNarrate': 'Narrate',
+        'BookProofread': 'Proofread',
         'BookEditDisplay': 'Display'
       }
     }
@@ -79,19 +67,33 @@ export default {
           modes = {
             'CollectionBookEdit': 'Edit',
             'CollectionBookNarrate': 'Narrate',
+            'CollectionBookProofread': 'Proofread',
             'CollectionBookEditDisplay': 'Display'
           }
-          if (!this.tc_hasTask('block_narrate')) {
-            delete modes['CollectionBookNarrate']
+          if (!this.tc_showProofreadTab()) {
+            delete modes['CollectionBookProofread'];
+          }
+          if (!this.tc_showNarrateTab()) {
+            delete modes['CollectionBookNarrate'];
+          }
+          if (!this.tc_showEditTab()) {
+            delete modes['CollectionBookEdit'];
           }
         } else {
           modes = {
             'BookEdit': 'Edit' ,
             'BookNarrate': 'Narrate',
+            'BookProofread': 'Proofread',
             'BookEditDisplay': 'Display'
           }
-          if (!this.tc_hasTask('block_narrate')) {
-            delete modes['BookNarrate']
+          if (!this.tc_showProofreadTab()) {
+            delete modes['BookProofread'];
+          }
+          if (!this.tc_showNarrateTab()) {
+            delete modes['BookNarrate'];
+          }
+          if (!this.tc_showEditTab()) {
+            delete modes['BookEdit'];
           }
         }
         return modes;

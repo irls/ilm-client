@@ -305,7 +305,9 @@ export default {
           'CollectionBookEditDisplay',
           'BookEditDisplay',
           'BooksGrid',
-          'CollectionBook'
+          'CollectionBook',
+          'BookProofread',
+          'CollectionBookProofread'
         ].indexOf(this.$route.name) !== -1) {
           return false;
         }
@@ -327,7 +329,9 @@ export default {
           'CollectionBookEditDisplay',
           'BookEditDisplay',
           'BooksGrid',
-          'CollectionBook'
+          'CollectionBook',
+          'BookProofread',
+          'CollectionBookProofread'
         ].indexOf(this.$route.name) !== -1) {
           return false;
         }
@@ -376,6 +380,30 @@ export default {
         } else {
           return null;
         }
+      },
+      tc_hasExecutorTasks(role) {
+        if (this.currentJobInfo && 
+                this.currentJobInfo.tasks_counter && 
+                this.currentJobInfo.executors && 
+                (this.currentJobInfo.executors[role] === this.$store.state.auth.getSession().user_id || 
+                (this.adminOrLibrarian && role === 'editor'))) {
+          let proofread = this.currentJobInfo.tasks_counter.find(tc => {
+            return tc.key === role;
+          });
+          if (proofread && proofread.data) {
+            return proofread.data.tasks && proofread.data.tasks.length > 0 ? true : false;
+          }
+        }
+        return false;
+      },
+      tc_showEditTab() {
+        return (this._is('editor') || this.adminOrLibrarian) && this.tc_hasExecutorTasks('editor');
+      },
+      tc_showNarrateTab() {
+        return this._is('narrator', true) && this.tc_hasExecutorTasks('narrator');
+      },
+      tc_showProofreadTab() {
+        return this._is('proofer', true) && this.tc_hasExecutorTasks('proofer');
       }
     },
     computed: {

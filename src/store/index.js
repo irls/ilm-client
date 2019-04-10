@@ -1632,6 +1632,21 @@ export const store = new Vuex.Store({
             return Promise.reject(err);
           });
     },
+    putBlockProofread({state, dispatch, commit}, block) {
+      commit('set_blocker', 'putBlock');
+      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread')
+        .then((response) => {
+          commit('clear_blocker', 'putBlock');
+          dispatch('tc_loadBookTask', block.bookid);
+          dispatch('getCurrentJobInfo');
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          commit('clear_blocker', 'putBlock');
+          dispatch('checkError', err);
+          return Promise.reject(err);
+        });
+    },
 
     putNumBlock ({commit, state, dispatch}, block) {
       let cleanBlock;

@@ -7,9 +7,9 @@
 
   <div class="pull-right">
   <!-- Edit Button -->
-  <button v-if="allowBookEditMode"
-    @click='editBook' class='btn btn-default'>
-    <i class="fa fa-pencil fa-lg"></i>  Edit
+  <button
+    @click='displayBook' class='btn btn-default'>
+    <i class="fa fa-pencil fa-lg"></i>  Display Book
   </button>  &nbsp;
 
   <!-- Meta Filter -->
@@ -99,8 +99,8 @@ export default {
         return 0;
       }
     },
-    editBook () {
-      this.$router.push('/books/' + this.$store.state.currentBookMeta._id + '/edit')
+    displayBook () {
+      this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
     },
     importBook () {
       console.log('event ok')

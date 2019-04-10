@@ -128,14 +128,22 @@
         if (this._is(role, true) || (role === 'editor' && this.adminOrLibrarian)) {
           if (this.$route && ([
             'BookEdit', 'BookEditDisplay', 'BookNarrate', 
-            'CollectionBookEdit', 'CollectionBookEditDisplay', 'CollectionBookNarrate'
+            'CollectionBookEdit', 'CollectionBookEditDisplay', 'CollectionBookNarrate',
+            'BookProofread', 'CollectionBookProofread'
           ].indexOf(this.$route.name) !== -1)) {
             return this.goToBlock(blockid);
           } else {
             let params = {params: {bookid: this.currentBookMeta.bookid, block: blockid}};
-            params.name = role === 'narrator' ? 'BookNarrate' : 'BookEdit';
-            if (this.currentCollectionId) {
-              params.name = role === 'narrator' ? 'CollectionBookNarrate' : 'CollectionBookEdit';
+            switch(role) {
+              case 'narrator':
+                params.name = this.currentCollectionId ? 'CollectionBookNarrate' : 'BookNarrate';
+                break;
+              case 'editor':
+                params.name = this.currentCollectionId ? 'CollectionBookEdit' : 'BookEdit';
+                break;
+              case 'proofer':
+                params.name = this.currentCollectionId ? 'CollectionBookProofread' : 'BookProofread';
+                break;
             }
             this.$router.push(params);
           }
