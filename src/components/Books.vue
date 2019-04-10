@@ -281,6 +281,7 @@ export default {
 
       .pull-right {
         min-width: 460px;
+        text-align: right;
       }
     }
 
