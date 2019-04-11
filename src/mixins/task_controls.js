@@ -51,9 +51,23 @@ export default {
         }
         return false;
       },
-      tc_isCompleted(block) {
-        if (this.tc_getBlockTask(block._id) || this.tc_getBlockTaskOtherRole(block._id)) {
-          return false;
+      tc_isCompleted(block, mode) {
+        let block_task = this.tc_getBlockTask(block.blockid);
+        if (!block_task) {
+          block_task = this.tc_getBlockTaskOtherRole(block.blockid);
+        }
+        if (block_task) {
+          switch (mode) {
+            case 'proofread':
+              return ['approve-block', 'approve-revoked-block'].indexOf(block_task.type) === -1;
+              break;
+            case 'edit':
+              return ['fix-block-text', 'fix-block-narration', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block'].indexOf(block_task.type) === -1;
+              break;
+            case 'narrate':
+              return ['narrate-block', 'fix-block-narration'].indexOf(block_task.type) === -1;
+              break;
+          }
         }
         if (this.adminOrLibrarian) {
           let flags_summary = block.calcFlagsSummary();
@@ -63,10 +77,10 @@ export default {
         }
         if (this.adminOrLibrarian || this._is('editor', true)) {
           if (this.currentJobInfo.text_cleanup) {
-            return false;
+            return mode === 'edit' ? false : true;
           }
           if (this.currentJobInfo.mastering && block.status) {
-            return block.status.stage !== 'audio_mastering';
+            return block.status.stage !== 'audio_mastering' || mode !== 'edit';
           }
           return !this.tc_getBlockTask(block._id) && !this.tc_getBlockTaskOtherRole(block._id);
         }

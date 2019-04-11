@@ -1634,11 +1634,38 @@ export const store = new Vuex.Store({
     },
     putBlockProofread({state, dispatch, commit}, block) {
       commit('set_blocker', 'putBlock');
-      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread')
+      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', {
+        block: {
+          blockid: block.blockid, 
+          bookid: block.bookid, 
+          flags: block.flags,
+          content: block.content
+        }
+      })
         .then((response) => {
           commit('clear_blocker', 'putBlock');
           dispatch('tc_loadBookTask', block.bookid);
           dispatch('getCurrentJobInfo');
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          commit('clear_blocker', 'putBlock');
+          dispatch('checkError', err);
+          return Promise.reject(err);
+        });
+    },
+    putBlockNarrate({state, dispatch, commit}, block) {
+      commit('set_blocker', 'putBlock');
+      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/narrate', {
+        block: {
+          blockid: block.blockid, 
+          bookid: block.bookid, 
+          flags: block.flags,
+          content: block.content
+        }
+      })
+        .then((response) => {
+          commit('clear_blocker', 'putBlock');
           return Promise.resolve(response.data);
         })
         .catch(err => {

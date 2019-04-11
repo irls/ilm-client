@@ -399,7 +399,7 @@
                     <li @click="audPlayFromSelection()">Play from here</li>
                     <li @click="audPlaySelection()">Play selection</li>
                   </template>
-                  <template v-if="!range.collapsed && tc_showBlockNarrate(block._id) && allowEditing && !isAudioEditing">
+                  <template v-if="!range.collapsed && tc_showBlockNarrate(block._id) && mode === 'narrate' && !isAudioEditing">
                     <li class="separator"></li>
                     <li @click="reRecord">Re-record audio</li>
                   </template>
@@ -697,7 +697,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -832,7 +832,7 @@ export default {
             return true;
           }
           let flagsSummary = this.block.calcFlagsSummary();
-          if (this.adminOrLibrarian && flagsSummary.dir === 'narrator' && flagsSummary.stat === 'open') {
+          if (this.adminOrLibrarian && flagsSummary.dir === 'narrator' && flagsSummary.stat === 'open' && !this._is('narrator', true)) {
             let narratorTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'fix-block-narration' && t.blockid == this.block._id);
             if (!narratorTask) {
               return false;
@@ -941,7 +941,7 @@ export default {
       },
       isCompleted: { cache: false,
         get() {
-          return this.block ? this.tc_isCompleted(this.block) : true;
+          return this.block ? this.tc_isCompleted(this.block, this.mode) : true;
         }
       },
       displaySelectionStart() {
@@ -1575,6 +1575,8 @@ export default {
       assembleBlockProxy: function (ev) {
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
+        } else if (this.mode === 'narrate') {
+          return this.assembleBlockNarrate();
         }
         if (this.block.type == 'illustration') {
           if (this.isIllustrationChanged) {
@@ -1687,12 +1689,28 @@ export default {
         });
       },
       assembleBlockProofread() {
-        return this.putBlockProofread(this.block)
+        this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+        this.isSaving = true;
+        return this.putBlockProofread(this.block.clean())
           .then(() => {
+            this.isSaving = false;
+            this.isChanged = false;
             if (this.isCompleted) {
               this.tc_loadBookTask(this.block.bookid);
               this.getCurrentJobInfo();
             }
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      },
+      assembleBlockNarrate() {
+        this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+        this.isSaving = true;
+        return this.putBlockNarrate(this.block.clean())
+          .then(() => {
+            this.isSaving = false;
+            this.isChanged = false;
           })
           .catch(err => {
             return Promise.reject(err);
@@ -3570,9 +3588,12 @@ export default {
         handler(val, oldVal) {
           //if (val === 'narrate') {
             //this.destroyEditor();
-          //} else if (oldVal === 'narrate') {
-            //this.initEditor(true);
-          //}
+          if (this.block.voicework === 'narration') {
+            if ((oldVal === 'narrate' && val === 'edit') || (oldVal === 'edit' && val === 'narrate')) {
+              this.destroyEditor();
+              this.initEditor(true);
+            }
+          }
         }
       },
       'isRecording': {

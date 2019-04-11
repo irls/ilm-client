@@ -54,6 +54,7 @@
               :prevId="parlistO.getInId(viewObj.blockRid)"
               :mode="mode"
               :putBlockProofread="putBlockProofreadProxy"
+              :putBlockNarrate="putBlockNarrateProxy"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
@@ -273,7 +274,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate']),
 
     test(ev) {
         console.log('test', ev);
@@ -739,9 +740,7 @@ export default {
       //console.log('putBlockProxy', block);
       return this.putBlock(block)
       .then((updated)=>{
-        this.updateVisibleBlocks();
-        this.refreshPreviewTmpl([block.blockid]);
-        this.$store.commit('set_storeList', new BookBlock(updated));
+        return this._refreshAfterUpdate(updated);
       })
       .catch((err)=>{})
     },
@@ -767,13 +766,28 @@ export default {
     putBlockProofreadProxy: function(block) {
       return this.putBlockProofread(block)
         .then(response => {
-          this.updateVisibleBlocks();
-          this.refreshPreviewTmpl([block.blockid]);
-          this.$store.commit('set_storeList', new BookBlock(response));
+          return this._refreshAfterUpdate(response);
         })
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    
+    putBlockNarrateProxy: function(block) {
+      return this.putBlockNarrate(block)
+        .then(response => {
+          return this._refreshAfterUpdate(response);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    
+    _refreshAfterUpdate(block) {
+      this.updateVisibleBlocks();
+      this.refreshPreviewTmpl([block.blockid]);
+      this.$store.commit('set_storeList', new BookBlock(block));
+      return Promise.resolve();
     },
 
     putNumBlockOProxy: function (blockData) {
