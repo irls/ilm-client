@@ -1339,7 +1339,6 @@ export const store = new Vuex.Store({
             if (update['version'] && response.data.collection_id) {
               dispatch('updateCollectionVersion', Object.assign({id: response.data.collection_id}, update));
             }
-            //dispatch('getTotalBookTasks');
             let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian;
             commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
 
@@ -1662,7 +1661,6 @@ export const store = new Vuex.Store({
                   dispatch('updateBookVersion', {major: true});
                 }
               });
-            //dispatch('getTotalBookTasks');
             return Promise.resolve(response.data);
           })
           .catch(err => {
@@ -1891,23 +1889,6 @@ export const store = new Vuex.Store({
         return Promise.resolve(list);
       })
       .catch(err => err)
-    },
-
-    getTotalBookTasks({state, commit}) {
-      let allow_by_role = superlogin.confirmRole('librarian') || superlogin.confirmRole('admin')
-      if (state.currentBookid && allow_by_role) {
-        if (typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) {
-          commit('SET_ALLOW_BOOK_PUBLISH', false);
-        } else {
-          axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/total')
-            .then((response) => {
-              commit('SET_ALLOW_BOOK_PUBLISH', typeof response.data !== 'undefined' && /^[0-9]+$/.test(response.data) && parseInt(response.data) === 0);
-            })
-            .catch((err) => {})
-        }
-      } else {
-        commit('SET_ALLOW_BOOK_PUBLISH', false);
-      }
     },
 
     setMetaData ({state, commit, dispatch}, data)
