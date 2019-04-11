@@ -6,7 +6,10 @@ import {mapGetters} from 'vuex';
 export default {
     data() {
       return {
-        tc_test: 'Test property'
+        tc_test: 'Test property',
+        editor_tasks: ['fix-block-text', 'fix-block-narration', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block'],
+        narrator_tasks: ['narrate-block', 'fix-block-narration'],
+        proofer_tasks: ['approve-block', 'approve-revoked-block']
       }
     },
     mounted() {
@@ -59,13 +62,13 @@ export default {
         if (block_task) {
           switch (mode) {
             case 'proofread':
-              return ['approve-block', 'approve-revoked-block'].indexOf(block_task.type) === -1;
+              return this.proofer_tasks.indexOf(block_task.type) === -1;
               break;
             case 'edit':
-              return ['fix-block-text', 'fix-block-narration', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block'].indexOf(block_task.type) === -1;
+              return this.editor_tasks.indexOf(block_task.type) === -1;
               break;
             case 'narrate':
-              return ['narrate-block', 'fix-block-narration'].indexOf(block_task.type) === -1;
+              return this.narrator_tasks.indexOf(block_task.type) === -1;
               break;
           }
         }
@@ -418,6 +421,98 @@ export default {
       },
       tc_showProofreadTab() {
         return this._is('proofer', true) && this.tc_hasExecutorTasks('proofer');
+      },
+      tc_isApproveDisabled(block, mode) {
+        let task = this.tc_getBlockTask(block.blockid);
+        if (!task) {
+          task = this.tc_getBlockTaskOtherRole(block.blockid);
+        }
+        if (!task) {
+          return true;
+        }
+        switch (mode) {
+          case 'edit':
+            if (this.editor_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            break;
+          case 'narrate':
+            if (this.narrator_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            break;
+          case 'proofread':
+            if (this.proofer_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            break;
+        }
+        let flags_summary = this.block.calcFlagsSummary();
+        if (flags_summary) {
+          if (flags_summary.stat === 'resolved') {
+            return false;
+          }
+          switch (mode) {
+            case 'edit':
+              if (flags_summary.dir === 'narrator') {
+                return this.narrator_tasks.indexOf(task.type) === -1 ? false : true;
+              }
+              break;
+            case 'narrate':
+              if (flags_summary.dir === 'editor') {
+                return true;
+              }
+              break;
+          }
+        }
+        return true;
+      },
+      tc_isNeedWorkDisabled(block, mode) {
+        let task = this.tc_getBlockTask(block.blockid);
+        if (!task) {
+          task = this.tc_getBlockTaskOtherRole(block.blockid);
+        }
+        if (!task) {
+          return true;
+        }
+        switch (mode) {
+          case 'edit':
+            if (this.editor_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            break;
+          case 'narrate':
+            if (this.narrator_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            break;
+          case 'proofread':
+            if (this.proofer_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            break;
+        }
+        let flags_summary = this.block.calcFlagsSummary();
+        if (flags_summary) {
+          if (flags_summary.stat === 'resolved') {
+            return true;
+          }
+          switch (mode) {
+            case 'edit':
+              if (flags_summary.dir === 'narrator') {
+                return true;
+              }
+              break;
+            case 'narrate':
+              if (flags_summary.dir === 'editor') {
+                return false;
+              }
+              break;
+            case 'proofread':
+              return false;
+          }
+        }
+        return true;
       }
     },
     computed: {

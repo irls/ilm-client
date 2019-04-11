@@ -458,6 +458,7 @@ export default {
           if (this.startId === false) {
             this.startId = startId; // first load
             this.parlistO.setStartId(startId);
+            this.parlistO.setFirstVisibleId(startId);
           }
           this.unfreeze('loadBook');
           result.blockId = result.rows[result.rows.length-1].blockid;
@@ -1718,6 +1719,7 @@ export default {
           if (visible) {
             if (!firstVisible) {
               firstVisible = blockRef.blockO;
+              this.parlistO.setFirstVisibleId(blockRef.blockId);
             }
             lastVisible =  blockRef.blockO;
             if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
@@ -1936,9 +1938,6 @@ export default {
                 }
 
                 //this.lazyLoad();
-                if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
-                  this.$router.push({name: 'BookEdit', params: {}});
-                }
               });
             });
           });
@@ -1998,9 +1997,6 @@ export default {
 //         if (newVal) {
 //           this.tc_loadBookTask()
 //           .then(()=>{
-//             if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
-//               this.$router.push({name: 'BookEdit', params: {}});
-//             }
 //             this.loadBookDown(true)
 //             .then(()=>{
 //               this.setBlockWatch();

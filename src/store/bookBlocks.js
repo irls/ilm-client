@@ -39,6 +39,7 @@ class BookBlocks {
     this.startRId = false;
     this.startRIdStore = window.localStorage.getItem("startRId") || false;
     this.bookid = null;
+    this.firstVisibleId = null;
   }
 
   idsViewArray() {
@@ -545,6 +546,18 @@ class BookBlocks {
     let tmp = this.listObjs;
     this.listObjs = [];
     this.listObjs = tmp;
+  }
+  
+  setFirstVisibleId(blockid) {
+    if (!blockid) return false;
+    if (this.firstVisibleId && this.firstVisibleId == blockid) return false;
+
+    if (blockid.charAt(0) == '#') { // Orient RID
+      this.firstVisibleId = this.lookupList[blockid].blockid;
+    } else {
+      this.firstVisibleId = blockid;
+    }
+    return true;
   }
 
 }

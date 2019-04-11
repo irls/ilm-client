@@ -20,8 +20,8 @@
 
 
 
-        <button v-if="allowBookEditMode" @click="editBook" class='btn btn-default'>
-          <i class="fa fa-pencil fa-lg"></i>&nbsp;Edit Book
+        <button v-if="hasBookSelected" @click="displayBook" class='btn btn-default'>
+          <i class="fa fa-pencil fa-lg"></i>&nbsp;Display Book
         </button>
 
 
@@ -59,15 +59,12 @@
       };
     },
     props: [
-      'hasItemSelected', 'metaVisible'
+      'hasItemSelected', 'metaVisible', 'hasBookSelected'
     ],
     mounted() {
 
     },
     methods: {
-      hasBookSelected() {
-
-      },
       collectionCount() {
         return this.bookCollections ? this.bookCollections.length : 0;
       },
@@ -106,13 +103,13 @@
         //this.metaVisible = !this.metaVisible;
         this.$emit('toggleMetaVisible', !this.metaVisible);
       },
-      editBook() {
-        this.$router.push('/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta._id + '/edit');
+      displayBook() {
+        this.$router.push('/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta.bookid + '/display');
       }
     },
     computed: {
 
-      ...mapGetters(['bookCollections', 'collectionsFilter', 'allowCollectionsEdit', 'allowBookEditMode', 'currentBookMeta', 'adminOrLibrarian'])
+      ...mapGetters(['bookCollections', 'collectionsFilter', 'allowCollectionsEdit', 'currentBookMeta', 'adminOrLibrarian'])
     }
   }
 </script>

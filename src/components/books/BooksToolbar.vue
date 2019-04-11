@@ -7,7 +7,7 @@
 
   <div class="pull-right">
   <!-- Edit Button -->
-  <button
+  <button v-if="hasBookSelected()"
     @click='displayBook' class='btn btn-default'>
     <i class="fa fa-pencil fa-lg"></i>  Display Book
   </button>  &nbsp;

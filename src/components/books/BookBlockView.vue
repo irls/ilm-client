@@ -32,7 +32,7 @@
 
         </div>
         <template v-if="mode === 'narrate'">
-          <div class="table-row" v-if="blockAudio.src && tc_showBlockAudioEdit(block._id) && !isAudioChanged && !isRecording">
+          <div class="table-row" v-if="blockAudio.src && tc_showBlockNarrate(block._id) && !isAudioChanged && !isRecording">
             <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
           </div>
           <template v-if="player && blockAudio.src && !isRecording">
@@ -831,6 +831,7 @@ export default {
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
             return true;
           }
+          return this.tc_isNeedWorkDisabled(this.block, this.mode);
           let flagsSummary = this.block.calcFlagsSummary();
           if (this.adminOrLibrarian && flagsSummary.dir === 'narrator' && flagsSummary.stat === 'open' && !this._is('narrator', true)) {
             let narratorTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'fix-block-narration' && t.blockid == this.block._id);
@@ -862,10 +863,6 @@ export default {
       enableMarkAsDone: { cache: false,
         get() {
           return this.tc_enableMarkAsDone(this.block);
-          if (this.tc_getBlockTask(this.block._id)) {
-            return false;
-          }
-          return this._is('editor', true) && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
         }
       },
       markAsDoneButtonDisabled: { cache: false,
@@ -904,25 +901,31 @@ export default {
               }
             }
           }
+          return this.tc_isApproveDisabled(this.block, this.mode);
           let flags_summary = this.block.calcFlagsSummary();
-            if (this.isCanApproveWithoutTask) {
-              if (flags_summary.stat === 'open') {
-                return true;
-              } else {
-                return false;
-              }
-            }
-            if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
-            if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1 && flags_summary.stat !== 'open' && !this._is(flags_summary.dir, true)) return false;
-            if ((this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
-            if ((this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasBlockTask(this.block._id, 'approve-modified-block')) return false;
-            if (this._is('proofer', true) && this.tc_hasBlockTask(this.block._id, 'approve-revoked-block') && flags_summary.stat !== 'open') return false;
-            if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
-            if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
-            if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
+          if (this.isCanApproveWithoutTask) {
+            if (flags_summary.stat === 'open') {
               return true;
+            } else {
+              return false;
             }
-            return false;
+          }
+          if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
+          if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1 && flags_summary.stat !== 'open' && !this._is(flags_summary.dir, true)) return false;
+          if ((this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
+          if ((this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasBlockTask(this.block._id, 'approve-modified-block')) return false;
+          if (this._is('proofer', true) && this.tc_hasBlockTask(this.block._id, 'approve-revoked-block') && flags_summary.stat !== 'open') return false;
+          if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
+          if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) {
+            if (flags_summary.dir === 'narrator' && this.mode !== 'narrate') {
+              return false;
+            }
+            return true;
+          }
+          if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
+            return true;
+          }
+          return false;
         }
       },
       isCanApproveWithoutTask: function() {

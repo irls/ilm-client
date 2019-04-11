@@ -106,8 +106,8 @@ export default {
     viewSelect: function(val) {
       if (this.$route.params.block) {
         this.$router.push({ name: val, params: { block: this.$route.params.block } });
-      } else if (this.storeListO.meta && this.currentBookid == this.storeListO.meta.bookid && this.storeListO.startId) {
-        this.$router.push({ name: val, params: { block: this.storeListO.startId } });
+      } else if (this.storeListO.meta && this.currentBookid == this.storeListO.meta.bookid && this.storeListO.firstVisibleId) {
+        this.$router.push({ name: val, params: { block: this.storeListO.firstVisibleId } });
 
       } else this.$router.push({ name: val });
     },
