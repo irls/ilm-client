@@ -1339,7 +1339,7 @@ export const store = new Vuex.Store({
             if (update['version'] && response.data.collection_id) {
               dispatch('updateCollectionVersion', Object.assign({id: response.data.collection_id}, update));
             }
-            let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian;
+            let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian && state.currentJobInfo.workflow.status !== 'archived';
             commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
 
             return Promise.resolve(response.data);
@@ -2327,7 +2327,7 @@ export const store = new Vuex.Store({
                 status: null,
                 archived: null
               }};
-            if (state.currentJobInfo.workflow.status === 'active' && state.currentJobInfo.text_cleanup === false && state.adminOrLibrarian) {
+            if (state.currentJobInfo.workflow.status !== 'archived' && state.currentJobInfo.text_cleanup === false && state.adminOrLibrarian) {
               if (!(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian) {
                 commit('SET_ALLOW_BOOK_PUBLISH', true);
               }
