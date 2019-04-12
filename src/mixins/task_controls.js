@@ -417,10 +417,10 @@ export default {
         return (this._is('editor') || this.adminOrLibrarian) && this.tc_hasExecutorTasks('editor');
       },
       tc_showNarrateTab() {
-        return this._is('narrator', true) && this.tc_hasExecutorTasks('narrator');
+        return this._is('narrator', true) && this.tc_hasExecutorTasks('narrator') && this.currentJobInfo.workflow.status === 'active';
       },
       tc_showProofreadTab() {
-        return this._is('proofer', true) && this.tc_hasExecutorTasks('proofer');
+        return this._is('proofer', true) && this.tc_hasExecutorTasks('proofer') && this.currentJobInfo.workflow.status === 'active';
       },
       tc_isApproveDisabled(block, mode) {
         let task = this.tc_getBlockTask(block.blockid);
@@ -435,9 +435,24 @@ export default {
             if (this.editor_tasks.indexOf(task.type) === -1) {
               return true;
             }
+            if (['tts', 'audio_file'].indexOf(block.voicework) !== -1 && !block.audiosrc) {
+              return true;
+            }
+            if (block.footnotes && Array.isArray(block.footnotes)) {
+              let notAlignedFootnote = block.footnotes.find(f => {
+                return !f.audiosrc && f.voicework === 'tts';
+              });
+              if (notAlignedFootnote) {
+                return true;
+              }
+            }
             break;
           case 'narrate':
             if (this.narrator_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            
+            if (['narration'].indexOf(block.voicework) !== -1 && !block.audiosrc) {
               return true;
             }
             break;
@@ -457,10 +472,21 @@ export default {
               if (flags_summary.dir === 'narrator') {
                 return this.narrator_tasks.indexOf(task.type) === -1 ? false : true;
               }
+              if (flags_summary.dir === 'proofer') {
+                return false;
+              }
               break;
             case 'narrate':
               if (flags_summary.dir === 'editor') {
                 return true;
+              }
+              if (flags_summary.dir === 'proofer') {
+                return false;
+              }
+              break;
+            case 'proofread':
+              if (flags_summary.dir === 'proofer') {
+                return false;
               }
               break;
           }
@@ -509,7 +535,7 @@ export default {
               }
               break;
             case 'proofread':
-              return false;
+              return flags_summary.dir === 'proofer' ? true : false;
           }
         }
         return true;

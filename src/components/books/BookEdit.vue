@@ -2065,6 +2065,19 @@ export default {
       handler(val) {
         this.recordingState == '';
       }
+    },
+    'currentJobInfo.workflow.status': {
+      handler(val) {
+        if (val && val !== 'active') {
+          if (this.mode && this.mode !== 'edit') {
+            let params = {};
+            if (this.parlistO.firstVisibleId) {
+              params.block = this.parlistO.firstVisibleId;
+            }
+            this.$router.push({ name: 'BookEdit', params: params });
+          }
+        }
+      }
     }
   }
 }

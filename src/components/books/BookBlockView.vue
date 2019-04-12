@@ -252,7 +252,7 @@
                   </div>
 
                   <div :class="['table-row content-description', block.getClass()]">
-                    <div class="content-wrap-desc description"
+                    <div class="content-wrap-desc description" 
                       ref="blockDescription"
                       @input="commitDescription($event)"
                       v-html="block.description"
@@ -436,7 +436,7 @@
                   </div>
                   <div class="table-cell -audio -right">
                     <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && ((_is('editor', true) || adminOrLibrarian) && tc_isShowEdit(block._id))"> <!--&& !isAudioChanged"-->
-                      <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor(footnote, ftnIdx, $event)"></i>
+                      <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor(footnote, ftnIdx, $event)" v-if="allowEditing"></i>
                     </template>
                     <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
                         <template v-if="!FtnAudio.isStarted || FtnAudio.isStarted!==`${block._id}_${ftnIdx}`">
@@ -469,7 +469,7 @@
                     :ref="'footnoteContent_' + ftnIdx">
                   </div>
                   <div class="table-cell -control">
-                    <span @click="delFootnote(ftnIdx)"><i class="fa fa-trash"></i></span>
+                    <span @click="delFootnote(ftnIdx)" v-if="allowEditing"><i class="fa fa-trash"></i></span>
                   </div>
                 </div>
               </div>
@@ -828,37 +828,10 @@ export default {
           return this.block.flags && this.block.flags.length;
       },
       isNeedWorkDisabled: function () {
-          if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
-            return true;
-          }
-          return this.tc_isNeedWorkDisabled(this.block, this.mode);
-          let flagsSummary = this.block.calcFlagsSummary();
-          if (this.adminOrLibrarian && flagsSummary.dir === 'narrator' && flagsSummary.stat === 'open' && !this._is('narrator', true)) {
-            let narratorTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'fix-block-narration' && t.blockid == this.block._id);
-            if (!narratorTask) {
-              return false;
-            }
-            let approveTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'approve-modified-block' && t.blockid == this.block._id);
-            if (approveTask) {
-              return false;
-            }
-          }
-          if (!this.tc_getBlockTask(this.block._id)) {
-            return true;
-          }
-
-          let executors = this.tc_currentBookTasks.job.executors;
-          if (executors[flagsSummary.dir] ==  this.auth.getSession().user_id) {
-            if (this._is('proofer', true) &&
-                    (this.tc_hasBlockTask(this.block._id, 'approve-block') || this.tc_hasBlockTask(this.block._id, 'approve-revoked-block')) &&
-                    flagsSummary.stat === 'open') {// if flag assigned to proofer - user has two roles
-              return false;
-            } else {
-              return true;
-            }
-          }
-
-          return flagsSummary.stat !== 'open';
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
+          return true;
+        }
+        return this.tc_isNeedWorkDisabled(this.block, this.mode);
       },
       enableMarkAsDone: { cache: false,
         get() {
@@ -888,44 +861,7 @@ export default {
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.isRecording || this.isUpdating) {
             return true;
           }
-          if (this.block && ['tts', 'audio_file'].indexOf(this.block.voicework) !== -1 && !this.block.audiosrc) {
-            return true;
-          }
-          if (this._is('editor') || this.adminOrLibrarian) {
-            if (this.block.footnotes && Array.isArray(this.block.footnotes)) {
-              let notAlignedFootnote = this.block.footnotes.find(f => {
-                return !f.audiosrc && f.voicework === 'tts';
-              })
-              if (notAlignedFootnote) {
-                return true;
-              }
-            }
-          }
           return this.tc_isApproveDisabled(this.block, this.mode);
-          let flags_summary = this.block.calcFlagsSummary();
-          if (this.isCanApproveWithoutTask) {
-            if (flags_summary.stat === 'open') {
-              return true;
-            } else {
-              return false;
-            }
-          }
-          if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
-          if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1 && flags_summary.stat !== 'open' && !this._is(flags_summary.dir, true)) return false;
-          if ((this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
-          if ((this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasBlockTask(this.block._id, 'approve-modified-block')) return false;
-          if (this._is('proofer', true) && this.tc_hasBlockTask(this.block._id, 'approve-revoked-block') && flags_summary.stat !== 'open') return false;
-          if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
-          if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) {
-            if (flags_summary.dir === 'narrator' && this.mode !== 'narrate') {
-              return false;
-            }
-            return true;
-          }
-          if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
-            return true;
-          }
-          return false;
         }
       },
       isCanApproveWithoutTask: function() {
@@ -3591,6 +3527,7 @@ export default {
         handler(val, oldVal) {
           //if (val === 'narrate') {
             //this.destroyEditor();
+          this.discardBlock();
           if (this.block.voicework === 'narration') {
             if ((oldVal === 'narrate' && val === 'edit') || (oldVal === 'edit' && val === 'narrate')) {
               this.destroyEditor();
