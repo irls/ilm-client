@@ -54,8 +54,8 @@
                 <button class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</button>
                 <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</button>
               </div>
-              <hr>
-              <div>
+              <hr  v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
+              <div v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
                 Download: <br />
                 <a class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
                 <a class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
