@@ -589,13 +589,7 @@ export default {
     },
     isAllowExportAudio: {
       get() {
-        if (this._is('admin') || this._is('librarian')) {
-          return true;
-        }
-        if (this._is('editor') && !this.currentBookMeta.published){
-          return true;
-        }
-        if (this.tc_hasTask('audio_mastering')) {
+        if (this._is('admin') || this._is('librarian') || this._is('editor', true)) {
           return true;
         }
         return false;
