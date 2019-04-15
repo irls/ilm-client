@@ -106,7 +106,7 @@ export default {
                   return 'Completed';
                   break;
                 default:
-                  return val;
+                  return val ? val : 'Book Import';
               }
             }
           }
