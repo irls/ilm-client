@@ -1646,7 +1646,9 @@ export default {
         });
       },
       assembleBlockProofread() {
-        this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+        if (this.$refs.blockContent) {
+          this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+        }
         this.isSaving = true;
         return this.putBlockProofread(this.block.clean())
           .then(() => {
