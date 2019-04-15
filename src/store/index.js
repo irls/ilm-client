@@ -1028,7 +1028,7 @@ export const store = new Vuex.Store({
       .catch(err => err)
     },
 
-    startBookWatch({state}, bookid) {
+    startBookWatch({state, dispatch}, bookid) {
       if (!bookid) {
         bookid = state.currentBookid
       }
@@ -1067,6 +1067,7 @@ export const store = new Vuex.Store({
               store.commit('set_storeList', new BookBlock(data.block));
             }
             state.storeListO.refresh();
+            dispatch('tc_loadBookTask', state.currentBookid);
           }
         });
       }

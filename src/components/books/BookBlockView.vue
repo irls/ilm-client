@@ -32,10 +32,10 @@
 
         </div>
         <template v-if="mode === 'narrate'">
-          <div class="table-row" v-if="blockAudio.src && tc_showBlockNarrate(block._id) && !isAudioChanged && !isRecording">
+          <div class="table-row" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged && !isRecording">
             <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
           </div>
-          <template v-if="player && blockAudio.src && !isRecording">
+          <template v-if="player && blockAudio.src && !isRecording && tc_showBlockNarrate(block.blockid)">
             <div class="table-row" v-if="!isAudStarted">
               <i class="fa fa-play-circle-o"
                 @click="audPlay(block._id, $event)"></i>
@@ -362,7 +362,7 @@
                       Flag for editing also</a>
                     </template>
 
-                    <a v-if="part.status == 'resolved' && !part.collapsed && (!isCompleted ||isProofreadUnassigned())"
+                    <a v-if="isCanReopen(flagsSel, partIdx)"
                       href="#" class="flag-control"
                       @click.prevent="reopenFlagPart($event, partIdx)">
                       Re-open flag</a>
@@ -1147,9 +1147,9 @@ export default {
         if (this.isProofreadUnassigned()) {
           return true;
         }
-        if (this.tc_allowAdminFlagging(this.block, flagType)) {
-          return true;
-        }
+        //if (this.tc_allowAdminFlagging(this.block, flagType)) {
+          //return true;
+        //}
         if (!this.tc_getBlockTask(this.block._id)) {
           return false;
         }
@@ -1170,11 +1170,29 @@ export default {
                 else if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
                 else if (this._is('narrator', true)) canFlag = false;
               }
+              if (this.mode === 'narrate') {
+                canFlag = false;
+              }
             } break;
           };
         }
 
         return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
+      },
+      isCanReopen(flag, partIdx) {
+        if (typeof flag !== 'undefined' && typeof partIdx !== 'undefined') {
+          let part = flag.parts && flag.parts[partIdx] ? flag.parts[partIdx] : false;
+          if (part) {
+            if (this.mode !== 'proofread' && part.type === 'editor') {
+              return false;
+            }
+            if (this.mode === 'narrate' && part.type === 'narrator') {
+              return false;
+            }
+            return part.status == 'resolved' && !part.collapsed && (!this.isCompleted || this.isProofreadUnassigned());
+          }
+        }
+        return false;
       },
       isProofreadUnassigned: function() {
         if (this._is('proofer', true) && this.mode === 'proofread') {
