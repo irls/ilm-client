@@ -259,17 +259,7 @@ export default {
         if (response.status===200) {
           // hide modal after one second
           vu_this.uploadProgress = "Upload Successful"
-          if (vu_this.importTaskId && response.data instanceof Array && response.data[0] && response.data[0].ok == true) {
-            axios.put(API_URL + 'task/' + encodeURIComponent(vu_this.importTaskId) + '/book_imported', {})
-              .then((link_response) => {
-                vu_this.closeForm(true)
-              })
-              .catch((err) => {
-                vu_this.closeForm(false)
-              })
-          } else {
-            vu_this.closeForm(true)
-          }
+          vu_this.closeForm(true)
         } else {
           // not sure what we should be doing here
           vu_this.formReset()
