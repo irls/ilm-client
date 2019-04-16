@@ -167,7 +167,15 @@
                     </select>
                   </td>
                 </tr>
-
+                <tr class='weight'>
+                  <td>Weight:</td>
+                  <td>
+                    <span style="float: left; width: 20%; text-align: center;">{{weightFloated}}</span>
+                    <input style="width: 80%" v-model='weightFloated' @input="update('weight', $event)"
+                           :disabled="!allowMetadataEdit"
+                           min="1" max="11" step="0.1" id="type-range" type="range" class="custom-range">
+                  </td>
+                </tr>
               </table>
             </fieldset>
 
@@ -576,6 +584,14 @@ export default {
       taskTypes: 'taskTypes',
       adminOrLibrarian: 'adminOrLibrarian'
     }),
+    weightFloated: {
+      get() {
+        return Math.round(this.currentBookMeta.weight * 10) / 10;
+      },
+      set(newVal) {
+        this.currentBookMeta.weight = newVal;
+      }
+    },
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
