@@ -1288,7 +1288,7 @@ export default {
           this.editor.setup();
         }
 
-        if ((!this.editorDescr || force === true) && this.block.type == 'illustration') {
+        if ((!this.editorDescr || force === true) && this.block.type == 'illustration' && this.mode === 'edit') {
           let extensions = {};
           let toolbar = {buttons: []};
           if (this.allowEditing) {
@@ -1313,7 +1313,9 @@ export default {
               extensions: extensions,
               disableEditing: !this.allowEditing
           });
-        } else if (this.editorDescr) this.editorDescr.setup();
+        } else if (this.editorDescr) {
+          this.editorDescr.setup();
+        }
 
         this.initFtnEditor(force)
 
