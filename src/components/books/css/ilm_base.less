@@ -275,11 +275,6 @@
     &.large { font-size: @font_header_normal*1.1; }
     &.x-large { font-size: @font_header_normal*1.2; }
     &.xx-large { font-size: @font_header_normal*1.3; }
-
-    &.smallcaps {
-      font-variant: small-caps;
-      text-transform: none;
-    }
   }
   .content-wrap {
     &.header {
@@ -436,6 +431,10 @@
   }
   .bookgraphic {
     text-transform: uppercase; /* ??? */
+  }
+  .smallcaps {
+    font-variant: small-caps;
+    text-transform: none;
   }
 
   /***** Global whitespace *****/
@@ -907,6 +906,10 @@
       &.editor-note/*, .question*/ {
         font-style: normal; color: @grayed_color;
       }
+      &.smallcaps {
+        font-variant: small-caps;
+        text-transform: none;
+      }
     }
 
     .title {
@@ -1146,6 +1149,10 @@
       }
       &.editor-note/*, .question*/ {
         font-style: normal; color: @grayed_color;
+      }
+      &.smallcaps {
+        font-variant: small-caps;
+        text-transform: none;
       }
     }
 
