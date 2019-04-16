@@ -40,10 +40,10 @@ export default {
   data () {
     return {
       editModes: {
-        'BookEdit': 'Edit' ,
-        'BookNarrate': 'Narrate',
-        'BookProofread': 'Proofread',
-        'BookEditDisplay': 'Display'
+        //'BookEdit': 'Edit' ,
+        //'BookNarrate': 'Narrate',
+        //'BookProofread': 'Proofread',
+        //'BookEditDisplay': 'Display'
       }
     }
   },
@@ -128,6 +128,15 @@ export default {
     clearRangeSelection() {
       this.setBlockSelection({start: {}, end: {}});
     },
+    setSelectedRoute() {
+      if (this.$route && this.editModesAvailable) {
+        for (let i in this.editModesAvailable) {
+          if (this.$route.name === i && this.$refs.modesButton.selected !== this.$route.name) {
+            this.$refs.modesButton.selected = this.$route.name;
+          }
+        }
+      }
+    },
     ...mapActions(['setBlockSelection'])
   },
   components: {
@@ -151,14 +160,13 @@ export default {
   },
   watch: {
     '$route' (toRoute, fromRoute) {
-      if (toRoute && this.$refs.modesButton) {
-        for (let i in this.$refs.modesButton.values) {
-          if (toRoute.name === i && this.$refs.modesButton.selected !== toRoute.name) {
-            this.$refs.modesButton.selected = toRoute.name;
-          }
-        }
-      }
+      this.setSelectedRoute();
     },
+    'editModesAvailable': {
+      handler(val) {
+        this.setSelectedRoute();
+      }
+    }
   },
   mounted() {
     

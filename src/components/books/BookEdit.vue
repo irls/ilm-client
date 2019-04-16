@@ -1886,7 +1886,8 @@ export default {
             break;
         }
         if (!allowed) {
-          this.$router.push({name: 'BookEditDisplay', params: {}});
+          let params = this.$route.params ? this.$route.params : {};
+          this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
         }
       }
     }
@@ -2076,6 +2077,13 @@ export default {
             }
             this.$router.push({ name: 'BookEdit', params: params });
           }
+        }
+      }
+    },
+    'currentJobInfo.id': {
+      handler(val) {
+        if (val) {
+          this.checkMode();
         }
       }
     }

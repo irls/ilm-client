@@ -539,6 +539,31 @@ export default {
           }
         }
         return true;
+      },
+      tc_getTaskMode(task) {
+        if (this.narrator_tasks.indexOf(task.type) !== -1) {
+          return 'narrate';
+        } else if (this.editor_tasks.indexOf(task.type) !== -1) {
+          return 'edit';
+        } else if (this.proofer_tasks.indexOf(task.type) !== -1) {
+          return 'proofread';
+        }
+        return 'display';
+      },
+      tc_getTaskUrl(task) {
+        let mode = this.tc_getTaskMode(task);
+        if (task.blockid) {
+          return '/books/' + task.bookid + '/' + mode + '/' + task.blockid;
+        }
+        switch(task.type) {
+          case 'master-audio' : {
+            return '/books/' + task.bookid + '/' + mode;
+          } break;
+          default : {
+            return '/books/' + task.bookid + '/' + mode + '/unresolved/' + task.type;
+          } break;
+        };
+        return '';
       }
     },
     computed: {
