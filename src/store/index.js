@@ -84,6 +84,7 @@ export const store = new Vuex.Store({
 
     bookFilters: {filter: '', language: '', jobStatus: 'active'},
     editMode: 'Editor',
+    allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
     tc_tasksByBlock: {},
     tc_userTasks: {list: [], total: 0},
@@ -199,6 +200,7 @@ export const store = new Vuex.Store({
     currentBookBlocksLeft: state => state.currentBookBlocksLeft,
     currentBookBlocksLeftId: state => state.currentBookBlocksLeftId,
     bookEditMode: state => state.editMode,
+    allowBookEditMode: state => state.currentBookid,
     allowArchiving: state => state.isProofer,
     tc_currentBookTasks: state => state.tc_currentBookTasks,
     tc_tasksByBlock: state => state.tc_tasksByBlock,
