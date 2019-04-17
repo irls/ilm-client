@@ -7,7 +7,7 @@
 
   <div class="pull-right">
   <!-- Edit Button -->
-  <button v-if="allowBookEditMode"
+  <button 
     @click='editBook' class='btn btn-default'>
     <i class="fa fa-pencil fa-lg"></i>  Edit
   </button>  &nbsp;
@@ -72,7 +72,6 @@ export default {
     'isAdmin',
     'isEditor',
     'isLibrarian',
-    'allowBookEditMode',
     'allBooks',
     'adminOrLibrarian',
     'bookFilters'

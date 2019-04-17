@@ -468,7 +468,7 @@
                     v-html="footnote.content"
                     :ref="'footnoteContent_' + ftnIdx">
                   </div>
-                  <div class="table-cell -control">
+                  <div class="table-cell -control" v-if="allowEditing">
                     <span @click="delFootnote(ftnIdx)"><i class="fa fa-trash"></i></span>
                   </div>
                 </div>

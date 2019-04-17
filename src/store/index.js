@@ -84,7 +84,6 @@ export const store = new Vuex.Store({
 
     bookFilters: {filter: '', language: '', jobStatus: 'active'},
     editMode: 'Editor',
-    allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
     tc_tasksByBlock: {},
     tc_userTasks: {list: [], total: 0},
@@ -200,7 +199,6 @@ export const store = new Vuex.Store({
     currentBookBlocksLeft: state => state.currentBookBlocksLeft,
     currentBookBlocksLeftId: state => state.currentBookBlocksLeftId,
     bookEditMode: state => state.editMode,
-    allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode) && state.currentBookMeta.status != 'import_text',
     allowArchiving: state => state.isProofer,
     tc_currentBookTasks: state => state.tc_currentBookTasks,
     tc_tasksByBlock: state => state.tc_tasksByBlock,
@@ -460,10 +458,6 @@ export const store = new Vuex.Store({
       state.currentBookMeta = meta
     },
 
-    ALLOW_BOOK_EDIT_MODE (state, allow) {
-      state.allowBookEditMode = allow;
-    },
-
     TASK_LIST_LOADED (state) {
       let tc_userTasks = 0;
       state.tc_tasksByBlock = {};
@@ -518,7 +512,6 @@ export const store = new Vuex.Store({
         }
       }
       state.tc_userTasks.total = tc_userTasks;
-      state.allowBookEditMode = state.tc_currentBookTasks.tasks.length > 0 || state.tc_currentBookTasks.is_proofread_unassigned;
     },
     PREPARE_BOOK_COLLECTIONS(state) {
       if (state.isAdmin || state.isLibrarian) {
@@ -1850,7 +1843,6 @@ export const store = new Vuex.Store({
           state.tc_currentBookTasks = {job: job, tasks: job.tasks, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : [], is_proofread_unassigned: job.is_proofread_unassigned ? job.is_proofread_unassigned : false}
         }
       }
-      commit('ALLOW_BOOK_EDIT_MODE', state.tc_currentBookTasks.tasks.length > 0);
     },
 
     tc_approveBookTask({state, commit, dispatch}, task) {

@@ -20,7 +20,7 @@
 
 
 
-        <button v-if="allowBookEditMode" @click="editBook" class='btn btn-default'>
+        <button @click="editBook" class='btn btn-default'>
           <i class="fa fa-pencil fa-lg"></i>&nbsp;Edit Book
         </button>
 
@@ -112,7 +112,7 @@
     },
     computed: {
 
-      ...mapGetters(['bookCollections', 'collectionsFilter', 'allowCollectionsEdit', 'allowBookEditMode', 'currentBookMeta', 'adminOrLibrarian'])
+      ...mapGetters(['bookCollections', 'collectionsFilter', 'allowCollectionsEdit', 'currentBookMeta', 'adminOrLibrarian'])
     }
   }
 </script>
