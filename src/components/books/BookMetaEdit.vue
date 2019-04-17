@@ -170,10 +170,9 @@
                 <tr class='weight'>
                   <td>Weight:</td>
                   <td>
-                    <span style="float: left; width: 20%; text-align: center;">{{weightFloated}}</span>
-                    <input style="width: 80%" v-model='weightFloated' @input="update('weight', $event)"
-                           :disabled="!allowMetadataEdit"
-                           min="1" max="11" step="0.1" id="type-range" type="range" class="custom-range">
+                    <input v-model='currentBookMeta.weight' @input="updateWeigth($event)" :disabled="!allowMetadataEdit"
+                           :class="[{'has-error': validationErrors['weight'].length}]"/>
+                    <span class="validation-error" v-for="error in validationErrors['weight']">{{error}}</span>
                   </td>
                 </tr>
               </table>
@@ -543,7 +542,7 @@ export default {
       isPublishingQueue: false,
       publicationStatus: false,
       isExporting:false,
-      validationErrors: {extid: []},
+      validationErrors: {extid: [], weight: []},
       updateAllowed: false,
       TAB_ASSIGNMENT_INDEX: 0,
       TAB_META_INDEX: 1,
@@ -584,14 +583,6 @@ export default {
       taskTypes: 'taskTypes',
       adminOrLibrarian: 'adminOrLibrarian'
     }),
-    weightFloated: {
-      get() {
-        return Math.round(this.currentBookMeta.weight * 10) / 10;
-      },
-      set(newVal) {
-        this.currentBookMeta.weight = newVal;
-      }
-    },
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -1515,7 +1506,26 @@ export default {
         this.liveUpdate('extid', event.target.value);
       }
     }, 500),
-    
+
+    updateWeigth: _.debounce(function (event) {
+      const value = event.target.value;
+      const valueFloated = parseFloat(value);
+      const key = 'weight';
+      const maxValue = 10.99;
+      const minValue = 1.00;
+      let errors = [];
+
+      if ((value != valueFloated || 0 === valueFloated || (valueFloated > maxValue || valueFloated < minValue))) {
+        errors.push('Allowed range ' + minValue + ' - ' + maxValue);
+      }
+
+      this.validationErrors[key] = errors;
+      if (!errors.length) {
+        this.liveUpdate(key, value);
+      }
+
+    }, 500),
+
     getTaskType(typeId) {
       let t = this.taskTypes.tasks.find(_t => {
         return _t._id === typeId;
