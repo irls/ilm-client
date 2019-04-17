@@ -1521,7 +1521,7 @@ export default {
 
       this.validationErrors[key] = errors;
       if (!errors.length) {
-        this.liveUpdate(key, value);
+        this.liveUpdate(key, parseFloat);
       }
 
     }, 500),
