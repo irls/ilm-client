@@ -170,7 +170,7 @@
                 <tr class='weight'>
                   <td>Weight:</td>
                   <td>
-                    <input v-model='currentBookMeta.weight' @input="updateWeigth($event)" :disabled="!allowMetadataEdit"
+                    <input v-model='weight' @input="updateWeigth($event)" :disabled="!allowMetadataEdit"
                            :class="[{'has-error': validationErrors['weight'].length}]"/>
                     <span class="validation-error" v-for="error in validationErrors['weight']">{{error}}</span>
                   </td>
@@ -583,6 +583,26 @@ export default {
       taskTypes: 'taskTypes',
       adminOrLibrarian: 'adminOrLibrarian'
     }),
+    weight: {
+      get() {
+        let value = this.currentBook.weight || this.currentBook.weight === 0 ? Math.round(this.currentBook.weight * 100) / 100 : '';
+        if (isNaN(value)) {
+          return this.currentBook.weight;
+        }
+
+        return value;
+      },
+      set(newValue) {
+        let value = newValue;
+        if (newValue) {
+          value = Math.round(newValue * 100) / 100;
+        }
+        if (isNaN(value)) {
+          return this.currentBook.weight = newValue;
+        }
+        return this.currentBook.weight = value;
+      },
+    },
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -1508,20 +1528,22 @@ export default {
     }, 500),
 
     updateWeigth: _.debounce(function (event) {
-      const value = event.target.value;
+      const value = event.target.value || event.target.value === 0 ? Math.round(event.target.value * 100) / 100 : '';
       const valueFloated = parseFloat(value);
       const key = 'weight';
       const maxValue = 10.99;
       const minValue = 1.00;
       let errors = [];
 
-      if ((value != valueFloated || 0 === valueFloated || (valueFloated > maxValue || valueFloated < minValue))) {
-        errors.push('Allowed range ' + minValue + ' - ' + maxValue);
+      if ((isNaN(valueFloated) || !isNaN(valueFloated)) && value !== '') {
+        if (value != valueFloated || value > maxValue || value < minValue) {
+          errors.push('Allowed range ' + minValue + ' - ' + maxValue);
+        }
       }
 
       this.validationErrors[key] = errors;
-      if (!errors.length) {
-        this.liveUpdate(key, valueFloated);
+      if (!errors.length && !isNaN(value)) {
+        this.liveUpdate(key, value);
       }
 
     }, 500),
