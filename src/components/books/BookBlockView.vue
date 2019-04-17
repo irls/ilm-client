@@ -198,7 +198,7 @@
                 </template>
               </div>
               <!--<div class="par-ctrl -hidden">-->
-              <div class="par-ctrl -audio -hidden"> <!---->
+              <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
                       <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating && mode === 'edit'"></i>
