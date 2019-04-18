@@ -1644,6 +1644,10 @@ export default {
                 }
               });
             }
+            if (this.block.status.marked) {
+              partUpdate['status'] = partUpdate['status'] || {};
+              partUpdate.status.marked = false;
+            }
             if (fullUpdate) {
               return this.assembleBlock(partUpdate);
             } else {
