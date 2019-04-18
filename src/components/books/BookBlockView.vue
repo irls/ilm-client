@@ -865,17 +865,21 @@ export default {
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
             return true;
           }
+          let disable_footnotes = false;
+          if (this.block.footnotes) {
+            this.block.footnotes.forEach(f => {
+              if (f.voicework === 'tts' && !f.audiosrc) {
+                disable_footnotes = true;
+              }
+            });
+          }
+          if (disable_footnotes) {
+            return true;
+          }
           if (this.block && this.block.voicework === 'no_audio') {
             return this.block.status.marked ? true : false;
           }
           let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
-          if (this.block.footnotes) {
-            this.block.footnotes.forEach(f => {
-              if (f.voicework === 'tts' && !f.audiosrc) {
-                disable_audio = true;
-              }
-            });
-          }
           return this.block.status.marked ||
                   (this.block.status && this.block.status.proofed === true) ||
                   disable_audio;
