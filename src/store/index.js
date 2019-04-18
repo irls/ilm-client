@@ -2131,7 +2131,7 @@ export const store = new Vuex.Store({
             if (block._id == state.blockSelection.end._id) {
               break;
             }
-            crossId = block.chainid;
+            crossId = state.storeListO.getOutId(block.blockid);
           } else break;
         }
         return Promise.all(wait_tasks)
