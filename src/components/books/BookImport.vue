@@ -265,11 +265,29 @@ export default {
           vu_this.formReset()
         }
       }).catch((err) => {
-        console.log(err)
-        vu_this.bookUploadError = err.response.data.message
-        vu_this.formReset()
-        setTimeout(function(){ vu_this.$emit('close_modal') }, 3000)
-      });
+          //console.log(err)
+          if (err.response.data.message && err.response.data.message.length) {
+            vu_this.bookUploadError = err.response.data.message
+          } else if (Array.isArray(err.response.data)) {
+            let bookUploadError = ''
+            err.response.data.forEach((msg)=>{
+              if (typeof msg.error == 'object') {
+                for (var prop in msg.error) {
+                  if (Array.isArray(msg.error[prop]) && msg.error[prop].length) {
+                    bookUploadError += `Error ${prop}: ${JSON.stringify(msg.error[prop])}\n`
+                  }
+                }
+              } else {
+                bookUploadError += `Error: ${msg.error}\n`
+              }
+            })
+            vu_this.bookUploadError = bookUploadError;
+          }
+          vu_this.formReset()
+          setTimeout(function () {
+            vu_this.$emit('close_modal')
+          }, 5000)
+        });
 
     },
     humanFileSize(bytes, si) {
