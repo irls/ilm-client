@@ -1474,6 +1474,8 @@ export default {
           if (this.block.footnotes.length > 0) {
             this.initFtnEditor(true);
           }
+          this.block.setAudiosrc(block.audiosrc, block.audiosrc_ver);
+          this.refreshBlockAudio();
 
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
@@ -2692,6 +2694,16 @@ export default {
           }
           this.$root.$emit('from-block-edit:set-style');
           if (type === 'type' && event && event.target) {
+            if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {
+              this.block.voicework = 'no_audio';
+              this.block.setAudiosrc('');
+              this.block.setContent('');
+              this.refreshBlockAudio();
+              this.pushChange('voicework');
+              this.pushChange('content');
+              this.pushChange('audiosrc');
+              this.pushChange('audiosrc_ver');
+            }
             if (event.target.value === 'illustration') {
               let i = setInterval(() => {
                 if (this.$refs.blockDescription) {
