@@ -585,22 +585,10 @@ export default {
     }),
     weight: {
       get() {
-        let value = this.currentBook.weight || this.currentBook.weight === 0 ? Math.round(this.currentBook.weight * 100) / 100 : '';
-        if (isNaN(value)) {
-          return this.currentBook.weight;
-        }
-
-        return value;
+        return this.currentBook.weight;
       },
       set(newValue) {
-        let value = newValue;
-        if (newValue) {
-          value = Math.round(newValue * 100) / 100;
-        }
-        if (isNaN(value)) {
-          return this.currentBook.weight = newValue;
-        }
-        return this.currentBook.weight = value;
+        return this.currentBook.weight = newValue;
       },
     },
     collectionsList: {
@@ -1519,7 +1507,7 @@ export default {
     updateExtid: _.debounce(function(event) {
       if (event.target.value && event.target.value.length != 32) {
         this.validationErrors['extid'] = ['Length must be equal to 32 symbols.']
-      } else if (/[^a-z\d]+/.test(event.target.value)) {
+      } else if (/[^a-z\d]+/.test(event.target.value) || /\d+\.$/.test(event.target.value)) {
         this.validationErrors['extid'] = ['Only lowercase letters (a-z) and numbers.']
       } else {
         this.validationErrors['extid'] = [];
@@ -1528,16 +1516,24 @@ export default {
     }, 500),
 
     updateWeigth: _.debounce(function (event) {
-      const value = event.target.value || event.target.value === 0 ? Math.round(event.target.value * 100) / 100 : '';
+      const value = event.target.value;
       const valueFloated = parseFloat(value);
       const key = 'weight';
       const maxValue = 10.99;
       const minValue = 1.00;
       let errors = [];
 
-      if ((isNaN(valueFloated) || !isNaN(valueFloated)) && value !== '') {
-        if (value != valueFloated || value > maxValue || value < minValue) {
-          errors.push('Allowed range ' + minValue + ' - ' + maxValue);
+      if (/\d+\.$/.test(event.target.value)) {
+        errors.push('Unvalid value');
+      } else {
+        if (!/^\d*(\.\d{2})*$/.test(event.target.value)) {
+          errors.push('Unrounded value');
+        } else {
+          if ((isNaN(valueFloated) || !isNaN(valueFloated)) && value !== '') {
+            if (value != valueFloated || value > maxValue || value < minValue) {
+              errors.push('Allowed range ' + minValue + ' - ' + maxValue);
+            }
+          }
         }
       }
 
