@@ -287,7 +287,20 @@ export const store = new Vuex.Store({
     liveDB: state => state.liveDB,
     bookCategories: state => state.bookCategories,
     tasks_counter: state => state.currentJobInfo.tasks_counter,
-    jobStatusError: state => state.jobStatusError
+    jobStatusError: state => state.jobStatusError,
+    activeTasksCount: state => {
+      let count = 0;
+      if (state.adminOrLibrarian && state.currentJobInfo.tasks_counter && Array.isArray(state.currentJobInfo.tasks_counter)) {
+        state.currentJobInfo.tasks_counter.forEach(tc => {
+          if (tc && tc.data && tc.data.tasks && Array.isArray(tc.data.tasks)) {
+            tc.data.tasks.forEach(t => {
+              count+= t.count ? parseInt(t.count) : 0;
+            });
+          }
+        });
+      }
+      return count;
+    }
   },
 
   mutations: {
@@ -1867,34 +1880,37 @@ export const store = new Vuex.Store({
         'taskStep': task.nextStep || 'narrate-block',
         'taskType': task.type || false
       })
-      .then((list) => {
-        if (task.blockid) {
-          state.approveBlocksList.forEach((_b, i) => {
-            if (_b === task.blockid) {
-              state.approveBlocksList.splice(i, 1);
+      .then((response) => {
+        return dispatch('checkResponse', response)
+          .then(list => {
+            if (task.blockid) {
+              state.approveBlocksList.forEach((_b, i) => {
+                if (_b === task.blockid) {
+                  state.approveBlocksList.splice(i, 1);
+                }
+              })
             }
+            //console.log('APPROVE TC', list)
+            //state.tc_tasksByBlock = {}
+            //state.tc_userTasks = {list: list.data.rows, total: 0}
+            //commit('TASK_LIST_LOADED')
+            if(Array.isArray(state.tc_currentBookTasks.tasks)) {// temporary remove current block task to disable it
+              state.tc_currentBookTasks.tasks.forEach((t, i) => {
+                if (t.blockid == task.blockid) {
+                  state.tc_currentBookTasks.tasks.splice(i, 1);
+                }
+              });
+            }
+            if (!state.tc_currentBookTasks.tasks || state.tc_currentBookTasks.tasks.length === 0) {
+              state.tc_currentBookTasks.is_proofread_unassigned = false;
+            }
+            //state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": []};
+            if (state.replicatingDB.ilm_tasks !== true) {
+              dispatch('tc_loadBookTask', task.bookid);
+            }
+            dispatch('getCurrentJobInfo');
+            return Promise.resolve(list);
           })
-        }
-        //console.log('APPROVE TC', list)
-        //state.tc_tasksByBlock = {}
-        //state.tc_userTasks = {list: list.data.rows, total: 0}
-        //commit('TASK_LIST_LOADED')
-        if(Array.isArray(state.tc_currentBookTasks.tasks)) {// temporary remove current block task to disable it
-          state.tc_currentBookTasks.tasks.forEach((t, i) => {
-            if (t.blockid == task.blockid) {
-              state.tc_currentBookTasks.tasks.splice(i, 1);
-            }
-          });
-        }
-        if (!state.tc_currentBookTasks.tasks || state.tc_currentBookTasks.tasks.length === 0) {
-          state.tc_currentBookTasks.is_proofread_unassigned = false;
-        }
-        //state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": []};
-        if (state.replicatingDB.ilm_tasks !== true) {
-          dispatch('tc_loadBookTask', task.bookid);
-        }
-        dispatch('getCurrentJobInfo');
-        return Promise.resolve(list);
       })
       .catch(err => err)
     },

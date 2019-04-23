@@ -21,7 +21,7 @@
         :book="currentBook"
         :importTask="importTask"
         :allowDownload="false" />
-      
+
       <div class="book-listing">
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="Assignments" id="assignments">
@@ -34,7 +34,7 @@
             <legend>Description </legend>
             <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
           </fieldset>
-            <BookWorkflow 
+            <BookWorkflow
               v-if="adminOrLibrarian"
               :isPublishingQueue="isPublishingQueue"
               ></BookWorkflow>
@@ -1458,7 +1458,7 @@ export default {
         this.liveUpdate('extid', event.target.value);
       }
     }, 500),
-    
+
     getTaskType(typeId) {
       let t = this.taskTypes.tasks.find(_t => {
         return _t._id === typeId;
@@ -1469,7 +1469,7 @@ export default {
         return '';
       }
     },
-    
+
     checkAfterAudioImport() {
       this.showModal_audio = false
       if (this.activeTabIndex !== this.TAB_AUDIO_INDEX && this.$refs.panelTabs && this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX] && !this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX].disabled) {
@@ -1478,11 +1478,11 @@ export default {
         this.$forceUpdate();
       }
     },
-    
+
     updateJobDescription: _.debounce(function(event) {
       this.updateJob({id: this.currentJobInfo.id, description: event.target.value});
     }, 500),
-    
+
     setInfoMessage(msg) {
       this.infoMessage = msg;
     },
@@ -1597,7 +1597,7 @@ Vue.component('resizable-textarea', {
 
   /* Edit area for book description */
   fieldset.description textarea {
-    width: 100%; padding: 0; margin:0; border: none; 
+    width: 100%; padding: 0; margin:0; border: none;
     /*min-height: 180px;*/
     resize: vertical;
   }

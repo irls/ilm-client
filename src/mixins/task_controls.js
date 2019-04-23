@@ -195,7 +195,7 @@ export default {
       },
       tc_hasBlockTask(block_id, type) {
         if (this.adminOrLibrarian) {
-          if (this.currentJobInfo.workflow.status === 'archived') {
+          if (this.currentJobInfo.workflow.status !== 'active') {
             if (this.currentJobInfo.can_resolve_tasks) {
               let task = this.currentJobInfo.can_resolve_tasks.find(t => {
                 return t.blockid === block_id && t.type === type;
