@@ -57,10 +57,10 @@
               <hr  v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
               <div v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
                 Download: <br />
-                <a class="btn btn-primary" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
-                <a class="btn btn-primary" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
-                <a class="btn btn-primary" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
-                <button v-if="currentBook.demo_zip_narration_size < 23" class="btn btn-primary" :disabled="true">Narration is empty</button>
+                <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
+                <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
+                <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
+                <button style="margin-bottom: 5px;" v-if="currentBook.demo_zip_narration_size < 23" class="btn btn-primary" :disabled="true">Narration is empty</button>
                 <hr>
                 <div v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
                 <div v-if="!currentBook.demo">Public Demo Book link has been deactivated</div>
