@@ -41,13 +41,21 @@
           <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
             <legend>Export </legend>
               <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
-              <div v-if="getDemoStatus == 'rebuild'">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
+              <div v-if="getDemoStatus == 'rebuild'" style="margin-bottom: 5px;">Last build: {{this.convertTime(currentBook.demo_time)}}</div>
               <div>
-                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
-                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
-                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
                 <button class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</button>
-                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</button>
+                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</button>
+              </div>
+              <hr  v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
+              <div v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
+                Download: <br />
+                <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
+                <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
+                <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
+                <button style="margin-bottom: 5px;" v-if="currentBook.demo_zip_narration_size < 23" class="btn btn-primary" :disabled="true">Narration is empty</button>
+                <hr>
+                <div v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
+                <div v-if="!currentBook.demo">Public Demo Book link has been deactivated</div>
                 <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
               </div>
           </fieldset>
@@ -1379,17 +1387,19 @@ export default {
     },
 
     downloadDemo() {
-        //this.isExporting = true;
-
-
         let currTime = new Date().getTime();
         this.currentBookMeta.demo_time = -1 * currTime;
         return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/demo')
                .then(resp => {
                  //this.isExporting = false;
                });
-
-        //return this.API_URL + 'books/' + this.currentBook._id + '/demo';
+    },
+    deactivateDemoLink() {
+      console.log('inside deactivate');
+      return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/deactivateDemoLink')
+             .then(resp => {
+               //this.isExporting = false;
+             });
     },
     downloadExportMp3() {
         return this.API_URL + 'export/' + this.currentBook._id + '/exportMp3';
@@ -1520,6 +1530,34 @@ Vue.component('resizable-textarea', {
   },
 });
 
+
+Vue.filter('prettyBytes', function (num) {
+  // jacked from: https://github.com/sindresorhus/pretty-bytes
+
+  if (typeof num !== 'number' || isNaN(num)) {
+    //throw new TypeError('Expected a number');
+    return 0;
+  }
+
+  var exponent;
+  var unit;
+  var neg = num < 0;
+  var units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+  if (neg) {
+    num = -num;
+  }
+
+  if (num < 1) {
+    return (neg ? '-' : '') + num + ' B';
+  }
+
+  exponent = Math.min(Math.floor(Math.log(num) / Math.log(1000)), units.length - 1);
+  num = (num / Math.pow(1000, exponent)).toFixed(1) * 1;
+  unit = units[exponent];
+
+  return (neg ? '-' : '') + num + ' ' + unit;
+});
 </script>
 
 
