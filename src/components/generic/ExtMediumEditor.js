@@ -567,7 +567,7 @@ let SuggestButton = MediumEditor.Extension.extend({
         }
       }
 
-      this.triggerEvent(this.base.getFocusedElement(), 'input');
+      this.triggerEvent(this.base.getFocusedElement(), 'inputSuggestion');
       this.base.restoreSelection();
       MediumEditor.util.getContainerEditorElement(this.base.getFocusedElement()).dataset.has_suggestion = true;
 //     }

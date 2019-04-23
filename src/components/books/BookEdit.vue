@@ -273,7 +273,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'getTotalBookTasks', 'insertBlock', 'blocksJoin', 'removeBlock']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock']),
 
     test(ev) {
         console.log('test', ev);
@@ -749,7 +749,11 @@ export default {
     putBlockPartProxy: function (blockData) {
       //console.log('putBlockPartProxy', blockData);
       return this.putBlockPart(blockData)
-      .then(()=>{})
+      .then((updated)=>{
+        this.updateVisibleBlocks();
+        this.refreshPreviewTmpl([updated.blockid]);
+        this.$store.commit('set_storeList', new BookBlock(updated));
+      })
       .catch((err)=>{})
     },
 

@@ -106,7 +106,6 @@ export default {
         if (val) {
           this.tc_loadBookTask(this.currentBookMeta.bookid);
           this.getCurrentJobInfo();
-          this.getTotalBookTasks();
           this.showModal({
             title: 'Book preparation is stopped. Further modifications are not allowed',
             text: '',
@@ -223,7 +222,7 @@ export default {
       return this.$store.state.currentBookid
     },
 
-    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks'])
+    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo'])
   },
 
   destroyed: function () {

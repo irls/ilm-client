@@ -23,14 +23,6 @@
         :allowDownload="false" />
       
       <div class="book-listing">
-        <template v-if="tc_allowFinishPublished()">
-          <div v-if="!finishPublishedProcess" class="row">
-            <div class="editing-wrapper">
-              <button class="btn btn-primary btn-edit-complete" v-on:click="finishPublished()">Editing complete</button>
-            </div>
-          </div>
-          <div v-else class="preloader-small"></div>
-        </template>
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="Assignments" id="assignments">
             <BookAssignments
@@ -59,27 +51,7 @@
                 <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
               </div>
           </fieldset>
-          <fieldset class="publish">
-            <!-- Fieldset Legend -->
-            <template>
-              <legend>{{ currentBook.published ? 'Published' : 'Unpublished' }},
-              </legend>
-              <div>
-                Version #{{ currentBook.version ? currentBook.version : '1.0' }}
-              </div>
-              <div v-if="publicationStatus" >
-                Status #{{ publicationStatus }}
-              </div>
-              <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
-              <div v-if="allowPublishCurrentBook && currentBookMeta.job_status === 'active'">
-                <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
-                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
-                <span v-if="isPublishing" class="align-preloader -small"></span>
-
-              </div>
-              <button class="btn btn-primary hidden" v-on:click="publishContent()">Publish Content</button>
-            </template>
-          </fieldset>
+          <BookPublish></BookPublish>
           </vue-tab>
           <vue-tab title="Meta" id="book-content">
             <fieldset>
@@ -173,11 +145,18 @@
 
           <fieldset class='description brief'>
             <legend>Book Cover</legend>
-            <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
-              <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
-              <div v-else class='coverimg-wrap'></div>
-            </div>
-            <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
+            <template v-if="allowMetadataEdit">
+              <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
+                <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+                <div v-else class='coverimg-wrap'></div>
+              </div>
+              <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
+            </template>
+            <template v-else>
+              <div class="coverimg pull-right">
+                <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+              </div>
+            </template>
           </fieldset>
 
           <fieldset class='description brief'>
@@ -468,6 +447,7 @@ import { VueTabs, VTab } from 'vue-nav-tabs'
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments from './details/BookAssignments';
 import BookWorkflow from './details/BookWorkflow';
+import BookPublish from './details/BookPublish';
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -489,7 +469,8 @@ export default {
     accordion,
     panel,
     BookAssignments,
-    BookWorkflow
+    BookWorkflow,
+    BookPublish
   },
 
   data () {
@@ -608,13 +589,7 @@ export default {
     },
     isAllowExportAudio: {
       get() {
-        if (this._is('admin') || this._is('librarian')) {
-          return true;
-        }
-        if (this._is('editor') && !this.currentBookMeta.published){
-          return true;
-        }
-        if (this.tc_hasTask('audio_mastering')) {
+        if (this._is('admin') || this._is('librarian') || this._is('editor', true)) {
           return true;
         }
         return false;
@@ -782,22 +757,6 @@ export default {
         if (this.blockSelection.start._id && this.blockSelection.end._id && this.blockSelection.start._id !== this.blockSelection.end._id) {
           this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
         }
-      }
-    },
-    'currentBook.publicationStatus': {
-      handler(val) {
-        this.publicationStatus = val;
-      }
-    },
-    'currentBook.isIntheProcessOfPublication': {
-      handler(val) {
-        console.log(val)
-        this.isPublishing = !!val;
-      }
-    },
-    'currentBook.isInTheQueueOfPublication': {
-      handler(val) {
-        this.isPublishingQueue = !!val;
       }
     },
     '$route': {
@@ -1531,7 +1490,7 @@ export default {
       this.errorMessage = msg;
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta', 'updateJob', 'updateBookCollection'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection'])
   }
 }
 

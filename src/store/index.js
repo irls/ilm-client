@@ -142,6 +142,7 @@ export const store = new Vuex.Store({
       executors: {editor: null, proofer: null, narrator: null},
       description: '',
       id: null,
+      completed: null,
       workflow: {
         status: null,
         archived: null
@@ -1116,6 +1117,7 @@ export const store = new Vuex.Store({
       if (book_id != state.currentBookid) {
         state.jobInfoRequest = null;// force reload tasks
         commit('set_currentAudiobook', {});
+        commit('SET_ALLOW_BOOK_PUBLISH', false);
       }
       //let oldBook = (state.currentBook && state.currentBook._id)
 
@@ -1166,6 +1168,8 @@ export const store = new Vuex.Store({
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
               }
               commit('SET_CURRENTBOOK_META', data.meta)
+              let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian;
+              commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
               dispatch('getCurrentJobInfo');
             }
           });
@@ -1285,7 +1289,9 @@ export const store = new Vuex.Store({
         if (update.major && update.major == true) updateVersion = {major: true}
       }
 
-      if (!(Object.keys(update).length === 2 && typeof update.authors !== 'undefined' && typeof update.bookid !== 'undefined')) {// updating authors from quote
+      if (!(Object.keys(update).length === 2 &&
+              (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined') &&
+              typeof update.bookid !== 'undefined')) {// updating authors from quote or masteringRequired
         if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
           let versions = currMeta.version.split('.');
 
@@ -1339,8 +1345,10 @@ export const store = new Vuex.Store({
             if (update['version'] && response.data.collection_id) {
               dispatch('updateCollectionVersion', Object.assign({id: response.data.collection_id}, update));
             }
+
+            let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian && state.currentJobInfo.workflow.status !== 'archived';
+            commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
             commit('SET_CURRENTBOOK_META', response.data);
-            dispatch('getTotalBookTasks');
 
             return Promise.resolve(response.data);
           } else {
@@ -1616,7 +1624,7 @@ export const store = new Vuex.Store({
       delete cleanBlock.secnum;
       delete cleanBlock.isNumber;
       commit('set_blocker', 'putBlock');
-      return axios.put(state.API_URL + 'book/block/' + block._id,
+      return axios.put(state.API_URL + 'book/block/' + block.blockid,
         {
           'block': cleanBlock,
         })
@@ -1661,7 +1669,6 @@ export const store = new Vuex.Store({
                   dispatch('updateBookVersion', {major: true});
                 }
               });
-            //dispatch('getTotalBookTasks');
             return Promise.resolve(response.data);
           })
           .catch(err => {
@@ -1671,28 +1678,29 @@ export const store = new Vuex.Store({
           });
     },
 
-    putBlockPart ({commit, state, dispatch}, blockData) {
-      let cleanBlock = blockData.block.cleanField(blockData.field);
-      blockData.block.partUpdate = true;
-      //console.log('putBlockPart', cleanBlock);
-      if (cleanBlock) {
-        commit('set_blocker', 'putBlockPart');
-        return dispatch('getBlock', cleanBlock._id)
-        .then(function(doc) {
-          return dispatch('_putBlock', _.merge(doc, cleanBlock))
-          .then((response) => {
-            commit('clear_blocker', 'putBlockPart');
-            return Promise.resolve(response)
-          })
-        })
-        .catch((err) => {
-          console.log('Block save error:', err);
-          commit('clear_blocker', 'putBlock');
-          return Promise.reject(err);
-        });
-      } else {
-        return Promise.resolve();
+    putBlockPart ({commit, state, dispatch}, update) {
+      let cleanBlock = Object.assign({}, update);
+      delete cleanBlock.parnum;
+      delete cleanBlock.secnum;
+      delete cleanBlock.isNumber;
+      if (!cleanBlock.blockid) {
+        return Promise.reject(new Error('blockid is not set'));
       }
+      commit('set_blocker', 'putBlock');
+      return axios.put(state.API_URL + 'book/block/' + cleanBlock.blockid,
+        {
+          'block': cleanBlock,
+        })
+          .then(response => {
+            commit('clear_blocker', 'putBlock');
+            dispatch('getCurrentJobInfo');
+            return Promise.resolve(response.data);
+          })
+          .catch(err => {
+            commit('clear_blocker', 'putBlock');
+            dispatch('checkError', err);
+            return Promise.reject(err);
+          });
     },
 
     putBlockO({commit, state}, params) {
@@ -1889,23 +1897,6 @@ export const store = new Vuex.Store({
         return Promise.resolve(list);
       })
       .catch(err => err)
-    },
-
-    getTotalBookTasks({state, commit}) {
-      let allow_by_role = superlogin.confirmRole('librarian') || superlogin.confirmRole('admin')
-      if (state.currentBookid && allow_by_role) {
-        if (typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) {
-          commit('SET_ALLOW_BOOK_PUBLISH', false);
-        } else {
-          axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/total')
-            .then((response) => {
-              commit('SET_ALLOW_BOOK_PUBLISH', typeof response.data !== 'undefined' && /^[0-9]+$/.test(response.data) && parseInt(response.data) === 0);
-            })
-            .catch((err) => {})
-        }
-      } else {
-        commit('SET_ALLOW_BOOK_PUBLISH', false);
-      }
     },
 
     setMetaData ({state, commit, dispatch}, data)
@@ -2318,7 +2309,7 @@ export const store = new Vuex.Store({
       if (state.jobInfoRequest) {
         return state.jobInfoRequest;
       }
-      commit('SET_ALLOW_BOOK_PUBLISH', false);
+      //commit('SET_ALLOW_BOOK_PUBLISH', false);
       if (state.currentBookid) {
         state.jobInfoRequest = axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
         if (clear) {
@@ -2339,25 +2330,25 @@ export const store = new Vuex.Store({
               executors: {editor: null, proofer: null, narrator: null},
               description: '',
               id: null,
+              completed: null,
               workflow: {
                 status: null,
                 archived: null
               }};
-            if (state.currentJobInfo.completed && state.adminOrLibrarian && state.currentJobInfo.tasks_counter && Array.isArray(state.currentJobInfo.tasks_counter)) {
-              if (!(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion)) {
-                let count = 0;
-                state.currentJobInfo.tasks_counter.forEach(tc => {
-                  if (tc && tc.data && tc.data.tasks && Array.isArray(tc.data.tasks)) {
-                    tc.data.tasks.forEach(t => {
-                      count+= t.count ? parseInt(t.count) : 0;
-                    });
-                  }
-                });
-                if (count === 0) {
-                  commit('SET_ALLOW_BOOK_PUBLISH', true);
-                }
+            if (state.currentJobInfo.workflow.status !== 'archived' && state.currentJobInfo.text_cleanup === false && state.adminOrLibrarian) {
+              if (!(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian) {
+                commit('SET_ALLOW_BOOK_PUBLISH', true);
               }
             }
+            let allowEdit = false;
+            if (state.adminOrLibrarian) {
+              allowEdit = true;
+            } else if (state.auth.getSession().user_id === state.currentJobInfo.executors.editor) {
+              allowEdit = state.currentJobInfo.workflow.status === 'active';
+            } else {
+              allowEdit = state.currentJobInfo.completed === false;
+            }
+            commit('ALLOW_BOOK_EDIT_MODE', allowEdit);
             return Promise.resolve();
           })
           .catch(err => {

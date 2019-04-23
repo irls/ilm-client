@@ -42,12 +42,7 @@ export default {
           return true;
         }
         if (this._is('editor', true)) {
-          let published = typeof this.currentJobInfo.published !== 'undefined' && this.currentJobInfo.published;
-          if (published) {
-            return this.tc_getBlockTask(blockid);
-          } else {
-            return true;
-          }
+          return this.currentJobInfo.workflow.status === 'active';
         }
         return false;
       },
@@ -111,7 +106,7 @@ export default {
         if (this.currentJobInfo.text_cleanup && (this._is('editor', true) || this.adminOrLibrarian)) {
           return true;
         }
-        if (!this.currentJobInfo.published || this.adminOrLibrarian) {
+        if (this.currentJobInfo.workflow.status === 'active' || this.adminOrLibrarian) {
           return true;
         }
         return false;
@@ -234,7 +229,7 @@ export default {
         return tasks;
       },
       tc_showBlockAudioEdit(blockid) {
-        if (this._is('editor', true) && !this.currentJobInfo.published) {
+        if (this._is('editor', true) && this.currentJobInfo.workflow.status === 'active') {
           return true;
         }
         if (this.adminOrLibrarian) {
@@ -301,16 +296,8 @@ export default {
         ].indexOf(this.$route.name) !== -1) {
           return false;
         }
-        if (this.adminOrLibrarian) {
+        if (this.adminOrLibrarian || this._is('editor', true)) {
           return true;
-        }
-        if (this._is('editor', true)) {
-          if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
-            return true;
-          }
-          if (!this.currentJobInfo.published) {
-            return true;
-          }
         }
         return false;
       },
@@ -323,16 +310,8 @@ export default {
         ].indexOf(this.$route.name) !== -1) {
           return false;
         }
-        if (this.adminOrLibrarian) {
+        if (this.adminOrLibrarian || this._is('editor', true)) {
           return true;
-        }
-        if (this._is('editor', true)) {
-          if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
-            return true;
-          }
-          if (!this.currentJobInfo.published) {
-            return true;
-          }
         }
         return false;
       },
