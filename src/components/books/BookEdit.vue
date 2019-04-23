@@ -1623,7 +1623,35 @@ export default {
       //console.log('scrollToBlock', blockId);
       let vBlock = document.getElementById('v-'+ blockId);
       if (vBlock) {
+        let firstId = this.parlistO.idsViewArray()[0];
+        if (firstId) {
+          firstId = firstId.blockRid;
+        }
         vBlock.scrollIntoView();
+        if (firstId) {
+          let i = 0;
+          let scrollInterval = setInterval(() => {// force scroll to the element after all visible elements are loaded
+            ++i;
+            if (i > 10) {
+              clearInterval(scrollInterval);
+            }
+            let newFirstId = this.parlistO.idsViewArray()[0];
+            if (newFirstId && newFirstId.blockRid) {
+              if (newFirstId.blockRid !== firstId) {
+                let loaded = true;
+                this.parlistO.idsViewArray().forEach(l => {
+                  loaded = !loaded ? false : this.parlistO.getBlockByRid(l.blockRid).loaded;
+                });
+                if (loaded) {
+                  vBlock.scrollIntoView();
+                  clearInterval(scrollInterval);
+                }
+              }
+            } else {
+              clearInterval(scrollInterval);
+            }
+          }, 100);
+        }
         //this.parlistO.setStartId(blockId)
       }
     },
