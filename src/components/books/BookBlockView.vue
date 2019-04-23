@@ -471,7 +471,7 @@
                     :ref="'footnoteContent_' + ftnIdx">
                   </div>
                   <div class="table-cell -control">
-                    <span @click="delFootnote(ftnIdx)"><i class="fa fa-trash"></i></span>
+                    <span @click="delFootnote([ftnIdx])"><i class="fa fa-trash"></i></span>
                   </div>
                 </div>
               </div>
@@ -1579,9 +1579,29 @@ export default {
             this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
             if (this.mode !== 'narrate') {
               if (this.block.footnotes && this.block.footnotes.length) {
-                this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-                  this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
-                });
+                let footnotesInText = this.$refs.blockContent.querySelectorAll(`sup[data-idx]`);
+                if (footnotesInText) {
+                  footnotesInText = footnotesInText.length;
+                } else {
+                  footnotesInText = 0;
+                }
+                let delCount = this.block.footnotes.length - footnotesInText;
+                if (this.block.footnotes.length > footnotesInText) {
+                  let delIdxList = [];
+                  this.block.footnotes.forEach((ftn, ftnIdx) => {
+                    let footnote = this.$refs.blockContent.querySelector(`sup[data-idx='${ftnIdx + 1}']`);
+                    if (!footnote || footnote.length === 0) {
+                      delIdxList.push(ftnIdx);
+                    }
+                  });
+                  this.delFootnote(delIdxList, false);
+                  this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+                }
+                if (!delCount) {
+                  this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+                    this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
+                  });
+                }
               }
             }
             break;
@@ -2183,8 +2203,15 @@ export default {
           this.initFtnEditor(true);
         });
       },
-      delFootnote: function(pos) {
-        this.$refs.blockContent.querySelector(`[data-idx='${pos+1}']`).remove();
+      delFootnote: function(pos, checkText = true) {
+        if (checkText) {
+          pos.forEach(p => {
+            let footnote = this.$refs.blockContent.querySelector(`[data-idx='${p+1}']`);
+            if (footnote) {
+              footnote.remove();
+            }
+          })
+        }
         this.updFootnotes();
         this.block.footnotes.forEach((ftn, ftnIdx) => {
           let ref = this.$refs['footnoteContent_' + ftnIdx]
@@ -2192,7 +2219,12 @@ export default {
             this.block.setContentFootnote(ftnIdx, ref[0].innerHTML);
           }
         });
-        this.block.footnotes.splice(pos, 1);
+        let posDecr = 0;
+        pos.forEach(p => {
+          this.block.footnotes.splice(p - posDecr, 1);
+          ++posDecr;
+        });
+        
         this.isChanged = false; // to be shure to update view
         this.isChanged = true;
         this.pushChange('footnotes');
