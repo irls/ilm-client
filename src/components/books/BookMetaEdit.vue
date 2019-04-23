@@ -1538,14 +1538,14 @@ export default {
       let errors = [];
 
       if (/\d+\.$/.test(event.target.value)) {
-        errors.push('Unvalid value.Expected float value rounded to the nearest hundredth');
+        errors.push('Allowed range ' + minValue + ' - ' + maxValue + '.Expected format 12.34');
       } else {
         if (!/^\d*(\.\d{1,2})*$/.test(event.target.value)) {
-          errors.push('Unvalid value.Expected float value rounded to the nearest hundredth');
+          errors.push('Allowed range ' + minValue + ' - ' + maxValue + '.Expected format 12.34');
         } else {
           if ((isNaN(valueFloated) || !isNaN(valueFloated)) && value !== '') {
             if (value != valueFloated || value > maxValue || value < minValue) {
-              errors.push('Allowed range ' + minValue + ' - ' + maxValue);
+              errors.push('Allowed range ' + minValue + ' - ' + maxValue + '.Expected format 12.34');
             }
           }
         }
