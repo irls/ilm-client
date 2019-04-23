@@ -585,7 +585,21 @@ export default {
     }),
     weight: {
       get() {
-        return this.currentBook.weight;
+
+        let value = this.currentBook.weight;
+
+        if (/\d+\.$/.test(value)) {
+        } else {
+          if (!/^\d*(\.\d{1,2})*$/.test(event.target.value)) {
+          } else {
+            if (value !== '') {
+              value = Math.round(value * 100) / 100;
+            }
+          }
+        }
+
+        return value;
+
       },
       set(newValue) {
         return this.currentBook.weight = newValue;
@@ -1524,10 +1538,10 @@ export default {
       let errors = [];
 
       if (/\d+\.$/.test(event.target.value)) {
-        errors.push('Unvalid value');
+        errors.push('Unvalid value.Expected float value rounded to the nearest hundredth');
       } else {
         if (!/^\d*(\.\d{1,2})*$/.test(event.target.value)) {
-          errors.push('Unrounded value');
+          errors.push('Unvalid value.Expected float value rounded to the nearest hundredth');
         } else {
           if ((isNaN(valueFloated) || !isNaN(valueFloated)) && value !== '') {
             if (value != valueFloated || value > maxValue || value < minValue) {
@@ -1539,7 +1553,7 @@ export default {
 
       this.validationErrors[key] = errors;
       if (!errors.length && !isNaN(value)) {
-        this.liveUpdate(key,  Math.round(value * 100) / 100);
+        this.liveUpdate(key, value === '' ? '' : Math.round(value * 100) / 100);
       }
 
     }, 500),
