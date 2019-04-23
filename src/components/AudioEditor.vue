@@ -1170,16 +1170,18 @@
               return _w.alignedIndex == index;
             });
             if (word) {
-              this.plEventEmitter.emit('select', word.start, word.end);
-              this._showSelectionBorders()
-                .then(() => {
-                  if (autoplay) {
-                    this.cursorPosition = false;
-                    Vue.nextTick(() => {
-                      this.stop().then(() => this.play());
-                    });
-                  }
-                });
+              this.stop().then(() => {
+                this.plEventEmitter.emit('select', word.start, word.end);
+                this._showSelectionBorders()
+                  .then(() => {
+                    if (autoplay) {
+                      this.cursorPosition = false;
+                      Vue.nextTick(() => {
+                        this.play()
+                      });
+                    }
+                  });
+              });
             }
           }
         },
