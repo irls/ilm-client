@@ -287,16 +287,8 @@ export default {
         }
       },
       tc_allowMetadataEdit() {
-        if (this.adminOrLibrarian) {
+        if (this.adminOrLibrarian || this._is('editor', true)) {
           return true;
-        }
-        if (this._is('editor', true)) {
-          if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
-            return true;
-          }
-          if (!this.currentJobInfo.published) {
-            return true;
-          }
         }
         return false;
       },

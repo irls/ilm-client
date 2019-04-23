@@ -82,7 +82,7 @@ export const store = new Vuex.Store({
     currentBookToc: {bookId: '', data: []},
     currentAudiobook: {},
 
-    bookFilters: {filter: '', language: '', importStatus: 'active'},
+    bookFilters: {filter: '', language: '', jobStatus: 'active'},
     editMode: 'Editor',
     allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
@@ -91,7 +91,7 @@ export const store = new Vuex.Store({
     API_URL: process.env.ILM_API + '/api/v1/',
     bookCollectionsAll: [],
     bookCollections: [],
-    collectionsFilter: {title: '', language: '', importStatus: 'active'},
+    collectionsFilter: {title: '', language: '', jobStatus: 'active'},
     currentCollection: {},
     currentCollectionFiles: { coverimg: false },
     currentCollectionId: false,
@@ -182,7 +182,16 @@ export const store = new Vuex.Store({
     isReader: state => state.isReader,
     allowPublishCurrentBook: state => state.allowPublishCurrentBook,
     allRolls: state => state.allRolls,
-    allBooks: state => state.books_meta || [],
+    allBooks: state => {
+      if (!state.books_meta) {
+        return [];
+      }
+      state.books_meta.forEach(b => {
+        b.pub_ver = b.publishedVersion && b.publishedVersion !== 'false' ? b.publishedVersion : '';
+        b.cur_ver = typeof b.version !== 'undefined' && b.version !== b.publishedVersion ? b.version || '1.0' : (b.publishedVersion ? '' : '1.0');
+      });
+      return state.books_meta;
+    },
     bookFilters: state => state.bookFilters,
     currentBookid: state => state.currentBookid,
     currentBook: state => state.currentBook,
@@ -191,7 +200,7 @@ export const store = new Vuex.Store({
     currentBookBlocksLeft: state => state.currentBookBlocksLeft,
     currentBookBlocksLeftId: state => state.currentBookBlocksLeftId,
     bookEditMode: state => state.editMode,
-    allowBookEditMode: state => state.currentBookid && (state.isAdmin || state.isLibrarian || state.allowBookEditMode) && state.currentBookMeta.status != 'import_text',
+    allowBookEditMode: state => state.currentBookid,
     allowArchiving: state => state.isProofer,
     tc_currentBookTasks: state => state.tc_currentBookTasks,
     tc_tasksByBlock: state => state.tc_tasksByBlock,
@@ -299,7 +308,7 @@ export const store = new Vuex.Store({
     },
 
     SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
-      for (var prop in obj) if (['filter', 'language', 'importStatus'].indexOf(prop) > -1) {
+      for (var prop in obj) if (['filter', 'language', 'jobStatus'].indexOf(prop) > -1) {
         state.bookFilters[prop] = obj[prop]
         // console.log("Setting bookfilter."+prop, obj[prop])
         // console.log(state.bookFilters)
@@ -451,10 +460,6 @@ export const store = new Vuex.Store({
       state.currentBookMeta = meta
     },
 
-    ALLOW_BOOK_EDIT_MODE (state, allow) {
-      state.allowBookEditMode = allow;
-    },
-
     TASK_LIST_LOADED (state) {
       let tc_userTasks = 0;
       state.tc_tasksByBlock = {};
@@ -509,7 +514,6 @@ export const store = new Vuex.Store({
         }
       }
       state.tc_userTasks.total = tc_userTasks;
-      state.allowBookEditMode = state.tc_currentBookTasks.tasks.length > 0 || state.tc_currentBookTasks.is_proofread_unassigned;
     },
     PREPARE_BOOK_COLLECTIONS(state) {
       if (state.isAdmin || state.isLibrarian) {
@@ -1334,6 +1338,7 @@ export const store = new Vuex.Store({
             if (update['version'] && response.data.collection_id) {
               dispatch('updateCollectionVersion', Object.assign({id: response.data.collection_id}, update));
             }
+            commit('SET_CURRENTBOOK_META', response.data);
             dispatch('getTotalBookTasks');
 
             return Promise.resolve(response.data);
@@ -1840,7 +1845,6 @@ export const store = new Vuex.Store({
           state.tc_currentBookTasks = {job: job, tasks: job.tasks, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : [], is_proofread_unassigned: job.is_proofread_unassigned ? job.is_proofread_unassigned : false}
         }
       }
-      commit('ALLOW_BOOK_EDIT_MODE', state.tc_currentBookTasks.tasks.length > 0);
     },
 
     tc_approveBookTask({state, commit, dispatch}, task) {
