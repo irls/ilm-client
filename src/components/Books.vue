@@ -34,6 +34,14 @@
     </nav>
 
     <v-dialog :clickToClose="false"/>
+    <alert v-model="hasErrorAlert" placement="top" :duration="5000" type="danger" width="400px">
+      <span class="icon-ok-circled alert-icon-float-left"></span>
+      <p>{{errorAlert}}</p>
+    </alert>
+    <alert v-model="hasAlert" placement="top" :duration="5000" type="info" width="400px">
+      <span class="icon-ok-circled alert-icon-float-left"></span>
+      <p>{{messageAlert}}</p>
+    </alert>
   </div>
 </template>
 
@@ -52,6 +60,7 @@ import AudioEditor from './AudioEditor'
 import task_controls from '../mixins/task_controls.js'
 import BookReimport from './books/BookReimport'
 import Vue from 'vue';
+import {alert} from 'vue-strap';
 var modal = require('vue-js-modal');
 
 Vue.use(modal, {dialog: true});
@@ -68,7 +77,11 @@ export default {
       metaAvailable: false,
       //colCount: 1,
       currentBookid: this.$store.state.currentBookid,
-      showBookReimport: false
+      showBookReimport: false,
+      hasErrorAlert: false,
+      errorAlert: '',
+      hasAlert: false,
+      messageAlert: ''
     }
   },
 
@@ -79,7 +92,8 @@ export default {
     axios,
     superlogin,
     AudioEditor,
-    BookReimport
+    BookReimport,
+    alert
   },
 
   computed: {
@@ -145,6 +159,34 @@ export default {
           });
         }
       }
+    },
+    errorAlert: {
+      handler(val) {
+        this.hasErrorAlert = val.length > 0;
+      },
+      deep: true
+    },
+    hasErrorAlert: {
+      handler(val) {
+        if (val === false) {
+          this.errorAlert = '';
+        }
+      },
+      deep: true
+    },
+    messageAlert: {
+      handler(val) {
+        this.hasAlert = val.length > 0;
+      },
+      deep: true
+    },
+    hasAlert: {
+      handler(val) {
+        if (val === false) {
+          this.messageAlert = '';
+        }
+      },
+      deep: true
     }
   },
   mixins: [api_config, task_controls],
@@ -162,6 +204,8 @@ export default {
         this.$root.$on('show-modal', (params) => {this.showModal(params)})
         this.$root.$on('hide-modal', () => {this.hideModal()})
         this.$root.$on('book-reimport-modal', this.evOnReimportModal);
+        this.$root.$on('set-error-alert', this.setErrorAlert);
+        this.$root.$on('set-alert', this.setAlert);
 
 //         this.loadTTSVoices();
   },
@@ -221,6 +265,12 @@ export default {
     getBookid() {
       return this.$store.state.currentBookid
     },
+    setErrorAlert(message) {
+      this.errorAlert = message;
+    },
+    setAlert(message) {
+      this.messageAlert = message;
+    },
 
     ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo'])
   },
@@ -228,6 +278,8 @@ export default {
   destroyed: function () {
     this.$root.$off('from-bookedit:set-selection', this.listenRangeSelection);
     this.$root.$off('book-reimport-modal', this.evOnReimportModal);
+    this.$root.$off('set-error-alert', this.setErrorAlert);
+    this.$root.$off('set-alert', this.setAlert);
   }
 }
 </script>
@@ -400,6 +452,12 @@ export default {
 .-langftn-ar,
 .-langftn-fa  {
   direction: rtl;
+}
+.alert.top {
+  top: 120px;
+  p {
+    text-align: center;
+  }
 }
 
 </style>

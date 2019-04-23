@@ -2066,7 +2066,7 @@ export default {
         api.post(api_url, formData, {})
           .then(response => {
             this.isUpdating = false;
-            if (response.status == 200) {
+            if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
 
               if (footnoteIdx === null) {
                 this.blockAudio.map = response.data.content;
@@ -2081,11 +2081,16 @@ export default {
                 this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
                 this.audioEditFootnote.isAudioChanged = true;
               }
+            } else {
+              this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+              this.$root.$emit('for-audioeditor:set-process-run', false);
             }
           })
           .catch(err => {
             this.checkError(err);
             this.isUpdating = false;
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           });
       },
       insertSilence(position, length, footnoteIdx = null) {
@@ -2110,7 +2115,7 @@ export default {
         api.post(api_url, formData, {})
           .then(response => {
             this.isUpdating = false;
-            if (response.status == 200) {
+            if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
               if (footnoteIdx === null) {
                 this.blockAudio.map = response.data.content;
                 this.block.setContent(response.data.content);
@@ -2124,11 +2129,16 @@ export default {
                 this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
                 this.audioEditFootnote.isAudioChanged = true;
               }
+            } else {
+              this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+              this.$root.$emit('for-audioeditor:set-process-run', false);
             }
           })
           .catch(err => {
             this.checkError(err);
             this.isUpdating = false;
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           });
       },
       audCleanClasses: function(block_id, ev) {
@@ -2580,7 +2590,7 @@ export default {
         return api.post(api_url, formData, {})
         .then(response => {
           this.isUpdating = false;
-          if (response.status == 200) {
+          if (response.status == 200 && response.data && response.data.audiosrc) {
             if (footnoteIdx === null) {
               this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
               this.blockAudio.src = this.block.getAudiosrc('m4a');
@@ -2592,6 +2602,9 @@ export default {
             if (this.isAudioEditing) {
               this.$root.$emit('for-audioeditor:reload-text', response.data.content);
             }
+          } else {
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           }
           this.reRecordPosition = false;
           return BPromise.resolve();
@@ -2599,6 +2612,8 @@ export default {
         .catch(err => {
           this.reRecordPosition = false;
           this.isUpdating = false;
+          this.$root.$emit('for-audioeditor:set-process-run', false);
+          this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           return BPromise.reject();
         });
         } else {

@@ -149,9 +149,9 @@
             this.textCleanupProcess = false;
             if (!doc.data.error) {
               //this.currentBook.private = false;
-              this.$emit('setInfoMessage', 'Text cleanup task finished');
+              this.$root.$emit('set-alert', 'Text cleanup task finished');
             } else {
-              this.$emit('setErrorMessage', doc.data.error);
+              this.$root.$emit('set-error-alert', doc.data.error);
             }
           })
           .catch((err) => {
@@ -165,12 +165,13 @@
           .then((doc) => {
             this.audioMasteringProcess = false
             if (!doc.data.error) {
-              this.$emit('setInfoMessage', 'Mastering task finished');
+              this.$root.$emit('set-alert', 'Mastering task finished');
             } else {
-              this.$emit('setErrorMessage', doc.data.error);
+              this.$root.$emit('set-error-alert', doc.data.error);
             }
           })
           .catch((err) => {
+            this.$root.$emit('set-error-alert', err && err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Error in finish mastering');
             this.audioMasteringProcess = false;
           });
       },
