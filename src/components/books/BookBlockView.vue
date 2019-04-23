@@ -755,30 +755,22 @@ export default {
         }
       },
       blockVoiceworksSel: function() {
-        if (this.currentJobInfo.text_cleanup) {
+        if (this.currentJobInfo.text_cleanup || (!this.currentJobInfo.mastering_complete && !this.currentJobInfo.published && !this.currentJobInfo.mastering)) {
           return this.blockVoiceworks;
         }
         let voiceworks = {};
-        if (this.adminOrLibrarian) {
-          let allowed = [];
-          switch (this.block.voicework) {
-            case 'narration':
-              allowed = Object.keys(this.blockVoiceworks);
-              break;
-            default:
-              allowed = ['audio_file', 'tts', 'no_audio'];
-              break;
-          }
-          for (let k in this.blockVoiceworks) {
-            if (allowed.indexOf(k) !== -1) {
-              voiceworks[k] = this.blockVoiceworks[k];
-            }
-          }
-        } else {
-          for (let k in this.blockVoiceworks) {
-            if (['tts', 'no_audio'].indexOf(k) !== -1) {
-              voiceworks[k] = this.blockVoiceworks[k];
-            }
+        let allowed = [];
+        switch (this.block.voicework) {
+          case 'narration':
+            allowed = Object.keys(this.blockVoiceworks);
+            break;
+          default:
+            allowed = ['audio_file', 'tts', 'no_audio'];
+            break;
+        }
+        for (let k in this.blockVoiceworks) {
+          if (allowed.indexOf(k) !== -1) {
+            voiceworks[k] = this.blockVoiceworks[k];
           }
         }
         return voiceworks;
@@ -873,14 +865,21 @@ export default {
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
             return true;
           }
-          let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
+          let disable_footnotes = false;
           if (this.block.footnotes) {
             this.block.footnotes.forEach(f => {
               if (f.voicework === 'tts' && !f.audiosrc) {
-                disable_audio = true;
+                disable_footnotes = true;
               }
             });
           }
+          if (disable_footnotes) {
+            return true;
+          }
+          if (this.block && this.block.voicework === 'no_audio') {
+            return this.block.status.marked ? true : false;
+          }
+          let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
           return this.block.status.marked ||
                   (this.block.status && this.block.status.proofed === true) ||
                   disable_audio;

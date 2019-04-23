@@ -105,16 +105,16 @@ export default {
         return true;
       },
       tc_allowVoiceworkChange(block) {
-        if (block.type == 'illustration' || block.type == 'hr') {
+        if (block.type == 'illustration' || block.type == 'hr' || (!this._is('editor', true) && !this.adminOrLibrarian)) {
           return false;
         }
         if (this.currentJobInfo.text_cleanup && (this._is('editor', true) || this.adminOrLibrarian)) {
           return true;
         }
-        if ((this.currentJobInfo.mastering || this.currentJobInfo.published) && this.adminOrLibrarian) {
+        if (!this.currentJobInfo.published || this.adminOrLibrarian) {
           return true;
         }
-        return this.tc_hasBlockTask(block._id, 'approve-new-block') || this.tc_hasBlockTask(block._id, 'approve-modified-block');
+        return false;
       },
       tc_allowEditingComplete() {
         if (this._is('editor', true) || this.adminOrLibrarian) {
