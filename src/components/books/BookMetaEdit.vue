@@ -590,7 +590,7 @@ export default {
 
         if (/\d+\.$/.test(value)) {
         } else {
-          if (!/^\d*(\.\d{1,2})*$/.test(value)) {
+          if (/^\d*(\.\d{1,2})*$/.test(value)) {
           } else {
             if (value !== '') {
               value = Math.round(value * 100) / 100;
