@@ -1556,7 +1556,7 @@ export default {
         this.liveUpdate(key, value === '' ? '' : Math.round(value * 100) / 100);
       }
 
-    }, 500),
+    }, 1000),
 
     getTaskType(typeId) {
       let t = this.taskTypes.tasks.find(_t => {
