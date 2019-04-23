@@ -94,11 +94,11 @@
 
       </div> <!-- tabbed content for create -->
 
-    </div> <!-- modal body -->
+      <div id='uploadingMsg' v-show='isUploading'>
+         <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
+      </div>
 
-    <div id='uploadingMsg' v-show='isUploading'>
-       <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
-    </div>
+    </div> <!-- modal body -->
 
     <div slot="modal-footer" class="modal-footer">
       <button class="btn btn-primary" type="button" @click="ok">Save</button>
@@ -114,10 +114,11 @@
 import { modal } from 'vue-strap'
 import { Carousel3d, Slide } from 'vue-carousel-3d'
 import modalMixin from './../../mixins/modal'
+import api_config from './../../mixins/api_config'
 import BOOKCOVERS from '../../../static/bookcovers.json'
 // import Canvas2Image from 'canvas2image'
 import html2canvas from 'html2canvas'
-// import axios from 'axios'
+import axios from 'axios'
 import PouchDB from 'pouchdb'
 import superlogin from 'superlogin-client'
 
@@ -142,7 +143,7 @@ import { mapGetters, mapActions }    from 'vuex'
 export default {
   name: 'BookEditCoverModal',
 
-  mixins: [modalMixin],
+  mixins: [modalMixin, api_config],
 
   components: {
     modal,
@@ -163,6 +164,7 @@ export default {
       errorCoverFileType: false,
       uploadMode: true,
       uploadImage: '',
+      uploadFile: false,
       uploadImageBlank: 'https://dl.dropboxusercontent.com/u/382588/share/book_blank_sm.png',
       isUploading: false,
       uploadProgress: '',
@@ -280,6 +282,7 @@ export default {
     },
 
     createImage (file) {
+      this.uploadFile = file;
       // console.log('*** Creating new image', file)
       var reader = new FileReader()
       var vm = this
@@ -287,33 +290,35 @@ export default {
       reader.readAsDataURL(file)
     },
 
-    uploadNewImageData (urlData) {
-      if (urlData.length < 1) return
+    uploadNewImageData () {
       //console.log('bookid:', bookid)
       // the book id is critical for the path
-      let bookid = this.img.bookid
+      let formData = new FormData();
+      formData.append('coverimg', this.uploadFile, 'coverimg');
+      formData.append('coverimgURL', this.uploadImage);
+      
+      var config = {
+        onUploadProgress: (progressEvent) => {
+          var percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          this.uploadProgress = "Uploading Files... " + percentCompleted + "%";
+        }
+      }
 
-      return this.ilm_library_files.get(bookid)
-      .then(doc => {
-        // cut out mime type part
-        let mime = urlData.substring(urlData.indexOf(':') + 1, urlData.indexOf(';'))
-        // cut out data part
-        urlData = urlData.substring(urlData.indexOf(',') + 1)
-
-        doc._attachments = (doc._attachments || {})
-        doc._attachments.coverimg = {content_type: mime, data: urlData}
-
-        return this.ilm_library_files.put(doc).then((doc)=>{
+      this.isUploading = true;
+      this.uploadProgress = 'Uploading file';
+      return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/coverimg', formData, config)
+        .then(doc => {
+          this.isUploading = false;
+          this.uploadProgress = '';
+          this.uploadFile = null;
           this.reloadBookCover();
           return this.updateBookVersion({minor: true});
-        }).catch(err => console.log(err))
-      }).catch(err => {
-        if (err.name === 'not_found') return this.ilm_library_files.put({_id: bookid, type: 'book'})
-        .then(doc => {
-          return this.uploadNewImageData(urlData);
+        }).catch(err => {
+          this.isUploading = false;
+          this.uploadProgress = '';
+          this.uploadFile = null;
+          return Promise.reject(err);
         })
-        else console.log('Oops, we should not ever be here... ', err)
-      })
     },
 
     uploadNewImageURL (url) {
@@ -351,8 +356,9 @@ export default {
         vm.showUploadMsg() // show progress message until the form closes
         // if already data format, upload else, convert to data then upload
         // yeah, I don't really get how to do an await...
-        if (image.indexOf('http') === 0) vm.uploadNewImageURL(image).then(vm.closeWithDelay)
-        else vm.uploadNewImageData(image).then(vm.closeWithDelay)
+        //if (image.indexOf('http') === 0) vm.uploadNewImageURL(image).then(vm.closeWithDelay)
+        //else vm.uploadNewImageData(image).then(vm.closeWithDelay)
+        vm.uploadNewImageData().then(vm.closeWithDelay);
       } else {
         // generate PNG image from preview using something like html2canvas
         this.captureBookImage()
@@ -406,6 +412,9 @@ export default {
       console.log('cancel')
       this.closed()
     }
+  },
+  computed: {
+    ...mapGetters(['currentBookMeta'])
   }
 
 }

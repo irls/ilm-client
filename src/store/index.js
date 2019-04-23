@@ -386,9 +386,8 @@ export const store = new Vuex.Store({
 //     },
 
     SET_CURRENTBOOK_FILES (state, fileObj) {
-      if (fileObj && fileObj.fileBlob) {
-        let url = URL.createObjectURL(fileObj.fileBlob);
-        state.currentBookFiles[fileObj.fileName] = url;
+      if (fileObj && fileObj.fileURL) {
+        state.currentBookFiles[fileObj.fileName] = process.env.ILM_API + fileObj.fileURL + '?time='  + Date.now();
       } else state.currentBookFiles[fileObj.fileName] = false;
     },
 
@@ -1144,12 +1143,12 @@ export const store = new Vuex.Store({
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);
           //dispatch('loadBookToc', {bookId: book_id});
-          state.filesRemoteDB.getAttachment(book_id, 'coverimg')
-          .then(fileBlob => {
-            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
+          axios.get(state.API_URL + 'books/' + book_id + '/coverimg')
+          .then(filePath => {
+            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: filePath.data});
           })
           .catch((err)=>{
-            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
+            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: false});
           })
           state.liveDB.stopWatch('metaV');
           state.liveDB.stopWatch('job');
@@ -1189,11 +1188,11 @@ export const store = new Vuex.Store({
         if (state.currentBookMeta._id) {
             dispatch('getBookMeta', state.currentBookMeta._id).then((meta) => {
                 commit('SET_CURRENTBOOK_META', meta)
-                state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
+                axios.get(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/coverimg')
                 .then(fileBlob => {
-                  commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
+                  commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: fileBlob.data});
                 }).catch((err)=>{
-                  commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
+                  commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: false});
                 })
             })
         }
@@ -1201,11 +1200,11 @@ export const store = new Vuex.Store({
 
     reloadBookCover({commit, state}) {
       if (state.currentBookMeta._id) {
-          state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
+          axios.get(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/coverimg')
             .then(fileBlob => {
-              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
+              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: fileBlob.data});
             }).catch((err)=>{
-              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
+              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: false});
             })
         }
     },
