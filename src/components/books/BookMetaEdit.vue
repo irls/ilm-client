@@ -1575,7 +1575,6 @@ Vue.component('resizable-textarea', {
 Vue.filter('prettyBytes', function (num) {
   // jacked from: https://github.com/sindresorhus/pretty-bytes
 
-  console.log('prettyBytes', num);
   if (typeof num !== 'number' || isNaN(num)) {
     //throw new TypeError('Expected a number');
     return 0;
