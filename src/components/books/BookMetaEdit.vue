@@ -590,7 +590,7 @@ export default {
 
         if (/\d+\.$/.test(value)) {
         } else {
-          if (!/^\d*(\.\d{1,2})*$/.test(event.target.value)) {
+          if (!/^\d*(\.\d{1,2})*$/.test(value)) {
           } else {
             if (value !== '') {
               value = Math.round(value * 100) / 100;
@@ -1538,14 +1538,14 @@ export default {
       let errors = [];
 
       if (/\d+\.$/.test(event.target.value)) {
-        errors.push('Allowed range ' + minValue + ' - ' + maxValue + '.Expected format 12.34');
+        errors.push('Allowed range ' + minValue + ' - ' + maxValue + '. Expected format 10.12');
       } else {
         if (!/^\d*(\.\d{1,2})*$/.test(event.target.value)) {
-          errors.push('Allowed range ' + minValue + ' - ' + maxValue + '.Expected format 12.34');
+          errors.push('Allowed range ' + minValue + ' - ' + maxValue + '. Expected format 10.12');
         } else {
           if ((isNaN(valueFloated) || !isNaN(valueFloated)) && value !== '') {
             if (value != valueFloated || value > maxValue || value < minValue) {
-              errors.push('Allowed range ' + minValue + ' - ' + maxValue + '.Expected format 12.34');
+              errors.push('Allowed range ' + minValue + ' - ' + maxValue + '. Expected format 10.12');
             }
           }
         }
