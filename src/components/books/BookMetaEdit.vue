@@ -592,7 +592,7 @@ export default {
         } else {
           if (/^\d*(\.\d{1,2})*$/.test(value)) {
           } else {
-            if (value !== '') {
+            if (value !== '' && typeof value !== 'undefined' && (Number(value) === value && value % 1 !== 0)) {
               value = Math.round(value * 100) / 100;
             }
           }
