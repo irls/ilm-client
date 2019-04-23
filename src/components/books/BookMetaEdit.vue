@@ -1238,6 +1238,8 @@ export default {
             if (oBlock) {
               let pBlock = this.storeList.get(oBlock.blockid);
 
+              if (styleKey !== 'paragraph type') updateNum = oBlock.isNumber;
+
               if (pBlock && blockType == 'title' && styleKey == 'style' && styleVal != ''){
                 pBlock.classes['table of contents'] = '';
               }
