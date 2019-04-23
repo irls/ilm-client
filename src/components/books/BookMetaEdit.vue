@@ -1526,7 +1526,7 @@ export default {
       if (/\d+\.$/.test(event.target.value)) {
         errors.push('Unvalid value');
       } else {
-        if (!/^\d*(\.\d{2})*$/.test(event.target.value)) {
+        if (!/^\d*(\.\d{1,2})*$/.test(event.target.value)) {
           errors.push('Unrounded value');
         } else {
           if ((isNaN(valueFloated) || !isNaN(valueFloated)) && value !== '') {
@@ -1539,7 +1539,7 @@ export default {
 
       this.validationErrors[key] = errors;
       if (!errors.length && !isNaN(value)) {
-        this.liveUpdate(key, value);
+        this.liveUpdate(key,  Math.round(value * 100) / 100);
       }
 
     }, 500),
