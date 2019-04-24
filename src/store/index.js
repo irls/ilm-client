@@ -1120,6 +1120,7 @@ export const store = new Vuex.Store({
       if (book_id && book_id === state.currentBookid) return Promise.resolve(state.currentBookMeta);
 
       if (book_id) {
+        commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: ''});
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
         //let metaDB = state.metaRemoteDB;
         state.liveDB.stopWatch('blockV');
@@ -1142,14 +1143,8 @@ export const store = new Vuex.Store({
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);
+          commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: answer.coverimgURL});
           //dispatch('loadBookToc', {bookId: book_id});
-          axios.get(state.API_URL + 'books/' + book_id + '/coverimg')
-          .then(filePath => {
-            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: filePath.data});
-          })
-          .catch((err)=>{
-            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: false});
-          })
           state.liveDB.stopWatch('metaV');
           state.liveDB.stopWatch('job');
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
@@ -1160,6 +1155,7 @@ export const store = new Vuex.Store({
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
               }
               commit('SET_CURRENTBOOK_META', data.meta)
+              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: data.meta.coverimgURL});
               dispatch('getCurrentJobInfo');
             }
           });
@@ -1184,29 +1180,17 @@ export const store = new Vuex.Store({
       }
     },
 
-    reloadBookMeta ({commit, state, dispatch}) {
-        if (state.currentBookMeta._id) {
-            dispatch('getBookMeta', state.currentBookMeta._id).then((meta) => {
-                commit('SET_CURRENTBOOK_META', meta)
-                axios.get(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/coverimg')
-                .then(fileBlob => {
-                  commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: fileBlob.data});
-                }).catch((err)=>{
-                  commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: false});
-                })
-            })
-        }
-    },
-
-    reloadBookCover({commit, state}) {
-      if (state.currentBookMeta._id) {
-          axios.get(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/coverimg')
-            .then(fileBlob => {
-              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: fileBlob.data});
-            }).catch((err)=>{
-              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: false});
-            })
-        }
+    updateBookCover({commit, state}, data) {
+      if (state.currentBookMeta.bookid) {
+        return axios.post(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/coverimg', data.formData, data.config)
+        .then(doc => {
+          commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: doc.data.coverimgURL});
+          this.updateBookVersion({minor: true});
+          return Promise.resolve();
+        }).catch(err => {
+          return Promise.reject(err);
+        })
+      }
     },
 
     loadBookToc({state, commit, dispatch}, params) {

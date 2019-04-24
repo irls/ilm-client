@@ -239,8 +239,7 @@ export default {
 
   methods: {
     ...mapActions([
-      'reloadBookCover',
-      'updateBookVersion'
+      'updateBookCover'
     ]),
     addBookCover (e) {
       console.log('addedBookCover', e.target.files[0])
@@ -306,18 +305,15 @@ export default {
 
       this.isUploading = true;
       this.uploadProgress = 'Uploading file';
-      return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/coverimg', formData, config)
+      return this.updateBookCover({formData: formData, config: config})
         .then(doc => {
           this.isUploading = false;
           this.uploadProgress = '';
           this.uploadFile = null;
-          this.reloadBookCover();
-          return this.updateBookVersion({minor: true});
         }).catch(err => {
           this.isUploading = false;
           this.uploadProgress = '';
           this.uploadFile = null;
-          return Promise.reject(err);
         })
     },
 
