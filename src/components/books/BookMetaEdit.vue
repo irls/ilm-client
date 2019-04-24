@@ -1508,7 +1508,7 @@ export default {
     }, 500),
 
     updateWeigth: _.debounce(function (event) {
-      const value = event.target.value.replace(' ', '');
+      const value = event.target.value.replace(/ /g, '');
       const key = 'weight';
       const maxValue = 10.99;
       const minValue = 1.00;
