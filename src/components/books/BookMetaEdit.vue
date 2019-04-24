@@ -170,7 +170,7 @@
                 <tr class='weight'>
                   <td>Weight:</td>
                   <td>
-                    <input v-model='weight' @input="updateWeigth($event)" :disabled="!allowMetadataEdit"
+                    <input v-model='currentBook.weight' @input="updateWeigth($event)" :disabled="!allowMetadataEdit"
                            :class="[{'has-error': validationErrors['weight'].length}]"/>
                     <span class="validation-error" v-for="error in validationErrors['weight']">{{error}}</span>
                   </td>
@@ -583,28 +583,6 @@ export default {
       taskTypes: 'taskTypes',
       adminOrLibrarian: 'adminOrLibrarian'
     }),
-    weight: {
-      get() {
-
-        let value = this.currentBook.weight;
-
-        if (/\d+\.$/.test(value)) {
-        } else {
-          if (/^\d*(\.\d{1,2})*$/.test(value)) {
-          } else {
-            if (value !== '' && typeof value !== 'undefined' && (Number(value) === value && value % 1 !== 0)) {
-              value = Math.round(value * 100) / 100;
-            }
-          }
-        }
-
-        return value;
-
-      },
-      set(newValue) {
-        return this.currentBook.weight = newValue;
-      },
-    },
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -1530,33 +1508,27 @@ export default {
     }, 500),
 
     updateWeigth: _.debounce(function (event) {
-      const value = event.target.value;
-      const valueFloated = parseFloat(value);
+      const value = event.target.value.replace(' ', '');
       const key = 'weight';
       const maxValue = 10.99;
       const minValue = 1.00;
       let errors = [];
-
-      if (/\d+\.$/.test(event.target.value)) {
-        errors.push('Allowed range ' + minValue + ' - ' + maxValue + '. Expected format 10.12');
-      } else {
-        if (!/^\d*(\.\d{1,2})*$/.test(event.target.value)) {
+      if (Number(value) == value && value % 1 !== 0) {
+        if (value > maxValue || value < minValue || (value.split('.')[1]).toString().length > 2) {
           errors.push('Allowed range ' + minValue + ' - ' + maxValue + '. Expected format 10.12');
-        } else {
-          if ((isNaN(valueFloated) || !isNaN(valueFloated)) && value !== '') {
-            if (value != valueFloated || value > maxValue || value < minValue) {
-              errors.push('Allowed range ' + minValue + ' - ' + maxValue + '. Expected format 10.12');
-            }
-          }
+        }
+      } else {
+        if (value !== '' && (Number(value) != value || (value > maxValue || value < minValue))) {
+          errors.push('Allowed range ' + minValue + ' - ' + maxValue + '. Expected format 10.12');
         }
       }
 
       this.validationErrors[key] = errors;
-      if (!errors.length && !isNaN(value)) {
-        this.liveUpdate(key, value === '' ? '' : Math.round(value * 100) / 100);
+      if (!errors.length) {
+        this.liveUpdate(key, value === '' ? '' : value);
       }
 
-    }, 1000),
+    }, 500),
 
     getTaskType(typeId) {
       let t = this.taskTypes.tasks.find(_t => {
