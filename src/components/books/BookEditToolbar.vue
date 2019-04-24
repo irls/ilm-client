@@ -183,7 +183,7 @@ h3 {
   margin-right: .5em;
 
   &.btn-meta {
-      margin-left: 40px;
+      margin-left: 20px;
     &:focus {
       background: rgb(255, 255, 255);
       border-color: rgb(204, 204, 204);
@@ -194,7 +194,7 @@ h3 {
   }
 
   &.booksbtn {
-    margin-right: 40px;
+    margin-right: 20px;
   }
 }
 

@@ -21,65 +21,43 @@
         :book="currentBook"
         :importTask="importTask"
         :allowDownload="false" />
-      
+
       <div class="book-listing">
-        <template v-if="tc_allowFinishPublished()">
-          <div v-if="!finishPublishedProcess" class="row">
-            <div class="editing-wrapper">
-              <button class="btn btn-primary btn-edit-complete" v-on:click="finishPublished()">Editing complete</button>
-            </div>
-          </div>
-          <div v-else class="preloader-small"></div>
-        </template>
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="Assignments" id="assignments">
             <BookAssignments
-              @setInfoMessage="setInfoMessage"
-              @setErrorMessage="setErrorMessage"
               @showModal_audio="showModal_audio = true"
               ></BookAssignments>
           <fieldset class='description brief'>
             <legend>Description </legend>
             <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
           </fieldset>
-            <BookWorkflow 
+            <BookWorkflow
               v-if="adminOrLibrarian"
               :isPublishingQueue="isPublishingQueue"
               ></BookWorkflow>
           <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
             <legend>Export </legend>
               <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
-              <div v-if="getDemoStatus == 'rebuild'">Last build: {{this.convertTime(currentBook.demo_time)}}<br>&nbsp;</div>
+              <div v-if="getDemoStatus == 'rebuild'" style="margin-bottom: 5px;">Last build: {{this.convertTime(currentBook.demo_time)}}</div>
               <div>
-                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportMp3()" target="_blank"><i class="fa fa-download" style="color:white"></i> Mp3 Zip</a>
-                <a class="btn btn-primary"      v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" :href="downloadExportFlac()" target="_blank"><i class="fa fa-download" style="color:white"></i> Flac Zip</a>
-                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>
-                <a class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</a>
-                <a class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" target="_blank" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</a>
+                <button class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</button>
+                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</button>
+              </div>
+              <hr  v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
+              <div v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
+                Download: <br />
+                <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
+                <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
+                <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
+                <button style="margin-bottom: 5px;" v-if="currentBook.demo_zip_narration_size < 23" class="btn btn-primary" :disabled="true">Narration is empty</button>
+                <hr>
+                <div v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
+                <div v-if="!currentBook.demo">Public Demo Book link has been deactivated</div>
                 <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
               </div>
           </fieldset>
-          <fieldset class="publish">
-            <!-- Fieldset Legend -->
-            <template>
-              <legend>{{ currentBook.published ? 'Published' : 'Unpublished' }},
-              </legend>
-              <div>
-                Version #{{ currentBook.version ? currentBook.version : '1.0' }}
-              </div>
-              <div v-if="publicationStatus" >
-                Status #{{ publicationStatus }}
-              </div>
-              <div v-if="currentBook.publishedVersion">Published version {{currentBook.publishedVersion}}</div>
-              <div v-if="allowPublishCurrentBook && currentBookMeta.job_status === 'active'">
-                <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
-                <button class="btn btn-primary" v-on:click="publish()" v-if="!isPublishingQueue && !isPublishing">Publish</button>
-                <span v-if="isPublishing" class="align-preloader -small"></span>
-
-              </div>
-              <button class="btn btn-primary hidden" v-on:click="publishContent()">Publish Content</button>
-            </template>
-          </fieldset>
+          <BookPublish></BookPublish>
           </vue-tab>
           <vue-tab title="Meta" id="book-content">
             <fieldset>
@@ -167,17 +145,31 @@
                     </select>
                   </td>
                 </tr>
-
+                <tr class='weight'>
+                  <td>Weight:</td>
+                  <td>
+                    <input v-model='currentBook.weight' @input="updateWeigth($event)" :disabled="!allowMetadataEdit"
+                           :class="[{'has-error': validationErrors['weight'].length}]"/>
+                    <span class="validation-error" v-for="error in validationErrors['weight']">{{error}}</span>
+                  </td>
+                </tr>
               </table>
             </fieldset>
 
           <fieldset class='description brief'>
             <legend>Book Cover</legend>
-            <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
-              <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
-              <div v-else class='coverimg-wrap'></div>
-            </div>
-            <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
+            <template v-if="allowMetadataEdit">
+              <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
+                <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+                <div v-else class='coverimg-wrap'></div>
+              </div>
+              <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
+            </template>
+            <template v-else>
+              <div class="coverimg pull-right">
+                <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+              </div>
+            </template>
           </fieldset>
 
           <fieldset class='description brief'>
@@ -413,17 +405,6 @@
       :img="currentBook"
     ></book-edit-cover-modal>
 
-    <alert v-model="hasError" placement="top" type="danger" width="400px" :dismissable="true">
-      <span class="icon-ok-circled alert-icon-float-left"></span>
-
-      <p>{{errorMessage}}.</p>
-    </alert>
-
-    <alert v-model="hasMessage" placement="top" :duration="3000" type="info" width="400px">
-      <span class="icon-ok-circled alert-icon-float-left"></span>
-
-      <p>{{infoMessage}}.</p>
-    </alert>
     <modal v-model="generatingAudiofile" :backdrop="false" effect="fade">
       <div slot="modal-header" class="modal-header">
         <h4>Export audio</h4>
@@ -459,7 +440,7 @@ import BookToc from './BookToc'
 import _ from 'lodash'
 import PouchDB from 'pouchdb'
 import axios from 'axios'
-import { alert, modal, accordion, panel } from 'vue-strap'
+import { modal, accordion, panel } from 'vue-strap'
 import task_controls from '../../mixins/task_controls.js'
 import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
@@ -468,6 +449,7 @@ import { VueTabs, VTab } from 'vue-nav-tabs'
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments from './details/BookAssignments';
 import BookWorkflow from './details/BookWorkflow';
+import BookPublish from './details/BookPublish';
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -484,12 +466,12 @@ export default {
     BookAudioIntegration,
     'vue-tabs': VueTabs,
     'vue-tab': VTab,
-    alert,
     modal,
     accordion,
     panel,
     BookAssignments,
-    BookWorkflow
+    BookWorkflow,
+    BookPublish
   },
 
   data () {
@@ -513,10 +495,6 @@ export default {
       importTask: {},
       linkTaskError: '',
       isOwner: false,
-      errorMessage: '',//to display validation errors for some cases, e.g. on sharing book
-      hasError: false,//has some validation error, e.g. on sharing book
-      hasMessage: false,//has some info message
-      infoMessage: '',//to display info on action finished
       approveMetadataComment: '',
       showSharePrivateBookModal: false,
       textCleanupProcess: false,
@@ -535,7 +513,7 @@ export default {
       isPublishingQueue: false,
       publicationStatus: false,
       isExporting:false,
-      validationErrors: {extid: []},
+      validationErrors: {extid: [], weight: []},
       updateAllowed: false,
       TAB_ASSIGNMENT_INDEX: 0,
       TAB_META_INDEX: 1,
@@ -608,13 +586,7 @@ export default {
     },
     isAllowExportAudio: {
       get() {
-        if (this._is('admin') || this._is('librarian')) {
-          return true;
-        }
-        if (this._is('editor') && !this.currentBookMeta.published){
-          return true;
-        }
-        if (this.tc_hasTask('audio_mastering')) {
+        if (this._is('admin') || this._is('librarian') || this._is('editor', true)) {
           return true;
         }
         return false;
@@ -704,34 +676,6 @@ export default {
       },
       deep: true
     },
-    errorMessage: {
-      handler(val) {
-        this.hasError = val.length > 0
-      },
-      deep: true
-    },
-    hasError: {
-      handler(val) {
-        if (val === false) {
-          this.errorMessage = ''
-        }
-      },
-      deep: true
-    },
-    infoMessage: {
-      handler(val) {
-        this.hasMessage = val.length > 0
-      },
-      deep: true
-    },
-    hasMessage: {
-      handler(val) {
-        if (val === false) {
-          this.infoMessage = ''
-        }
-      },
-      deep: true
-    },
     currentBookBlocksLeft: {
       handler(val) {
 
@@ -782,22 +726,6 @@ export default {
         if (this.blockSelection.start._id && this.blockSelection.end._id && this.blockSelection.start._id !== this.blockSelection.end._id) {
           this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
         }
-      }
-    },
-    'currentBook.publicationStatus': {
-      handler(val) {
-        this.publicationStatus = val;
-      }
-    },
-    'currentBook.isIntheProcessOfPublication': {
-      handler(val) {
-        console.log(val)
-        this.isPublishing = !!val;
-      }
-    },
-    'currentBook.isInTheQueueOfPublication': {
-      handler(val) {
-        this.isPublishingQueue = !!val;
       }
     },
     '$route': {
@@ -1065,10 +993,10 @@ export default {
                   self.tc_currentBookTasks.assignments.splice(self.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
                   self.$store.dispatch('tc_loadBookTask')
                   self.$store.dispatch('getCurrentJobInfo');
-                  self.infoMessage = 'Text cleanup task finished'
+                  self.$root.$emit('set-alert', 'Text cleanup task finished')
                 } else {
                   self.liveUpdate('private', true)
-                  self.errorMessage = doc.data.error
+                  this.$root.$emit('set-error-alert', doc.data.error);
                 }
               })
               .catch((err, test) => {
@@ -1271,6 +1199,8 @@ export default {
             if (oBlock) {
               let pBlock = this.storeList.get(oBlock.blockid);
 
+              if (styleKey !== 'paragraph type') updateNum = oBlock.isNumber;
+
               if (pBlock && blockType == 'title' && styleKey == 'style' && styleVal != ''){
                 pBlock.classes['table of contents'] = '';
               }
@@ -1420,17 +1350,19 @@ export default {
     },
 
     downloadDemo() {
-        //this.isExporting = true;
-
-
         let currTime = new Date().getTime();
         this.currentBookMeta.demo_time = -1 * currTime;
         return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/demo')
                .then(resp => {
                  //this.isExporting = false;
                });
-
-        //return this.API_URL + 'books/' + this.currentBook._id + '/demo';
+    },
+    deactivateDemoLink() {
+      console.log('inside deactivate');
+      return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/deactivateDemoLink')
+             .then(resp => {
+               //this.isExporting = false;
+             });
     },
     downloadExportMp3() {
         return this.API_URL + 'export/' + this.currentBook._id + '/exportMp3';
@@ -1492,14 +1424,37 @@ export default {
     updateExtid: _.debounce(function(event) {
       if (event.target.value && event.target.value.length != 32) {
         this.validationErrors['extid'] = ['Length must be equal to 32 symbols.']
-      } else if (/[^a-z\d]+/.test(event.target.value)) {
+      } else if (/[^a-z\d]+/.test(event.target.value) || /\d+\.$/.test(event.target.value)) {
         this.validationErrors['extid'] = ['Only lowercase letters (a-z) and numbers.']
       } else {
         this.validationErrors['extid'] = [];
         this.liveUpdate('extid', event.target.value);
       }
     }, 500),
-    
+
+    updateWeigth: _.debounce(function (event) {
+      const value = event.target.value.replace(/ /g, '');
+      const key = 'weight';
+      const maxValue = 10.99;
+      const minValue = 1.00;
+      let errors = [];
+      if (Number(value) == value && value % 1 !== 0) {
+        if (value > maxValue || value < minValue || (value.split('.')[1]).toString().length > 2) {
+          errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
+        }
+      } else {
+        if (value !== '' && (Number(value) != value || (value > maxValue || value < minValue))) {
+          errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
+        }
+      }
+
+      this.validationErrors[key] = errors;
+      if (!errors.length) {
+        this.liveUpdate(key, value === '' ? '' : value);
+      }
+
+    }, 500),
+
     getTaskType(typeId) {
       let t = this.taskTypes.tasks.find(_t => {
         return _t._id === typeId;
@@ -1510,7 +1465,7 @@ export default {
         return '';
       }
     },
-    
+
     checkAfterAudioImport() {
       this.showModal_audio = false
       if (this.activeTabIndex !== this.TAB_AUDIO_INDEX && this.$refs.panelTabs && this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX] && !this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX].disabled) {
@@ -1519,19 +1474,12 @@ export default {
         this.$forceUpdate();
       }
     },
-    
+
     updateJobDescription: _.debounce(function(event) {
       this.updateJob({id: this.currentJobInfo.id, description: event.target.value});
     }, 500),
-    
-    setInfoMessage(msg) {
-      this.infoMessage = msg;
-    },
-    setErrorMessage(msg) {
-      this.errorMessage = msg;
-    },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'getTotalBookTasks', 'updateBookMeta', 'updateJob', 'updateBookCollection'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection'])
   }
 }
 
@@ -1561,6 +1509,34 @@ Vue.component('resizable-textarea', {
   },
 });
 
+
+Vue.filter('prettyBytes', function (num) {
+  // jacked from: https://github.com/sindresorhus/pretty-bytes
+
+  if (typeof num !== 'number' || isNaN(num)) {
+    //throw new TypeError('Expected a number');
+    return 0;
+  }
+
+  var exponent;
+  var unit;
+  var neg = num < 0;
+  var units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+  if (neg) {
+    num = -num;
+  }
+
+  if (num < 1) {
+    return (neg ? '-' : '') + num + ' B';
+  }
+
+  exponent = Math.min(Math.floor(Math.log(num) / Math.log(1000)), units.length - 1);
+  num = (num / Math.pow(1000, exponent)).toFixed(1) * 1;
+  unit = units[exponent];
+
+  return (neg ? '-' : '') + num + ' ' + unit;
+});
 </script>
 
 
@@ -1638,7 +1614,7 @@ Vue.component('resizable-textarea', {
 
   /* Edit area for book description */
   fieldset.description textarea {
-    width: 100%; padding: 0; margin:0; border: none; 
+    width: 100%; padding: 0; margin:0; border: none;
     /*min-height: 180px;*/
     resize: vertical;
   }
@@ -1679,9 +1655,6 @@ Vue.component('resizable-textarea', {
       background: url(/static/preloader-snake-small.gif);
       width: 34px;
       height: 34px;
-  }
-  .alert.top {
-    top: 120px;
   }
 
   .nav-tabs-navigation {

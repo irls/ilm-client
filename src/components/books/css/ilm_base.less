@@ -432,6 +432,10 @@
   .bookgraphic {
     text-transform: uppercase; /* ??? */
   }
+  .smallcaps {
+    font-variant: small-caps;
+    text-transform: none;
+  }
 
   /***** Global whitespace *****/
   .verse {
@@ -902,6 +906,10 @@
       &.editor-note/*, .question*/ {
         font-style: normal; color: @grayed_color;
       }
+      &.smallcaps {
+        font-variant: small-caps;
+        text-transform: none;
+      }
     }
 
     .title {
@@ -1142,6 +1150,10 @@
       &.editor-note/*, .question*/ {
         font-style: normal; color: @grayed_color;
       }
+      &.smallcaps {
+        font-variant: small-caps;
+        text-transform: none;
+      }
     }
 
     .title {
@@ -1216,8 +1228,10 @@
           font-weight: 700;
           font-size: 38px;
         }
-
-
+        &.smallcaps {
+          font-variant: small-caps;
+          text-transform: none;
+        }
       }
       &.h3 {
         font-family: Garamond1689;
@@ -1227,6 +1241,11 @@
         font-weight: 700;
         min-height: 95px;
         color: rgb(104, 122, 67);
+
+        &.smallcaps {
+          font-variant: small-caps;
+          text-transform: none;
+        }
 
 /*        font-size: 1.7em;
         line-height: 1.45em;
@@ -1254,6 +1273,16 @@
           background: url(@h2_bottom_decor) center bottom no-repeat;
           background-size: 100% 15px;
           clear: both;
+        }
+      }
+      &.h4 {
+        font-family: Garamond1689;
+        color: rgb(63, 74, 40);
+        font-weight: 700;
+        font-size: 20pt;
+        &.smallcaps {
+          font-variant: small-caps;
+          text-transform: none;
         }
       }
     }

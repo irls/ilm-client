@@ -42,12 +42,7 @@ export default {
           return true;
         }
         if (this._is('editor', true)) {
-          let published = typeof this.currentJobInfo.published !== 'undefined' && this.currentJobInfo.published;
-          if (published) {
-            return this.tc_getBlockTask(blockid);
-          } else {
-            return true;
-          }
+          return this.currentJobInfo.workflow.status === 'active';
         }
         return false;
       },
@@ -105,16 +100,16 @@ export default {
         return true;
       },
       tc_allowVoiceworkChange(block) {
-        if (block.type == 'illustration' || block.type == 'hr') {
+        if (block.type == 'illustration' || block.type == 'hr' || (!this._is('editor', true) && !this.adminOrLibrarian)) {
           return false;
         }
         if (this.currentJobInfo.text_cleanup && (this._is('editor', true) || this.adminOrLibrarian)) {
           return true;
         }
-        if ((this.currentJobInfo.mastering || this.currentJobInfo.published) && this.adminOrLibrarian) {
+        if (this.currentJobInfo.workflow.status === 'active' || this.adminOrLibrarian) {
           return true;
         }
-        return this.tc_hasBlockTask(block._id, 'approve-new-block') || this.tc_hasBlockTask(block._id, 'approve-modified-block');
+        return false;
       },
       tc_allowEditingComplete() {
         if (this._is('editor', true) || this.adminOrLibrarian) {
@@ -200,7 +195,7 @@ export default {
       },
       tc_hasBlockTask(block_id, type) {
         if (this.adminOrLibrarian) {
-          if (this.currentJobInfo.workflow.status === 'archived') {
+          if (this.currentJobInfo.workflow.status !== 'active') {
             if (this.currentJobInfo.can_resolve_tasks) {
               let task = this.currentJobInfo.can_resolve_tasks.find(t => {
                 return t.blockid === block_id && t.type === type;
@@ -234,7 +229,7 @@ export default {
         return tasks;
       },
       tc_showBlockAudioEdit(blockid) {
-        if (this._is('editor', true) && !this.currentJobInfo.published) {
+        if (this._is('editor', true) && this.currentJobInfo.workflow.status === 'active') {
           return true;
         }
         if (this.adminOrLibrarian) {
@@ -287,16 +282,8 @@ export default {
         }
       },
       tc_allowMetadataEdit() {
-        if (this.adminOrLibrarian) {
+        if (this.adminOrLibrarian || this._is('editor', true)) {
           return true;
-        }
-        if (this._is('editor', true)) {
-          if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
-            return true;
-          }
-          if (!this.currentJobInfo.published) {
-            return true;
-          }
         }
         return false;
       },
@@ -309,16 +296,8 @@ export default {
         ].indexOf(this.$route.name) !== -1) {
           return false;
         }
-        if (this.adminOrLibrarian) {
+        if (this.adminOrLibrarian || this._is('editor', true)) {
           return true;
-        }
-        if (this._is('editor', true)) {
-          if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
-            return true;
-          }
-          if (!this.currentJobInfo.published) {
-            return true;
-          }
         }
         return false;
       },
@@ -331,16 +310,8 @@ export default {
         ].indexOf(this.$route.name) !== -1) {
           return false;
         }
-        if (this.adminOrLibrarian) {
+        if (this.adminOrLibrarian || this._is('editor', true)) {
           return true;
-        }
-        if (this._is('editor', true)) {
-          if (this.tc_currentBookTasks.tasks.length || this.currentJobInfo.can_resolve_tasks.length) {
-            return true;
-          }
-          if (!this.currentJobInfo.published) {
-            return true;
-          }
         }
         return false;
       },

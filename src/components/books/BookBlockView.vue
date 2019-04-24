@@ -279,7 +279,8 @@
                 @input="onInput"
                 @mouseenter="onHover"
                 @contextmenu.prevent="onContext"
-                @focusout="onFocusout">
+                @focusout="onFocusout"
+                @inputSuggestion="onInputSuggestion">
                 </div>
                 <!--<div class="content-wrap">-->
 
@@ -465,10 +466,11 @@
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
                     :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + footnote.language]"
                     @input="commitFootnote(ftnIdx, $event)"
+                    @inputSuggestion="commitFootnote(ftnIdx, $event, 'suggestion')"
                     v-html="footnote.content"
                     :ref="'footnoteContent_' + ftnIdx">
                   </div>
-                  <div class="table-cell -control">
+                  <div class="table-cell -control" v-if="allowEditing">
                     <span @click="delFootnote(ftnIdx)"><i class="fa fa-trash"></i></span>
                   </div>
                 </div>
@@ -755,30 +757,22 @@ export default {
         }
       },
       blockVoiceworksSel: function() {
-        if (this.currentJobInfo.text_cleanup) {
+        if (this.currentJobInfo.text_cleanup || (!this.currentJobInfo.mastering_complete && !this.currentJobInfo.published && !this.currentJobInfo.mastering)) {
           return this.blockVoiceworks;
         }
         let voiceworks = {};
-        if (this.adminOrLibrarian) {
-          let allowed = [];
-          switch (this.block.voicework) {
-            case 'narration':
-              allowed = Object.keys(this.blockVoiceworks);
-              break;
-            default:
-              allowed = ['audio_file', 'tts', 'no_audio'];
-              break;
-          }
-          for (let k in this.blockVoiceworks) {
-            if (allowed.indexOf(k) !== -1) {
-              voiceworks[k] = this.blockVoiceworks[k];
-            }
-          }
-        } else {
-          for (let k in this.blockVoiceworks) {
-            if (['tts', 'no_audio'].indexOf(k) !== -1) {
-              voiceworks[k] = this.blockVoiceworks[k];
-            }
+        let allowed = [];
+        switch (this.block.voicework) {
+          case 'narration':
+            allowed = Object.keys(this.blockVoiceworks);
+            break;
+          default:
+            allowed = ['audio_file', 'tts', 'no_audio'];
+            break;
+        }
+        for (let k in this.blockVoiceworks) {
+          if (allowed.indexOf(k) !== -1) {
+            voiceworks[k] = this.blockVoiceworks[k];
           }
         }
         return voiceworks;
@@ -873,14 +867,21 @@ export default {
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
             return true;
           }
-          let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
+          let disable_footnotes = false;
           if (this.block.footnotes) {
             this.block.footnotes.forEach(f => {
               if (f.voicework === 'tts' && !f.audiosrc) {
-                disable_audio = true;
+                disable_footnotes = true;
               }
             });
           }
+          if (disable_footnotes) {
+            return true;
+          }
+          if (this.block && this.block.voicework === 'no_audio') {
+            return this.block.status.marked ? true : false;
+          }
+          let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
           return this.block.status.marked ||
                   (this.block.status && this.block.status.proofed === true) ||
                   disable_audio;
@@ -1194,7 +1195,6 @@ export default {
         'loadBookToc',
         'tc_loadBookTask',
         'getCurrentJobInfo',
-        'getTotalBookTasks',
         'updateBookVersion',
         'updateBlockToc',
         'saveNarrated',
@@ -1431,6 +1431,12 @@ export default {
         $(ev.target).find("span[style]").contents().unwrap();
         ev.target.focus();
       },
+      onInputSuggestion: function(ev) {
+        this.isChanged = true;
+        this.pushChange('suggestion');
+        $(ev.target).find("span[style]").contents().unwrap();
+        ev.target.focus();
+      },
       onInputFlag: function(ev) {
         this.isChanged = true;
         this.pushChange('flags');
@@ -1474,6 +1480,8 @@ export default {
           if (this.block.footnotes.length > 0) {
             this.initFtnEditor(true);
           }
+          this.block.setAudiosrc(block.audiosrc, block.audiosrc_ver);
+          this.refreshBlockAudio();
 
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
@@ -1568,20 +1576,6 @@ export default {
       },
 
       assembleBlockProxy: function (ev) {
-        if (this.block.type == 'illustration') {
-          if (this.isIllustrationChanged) {
-            return this.uploadIllustration();
-          } else if (this.isChanged) {
-            return this.assembleBlock();
-          }
-        } else {
-          if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
-          else if (this.isChanged) return this.assembleBlock();
-        }
-        return BPromise.resolve();
-      },
-
-      assembleBlock: function() {
         switch (this.block.type) {
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
@@ -1601,19 +1595,91 @@ export default {
             }
             break;
         }
-        this.block.classes = [this.block.classes];
-        if (this.block.status.marked === true) {
-          this.block.status.marked = false;
+        if (this.block.type == 'illustration') {
+          if (this.isIllustrationChanged) {
+            return this.uploadIllustration();
+          } else if (this.isChanged) {
+            return this.assembleBlock();
+          }
+        } else {
+          if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
+          else if (this.isChanged) {
+            let fullUpdate = false;
+            this.block.clean();
+            let partUpdate = {blockid: this.block.blockid, bookid: this.block.bookid};
+            if (this.changes && Array.isArray(this.changes)) {
+              this.changes.forEach(c => {
+                switch(c) {
+                  case 'content':
+                    fullUpdate = true;
+                    partUpdate.content = this.block.content;
+                    break;
+                  case 'footnotes':
+                    fullUpdate = true;
+                    partUpdate.footnotes = this.block.footnotes;
+                    partUpdate.content = this.block.content;
+                    break;
+                  case 'footnotes_language':
+                    fullUpdate = true;
+                    partUpdate.footnotes = this.block.footnotes;
+                    break;
+                  case 'type':
+                    fullUpdate = true;
+                    partUpdate.type = this.block.type;
+                    break;
+                  case 'language':
+                    fullUpdate = true;
+                    partUpdate.language = this.block.language;
+                    break;
+                  case 'suggestion':
+                    partUpdate['content'] = this.block.content;
+                    if (this.block.audiosrc) {
+                      fullUpdate = true;
+                    }
+                    break;
+                  case 'footnotes_voicework':
+                  case 'footnotes_suggestion':
+                    partUpdate['footnotes'] = this.block.footnotes;
+                    break;
+                  case 'flags':
+                    this.checkBlockContentFlags();
+                    this.updateFlagStatus(this.block._id);
+                    partUpdate['flags'] = this.block.flags;
+                    partUpdate['content'] = this.block.content;
+                    break;
+                  default:
+                    partUpdate[c] = this.block[c];
+                    break;
+                }
+              });
+            }
+            if (this.block.status.marked) {
+              partUpdate['status'] = partUpdate['status'] || {};
+              partUpdate.status.marked = false;
+            }
+            if (fullUpdate) {
+              return this.assembleBlock(partUpdate);
+            } else {
+              return this.assembleBlockPart(partUpdate);
+            }
+          }
         }
-        if (this.block._markedAsDone) {
-          this.block.status.marked = true;
-          delete this.block._markedAsDone;
+        return BPromise.resolve();
+      },
+
+      assembleBlock: function(partUpdate = null) {
+        let update = partUpdate ? partUpdate : this.block;
+        if (update.classes) {
+          update.classes = [update.classes];
+        }
+        if (update.status && update.status.marked === true) {
+          update.status.marked = false;
         }
 
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
         this.isSaving = true;
-        return this.putBlock(this.block).then(()=>{
+        return this.putBlock(update).then(()=>{
           this.isSaving = false;
           /*if (this.tc_createApproveModifiedBlock(this.block._id)) {
             if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) ||
@@ -1686,6 +1752,16 @@ export default {
             }
           //});
         });
+      },
+      assembleBlockPart: function(update) {
+        update.blockid = this.block.blockid;
+        update.bookid = this.block.bookid;
+        this.isSaving = true;
+        return this.putBlockPart(update)
+          .then(() => {
+            this.isSaving = false;
+            this.isChanged = false;
+          });
       },
       clearBlockContent: function(content) {
         //console.log(content)
@@ -1768,7 +1844,7 @@ export default {
                 if (this.block.status.marked != response.data.status.marked) {
                   this.block.status.marked = response.data.status.marked;
                 }
-                this.$emit('blockUpdated', this.block._id);
+                //this.$emit('blockUpdated', this.block._id);
                 if (footnoteIdx === null) {
                   this.block.content = response.data.content;
                   this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
@@ -1836,17 +1912,14 @@ export default {
           if (!this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts')) {
             return false;
           }
-          this.block._markedAsDone = true;
-          this.assembleBlock(ev)
+          let status = Object.assign(this.block.status, {marked: true});
+          this.assembleBlockPart({status: status})
           .then(()=>{
-            //this.setCurrentBookBlocksLeft(this.block.bookid);
             if (this.tc_hasTask('audio_mastering')) {
               this.setCurrentBookCounters(['not_proofed_audio_blocks']);
             }
 
             this.recountApprovedInRange();
-            //this.$router.push({name: this.$route.name, params:  { block: 'unresolved' }});
-            //this.getBloksUntil('unresolved', null, this.block._id)
           });
         }
       },
@@ -1893,9 +1966,6 @@ export default {
               }
               //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
               this.recountApprovedInRange();
-              if (this.adminOrLibrarian) {
-                this.getTotalBookTasks();
-              }
               //this.getBloksUntil('unresolved', true, this.block._id)
             }
           })
@@ -1996,7 +2066,7 @@ export default {
         api.post(api_url, formData, {})
           .then(response => {
             this.isUpdating = false;
-            if (response.status == 200) {
+            if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
 
               if (footnoteIdx === null) {
                 this.blockAudio.map = response.data.content;
@@ -2011,11 +2081,16 @@ export default {
                 this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
                 this.audioEditFootnote.isAudioChanged = true;
               }
+            } else {
+              this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+              this.$root.$emit('for-audioeditor:set-process-run', false);
             }
           })
           .catch(err => {
             this.checkError(err);
             this.isUpdating = false;
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           });
       },
       insertSilence(position, length, footnoteIdx = null) {
@@ -2040,7 +2115,7 @@ export default {
         api.post(api_url, formData, {})
           .then(response => {
             this.isUpdating = false;
-            if (response.status == 200) {
+            if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
               if (footnoteIdx === null) {
                 this.blockAudio.map = response.data.content;
                 this.block.setContent(response.data.content);
@@ -2054,11 +2129,16 @@ export default {
                 this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
                 this.audioEditFootnote.isAudioChanged = true;
               }
+            } else {
+              this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+              this.$root.$emit('for-audioeditor:set-process-run', false);
             }
           })
           .catch(err => {
             this.checkError(err);
             this.isUpdating = false;
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           });
       },
       audCleanClasses: function(block_id, ev) {
@@ -2148,7 +2228,7 @@ export default {
       commitFootnote: function(pos, ev, field = null) {
         //this.block.footnotes[pos] = ev.target.innerText.trim();
         this.isChanged = true;
-        this.pushChange('footnotes');
+        this.pushChange(field === null ? 'footnotes' : 'footnotes_' + field);
         if (field === 'voicework') {
           this.block.setAudiosrcFootnote(pos, '');
         }
@@ -2510,7 +2590,7 @@ export default {
         return api.post(api_url, formData, {})
         .then(response => {
           this.isUpdating = false;
-          if (response.status == 200) {
+          if (response.status == 200 && response.data && response.data.audiosrc) {
             if (footnoteIdx === null) {
               this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
               this.blockAudio.src = this.block.getAudiosrc('m4a');
@@ -2522,6 +2602,9 @@ export default {
             if (this.isAudioEditing) {
               this.$root.$emit('for-audioeditor:reload-text', response.data.content);
             }
+          } else {
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           }
           this.reRecordPosition = false;
           return BPromise.resolve();
@@ -2529,6 +2612,8 @@ export default {
         .catch(err => {
           this.reRecordPosition = false;
           this.isUpdating = false;
+          this.$root.$emit('for-audioeditor:set-process-run', false);
+          this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           return BPromise.reject();
         });
         } else {
@@ -2692,6 +2777,16 @@ export default {
           }
           this.$root.$emit('from-block-edit:set-style');
           if (type === 'type' && event && event.target) {
+            if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {
+              this.block.voicework = 'no_audio';
+              this.block.setAudiosrc('');
+              this.block.setContent('');
+              this.refreshBlockAudio();
+              this.pushChange('voicework');
+              this.pushChange('content');
+              this.pushChange('audiosrc');
+              this.pushChange('audiosrc_ver');
+            }
             if (event.target.value === 'illustration') {
               let i = setInterval(() => {
                 if (this.$refs.blockDescription) {
@@ -3124,9 +3219,9 @@ export default {
             if (this.isCompleted) {
               this.tc_loadBookTask();
             }
-            if (this.currentJobInfo && this.currentJobInfo.published) {
-              this.updateBookVersion({major: true});
-            }
+            //if (this.currentJobInfo && this.currentJobInfo.published) {
+              //this.updateBookVersion({major: true});
+            //}
             this.getCurrentJobInfo();
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
@@ -3212,6 +3307,7 @@ export default {
         this.block.content = this.$refs['block-html' + this.block._id].value;
         this.$refs.blockContent.innerHTML = this.block.content;
         this.isChanged = true;
+        this.pushChange('content');
         this.hideModal('block-html');
       },
 

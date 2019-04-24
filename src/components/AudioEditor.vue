@@ -13,7 +13,8 @@
       <div class="waveform-wrapper" @contextmenu.prevent="onContext">
         <div id="playlist" class="wf-playlist" ref="playlist"></div>
       </div>
-      <div class="player-controls">
+      <div class="process-run" v-if="processRun"></div>
+      <div class="player-controls" v-else>
 
         <div :class="['play-controls', '-' + mode]">
           <i class="fa fa-play-circle-o" v-if="!isPlaying" v-on:click="play()"></i>
@@ -182,7 +183,8 @@
           alignProcess: false,
           annotations: [],
           minWordSize: 0.05,
-          wordSelectionMode: false
+          wordSelectionMode: false,
+          processRun: false
         }
       },
       mounted() {
@@ -199,6 +201,7 @@
         this.$root.$on('stop-align', () => {
           this.alignProcess = false;
         })
+        this.$root.$on('for-audioeditor:set-process-run', this.setProcessRun);
       },
       beforeDestroy() {
         if (this.audioContext) {
@@ -212,6 +215,7 @@
         this.$root.$off('for-audioeditor:load', this.setAudio);
         this.$root.$off('for-audioeditor:reload-text', this._setText);
         this.$root.$off('for-audioeditor:select', this.select);
+        this.$root.$off('for-audioeditor:set-process-run', this.setProcessRun);
       },
       methods: {
         select (block_id, start, end) {
@@ -226,6 +230,7 @@
           }
         },
         load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
+          this.processRun = false;
           //console.log('load', audio, text, block, autostart, bookAudiofile, reloadOnChange);
           let blockId = block ? block._id : null;
 
@@ -952,6 +957,7 @@
         },
         addSilence() {
           if (this.silenceLength > 0 && this.cursorPosition >= 0) {
+            this.processRun = true;
             this.$root.$emit('from-audioeditor:insert-silence', this.blockId, this._round(this.cursorPosition, 2), this.silenceLength);
             this.isModified = true;
           }
@@ -981,11 +987,13 @@
         },
         saveAndRealign() {
           if (this.isModified) {
+            this.processRun = true;
             this.$root.$emit('from-audioeditor:save-and-realign', this.blockId);
             this.isModified = false;
           }
         },
         cut() {
+          this.processRun = true;
           this.cursorPosition = this.selection.start;
           this.$root.$emit('from-audioeditor:cut', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
           this.isModified = true;
@@ -1162,16 +1170,18 @@
               return _w.alignedIndex == index;
             });
             if (word) {
-              this.plEventEmitter.emit('select', word.start, word.end);
-              this._showSelectionBorders()
-                .then(() => {
-                  if (autoplay) {
-                    this.cursorPosition = false;
-                    Vue.nextTick(() => {
-                      this.stop().then(() => this.play());
-                    });
-                  }
-                });
+              this.stop().then(() => {
+                this.plEventEmitter.emit('select', word.start, word.end);
+                this._showSelectionBorders()
+                  .then(() => {
+                    if (autoplay) {
+                      this.cursorPosition = false;
+                      Vue.nextTick(() => {
+                        this.play()
+                      });
+                    }
+                  });
+              });
             }
           }
         },
@@ -1629,6 +1639,10 @@
             }
           }
         }, 30),
+        
+        setProcessRun(val) {
+          this.processRun = val;
+        }
 
       },
       computed: {
@@ -2166,5 +2180,15 @@
     .btn.btn-default {
       display: none;
     }
+  }
+  .process-run {
+    background: url(/static/preloader-horizontal.gif);
+    width: 100%;
+    display: inline-block;
+    margin: 4px 0px;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 62px;
+    vertical-align: middle;
   }
 </style>

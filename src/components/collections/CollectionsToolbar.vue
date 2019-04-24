@@ -8,10 +8,12 @@
 
         <input type="text" @keyup="filterChange('title', $event)" class="form-control" placeholder="Search by author or title" v-model="collectionsFilter['title']"></input>
         <template v-if="adminOrLibrarian">
-          <select @change="filterChange('importStatus', $event)" v-model="collectionsFilter.importStatus">
+          <select @change="filterChange('jobStatus', $event)" v-model="collectionsFilter.jobStatus">
             <option value="">Not filtered</option>
             <option value="active">Active</option>
             <option value="archived">Archived</option>
+            <option value="completed">Completed</option>
+            <option value="suspended">Suspended</option>
           </select> &nbsp;
         </template>
         <select @change="filterChange('language', $event)" v-model="collectionsFilter['language']">

@@ -16,10 +16,12 @@
   <input type="text" @keyup="booksFilterChange" class="form-control" placeholder="Filter"></input> &nbsp;
 
   <template v-if="adminOrLibrarian">
-    <select @change="booksTypeChange" v-model="bookFilters.importStatus">
+    <select @change="booksTypeChange" v-model="bookFilters.jobStatus">
       <option value="">Not filtered</option>
       <option value="active">Active</option>
       <option value="archived">Archived</option>
+      <option value="completed">Completed</option>
+      <option value="suspended">Suspended</option>
     </select> &nbsp;
   </template>
 
@@ -87,7 +89,7 @@ export default {
       // console.log("language: "+el.target.value)
     },
     booksTypeChange (el) {
-      this.$store.commit('SET_CURRENTBOOK_FILTER', {importStatus: el.target.value})
+      this.$store.commit('SET_CURRENTBOOK_FILTER', {jobStatus: el.target.value})
     },
     bookCount () {
       if (this.allBooks && this.allBooks.length) {
