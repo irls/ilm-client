@@ -145,7 +145,14 @@
                     </select>
                   </td>
                 </tr>
-
+                <tr class='weight'>
+                  <td>Weight:</td>
+                  <td>
+                    <input v-model='currentBook.weight' @input="updateWeigth($event)" :disabled="!allowMetadataEdit"
+                           :class="[{'has-error': validationErrors['weight'].length}]"/>
+                    <span class="validation-error" v-for="error in validationErrors['weight']">{{error}}</span>
+                  </td>
+                </tr>
               </table>
             </fieldset>
 
@@ -506,7 +513,7 @@ export default {
       isPublishingQueue: false,
       publicationStatus: false,
       isExporting:false,
-      validationErrors: {extid: []},
+      validationErrors: {extid: [], weight: []},
       updateAllowed: false,
       TAB_ASSIGNMENT_INDEX: 0,
       TAB_META_INDEX: 1,
@@ -1417,12 +1424,35 @@ export default {
     updateExtid: _.debounce(function(event) {
       if (event.target.value && event.target.value.length != 32) {
         this.validationErrors['extid'] = ['Length must be equal to 32 symbols.']
-      } else if (/[^a-z\d]+/.test(event.target.value)) {
+      } else if (/[^a-z\d]+/.test(event.target.value) || /\d+\.$/.test(event.target.value)) {
         this.validationErrors['extid'] = ['Only lowercase letters (a-z) and numbers.']
       } else {
         this.validationErrors['extid'] = [];
         this.liveUpdate('extid', event.target.value);
       }
+    }, 500),
+
+    updateWeigth: _.debounce(function (event) {
+      const value = event.target.value.replace(/ /g, '');
+      const key = 'weight';
+      const maxValue = 10.99;
+      const minValue = 1.00;
+      let errors = [];
+      if (Number(value) == value && value % 1 !== 0) {
+        if (value > maxValue || value < minValue || (value.split('.')[1]).toString().length > 2) {
+          errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
+        }
+      } else {
+        if (value !== '' && (Number(value) != value || (value > maxValue || value < minValue))) {
+          errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
+        }
+      }
+
+      this.validationErrors[key] = errors;
+      if (!errors.length) {
+        this.liveUpdate(key, value === '' ? '' : value);
+      }
+
     }, 500),
 
     getTaskType(typeId) {
