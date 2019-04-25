@@ -19,7 +19,6 @@
         <div :class="['play-controls', '-' + mode]">
           <i class="fa fa-play-circle-o" v-if="!isPlaying" v-on:click="play()"></i>
           <i class="fa fa-pause-circle-o" v-if="isPlaying" v-on:click="pause()"></i>
-          <i class="fa fa-stop-circle" v-on:click="stop()"></i>
           <i class="fa fa-step-backward" v-on:click="goToStart()"></i>
           <i class="fa fa-step-forward" v-on:click="goToEnd()"></i>
         </div>
@@ -451,6 +450,7 @@
               this.$root.$emit('from-audioeditor:audio-loaded', bookAudiofile.id);
             }
             $('.playlist-tracks').scrollLeft(this.playlistScrollPosition);
+            $('.playlist-tracks').trigger('scroll');
             $('.playlist-tracks').on('scroll', () => {
               this.playlistScrollPosition = $('.playlist-tracks').scrollLeft();
             });
@@ -1898,6 +1898,11 @@
             if (val === false) {
               this._clearWordSelection();
             }
+          }
+        },
+        'processRun': {
+          handler(val) {
+            
           }
         }
       }
