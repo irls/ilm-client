@@ -1544,9 +1544,13 @@ export default {
             return this.assembleBlock();
           }
         } else {
-          if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
-          else if (this.isChanged) return this.assembleBlock();
+          if (this.isAudioChanged && !this.isAudioEditing) {
+            return this.assembleBlockAudio();
+          } else if (this.isChanged) {
+            return this.assembleBlock();
+          }
         }
+        
         return BPromise.resolve();
       },
 
@@ -1555,6 +1559,8 @@ export default {
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
             this.block.voicework = 'no_audio';
+            this.block.content = '';
+            break;
           case 'hr':
             this.block.content = '';
             this.block.voicework = 'no_audio';
