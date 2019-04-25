@@ -943,19 +943,19 @@ export default {
           //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
-          this.$store.commit('set_storeList', new BookBlock(b_new));
-          this.refreshBlock({doc: b_new, deleted: false});
-          if (b_old) {
-            this.refreshBlock({doc: b_old, deleted: false});
-          }
+
           let blockO = response.data.new_block;
           if (!this.parlistO.get(blockO.blockid)) {
             this.parlistO.addBlock(blockO);
           }
+          this.$store.commit('set_storeList', new BookBlock(b_new));
+
+//           if (b_old) {
+//             this.refreshBlock({doc: b_old, deleted: false});
+//           }
 
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
-          this.scrollBarBlocks = this.parlistO.idsArray();
           if (!this.parlistO.getInId(blockO.blockid)) {
             this.startId = blockO.blockid;
           }
@@ -986,13 +986,16 @@ export default {
           //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
-          this.$store.commit('set_storeList', new BookBlock(b_new));
-          this.refreshBlock({doc: b_new, deleted: false});
-          this.refreshBlock({doc: b_old, deleted: false});
+
           let blockO = response.data.new_block;
           if (!this.parlistO.get(blockO.blockid)) {
             this.parlistO.addBlock(blockO);
           }
+          this.$store.commit('set_storeList', new BookBlock(b_new));
+
+//           if (b_old) {
+//             this.refreshBlock({doc: b_old, deleted: false});
+//           }
 
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
