@@ -1833,8 +1833,10 @@ export default {
               footnote_idx: footnoteIdx
             }
           }
+          this.isSaving = true;
           return api.post(api_url, data, {})
             .then(response => {
+              this.isSaving = false;
               if (response.status == 200) {
                 if (this.isCompleted) {
                   this.tc_loadBookTask();
@@ -1873,6 +1875,7 @@ export default {
               }
             })
             .catch(err => {
+              this.isSaving = false;
               this.checkError(err);
               BPromise.reject(err)
             });

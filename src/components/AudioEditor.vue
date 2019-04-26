@@ -13,8 +13,7 @@
       <div class="waveform-wrapper" @contextmenu.prevent="onContext">
         <div id="playlist" class="wf-playlist" ref="playlist"></div>
       </div>
-      <div class="process-run" v-if="processRun"></div>
-      <div class="player-controls" v-else>
+      <div class="player-controls">
 
         <div :class="['play-controls', '-' + mode]">
           <i class="fa fa-play-circle-o" v-if="!isPlaying" v-on:click="play()"></i>
@@ -230,6 +229,7 @@
         },
         load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
           //console.log('load', audio, text, block, autostart, bookAudiofile, reloadOnChange);
+          this.setProcessRun(true, 'loading');
           let blockId = block ? block._id : null;
 
           this.$root.$on('for-audioeditor:select', this.select);
@@ -386,8 +386,10 @@
             }
           ])
           .then(() => {
-            this.clearSelection();
-            this.processRun = false;
+            if (this.mode === 'block') {
+              this.clearSelection();
+            }
+            this.setProcessRun(false);
             this.audiosourceEditor.stopAnimation();
             if (this.audiosourceEditor.tracks.length > 1) {
               this.audiosourceEditor.getEventEmitter().emit('clear');
@@ -833,7 +835,9 @@
             }
             this._showSelectionBorders();
             this._scrollToCursor();
-            $('.cursor-position').css('left', $('.cursor').position().left);
+            if ($('.cursor').position()) {
+              $('.cursor-position').css('left', $('.cursor').position().left);
+            }
             return true;
           }
           return false;
@@ -848,7 +852,9 @@
             }
             this._showSelectionBorders();
             this._scrollToCursor();
-            $('.cursor-position').css('left', $('.cursor').position().left);
+            if ($('.cursor').position()) {
+              $('.cursor-position').css('left', $('.cursor').position().left);
+            }
             return true;
           }
           return false;
@@ -927,7 +933,7 @@
             })
         },
         isEmpty() {
-          return !this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0;
+          return (!this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0) && !this.processRun;
         },
         close(autosave = true) {
           //console.log('AudioEditor close', autosave);
@@ -970,7 +976,7 @@
         },
         addSilence() {
           if (this.silenceLength > 0 && this.cursorPosition >= 0) {
-            this.processRun = true;
+            this.setProcessRun(true, 'editing-audio');
             this.$root.$emit('from-audioeditor:insert-silence', this.blockId, this._round(this.cursorPosition, 2), this.silenceLength);
             this.isModified = true;
           }
@@ -978,6 +984,7 @@
         save() {
           if (this.mode == 'block') {
             if (this.isModified) {
+              this.setProcessRun(true, 'save');
               this.$root.$emit('from-audioeditor:save', this.blockId);
               this.isModified = false;
             }
@@ -1000,13 +1007,13 @@
         },
         saveAndRealign() {
           if (this.isModified) {
-            this.processRun = true;
+            this.setProcessRun(true, 'align');
             this.$root.$emit('from-audioeditor:save-and-realign', this.blockId);
             this.isModified = false;
           }
         },
         cut() {
-          this.processRun = true;
+          this.setProcessRun(true, 'editing-audio');
           this.cursorPosition = this.selection.start;
           this.$root.$emit('from-audioeditor:cut', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
           this.isModified = true;
@@ -1035,6 +1042,7 @@
           }
         },
         discard() {
+          this.setProcessRun(true, '');
           this.$root.$emit('from-audioeditor:discard', this.blockId);
           this._setDefaults();
           this.hideModal('onDiscardMessage');
@@ -1653,8 +1661,13 @@
           }
         }, 30),
         
-        setProcessRun(val) {
+        setProcessRun(val, type) {
           this.processRun = val;
+          if (val) {
+            this.$root.$emit('preloader-toggle', true, type);
+          } else {
+            this.$root.$emit('preloader-toggle', false, '');
+          }
         }
 
       },
@@ -1912,11 +1925,6 @@
               this._clearWordSelection();
             }
           }
-        },
-        'processRun': {
-          handler(val) {
-            
-          }
         }
       }
   }
@@ -2160,7 +2168,7 @@
       display: none;
   }
   .playlist-tracks {
-
+    height: 92px;
   }
   .playlist-tracks::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
@@ -2201,15 +2209,5 @@
     .btn.btn-default {
       display: none;
     }
-  }
-  .process-run {
-    background: url(/static/preloader-horizontal.gif);
-    width: 100%;
-    display: inline-block;
-    margin: 4px 0px;
-    background-repeat: no-repeat;
-    background-position: center;
-    height: 62px;
-    vertical-align: middle;
   }
 </style>
