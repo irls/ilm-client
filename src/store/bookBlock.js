@@ -122,7 +122,8 @@ class BookBlock {
   constructor(init) {
 
     // OrientDB properties
-//     this.rid = init.rid || '';
+    this._rid = init.rid || '';
+    this._uRid = encodeURIComponent(init.rid || '');
 //     this.in = init.in || '';
 //     this.out = init.out || '';
 //     this.blockid = init.blockid || '';
