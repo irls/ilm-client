@@ -1,6 +1,6 @@
 <template>
   <transition name="modal">
-    <div class="modal-mask" @click="$emit('close_modal')">
+    <div class="modal-mask" ><!--@click="$emit('close_modal')"-->
       <div class="modal-wrapper">
         <div class="modal-container" @click="$event.stopPropagation()">
 
@@ -64,10 +64,24 @@
           </div>
         </div>
       </div>
-      <alert :value="bookUploadError != false" placement="top" duration="3000" type="danger" width="400px">
-        <span class="icon-ok-circled alert-icon-float-left"></span>
-
-        <p>{{bookUploadError}}.</p>
+      <alert
+        :value="bookUploadCommonError != false"
+        placement="top"
+        duration="3000"
+        type="danger"
+        width="400px">
+        <span class="icon-info-circled alert-icon-float-left"></span>
+        <p>{{bookUploadCommonError}}.</p>
+      </alert>
+      <alert dismissable
+        :value="bookUploadCheckError != false"
+        placement="top"
+        type="danger"
+        width="500px">
+        <i class="fa fa-exclamation-triangle alert-icon-float-left" aria-hidden="true"></i>
+        <div class="alert-text-float-right">
+          <p v-for='(errMsg) in bookUploadCheckError'>{{errMsg}}.</p>
+        </div>
       </alert>
     </div>
   </transition>
@@ -97,9 +111,14 @@
         uploadFile: false,
         formData: new FormData(),
         uploadProgress: "Uploading Files...",
-        bookUploadError: false,
+        bookUploadCommonError: false,
+        bookUploadCheckError: false,
         fileValue: '',
-        errors: {}
+        errors: {},
+        errorsMsgKeys: {
+          duplicates: 'Found duplicates',
+          wrongVals: 'Found wrong id\'s'
+        }
       }
     },
     mixins: [api_config],
@@ -175,30 +194,40 @@
             vu_this.closeForm(true)
           }
         }).catch((err) => {
-          //console.log(err)
+          //console.log('reimportBook Err:', err.response)
           if (err.response.data.message && err.response.data.message.length) {
-            vu_this.bookUploadError = err.response.data.message
+            vu_this.bookUploadCommonError = err.response.data.message;
+            setTimeout(function () {
+              vu_this.$emit('close_modal')
+            }, 5000)
           } else if (Array.isArray(err.response.data)) {
-            let bookUploadError = ''
+            let bookUploadCheckError = [];
             err.response.data.forEach((msg)=>{
               if (typeof msg.error == 'object') {
                 for (var prop in msg.error) {
                   if (Array.isArray(msg.error[prop]) && msg.error[prop].length) {
-                    bookUploadError += `Error ${prop}: ${JSON.stringify(msg.error[prop])}\n`
+                    bookUploadCheckError.push(`${vu_this.errorsMsgKeys[prop] ? vu_this.errorsMsgKeys[prop] : prop}: ${(JSON.stringify(msg.error[prop])).split(',').join(', ')}`)
                   }
                 }
               } else {
-                bookUploadError += `Error: ${msg.error}\n`
+                bookUploadCheckError.push(`Error: ${msg.error}`);
               }
             })
-            vu_this.bookUploadError = bookUploadError;
+            bookUploadCheckError.reverse();
+            vu_this.bookUploadCheckError = bookUploadCheckError;
           }
           vu_this.formReset()
-          setTimeout(function () {
+          /*setTimeout(function () {
             vu_this.$emit('close_modal')
-          }, 5000)
+          }, 5000)*/
         });
-
+      },
+      closeForm(response) {
+        let self = this
+        setTimeout(function () {
+          self.formReset()
+          self.$emit('close_modal', response)
+        }, 1000)
       },
       humanFileSize(bytes, si) {
         var thresh = si ? 1000 : 1024;
@@ -214,13 +243,6 @@
           ++u;
         } while (Math.abs(bytes) >= thresh && u < units.length - 1);
         return bytes.toFixed(1) + ' ' + units[u];
-      },
-      closeForm(response) {
-        let self = this
-        setTimeout(function () {
-          self.formReset()
-          self.$emit('close_modal', response)
-        }, 1000)
       },
       validate() {
         //if (this.bookType === '') {
@@ -366,5 +388,22 @@
   .book-import-list { list-style-type: none; }
   .book-import-list i { padding: 0px 5px 0px 0px; }
 
+  .alert-icon-float-left {
+    font-size: 40px;
+    float: left;
+    color: #a94442;
+  }
+
+  .alert-text-float-right {
+    float: right;
+    text-align: left;
+    width: 400px;
+  }
+
+  .alert.top .alert-text-float-right p {
+    text-align: left;
+    margin: 5px 0;
+    word-break: break-word;
+  }
 
 </style>
