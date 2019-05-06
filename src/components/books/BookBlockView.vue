@@ -588,7 +588,7 @@
     <div v-on:wheel.stop="">
       <div class="modal-header">
         <h4 class="modal-title">
-          Block: {{(block._id).split(':')[1]}}
+          Block: bl{{(block._id).split('-bl')[1]}}
         </h4>
         <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
       </div>
