@@ -86,7 +86,7 @@
                     {{ book.name }} - {{ humanFileSize(book.size, true) }}
                   </li>
                </ul>
-                <button v-if="importTaskId" class="btn btn-primary modal-default-button" @click.prevent='onFormSubmit' :class="{disabled : saveDisabled}">
+                <button v-if="importTaskId" class="btn btn-primary modal-default-button" @click.prevent='onFormSubmit' :class="{disabled : saveDisabled}" :disabled="saveDisabled">
                   <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;Import Book
                 </button>
                 <span v-if="!importTaskId" class="label label-danger">Book should be imported from task. You have no import book task assigned</span>
@@ -216,9 +216,6 @@ export default {
       return this.bookTypes[this.bookType];
     },
     saveDisabled: function() {
-      //return (!this.bookURL && !this. bookFile);
-      //console.log(this.uploadFiles.bookFiles, this.bookURL.length)
-
       return (this.uploadFiles.bookFiles==0 && this.bookURL.length==0)
     }
   },
@@ -233,7 +230,9 @@ export default {
       //document.getElementById('bookFiles').value = null
       this.uploadFiles = {bookFiles: 0, audioFiles: 0}
       this.selectedBooks = [];
-      this.$refs.book_select.reset();
+      if (this.$refs && this.$refs.book_select) {
+        this.$refs.book_select.reset();
+      }
       this.$emit('books_changed', this.selectedBooks)
     },
     onFilesChange(e) {
@@ -291,6 +290,7 @@ export default {
         vu_this.formReset();
         if (err.response.data.message && err.response.data.message.length) {
           vu_this.bookUploadCommonError = err.response.data.message;
+          vu_this.$emit('upload_error', err.response.data.message);
           setTimeout(function () {
             vu_this.$emit('close_modal')
           }, 5000)
@@ -309,6 +309,7 @@ export default {
           })
           bookUploadCheckError.reverse();
           vu_this.bookUploadCheckError = bookUploadCheckError;
+          vu_this.$emit('upload_error', bookUploadCheckError);
         }
         /*setTimeout(function () {
           vu_this.$emit('close_modal')

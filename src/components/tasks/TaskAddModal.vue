@@ -1,9 +1,34 @@
 <template>
-  <modal id="taskAddModal" :value="show" effect="fade" @closed="closed">
+  <modal
+    id="taskAddModal"
+    :value="show"
+    effect="fade"
+    :backdrop="false"
+    @closed="closed">
     <div slot="modal-header" class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
       <h4 class="modal-title">Add Job</h4>
+      <alert
+        :value="bookUploadCommonError != false"
+        placement="top"
+        duration="3000"
+        type="danger"
+        width="400px">
+        <span class="icon-info-circled alert-icon-float-left"></span>
+        <p>{{bookUploadCommonError}}.</p>
+      </alert>
+      <alert dismissable
+        :value="bookUploadCheckError != false"
+        placement="top"
+        type="danger"
+        width="500px">
+        <i class="fa fa-exclamation-triangle alert-icon-float-left" aria-hidden="true"></i>
+        <div class="alert-text-float-right">
+          <p v-for='(errMsg) in bookUploadCheckError'>{{errMsg}}.</p>
+        </div>
+      </alert>
     </div>
+
     <div slot="modal-body" class="modal-body">
       <div class="form-group" v-if="false">
         <label>Type</label>
@@ -79,22 +104,25 @@
     </div>
     <div slot="modal-footer" class="modal-footer">
       <div class="col-sm-3 pull-right">
-        <button class="btn btn-primary" type="button" @click="save">Submit </button>
+        <button class="btn btn-primary" type="button" @click.prevent="save" :disabled="saveDisabled">Submit</button>
       </div>
       <div class="col-sm-6 pull-right">
         <!-- Import Books Modal Popup -->
         <BookImport :isModal="false"
+          ref="bookImport"
           :bookId="createdJob.bookid"
           :multiple="false"
           :forceUpload="typeof createdJob.bookid != 'undefined'"
           @close_modal="bookImportFinished"
-          @books_changed="bookListChanged" />
+          @books_changed="bookListChanged"
+          @upload_error="uploadError"/>
       </div>
     </div>
+
   </modal>
 </template>
 <script>
-import { modal } from 'vue-strap'
+import { modal, alert } from 'vue-strap'
 import modalMixin from './../../mixins/modal'
 import axios from 'axios'
 import superlogin from 'superlogin-client'
@@ -106,6 +134,7 @@ export default {
   name: 'TaskAddModal',
   components: {
     modal,
+    alert,
     BookImport
   },
   mixins: [modalMixin],
@@ -157,6 +186,8 @@ export default {
         }
       },
       errors: {},
+      bookUploadCommonError: false,
+      bookUploadCheckError: false,
       description: '',
       id: [''],
       createdJob: {},
@@ -169,6 +200,9 @@ export default {
       self.$emit('closed', false)
     },
     save() {
+      this.bookUploadCommonError = false;
+      this.bookUploadCheckError = false;
+
       if (!this.validate()) {
         return false
       }
@@ -292,12 +326,23 @@ export default {
     bookImportFinished() {
       this.$emit('closed', true)
     },
+    uploadError(errors) {
+      if (Array.isArray(errors)) {
+        this.bookUploadCheckError = errors;
+      } else {
+        this.bookUploadCommonError = errors;
+      }
+    },
     bookListChanged(list) {
+      console.log('this.importingBooksList', list);
       this.importingBooksList = list
     }
   },
   computed: {
-
+    saveDisabled: function() {
+      return false; // while we need to create job without book
+      //return this.importingBooksList.length == 0;
+    }
   },
   watch: {
     type(val) {
@@ -358,4 +403,22 @@ i.add-book {
 textarea.job-descr {
   resize: vertical;
 }
+
+  .alert-icon-float-left {
+    font-size: 40px;
+    float: left;
+    color: #a94442;
+  }
+
+  .alert-text-float-right {
+    float: right;
+    text-align: left;
+    width: 400px;
+  }
+
+  .alert.top .alert-text-float-right p {
+    text-align: left;
+    margin: 5px 0;
+    word-break: break-word;
+  }
 </style>
