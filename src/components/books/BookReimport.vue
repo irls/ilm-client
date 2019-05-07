@@ -13,6 +13,7 @@
             </div>
           </div>
           <div class="modal-body clearfix">
+          <form id="book_select" enctype="multipart/form-data" @submit.prevent ref="book_select">
 
             <div class="col-sm-12">
               <!--<div class="col-sm-5">
@@ -61,6 +62,7 @@
               <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
             </div>
 
+          </form>
           </div>
         </div>
       </div>
@@ -151,9 +153,10 @@
         this.isUploading = false
         // clear formData
         let entries = this.formData.entries()
-        for (let pair of entries)
+        for (let pair of entries) {
           this.formData.delete(pair[0])
-        //document.getElementById('bookFiles').value = null
+        }
+        this.$refs.book_select.reset();
         this.uploadFile = false;
       },
       onFilesChange(e) {
@@ -164,6 +167,8 @@
       },
 
       onFormSubmit() {
+        this.bookUploadCommonError = false;
+        this.bookUploadCheckError = false;
         this.validate();
         if (Object.keys(this.errors).length > 0) {
           return false;

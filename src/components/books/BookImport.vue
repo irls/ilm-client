@@ -1,6 +1,6 @@
 <template>
   <transition name="modal">
-    <div class="modal-mask" @click="$emit('close_modal')" v-if="isModal" >
+    <div class="modal-mask" v-if="isModal" ><!--@click="$emit('close_modal')"-->
       <div class="modal-wrapper">
         <div class="modal-container" @click="$event.stopPropagation()">
 
@@ -17,9 +17,9 @@
 
             <div class="modal-body clearfix">
 
-            <form id="book_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent>
+            <form id="book_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent ref="book_select">
 
-              <h4> Book Text </h4>
+              <!--<h4> Book Text </h4>-->
                 <div class="col-sm-12">
                   <div class="col-sm-7">
                     <div class="input-group">
@@ -42,7 +42,7 @@
 
                 <br><br><br>
 
-                <div class="col-sm-12">
+                <!--<div class="col-sm-12">
                   <div class="col-sm-6">
                     <div class="form-group">
                       <label for="booktype">Book Type:</label>
@@ -54,7 +54,7 @@
                     </div>
                   </div>
                 </div>
-                <br><br><br><br>
+                <br><br><br><br>-->
 
                 <!-- <h4> Book Audio </h4>
 
@@ -86,8 +86,8 @@
                     {{ book.name }} - {{ humanFileSize(book.size, true) }}
                   </li>
                </ul>
-                <button v-if="importTaskId" class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
-                  <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
+                <button v-if="importTaskId" class="btn btn-primary modal-default-button" @click.prevent='onFormSubmit' :class="{disabled : saveDisabled}">
+                  <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;Import Book
                 </button>
                 <span v-if="!importTaskId" class="label label-danger">Book should be imported from task. You have no import book task assigned</span>
 
@@ -97,20 +97,34 @@
                <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
             </div>
 
-          </div comment="clearfix">
+          </div>
         </div>
       </div>
-      <alert :value="bookUploadError != false" placement="top" duration="3000" type="danger" width="400px">
-        <span class="icon-ok-circled alert-icon-float-left"></span>
-
-        <p>{{bookUploadError}}.</p>
+      <alert
+        :value="bookUploadCommonError != false"
+        placement="top"
+        duration="3000"
+        type="danger"
+        width="400px">
+        <span class="icon-info-circled alert-icon-float-left"></span>
+        <p>{{bookUploadCommonError}}.</p>
+      </alert>
+      <alert dismissable
+        :value="bookUploadCheckError != false"
+        placement="top"
+        type="danger"
+        width="500px">
+        <i class="fa fa-exclamation-triangle alert-icon-float-left" aria-hidden="true"></i>
+        <div class="alert-text-float-right">
+          <p v-for='(errMsg) in bookUploadCheckError'>{{errMsg}}.</p>
+        </div>
       </alert>
     </div>
     <div v-else>
       <div v-show="!isUploading">
         <div>
           <label class='btn btn-default' type="file">
-            <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
+            <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp;&nbsp; Browse&hellip;
 
             <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip,.txt,.docx,.md"
                    :multiple="multiple"
@@ -158,9 +172,14 @@ export default {
         uploadFiles: {bookFiles: 0, audioFiles: 0},
         formData: new FormData(),
         uploadProgress: "Uploading Files...",
-        bookUploadError: false,
+        bookUploadCommonError: false,
+        bookUploadCheckError: false,
         selectedBooks: [],
-        fileValue: ''
+        fileValue: '',
+        errorsMsgKeys: {
+          duplicates: 'Found duplicates',
+          wrongVals: 'Found wrong id\'s'
+        }
     }
   },
   mixins: [api_config],
@@ -213,7 +232,8 @@ export default {
       for(let pair of entries) this.formData.delete(pair[0])
       //document.getElementById('bookFiles').value = null
       this.uploadFiles = {bookFiles: 0, audioFiles: 0}
-      this.selectedBooks = []
+      this.selectedBooks = [];
+      this.$refs.book_select.reset();
       this.$emit('books_changed', this.selectedBooks)
     },
     onFilesChange(e) {
@@ -234,9 +254,11 @@ export default {
     },
 
     onFormSubmit() {
-      if (!this.isModal && this.selectedBooks.length == 0) {// called on Job creation and no file was selected
-        this.$emit('close_modal', false)
-        return
+      this.bookUploadCommonError = false;
+      this.bookUploadCheckError = false;
+      if (/*this.isModal && */this.selectedBooks.length == 0) {// called on Job creation and no file was selected
+        //this.$emit('close_modal', false)
+        return false;
       }
       let vu_this = this
       let api = this.$store.state.auth.getHttp()
@@ -265,30 +287,33 @@ export default {
           vu_this.formReset()
         }
       }).catch((err) => {
-          //console.log(err)
-          if (err.response.data.message && err.response.data.message.length) {
-            vu_this.bookUploadError = err.response.data.message
-          } else if (Array.isArray(err.response.data)) {
-            let bookUploadError = ''
-            err.response.data.forEach((msg)=>{
-              if (typeof msg.error == 'object') {
-                for (var prop in msg.error) {
-                  if (Array.isArray(msg.error[prop]) && msg.error[prop].length) {
-                    bookUploadError += `Error ${prop}: ${JSON.stringify(msg.error[prop])}\n`
-                  }
-                }
-              } else {
-                bookUploadError += `Error: ${msg.error}\n`
-              }
-            })
-            vu_this.bookUploadError = bookUploadError;
-          }
-          vu_this.formReset()
+        //console.log('importBook Err:', err.response);
+        vu_this.formReset();
+        if (err.response.data.message && err.response.data.message.length) {
+          vu_this.bookUploadCommonError = err.response.data.message;
           setTimeout(function () {
             vu_this.$emit('close_modal')
           }, 5000)
-        });
-
+        } else if (Array.isArray(err.response.data)) {
+          let bookUploadCheckError = [];
+          err.response.data.forEach((msg)=>{
+            if (typeof msg.error == 'object') {
+              for (var prop in msg.error) {
+                if (Array.isArray(msg.error[prop]) && msg.error[prop].length) {
+                  bookUploadCheckError.push(`${vu_this.errorsMsgKeys[prop] ? vu_this.errorsMsgKeys[prop] : prop}: ${(JSON.stringify(msg.error[prop])).split(',').join(', ')}`)
+                }
+              }
+            } else {
+              bookUploadCheckError.push(`Error: ${msg.error}`);
+            }
+          })
+          bookUploadCheckError.reverse();
+          vu_this.bookUploadCheckError = bookUploadCheckError;
+        }
+        /*setTimeout(function () {
+          vu_this.$emit('close_modal')
+        }, 5000)*/
+      });
     },
     humanFileSize(bytes, si) {
         var thresh = si ? 1000 : 1024;
@@ -344,7 +369,7 @@ export default {
 }
 
 .modal-container {
-  width: 500px;
+  width: 518px;
   margin: 0px auto;
   padding: 0px 0px;
   background-color: #fff;
@@ -451,5 +476,21 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
 .book-import-list { list-style-type: none; }
 .book-import-list i { padding: 0px 5px 0px 0px; }
 
+  .alert-icon-float-left {
+    font-size: 40px;
+    float: left;
+    color: #a94442;
+  }
 
+  .alert-text-float-right {
+    float: right;
+    text-align: left;
+    width: 400px;
+  }
+
+  .alert.top .alert-text-float-right p {
+    text-align: left;
+    margin: 5px 0;
+    word-break: break-word;
+  }
 </style>
