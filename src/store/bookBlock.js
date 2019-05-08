@@ -31,6 +31,7 @@ let defBlock = [
   'status',
   'audiosrc_ver',
   'blockid',
+  'manual_boundaries'
 ]
 
 let BlockTypes = {
@@ -192,6 +193,7 @@ class BookBlock {
     this.illustration_width = init.illustration_width || false;
     this.illustration_height = init.illustration_height || false;
     this.blockid = init.blockid || false;
+    this.manual_boundaries = init.manual_boundaries || [];
   }
 
   clean() {

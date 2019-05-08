@@ -516,8 +516,8 @@
                   </div>
                   <div class="save-block -right"
                   v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-                  @click="assembleBlockProxy">
-                    Save
+                  @click="assembleBlockProxy(true)">
+                    {{saveBlockLabel}}
                   </div>
                   <template v-if="!isCompleted">
                   <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
@@ -981,6 +981,21 @@ export default {
       approveWaiting: {
         get() {
           return this._is('proofer', true) && this.approveBlocksList.length > 0;
+        }
+      },
+      saveBlockLabel: {
+        get() {
+          return this.needsRealignment ? 'Save & Re-align' : 'Save';
+        }
+      },
+      needsRealignment: {
+        get() {
+          if (this.changes && this.block.audiosrc) {
+            if (this.changes.indexOf('content') !== -1 || this.changes.indexOf('suggestion') !== -1) {
+              return true;
+            }
+          }
+          return false;
         }
       },
       ...mapGetters({
@@ -1554,6 +1569,7 @@ export default {
                 this.blockAudio.map = response.data.content;
                 //this.block.audiosrc = this.blockAudio.src;
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
+                this.block.manual_boundaries = response.data.manual_boundaries || [];
                 this.isAudioChanged = false;
                 if (reload) {
                   this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
@@ -1575,7 +1591,52 @@ export default {
           });
       },
 
-      assembleBlockProxy: function (ev) {
+      assembleBlockProxy: function (check_realign = true, realign = false) {
+        if (check_realign === true && this.needsRealignment && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
+          this.$root.$emit('show-modal', {
+            title: `Manually adjusted word positions won’t be saved at “Save & Re-align” action.<br>Are you sure you want to save and realign the block?`,
+            text: '',
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+              },
+              {
+                title: 'Save',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.assembleBlockProxy(false, false)
+                    }
+                  }, 50);
+                }
+              },
+              {
+                title: 'Save & Re-align',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.assembleBlockProxy(false, true)
+                    }
+                  }, 50);
+                },
+                'class': 'btn btn-primary',
+                default: true
+              }
+            ],
+            class: ['align-modal']
+          });
+          return;
+        }
+        if (check_realign === true && this.needsRealignment) {
+          realign = true;
+        }
         switch (this.block.type) {
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
@@ -1658,7 +1719,7 @@ export default {
               partUpdate.status.marked = false;
             }
             if (fullUpdate) {
-              return this.assembleBlock(partUpdate);
+              return this.assembleBlock(partUpdate, realign);
             } else {
               return this.assembleBlockPart(partUpdate);
             }
@@ -1667,7 +1728,7 @@ export default {
         return BPromise.resolve();
       },
 
-      assembleBlock: function(partUpdate = null) {
+      assembleBlock: function(partUpdate = null, realign = false) {
         let update = partUpdate ? partUpdate : this.block;
         if (update.classes) {
           update.classes = [update.classes];
@@ -1679,7 +1740,7 @@ export default {
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
         this.isSaving = true;
-        return this.putBlock(update).then(()=>{
+        return this.putBlock([update, realign]).then(()=>{
           this.isSaving = false;
           /*if (this.tc_createApproveModifiedBlock(this.block._id)) {
             if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) ||
@@ -1701,18 +1762,9 @@ export default {
             this.blockAudio.map = this.block.content;
           }
           if (this.isAudioEditing) {
-            this.$root.$emit('for-audioeditor:reload-text', this.block.content);
+            this.$root.$emit('for-audioeditor:reload-text', this.block.content, this.block);
           }
-          let has_suggestion = this.$refs.blockContent && this.block.audiosrc
-            && this.$refs.blockContent.dataset.has_suggestion
-            && this.$refs.blockContent.dataset.has_suggestion === 'true';
-          if (has_suggestion) {
-            //console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
-            this.doReAlign();
-            this.$refs.blockContent.dataset.has_suggestion = false;
-          } else if (is_content_changed && this.block.audiosrc) {
-            this.doReAlign();
-          }
+          this.$refs.blockContent.dataset.has_suggestion = false;
           if (is_content_changed) {
             if (['title', 'header'].indexOf(this.block.type) !== -1) {
               this.updateBlockToc({blockid: this.block._id, bookid: this.block.bookid});
@@ -1816,7 +1868,58 @@ export default {
         this.isAudioChanged = false;
       },
 
-      assembleBlockAudioEdit: function(footnoteIdx = null) {// to save changes from audio editor
+      assembleBlockAudioEdit: function(footnoteIdx = null, check_realign = true, realign = false) {// to save changes from audio editor
+        let manual_boundaries = [];
+        if (this.footnoteIdx) {
+          if (this.audioEditFootnote && this.audioEditFootnote.footnote) {
+            manual_boundaries = this.audioEditFootnote.footnote.manual_boundaries || [];
+          }
+        } else {
+          manual_boundaries = this.block.manual_boundaries || [];
+        }
+        if (check_realign === true && manual_boundaries.length > 0) {
+        this.$root.$emit('show-modal', {
+          title: `Manually adjusted word positions won’t be saved at “Save & Re-align” action.<br>Are you sure you want to save and realign the block?`,
+          text: '',
+          buttons: [
+            {
+              title: 'Cancel',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+                this.$root.$emit('for-audioeditor:set-process-run', false);
+              },
+            },
+            {
+              title: 'Save',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+                let i = setInterval(() => {
+                  if ($('.align-modal').length == 0) {
+                    clearInterval(i);
+                    this.assembleBlockAudioEdit(footnoteIdx, false, false);
+                  }
+                }, 50);
+              }
+            },
+            {
+              title: 'Save & Re-align',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+                let i = setInterval(() => {
+                  if ($('.align-modal').length == 0) {
+                    clearInterval(i);
+                    this.assembleBlockAudioEdit(footnoteIdx, false, true);
+                  }
+                }, 50);
+              },
+              'class': 'btn btn-primary',
+              default: true
+            }
+          ],
+          class: ['align-modal']
+        });
+        return;
+      }
         if ((this.blockAudio.map && this.blockAudio.src) || (typeof footnoteIdx !== 'undefined' && footnoteIdx !== null && this.audioEditFootnote.footnote)) {
           let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
           let api = this.$store.state.auth.getHttp();
@@ -1824,14 +1927,19 @@ export default {
           if (footnoteIdx === null) {
             data = {
               audiosrc: this.block.getAudiosrc(null, false),
-              content: this.blockAudio.map
+              content: this.blockAudio.map,
+              manual_boundaries: this.block.manual_boundaries
             };
           } else {
             data = {
               audiosrc: this.block.getAudiosrcFootnote(footnoteIdx, null, false),
               content: this.audioEditFootnote.footnote.content,
-              footnote_idx: footnoteIdx
+              footnote_idx: footnoteIdx,
+              manual_boundaries: this.audioEditFootnote.footnote.manual_boundaries || []
             }
+          }
+          if (realign) {
+            api_url+= '?realign=true';
           }
           return api.post(api_url, data, {})
             .then(response => {
@@ -1850,6 +1958,7 @@ export default {
                   this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                   this.blockAudio.map = response.data.content;
                   this.blockAudio.src = this.block.getAudiosrc('m4a');
+                  this.block.manual_boundaries = response.data.manual_boundaries || [];
                   //return this.putBlock(this.block);
                   this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
                   this.isAudioChanged = false;
@@ -1866,6 +1975,7 @@ export default {
                   let resp_f = resp_block.footnotes[footnoteIdx];
                   this.block.setContentFootnote(footnoteIdx, resp_f.content);
                   this.block.setAudiosrcFootnote(footnoteIdx, resp_f.audiosrc, resp_f.audiosrc_ver);
+                  this.audioEditFootnote.footnote.manual_boundaries = resp_f.manual_boundaries || [];
                   this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
                   this.audioEditFootnote.isAudioChanged = false;
                   return BPromise.resolve();
@@ -2595,12 +2705,16 @@ export default {
               this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
               this.blockAudio.src = this.block.getAudiosrc('m4a');
               this.blockAudio.map = response.data.content;
+              this.block.manual_boundaries = response.data.manual_boundaries || [];
             } else {
               this.block.setContentFootnote(footnoteIdx, response.data.content);
               this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
+              if (this.audioEditFootnote && this.audioEditFootnote.footnote) {
+                this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
+              }
             }
             if (this.isAudioEditing) {
-              this.$root.$emit('for-audioeditor:reload-text', response.data.content);
+              this.$root.$emit('for-audioeditor:reload-text', response.data.content, response.data);
             }
           } else {
             this.$root.$emit('for-audioeditor:set-process-run', false);
@@ -2845,7 +2959,7 @@ export default {
         Vue.nextTick(() => {
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
           let text = footnote ? footnote.content : this.blockAudio.map;
-          let loadBlock = footnoteIdx !== null ? {_id: this.check_id, voicework: footnote ? footnote.voicework : 'tts'} : this.block;
+          let loadBlock = footnoteIdx !== null ? {_id: this.check_id, voicework: footnote ? footnote.voicework : 'tts', manual_boundaries: footnote ? footnote.manual_boundaries || [] : []} : this.block;
           this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
 
           let self = this;
@@ -2887,30 +3001,66 @@ export default {
               ref = ref[0];
             }
             if (ref && ref.querySelectorAll) {
+              let manual_boundaries = this.audioEditFootnote.footnote.manual_boundaries || [];
               ref.querySelectorAll('[data-map]').forEach(_w => {
                 if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
                   let _m = map.shift();
                   if (_m) {
-                    let w_map = _m.join()
+                    let w_map = _m.join();
+                    let currentMap = $(_w).attr('data-map').split(',');
+                    currentMap[0] = parseInt(currentMap[0]);
+                    currentMap[1] = parseInt(currentMap[1]);
+                    if (currentMap[0] != _m[0] && manual_boundaries.indexOf(_m[0]) == -1) {
+                      if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
+                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
+                      }
+                      manual_boundaries.push(_m[0]);
+                    }
+                    if (currentMap[0] + currentMap[1] != _m[0] + _m[1] && manual_boundaries.indexOf(_m[0] + _m[1]) == -1) {
+                      if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
+                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
+                      }
+                      manual_boundaries.push(_m[0] + _m[1]);
+                    }
                     $(_w).attr('data-map', w_map)
                   }
                 }
               });
               this.audioEditFootnote.footnote.content = ref.innerHTML;
+              this.audioEditFootnote.footnote.manual_boundaries = manual_boundaries;
+              this.$root.$emit('for-audioeditor:reload-text', this.audioEditFootnote.footnote.content, this.audioEditFootnote.footnote);
               this.pushChange('footnotes');
               this.pushChange('content_footnote');
             }
           } else {
             if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
+              let manual_boundaries = this.block.manual_boundaries || [];
               this.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
                 if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
                   let _m = map.shift();
                   if (_m) {
                     let w_map = _m.join()
+                    let currentMap = $(_w).attr('data-map').split(',');
+                    currentMap[0] = parseInt(currentMap[0]);
+                    currentMap[1] = parseInt(currentMap[1]);
+                    if (currentMap[0] != _m[0] && manual_boundaries.indexOf(_m[0]) == -1) {
+                      if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
+                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
+                      }
+                      manual_boundaries.push(_m[0]);
+                    }
+                    if (currentMap[0] + currentMap[1] != _m[0] + _m[1] && manual_boundaries.indexOf(_m[0] + _m[1]) == -1) {
+                      if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
+                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
+                      }
+                      manual_boundaries.push(_m[0] + _m[1]);
+                    }
                     $(_w).attr('data-map', w_map)
                   }
                 }
               });
+              this.block.manual_boundaries = manual_boundaries;
+              this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.block);
               this.block.content = this.$refs.blockContent.innerHTML;
               this.blockAudio.map = this.block.content;
               this.pushChange('content');
@@ -2919,16 +3069,16 @@ export default {
         }
         this.isAudioChanged = true;
       },
-      evFromAudioeditorSaveAndRealign (blockId) {
+      evFromAudioeditorSaveAndRealign (blockId, check_realign = true, realign = false) {
         if (blockId == this.check_id) {
           this.audStop();
-          this.doReAlign(this.footnoteIdx)
-            .then(() => {
-              this.assembleBlockAudioEdit(this.footnoteIdx);
+          //this.doReAlign(this.footnoteIdx)
+            //.then(() => {
+              this.assembleBlockAudioEdit(this.footnoteIdx, true, false);
               this.flushChanges();
               this.isChanged = false;
               this.isAudioChanged = false;
-            });
+            //});
         }
       },
       evFromAudioeditorCut (blockId, start, end) {
@@ -2940,7 +3090,7 @@ export default {
       evFromAudioeditorSave (blockId) {
         if (blockId == this.check_id) {
           this.audStop();
-          this.assembleBlockAudioEdit(this.footnoteIdx);
+          this.assembleBlockAudioEdit(this.footnoteIdx, false, false);
           this.flushChanges();
           this.isChanged = false;
           this.isAudioChanged = false;
