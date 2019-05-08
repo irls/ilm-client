@@ -693,9 +693,9 @@ export default {
       alert('Editing block id '+block.id)
     },
 
-    putBlockProxy: function (block) {
+    putBlockProxy: function ([block, realign]) {
       //console.log('putBlockProxy', block);
-      return this.putBlock(block)
+      return this.putBlock([block, realign])
       .then((updated)=>{
         return this._refreshAfterUpdate(updated);
       })

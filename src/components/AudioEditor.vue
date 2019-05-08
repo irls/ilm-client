@@ -368,7 +368,7 @@
               this.audiosourceEditor.getEventEmitter().off('dragged', this.audiosourceEditor.getEventEmitter().__ee__['dragged']);
             }
           } catch(e) {}*/
-          this._setText(text);
+          this._setText(text, block);
           this.audiosourceEditor.load([
             {
               src: this.audiofile,
@@ -1324,7 +1324,7 @@
             this._showSelectionBorders();
           }
         },
-        _setText(text) {
+        _setText(text, block) {
           this.content = text;
           let self = this;
           let annotations = [];
@@ -1368,6 +1368,29 @@
                 isContinuousPlay: false,
                 linkEndpoints: true
               });
+            $('.resize-handle').removeClass('manual');
+            if (block && block.manual_boundaries && block.manual_boundaries.length > 0) {
+              let waitAnnotations = setInterval(() => {
+                if ($('.annotation-box').length > 0) {
+                  clearInterval(waitAnnotations);
+                  block.manual_boundaries.forEach(mb => {
+                    let position = parseInt(mb) / 1000;
+                    let annotations = self.audiosourceEditor.annotationList.annotations.filter(al => {
+                      return al.start == position || al.end == position;
+                    });
+                    if (annotations && annotations.length > 0) {
+                      annotations.forEach(al => {
+                        if (al.start == position) {
+                          $('.annotation-box[data-id="' + al.id + '"] .resize-handle.resize-w').addClass('manual');
+                        } else if (al.end == position) {
+                          $('.annotation-box[data-id="' + al.id + '"] .resize-handle.resize-e').addClass('manual');
+                        }
+                      });
+                    }
+                  });
+                }
+              }, 500);
+            }
             if (self.audiosourceEditor.annotationList.annotations.length > 0) {
               $('.annotation-box').each(function(i, el) {
                 if(typeof annotations[i] !== 'undefined') {
@@ -2017,6 +2040,9 @@
                 background: grey;
                 opacity: 0.3;
                 cursor: ew-resize;
+                &.manual {
+                  background: #6aa84f;
+                }
             }
             .id {
                 height: 100%;

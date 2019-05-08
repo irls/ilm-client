@@ -1247,7 +1247,7 @@ export default {
                     oBlock.isNumber = updateNum;
                     updatePromises.push(this.putNumBlock(pBlock));
                   } else {
-                    updatePromises.push(this.putBlock(pBlock));
+                    updatePromises.push(this.putBlock([pBlock]));
                   }
                 }
               }

@@ -1618,7 +1618,7 @@ export const store = new Vuex.Store({
         });
     },
 
-    putBlock ({commit, state, dispatch}, block) {
+    putBlock ({commit, state, dispatch}, [block, realign = false]) {
       let cleanBlock = Object.assign({}, block);
       if (typeof block.clean === 'function') {
         cleanBlock = block.clean();
@@ -1627,7 +1627,11 @@ export const store = new Vuex.Store({
       delete cleanBlock.secnum;
       delete cleanBlock.isNumber;
       commit('set_blocker', 'putBlock');
-      return axios.put(state.API_URL + 'book/block/' + block.blockid,
+      let url = state.API_URL + 'book/block/' + block.blockid;
+      if (realign) {
+        url+= '?realign=true';
+      }
+      return axios.put(url,
         {
           'block': cleanBlock,
         })
