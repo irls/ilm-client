@@ -186,6 +186,7 @@ export default {
         }
       },
       errors: {},
+      bookUploadError: false,
       bookUploadCommonError: false,
       bookUploadCheckError: false,
       description: '',
@@ -327,21 +328,25 @@ export default {
       this.$emit('closed', true)
     },
     uploadError(errors) {
+      this.bookUploadError = true;
       if (Array.isArray(errors)) {
         this.bookUploadCheckError = errors;
       } else {
         this.bookUploadCommonError = errors;
       }
+      axios.delete(TASKS_URL, { data: {id: this.id} })
+      .then(function(response){
+      }).catch((err) => {
+      });
     },
     bookListChanged(list) {
-      console.log('this.importingBooksList', list);
       this.importingBooksList = list
     }
   },
   computed: {
     saveDisabled: function() {
-      return false; // while we need to create job without book
-      //return this.importingBooksList.length == 0;
+      //return false; // while we need to create job without book
+      return this.bookUploadError && this.importingBooksList.length == 0;
     }
   },
   watch: {

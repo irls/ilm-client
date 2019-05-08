@@ -13,8 +13,6 @@
             </div>
           </div>
 
-
-
             <div class="modal-body clearfix">
 
             <form id="book_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent ref="book_select">
@@ -33,7 +31,8 @@
                     <label class='btn btn-default' type="file">
                       <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
 
-                      <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip,.docx,.txt,.md" :multiple="multiple" @change="onFilesChange($event)">
+                      <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip,.docx,.txt,.md" :multiple="multiple"
+                      @change="onFilesChange($event)">
 
                     </label>
                   </div>
@@ -120,20 +119,20 @@
         </div>
       </alert>
     </div>
-    <div v-else>
+    <div v-else class="non-modal-form"> <!--v-if="isModal"-->
       <div v-show="!isUploading">
-        <div>
-          <label class='btn btn-default' type="file">
-            <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp;&nbsp; Browse&hellip;
+        <form id="book_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent ref="book_select">
+        <label class='btn btn-default' type="file">
+          <i class="fa fa-folder-open-o" aria-hidden="true"></i>&nbsp;&nbsp;Browse&hellip;
 
-            <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip,.txt,.docx,.md"
-                   :multiple="multiple"
-                   @change="onFilesChange($event)"
-                   v-bind:value="fileValue">
+          <input name="bookFiles" type="file" v-show="false"
+            accept="text/*,application/zip,.txt,.docx,.md"
+            :multiple="multiple"
+            @change="onFilesChange($event)">
 
-          </label>
-        </div>
-        <span class="help-block"> &nbsp; &nbsp; Book file or ZIP with files and images, Docx, txt or Markdown with text  </span>
+        </label>
+        </form>
+        <span class="help-block">Book file or ZIP with files and images, Docx, txt or Markdown with text</span>
         <ul id="selectedBooks">
           <li class="book-import-list" v-for="book in selectedBooks">
             <i class="fa fa-remove" v-on:click="formReset()"></i>{{ book.name }} - {{ humanFileSize(book.size, true) }}
@@ -221,19 +220,22 @@ export default {
   },
   methods: {
     formReset(){
-      this.isUploading= false
-      this.bookURL= ''
-      this.audioURL= ''
-      // clear formData
-      let entries = this.formData.entries()
-      for(let pair of entries) this.formData.delete(pair[0])
-      //document.getElementById('bookFiles').value = null
-      this.uploadFiles = {bookFiles: 0, audioFiles: 0}
-      this.selectedBooks = [];
-      if (this.$refs && this.$refs.book_select) {
-        this.$refs.book_select.reset();
+      this.isUploading= false;
+      console.log('formReset', this.isModal);
+      if (false && this.isModal) {
+        this.bookURL= ''
+        this.audioURL= ''
+        // clear formData
+        let entries = this.formData.entries()
+        for(let pair of entries) this.formData.delete(pair[0])
+        //document.getElementById('bookFiles').value = null
+        this.uploadFiles = {bookFiles: 0, audioFiles: 0}
+        this.selectedBooks = [];
+        if (this.$refs && this.$refs.book_select) {
+          //this.$refs.book_select.reset();
+        }
+        this.$emit('books_changed', this.selectedBooks)
       }
-      this.$emit('books_changed', this.selectedBooks)
     },
     onFilesChange(e) {
       let fieldName = e.target.name
@@ -274,7 +276,6 @@ export default {
           vu_this.uploadProgress = "Uploading Files... " + percentCompleted + "%";
         }
       }
-
       this.isUploading = true
       api.post('/api/v1/books', this.formData, config).then(function(response){
         if (response.status===200) {
@@ -283,15 +284,15 @@ export default {
           vu_this.closeForm(true)
         } else {
           // not sure what we should be doing here
-          vu_this.formReset()
+          vu_this.formReset();
         }
       }).catch((err) => {
-        //console.log('importBook Err:', err.response);
+        console.log('importBook Err:', err.response);
         vu_this.formReset();
         if (err.response.data.message && err.response.data.message.length) {
           vu_this.bookUploadCommonError = err.response.data.message;
           vu_this.$emit('upload_error', err.response.data.message);
-          setTimeout(function () {
+          if (this.isModal) setTimeout(function () {
             vu_this.$emit('close_modal')
           }, 5000)
         } else if (Array.isArray(err.response.data)) {
@@ -476,6 +477,15 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
 
 .book-import-list { list-style-type: none; }
 .book-import-list i { padding: 0px 5px 0px 0px; }
+
+  .modal-footer .non-modal-form {
+    width: 400px;
+    padding-right: 120px;
+  }
+
+  .modal-footer .non-modal-form .help-block {
+    text-align: left;
+  }
 
   .alert-icon-float-left {
     font-size: 40px;
