@@ -81,7 +81,7 @@ export default {
       hasErrorAlert: false,
       errorAlert: '',
       hasAlert: false,
-      messageAlert: ''
+      messageAlert: '',
     }
   },
 
@@ -206,6 +206,7 @@ export default {
         this.$root.$on('book-reimport-modal', this.evOnReimportModal);
         this.$root.$on('set-error-alert', this.setErrorAlert);
         this.$root.$on('set-alert', this.setAlert);
+        
 
 //         this.loadTTSVoices();
   },

@@ -3,10 +3,16 @@
     <div v-for="counter in tasks_counter">
       <div v-if="counter.data.tasks.length > 0" class="counters-container">
         <div class="counter-executor">
-          <span v-if="counter.key == 'editor'"><i>Editor:</i></span>
+          <span v-if="counter.key == 'editor'">
+            <div class="col-sm-2" ><i>Editor:</i></div>
+            <div class="col-sm-2" >&nbsp;</div>
+            <div class="col-sm-8"><select v-model="counter.data.executor"><option v-for="user_editor in users['editor']" :value="user_editor._id">{{user_editor.name}} {{user_editor.email}}</option></select></div>
+          </span>
+
           <span v-if="counter.key == 'narrator'"><i>Narrator:</i></span>
           <span v-if="counter.key == 'proofer'"><i>Proofreader:</i></span>
-          <span>{{counter.data.executor}}</span>
+          <span v-if="counter.key != 'editor'">{{counter.data.executor}}</span>
+
         </div>
         <table class="counters">
           <thead>
@@ -90,6 +96,9 @@
       }
     },
     mixins: [access, task_controls],
+    props: {
+      users: Object
+    },
     components: {
       modal
     },
