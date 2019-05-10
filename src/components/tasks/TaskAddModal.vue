@@ -17,7 +17,7 @@
         <span class="icon-info-circled alert-icon-float-left"></span>
         <p>{{bookUploadCommonError}}.</p>
       </alert>
-      <alert dismissable
+      <!--<alert dismissable
         :value="bookUploadCheckError != false"
         placement="top"
         type="danger"
@@ -26,7 +26,7 @@
         <div class="alert-text-float-right">
           <p v-for='(errMsg) in bookUploadCheckError'>{{errMsg}}.</p>
         </div>
-      </alert>
+      </alert>-->
     </div>
 
     <div slot="modal-body" class="modal-body">
@@ -103,10 +103,11 @@
       </div>
     </div>
     <div slot="modal-footer" class="modal-footer">
-      <div class="col-sm-3 pull-right">
+      <!--<form id="book_select" enctype="multipart/form-data" @submit.prevent ref="book_select">-->
+      <div class="col-sm-3 pull-right non-modal-submit">
         <button class="btn btn-primary" type="button" @click.prevent="save" :disabled="saveDisabled">Submit</button>
       </div>
-      <div class="col-sm-6 pull-right">
+      <div class="col-sm-9 pull-right non-modal-form">
         <!-- Import Books Modal Popup -->
         <BookImport :isModal="false"
           ref="bookImport"
@@ -117,6 +118,7 @@
           @books_changed="bookListChanged"
           @upload_error="uploadError"/>
       </div>
+      <!--</form>-->
     </div>
 
   </modal>
@@ -232,12 +234,22 @@ export default {
                   self.errors['name'] = [];
                 }
                 self.errors['name'].push(self.id[_id] + ': ' + response.data.errors[self.id[_id]])
-                //console.log(self.errors)
               }
             }
           } else {
             self.createdJob = response.data.insert_jobs[0]
-            //self.$emit('closed', true)
+            this.$nextTick(()=>{
+              if (!this.$refs.bookImport.saveDisabled) {
+                this.$refs.bookImport.onFormSubmit()
+                .then((res)=>{
+                  self.$emit('closed', true)
+                }).catch(error => {
+                  //this.uploadError(error);
+                })
+              } else {
+                self.$emit('closed', true)
+              }
+            })
           }
         })
         .catch(error => {
@@ -426,4 +438,13 @@ textarea.job-descr {
     margin: 5px 0;
     word-break: break-word;
   }
+
+  .modal-footer .non-modal-submit {
+    width: 15%;
+  }
+
+  .modal-footer .non-modal-form {
+    width: 85%;
+  }
+
 </style>

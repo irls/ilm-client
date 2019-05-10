@@ -119,25 +119,45 @@
         </div>
       </alert>
     </div>
-    <div v-else class="non-modal-form"> <!--v-if="isModal"-->
+
+
+    <div v-else > <!--v-if="isModal"-->
       <div v-show="!isUploading">
-        <form id="book_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent ref="book_select">
-        <label class='btn btn-default' type="file">
-          <i class="fa fa-folder-open-o" aria-hidden="true"></i>&nbsp;&nbsp;Browse&hellip;
+      <form id="book_select" enctype="multipart/form-data" @submit.prevent ref="book_select">
+        <div class="row">
+          <div class="col-sm-8 help-block">
+            <span v-show="!bookUploadCheckError">Book file or ZIP with files and images, Docx, txt or Markdown with text</span>
 
-          <input name="bookFiles" type="file" v-show="false"
-            accept="text/*,application/zip,.txt,.docx,.md"
-            :multiple="multiple"
-            @change="onFilesChange($event)">
+            <alert type="danger"
+              :value="bookUploadCheckError !== false">
+              <i class="fa fa-exclamation-triangle alert-icon-float-left" aria-hidden="true"></i>
+              <div class="alert-text-float-right">
+                <p v-for='(errMsg) in bookUploadCheckError'>{{errMsg}}.</p>
+              </div>
+            </alert>
 
-        </label>
-        </form>
-        <span class="help-block">Book file or ZIP with files and images, Docx, txt or Markdown with text</span>
-        <ul id="selectedBooks">
-          <li class="book-import-list" v-for="book in selectedBooks">
-            <i class="fa fa-remove" v-on:click="formReset()"></i>{{ book.name }} - {{ humanFileSize(book.size, true) }}
-          </li>
-        </ul>
+          </div>
+          <div class="col-sm-4">
+            <label class='btn btn-default' type="file">
+              <i class="fa fa-folder-open-o" aria-hidden="true"></i>&nbsp;&nbsp;Browse&hellip;
+
+              <input name="bookFiles" type="file" v-show="false"
+                accept="text/*,application/zip,.txt,.docx,.md"
+                :multiple="multiple"
+                @change="onFilesChange($event)">
+
+            </label>
+
+            <ul id="selectedBooks">
+              <li class="book-import-list" v-for="book in selectedBooks">
+                <i class="fa fa-remove" v-on:click="formReset(true)"></i>{{ book.name }} - {{ humanFileSize(book.size, true) }}
+              </li>
+            </ul>
+
+          </div>
+        </div>
+        <div class="row"></div>
+      </form>
       </div>
       <div id='uploadingMsg' v-show='isUploading'>
         <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
@@ -219,10 +239,11 @@ export default {
     }
   },
   methods: {
-    formReset(){
+    formReset(sucess = false){
       this.isUploading= false;
-      console.log('formReset', this.isModal);
-      if (false && this.isModal) {
+      this.bookUploadCommonError = false;
+      this.bookUploadCheckError = false;
+      if (sucess || this.isModal) {
         this.bookURL= ''
         this.audioURL= ''
         // clear formData
@@ -232,12 +253,14 @@ export default {
         this.uploadFiles = {bookFiles: 0, audioFiles: 0}
         this.selectedBooks = [];
         if (this.$refs && this.$refs.book_select) {
-          //this.$refs.book_select.reset();
+          this.$refs.book_select.reset();
         }
         this.$emit('books_changed', this.selectedBooks)
       }
     },
     onFilesChange(e) {
+      this.bookUploadCommonError = false;
+      this.bookUploadCheckError = false;
       let fieldName = e.target.name
       let fileList = e.target.files || e.dataTransfer.files
       this.selectedBooks = [];
@@ -277,17 +300,24 @@ export default {
         }
       }
       this.isUploading = true
-      api.post('/api/v1/books', this.formData, config).then(function(response){
+      return api.post('/api/v1/books', this.formData, config)
+      .then((response) => {
         if (response.status===200) {
           // hide modal after one second
           vu_this.uploadProgress = "Upload Successful"
-          vu_this.closeForm(true)
+          if (this.isModal) {
+            vu_this.closeForm(true);
+          } else {
+            vu_this.formReset(true);
+          }
+          return Promise.resolve({ok: true});
         } else {
           // not sure what we should be doing here
           vu_this.formReset();
+          return Promise.resolve({ok: true});
         }
       }).catch((err) => {
-        console.log('importBook Err:', err.response);
+        //console.log('importBook Err:', err);
         vu_this.formReset();
         if (err.response.data.message && err.response.data.message.length) {
           vu_this.bookUploadCommonError = err.response.data.message;
@@ -312,9 +342,7 @@ export default {
           vu_this.bookUploadCheckError = bookUploadCheckError;
           vu_this.$emit('upload_error', bookUploadCheckError);
         }
-        /*setTimeout(function () {
-          vu_this.$emit('close_modal')
-        }, 5000)*/
+        return Promise.reject(err);
       });
     },
     humanFileSize(bytes, si) {
@@ -341,11 +369,11 @@ export default {
     }
   },
   watch: {
-    forceUpload(val) {
-      if (val === true) {
-        this.onFormSubmit()
-      }
-    }
+//     forceUpload(val) {
+//       if (val === true) {
+//         this.onFormSubmit()
+//       }
+//     }
   }
 }
 </script>
@@ -478,22 +506,27 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
 .book-import-list { list-style-type: none; }
 .book-import-list i { padding: 0px 5px 0px 0px; }
 
-  .modal-footer .non-modal-form {
-    width: 400px;
-    padding-right: 120px;
-  }
-
-  .modal-footer .non-modal-form .help-block {
-    text-align: left;
-  }
-
   .alert-icon-float-left {
     font-size: 40px;
     float: left;
     color: #a94442;
   }
 
-  .alert-text-float-right {
+  .alert .alert-icon-float-left {
+    padding-right: 12px;
+  }
+
+  .alert .alert-text-float-right {
+    text-align: left;
+  }
+
+  .alert .alert-text-float-right p {
+    text-align: left;
+    margin: 3px 0;
+    word-break: break-word;
+  }
+
+  .alert.top .alert-text-float-right {
     float: right;
     text-align: left;
     width: 400px;
@@ -503,5 +536,22 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
     text-align: left;
     margin: 5px 0;
     word-break: break-word;
+  }
+
+  .modal-footer .non-modal-form .alert{
+
+  }
+
+  .modal-footer .non-modal-form .help-block {
+    text-align: left;
+    margin: 0; padding: 0;
+  }
+
+  .modal-footer .non-modal-form #selectedBooks {
+    margin-top: 10px;
+    padding-left: 16px;
+    float: left;
+    width: 177%;
+    text-align: left;
   }
 </style>
