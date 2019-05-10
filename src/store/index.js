@@ -2601,6 +2601,16 @@ export const store = new Vuex.Store({
       } else {
         return Promise.resolve(response);
       }
-    }
+    },
+    createDummyBook({state, commit}, data) {
+      return axios.post(state.API_URL + 'books/dummy', {})
+      .then(response => {
+          //console.log(response);
+          return Promise.resolve(response);
+        })
+        .catch(err => {
+          return Promise.reject();
+        });
+    },
   }
 })

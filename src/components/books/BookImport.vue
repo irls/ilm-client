@@ -304,26 +304,26 @@ export default {
       .then((response) => {
         if (response.status===200) {
           // hide modal after one second
-          vu_this.uploadProgress = "Upload Successful"
+          this.uploadProgress = "Upload Successful"
           if (this.isModal) {
-            vu_this.closeForm(true);
+            this.closeForm(true);
           } else {
-            vu_this.formReset(true);
+            this.formReset(true);
           }
           return Promise.resolve({ok: true});
         } else {
           // not sure what we should be doing here
-          vu_this.formReset();
+          this.formReset();
           return Promise.resolve({ok: true});
         }
       }).catch((err) => {
         //console.log('importBook Err:', err);
-        vu_this.formReset();
+        this.formReset();
         if (err.response.data.message && err.response.data.message.length) {
-          vu_this.bookUploadCommonError = err.response.data.message;
-          vu_this.$emit('upload_error', err.response.data.message);
+          this.bookUploadCommonError = err.response.data.message;
+          this.$emit('upload_error', err.response.data.message);
           if (this.isModal) setTimeout(function () {
-            vu_this.$emit('close_modal')
+            this.$emit('close_modal')
           }, 5000)
         } else if (Array.isArray(err.response.data)) {
           let bookUploadCheckError = [];
@@ -331,7 +331,7 @@ export default {
             if (typeof msg.error == 'object') {
               for (var prop in msg.error) {
                 if (Array.isArray(msg.error[prop]) && msg.error[prop].length) {
-                  bookUploadCheckError.push(`${vu_this.errorsMsgKeys[prop] ? vu_this.errorsMsgKeys[prop] : prop}: ${(JSON.stringify(msg.error[prop])).split(',').join(', ')}`)
+                  bookUploadCheckError.push(`${this.errorsMsgKeys[prop] ? this.errorsMsgKeys[prop] : prop}: ${(JSON.stringify(msg.error[prop])).split(',').join(', ')}`)
                 }
               }
             } else {
@@ -339,8 +339,8 @@ export default {
             }
           })
           bookUploadCheckError.reverse();
-          vu_this.bookUploadCheckError = bookUploadCheckError;
-          vu_this.$emit('upload_error', bookUploadCheckError);
+          this.bookUploadCheckError = bookUploadCheckError;
+          this.$emit('upload_error', bookUploadCheckError);
         }
         return Promise.reject(err);
       });

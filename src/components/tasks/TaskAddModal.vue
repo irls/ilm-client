@@ -125,6 +125,7 @@
 </template>
 <script>
 import { modal, alert } from 'vue-strap'
+import { /*mapGetters, mapState, */mapActions } from 'vuex'
 import modalMixin from './../../mixins/modal'
 import axios from 'axios'
 import superlogin from 'superlogin-client'
@@ -198,6 +199,9 @@ export default {
     }
   },
   methods: {
+    ...mapActions([
+      'createDummyBook'
+    ]),
     cancel() {
       var self = this
       self.$emit('closed', false)
@@ -242,12 +246,20 @@ export default {
               if (!this.$refs.bookImport.saveDisabled) {
                 this.$refs.bookImport.onFormSubmit()
                 .then((res)=>{
-                  self.$emit('closed', true)
+                  self.$emit('closed', true);
+                  //from Tasks.vue :
+                  //this.$store.dispatch('tc_loadBookTask')
+                  //this.$router.replace({ path: '/books/' + this.import_book_id })
                 }).catch(error => {
                   //this.uploadError(error);
                 })
               } else {
-                self.$emit('closed', true)
+                this.createDummyBook()
+                .then((res)=>{
+                  this.$emit('closed', true)
+                }).catch(error => {
+                  this.deleteTask()
+                });
               }
             })
           }
@@ -346,9 +358,14 @@ export default {
       } else {
         this.bookUploadCommonError = errors;
       }
-      axios.delete(TASKS_URL, { data: {id: this.id} })
+      this.deleteTask();
+    },
+    deleteTask() {
+      return axios.delete(TASKS_URL, { data: {id: this.id} })
       .then(function(response){
+        return Promise.resolve({ok: true});
       }).catch((err) => {
+        return Promise.reject(err);
       });
     },
     bookListChanged(list) {
@@ -392,6 +409,7 @@ export default {
         }
         //this.roles['engineer'] = this.users['engineer'][0]._id;
       }
+      this.bookUploadError = false;
     },
     'name': {
       handler(val) {
