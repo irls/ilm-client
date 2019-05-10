@@ -660,6 +660,18 @@
 
           $('body').on('click', '.playlist-overlay', (e) => {
             if (typeof this.audiosourceEditor !== 'undefined') {
+              let restart = this.isPlaying;
+              let stop = new Promise((resolve, reject) => {
+                if (this.isPlaying) {
+                  return this.stop()
+                    .then(() => {
+                      return resolve();
+                    });
+                } else {
+                  return resolve();
+                }
+              });
+              stop.then(() => {
               let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
               let pos_r = this._round(pos, 1);
               //console.log('click', this.mouseSelection.start, Math.abs(pos_r - this.mouseSelection.start));
@@ -695,6 +707,10 @@
               //$('#cursor-position').show();
 
               this._showSelectionBorders();
+              if (restart) {
+                this.play();
+              }
+              })
             }
           });
 
@@ -704,6 +720,17 @@
               return;
             }
 
+            let stop = new Promise((resolve, reject) => {
+                if (this.isPlaying) {
+                  return this.stop()
+                    .then(() => {
+                      return resolve();
+                    });
+                } else {
+                  return resolve();
+                }
+              });
+              stop.then(() => {
             $('[id="resize-selection-right"]').hide().css('left', 0);
             $('[id="resize-selection-left"]').hide().css('left', 0);
             $('#cursor-position').hide();
@@ -714,6 +741,7 @@
               }
               this.mouseSelection = {start: this._round(pos, 1), end: null};
             }
+          });
             //console.log("$('body').on('mousedown', '.playlist-overlay'");
           });
 
