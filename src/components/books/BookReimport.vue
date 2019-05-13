@@ -67,7 +67,7 @@
         </div>
       </div>
       <alert
-        :value="bookUploadCommonError != false"
+        v-model="hasUploadCommonError"
         placement="top"
         duration="3000"
         type="danger"
@@ -76,13 +76,13 @@
         <p>{{bookUploadCommonError}}.</p>
       </alert>
       <alert dismissable
-        :value="bookUploadCheckError != false"
+        v-model="hasUploadCheckError"
         placement="top"
         type="danger"
         width="500px">
         <i class="fa fa-exclamation-triangle alert-icon-float-left" aria-hidden="true"></i>
         <div class="alert-text-float-right">
-          <p v-for='(errMsg) in bookUploadCheckError'>{{errMsg}}.</p>
+          <p v-html="bookUploadCheckError"></p>
         </div>
       </alert>
     </div>
@@ -137,6 +137,12 @@
 
     },
     computed: {
+      hasUploadCommonError: function() {
+        return this.bookUploadCommonError != false
+      },
+      hasUploadCheckError: function() {
+        return this.bookUploadCheckError != false;
+      },
       selectedBookType: function () {
         return this.bookTypes[this.bookType];
       },
@@ -218,7 +224,7 @@
                 bookUploadCheckError.push(`Error: ${msg.error}`);
               }
             })
-            bookUploadCheckError.reverse();
+            bookUploadCheckError.reverse().join('<br/>');
             vu_this.bookUploadCheckError = bookUploadCheckError;
           }
           vu_this.formReset()
