@@ -1150,7 +1150,7 @@ export default {
         //if (this.tc_allowAdminFlagging(this.block, flagType)) {
           //return true;
         //}
-        if (!this.tc_getBlockTask(this.block._id)) {
+        if (!this.tc_getBlockTask(this.block._id) && !this.tc_getBlockTaskOtherRole(this.block._id)) {
           return false;
         }
         let canFlag = true;
