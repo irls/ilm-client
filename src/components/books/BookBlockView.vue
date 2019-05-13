@@ -2341,6 +2341,7 @@ export default {
                 let parent = node.parentNode;
                 while (node.firstChild) parent.insertBefore(node.firstChild, node);
                 parent.removeChild(node);
+                this.block.delFlag(this.flagsSel._id);
               } else {
                 this.$refs.blockFlagControl.removeAttribute('data-flag');
                 this.$refs.blockFlagControl.removeAttribute('data-status');
