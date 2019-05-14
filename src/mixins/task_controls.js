@@ -7,7 +7,7 @@ export default {
     data() {
       return {
         tc_test: 'Test property',
-        editor_tasks: ['fix-block-text', 'fix-block-narration', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block'],
+        editor_tasks: ['fix-block-text', 'fix-block-narration', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block', 'text-cleanup', 'master-audio'],
         narrator_tasks: ['narrate-block', 'fix-block-narration'],
         proofer_tasks: ['approve-block', 'approve-revoked-block']
       }
@@ -556,9 +556,6 @@ export default {
           return '/books/' + task.bookid + '/' + mode + '/' + task.blockid;
         }
         switch(task.type) {
-          case 'master-audio' : {
-            return '/books/' + task.bookid + '/' + mode;
-          } break;
           default : {
             return '/books/' + task.bookid + '/' + mode + '/unresolved/' + task.type;
           } break;
