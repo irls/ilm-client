@@ -132,7 +132,7 @@
               v-model="hasUploadCheckError">
               <i class="fa fa-exclamation-triangle alert-icon-float-left" aria-hidden="true"></i>
               <div class="alert-text-float-right">
-                <p v-html="bookUploadCheckError"></p>
+                <p v-for='(errMsg) in bookUploadCheckError' v-html="errMsg"></p>
               </div>
             </alert>
 
@@ -147,6 +147,13 @@
                 @change="onFilesChange($event)">
 
             </label>
+
+            <ul id="dummyBooks" v-if="selectedBooks.length==0">
+              <li class="book-import-list">
+                <input type="checkbox" id="dummyBooksCheck" v-model="isDummyBook">
+                <label for="dummyBooksCheck">Create empty book template</label>
+              </li>
+            </ul>
 
             <ul id="selectedBooks">
               <li class="book-import-list" v-for="book in selectedBooks">
@@ -195,6 +202,7 @@ export default {
         bookUploadCheckError: false,
         selectedBooks: [],
         fileValue: '',
+        isDummyBook: true,
         errorsMsgKeys: {
           duplicates: 'Found duplicates',
           wrongVals: 'Found wrong id\'s'
@@ -231,11 +239,19 @@ export default {
 
   },
   computed: {
-    hasUploadCommonError: function() {
-      return this.bookUploadCommonError != false;
+    hasUploadCommonError: {
+      get: function () {
+        return this.bookUploadCommonError != false;
+      },
+      set: function (newValue) {
+      }
     },
-    hasUploadCheckError: function() {
-      return this.bookUploadCheckError != false;
+    hasUploadCheckError: {
+      get: function () {
+        return this.bookUploadCheckError != false;
+      },
+      set: function (newValue) {
+      }
     },
     selectedBookType: function() {
       return this.bookTypes[this.bookType];
@@ -246,7 +262,7 @@ export default {
   },
   methods: {
     formReset(sucess = false){
-      this.isUploading= false;
+      this.isUploading = false;
       this.bookUploadCommonError = false;
       this.bookUploadCheckError = false;
       if (sucess || this.isModal) {
@@ -553,7 +569,8 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
     margin: 0; padding: 0;
   }
 
-  .modal-footer .non-modal-form #selectedBooks {
+  .modal-footer .non-modal-form #selectedBooks,
+  .modal-footer .non-modal-form #dummyBooks {
     margin-top: 10px;
     padding-left: 16px;
     float: left;

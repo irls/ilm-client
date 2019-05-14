@@ -254,12 +254,17 @@ export default {
                   //this.uploadError(error);
                 })
               } else {
-                this.createDummyBook()
-                .then((res)=>{
-                  this.$emit('closed', true)
-                }).catch(error => {
-                  this.deleteTask()
-                });
+                console.log('this.$refs.bookImport.isDummyBook', this.$refs.bookImport.isDummyBook);
+                if (this.$refs.bookImport.isDummyBook == true) {
+                  this.createDummyBook({book_id: self.createdJob.bookid, jobId: self.createdJob['@rid']})
+                  .then((res)=>{
+                    this.$emit('closed', true)
+                  }).catch(error => {
+                    this.deleteTask()
+                  });
+                } else {
+                  this.$emit('closed', true);
+                }
               }
             })
           }
@@ -410,6 +415,7 @@ export default {
         //this.roles['engineer'] = this.users['engineer'][0]._id;
       }
       this.bookUploadError = false;
+      this.$refs.bookImport.isDummyBook = true;
     },
     'name': {
       handler(val) {

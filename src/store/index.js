@@ -2603,7 +2603,7 @@ export const store = new Vuex.Store({
       }
     },
     createDummyBook({state, commit}, data) {
-      return axios.post(state.API_URL + 'books/dummy', {})
+      return axios.post(state.API_URL + 'books/dummy', data, {})
       .then(response => {
           //console.log(response);
           return Promise.resolve(response);
