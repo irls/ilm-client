@@ -415,7 +415,7 @@ export default {
         //this.roles['engineer'] = this.users['engineer'][0]._id;
       }
       this.bookUploadError = false;
-      this.$refs.bookImport.isDummyBook = true;
+      this.$refs.bookImport.isDummyBook = false;
     },
     'name': {
       handler(val) {

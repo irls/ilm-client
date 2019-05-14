@@ -202,7 +202,7 @@ export default {
         bookUploadCheckError: false,
         selectedBooks: [],
         fileValue: '',
-        isDummyBook: true,
+        isDummyBook: false,
         errorsMsgKeys: {
           duplicates: 'Found duplicates',
           wrongVals: 'Found wrong id\'s'
