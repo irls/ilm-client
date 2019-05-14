@@ -20,7 +20,7 @@
 
 
 
-        <button v-if="hasBookSelected" @click="displayBook" class='btn btn-default'>
+        <button v-if="hasBookSelected()" @click="displayBook" class='btn btn-default'>
           <i class="fa fa-pencil fa-lg"></i>&nbsp;Display Book
         </button>
 
