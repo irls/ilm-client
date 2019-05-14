@@ -151,7 +151,7 @@
             <ul id="dummyBooks" v-if="selectedBooks.length==0">
               <li class="book-import-list">
                 <input type="checkbox" id="dummyBooksCheck" v-model="isDummyBook">
-                <label for="dummyBooksCheck">Create empty book template</label>
+                <label for="dummyBooksCheck">Create blank book template</label>
               </li>
             </ul>
 
