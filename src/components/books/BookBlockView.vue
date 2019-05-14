@@ -1679,6 +1679,20 @@ export default {
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
         this.isSaving = true;
+        let realign = false;
+        let is_content_changed = this.hasChange('content');
+        let is_type_changed = this.hasChange('type');
+        let has_suggestion = this.$refs.blockContent && this.block.audiosrc
+            && this.$refs.blockContent.dataset.has_suggestion
+            && this.$refs.blockContent.dataset.has_suggestion === 'true';
+        if (has_suggestion) {
+          realign = true;
+        } else if (is_content_changed && this.block.audiosrc) {
+          realign = true;
+        }
+        if (this.isAudioEditing) {
+          this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
+        }
         return this.putBlock(update).then(()=>{
           this.isSaving = false;
           /*if (this.tc_createApproveModifiedBlock(this.block._id)) {
@@ -1694,8 +1708,6 @@ export default {
             this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
           }
-          let is_content_changed = this.hasChange('content');
-          let is_type_changed = this.hasChange('type');
           this.isChanged = false;
           if (this.blockAudio.map) {
             this.blockAudio.map = this.block.content;
@@ -1707,11 +1719,12 @@ export default {
             && this.$refs.blockContent.dataset.has_suggestion
             && this.$refs.blockContent.dataset.has_suggestion === 'true';
           if (has_suggestion) {
-            //console.log('has_suggestion', this.$refs.blockContent.dataset.has_suggestion);
-            this.doReAlign();
             this.$refs.blockContent.dataset.has_suggestion = false;
-          } else if (is_content_changed && this.block.audiosrc) {
+          }
+          if (realign) {
             this.doReAlign();
+          } else if (this.isAudioEditing) {
+            this.$root.$emit('for-audioeditor:set-process-run', false);
           }
           if (is_content_changed) {
             if (['title', 'header'].indexOf(this.block.type) !== -1) {
@@ -1757,10 +1770,16 @@ export default {
         update.blockid = this.block.blockid;
         update.bookid = this.block.bookid;
         this.isSaving = true;
+        if (this.isAudioEditing) {
+          this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+        }
         return this.putBlockPart(update)
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
+            if (this.isAudioEditing) {
+              this.$root.$emit('for-audioeditor:set-process-run', false);
+            }
           });
       },
       clearBlockContent: function(content) {
@@ -2602,6 +2621,7 @@ export default {
               this.block.setContentFootnote(footnoteIdx, response.data.content);
               this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
             }
+            this.$store.commit('set_storeList', new BookBlock(response.data));
             if (this.isAudioEditing) {
               this.$root.$emit('for-audioeditor:reload-text', response.data.content);
             }
@@ -2610,6 +2630,10 @@ export default {
             this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
           }
           this.reRecordPosition = false;
+          if (this.isAudioEditing) {
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            //this.$root.$emit('for-audioeditor:select', this.block.blockid);
+          }
           return BPromise.resolve();
         })
         .catch(err => {
@@ -2620,6 +2644,9 @@ export default {
           return BPromise.reject();
         });
         } else {
+          if (this.isAudioEditing) {
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+          }
           return BPromise.reject();
         }
       },
