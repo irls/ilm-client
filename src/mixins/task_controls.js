@@ -7,9 +7,10 @@ export default {
     data() {
       return {
         tc_test: 'Test property',
-        editor_tasks: ['fix-block-text', 'fix-block-narration', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block', 'text-cleanup', 'master-audio'],
+        editor_tasks: ['fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block', 'text-cleanup', 'master-audio'],
         narrator_tasks: ['narrate-block', 'fix-block-narration'],
-        proofer_tasks: ['approve-block', 'approve-revoked-block']
+        proofer_tasks: ['approve-block', 'approve-revoked-block'],
+        editor_resolve_tasks: ['fix-block-narration']
       }
     },
     mounted() {
@@ -65,7 +66,7 @@ export default {
               return this.proofer_tasks.indexOf(block_task.type) === -1;
               break;
             case 'edit':
-              return this.editor_tasks.indexOf(block_task.type) === -1;
+              return this.editor_tasks.indexOf(block_task.type) === -1 && this.editor_resolve_tasks.indexOf(block_task.type) === -1;
               break;
             case 'narrate':
               return this.narrator_tasks.indexOf(block_task.type) === -1;
@@ -432,7 +433,7 @@ export default {
         }
         switch (mode) {
           case 'edit':
-            if (this.editor_tasks.indexOf(task.type) === -1) {
+            if (this.editor_tasks.indexOf(task.type) === -1 && this.editor_resolve_tasks.indexOf(task.type) === -1) {
               return true;
             }
             if (['tts', 'audio_file'].indexOf(block.voicework) !== -1 && !block.audiosrc) {
@@ -470,7 +471,10 @@ export default {
           switch (mode) {
             case 'edit':
               if (flags_summary.dir === 'narrator') {
-                return this.narrator_tasks.indexOf(task.type) === -1 ? false : true;
+                if (this.editor_tasks.indexOf(task.type) !== -1) {
+                  return true;
+                }
+                return this.editor_resolve_tasks.indexOf(task.type) === -1 ? false : true;
               }
               if (flags_summary.dir === 'proofer') {
                 return false;
@@ -526,7 +530,7 @@ export default {
           switch (mode) {
             case 'edit':
               if (flags_summary.dir === 'narrator') {
-                return true;
+                return this.editor_resolve_tasks.indexOf(task.type) === -1 ? false : true;
               }
               break;
             case 'narrate':
