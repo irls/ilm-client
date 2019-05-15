@@ -550,14 +550,15 @@ export default {
         }
         return 'display';
       },
-      tc_getTaskUrl(task) {
+      tc_getTaskUrl(task, job) {
         let mode = this.tc_getTaskMode(task);
+        let url = job.collection_id ? '/collections/' + job.collection_id + '/' + task.bookid + '/' + mode : '/books/' + task.bookid + '/' + mode;
         if (task.blockid) {
-          return '/books/' + task.bookid + '/' + mode + '/' + task.blockid;
+          return url + '/' + task.blockid;
         }
         switch(task.type) {
           default : {
-            return '/books/' + task.bookid + '/' + mode + '/unresolved/' + task.type;
+            return url + '/unresolved/' + task.type;
           } break;
         };
         return '';

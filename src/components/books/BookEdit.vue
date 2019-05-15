@@ -311,45 +311,31 @@ export default {
       let checkMeta = this.parlistO.meta || {};
       checkMeta = checkMeta.bookid || false;
       if (this.$route.params.hasOwnProperty('bookid')) {
-        if (!checkMeta || checkMeta!==this.$route.params.bookid) {
+        if (!checkMeta || checkMeta!==this.$route.params.bookid || this.$route.params.task_type) {
           this.freeze('loadBookMeta');
           return this.loadBook(this.$route.params.bookid)
           .then((meta)=>{
             //console.log('loadBook then meta', meta);
             this.unfreeze('loadBookMeta');
-            return this.searchBlockUnresolved()
-            .then((blockId)=>{
+            let startBlock = this.$route.params.block || false;
+            let taskType = this.$route.params.task_type || false;
 
-              let startBlock = blockId || this.$route.params.block || false;
-              let taskType = this.$route.params.task_type || false;
-
-              return this.loadPartOfBookBlocks({
-                bookId: this.$route.params.bookid,
-                block: startBlock,
-                taskType: taskType
-              }).then((answer)=>{
-                this.parlistO.setLookupsList(this.meta._id, answer);
-                let rIdsArray = this.parlistO.rIdsArray();
-                this.isNeedUp = rIdsArray[0];
-                this.isNeedDown = rIdsArray[rIdsArray.length-1];
-                this.$router.replace({name: this.$route.name, params: {}});
-                return Promise.resolve(answer);
-              })
+            return this.loadPartOfBookBlocks({
+              bookId: this.$route.params.bookid,
+              block: startBlock,
+              taskType: taskType
+            }).then((answer)=>{
+              this.parlistO.setLookupsList(this.meta._id, answer);
+              let rIdsArray = this.parlistO.rIdsArray();
+              this.isNeedUp = rIdsArray[0];
+              this.isNeedDown = rIdsArray[rIdsArray.length-1];
+              this.$router.replace({name: this.$route.name, params: {}});
+              return Promise.resolve(answer);
             })
           }).catch((err)=>{
             this.unfreeze('loadBookMeta');
             return Promise.reject(err);
           });
-        } else if (this.$route.params.task_type) {
-          this.freeze('loadBookMeta');
-          return this.searchBlockUnresolved()
-            .then((blockId)=>{
-              this.unfreeze('loadBookMeta');
-              if (blockId) {
-                this.scrollToBlock(blockId);
-              }
-              return Promise.resolve({ blocks:[] }); // already loaded
-            });
         } else {
           this.handleScroll(true);
           return Promise.resolve({ blocks:[] }); // already loaded
@@ -469,36 +455,6 @@ export default {
         }
       }).catch(err=>{
         this.unfreeze('loadBook'); return err;
-      });
-    },
-
-    searchBlockUnresolved() { //TODO Temporary solution
-      let task_type = this.$route.params.task_type || false;
-      if (!task_type) return Promise.resolve(false);
-      if (task_type && task_type !== 'master-audio') {
-        if (!Object.keys(this.tc_tasksByBlock).length) {
-          return Promise.resolve(false);
-        }
-      }//&& task_type !== 'text-cleanup'
-
-      if (task_type === 'true') {
-        task_type = true;
-      }
-      if (!task_type && !this._is('editor')) {
-        task_type = true;
-      }
-      let meta = this.meta;
-      if (!meta.bookid) {
-        if (this.parlistO && this.parlistO.meta && this.parlistO.meta.bookid) {
-          meta = this.parlistO.meta;
-        }
-      }
-      return this.$store.dispatch('searchBlocksChain', {
-        book_id: meta.bookid,
-        startId: this.startId || meta.startBlock_id,
-        search: {block_type: 'unresolved',  task_type: task_type}
-      }).then((result)=>{
-        return result.blockId;
       });
     },
 

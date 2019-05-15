@@ -59,7 +59,7 @@
                     <i class="fa fa-file-audio-o"></i>Import audio
                   </button>
                 </div>
-                <router-link v-else :to="tc_getTaskUrl(task)"><a>{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a></router-link>
+                <router-link v-else :to="tc_getTaskUrl(task, job)"><a>{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a></router-link>
               </div>
             </div>
           </div>
