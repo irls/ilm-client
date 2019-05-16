@@ -229,7 +229,6 @@
         },
         load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
           //console.log('load', audio, text, block, autostart, bookAudiofile, reloadOnChange);
-          this.setProcessRun(true, 'loading');
           let blockId = block ? block._id : null;
 
           this.$root.$on('for-audioeditor:select', this.select);
@@ -279,6 +278,7 @@
             //this.audioHistory = [];
             //this.close();
           }
+          this.setProcessRun(true, 'loading');
           this.pendingLoad = null;
           this.isPlaying = false;
           this.isPaused = false;
