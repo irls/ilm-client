@@ -757,7 +757,7 @@ export default {
         }
       },
       blockVoiceworksSel: function() {
-        if (this.currentJobInfo.text_cleanup || (!this.currentJobInfo.mastering_complete && !this.currentJobInfo.published && !this.currentJobInfo.mastering)) {
+        if (this.currentJobInfo.text_cleanup || (!this.currentJobInfo.mastering_complete && !this.currentJobInfo.mastering)) {
           return this.blockVoiceworks;
         }
         let voiceworks = {};
