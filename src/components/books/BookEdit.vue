@@ -2021,6 +2021,9 @@ export default {
     'mode': {
       handler(val) {
         this.recordingState == '';
+        Vue.nextTick(() => {
+          this.correctEditWrapper();
+        })
       }
     },
     'currentJobInfo.workflow.status': {
