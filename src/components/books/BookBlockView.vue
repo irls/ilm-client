@@ -1120,6 +1120,7 @@ export default {
         this.recountApprovedInRange();
       });
       this.$root.$on('prepare-alignment', this._saveContent);
+      this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
 
 //       Vue.nextTick(() => {
 //
@@ -1183,6 +1184,7 @@ export default {
 
     this.destroyEditor();
     this.$root.$off('prepare-alignment', this._saveContent);
+    this.$root.$off('from-styles:styles-change-' + this.block.blockid, this.setClasses);
   },
   methods: {
       ...mapActions([
@@ -1669,9 +1671,6 @@ export default {
 
       assembleBlock: function(partUpdate = null) {
         let update = partUpdate ? partUpdate : this.block;
-        if (update.classes) {
-          update.classes = [update.classes];
-        }
         if (update.status && update.status.marked === true) {
           update.status.marked = false;
         }
@@ -3449,6 +3448,12 @@ export default {
           if (src) {
             this.blockAudio.src = this.block.getAudiosrc('m4a');
           }
+        }
+      },
+      setClasses: function(classes) {
+        if (this.block) {
+          this.$forceUpdate();
+          this.pushChange('classes');
         }
       }
   },

@@ -1236,6 +1236,7 @@ export default {
                   if (oBlock.isNumber !== updateNum) {
                     oBlock.isNumber = updateNum;
                   }
+                  this.$root.$emit('from-styles:styles-change-' + pBlock.blockid, pBlock.classes);
                 } else {
                   pBlock.partUpdate = true;
                   if (oBlock.isNumber !== updateNum) {
