@@ -956,8 +956,9 @@ export default {
 
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
-          if (!this.parlistO.getInId(blockO.blockid)) {
+          if (!this.parlistO.getInId(blockO['@rid'])) {
             this.startId = blockO.blockid;
+            this.parlistO.setStartId(blockO['@rid']);
           }
           this.unfreeze('insertBlockBefore');
           this.tc_loadBookTask(block.bookid);
@@ -1002,6 +1003,7 @@ export default {
           if (!this.parlistO.getOutId(blockO.blockid)) {
             let firstId = this.parlistO.idsViewArray()[0];
             this.startId = this.parlistO.getOutId(firstId);
+            this.parlistO.setStartId(this.startId);
             //this.startId = blockO.blockid;
           } //else this.refreshTmpl();
           this.unfreeze('insertBlockAfter');
