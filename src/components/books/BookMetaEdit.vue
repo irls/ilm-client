@@ -1235,6 +1235,8 @@ export default {
                   pBlock.checked = true;
                   if (oBlock.isNumber !== updateNum) {
                     oBlock.isNumber = updateNum;
+                    updatePromises.push(this.putNumBlock({blockid: pBlock.blockid, isNumber: updateNum, classes: pBlock.classes}));
+                    updateNums.push(oBlock.rid)
                   }
                   this.$root.$emit('from-styles:styles-change-' + pBlock.blockid, pBlock.classes);
                 } else {
