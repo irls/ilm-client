@@ -415,7 +415,7 @@ export default {
         return false;
       },
       tc_showEditTab() {
-        return (this._is('editor') || this.adminOrLibrarian) && this.tc_hasExecutorTasks('editor');
+        return (this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasExecutorTasks('editor');
       },
       tc_showNarrateTab() {
         return this._is('narrator', true) && this.tc_hasExecutorTasks('narrator') && this.currentJobInfo.workflow.status === 'active';
