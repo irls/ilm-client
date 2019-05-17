@@ -1883,6 +1883,30 @@ export default {
           this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
         }
       }
+    },
+    saveAndRealignBlockModal(handlerCancel, handlerSave, handlerSaveAndRealign) {
+      this.$root.$emit('show-modal', {
+        title: `Manually adjusted word positions won’t be saved at “Save & Re-align” action.<br>Are you sure you want to save and realign the block?`,
+        text: '',
+        buttons: [
+          {
+            title: 'Cancel',
+            handler: handlerCancel,
+          },
+          {
+            title: 'Save',
+            handler: handlerSave,
+          },
+          {
+            title: 'Save & Re-align',
+            handler: handlerSaveAndRealign,
+            'class': 'btn btn-primary',
+            default: true
+          }
+        ],
+        class: ['align-modal']
+      });
+      return;
     }
   },
   events: {
@@ -1960,6 +1984,7 @@ export default {
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
       this.$root.$on('from-toolbar:toggle-meta', this.correctEditWrapper);
+      this.$root.$on('from-block:save-and-realign-warning', this.saveAndRealignBlockModal);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -1983,6 +2008,7 @@ export default {
     this.$root.$off('book-reimported', this.bookReimported);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
     this.$root.$off('from-toolbar:toggle-meta', this.correctEditWrapper);
+    this.$root.$off('from-block:save-and-realign-warning', this.saveAndRealignBlockModal);
   },
   watch: {
     'meta._id': {
