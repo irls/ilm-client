@@ -985,8 +985,31 @@
             }
           }
         },
-        saveAndRealign() {
+        saveAndRealign(check_realign = true) {
           if (this.isModified) {
+            if (check_realign) {
+              this.$root.$emit('from-block:save-and-realign-warning', () => {
+                this.$root.$emit('hide-modal');
+                this.$root.$emit('for-audioeditor:set-process-run', false);
+              }, () => {
+                this.$root.$emit('hide-modal');
+                let i = setInterval(() => {
+                  if ($('.align-modal').length == 0) {
+                    clearInterval(i);
+                    this.save();
+                  }
+                }, 50);
+              }, () => {
+                this.$root.$emit('hide-modal');
+                let i = setInterval(() => {
+                  if ($('.align-modal').length == 0) {
+                    clearInterval(i);
+                    this.saveAndRealign(false);
+                  }
+                }, 50);
+              });
+              return;
+            }
             this.processRun = true;
             this.$root.$emit('from-audioeditor:save-and-realign', this.blockId);
             this.isModified = false;

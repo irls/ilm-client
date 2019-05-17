@@ -1593,19 +1593,10 @@ export default {
 
       assembleBlockProxy: function (check_realign = true, realign = false) {
         if (check_realign === true && this.needsRealignment && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
-          this.$root.$emit('show-modal', {
-            title: `Manually adjusted word positions won’t be saved at “Save & Re-align” action.<br>Are you sure you want to save and realign the block?`,
-            text: '',
-            buttons: [
-              {
-                title: 'Cancel',
-                handler: () => {
+          this.$root.$emit('from-block:save-and-realign-warning', () => {
                   this.$root.$emit('hide-modal');
-                },
-              },
-              {
-                title: 'Save',
-                handler: () => {
+                }, 
+                () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
                     if ($('.align-modal').length == 0) {
@@ -1613,11 +1604,8 @@ export default {
                       this.assembleBlockProxy(false, false)
                     }
                   }, 50);
-                }
-              },
-              {
-                title: 'Save & Re-align',
-                handler: () => {
+                }, 
+                () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
                     if ($('.align-modal').length == 0) {
@@ -1625,13 +1613,7 @@ export default {
                       this.assembleBlockProxy(false, true)
                     }
                   }, 50);
-                },
-                'class': 'btn btn-primary',
-                default: true
-              }
-            ],
-            class: ['align-modal']
-          });
+                });
           return;
         }
         if (check_realign === true && this.needsRealignment) {
@@ -1674,6 +1656,7 @@ export default {
                   case 'content':
                     fullUpdate = true;
                     partUpdate.content = this.block.content;
+                    partUpdate.manual_boundaries = this.block.manual_boundaries || [];
                     break;
                   case 'footnotes':
                     fullUpdate = true;
@@ -1868,7 +1851,7 @@ export default {
         this.isAudioChanged = false;
       },
 
-      assembleBlockAudioEdit: function(footnoteIdx = null, check_realign = true, realign = false) {// to save changes from audio editor
+      assembleBlockAudioEdit: function(footnoteIdx = null, realign = false) {// to save changes from audio editor
         let manual_boundaries = [];
         if (this.footnoteIdx) {
           if (this.audioEditFootnote && this.audioEditFootnote.footnote) {
@@ -1877,49 +1860,6 @@ export default {
         } else {
           manual_boundaries = this.block.manual_boundaries || [];
         }
-        if (check_realign === true && manual_boundaries.length > 0) {
-        this.$root.$emit('show-modal', {
-          title: `Manually adjusted word positions won’t be saved at “Save & Re-align” action.<br>Are you sure you want to save and realign the block?`,
-          text: '',
-          buttons: [
-            {
-              title: 'Cancel',
-              handler: () => {
-                this.$root.$emit('hide-modal');
-                this.$root.$emit('for-audioeditor:set-process-run', false);
-              },
-            },
-            {
-              title: 'Save',
-              handler: () => {
-                this.$root.$emit('hide-modal');
-                let i = setInterval(() => {
-                  if ($('.align-modal').length == 0) {
-                    clearInterval(i);
-                    this.assembleBlockAudioEdit(footnoteIdx, false, false);
-                  }
-                }, 50);
-              }
-            },
-            {
-              title: 'Save & Re-align',
-              handler: () => {
-                this.$root.$emit('hide-modal');
-                let i = setInterval(() => {
-                  if ($('.align-modal').length == 0) {
-                    clearInterval(i);
-                    this.assembleBlockAudioEdit(footnoteIdx, false, true);
-                  }
-                }, 50);
-              },
-              'class': 'btn btn-primary',
-              default: true
-            }
-          ],
-          class: ['align-modal']
-        });
-        return;
-      }
         if ((this.blockAudio.map && this.blockAudio.src) || (typeof footnoteIdx !== 'undefined' && footnoteIdx !== null && this.audioEditFootnote.footnote)) {
           let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
           let api = this.$store.state.auth.getHttp();
