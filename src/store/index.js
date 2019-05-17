@@ -168,7 +168,8 @@ export const store = new Vuex.Store({
     loadBookTaskWait: null,
     jobInfoRequest: null,
     jobInfoTimer: null,
-    jobStatusError: ''
+    jobStatusError: '',
+    bookMode: null
   },
 
   getters: {
@@ -300,7 +301,8 @@ export const store = new Vuex.Store({
         });
       }
       return count;
-    }
+    },
+    bookMode: state => state.bookMode
   },
 
   mutations: {
@@ -798,6 +800,10 @@ export const store = new Vuex.Store({
     },
     set_job_status_error(state, error) {
       state.jobStatusError = error;
+    },
+    
+    set_book_mode(state, mode) {
+      state.bookMode = mode || null;
     }
   },
 
