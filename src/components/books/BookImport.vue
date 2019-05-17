@@ -159,12 +159,12 @@
 
             </label>
 
-            <ul id="dummyBooks" v-if="selectedBooks.length==0">
+            <!--<ul id="dummyBooks" v-if="selectedBooks.length==0">
               <li class="book-import-list">
                 <input type="checkbox" id="dummyBooksCheck" v-model="isDummyBook">
                 <label for="dummyBooksCheck">Create blank book template</label>
               </li>
-            </ul>
+            </ul>-->
 
             <ul id="selectedBooks">
               <li class="book-import-list" v-for="book in selectedBooks">
