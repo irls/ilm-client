@@ -3954,6 +3954,7 @@ export default {
     }
 
     &.controls-bottom {
+        height: 24px;
         span {
           margin-right: 15px;
           cursor: pointer;
