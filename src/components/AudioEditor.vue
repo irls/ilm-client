@@ -1035,7 +1035,7 @@
         },
         saveAndRealign(check_realign = true) {
           if (this.isModified) {
-            if (check_realign) {
+            if (check_realign && this.block && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
               this.$root.$emit('from-block:save-and-realign-warning', () => {
                 this.$root.$emit('hide-modal');
                 this.$root.$emit('for-audioeditor:set-process-run', false);
