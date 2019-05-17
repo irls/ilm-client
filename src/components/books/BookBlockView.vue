@@ -588,7 +588,7 @@
     <div v-on:wheel.stop="">
       <div class="modal-header">
         <h4 class="modal-title">
-          Block: {{block._id}}
+          Block: {{((block._id).split('-bl').length > 1) ? 'bl'+(block._id).split('-bl')[1] : block._id}}
         </h4>
         <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
       </div>
@@ -3264,7 +3264,7 @@ export default {
           return false;
         }
         this.voiceworkUpdating = true;
-        let api_url = this.API_URL + 'book/block/' + this.block._id + '/set_voicework';
+        let api_url = this.API_URL + 'book/block/' + this.block._uRid + '/set_voicework';
         let api = this.$store.state.auth.getHttp();
         return api.post(api_url, {
           voicework: this.voiceworkChange,
@@ -3994,7 +3994,7 @@ export default {
     &.completed {
       background: #EFEFEF;
       border-radius: 7px;
-      padding: 7px;
+      padding: 0;
     }
 
 }
@@ -4026,6 +4026,7 @@ export default {
     }
 
     &.controls-bottom {
+        height: 24px;
         span {
           margin-right: 15px;
           cursor: pointer;
