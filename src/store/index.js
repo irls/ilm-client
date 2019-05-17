@@ -1668,7 +1668,7 @@ export const store = new Vuex.Store({
         cleanBlock = Object.assign({}, block);
       }
       commit('set_blocker', 'putNumBlock');
-      return axios.put(state.API_URL + 'book/block/' + block._id,
+      return axios.put(state.API_URL + 'book/block/' + block.blockid,
         {
           'block': cleanBlock,
         })
