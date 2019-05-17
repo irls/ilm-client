@@ -111,7 +111,29 @@ export default {
     'currentBookMeta': {
       handler(val, old_val) {
         if (this.$route.path.indexOf('/collections') !== 0 && !old_val._id && this.currentBookMeta && this.currentBookMeta.collection_id) {
-          this.$router.replace({ path: '/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta.bookid });
+          if (this.$route) {
+            let params = this.$route.params ? this.$route.params : {};
+            let meta = this.$route.meta ? this.$route.meta : {};
+            let name = 'CollectionBook';
+            switch (this.$route.name) {
+              case 'BookNarrate':
+                name = 'CollectionBookNarrate';
+                break;
+              case 'BookEdit':
+                name = 'CollectionBookEdit';
+                break;
+              case 'BookEditDisplay':
+                name = 'CollectionBookEditDisplay';
+                break;
+              case 'BookProofread':
+                name = 'CollectionBookProofread';
+                break;
+            }
+            params.collectionid = this.currentBookMeta.collection_id;
+            this.$router.replace({name: name, params: params, meta: meta});
+          } else {
+            this.$router.replace({ path: '/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta.bookid });
+          }
         } else if (this.metaVisible && !this.currentBookMeta._id) {
           this.metaVisible = false;
           this.metaAvailable = false;
@@ -232,7 +254,7 @@ export default {
     },
     isEditMode () {
       return this.$route.matched.some(record => {
-        return record.meta.mode === 'edit' || record.meta.mode === 'narrate'
+        return ['edit', 'narrate', 'proofread'].indexOf(record.meta.mode) !== -1;
       })
     },
 //     recountRows () {

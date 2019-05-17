@@ -126,17 +126,22 @@
           return;
         }
         if (this._is(role, true) || (role === 'editor' && this.adminOrLibrarian)) {
-          if (this.$route && ([
-            'BookEdit', 'BookEditDisplay', 'BookNarrate', 
-            'CollectionBookEdit', 'CollectionBookEditDisplay', 'CollectionBookNarrate'
-          ].indexOf(this.$route.name) !== -1)) {
+          let currentRoute = this.$route && this.$route.name ? this.$route.name : '';
+          let params = {params: {bookid: this.currentBookMeta.bookid, block: blockid}};
+          switch(role) {
+            case 'narrator':
+              params.name = this.currentCollectionId ? 'CollectionBookNarrate' : 'BookNarrate';
+              break;
+            case 'editor':
+              params.name = this.currentCollectionId ? 'CollectionBookEdit' : 'BookEdit';
+              break;
+            case 'proofer':
+              params.name = this.currentCollectionId ? 'CollectionBookProofread' : 'BookProofread';
+              break;
+          }
+          if (currentRoute === params.name) {
             return this.goToBlock(blockid);
           } else {
-            let params = {params: {bookid: this.currentBookMeta.bookid, block: blockid}};
-            params.name = role === 'narrator' ? 'BookNarrate' : 'BookEdit';
-            if (this.currentCollectionId) {
-              params.name = role === 'narrator' ? 'CollectionBookNarrate' : 'CollectionBookEdit';
-            }
             this.$router.push(params);
           }
         }

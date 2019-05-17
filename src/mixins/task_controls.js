@@ -6,7 +6,11 @@ import {mapGetters} from 'vuex';
 export default {
     data() {
       return {
-        tc_test: 'Test property'
+        tc_test: 'Test property',
+        editor_tasks: ['fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block', 'text-cleanup', 'master-audio'],
+        narrator_tasks: ['narrate-block', 'fix-block-narration'],
+        proofer_tasks: ['approve-block', 'approve-revoked-block'],
+        editor_resolve_tasks: ['fix-block-narration']
       }
     },
     mounted() {
@@ -46,9 +50,23 @@ export default {
         }
         return false;
       },
-      tc_isCompleted(block) {
-        if (this.tc_getBlockTask(block._id) || this.tc_getBlockTaskOtherRole(block._id)) {
-          return false;
+      tc_isCompleted(block, mode) {
+        let block_task = this.tc_getBlockTask(block.blockid);
+        if (!block_task) {
+          block_task = this.tc_getBlockTaskOtherRole(block.blockid);
+        }
+        if (block_task) {
+          switch (mode) {
+            case 'proofread':
+              return this.proofer_tasks.indexOf(block_task.type) === -1;
+              break;
+            case 'edit':
+              return this.editor_tasks.indexOf(block_task.type) === -1 && this.editor_resolve_tasks.indexOf(block_task.type) === -1;
+              break;
+            case 'narrate':
+              return this.narrator_tasks.indexOf(block_task.type) === -1;
+              break;
+          }
         }
         if (this.adminOrLibrarian) {
           let flags_summary = block.calcFlagsSummary();
@@ -58,10 +76,10 @@ export default {
         }
         if (this.adminOrLibrarian || this._is('editor', true)) {
           if (this.currentJobInfo.text_cleanup) {
-            return false;
+            return mode === 'edit' ? false : true;
           }
           if (this.currentJobInfo.mastering && block.status) {
-            return block.status.stage !== 'audio_mastering';
+            return block.status.stage !== 'audio_mastering' || mode !== 'edit';
           }
           return !this.tc_getBlockTask(block._id) && !this.tc_getBlockTaskOtherRole(block._id);
         }
@@ -292,7 +310,9 @@ export default {
           'CollectionBookEditDisplay',
           'BookEditDisplay',
           'BooksGrid',
-          'CollectionBook'
+          'CollectionBook',
+          'BookProofread',
+          'CollectionBookProofread'
         ].indexOf(this.$route.name) !== -1) {
           return false;
         }
@@ -306,7 +326,9 @@ export default {
           'CollectionBookEditDisplay',
           'BookEditDisplay',
           'BooksGrid',
-          'CollectionBook'
+          'CollectionBook',
+          'BookProofread',
+          'CollectionBookProofread'
         ].indexOf(this.$route.name) !== -1) {
           return false;
         }
@@ -347,6 +369,174 @@ export default {
         } else {
           return null;
         }
+      },
+      tc_hasExecutorTasks(role) {
+        if (this.currentJobInfo && 
+                this.currentJobInfo.tasks_counter && 
+                this.currentJobInfo.executors && 
+                (this.currentJobInfo.executors[role] === this.$store.state.auth.getSession().user_id || 
+                (this.adminOrLibrarian && role === 'editor'))) {
+          let proofread = this.currentJobInfo.tasks_counter.find(tc => {
+            return tc.key === role;
+          });
+          if (proofread && proofread.data) {
+            return proofread.data.tasks && proofread.data.tasks.length > 0 ? true : false;
+          }
+        }
+        return false;
+      },
+      tc_showEditTab() {
+        return (this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasExecutorTasks('editor');
+      },
+      tc_showNarrateTab() {
+        return this._is('narrator', true) && this.tc_hasExecutorTasks('narrator') && this.currentJobInfo.workflow.status === 'active';
+      },
+      tc_showProofreadTab() {
+        return this._is('proofer', true) && this.tc_hasExecutorTasks('proofer') && this.currentJobInfo.workflow.status === 'active';
+      },
+      tc_isApproveDisabled(block, mode) {
+        let task = this.tc_getBlockTask(block.blockid);
+        if (!task) {
+          task = this.tc_getBlockTaskOtherRole(block.blockid);
+        }
+        if (!task) {
+          return true;
+        }
+        switch (mode) {
+          case 'edit':
+            if (this.editor_tasks.indexOf(task.type) === -1 && this.editor_resolve_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            if (['tts', 'audio_file'].indexOf(block.voicework) !== -1 && !block.audiosrc) {
+              return true;
+            }
+            if (block.footnotes && Array.isArray(block.footnotes)) {
+              let notAlignedFootnote = block.footnotes.find(f => {
+                return !f.audiosrc && f.voicework === 'tts';
+              });
+              if (notAlignedFootnote) {
+                return true;
+              }
+            }
+            break;
+          case 'narrate':
+            if (this.narrator_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            
+            if (['narration'].indexOf(block.voicework) !== -1 && !block.audiosrc) {
+              return true;
+            }
+            break;
+          case 'proofread':
+            if (this.proofer_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            break;
+        }
+        let flags_summary = this.block.calcFlagsSummary();
+        if (flags_summary) {
+          if (flags_summary.stat === 'resolved') {
+            return false;
+          }
+          switch (mode) {
+            case 'edit':
+              if (flags_summary.dir === 'narrator') {
+                if (this.editor_tasks.indexOf(task.type) !== -1) {
+                  return true;
+                }
+                return this.editor_resolve_tasks.indexOf(task.type) === -1 ? false : true;
+              }
+              if (flags_summary.dir === 'proofer') {
+                return false;
+              }
+              break;
+            case 'narrate':
+              if (flags_summary.dir === 'editor') {
+                return true;
+              }
+              if (flags_summary.dir === 'proofer') {
+                return false;
+              }
+              break;
+            case 'proofread':
+              if (flags_summary.dir === 'proofer') {
+                return false;
+              }
+              break;
+          }
+        }
+        return true;
+      },
+      tc_isNeedWorkDisabled(block, mode) {
+        let task = this.tc_getBlockTask(block.blockid);
+        if (!task) {
+          task = this.tc_getBlockTaskOtherRole(block.blockid);
+        }
+        if (!task) {
+          return true;
+        }
+        switch (mode) {
+          case 'edit':
+            if (this.editor_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            break;
+          case 'narrate':
+            if (this.narrator_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            break;
+          case 'proofread':
+            if (this.proofer_tasks.indexOf(task.type) === -1) {
+              return true;
+            }
+            break;
+        }
+        let flags_summary = this.block.calcFlagsSummary();
+        if (flags_summary) {
+          if (flags_summary.stat === 'resolved') {
+            return true;
+          }
+          switch (mode) {
+            case 'edit':
+              if (flags_summary.dir === 'narrator') {
+                return this.editor_resolve_tasks.indexOf(task.type) === -1 ? false : true;
+              }
+              break;
+            case 'narrate':
+              if (flags_summary.dir === 'editor') {
+                return false;
+              }
+              break;
+            case 'proofread':
+              return flags_summary.dir === 'proofer' ? true : false;
+          }
+        }
+        return true;
+      },
+      tc_getTaskMode(task) {
+        if (this.narrator_tasks.indexOf(task.type) !== -1) {
+          return 'narrate';
+        } else if (this.editor_tasks.indexOf(task.type) !== -1) {
+          return 'edit';
+        } else if (this.proofer_tasks.indexOf(task.type) !== -1) {
+          return 'proofread';
+        }
+        return 'display';
+      },
+      tc_getTaskUrl(task, job) {
+        let mode = this.tc_getTaskMode(task);
+        let url = job.collection_id ? '/collections/' + job.collection_id + '/' + task.bookid + '/' + mode : '/books/' + task.bookid + '/' + mode;
+        if (task.blockid) {
+          return url + '/' + task.blockid;
+        }
+        switch(task.type) {
+          default : {
+            return url + '/unresolved/' + task.type;
+          } break;
+        };
+        return '';
       }
     },
     computed: {

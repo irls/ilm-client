@@ -32,10 +32,10 @@
 
         </div>
         <template v-if="mode === 'narrate'">
-          <div class="table-row" v-if="blockAudio.src && tc_showBlockAudioEdit(block._id) && !isAudioChanged && !isRecording">
+          <div class="table-row" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged && !isRecording">
             <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
           </div>
-          <template v-if="player && blockAudio.src && !isRecording">
+          <template v-if="player && blockAudio.src && !isRecording && tc_showBlockNarrate(block.blockid)">
             <div class="table-row" v-if="!isAudStarted">
               <i class="fa fa-play-circle-o"
                 @click="audPlay(block._id, $event)"></i>
@@ -198,10 +198,10 @@
                 </template>
               </div>
               <!--<div class="par-ctrl -hidden">-->
-              <div class="par-ctrl -audio -hidden"> <!---->
+              <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
-                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating"></i>
+                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating && mode === 'edit'"></i>
                       <i class="fa fa-play-circle-o"
                         @click="audPlay(block._id, $event)"></i>
                       <i class="fa fa-stop-circle-o disabled"></i>
@@ -252,7 +252,7 @@
                   </div>
 
                   <div :class="['table-row content-description', block.getClass()]">
-                    <div class="content-wrap-desc description"
+                    <div class="content-wrap-desc description" 
                       ref="blockDescription"
                       @input="commitDescription($event)"
                       v-html="block.description"
@@ -363,7 +363,7 @@
                       Flag for editing also</a>
                     </template>
 
-                    <a v-if="part.status == 'resolved' && !part.collapsed && (!isCompleted ||isProofreadUnassigned())"
+                    <a v-if="isCanReopen(flagsSel, partIdx)"
                       href="#" class="flag-control"
                       @click.prevent="reopenFlagPart($event, partIdx)">
                       Re-open flag</a>
@@ -400,7 +400,7 @@
                     <li @click="audPlayFromSelection()">Play from here</li>
                     <li @click="audPlaySelection()">Play selection</li>
                   </template>
-                  <template v-if="!range.collapsed && tc_showBlockNarrate(block._id) && allowEditing && !isAudioEditing">
+                  <template v-if="!range.collapsed && tc_showBlockNarrate(block._id) && mode === 'narrate' && !isAudioEditing">
                     <li class="separator"></li>
                     <li @click="reRecord">Re-record audio</li>
                   </template>
@@ -437,7 +437,7 @@
                   </div>
                   <div class="table-cell -audio -right">
                     <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && ((_is('editor', true) || adminOrLibrarian) && tc_isShowEdit(block._id))"> <!--&& !isAudioChanged"-->
-                      <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor(footnote, ftnIdx, $event)"></i>
+                      <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor(footnote, ftnIdx, $event)" v-if="allowEditing"></i>
                     </template>
                     <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
                         <template v-if="!FtnAudio.isStarted || FtnAudio.isStarted!==`${block._id}_${ftnIdx}`">
@@ -699,7 +699,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'createBlockSubtask'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -822,44 +822,14 @@ export default {
           return this.block.flags && this.block.flags.length;
       },
       isNeedWorkDisabled: function () {
-          if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
-            return true;
-          }
-          let flagsSummary = this.block.calcFlagsSummary();
-          if (this.adminOrLibrarian && flagsSummary.dir === 'narrator' && flagsSummary.stat === 'open') {
-            let narratorTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'fix-block-narration' && t.blockid == this.block._id);
-            if (!narratorTask) {
-              return false;
-            }
-            let approveTask = this.currentJobInfo.can_resolve_tasks.find(t => t.type === 'approve-modified-block' && t.blockid == this.block._id);
-            if (approveTask) {
-              return false;
-            }
-          }
-          if (!this.tc_getBlockTask(this.block._id)) {
-            return true;
-          }
-
-          let executors = this.tc_currentBookTasks.job.executors;
-          if (executors[flagsSummary.dir] ==  this.auth.getSession().user_id) {
-            if (this._is('proofer', true) &&
-                    (this.tc_hasBlockTask(this.block._id, 'approve-block') || this.tc_hasBlockTask(this.block._id, 'approve-revoked-block')) &&
-                    flagsSummary.stat === 'open') {// if flag assigned to proofer - user has two roles
-              return false;
-            } else {
-              return true;
-            }
-          }
-
-          return flagsSummary.stat !== 'open';
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
+          return true;
+        }
+        return this.tc_isNeedWorkDisabled(this.block, this.mode);
       },
       enableMarkAsDone: { cache: false,
         get() {
           return this.tc_enableMarkAsDone(this.block);
-          if (this.tc_getBlockTask(this.block._id)) {
-            return false;
-          }
-          return this._is('editor', true) && (this.tc_hasTask('content_cleanup') || this.tc_hasTask('audio_mastering'));
         }
       },
       markAsDoneButtonDisabled: { cache: false,
@@ -892,38 +862,7 @@ export default {
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.isRecording || this.isUpdating) {
             return true;
           }
-          if (this.block && ['tts', 'audio_file'].indexOf(this.block.voicework) !== -1 && !this.block.audiosrc) {
-            return true;
-          }
-          if (this._is('editor') || this.adminOrLibrarian) {
-            if (this.block.footnotes && Array.isArray(this.block.footnotes)) {
-              let notAlignedFootnote = this.block.footnotes.find(f => {
-                return !f.audiosrc && f.voicework === 'tts';
-              })
-              if (notAlignedFootnote) {
-                return true;
-              }
-            }
-          }
-          let flags_summary = this.block.calcFlagsSummary();
-            if (this.isCanApproveWithoutTask) {
-              if (flags_summary.stat === 'open') {
-                return true;
-              } else {
-                return false;
-              }
-            }
-            if (this._is('editor', true) && !this.tc_getBlockTask(this.block._id)) return true;
-            if (this._is('editor', true) && ['hr', 'illustration'].indexOf(this.block.type) !== -1 && flags_summary.stat !== 'open' && !this._is(flags_summary.dir, true)) return false;
-            if ((this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasBlockTask(this.block._id, 'approve-new-block')) return false;
-            if ((this._is('editor', true) || this.adminOrLibrarian) && this.tc_hasBlockTask(this.block._id, 'approve-modified-block')) return false;
-            if (this._is('proofer', true) && this.tc_hasBlockTask(this.block._id, 'approve-revoked-block') && flags_summary.stat !== 'open') return false;
-            if (this._is('narrator', true) && !(this.blockAudio && this.blockAudio.src) && this.block.voicework === 'narration') return true;
-            if (!(flags_summary.stat !== 'open') && this._is(flags_summary.dir, true)) return true;
-            if (flags_summary && flags_summary.stat === 'open' && flags_summary.dir && !this._is(flags_summary.dir, true)) {
-              return true;
-            }
-            return false;
+          return this.tc_isApproveDisabled(this.block, this.mode);
         }
       },
       isCanApproveWithoutTask: function() {
@@ -942,7 +881,7 @@ export default {
       },
       isCompleted: { cache: false,
         get() {
-          return this.block ? this.tc_isCompleted(this.block) : true;
+          return this.block ? this.tc_isCompleted(this.block, this.mode) : true;
         }
       },
       displaySelectionStart() {
@@ -1042,7 +981,8 @@ export default {
           } else {
             return this.block.content;
           }
-        }
+        },
+        cache: false
       },
       allowAudioRevert() {
         if (this.tc_hasBlockTask('fix-block-text') && this.block && this.block.audiosrc === 'audio_file') {
@@ -1210,10 +1150,10 @@ export default {
         if (this.isProofreadUnassigned()) {
           return true;
         }
-        if (this.tc_allowAdminFlagging(this.block, flagType)) {
-          return true;
-        }
-        if (!this.tc_getBlockTask(this.block._id)) {
+        //if (this.tc_allowAdminFlagging(this.block, flagType)) {
+          //return true;
+        //}
+        if (!this.tc_getBlockTask(this.block._id) && !this.tc_getBlockTaskOtherRole(this.block._id)) {
           return false;
         }
         let canFlag = true;
@@ -1221,6 +1161,9 @@ export default {
           switch(flagType) {
             case 'editor' : {
               if (this._is('editor', true)) canFlag = false;
+              if (this.mode === 'edit') {
+                canFlag = false;
+              }
             } break;
             case 'narrator' : {
               if (this.block.voicework !== 'narration') {
@@ -1230,14 +1173,32 @@ export default {
                 else if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
                 else if (this._is('narrator', true)) canFlag = false;
               }
+              if (this.mode === 'narrate') {
+                canFlag = false;
+              }
             } break;
           };
         }
 
         return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
       },
+      isCanReopen(flag, partIdx) {
+        if (typeof flag !== 'undefined' && typeof partIdx !== 'undefined') {
+          let part = flag.parts && flag.parts[partIdx] ? flag.parts[partIdx] : false;
+          if (part) {
+            if (this.mode !== 'proofread' && part.type === 'editor') {
+              return false;
+            }
+            if (this.mode === 'narrate' && part.type === 'narrator') {
+              return false;
+            }
+            return part.status == 'resolved' && !part.collapsed && (!this.isCompleted || this.isProofreadUnassigned());
+          }
+        }
+        return false;
+      },
       isProofreadUnassigned: function() {
-        if (this._is('proofer', true)) {
+        if (this._is('proofer', true) && this.mode === 'proofread') {
           if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned()) {
             return true;
           }
@@ -1326,9 +1287,11 @@ export default {
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
     //       this.editor.subscribe('positionToolbar', ()=>{})
-        }  else if (this.editor) this.editor.setup();
+        }  else if (this.editor) { 
+          this.editor.setup();
+        }
 
-        if ((!this.editorDescr || force === true) && this.block.type == 'illustration') {
+        if ((!this.editorDescr || force === true) && this.block.type == 'illustration' && this.mode === 'edit') {
           let extensions = {};
           let toolbar = {buttons: []};
           if (this.allowEditing) {
@@ -1353,7 +1316,9 @@ export default {
               extensions: extensions,
               disableEditing: !this.allowEditing
           });
-        } else if (this.editorDescr) this.editorDescr.setup();
+        } else if (this.editorDescr) {
+          this.editorDescr.setup();
+        }
 
         this.initFtnEditor(force)
 
@@ -1466,7 +1431,11 @@ export default {
         .then((block)=>{
 
           if (this.$refs.blockContent) {
-            this.$refs.blockContent.innerHTML = block.content;
+            if (this.mode !== 'narrate') {
+              this.$refs.blockContent.innerHTML = block.content;
+            } else {
+              this.block.content = block.content;
+            }
             //this.$refs.blockContent.focus();
           }
           if (this.$refs.blockFlagPopup) {
@@ -1578,10 +1547,17 @@ export default {
       },
 
       assembleBlockProxy: function (ev) {
+        if (this.mode === 'proofread') {
+          return this.assembleBlockProofread();
+        } else if (this.mode === 'narrate') {
+          return this.assembleBlockNarrate();
+        }
         switch (this.block.type) {
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
             this.block.voicework = 'no_audio';
+            this.block.content = '';
+            break;
           case 'hr':
             this.block.content = '';
             this.block.voicework = 'no_audio';
@@ -1694,15 +1670,6 @@ export default {
         }
         return this.putBlock(update).then(()=>{
           this.isSaving = false;
-          /*if (this.tc_createApproveModifiedBlock(this.block._id)) {
-            if (!(this.changes.length == 1 && this.changes.indexOf('flags') !== -1) ||
-                    this.tc_allowAdminFlagging(this.block)) {
-              this.createBlockSubtask(this.block._id, 'approve-modified-block', 'editor');
-            }
-          } else if (this.tc_createApproveRevokedBlock(this.block._id) &&
-                  this.changes.indexOf('flags') !== -1) {
-            this.createBlockSubtask(this.block._id, 'approve-revoked-block', 'proofer');
-          }*/
           if (this.isCompleted) {
             this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
@@ -1779,6 +1746,36 @@ export default {
             if (this.isAudioEditing) {
               this.$root.$emit('for-audioeditor:set-process-run', false);
             }
+          });
+      },
+      assembleBlockProofread() {
+        if (this.$refs.blockContent) {
+          this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+        }
+        this.isSaving = true;
+        return this.putBlockProofread(this.block.clean())
+          .then(() => {
+            this.isSaving = false;
+            this.isChanged = false;
+            if (this.isCompleted) {
+              this.tc_loadBookTask(this.block.bookid);
+              this.getCurrentJobInfo();
+            }
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      },
+      assembleBlockNarrate() {
+        this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+        this.isSaving = true;
+        return this.putBlockNarrate(this.block.clean())
+          .then(() => {
+            this.isSaving = false;
+            this.isChanged = false;
+          })
+          .catch(err => {
+            return Promise.reject(err);
           });
       },
       clearBlockContent: function(content) {
@@ -1950,50 +1947,47 @@ export default {
           return;
         }
         //this.isApproving = true;
-        this.assembleBlockProxy(ev)
-        .then(()=>{
-          let task = this.tc_getBlockTask(this.block._id);
+        let task = this.tc_getBlockTask(this.block._id);
 
-          if (!task) {
-            let other_task = this.tc_getBlockTaskOtherRole(this.block._id);
-              if (other_task) {
-                task = Object.assign({}, other_task);
-              } else {
-              task = {
-                blockid: this.block._id,
-                bookid: this.block.bookid
-              }
+        if (!task) {
+          let other_task = this.tc_getBlockTaskOtherRole(this.block.blockid);
+            if (other_task) {
+              task = Object.assign({}, other_task);
+            } else {
+            task = {
+              blockid: this.block.blockid,
+              bookid: this.block.bookid
             }
           }
+        }
 
-          let blockSummary = this.block.calcFlagsSummary();
-          task.nextStep = blockSummary.dir;
+        let blockSummary = this.block.calcFlagsSummary();
+        task.nextStep = blockSummary.dir;
 
-          if (task.nextStep == 'proofer' && !this.block.hasAudio()) {
-            switch (this.block.voicework) {
-              case 'narration':
-                task.nextStep = 'narrator';
-                break;
-            }
+        if (task.nextStep == 'proofer' && !this.block.hasAudio()) {
+          switch (this.block.voicework) {
+            case 'narration':
+              task.nextStep = 'narrator';
+              break;
           }
-          this.isSaving = true;
-          this.tc_approveBookTask(task)
-          .then(response => {
-            this.isSaving = false;
-            //this.isApproving = false;
-            if (response.status == 200) {
-              if (typeof response.data._id !== 'undefined') {
-                this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
-              }
-              //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
-              this.recountApprovedInRange();
-              //this.getBloksUntil('unresolved', true, this.block._id)
+        }
+        this.isSaving = true;
+        this.tc_approveBookTask(task)
+        .then(response => {
+          this.isSaving = false;
+          //this.isApproving = false;
+          if (response.status == 200) {
+            if (typeof response.data._id !== 'undefined') {
+              this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
             }
-          })
-          .catch(err => {
-            this.isSaving = false;
-            //this.isApproving = false;
-          });
+            //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
+            this.recountApprovedInRange();
+            //this.getBloksUntil('unresolved', true, this.block._id)
+          }
+        })
+        .catch(err => {
+          this.isSaving = false;
+          //this.isApproving = false;
         });
 
         this.$root.$emit('closeFlagPopup', true);
@@ -2449,6 +2443,7 @@ export default {
                 let parent = node.parentNode;
                 while (node.firstChild) parent.insertBefore(node.firstChild, node);
                 parent.removeChild(node);
+                this.block.delFlag(this.flagsSel._id);
               } else {
                 this.$refs.blockFlagControl.removeAttribute('data-flag');
                 this.$refs.blockFlagControl.removeAttribute('data-status');
@@ -3679,17 +3674,27 @@ export default {
       'allowEditing': {
         handler(newVal, oldVal) {
           // because after page loaded tasks may be late
-          if (newVal === true && !this.editor) this.initEditor();
-          else this.destroyEditor();
+          if (newVal === true) {
+            if (!this.editor || !this.editor.isActive) {
+              this.initEditor();
+            }
+          }
+          else {
+            this.destroyEditor();
+          }
         }
       },
       'mode': {
         handler(val, oldVal) {
           //if (val === 'narrate') {
             //this.destroyEditor();
-          //} else if (oldVal === 'narrate') {
-            this.initEditor(true);
-          //}
+          this.discardBlock();
+          if (this.block.voicework === 'narration') {
+            if ((oldVal === 'narrate' && val === 'edit') || (oldVal === 'edit' && val === 'narrate')) {
+              this.destroyEditor();
+              this.initEditor(true);
+            }
+          }
         }
       },
       'isRecording': {
