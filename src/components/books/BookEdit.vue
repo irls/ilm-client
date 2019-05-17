@@ -2291,7 +2291,7 @@ export default {
   .table-row.controls-top {
     height: 28px;
     &.completed {
-      height: 20px;
+      /*height: 20px;*/
     }
   }
 
