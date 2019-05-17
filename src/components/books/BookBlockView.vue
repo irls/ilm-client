@@ -980,7 +980,8 @@ export default {
           } else {
             return this.block.content;
           }
-        }
+        },
+        cache: false
       },
       allowAudioRevert() {
         if (this.tc_hasBlockTask('fix-block-text') && this.block && this.block.audiosrc === 'audio_file') {
@@ -1422,7 +1423,11 @@ export default {
         .then((block)=>{
 
           if (this.$refs.blockContent) {
-            this.$refs.blockContent.innerHTML = block.content;
+            if (this.mode !== 'narrate') {
+              this.$refs.blockContent.innerHTML = block.content;
+            } else {
+              this.block.content = block.content;
+            }
             //this.$refs.blockContent.focus();
           }
           if (this.$refs.blockFlagPopup) {
