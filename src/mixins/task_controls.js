@@ -55,13 +55,13 @@ export default {
         }
         return false;
       },
-      tc_isCompleted(block, mode) {
+      tc_isCompleted(block) {
         let block_task = this.tc_getBlockTask(block.blockid);
         if (!block_task) {
           block_task = this.tc_getBlockTaskOtherRole(block.blockid);
         }
         if (block_task) {
-          switch (mode) {
+          switch (this.bookMode) {
             case 'proofread':
               return this.proofer_tasks.indexOf(block_task.type) === -1;
               break;
@@ -81,10 +81,10 @@ export default {
         }
         if (this.adminOrLibrarian || this._is('editor', true)) {
           if (this.currentJobInfo.text_cleanup) {
-            return mode === 'edit' ? false : true;
+            return this.bookMode === 'edit' ? false : true;
           }
           if (this.currentJobInfo.mastering && block.status) {
-            return block.status.stage !== 'audio_mastering' || mode !== 'edit';
+            return block.status.stage !== 'audio_mastering' || this.bookMode !== 'edit';
           }
           return !this.tc_getBlockTask(block._id) && !this.tc_getBlockTaskOtherRole(block._id);
         }
@@ -569,6 +569,6 @@ export default {
       }
     },
     computed: {
-      ...mapGetters(['currentBookMeta', 'adminOrLibrarian', 'currentJobInfo'])
+      ...mapGetters(['currentBookMeta', 'adminOrLibrarian', 'currentJobInfo', 'bookMode'])
     }
 }

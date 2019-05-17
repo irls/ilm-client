@@ -880,7 +880,7 @@ export default {
       },
       isCompleted: { cache: false,
         get() {
-          return this.block ? this.tc_isCompleted(this.block, this.mode) : true;
+          return this.block ? this.tc_isCompleted(this.block) : true;
         }
       },
       displaySelectionStart() {

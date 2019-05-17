@@ -27,6 +27,8 @@ export default {
 
   watch: {
     '$route' () {
+      let mode = this.$route.meta && this.$route.meta.mode ? this.$route.meta.mode : null;
+      this.$store.commit('set_book_mode', mode);
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.loadBook(this.$route.params.bookid)
       } else {
@@ -46,7 +48,8 @@ export default {
   },
 
   created () {
-
+    let mode = this.$route.meta && this.$route.meta.mode ? this.$route.meta.mode : null;
+    this.$store.commit('set_book_mode', mode);
   },
 
   methods: {
