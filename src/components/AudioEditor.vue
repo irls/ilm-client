@@ -13,13 +13,11 @@
       <div class="waveform-wrapper" @contextmenu.prevent="onContext">
         <div id="playlist" class="wf-playlist" ref="playlist"></div>
       </div>
-      <div class="process-run" v-if="processRun"></div>
-      <div class="player-controls" v-else>
+      <div class="player-controls">
 
         <div :class="['play-controls', '-' + mode]">
           <i class="fa fa-play-circle-o" v-if="!isPlaying" v-on:click="play()"></i>
           <i class="fa fa-pause-circle-o" v-if="isPlaying" v-on:click="pause()"></i>
-          <i class="fa fa-stop-circle" v-on:click="stop()"></i>
           <i class="fa fa-step-backward" v-on:click="goToStart()"></i>
           <i class="fa fa-step-forward" v-on:click="goToEnd()"></i>
         </div>
@@ -230,7 +228,6 @@
           }
         },
         load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
-          this.processRun = false;
           //console.log('load', audio, text, block, autostart, bookAudiofile, reloadOnChange);
           let blockId = block ? block._id : null;
 
@@ -281,6 +278,7 @@
             //this.audioHistory = [];
             //this.close();
           }
+          this.setProcessRun(true, 'loading');
           this.pendingLoad = null;
           this.isPlaying = false;
           this.isPaused = false;
@@ -388,6 +386,10 @@
             }
           ])
           .then(() => {
+            if (this.mode === 'block') {
+              this.clearSelection();
+            }
+            this.setProcessRun(false);
             this.audiosourceEditor.stopAnimation();
             if (this.audiosourceEditor.tracks.length > 1) {
               this.audiosourceEditor.getEventEmitter().emit('clear');
@@ -451,6 +453,7 @@
               this.$root.$emit('from-audioeditor:audio-loaded', bookAudiofile.id);
             }
             $('.playlist-tracks').scrollLeft(this.playlistScrollPosition);
+            $('.playlist-tracks').trigger('scroll');
             $('.playlist-tracks').on('scroll', () => {
               this.playlistScrollPosition = $('.playlist-tracks').scrollLeft();
             });
@@ -467,8 +470,19 @@
             }
             this.plEventEmitter.on('timeupdate', function(position) {
               //console.log('this.plEventEmitter.on(timeupdate');
+              if (self.isPlaying) {
+                let cursor_position = $('.cursor').position().left;
+                let waveform_position = $('.playlist-tracks')[0].scrollLeft;
+                let waveform_width = $('.playlist-tracks')[0].offsetWidth;
+                if (cursor_position > 0 && (
+                        cursor_position < waveform_position ||
+                        cursor_position > waveform_position + waveform_width)) {
+                    let scrollPosition = cursor_position > waveform_position + waveform_width ? waveform_position + waveform_width / 2 : cursor_position;
+                    $('.playlist-tracks').scrollLeft(scrollPosition);// scrolls to start, changes scroll on click
+                }
+              }
               if (self.mode == 'block') {
-                if ((!self.isSingleWordPlaying && !self.isPlaying) || self.currentWord && self.currentWord.start <= position && self.currentWord.end > position) {
+                if ((!self.isSingleWordPlaying && !self.isPlaying) || (self.currentWord && self.currentWord.start <= position && self.currentWord.end > position)) {
                   return;
                 }
                 let word = self.words.find(_w => {
@@ -482,20 +496,6 @@
                   }
                   if (self.isSingleWordPlaying) {
                     self.isSingleWordPlaying = false;
-                  }
-                }
-              } else if (self.mode == 'file') {
-                if (self.isPlaying) {
-                  let click_cursor_position = $('.cursor-position').position().left;
-                  let cursor_position = $('.cursor').position().left;
-                  let waveform_position = $('.playlist-tracks')[0].scrollLeft;
-                  let waveform_width = $('.playlist-tracks')[0].offsetWidth;
-                  if (cursor_position > 0 && (
-                          cursor_position < waveform_position ||
-                          cursor_position > waveform_position + waveform_width)) {
-                      let scrollPosition = cursor_position > waveform_position + waveform_width ? waveform_position + waveform_width / 2 : cursor_position;
-                      console.log("$('.playlist-tracks').scrollLeft(scrollPosition);");
-                      $('.playlist-tracks').scrollLeft(scrollPosition);// scrolls to start, changes scroll on click
                   }
                 }
               }
@@ -538,6 +538,13 @@
               if ($('.waveform .selection').length > 0) {
                 clearInterval(dragDropInterval);
                 $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>').after('<div id="context-position" class="context-position"></div>');
+                if (self.cursorPosition) {//reset cursor position
+                  let cp = this.cursorPosition;
+                  this.cursorPosition = 0;
+                  Vue.nextTick(() => {
+                    this.cursorPosition = cp;
+                  });
+                }
                 self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
 
                   limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
@@ -653,6 +660,18 @@
 
           $('body').on('click', '.playlist-overlay', (e) => {
             if (typeof this.audiosourceEditor !== 'undefined') {
+              let restart = this.isPlaying;
+              let stop = new Promise((resolve, reject) => {
+                if (this.isPlaying) {
+                  return this.stop()
+                    .then(() => {
+                      return resolve();
+                    });
+                } else {
+                  return resolve();
+                }
+              });
+              stop.then(() => {
               let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
               let pos_r = this._round(pos, 1);
               //console.log('click', this.mouseSelection.start, Math.abs(pos_r - this.mouseSelection.start));
@@ -688,6 +707,10 @@
               //$('#cursor-position').show();
 
               this._showSelectionBorders();
+              if (restart) {
+                this.play();
+              }
+              })
             }
           });
 
@@ -697,6 +720,17 @@
               return;
             }
 
+            let stop = new Promise((resolve, reject) => {
+                if (this.isPlaying) {
+                  return this.stop()
+                    .then(() => {
+                      return resolve();
+                    });
+                } else {
+                  return resolve();
+                }
+              });
+              stop.then(() => {
             $('[id="resize-selection-right"]').hide().css('left', 0);
             $('[id="resize-selection-left"]').hide().css('left', 0);
             $('#cursor-position').hide();
@@ -707,6 +741,7 @@
               }
               this.mouseSelection = {start: this._round(pos, 1), end: null};
             }
+          });
             //console.log("$('body').on('mousedown', '.playlist-overlay'");
           });
 
@@ -828,6 +863,9 @@
             }
             this._showSelectionBorders();
             this._scrollToCursor();
+            if ($('.cursor').position()) {
+              $('.cursor-position').css('left', $('.cursor').position().left);
+            }
             return true;
           }
           return false;
@@ -842,6 +880,9 @@
             }
             this._showSelectionBorders();
             this._scrollToCursor();
+            if ($('.cursor').position()) {
+              $('.cursor-position').css('left', $('.cursor').position().left);
+            }
             return true;
           }
           return false;
@@ -865,6 +906,8 @@
           } else if (this.mode == 'file') {
             $('.playlist-tracks').animate({scrollLeft: 0},500);
           }
+          this.playPosition = 0;
+          this.cursorPosition = 0;
           this.isPlaying = false;
           this.isPaused = false;
         },
@@ -874,6 +917,10 @@
             this.plEventEmitter.emit('fastforward');
           } else if (this.mode == 'file') {
             $('.playlist-tracks').animate({scrollLeft: $('.channel-0').width()},500);
+          }
+          if (this.audiosourceEditor) {
+            this.playPosition = this.audiosourceEditor.duration;
+            this.cursorPosition = this.audiosourceEditor.duration;
           }
           this.isPlaying = false;
           this.isPaused = false;
@@ -914,7 +961,7 @@
             })
         },
         isEmpty() {
-          return !this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0;
+          return (!this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0) && !this.processRun;
         },
         close(autosave = true) {
           //console.log('AudioEditor close', autosave);
@@ -957,7 +1004,7 @@
         },
         addSilence() {
           if (this.silenceLength > 0 && this.cursorPosition >= 0) {
-            this.processRun = true;
+            this.setProcessRun(true, 'editing-audio');
             this.$root.$emit('from-audioeditor:insert-silence', this.blockId, this._round(this.cursorPosition, 2), this.silenceLength);
             this.isModified = true;
           }
@@ -965,6 +1012,7 @@
         save() {
           if (this.mode == 'block') {
             if (this.isModified) {
+              this.setProcessRun(true, 'save');
               this.$root.$emit('from-audioeditor:save', this.blockId);
               this.isModified = false;
             }
@@ -987,13 +1035,13 @@
         },
         saveAndRealign() {
           if (this.isModified) {
-            this.processRun = true;
+            this.setProcessRun(true, 'align');
             this.$root.$emit('from-audioeditor:save-and-realign', this.blockId);
             this.isModified = false;
           }
         },
         cut() {
-          this.processRun = true;
+          this.setProcessRun(true, 'editing-audio');
           this.cursorPosition = this.selection.start;
           this.$root.$emit('from-audioeditor:cut', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
           this.isModified = true;
@@ -1022,6 +1070,7 @@
           }
         },
         discard() {
+          this.setProcessRun(true, '');
           this.$root.$emit('from-audioeditor:discard', this.blockId);
           this._setDefaults();
           this.hideModal('onDiscardMessage');
@@ -1640,8 +1689,13 @@
           }
         }, 30),
         
-        setProcessRun(val) {
+        setProcessRun(val, type) {
           this.processRun = val;
+          if (val) {
+            this.$root.$emit('preloader-toggle', true, type);
+          } else {
+            this.$root.$emit('preloader-toggle', false, '');
+          }
         }
 
       },
@@ -2064,6 +2118,9 @@
     vertical-align: middle;
     min-height: 62px;
     height: auto;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
     .play-controls {
       display: inline-block;
       padding: 17px 25px;
@@ -2139,7 +2196,7 @@
       display: none;
   }
   .playlist-tracks {
-
+    height: 92px;
   }
   .playlist-tracks::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
@@ -2180,15 +2237,5 @@
     .btn.btn-default {
       display: none;
     }
-  }
-  .process-run {
-    background: url(/static/preloader-horizontal.gif);
-    width: 100%;
-    display: inline-block;
-    margin: 4px 0px;
-    background-repeat: no-repeat;
-    background-position: center;
-    height: 62px;
-    vertical-align: middle;
   }
 </style>

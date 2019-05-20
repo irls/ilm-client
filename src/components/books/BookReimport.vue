@@ -1,20 +1,21 @@
 <template>
   <transition name="modal">
-    <div class="modal-mask" @click="$emit('close_modal')">
+    <div class="modal-mask" ><!--@click="$emit('close_modal')"-->
       <div class="modal-wrapper">
         <div class="modal-container" @click="$event.stopPropagation()">
 
           <div class="modal-header">
             <div class="header-title">
-              <img src='/static/bookstack.svg' class='book-logo'> <h3 class="header-h">Re-Import Book</h3>
+              <img src='/static/bookstack.svg' class='book-logo'> <h3 class="header-h">Import Book</h3>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')">
                 <i class="fa fa-times-circle-o" aria-hidden="true"></i>
               </button>
             </div>
           </div>
           <div class="modal-body clearfix">
+          <form id="book_select" enctype="multipart/form-data" @submit.prevent ref="book_select">
 
-            <div class="col-sm-12">
+            <div class="row">
               <!--<div class="col-sm-5">
                 <div class="form-group">
                   <label for="booktype">Book Type:</label>
@@ -32,7 +33,7 @@
                   <input type="text" class="form-control" placeholder="URL" v-model="bookURL"/>
                 </div>
               </div> -->
-              <div class="col-sm-12">
+              <div class="col-sm-4 browse-btn">
                 <!-- or &nbsp;&nbsp;&nbsp; -->
                 <label class='btn btn-default' type="file">
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse&hellip;
@@ -40,35 +41,49 @@
                   <input name="bookFiles" type="file" v-show="false" accept="text/*,application/zip,.docx,.md" multiple="false" @change="onFilesChange($event)">
 
                 </label>
-                <span class="help-block">Book file or ZIP with files and images, Docx or Markdown with text</span>
               </div>
 
-            </div>
+              <div class="col-sm-8">
+                <div v-if="uploadFile">
+                {{ uploadFile.name }} - {{ humanFileSize(uploadFile.size, true) }}
+                </div>
+              </div>
 
-            <div class="col-sm-12">
-            <div v-if="uploadFile" class="col-sm-12">
-              {{ uploadFile.name }} - {{ humanFileSize(uploadFile.size, true) }}
-            </div>
-            </div>
+            </div><!--<div class="row">-->
+            <div class="row">
+              <div class="col-sm-12" v-show='!hasUploadError'>
+                <span class="help-block">Book file or ZIP with files and images, Docx or Markdown with text</span>
+              </div>
+              <div class="col-sm-12" v-show='hasUploadError'>
+                <div class="alert alert-danger">
+                  <button type="button" class="close" @click="closeAlert"><span>×</span></button>
+                  <i aria-hidden="true" class="fa fa-exclamation-triangle alert-icon-float-left"></i>
+                  <div class="alert-text-float-right" v-if="bookUploadCommonError">
+                    <p>{{bookUploadCommonError}}.</p>
+                  </div>
+                  <div class="alert-text-float-right" v-if="bookUploadCheckError">
+                    <p v-for='(errMsg) in bookUploadCheckError' v-html="errMsg+'.'"></p>
+                  </div>
+                  <div class="clearfix"></div>
+                </div>
+              </div>
+            </div><!--<div class="row">-->
 
-            <div class="col-sm-12 pull-right">
-              <button class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
-                <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
-              </button>
-            </div>
+            <div class="row">
+              <div class="col-sm-12 pull-right" v-show='!isUploading'>
+                <button class="btn btn-primary modal-default-button" @click='onFormSubmit' :class="{disabled : saveDisabled}">
+                  <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Book
+                </button>
+              </div>
+              <div class="col-sm-12" id='uploadingMsg' v-show='isUploading'>
+                <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
+              </div>
+            </div><!--<div class="row">-->
 
-            <div id='uploadingMsg' v-show='isUploading' class="col-sm-12">
-              <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
-            </div>
-
+          </form>
           </div>
         </div>
       </div>
-      <alert :value="bookUploadError != false" placement="top" duration="3000" type="danger" width="400px">
-        <span class="icon-ok-circled alert-icon-float-left"></span>
-
-        <p>{{bookUploadError}}.</p>
-      </alert>
     </div>
   </transition>
 </template>
@@ -76,12 +91,11 @@
 
 <script>
 
-  import { alert } from 'vue-strap'
-          import axios from 'axios'
-          import api_config from '../../mixins/api_config.js'
+  import axios from 'axios'
+  import api_config from '../../mixins/api_config.js'
 
-          const API_URL = process.env.ILM_API + '/api/v1/'
-          import { mapGetters, mapActions } from 'vuex'
+  const API_URL = process.env.ILM_API + '/api/v1/'
+  import { mapGetters, mapActions } from 'vuex'
 
   export default {
     data() {
@@ -97,9 +111,14 @@
         uploadFile: false,
         formData: new FormData(),
         uploadProgress: "Uploading Files...",
-        bookUploadError: false,
+        bookUploadCommonError: false,
+        bookUploadCheckError: false,
         fileValue: '',
-        errors: {}
+        errors: {},
+        errorsMsgKeys: {
+          duplicates: '<b>Found duplicates</b>',
+          wrongVals: '<b>Found wrong id\'s</b>'
+        }
       }
     },
     mixins: [api_config],
@@ -116,6 +135,9 @@
 
     },
     computed: {
+      hasUploadError: function() {
+        return this.bookUploadCheckError || this.bookUploadCommonError;
+      },
       selectedBookType: function () {
         return this.bookTypes[this.bookType];
       },
@@ -132,12 +154,18 @@
         this.isUploading = false
         // clear formData
         let entries = this.formData.entries()
-        for (let pair of entries)
+        for (let pair of entries) {
           this.formData.delete(pair[0])
-        //document.getElementById('bookFiles').value = null
+        }
+        this.$refs.book_select.reset();
         this.uploadFile = false;
       },
+      closeAlert() {
+        this.bookUploadCommonError = false;
+        this.bookUploadCheckError = false;
+      },
       onFilesChange(e) {
+        this.closeAlert();
         let fileList = e.target.files || e.dataTransfer.files
         this.formData = new FormData();
         this.formData.append('book', fileList[0], fileList[0].name);
@@ -145,6 +173,7 @@
       },
 
       onFormSubmit() {
+        this.closeAlert();
         this.validate();
         if (Object.keys(this.errors).length > 0) {
           return false;
@@ -175,14 +204,40 @@
             vu_this.closeForm(true)
           }
         }).catch((err) => {
-          console.log(err)
-          vu_this.bookUploadError = err.response.data.message
+          //console.log('reimportBook Err:', err.response)
+          if (err.response.data.message && err.response.data.message.length) {
+            vu_this.bookUploadCommonError = err.response.data.message;
+            setTimeout(function () {
+              vu_this.$emit('close_modal')
+            }, 5000)
+          } else if (Array.isArray(err.response.data)) {
+            let bookUploadCheckError = [];
+            err.response.data.forEach((msg)=>{
+              if (typeof msg.error == 'object') {
+                for (var prop in msg.error) {
+                  if (Array.isArray(msg.error[prop]) && msg.error[prop].length) {
+                    bookUploadCheckError.push(`${vu_this.errorsMsgKeys[prop] ? vu_this.errorsMsgKeys[prop] : prop}: ${(JSON.stringify(msg.error[prop])).split(',').join(', ').replace(/(^\[|\]$)/g, '')}`)
+                  }
+                }
+              } else {
+                bookUploadCheckError.push(`Error: ${msg.error}`);
+              }
+            })
+            bookUploadCheckError.reverse().join('<br/>');
+            vu_this.bookUploadCheckError = bookUploadCheckError;
+          }
           vu_this.formReset()
-          setTimeout(function () {
+          /*setTimeout(function () {
             vu_this.$emit('close_modal')
-          }, 3000)
+          }, 5000)*/
         });
-
+      },
+      closeForm(response) {
+        let self = this
+        setTimeout(function () {
+          self.formReset()
+          self.$emit('close_modal', response)
+        }, 1000)
       },
       humanFileSize(bytes, si) {
         var thresh = si ? 1000 : 1024;
@@ -198,13 +253,6 @@
           ++u;
         } while (Math.abs(bytes) >= thresh && u < units.length - 1);
         return bytes.toFixed(1) + ' ' + units[u];
-      },
-      closeForm(response) {
-        let self = this
-        setTimeout(function () {
-          self.formReset()
-          self.$emit('close_modal', response)
-        }, 1000)
       },
       validate() {
         //if (this.bookType === '') {
@@ -259,6 +307,11 @@
     /*#42b983;*/
   }
 
+  .modal-header .header-title {
+    width: 100%;
+    display: block;
+  }
+
   .modal-header {
     padding-left: 0px;
     padding-right: 0px;
@@ -276,6 +329,12 @@
 
   .modal-footer {
 
+  }
+
+  .modal-header .header-title button {
+    float: none;
+    width: auto;
+    right: 0px;
   }
 
   .modal-default-button {
@@ -350,5 +409,31 @@
   .book-import-list { list-style-type: none; }
   .book-import-list i { padding: 0px 5px 0px 0px; }
 
+  .browse-btn {
+    margin-bottom: 18px;
+  }
+
+  .help-block {
+    margin-top: 0px;
+    margin-bottom: 18px;
+  }
+
+  .alert-icon-float-left {
+    font-size: 40px;
+    float: left;
+    color: #a94442;
+  }
+
+  .alert-text-float-right {
+    float: right;
+    text-align: left;
+    width: 370px;
+  }
+
+  .alert .alert-text-float-right p {
+    text-align: left;
+    margin: 5px 0;
+    word-break: break-word;
+  }
 
 </style>

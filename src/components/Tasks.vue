@@ -59,7 +59,7 @@
                     <i class="fa fa-file-audio-o"></i>Import audio
                   </button>
                 </div>
-                <router-link v-else :to="bookUrl(job.bookid, task)"><a>{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a></router-link>
+                <router-link v-else :to="tc_getTaskUrl(task, job)"><a>{{job.bookid}}&nbsp;<i class="fa fa-arrow-circle-o-right"></i></a></router-link>
               </div>
             </div>
           </div>
@@ -104,6 +104,7 @@ import BookImport from './books/BookImport'
 import AudioImport from './audio/AudioImport'
 import { mapGetters, mapActions } from 'vuex'
 import api_config from '../mixins/api_config.js';
+import task_controls from '../mixins/task_controls.js';
 var BPromise = require('bluebird');
 
 export default {
@@ -133,7 +134,7 @@ export default {
     }
   },
 
-  mixins: [api_config],
+  mixins: [api_config, task_controls],
 
   components: {
     VueTabs,
@@ -267,21 +268,6 @@ export default {
     },
     onTabChange() {
       return true
-    },
-
-    bookUrl (bookId, task) {
-      //console.log('task', task);
-      if (task.blockid) {
-        return '/books/' + bookId + '/edit/' + task.blockid;
-      }
-      switch(task.type) {
-        case 'master-audio' : {
-          return '/books/' + bookId + '/edit';
-        } break;
-        default : {
-          return '/books/' + bookId + '/edit/unresolved/' + task.type;
-        } break;
-      };
     },
 
     ...mapActions([

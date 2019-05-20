@@ -168,7 +168,8 @@ export const store = new Vuex.Store({
     loadBookTaskWait: null,
     jobInfoRequest: null,
     jobInfoTimer: null,
-    jobStatusError: ''
+    jobStatusError: '',
+    bookMode: null
   },
 
   getters: {
@@ -300,7 +301,8 @@ export const store = new Vuex.Store({
         });
       }
       return count;
-    }
+    },
+    bookMode: state => state.bookMode
   },
 
   mutations: {
@@ -410,9 +412,8 @@ export const store = new Vuex.Store({
 //     },
 
     SET_CURRENTBOOK_FILES (state, fileObj) {
-      if (fileObj && fileObj.fileBlob) {
-        let url = URL.createObjectURL(fileObj.fileBlob);
-        state.currentBookFiles[fileObj.fileName] = url;
+      if (fileObj && fileObj.fileURL) {
+        state.currentBookFiles[fileObj.fileName] = process.env.ILM_API + fileObj.fileURL + '?time='  + Date.now();
       } else state.currentBookFiles[fileObj.fileName] = false;
     },
 
@@ -799,6 +800,10 @@ export const store = new Vuex.Store({
     },
     set_job_status_error(state, error) {
       state.jobStatusError = error;
+    },
+    
+    set_book_mode(state, mode) {
+      state.bookMode = mode || null;
     }
   },
 
@@ -1047,7 +1052,7 @@ export const store = new Vuex.Store({
       .catch(err => err)
     },
 
-    startBookWatch({state}, bookid) {
+    startBookWatch({state, dispatch}, bookid) {
       if (!bookid) {
         bookid = state.currentBookid
       }
@@ -1086,6 +1091,7 @@ export const store = new Vuex.Store({
               store.commit('set_storeList', new BookBlock(data.block));
             }
             state.storeListO.refresh();
+            dispatch('tc_loadBookTask', state.currentBookid);
           }
         });
       }
@@ -1141,6 +1147,7 @@ export const store = new Vuex.Store({
       if (book_id && book_id === state.currentBookid) return Promise.resolve(state.currentBookMeta);
 
       if (book_id) {
+        commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: ''});
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
         //let metaDB = state.metaRemoteDB;
         state.liveDB.stopWatch('blockV');
@@ -1163,14 +1170,8 @@ export const store = new Vuex.Store({
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);
+          commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: answer.coverimgURL});
           //dispatch('loadBookToc', {bookId: book_id});
-          state.filesRemoteDB.getAttachment(book_id, 'coverimg')
-          .then(fileBlob => {
-            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
-          })
-          .catch((err)=>{
-            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
-          })
           state.liveDB.stopWatch('metaV');
           state.liveDB.stopWatch('job');
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
@@ -1183,6 +1184,7 @@ export const store = new Vuex.Store({
               commit('SET_CURRENTBOOK_META', data.meta)
               let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian;
               commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
+              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: data.meta.coverimgURL});
               dispatch('getCurrentJobInfo');
             }
           });
@@ -1207,29 +1209,17 @@ export const store = new Vuex.Store({
       }
     },
 
-    reloadBookMeta ({commit, state, dispatch}) {
-        if (state.currentBookMeta._id) {
-            dispatch('getBookMeta', state.currentBookMeta._id).then((meta) => {
-                commit('SET_CURRENTBOOK_META', meta)
-                state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
-                .then(fileBlob => {
-                  commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
-                }).catch((err)=>{
-                  commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
-                })
-            })
-        }
-    },
-
-    reloadBookCover({commit, state}) {
-      if (state.currentBookMeta._id) {
-          state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
-            .then(fileBlob => {
-              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
-            }).catch((err)=>{
-              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileBlob: false});
-            })
-        }
+    updateBookCover({commit, state}, data) {
+      if (state.currentBookMeta.bookid) {
+        return axios.post(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/coverimg', data.formData, data.config)
+        .then(doc => {
+          commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: doc.data.coverimgURL});
+          this.updateBookVersion({minor: true});
+          return Promise.resolve();
+        }).catch(err => {
+          return Promise.reject(err);
+        })
+      }
     },
 
     loadBookToc({state, commit, dispatch}, params) {
@@ -1659,6 +1649,48 @@ export const store = new Vuex.Store({
             return Promise.reject(err);
           });
     },
+    putBlockProofread({state, dispatch, commit}, block) {
+      commit('set_blocker', 'putBlock');
+      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', {
+        block: {
+          blockid: block.blockid, 
+          bookid: block.bookid, 
+          flags: block.flags,
+          content: block.content
+        }
+      })
+        .then((response) => {
+          commit('clear_blocker', 'putBlock');
+          dispatch('tc_loadBookTask', block.bookid);
+          dispatch('getCurrentJobInfo');
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          commit('clear_blocker', 'putBlock');
+          dispatch('checkError', err);
+          return Promise.reject(err);
+        });
+    },
+    putBlockNarrate({state, dispatch, commit}, block) {
+      commit('set_blocker', 'putBlock');
+      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/narrate', {
+        block: {
+          blockid: block.blockid, 
+          bookid: block.bookid, 
+          flags: block.flags,
+          content: block.content
+        }
+      })
+        .then((response) => {
+          commit('clear_blocker', 'putBlock');
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          commit('clear_blocker', 'putBlock');
+          dispatch('checkError', err);
+          return Promise.reject(err);
+        });
+    },
 
     putNumBlock ({commit, state, dispatch}, block) {
       let cleanBlock;
@@ -1668,7 +1700,7 @@ export const store = new Vuex.Store({
         cleanBlock = Object.assign({}, block);
       }
       commit('set_blocker', 'putNumBlock');
-      return axios.put(state.API_URL + 'book/block/' + block._id,
+      return axios.put(state.API_URL + 'book/block/' + block.blockid,
         {
           'block': cleanBlock,
         })
@@ -2601,6 +2633,16 @@ export const store = new Vuex.Store({
       } else {
         return Promise.resolve(response);
       }
-    }
+    },
+    createDummyBook({state, commit}, data) {
+      return axios.post(state.API_URL + 'books/dummy', data, {})
+      .then(response => {
+          //console.log(response);
+          return Promise.resolve(response);
+        })
+        .catch(err => {
+          return Promise.reject();
+        });
+    },
   }
 })

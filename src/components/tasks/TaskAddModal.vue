@@ -1,9 +1,34 @@
 <template>
-  <modal id="taskAddModal" :value="show" effect="fade" @closed="closed">
+  <modal
+    id="taskAddModal"
+    :value="show"
+    effect="fade"
+    :backdrop="false"
+    @closed="closed">
     <div slot="modal-header" class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
       <h4 class="modal-title">Add Job</h4>
+      <alert
+        :value="bookUploadCommonError != false"
+        placement="top"
+        duration="3000"
+        type="danger"
+        width="400px">
+        <span class="icon-info-circled alert-icon-float-left"></span>
+        <p>{{bookUploadCommonError}}.</p>
+      </alert>
+      <!--<alert dismissable
+        :value="bookUploadCheckError != false"
+        placement="top"
+        type="danger"
+        width="500px">
+        <i class="fa fa-exclamation-triangle alert-icon-float-left" aria-hidden="true"></i>
+        <div class="alert-text-float-right">
+          <p v-for='(errMsg) in bookUploadCheckError'>{{errMsg}}.</p>
+        </div>
+      </alert>-->
     </div>
+
     <div slot="modal-body" class="modal-body">
       <div class="form-group" v-if="false">
         <label>Type</label>
@@ -78,23 +103,29 @@
       </div>
     </div>
     <div slot="modal-footer" class="modal-footer">
-      <div class="col-sm-3 pull-right">
-        <button class="btn btn-primary" type="button" @click="save">Submit </button>
+      <!--<form id="book_select" enctype="multipart/form-data" @submit.prevent ref="book_select">-->
+      <div class="col-sm-3 pull-right non-modal-submit">
+        <button class="btn btn-primary" type="button" @click.prevent="save" :disabled="saveDisabled">Submit</button>
       </div>
-      <div class="col-sm-6 pull-right">
+      <div class="col-sm-9 pull-right non-modal-form">
         <!-- Import Books Modal Popup -->
         <BookImport :isModal="false"
+          ref="bookImport"
           :bookId="createdJob.bookid"
           :multiple="false"
           :forceUpload="typeof createdJob.bookid != 'undefined'"
           @close_modal="bookImportFinished"
-          @books_changed="bookListChanged" />
+          @books_changed="bookListChanged"
+          @upload_error="uploadError"/>
       </div>
+      <!--</form>-->
     </div>
+
   </modal>
 </template>
 <script>
-import { modal } from 'vue-strap'
+import { modal, alert } from 'vue-strap'
+import { /*mapGetters, mapState, */mapActions } from 'vuex'
 import modalMixin from './../../mixins/modal'
 import axios from 'axios'
 import superlogin from 'superlogin-client'
@@ -106,6 +137,7 @@ export default {
   name: 'TaskAddModal',
   components: {
     modal,
+    alert,
     BookImport
   },
   mixins: [modalMixin],
@@ -157,6 +189,9 @@ export default {
         }
       },
       errors: {},
+      bookUploadError: false,
+      bookUploadCommonError: false,
+      bookUploadCheckError: false,
       description: '',
       id: [''],
       createdJob: {},
@@ -164,11 +199,17 @@ export default {
     }
   },
   methods: {
+    ...mapActions([
+      'createDummyBook'
+    ]),
     cancel() {
       var self = this
       self.$emit('closed', false)
     },
     save() {
+      this.bookUploadCommonError = false;
+      this.bookUploadCheckError = false;
+
       if (!this.validate()) {
         return false
       }
@@ -197,12 +238,35 @@ export default {
                   self.errors['name'] = [];
                 }
                 self.errors['name'].push(self.id[_id] + ': ' + response.data.errors[self.id[_id]])
-                //console.log(self.errors)
               }
             }
           } else {
             self.createdJob = response.data.insert_jobs[0]
-            //self.$emit('closed', true)
+            this.$nextTick(()=>{
+              if (!this.$refs.bookImport.saveDisabled) {
+                this.$refs.bookImport.onFormSubmit()
+                .then((res)=>{
+                  self.$emit('closed', true);
+                  //from Tasks.vue :
+                  //this.$store.dispatch('tc_loadBookTask')
+                  //this.$router.replace({ path: '/books/' + this.import_book_id })
+                }).catch(error => {
+                  //this.uploadError(error);
+                })
+              } else {
+                console.log('this.$refs.bookImport.isDummyBook', this.$refs.bookImport.isDummyBook);
+                if (this.$refs.bookImport.isDummyBook == true) {
+                  this.createDummyBook({book_id: self.createdJob.bookid, jobId: self.createdJob['@rid']})
+                  .then((res)=>{
+                    this.$emit('closed', true)
+                  }).catch(error => {
+                    this.deleteTask()
+                  });
+                } else {
+                  this.$emit('closed', true);
+                }
+              }
+            })
           }
         })
         .catch(error => {
@@ -292,12 +356,32 @@ export default {
     bookImportFinished() {
       this.$emit('closed', true)
     },
+    uploadError(errors) {
+      this.bookUploadError = true;
+      if (Array.isArray(errors)) {
+        this.bookUploadCheckError = errors;
+      } else {
+        this.bookUploadCommonError = errors;
+      }
+      this.deleteTask();
+    },
+    deleteTask() {
+      return axios.delete(TASKS_URL, { data: {id: this.id} })
+      .then(function(response){
+        return Promise.resolve({ok: true});
+      }).catch((err) => {
+        return Promise.reject(err);
+      });
+    },
     bookListChanged(list) {
       this.importingBooksList = list
     }
   },
   computed: {
-
+    saveDisabled: function() {
+      //return false; // while we need to create job without book
+      return this.bookUploadError && this.importingBooksList.length == 0;
+    }
   },
   watch: {
     type(val) {
@@ -330,6 +414,8 @@ export default {
         }
         //this.roles['engineer'] = this.users['engineer'][0]._id;
       }
+      this.bookUploadError = false;
+      this.$refs.bookImport.isDummyBook = false;
     },
     'name': {
       handler(val) {
@@ -358,4 +444,31 @@ i.add-book {
 textarea.job-descr {
   resize: vertical;
 }
+
+  .alert-icon-float-left {
+    font-size: 40px;
+    float: left;
+    color: #a94442;
+  }
+
+  .alert-text-float-right {
+    float: right;
+    text-align: left;
+    width: 400px;
+  }
+
+  .alert.top .alert-text-float-right p {
+    text-align: left;
+    margin: 5px 0;
+    word-break: break-word;
+  }
+
+  .modal-footer .non-modal-submit {
+    width: 15%;
+  }
+
+  .modal-footer .non-modal-form {
+    width: 85%;
+  }
+
 </style>

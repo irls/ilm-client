@@ -52,6 +52,10 @@ export default new Router({
         {
           path: 'narrate/:block?/:task_type?', name: 'BookNarrate',
           component: BookEdit, meta: { mode: 'narrate' }, props: { mode: 'narrate', listing: 'books' }
+        },
+        {
+          path: 'proofread/:block?/:task_type?', name: 'BookProofread',
+          component: BookEdit, meta: { mode: 'proofread' }, props: { mode: 'proofread', listing: 'books' }
         }
       ]
     },
@@ -127,6 +131,10 @@ export default new Router({
         {
           path: '/collections/:collectionid/:bookid/narrate/:block?/:task_type?', name: 'CollectionBookNarrate',
           component: BookEdit, meta: { mode: 'narrate' }, props: { mode: 'narrate' }
+        },
+        {
+          path: '/collections/:collectionid/:bookid/proofread/:block?/:task_type?', name: 'CollectionBookProofread',
+          component: BookEdit, meta: { mode: 'proofread' }, props: { mode: 'proofread' }
         }
       ]
     },

@@ -17,17 +17,6 @@
     </button>
 
     <template v-if="tc_allowEditingComplete()">
-      <!--<dropdown text="Download" type="default">
-          <li>
-            <a :href="getCurrentBookUrl('html')"
-              target="_blank" class="" >As HTML</a>
-          </li>
-          <li>
-            <a :href="getCurrentBookUrl('zip')"
-              target="_blank" class="">As ZIP</a>
-          </li>
-      </dropdown>-->
-
       <button class="btn btn-default" @click="$root.$emit('book-reimport-modal')">Re-Import</button>
     </template>
 
@@ -51,11 +40,10 @@ export default {
   data () {
     return {
       editModes: {
-        'BookEdit': 'Edit' ,
-        //'HTML': 'HTML',
-        //'JSON': 'JSON',
-        'BookNarrate': 'Narrate',
-        'BookEditDisplay': 'Display'
+        //'BookEdit': 'Edit' ,
+        //'BookNarrate': 'Narrate',
+        //'BookProofread': 'Proofread',
+        //'BookEditDisplay': 'Display'
       }
     }
   },
@@ -79,19 +67,33 @@ export default {
           modes = {
             'CollectionBookEdit': 'Edit',
             'CollectionBookNarrate': 'Narrate',
+            'CollectionBookProofread': 'Proofread',
             'CollectionBookEditDisplay': 'Display'
           }
-          if (!this.tc_hasTask('block_narrate')) {
-            delete modes['CollectionBookNarrate']
+          if (!this.tc_showProofreadTab()) {
+            delete modes['CollectionBookProofread'];
+          }
+          if (!this.tc_showNarrateTab()) {
+            delete modes['CollectionBookNarrate'];
+          }
+          if (!this.tc_showEditTab()) {
+            delete modes['CollectionBookEdit'];
           }
         } else {
           modes = {
             'BookEdit': 'Edit' ,
             'BookNarrate': 'Narrate',
+            'BookProofread': 'Proofread',
             'BookEditDisplay': 'Display'
           }
-          if (!this.tc_hasTask('block_narrate')) {
-            delete modes['BookNarrate']
+          if (!this.tc_showProofreadTab()) {
+            delete modes['BookProofread'];
+          }
+          if (!this.tc_showNarrateTab()) {
+            delete modes['BookNarrate'];
+          }
+          if (!this.tc_showEditTab()) {
+            delete modes['BookEdit'];
           }
         }
         return modes;
@@ -104,8 +106,8 @@ export default {
     viewSelect: function(val) {
       if (this.$route.params.block) {
         this.$router.push({ name: val, params: { block: this.$route.params.block } });
-      } else if (this.storeListO.meta && this.currentBookid == this.storeListO.meta.bookid && this.storeListO.startId) {
-        this.$router.push({ name: val, params: { block: this.storeListO.startId } });
+      } else if (this.storeListO.meta && this.currentBookid == this.storeListO.meta.bookid && this.storeListO.firstVisibleId) {
+        this.$router.push({ name: val, params: { block: this.storeListO.firstVisibleId } });
 
       } else this.$router.push({ name: val });
     },
@@ -125,6 +127,15 @@ export default {
     },
     clearRangeSelection() {
       this.setBlockSelection({start: {}, end: {}});
+    },
+    setSelectedRoute() {
+      if (this.$route && this.editModesAvailable) {
+        for (let i in this.editModesAvailable) {
+          if (this.$route.name === i && this.$refs.modesButton.selected !== this.$route.name) {
+            this.$refs.modesButton.selected = this.$route.name;
+          }
+        }
+      }
     },
     ...mapActions(['setBlockSelection'])
   },
@@ -149,14 +160,13 @@ export default {
   },
   watch: {
     '$route' (toRoute, fromRoute) {
-      if (toRoute && this.$refs.modesButton) {
-        for (let i in this.$refs.modesButton.values) {
-          if (toRoute.name === i && this.$refs.modesButton.selected !== toRoute.name) {
-            this.$refs.modesButton.selected = toRoute.name;
-          }
-        }
-      }
+      this.setSelectedRoute();
     },
+    'editModesAvailable': {
+      handler(val) {
+        this.setSelectedRoute();
+      }
+    }
   },
   mounted() {
     

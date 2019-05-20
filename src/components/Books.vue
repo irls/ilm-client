@@ -30,6 +30,7 @@
     </div>
 
     <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}, audioeditorMode()]" >
+      <div v-if="preloader" :class="['audio-process-run', 'preloader-' + preloaderType]"></div>
       <AudioEditor ref="audioEditor"></AudioEditor>
     </nav>
 
@@ -81,7 +82,9 @@ export default {
       hasErrorAlert: false,
       errorAlert: '',
       hasAlert: false,
-      messageAlert: ''
+      messageAlert: '',
+      preloader: false,
+      preloaderType: ''
     }
   },
 
@@ -108,7 +111,29 @@ export default {
     'currentBookMeta': {
       handler(val, old_val) {
         if (this.$route.path.indexOf('/collections') !== 0 && !old_val._id && this.currentBookMeta && this.currentBookMeta.collection_id) {
-          this.$router.replace({ path: '/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta.bookid });
+          if (this.$route) {
+            let params = this.$route.params ? this.$route.params : {};
+            let meta = this.$route.meta ? this.$route.meta : {};
+            let name = 'CollectionBook';
+            switch (this.$route.name) {
+              case 'BookNarrate':
+                name = 'CollectionBookNarrate';
+                break;
+              case 'BookEdit':
+                name = 'CollectionBookEdit';
+                break;
+              case 'BookEditDisplay':
+                name = 'CollectionBookEditDisplay';
+                break;
+              case 'BookProofread':
+                name = 'CollectionBookProofread';
+                break;
+            }
+            params.collectionid = this.currentBookMeta.collection_id;
+            this.$router.replace({name: name, params: params, meta: meta});
+          } else {
+            this.$router.replace({ path: '/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta.bookid });
+          }
         } else if (this.metaVisible && !this.currentBookMeta._id) {
           this.metaVisible = false;
           this.metaAvailable = false;
@@ -206,6 +231,7 @@ export default {
         this.$root.$on('book-reimport-modal', this.evOnReimportModal);
         this.$root.$on('set-error-alert', this.setErrorAlert);
         this.$root.$on('set-alert', this.setAlert);
+        this.$root.$on('preloader-toggle', this.onPreloaderToggle);
 
 //         this.loadTTSVoices();
   },
@@ -228,7 +254,7 @@ export default {
     },
     isEditMode () {
       return this.$route.matched.some(record => {
-        return record.meta.mode === 'edit' || record.meta.mode === 'narrate'
+        return ['edit', 'narrate', 'proofread'].indexOf(record.meta.mode) !== -1;
       })
     },
 //     recountRows () {
@@ -271,6 +297,15 @@ export default {
     setAlert(message) {
       this.messageAlert = message;
     },
+    onPreloaderToggle(state, type) {
+      if (state) {
+        this.preloader = true;
+        this.preloaderType = type;
+      } else {
+        this.preloader = false;
+        this.preloaderType = '';
+      }
+    },
 
     ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo'])
   },
@@ -280,6 +315,7 @@ export default {
     this.$root.$off('book-reimport-modal', this.evOnReimportModal);
     this.$root.$off('set-error-alert', this.setErrorAlert);
     this.$root.$off('set-alert', this.setAlert);
+    this.$root.$off('preloader-toggle', this.onPreloaderToggle);
   }
 }
 </script>
@@ -457,6 +493,28 @@ export default {
   top: 120px;
   p {
     text-align: center;
+  }
+}
+.audio-process-run {
+
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 99999;
+  background-color: #0000006b;
+  background-repeat: no-repeat;
+  background-position: center;
+  &.preloader-editing-audio {
+    background-image: url(/static/preloader-editing-audio.gif);
+  }
+  &.preloader-save {
+    background-image: url(/static/preloader-save.gif);
+  }
+  &.preloader-align {
+    background-image: url(/static/preloader-align.gif);
+  }
+  &.preloader-loading {
+    background-image: url(/static/preloader-loading.gif);
   }
 }
 

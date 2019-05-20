@@ -9,6 +9,7 @@
       <CollectionsToolbar v-else
       :hasItemSelected="hasItemSelected"
       :metaVisible="metaVisible"
+      :hasBookSelected="hasBookSelected"
       @collectionAdded="onCollectionAdded"
       @toggleMetaVisible="toggleMetaVisible"/>
 
@@ -82,7 +83,7 @@
       props: ['mode'],
       methods: {
         hasBookSelected () {
-          return !!this.currentBookMeta._id;
+          return !!this.currentBookMeta.bookid;
         },
         isEditMode () {
           return this.$route.matched.some(record => {

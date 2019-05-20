@@ -53,7 +53,8 @@
               :allowSetEnd="allowSetEnd"
               :prevId="parlistO.getInId(viewObj.blockRid)"
               :mode="mode"
-              :createBlockSubtask="createBlockSubtask"
+              :putBlockProofread="putBlockProofreadProxy"
+              :putBlockNarrate="putBlockNarrateProxy"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
@@ -273,7 +274,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate']),
 
     test(ev) {
         console.log('test', ev);
@@ -310,45 +311,31 @@ export default {
       let checkMeta = this.parlistO.meta || {};
       checkMeta = checkMeta.bookid || false;
       if (this.$route.params.hasOwnProperty('bookid')) {
-        if (!checkMeta || checkMeta!==this.$route.params.bookid) {
+        if (!checkMeta || checkMeta!==this.$route.params.bookid || this.$route.params.task_type) {
           this.freeze('loadBookMeta');
           return this.loadBook(this.$route.params.bookid)
           .then((meta)=>{
             //console.log('loadBook then meta', meta);
             this.unfreeze('loadBookMeta');
-            return this.searchBlockUnresolved()
-            .then((blockId)=>{
+            let startBlock = this.$route.params.block || false;
+            let taskType = this.$route.params.task_type || false;
 
-              let startBlock = blockId || this.$route.params.block || false;
-              let taskType = this.$route.params.task_type || false;
-
-              return this.loadPartOfBookBlocks({
-                bookId: this.$route.params.bookid,
-                block: startBlock,
-                taskType: taskType
-              }).then((answer)=>{
-                this.parlistO.setLookupsList(this.meta._id, answer);
-                let rIdsArray = this.parlistO.rIdsArray();
-                this.isNeedUp = rIdsArray[0];
-                this.isNeedDown = rIdsArray[rIdsArray.length-1];
-                this.$router.replace({name: this.$route.name, params: {}});
-                return Promise.resolve(answer);
-              })
+            return this.loadPartOfBookBlocks({
+              bookId: this.$route.params.bookid,
+              block: startBlock,
+              taskType: taskType
+            }).then((answer)=>{
+              this.parlistO.setLookupsList(this.meta._id, answer);
+              let rIdsArray = this.parlistO.rIdsArray();
+              this.isNeedUp = rIdsArray[0];
+              this.isNeedDown = rIdsArray[rIdsArray.length-1];
+              this.$router.replace({name: this.$route.name, params: {}});
+              return Promise.resolve(answer);
             })
           }).catch((err)=>{
             this.unfreeze('loadBookMeta');
             return Promise.reject(err);
           });
-        } else if (this.$route.params.task_type) {
-          this.freeze('loadBookMeta');
-          return this.searchBlockUnresolved()
-            .then((blockId)=>{
-              this.unfreeze('loadBookMeta');
-              if (blockId) {
-                this.scrollToBlock(blockId);
-              }
-              return Promise.resolve({ blocks:[] }); // already loaded
-            });
         } else {
           this.handleScroll(true);
           return Promise.resolve({ blocks:[] }); // already loaded
@@ -457,6 +444,7 @@ export default {
           if (this.startId === false) {
             this.startId = startId; // first load
             this.parlistO.setStartId(startId);
+            this.parlistO.setFirstVisibleId(startId);
           }
           this.unfreeze('loadBook');
           result.blockId = result.rows[result.rows.length-1].blockid;
@@ -467,36 +455,6 @@ export default {
         }
       }).catch(err=>{
         this.unfreeze('loadBook'); return err;
-      });
-    },
-
-    searchBlockUnresolved() { //TODO Temporary solution
-      let task_type = this.$route.params.task_type || false;
-      if (!task_type) return Promise.resolve(false);
-      if (task_type && task_type !== 'master-audio') {
-        if (!Object.keys(this.tc_tasksByBlock).length) {
-          return Promise.resolve(false);
-        }
-      }//&& task_type !== 'text-cleanup'
-
-      if (task_type === 'true') {
-        task_type = true;
-      }
-      if (!task_type && !this._is('editor')) {
-        task_type = true;
-      }
-      let meta = this.meta;
-      if (!meta.bookid) {
-        if (this.parlistO && this.parlistO.meta && this.parlistO.meta.bookid) {
-          meta = this.parlistO.meta;
-        }
-      }
-      return this.$store.dispatch('searchBlocksChain', {
-        book_id: meta.bookid,
-        startId: this.startId || meta.startBlock_id,
-        search: {block_type: 'unresolved',  task_type: task_type}
-      }).then((result)=>{
-        return result.blockId;
       });
     },
 
@@ -739,9 +697,7 @@ export default {
       //console.log('putBlockProxy', block);
       return this.putBlock(block)
       .then((updated)=>{
-        this.updateVisibleBlocks();
-        this.refreshPreviewTmpl([block.blockid]);
-        this.$store.commit('set_storeList', new BookBlock(updated));
+        return this._refreshAfterUpdate(updated);
       })
       .catch((err)=>{})
     },
@@ -766,6 +722,33 @@ export default {
         return Promise.resolve(blocks)
       })
       .catch((err)=>{})
+    },
+    
+    putBlockProofreadProxy: function(block) {
+      return this.putBlockProofread(block)
+        .then(response => {
+          return this._refreshAfterUpdate(response);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    
+    putBlockNarrateProxy: function(block) {
+      return this.putBlockNarrate(block)
+        .then(response => {
+          return this._refreshAfterUpdate(response);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    
+    _refreshAfterUpdate(block) {
+      this.updateVisibleBlocks();
+      this.refreshPreviewTmpl([block.blockid]);
+      this.$store.commit('set_storeList', new BookBlock(block));
+      return Promise.resolve();
     },
 
     putNumBlockOProxy: function (blockData) {
@@ -943,21 +926,22 @@ export default {
           //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
-          this.$store.commit('set_storeList', new BookBlock(b_new));
-          this.refreshBlock({doc: b_new, deleted: false});
-          if (b_old) {
-            this.refreshBlock({doc: b_old, deleted: false});
-          }
+
           let blockO = response.data.new_block;
           if (!this.parlistO.get(blockO.blockid)) {
             this.parlistO.addBlock(blockO);
           }
+          this.$store.commit('set_storeList', new BookBlock(b_new));
+
+//           if (b_old) {
+//             this.refreshBlock({doc: b_old, deleted: false});
+//           }
 
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
-          this.scrollBarBlocks = this.parlistO.idsArray();
-          if (!this.parlistO.getInId(blockO.blockid)) {
+          if (!this.parlistO.getInId(blockO['@rid'])) {
             this.startId = blockO.blockid;
+            this.parlistO.setStartId(blockO['@rid']);
           }
           this.unfreeze('insertBlockBefore');
           this.tc_loadBookTask(block.bookid);
@@ -986,19 +970,23 @@ export default {
           //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
-          this.$store.commit('set_storeList', new BookBlock(b_new));
-          this.refreshBlock({doc: b_new, deleted: false});
-          this.refreshBlock({doc: b_old, deleted: false});
+
           let blockO = response.data.new_block;
           if (!this.parlistO.get(blockO.blockid)) {
             this.parlistO.addBlock(blockO);
           }
+          this.$store.commit('set_storeList', new BookBlock(b_new));
+
+//           if (b_old) {
+//             this.refreshBlock({doc: b_old, deleted: false});
+//           }
 
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
           if (!this.parlistO.getOutId(blockO.blockid)) {
             let firstId = this.parlistO.idsViewArray()[0];
             this.startId = this.parlistO.getOutId(firstId);
+            this.parlistO.setStartId(this.startId);
             //this.startId = blockO.blockid;
           } //else this.refreshTmpl();
           this.unfreeze('insertBlockAfter');
@@ -1724,6 +1712,7 @@ export default {
           if (visible) {
             if (!firstVisible) {
               firstVisible = blockRef.blockO;
+              this.parlistO.setFirstVisibleId(blockRef.blockId);
             }
             lastVisible =  blockRef.blockO;
             if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
@@ -1874,8 +1863,27 @@ export default {
       if (Array.isArray(data.blocks)) data.blocks.forEach((res)=>{
         this.refreshBlock({doc: res, deleted: res.deleted || false, updField: updField});
       })
+    },
+    checkMode() {
+      if (this.currentJobInfo.id) {
+        let allowed = false;
+        switch (this.mode) {
+          case 'edit':
+            allowed = this.tc_showEditTab();
+            break;
+          case 'proofread':
+            allowed = this.tc_showProofreadTab();
+            break;
+          case 'narrate':
+            allowed = this.tc_showNarrateTab();
+            break;
+        }
+        if (!allowed) {
+          let params = this.$route.params ? this.$route.params : {};
+          this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
+        }
+      }
     }
-
   },
   events: {
       currentEditingBlock_id : function (key) {
@@ -1893,6 +1901,7 @@ export default {
   mounted: function() {
       //this.onScrollBookDown();
       //console.log('book mounted', this.meta._id);
+      this.checkMode();
       this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
         if (this.meta._id && initBlocks.blocks && initBlocks.blocks.length) {
@@ -1923,9 +1932,6 @@ export default {
                 }
 
                 //this.lazyLoad();
-                if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
-                  this.$router.push({name: 'BookEdit', params: {}});
-                }
               });
             });
           });
@@ -1985,9 +1991,6 @@ export default {
 //         if (newVal) {
 //           this.tc_loadBookTask()
 //           .then(()=>{
-//             if (this.mode === 'narrate' && !this.tc_hasTask('block_narrate')) {
-//               this.$router.push({name: 'BookEdit', params: {}});
-//             }
 //             this.loadBookDown(true)
 //             .then(()=>{
 //               this.setBlockWatch();
@@ -2055,6 +2058,29 @@ export default {
     'mode': {
       handler(val) {
         this.recordingState == '';
+        Vue.nextTick(() => {
+          this.correctEditWrapper();
+        })
+      }
+    },
+    'currentJobInfo.workflow.status': {
+      handler(val) {
+        if (val && val !== 'active') {
+          if (this.mode && this.mode !== 'edit') {
+            let params = {};
+            if (this.parlistO.firstVisibleId) {
+              params.block = this.parlistO.firstVisibleId;
+            }
+            this.$router.push({ name: 'BookEdit', params: params });
+          }
+        }
+      }
+    },
+    'currentJobInfo.id': {
+      handler(val) {
+        if (val) {
+          this.checkMode();
+        }
       }
     }
   }
@@ -2286,7 +2312,7 @@ export default {
   .table-row.controls-top {
     height: 28px;
     &.completed {
-      height: 20px;
+      /*height: 20px;*/
     }
   }
 

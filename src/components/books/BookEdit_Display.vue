@@ -173,9 +173,14 @@ export default {
         //console.log('firstVisibleId', firstVisibleId);
         if (firstVisibleId !== false && this.$route.params.block !== firstVisibleId) {
           this.onScrollEv = true;
+          let params = {};
+          for (let p in this.$route.params) {
+            params[p] = this.$route.params[p];
+          }
+          params.block = firstVisibleId;
           this.$router.push({
-            name: 'BookEditDisplay',
-            params: { block: firstVisibleId }
+            name: this.$route.name,
+            params: params
           });
         }
         //console.timeEnd('handleScroll');
