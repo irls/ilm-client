@@ -2149,7 +2149,7 @@ export default {
                 this.block.setContent(response.data.content);
                 this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
-                this.block.manual_boundaries = response.data.manual_boundaries || [];
+                this.block.setManualBoundaries(response.data.manual_boundaries || []);
                 this.isAudioChanged = true;
                 this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
               } else {
@@ -2203,7 +2203,7 @@ export default {
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
                 this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
                 this.isAudioChanged = true;
-                this.block.manual_boundaries = response.data.manual_boundaries || [];
+                this.block.setManualBoundaries(response.data.manual_boundaries || []);
               } else {
                 this.block.setContentFootnote(footnoteIdx, response.data.content);
                 this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
@@ -3103,6 +3103,7 @@ export default {
             this.block.undoAudiosrc();
             this.blockAudio.map = this.block.content;
             this.blockAudio.src = this.block.getAudiosrc('m4a');
+            this.block.undoManualBoundaries();
             this.isAudioChanged = isModified;
           } else {
             //this.audioEditFootnote.footnote.content = text;
