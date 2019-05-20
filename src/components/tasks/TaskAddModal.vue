@@ -252,9 +252,9 @@ export default {
                   //this.$router.replace({ path: '/books/' + this.import_book_id })
                 }).catch(error => {
                   //this.uploadError(error);
+                  this.deleteTask();
                 })
               } else {
-                console.log('this.$refs.bookImport.isDummyBook', this.$refs.bookImport.isDummyBook);
                 if (this.$refs.bookImport.isDummyBook == true) {
                   this.createDummyBook({book_id: self.createdJob.bookid, jobId: self.createdJob['@rid']})
                   .then((res)=>{
