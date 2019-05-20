@@ -2155,6 +2155,7 @@ export default {
               } else {
                 this.block.setContentFootnote(footnoteIdx, response.data.content);
                 this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
+                this.block.setManualBoundariesFootnote(footnoteIdx, response.data.manual_boundaries || []);
                 this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
                 this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
                 this.audioEditFootnote.isAudioChanged = true;
@@ -2201,15 +2202,15 @@ export default {
                 this.block.setContent(response.data.content);
                 this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
+                this.block.setManualBoundaries(response.data.manual_boundaries || []);
                 this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
                 this.isAudioChanged = true;
-                this.block.setManualBoundaries(response.data.manual_boundaries || []);
               } else {
                 this.block.setContentFootnote(footnoteIdx, response.data.content);
                 this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
+                this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
                 this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
                 this.audioEditFootnote.isAudioChanged = true;
-                this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
               }
             } else {
               this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
