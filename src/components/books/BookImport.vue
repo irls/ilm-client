@@ -140,7 +140,7 @@
                 <div class="alert-text-float-right" v-if="bookUploadCommonError">
                   <p>{{bookUploadCommonError}}.</p>
                 </div>
-                <div class="alert-text-float-right" v-if="bookUploadCheckError">
+                <div class="alert-text-float-right" v-if="bookUploadCheckError.length>0">
                   <p v-for='(errMsg) in bookUploadCheckError' v-html="errMsg+'.'"></p>
                 </div>
                 <div class="clearfix"></div>
@@ -209,7 +209,7 @@ export default {
         formData: new FormData(),
         uploadProgress: "Uploading Files...",
         bookUploadCommonError: false,
-        bookUploadCheckError: false,
+        bookUploadCheckError: [],
         selectedBooks: [],
         fileValue: '',
         isDummyBook: false,
@@ -250,7 +250,7 @@ export default {
   },
   computed: {
     hasUploadError: function() {
-      return this.bookUploadCheckError || this.bookUploadCommonError;
+      return this.bookUploadCheckError.length > 0 || this.bookUploadCommonError;
     },
     selectedBookType: function() {
       return this.bookTypes[this.bookType];
@@ -280,7 +280,7 @@ export default {
     },
     closeAlert() {
       this.bookUploadCommonError = false;
-      this.bookUploadCheckError = false;
+      this.bookUploadCheckError = [];
     },
     onFilesChange(e) {
       this.closeAlert();
@@ -348,21 +348,20 @@ export default {
             this.$emit('close_modal')
           }, 5000)
         } else if (Array.isArray(err.response.data)) {
-          let bookUploadCheckError = [];
+          this.bookUploadCheckError = [];
           err.response.data.forEach((msg)=>{
             if (typeof msg.error == 'object') {
               for (var prop in msg.error) {
                 if (Array.isArray(msg.error[prop]) && msg.error[prop].length) {
-                  bookUploadCheckError.push(`${this.errorsMsgKeys[prop] ? this.errorsMsgKeys[prop] : prop}: ${(JSON.stringify(msg.error[prop])).split(',').join(', ').replace(/(^\[|\]$)/g, '')}`)
+                  this.bookUploadCheckError.push(`${this.errorsMsgKeys[prop] ? this.errorsMsgKeys[prop] : prop}: ${(JSON.stringify(msg.error[prop])).split(',').join(', ').replace(/(^\[|\]$)/g, '')}`)
                 }
               }
             } else {
-              bookUploadCheckError.push(`Error: ${msg.error}`);
+              this.bookUploadCheckError.push(`Error: ${msg.error}`);
             }
           })
-          bookUploadCheckError.reverse().join('<br/>');
-          this.bookUploadCheckError = bookUploadCheckError;
-          this.$emit('upload_error', bookUploadCheckError);
+          this.bookUploadCheckError.reverse();
+          //this.$emit('upload_error', bookUploadCheckError);
         }
         return Promise.reject(err);
       });

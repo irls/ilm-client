@@ -295,7 +295,7 @@ export default {
             this.startId = startBlock;
             let taskType = this.$route.params.task_type || false;
 
-            console.log('startId', this.$route.params.block, this.startId);
+            //console.log('startId', this.$route.params.block, this.startId);
 
             return this.loadPartOfBookBlocks({
               bookId: this.$route.params.bookid,
