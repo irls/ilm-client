@@ -2124,18 +2124,20 @@ export default {
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_remove';
         let api = this.$store.state.auth.getHttp();
         this.isUpdating = true;
-        let formData = new FormData();
+        let formData = {};
         let position = [start, end];
-        formData.append('position', position);
+        formData.position = position;
         if (footnoteIdx === null ) {
-          formData.append('modified', this.isAudioChanged);
-          formData.append('content', this.block.content);
-          formData.append('audio', this.block.getAudiosrc(null, false));
+          formData.modified = this.isAudioChanged;
+          formData.content = this.block.content;
+          formData.audio = this.block.getAudiosrc(null, false);
+          formData.manual_boundaries = this.block.manual_boundaries || [];
         } else {
-          formData.append('content', this.audioEditFootnote.footnote.content);
-          formData.append('audio', this.block.getAudiosrcFootnote(footnoteIdx, null, false));
-          formData.append('modified', this.audioEditFootnote.isAudioChanged);
-          formData.append('footnote_idx', footnoteIdx);
+          formData.content = this.audioEditFootnote.footnote.content;
+          formData.audio = this.block.getAudiosrcFootnote(footnoteIdx, null, false);
+          formData.modified = this.audioEditFootnote.isAudioChanged;
+          formData.footnote_idx = footnoteIdx;
+          formData.manual_boundaries = this.audioEditFootnote.footnote.manual_boundaries || [];
         }
         api.post(api_url, formData, {})
           .then(response => {
@@ -2147,11 +2149,13 @@ export default {
                 this.block.setContent(response.data.content);
                 this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
+                this.block.manual_boundaries = response.data.manual_boundaries || [];
                 this.isAudioChanged = true;
                 this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
               } else {
                 this.block.setContentFootnote(footnoteIdx, response.data.content);
                 this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
+                this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
                 this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
                 this.audioEditFootnote.isAudioChanged = true;
               }
@@ -2171,20 +2175,22 @@ export default {
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio/insert_silence';
         let api = this.$store.state.auth.getHttp();
         this.isUpdating = true;
-        let formData = new FormData();
-        formData.append('position', position);
-        formData.append('length', length);
+        let formData = {};
+        formData.position = position;
+        formData.length = length;
         if (footnoteIdx === null ) {
-          formData.append('content', this.block.content);
-          formData.append('audio', this.block.getAudiosrc(null, false));
-          formData.append('modified', this.isAudioChanged);
+          formData.content = this.block.content;
+          formData.audio = this.block.getAudiosrc(null, false);
+          formData.modified = this.isAudioChanged;
+          formData.manual_boundaries = this.block.manual_boundaries || [];
         } else {
-          formData.append('content', this.audioEditFootnote.footnote.content);
-          formData.append('audio', this.block.getAudiosrcFootnote(footnoteIdx, null, false));
-          formData.append('modified', this.audioEditFootnote.isAudioChanged);
+          formData.content = this.audioEditFootnote.footnote.content;
+          formData.audio = this.block.getAudiosrcFootnote(footnoteIdx, null, false)
+          formData.modified = this.audioEditFootnote.isAudioChanged;
+          formData.manual_boundaries = this.audioEditFootnote.footnote.manual_boundaries || [];
         }
         if (footnoteIdx !== null) {
-          formData.append('footnote_idx', footnoteIdx)
+          formData.footnote_idx = footnoteIdx
         }
         api.post(api_url, formData, {})
           .then(response => {
@@ -2197,11 +2203,13 @@ export default {
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
                 this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
                 this.isAudioChanged = true;
+                this.block.manual_boundaries = response.data.manual_boundaries || [];
               } else {
                 this.block.setContentFootnote(footnoteIdx, response.data.content);
                 this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
                 this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
                 this.audioEditFootnote.isAudioChanged = true;
+                this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
               }
             } else {
               this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
