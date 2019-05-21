@@ -1,7 +1,7 @@
 <template>
   <div ref="viewBlock" :id="block._id"
     :class="['table-body -block', '-mode-' + mode, blockOutPaddings]">
-    <div v-if="isLocked" class="locked-block-cover"></div>
+    <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
 
         <div class="table-row" v-if="meta.numbering !== 'none'">
@@ -714,6 +714,13 @@ export default {
       hasLock: {
         get() {
           return this.block ? this.isBlockLocked(this.block.blockid) : false;
+        }
+      },
+      lockedType: {
+        get() {
+          if (this.isSaving) {
+            return 'save';
+          }
         },
         cache: false
       },
@@ -4757,16 +4764,6 @@ export default {
       background-repeat: no-repeat;
       text-align: center;
       background-position: center;
-  }
-  .locked-block-cover {
-    width: 100%;
-    position: absolute;
-    height: 100%;
-    background: url(/static/preloader-snake-small.gif);
-    background-repeat: no-repeat;
-    text-align: center;
-    background-position: center;
-    background-color: #8080807d;
   }
   .recording-hover-controls {
     position: absolute;

@@ -517,5 +517,24 @@ export default {
     background-image: url(/static/preloader-loading.gif);
   }
 }
+.content-process-run {
+  height: 150px;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  
+  &.locked-block-cover {
+    width: 100%;
+    position: absolute;
+    height: 100%;
+    background-color: #8080807d;
+  }
+  &.preloader-loading {
+    background-image: url(/static/preloader-loading-black.gif);
+  }
+  &.preloader-save {
+    background-image: url(/static/preloader-save-black.gif);
+  }
+}
 
 </style>
