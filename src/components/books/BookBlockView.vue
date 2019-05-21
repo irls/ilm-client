@@ -1543,7 +1543,7 @@ export default {
                 this.block.manual_boundaries = response.data.manual_boundaries || [];
                 this.isAudioChanged = false;
                 if (reload) {
-                  this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
+                  this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
                 }
               } else {
                 let resp_block = response.data;
@@ -1551,7 +1551,7 @@ export default {
                 this.block.setContentFootnote(footnoteIdx, resp_f.content);
                 this.block.setAudiosrcFootnote(footnoteIdx, resp_f.audiosrc, resp_f.audiosrc_ver);
                 if (reload) {
-                  this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
+                  this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
                 }
                 this.audioEditFootnote.isAudioChanged = false;
               }
@@ -1926,7 +1926,7 @@ export default {
                   this.blockAudio.src = this.block.getAudiosrc('m4a');
                   this.block.manual_boundaries = response.data.manual_boundaries || [];
                   //return this.putBlock(this.block);
-                  this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map);
+                  this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
                   this.isAudioChanged = false;
                   this.isChanged = false;
                   this.block.isAudioChanged = false;
@@ -1942,7 +1942,7 @@ export default {
                   this.block.setContentFootnote(footnoteIdx, resp_f.content);
                   this.block.setAudiosrcFootnote(footnoteIdx, resp_f.audiosrc, resp_f.audiosrc_ver);
                   this.audioEditFootnote.footnote.manual_boundaries = resp_f.manual_boundaries || [];
-                  this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
+                  this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
                   this.audioEditFootnote.isAudioChanged = false;
                   return BPromise.resolve();
                 }
@@ -2208,8 +2208,8 @@ export default {
               } else {
                 this.block.setContentFootnote(footnoteIdx, response.data.content);
                 this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
-                this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
-                this.block.setManualBoundariesFootnote(response.data.manual_boundaries || []);
+                //this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
+                this.block.setManualBoundariesFootnote(footnoteIdx, response.data.manual_boundaries || []);
                 this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, true, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
                 this.audioEditFootnote.isAudioChanged = true;
               }
@@ -3113,7 +3113,8 @@ export default {
             //this.audioEditFootnote.isAudioChanged = isModified;
             this.block.undoContentFootnote(this.footnoteIdx);
             this.block.undoAudiosrcFootnote(this.footnoteIdx);
-            this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(this.footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content);
+            this.block.undoManualBoundariesFootnote(this.footnoteIdx);
+            this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(this.footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
           }
         }
       },
