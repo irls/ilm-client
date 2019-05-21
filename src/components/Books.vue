@@ -535,6 +535,12 @@ export default {
   &.preloader-save {
     background-image: url(/static/preloader-save-black.gif);
   }
+  &.preloader-editing-audio {
+    background-image: url(/static/preloader-editing-audio-black.gif);
+  }
+  &.preloader-align {
+    background-image: url(/static/preloader-align-black.gif);
+  }
 }
 
 </style>

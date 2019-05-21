@@ -716,6 +716,10 @@ export default {
           if (this.isSaving) {
             return 'save';
           }
+          if (this.isUpdating) {
+            return 'editing-audio';
+          }
+          return this.blockLockType(this.block.blockid);
         },
         cache: false
       },
@@ -960,7 +964,8 @@ export default {
           storeListO: 'storeListO',
           approveBlocksList: 'approveBlocksList',
           adminOrLibrarian: 'adminOrLibrarian',
-          currentJobInfo: 'currentJobInfo'
+          currentJobInfo: 'currentJobInfo',
+          blockLockType: 'blockLockType'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
