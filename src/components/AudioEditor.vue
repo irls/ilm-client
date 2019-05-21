@@ -778,7 +778,7 @@
           }
           this._clearWordSelection();
         },
-        setAudio(audio, text, saveToHistory) {
+        setAudio(audio, text, saveToHistory = true, block = null) {
           if (this.plEventEmitter) {
             this.plEventEmitter.emit('clear');
           }
@@ -788,7 +788,7 @@
           if (saveToHistory && this.content && this.audiofile) {
             this._addHistory(this.content, this.audiofile);
           }
-          this.load(audio, text, this.block);
+          this.load(audio, text, block ? block : this.block);
         },
         play(cursorPosition) {
           if (typeof cursorPosition === 'undefined') {
@@ -1412,7 +1412,7 @@
                     }
                   });
                 }
-              }, 500);
+              }, 100);
             }
             if (self.audiosourceEditor.annotationList.annotations.length > 0) {
               $('.annotation-box').each(function(i, el) {
