@@ -42,7 +42,7 @@
       </div>
 
   </div>
-  <div v-else ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', 'in-loading']">
+  <div v-else ref="viewBlock" :data-id="blockId" :data-rid="blockRid" :id="blockId" :class="['ilm-block', 'ilm-display', 'content-process-run', 'preloader-loading']">
     <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
   </div>
 
@@ -159,12 +159,5 @@ import { mapGetters, mapState, mapActions } from 'vuex'
 </script>
 
 <style lang='less' scoped>
-  .in-loading {
-    height: 150px;
-    background: url(/static/preloader-snake-small.gif);
-    width: 100%;
-    background-repeat: no-repeat;
-    text-align: center;
-    background-position: center;
-  }
+  
 </style>
