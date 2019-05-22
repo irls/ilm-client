@@ -1155,7 +1155,8 @@ export default {
         'updateBookVersion',
         'updateBlockToc',
         'saveNarrated',
-        'checkError'
+        'checkError',
+        'getBookAlign'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1717,12 +1718,22 @@ export default {
 
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
+        let is_content_changed = this.hasChange('content');
+        let is_type_changed = this.hasChange('type');
         this.isSaving = true;
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
-        return this.putBlock([update, realign]).then(()=>{
-          this.isSaving = false;
+        return this.putBlock([update, realign]).then((updated)=>{
+          //this.block.manual_boundaries = updated.manual_boundaries
+          if (realign) {
+            this.getBookAlign()
+              .then(() => {
+                this.isSaving = false;
+              });
+          } else {
+            this.isSaving = false;
+          }
           if (this.isCompleted) {
             this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();

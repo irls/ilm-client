@@ -748,7 +748,7 @@ export default {
       this.updateVisibleBlocks();
       this.refreshPreviewTmpl([block.blockid]);
       this.$store.commit('set_storeList', new BookBlock(block));
-      return Promise.resolve();
+      return Promise.resolve(this.parlist.get(block.blockid));
     },
 
     putNumBlockOProxy: function (blockData) {

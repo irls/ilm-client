@@ -2295,7 +2295,7 @@ export const store = new Vuex.Store({
     getBookAlign({state, commit, dispatch}) {
       if (state.currentBookid) {
         let api_url = state.API_URL + 'align_queue/' + state.currentBookid;
-        axios.get(api_url, {})
+        return axios.get(api_url, {})
           .then(response => {
             if (response.status == 200) {
               let oldBlocks = state.aligningBlocks;
@@ -2322,7 +2322,7 @@ export const store = new Vuex.Store({
                   }
                 });
               }
-              Promise.all(checks)
+              return Promise.all(checks)
                 .then(() => {
                   if (oldBlocks.length != blocks.length) {
                     dispatch('getAudioBook');
@@ -2334,6 +2334,7 @@ export const store = new Vuex.Store({
                     dispatch('recountApprovedInRange');
                     state.storeListO.refresh();
                   }
+                  return Promise.resolve();
                 })
             }
             return Promise.resolve();
