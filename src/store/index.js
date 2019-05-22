@@ -269,6 +269,13 @@ export const store = new Vuex.Store({
           return 'align';
         }
       }
+      if (state.lockedBlocks.length > 0) {
+        let l = state.lockedBlocks.find(_l => _l._id === id);
+        if (l) {
+          return l.type;
+        }
+      }
+      return '';
     },
 
     storeList: state => state.storeList, // global parlist

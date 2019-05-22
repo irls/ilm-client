@@ -527,19 +527,19 @@ export default {
     width: 100%;
     position: absolute;
     height: 100%;
-    background-color: #8080807d;
+    background-color: #0000006b;
   }
   &.preloader-loading {
-    background-image: url(/static/preloader-loading-black.gif);
+    background-image: url(/static/preloader-loading.gif);
   }
   &.preloader-save {
-    background-image: url(/static/preloader-save-black.gif);
+    background-image: url(/static/preloader-save.gif);
   }
   &.preloader-editing-audio {
-    background-image: url(/static/preloader-editing-audio-black.gif);
+    background-image: url(/static/preloader-editing-audio.gif);
   }
   &.preloader-align {
-    background-image: url(/static/preloader-align-black.gif);
+    background-image: url(/static/preloader-align.gif);
   }
 }
 

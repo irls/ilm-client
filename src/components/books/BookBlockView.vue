@@ -709,7 +709,7 @@ export default {
         if (this.isUpdating) {
           return true;
         }
-        return this.block ? this.isBlockLocked(this.block.blockid) : false;
+        return this.hasLock;
       },
       hasLock: {
         get() {
@@ -724,7 +724,13 @@ export default {
           if (this.isUpdating) {
             return 'editing-audio';
           }
-          return this.blockLockType(this.block.blockid);
+          let lockType = this.blockLockType(this.block.blockid);
+          switch (lockType) {
+            case 'align':
+              return 'align';
+            default:
+              return 'save';
+          }
         },
         cache: false
       },
