@@ -2598,7 +2598,10 @@ export const store = new Vuex.Store({
           donorBlock_id: data.donorBlock_id
         })
         .then(response => {
-          return dispatch('checkResponse', response);
+          return dispatch('getBookAlign')
+            .then(() => {
+              return dispatch('checkResponse', response);
+            });
         })
         .catch(err => {
           return Promise.reject(err);
