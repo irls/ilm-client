@@ -182,7 +182,8 @@
           annotations: [],
           minWordSize: 0.05,
           wordSelectionMode: false,
-          processRun: false
+          processRun: false,
+          processRunType: null
         }
       },
       mounted() {
@@ -200,6 +201,7 @@
           this.alignProcess = false;
         })
         this.$root.$on('for-audioeditor:set-process-run', this.setProcessRun);
+        this.$root.$on('for-audioeditor:flush', this.flush);
       },
       beforeDestroy() {
         if (this.audioContext) {
@@ -214,6 +216,7 @@
         this.$root.$off('for-audioeditor:reload-text', this._setText);
         this.$root.$off('for-audioeditor:select', this.select);
         this.$root.$off('for-audioeditor:set-process-run', this.setProcessRun);
+        this.$root.$off('for-audioeditor:flush', this.flush);
       },
       methods: {
         select (block_id, start, end) {
@@ -1737,11 +1740,17 @@
         
         setProcessRun(val, type) {
           this.processRun = val;
+          this.processRunType = type;
           if (val) {
             this.$root.$emit('preloader-toggle', true, type);
           } else {
             this.$root.$emit('preloader-toggle', false, '');
           }
+        },
+        
+        flush() {
+          this.setProcessRun(false);
+          this.isModified = false;
         }
 
       },

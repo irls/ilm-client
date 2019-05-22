@@ -711,6 +711,12 @@ export default {
         }
         return this.block ? this.isBlockLocked(this.block.blockid) : false;
       },
+      hasLock: {
+        get() {
+          return this.block ? this.isBlockLocked(this.block.blockid) : false;
+        },
+        cache: false
+      },
       isChecked: { cache: false,
       get: function () {
         return (this.blockO && this.blockO.checked === true);
@@ -1742,8 +1748,8 @@ export default {
           if (this.blockAudio.map) {
             this.blockAudio.map = this.block.content;
           }
-          if (this.isAudioEditing) {
-            this.$root.$emit('for-audioeditor:set-process-run', false);
+          if (this.isAudioEditing && !realign) {
+            this.$root.$emit('for-audioeditor:flush');
             this.$root.$emit('for-audioeditor:reload-text', this.block.content, this.block);
           }
           this.$refs.blockContent.dataset.has_suggestion = false;
@@ -1919,7 +1925,15 @@ export default {
           }
           return api.post(api_url, data, {})
             .then(response => {
-              this.isSaving = false;
+              if (!realign) {
+                this.isSaving = false;
+              } else {
+                this.getBookAlign()
+                  .then(() => {
+                    this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+                    this.isSaving = false;
+                  })
+              }
               if (response.status == 200) {
                 if (this.isCompleted) {
                   this.tc_loadBookTask();
@@ -1937,7 +1951,9 @@ export default {
                   this.blockAudio.src = this.block.getAudiosrc('m4a');
                   this.block.manual_boundaries = response.data.manual_boundaries || [];
                   //return this.putBlock(this.block);
-                  this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
+                  if (!realign) {
+                    this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
+                  }
                   this.isAudioChanged = false;
                   this.isChanged = false;
                   this.block.isAudioChanged = false;
@@ -1953,7 +1969,9 @@ export default {
                   this.block.setContentFootnote(footnoteIdx, resp_f.content);
                   this.block.setAudiosrcFootnote(footnoteIdx, resp_f.audiosrc, resp_f.audiosrc_ver);
                   this.audioEditFootnote.footnote.manual_boundaries = resp_f.manual_boundaries || [];
-                  this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
+                  if (!realign) {
+                    this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
+                  }
                   this.audioEditFootnote.isAudioChanged = false;
                   return BPromise.resolve();
                 }
@@ -2947,6 +2965,7 @@ export default {
         //$('nav.fixed-bottom').removeClass('hidden');
         this.audioEditFootnote.footnote = footnote;
         this.showAudioEditor(ftnIdx, footnote);
+        this.isAudioEditing = true;
       },
       showAudioEditor(footnoteIdx = null, footnote = null) {
         //$('.table-body.-content').removeClass('editing');
@@ -3630,6 +3649,23 @@ export default {
               this.getCurrentJobInfo();
             }
           }
+        }
+      },
+      'hasLock': {
+        handler(val) {
+          if (!val) {
+            if (this.isAudioEditing) {
+              //this.$root.$emit('for-audioeditor:set-process-run', false);
+              if (this.check_id === this.block.blockid) {
+                this.refreshBlockAudio();
+                this.showAudioEditor();
+              } else {
+                let ftn = this.block.footnotes[this.footnoteIdx];
+                this.showFootnoteAudioEditor(ftn, this.footnoteIdx);
+              }
+            }
+          }
+          
         }
       },
       'block.isUpdated' (newVal, oldVal) {
