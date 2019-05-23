@@ -2620,7 +2620,10 @@ export const store = new Vuex.Store({
       return axios.post(state.API_URL + 'book/block/' + data.blockid + '/audio', data, {})
         .then(response => {
           //console.log(response);
-          return Promise.resolve(response);
+          return dispatch('getBookAlign')
+            .then(() => {
+              return Promise.resolve(response);
+            });
         })
         .catch(err => {
           return dispatch('checkError', err);
