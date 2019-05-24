@@ -1,20 +1,37 @@
 <template>
   <div>
     <div v-for="counter in tasks_counter">
-      <div v-if="counter.data.tasks.length > 0" class="counters-container">
+      <div class="counters-container">
         <div class="counter-executor">
           <span v-if="counter.key == 'editor'">
             <div class="col-sm-2" ><i>Editor:</i></div>
             <div class="col-sm-2" >&nbsp;</div>
-            <div class="col-sm-8"><select v-model="counter.data.executor"><option v-for="user_editor in users['editor']" :value="user_editor._id">{{user_editor.name}} {{user_editor.email}}</option></select></div>
+            <div class="col-sm-8" v-if="adminOrLibrarian"><select v-model="counter.data.executor_id" @change="updateAssignee('editor', counter.data.executor_id)" ><option v-for="user_editor in users['editor']" :value="user_editor._id" >{{user_editor.name}} {{user_editor.email}}</option></select></div>
+            <div class="col-sm-8" v-if="!adminOrLibrarian">{{counter.data.executor}}</div>
           </span>
 
-          <span v-if="counter.key == 'narrator'"><i>Narrator:</i></span>
+          <span v-if="counter.key == 'proofer'">
+            <div class="col-sm-2" ><i>Proofreader:</i></div>
+            <div class="col-sm-2" >&nbsp;</div>
+            <div class="col-sm-8" v-if="adminOrLibrarian"><select v-model="counter.data.executor_id" @change="updateAssignee('proofer', counter.data.executor_id)"><option v-for="user_proofer in users['proofer']" :value="user_proofer._id">{{user_proofer.name}} {{user_proofer.email}}</option></select></div>
+            <div class="col-sm-8" v-if="!adminOrLibrarian">{{counter.data.executor}}</div>
+          </span>
+
+          <span v-if="counter.key == 'narrator'">
+            <div class="col-sm-2" ><i>Narrator:</i></div>
+            <div class="col-sm-2" >&nbsp;</div>
+            <div class="col-sm-8" v-if="adminOrLibrarian"><select v-model="counter.data.executor_id" @change="updateAssignee('narrator', counter.data.executor_id)"><option v-for="user_narrator in users['narrator']" :value="user_narrator._id">{{user_narrator.name}} {{user_narrator.email}}</option></select></div>
+            <div class="col-sm-8" v-if="!adminOrLibrarian">{{counter.data.executor}}</div>
+          </span>
+
+          
+
+          <!--<span v-if="counter.key == 'narrator'"><i>Narrator:</i></span>
           <span v-if="counter.key == 'proofer'"><i>Proofreader:</i></span>
-          <span v-if="counter.key != 'editor'">{{counter.data.executor}}</span>
+          <span v-if="counter.key != 'editor'">{{counter.data.executor}}</span>-->
 
         </div>
-        <table class="counters">
+        <table class="counters" v-if="counter.data.tasks.length > 0">
           <thead>
             <th>Task</th>
             <th>Status</th>
@@ -126,6 +143,26 @@
       })
     },
     methods: {
+      updateAssignee(role, user){
+        let api_url = this.API_URL + 'books/' + this.currentBookMeta._id + '/assignee';
+        let api = this.$store.state.auth.getHttp();
+        return api.post(api_url, {
+          bookid: this.currentBookMeta._id,
+          role: role,
+          user: user
+        }, {})
+          .then(response => {
+            if (response.status == 200 && response.data.audiosrc) {
+              //this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+              //this.blockAudio.src = this.block.getAudiosrc('m4a');
+              this.isAudioChanged = false;
+              this.block.isAudioChanged = false;
+              //return this.putBlock(this.block);
+              this.$root.$emit('bookBlocksUpdates', {blocks: [response.data.block]});
+            }
+          })
+          .catch(err => {});
+      },
       goToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
