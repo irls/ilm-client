@@ -633,9 +633,6 @@ export default {
   mounted() {
     let self = this;
     self.getTaskUsers();
-    console.log(this.users);
-
-
 
     //this.loadAudiobook(true)
     this.getAudioBook(this.currentBookid)
