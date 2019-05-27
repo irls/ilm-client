@@ -1494,6 +1494,7 @@ export default {
       var self = this
       axios.get(this.API_URL + 'tasks/users').then(users => {
         for (var role in self.users) {
+          //let's add unassigned user in this list:
           self.users[role] = [{'_id':'unassigned', 'email':'', 'name':'Unassigned'}]
           for (var i in users.data) {
             if (users.data[i].roles.indexOf(role) != -1 && users.data[i].enable === true) {
