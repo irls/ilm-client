@@ -1180,12 +1180,12 @@ export const store = new Vuex.Store({
       }
     },
 
-    updateBookCover({commit, state}, data) {
+    updateBookCover({commit, state, dispatch}, data) {
       if (state.currentBookMeta.bookid) {
         return axios.post(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/coverimg', data.formData, data.config)
         .then(doc => {
           commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: doc.data.coverimgURL});
-          this.updateBookVersion({minor: true});
+          dispatch('updateBookVersion', {minor: true});
           return Promise.resolve();
         }).catch(err => {
           return Promise.reject(err);
