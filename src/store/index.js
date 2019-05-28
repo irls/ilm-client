@@ -2655,5 +2655,15 @@ export const store = new Vuex.Store({
           return Promise.reject();
         });
     },
+    updateBlockPart({state}, [id, update, blockIdx, realign]) {
+      let url = `books/blocks/${encodeURIComponent(id)}/part/${blockIdx}`;
+      if (realign) {
+        url+= '?realign=true';
+      }
+      return axios.put(state.API_URL + url, update)
+        .then((response) => {
+          console.log(response);
+        });
+    }
   }
 })

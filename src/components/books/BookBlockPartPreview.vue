@@ -12,16 +12,38 @@
       <div :class="['table-body', '-content']">
         <div class="table-row-flex controls-top"></div>
         <!--<div class="table-row-flex controls-top">-->
-        <template v-for="(blockPart, blockPartIdx) in blockParts">
-          <BookBlockPartPreview
-            :blockRid = "blockRid"
-            :blockId = "blockId"
-            :blockO = "blockO"
-            :block = "block"
-            :blockPart="blockPart"
-            :blockPartIdx="blockPartIdx"
-            ></BookBlockPartPreview>
+        <div :class="['table-row ilm-block']">
+
+        <hr v-if="block.type=='hr'"
+          :class="[getClass]"/>
+
+        <div v-else-if="block.type == 'illustration'"
+        :class="['table-body illustration-block']">
+          <img v-if="block.illustration" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+          :height="block.illustration_height"
+          :class="[getClass]"/>
+          <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': isChanged && !isIllustrationChanged}]" v-if="allowEditing">
+            <div class="preview-container"></div>
+          </div>
+
+          <div :class="['table-row content-description', getClass]">
+            <div class="content-wrap-desc description"
+              v-html="block.description">
+            </div>
+          </div>
+
+        </div>
+        <!--<img v-if="block.illustration"-->
+
+        <template v-else>
+          <div v-cloak
+          :class="['content-wrap-preview', getClass, {'js-hidden': blockO.loaded !== true}]"
+          v-html="blockPart.content">
+          </div>
         </template>
+        <!--<div class="content-wrap">-->
+
+        </div>
         <!--<div :class="['table-row ilm-block']">-->
 
         <div class="table-row content-footnotes"
@@ -73,12 +95,12 @@
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import access             from '../../mixins/access.js';
-import BookBlockPartPreview from './BookBlockPartPreview';
+import {mapGetters} from 'vuex'
 
   export default {
     name: 'book-block-preview',
     props: [
-      'blockRid', 'blockO', 'block', 'mode'
+      'blockRid', 'blockO', 'block', 'blockPart', 'blockPartIdx'
     ],// loaded property is necessary for updating first part of loaded blocks, VueJS is not updating automatically
     data() {
       return {
@@ -86,9 +108,6 @@ import BookBlockPartPreview from './BookBlockPartPreview';
       }
     },
     mixins: [access, taskControls, apiConfig],
-    components: {
-      BookBlockPartPreview: BookBlockPartPreview
-    },
     computed: {
       /*...mapGetters({
         meta: 'currentBookMeta',
@@ -160,9 +179,13 @@ import BookBlockPartPreview from './BookBlockPartPreview';
           return false;
         }
       },
+      ...mapGetters({
+        mode: 'bookMode'
+      })
     },
     methods: {
 
     }
   }
 </script>
+

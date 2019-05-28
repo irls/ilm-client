@@ -1,44 +1,15 @@
 <template>
-  <div ref="viewBlock" :id="block._id"
+  <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block', '-mode-' + mode, blockOutPaddings]">
-    <div v-if="isLocked" class="locked-block-cover"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
-
-        <!-- <div class="table-row" v-if="meta.numbering !== 'none'">
-            <div v-if="false" class='par-ctrl -hidden'>
-                <i class="glyphicon glyphicon-volume-up"></i>
-                <i class="glyphicon glyphicon-volume-off"></i>
-            </div>
-        </div> -->
-        <div class="table-row check-row" v-if="allowEditing">
-
-          <div class="set-range">
-            <i class="fa fa-square-o -hidden" aria-hidden="true"
-            v-if="isChecked === false"
-            v-on:click="$event.target.checked = true; setRangeSelection('byOne', $event)"></i>
-            <i class="fa fa-check-square-o" aria-hidden="true"
-            v-if="isChecked === true"
-            v-on:click="setRangeSelection('byOne', false)"></i>
-
-            <template v-if="selectionStart && selectionStart !== selectionEnd">
-            <i v-if="selectionEnd && block._id == selectionStart"
-            class="fa fa-arrow-circle-down" aria-hidden="true"
-            v-on:click="scrollToBlock(selectionEnd)"></i>
-            <i v-if="selectionStart && block._id == selectionEnd"
-            class="fa fa-arrow-circle-up" aria-hidden="true"
-            v-on:click="scrollToBlock(selectionStart)"></i>
-            </template>
-          </div>
-
-        </div>
-        <!-- <template v-if="mode === 'narrate'">
+        <template v-if="mode === 'narrate'">
           <div class="table-row" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged && !isRecording">
             <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
           </div>
           <template v-if="player && blockAudio.src && !isRecording && tc_showBlockNarrate(block.blockid)">
             <div class="table-row" v-if="!isAudStarted">
               <i class="fa fa-play-circle-o"
-                @click="audPlay(block._id, $event)"></i>
+                @click="audPlay($event)"></i>
             </div>
             <template v-else>
               <div class="table-row">
@@ -54,154 +25,25 @@
             </template>
           </template>
           <div class="table-row narrate-controls" v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
+            <!-- <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i> -->
+            <!-- <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i> -->
             <i class="fa fa-microphone" v-if="!isRecording && !isChanged" @click="startRecording($event)"></i>
             <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i>
             <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i>
           </div>
-        </template> -->
+        </template>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + (block.language || 'undefined')]"
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
-              <div v-if="isNumbered" class="par-ctrl -par-num -hidden-hover">
-                <!--<i class="fa fa-hashtag"></i>-->
-                <label ref="parnumRef" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
-              </div>
-              <div class="par-ctrl -hidden">
-                <div class="block-menu">
-                  <i class="glyphicon glyphicon-menu-hamburger"
-                  @click.prevent="$refs.blockMenu.open($event, block._id)">
-                  </i><!-- {{changes}} -->
-                  <block-menu
-                      ref="blockMenu"
-                      dir="top"
-                      :update="update"
-                      @click.stop>
-
-                    <li v-if="isHideArchFlags"
-                      @click.prevent="toggleArchFlags()">
-                      <i class="fa fa-eye" aria-hidden="true"></i>
-                      Show archived flags</li>
-                    <li v-else
-                      @click.prevent="toggleArchFlags()">
-                      <i class="fa fa-eye-slash" aria-hidden="true"></i>
-                      Hide archived flags</li>
-
-                    <li class="separator"></li>
-                    <template v-if="allowEditing">
-                      <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
-                        <i class="fa fa-angle-up" aria-hidden="true"></i>
-                        Insert block before</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Insert block before</li>
-                      <li v-if="!isBlocked" @click="insertBlockAfter()">
-                        <i class="fa fa-angle-down" aria-hidden="true"></i>
-                        Insert block after</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Insert block after</li>
-                      <li v-if="!isBlockLocked(prevId)" @click="showModal('delete-block-message')">
-                        <i class="fa fa-trash" aria-hidden="true"></i>
-                        Delete block</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Delete block</li>
-                      <!--<li>Split block</li>-->
-                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(prevId)" @click="joinWithPrevious()">
-                        <i class="fa fa-angle-double-up" aria-hidden="true"></i>
-                        Join with previous block</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Join with previous block</li>
-                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(block.chainid)" @click="joinWithNext()">
-                        <i class="fa fa-angle-double-down" aria-hidden="true"></i>
-                        Join with next block</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Join with next block</li>
-                      <li class="separator"></li>
-                      <li @click.prevent="selectLang($event)"  v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
-                          <i class="fa fa-language" aria-hidden="true"></i>
-                          Language: <select v-model='block.language' style="min-width: 100px;" @input="selectLangSubmit(block);">
-                          <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
-                        </select>
-                      </li>
-                      <li class="separator"></li>
-                      <template v-if="block.type != 'illustration' && block.type != 'hr'">
-                      <li @click="showModal('block-html')">
-                        <i class="fa fa-code" aria-hidden="true"></i>
-                        Edit HTML</li>
-                      <li class="separator"></li>
-                      </template>
-                    </template>
-                    <li @click="discardAudio" v-if="allowAudioRevert">
-                      <i class="fa fa-cloud-download" aria-hidden="true"></i>
-                      Revert to original audio</li>
-                  </block-menu>
-                </div>
-                <!--<div class="block-menu">-->
-                <div class="par-ctrl-divider"></div>
-
-                <!--<i class="fa fa-trash-o fa-lg"></i>-->
-                <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
-
-                <template v-if="allowEditing">
-                  <!--{{blockO.rid}} - {{isNumbered}}-->
-                  <div v-if="isNumbered"
-                    :class="['parnum-row', {'-locked': blockO.isManual==true}]">
-
-                    <input v-if="block.type=='header'"
-                      @input="setNumVal" v-model="blockO.secnum"
-                      class="num" type="text" maxlength="12" size="12"/>
-                    <input v-if="block.type=='par'"
-                      @input="setNumVal" v-model="blockO.parnum"
-                      class="num" type="text" maxlength="12" size="12"/>
-
-                  </div>
-                  <!--<div v-else class="parnum-row"></div>-->
-                  <div class="par-ctrl-divider"></div>
-                  <div class="par-ctrl-divider"></div>
-
-                  <!-- Block Type selector -->
-                  <label>
-                    <select v-model="block.type" @input="setChanged(true, 'type', $event)"><!--v-model='block.type'--><!--:value="type"-->
-                      <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
-                    </select>
-                  </label>
-
-                  <div class="par-ctrl-divider"></div>
-
-                  <template v-if="allowVoiceworkChange()">
-                    <i class="fa fa-volume-off"></i>
-                    <div class="par-ctrl-divider"></div>
-                    <label>
-                      <select v-model='voiceworkSel'>
-                        <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
-                      </select>
-                    </label>
-                  </template>
-                  <template v-else>
-                    <i class="fa fa-volume-off"></i>
-                    <div class="par-ctrl-divider"></div>
-                    <label>
-                      <span>{{blockVoiceworks[block.voicework]}}</span>
-                    </label>
-                  </template>
-                </template>
-                <template v-else >
-
-                </template>
-              </div>
-              <!--<div class="par-ctrl -hidden">-->
-               <!-- <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'">
+              <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
                       <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating && mode === 'edit'"></i>
                       <i class="fa fa-play-circle-o"
-                        @click="audPlay(block._id, $event)"></i>
+                        @click="audPlay($event)"></i>
                       <i class="fa fa-stop-circle-o disabled"></i>
                     </template>
                     <template v-else>
@@ -211,9 +53,10 @@
                         @click="audResume(block._id, $event)"></i>
                       <i class="fa fa-stop-circle-o"
                         @click="audStop(block._id, $event)"></i>
+                      <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
                     </template>
                 </template>
-              </div> -->
+              </div>
               <!--<div class="par-ctrl -hidden">-->
             </div>
             <!--<div class="table-row-flex controls-top">-->
@@ -221,36 +64,8 @@
             <!-- <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
-            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + blockPartIdx" ref="blocks"
-              :block="block"
-              :blockO="blockO"
-              :blockId = "blockId"
-              :putBlock ="putBlock"
-              :getBlock ="getBlock"
-              :putBlockPart ="putBlockPart"
-              :putBlockO ="putBlockO"
-              :putNumBlockO ="putNumBlockO"
-              :recorder ="recorder"
-              :blockReindexProcess="blockReindexProcess"
-              :getBloksUntil="getBloksUntil"
-              :allowSetStart="allowSetStart"
-              :allowSetEnd="allowSetEnd"
-              :prevId="prevId"
-              :putBlockProofread="putBlockProofread"
-              :putBlockNarrate="putBlockNarrate"
-              :blockPart="blockPart"
-              :blockPartIdx="blockPartIdx"
-              @stopRecordingAndNext="stopRecordingAndNext"
-              @insertBefore="insertBlockBefore"
-              @insertAfter="insertBlockAfter"
-              @deleteBlock="deleteBlock"
-              :joinBlocks="joinBlocks"
-              @setRangeSelection="setRangeSelection"
-              @blockUpdated="$emit('blockUpdated')"
-              @recordingState="$emit('recordingState')"
-              @save="saveBlockPart"
-          /></BookBlockPartView>
-            <!-- <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
+
+            <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
@@ -271,6 +86,9 @@
                       :removable="true"
                       :crop="false">
                     </vue-picture-input>
+                    <!-- <div class="save-illustration" v-if="isIllustrationChanged">
+                      <button class="btn btn-default" @click="uploadIllustration">Save picture</button>
+                    </div> -->
                   </div>
 
                   <div :class="['table-row content-description', block.getClass()]">
@@ -283,11 +101,12 @@
                   </div>
 
                 </div>
+                <!--<img v-if="block.illustration"-->
 
                 <div v-else class="content-wrap -hover -focus"
-                :id="'content-'+block._id"
+                :id="'content-'+block._id+'-part-'+blockPartIdx"
                 ref="blockContent"
-                v-html="mode === 'narrate' ? blockContent : block.content"
+                v-html="blockPart.content"
                 :class="[ block.getClass(), {
                   'updated': isUpdated,
                   'checked': blockO.checked,
@@ -303,6 +122,7 @@
                 @focusout="onFocusout"
                 @inputSuggestion="onInputSuggestion">
                 </div>
+                <!--<div class="content-wrap">-->
 
                 <block-flag-popup
                     ref="blockFlagPopup"
@@ -396,6 +216,7 @@
                     <div class="clearfix"></div>
 
                     </li>
+                    <!--<li class="separator"></li>-->
 
                     </template>
                   </template>
@@ -423,9 +244,10 @@
                     <li class="separator"></li>
                     <li @click="reRecord">Re-record audio</li>
                   </template>
+                  <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
 
-            </div> -->
+            </div>
             <!--<div class="table-row ilm-block">-->
 
             <div class="table-row content-footnotes"
@@ -496,51 +318,24 @@
             </div>
 
             <div class="table-row controls-bottom">
-              <div class="-hidden -left">
-                <span>
-                  <i :class="['glyphicon', 'glyphicon-flag']"
-                    ref="blockFlagControl"
-                    @click="handleBlockFlagClick"
-                  ></i>
-                </span>
-              </div>
-              <div class="align-range -hidden -left" v-if="false && allowEditing">
-                Set block range: <label>
-                <input type="checkbox" v-on:change="setRangeSelection('start', $event)"
-                class="set-range-start" :disabled="!allowSetStart(block._id)"
-                v-model="block.checkedStart"/>&nbsp;Start</label>
-                <label>&nbsp;&nbsp;
-                <input type="checkbox" v-on:change="setRangeSelection('end', $event)" class="set-range-end" :disabled="!allowSetEnd(block._id)"
-                v-model="block.checkedEnd"/>&nbsp;End</label>
-                <template v-if="displaySelectionStart">
-                  <a class="go-to-block" v-on:click="scrollToBlock(selectionStart)">View start({{displaySelectionStart}})</a>
-                </template>
-                <template v-if="displaySelectionEnd">
-                  <a class="go-to-block" v-on:click="scrollToBlock(selectionEnd)">View end({{displaySelectionEnd}})</a>
-                </template>
-              </div>
               <div v-if="isRecording" class="recording-hover-controls" ref="recordingCtrls">
                 <i class="fa fa-ban" v-if="isRecording" @click="cancelRecording()"></i>
                 <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i>
                 <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i>
+                <!-- <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i> -->
+                <!-- <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i> -->
               </div>
               <div class="par-ctrl -hidden -right">
-                  <template v-if="!isCompleted">
-                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
-                    @click.prevent="reworkBlock">
-                    Need work</div>
-                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
-                    @click.prevent="approveBlock">
-                    Approve</div>
-
-                  <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
-                    @click.prevent="markBlock">
-                    Approve</div>
-                  <div :class="['save-block', '-right', {'-disabled': isSpotCheckDisabled }]" @click.prevent="spotCheck">
-                    Spot check
+                  <!--<span>isCompleted: {{isCompleted}}</span>-->
+                  <div class="save-block -right" @click="discardBlock"
+                       v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
+                    Discard
                   </div>
-
-                  </template>
+                  <div class="save-block -right"
+                  v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+                  @click="assembleBlockProxy(true)">
+                    {{saveBlockLabel}}
+                  </div>
               </div>
               <!--<div class="-hidden">-->
             </div>
@@ -551,45 +346,6 @@
     <!--<div :class="['table-cell'-->
     <div class="table-cell controls-right">
     </div>
-    <modal :name="'delete-block-message' + block._id" :resizeable="false" :clickToClose="false" height="auto">
-      <div class="modal-header"></div>
-      <div class="modal-body">
-        <p>Delete block?</p>
-      </div>
-      <div class="modal-footer">
-        <template v-if="deletePending">
-          <div class="voicework-preloader"></div>
-        </template>
-        <template v-else>
-          <button class="btn btn-default" v-on:click="hideModal('delete-block-message')">Cancel</button>
-          <button class="btn btn-primary" v-on:click="deleteBlock()">Delete</button>
-        </template>
-      </div>
-    </modal>
-    <modal :name="'voicework-change' + block._id" :resizeable="false" :height="250">
-      <!-- custom header -->
-      <div class="modal-header">
-        <h4 class="modal-title">
-          Voicework update
-        </h4>
-      </div>
-      <div class="modal-body">
-        <div>Apply "{{blockVoiceworks[voiceworkChange]}}" voicework type to</div>
-        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label></div>
-        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label></div>
-        <div>This will also delete current audio from the {{blockTypeLabel}}(s)</div>
-      </div>
-      <!-- custom buttons -->
-      <div class="modal-footer">
-        <template v-if="!voiceworkUpdating">
-          <button type="button" class="btn btn-default" @click="voiceworkChange = false">Cancel</button>
-          <button type="button" class="btn btn-confirm" @click="updateVoicework()">Apply</button>
-        </template>
-        <template v-else>
-          <div class="voicework-preloader"></div>
-        </template>
-      </div>
-    </modal>
     <modal :name="'block-html' + block._id" height="auto" width="90%" class="block-html-modal" :clickToClose="false" @opened="setHtml">
     <div v-on:wheel.stop="">
       <div class="modal-header">
@@ -630,7 +386,6 @@ import access             from '../../mixins/access.js';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
 import VuePictureInput    from 'vue-picture-input'
-import BookBlockPartView from './BookBlockPartView';
 var BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
 
@@ -704,10 +459,9 @@ export default {
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
       //'modal': modal,
-      'vue-picture-input': VuePictureInput,
-      BookBlockPartView: BookBlockPartView
+      'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -943,22 +697,13 @@ export default {
       },
       needsRealignment: {
         get() {
-          if (this.changes && this.block.audiosrc) {
+          if (this.changes && this.blockPart.audiosrc) {
             if (this.changes.indexOf('content') !== -1 || this.changes.indexOf('suggestion') !== -1) {
               return true;
             }
           }
           return false;
         }
-      },
-      isSplittedBlock: {
-        get() {
-          if (this.block.voicework === 'narration' && Array.isArray(this.block.parts)) {
-            return true;
-          }
-          return false;
-        },
-        cache: false
       },
       ...mapGetters({
           auth: 'auth',
@@ -975,7 +720,8 @@ export default {
           storeListO: 'storeListO',
           approveBlocksList: 'approveBlocksList',
           adminOrLibrarian: 'adminOrLibrarian',
-          currentJobInfo: 'currentJobInfo'
+          currentJobInfo: 'currentJobInfo',
+          mode: 'bookMode'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
@@ -990,18 +736,34 @@ export default {
           return this.block.type === 'par' ? 'paragraph' : this.block.type;
         }
       },
-      blockParts: {
+      blockContent: {
         get() {
-          if (this.block.parts && this.block.parts.length > 0) {
-            return this.block.parts;
+          if (this.mode === 'narrate') {
+            let content = '';
+            /*if ($('<div>' + this.block.content + '</div>').find('w').length > 0) {
+              content = this.block.content.replace(/(\.|\?|\!)([^<]*)<\/w>(.+?)/g, '<div class="narrate-content">$1$2</w></div>$3')
+            } else if ($('<div>' + this.block.content + '</div>').find('*').length > 0) {
+              //content = this.block.content.replace(/(<[^>]+>)([^<]+)(<\/[^>]+>)/g, '<span>$1</span>$2')
+              content = this.block.content.replace(/([^\.|\?|\!]+)(\.|\?|\!)/g, '<div class="narrate-content">$1$2</div>');
+              content = content.replace(/(<\/div>)([^\.|\?|\!]+)$/g, '$1<div class="narrate-content">$2</div>');
+            } else {
+              content = this.block.content//.replace(/([A-z0-9']+)/g, '<span>$1</span>')
+              content = content.replace(/([^\.|\?|\!]+)(\.|\?|\!)/g, '<div class="narrate-content">$1$2</div>');
+              content = content.replace(/(<\/div>)([^\.|\?|\!]+)$/g, '$1<div class="narrate-content">$2</div>');
+            }*/
+            let split = '<br class="narrate-split"/><br class="narrate-split"/>';
+            if ($('<div>' + this.block.content + '</div>').find('w').length > 0) {
+              let rg = new RegExp('(<[^>]+>[^<]*?)((?<!St|Mr|Mrs|Dr|[^\\w][\\w]{1})[\\.|\\?|\\!]+[\'\"\‘\”\“\’]*)([^<]*?<\\/[^>]+>.+?)', 'gmi')
+              content = this.block.content.replace(rg, '$1$2' + split + '$3')
+            } else {
+              content = this.block.content + '<span class="content-tail"></span>';
+              let rg = new RegExp('((?<!St|Mr|Mrs|Dr|[^\\w][\\w]{1})[\\.\\?\\!]+[\'\"\‘\”\“\’]*)([^\\.\\?\\!\'\"\‘\”\“\’]+)', 'mig');
+              content = content.replace(/<a[^>]*>((?!<\/a>).*)<\/a>/igm, '$1')
+              content = content.replace(rg, '$1' + split + '$2');
+            }
+            return content;
           } else {
-            return [
-              {
-                content: this.block.content,
-                audiosrc: this.block.audiosrc,
-                audiosrc_ver: this.block.audiosrc_ver
-              }
-            ];
+            return this.block.content;
           }
         },
         cache: false
@@ -1019,7 +781,7 @@ export default {
   mounted: function() {
       //this.initEditor();
       //console.log('mounted', this.block._id);
-      this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
+      this.blockAudio = {'map': this.blockPart.content, 'src': this.block.getPartAudiosrc(this.blockPartIdx, 'm4a')};
       if (!this.player && this.blockAudio.src) {
           this.initPlayer();
       }
@@ -1163,8 +925,7 @@ export default {
         'updateBlockToc',
         'saveNarrated',
         'checkError',
-        'getBookAlign',
-        'updateBlockPart'
+        'getBookAlign'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1282,7 +1043,7 @@ export default {
                   'quoteButton', 'suggestButton'
                 ]
               };
-            this.editor = new MediumEditor('#content-' + this.block._id, {
+            this.editor = new MediumEditor('#content-' + this.block.blockid + '-part-' + this.blockPartIdx, {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
@@ -1450,15 +1211,15 @@ export default {
       },
       discardBlock: function(ev) {
 
-        let checked = this.block.checked;
-        this.getBlock(this.block._id)
+        this.getBlock(this.block.blockid)
         .then((block)=>{
 
           if (this.$refs.blockContent) {
+            let content = block.getPartContent(this.blockPartIdx);
             if (this.mode !== 'narrate') {
-              this.$refs.blockContent.innerHTML = block.content;
+              this.$refs.blockContent.innerHTML = content;
             } else {
-              this.block.content = block.content;
+              this.block.content = content;
             }
             //this.$refs.blockContent.focus();
           }
@@ -1475,7 +1236,7 @@ export default {
           if (this.block.footnotes.length > 0) {
             this.initFtnEditor(true);
           }
-          this.block.setAudiosrc(block.audiosrc, block.audiosrc_ver);
+          this.block.setPartAudiosrc(this.blockPartIdx, block.audiosrc, block.audiosrc_ver);
           this.refreshBlockAudio();
 
           Vue.nextTick(() => {
@@ -1604,6 +1365,9 @@ export default {
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
+        this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+        this.isChanged = false;
+        return this.$emit('save', this.blockPart, this.blockPartIdx, realign);
         switch (this.block.type) {
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
@@ -1810,30 +1574,6 @@ export default {
               this.$root.$emit('for-audioeditor:set-process-run', false);
             }
           });
-      },
-      saveBlockPart(blockPart, blockPartIdx, realign) {
-        //console.log(arguments);
-        let update = {};
-        let isPartUpdate = this.isSplittedBlock;
-        //if (!isPartUpdate) {
-          Object.keys(blockPart).forEach(k => {
-            update[k] = blockPart[k];
-          });
-        //} else {
-          //update.parts = this.block.parts;
-          //Object.keys(blockPart).forEach(k => {
-            //update.parts[blockPartIdx][k] = blockPart[k];
-          //});
-        //}
-        if (!isPartUpdate) {
-          if (!realign) {
-            return this.assembleBlockPart(update);
-          } else {
-            return this.assembleBlock(update, realign);
-          }
-        } else {
-          return this.updateBlockPart([this.block._rid, update, blockPartIdx, realign]);
-        }
       },
       assembleBlockProofread() {
         if (this.$refs.blockContent) {
@@ -2107,10 +1847,10 @@ export default {
         this.$root.$emit('closeFlagPopup', true);
       },
 
-      audPlay: function(block_id, ev) {
+      audPlay: function(ev) {
         if (this.player) {
-          this.audCleanClasses(block_id, ev);
-          this.player.playBlock('content-'+block_id);
+          this.audCleanClasses(this.block.blockid, ev);
+          this.player.playBlock('content-'+this.block.blockid+'-part-'+this.blockPartIdx);
         }
       },
       audPlayFromSelection() {
@@ -2673,8 +2413,7 @@ export default {
           }, 1000);
         });
       },
-      stopRecording(start_next) {
-        start_next = typeof start_next === 'undefined' ? false : start_next;
+      stopRecording(start_next = false) {
         if (!this.isRecording) {
           return false;
         }
@@ -2683,8 +2422,6 @@ export default {
 
         let self = this;
 
-        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio';
-        let api = this.$store.state.auth.getHttp();
         this.isUpdating = true;
         this.recorder.stopRecording(function(audioUrl) {
           this.getDataURL(function(dataURL) {
@@ -2695,7 +2432,8 @@ export default {
               'audio': dataURL.split(',').pop(),
               'position': self.reRecordPosition,
               'isTemp': self.isAudioChanged,
-              'blockid': self.block.blockid
+              'blockid': self.block.blockid,
+              'partIdx': self.blockPartIdx
             })
               .then(response => {
                 self.isUpdating = false;
@@ -4826,4 +4564,3 @@ export default {
   }
 
 </style>
-

@@ -266,7 +266,7 @@ export default {
   mixins: [access, taskControls, api_config],
   components: {
       BookBlockView, BookBlockPreview,
-      modal, vueSlider,
+      modal, vueSlider
   },
   methods: {
     ...mapActions([
@@ -778,10 +778,11 @@ export default {
         if (oldBlock) {
           res.checked = oldBlock.checked;
         }
-        this.$store.commit('set_storeList', new BookBlock(res));
+        let block = new BookBlock(res);
+        this.$store.commit('set_storeList', block);
         this.$root.$emit('from-block-edit:set-style');
         this.refreshTmpl();
-        return Promise.resolve(res);
+        return Promise.resolve(block);
       })
       .catch((err)=>{
         console.log(err);
