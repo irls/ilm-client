@@ -432,7 +432,7 @@ class BookBlock {
     return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
   }
   
-  getPartAudiosrc(partIdx, ver = false) {
+  getPartAudiosrc(partIdx, ver = false, full = true) {
     let part = this.parts[partIdx];
     if (!part && (!this.parts || this.parts.length === 0)) {
       part = this;
@@ -444,7 +444,7 @@ class BookBlock {
     if (!path) {
       return false;
     }
-    return process.env.ILM_API + path +'?'+ (new Date()).toJSON();
+    return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
   }
   
   getPartContent(partIdx) {
@@ -452,6 +452,14 @@ class BookBlock {
       return this.content;
     } else {
       return this.parts[partIdx].content;
+    }
+  }
+  
+  getPartManualBoundaries(partIdx) {
+    if (!(Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined') && partIdx === 0) {
+      return this.manual_boundaries || [];
+    } else {
+      return this.parts[partIdx].manual_boundaries || [];
     }
   }
 
@@ -475,6 +483,15 @@ class BookBlock {
   setContent(content) {
     this.set('content', content);
   }
+  
+  setPartContent(partIdx, content) {
+    let partCheck = Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+    if (partCheck) {
+      this.set(`parts.${partIdx}.content`, content);
+    } else if (partIdx === 0) {
+      this.setContent(content);
+    }
+  }
 
   setAudiosrc(path, ver = {}) {
     this.set('audiosrc', path);
@@ -493,6 +510,15 @@ class BookBlock {
   
   setManualBoundaries(boundaries = []) {
     this.set('manual_boundaries', boundaries);
+  }
+  
+  setPartManualBoundaries(partIdx, boundaries = []) {
+    let partCheck = Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+    if (partCheck) {
+      this.set(`parts.${partIdx}.manual_boundaries`, boundaries);
+    } else if (partIdx === 0) {
+      this.setManualBoundaries(boundaries);
+    }
   }
 
   undoContent() {
@@ -544,6 +570,17 @@ class BookBlock {
       hasAudio = this.parts.find(p => {
         return p.audiosrc && p.audiosrc.length;
       });
+    }
+    return hasAudio ? true : false;
+  }
+  
+  hasCompleteAudio() {
+    let hasAudio = (this.audiosrc && this.audiosrc.length);
+    if (Array.isArray(this.parts) && this.parts.length > 0) {
+      let noAudio = this.parts.find(p => {
+        return !p.audiosrc || !p.audiosrc.length;
+      });
+      hasAudio = noAudio ? false : true;
     }
     return hasAudio ? true : false;
   }

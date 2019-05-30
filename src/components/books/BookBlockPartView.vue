@@ -38,6 +38,7 @@
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
+              <div class="par-ctrl -hidden"></div>
               <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
@@ -461,7 +462,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -630,7 +631,7 @@ export default {
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.isRecording || this.isUpdating) {
             return true;
           }
-          return this.tc_isApproveDisabled(this.block, this.mode);
+          return false;
         }
       },
       isCanApproveWithoutTask: function() {
@@ -2419,41 +2420,8 @@ export default {
         }
         this.isRecording = false;
         this.isRecordingPaused = false;
-
-        let self = this;
-
-        this.isUpdating = true;
-        this.recorder.stopRecording(function(audioUrl) {
-          this.getDataURL(function(dataURL) {
-            if (start_next) {
-              self.stopRecordingAndNext();
-            }
-            self.saveNarrated({
-              'audio': dataURL.split(',').pop(),
-              'position': self.reRecordPosition,
-              'isTemp': self.isAudioChanged,
-              'blockid': self.block.blockid,
-              'partIdx': self.blockPartIdx
-            })
-              .then(response => {
-                self.isUpdating = false;
-                if (response.status == 200) {
-                  //self.blockAudio.map = response.data.content;
-                  self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
-                  //self.block.setContent(response.data.content);
-                  //self.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
-                  //self.blockAudio.src = self.block.getAudiosrc('m4a');
-                  //self.blockAudio.map = self.block.content;
-                  //self.isAudioChanged = true;
-                }
-                self.reRecordPosition = false;
-              })
-              .catch(err => {
-                self.reRecordPosition = false;
-                self.isUpdating = false;
-              });
-          });
-        });
+        this.reRecordPosition = false;
+        return this.$emit('stopRecording', this.blockPartIdx, this.reRecordPosition, start_next);
       },
       cancelRecording() {
         if (this.recorder) {
@@ -2741,17 +2709,17 @@ export default {
           }
         }
         this.footnoteIdx = footnoteIdx;
-        this.check_id = footnoteIdx !== null ? this.block._id + '_' + footnoteIdx : this.block._id;
+        this.check_id = this.generateAudioCheckId();
         this.audioEditorEventsOff();
 
 
         Vue.nextTick(() => {
-          let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
-          let text = footnote ? footnote.content : this.blockAudio.map;
-          let loadBlock = footnoteIdx !== null ? {_id: this.check_id, voicework: footnote ? footnote.voicework : 'tts', manual_boundaries: footnote ? footnote.manual_boundaries || [] : []} : this.block;
+          let audiosrc = this.blockAudio.src;
+          let text = this.blockAudio.map;
+          let loadBlock = this.blockPart;
+          loadBlock._id = this.check_id;
           this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
 
-          let self = this;
           this.audioEditorEventsOn();
         });
       },
@@ -2759,7 +2727,7 @@ export default {
       //-- Events -- { --//
       evFromAudioeditorClosed(blockId) {
 
-        if (blockId === this.block._id || blockId === this.block._id + '_' + this.footnoteIdx) {
+        if (blockId === this.check_id) {
           this.isAudioEditing = false;
           if (this.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false);
@@ -2823,7 +2791,7 @@ export default {
             }
           } else {
             if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
-              let manual_boundaries = this.block.manual_boundaries || [];
+              let manual_boundaries = this.blockPart.manual_boundaries || [];
               this.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
                 if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
                   let _m = map.shift();
@@ -2848,10 +2816,10 @@ export default {
                   }
                 }
               });
-              this.block.manual_boundaries = manual_boundaries;
-              this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.block);
-              this.block.content = this.$refs.blockContent.innerHTML;
-              this.blockAudio.map = this.block.content;
+              this.blockPart.manual_boundaries = manual_boundaries;
+              this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+              this.blockPart.content = this.$refs.blockContent.innerHTML;
+              this.blockAudio.map = this.blockPart.content;
               this.pushChange('content');
             }
           }
@@ -2861,25 +2829,23 @@ export default {
       evFromAudioeditorSaveAndRealign (blockId, check_realign = true, realign = false) {
         if (blockId == this.check_id) {
           this.audStop();
-          //this.doReAlign(this.footnoteIdx)
-            //.then(() => {
-              this.assembleBlockAudioEdit(this.footnoteIdx, true, false);
-              this.flushChanges();
-              this.isChanged = false;
-              this.isAudioChanged = false;
-            //});
+          this.$emit('assembleBlockAudioEdit', this.blockPartIdx, this.blockAudio.map, this.block.getPartAudiosrc(this.blockPartIdx, null, false), true);
+          this.flushChanges();
+          this.isChanged = false;
+          this.isAudioChanged = false;
         }
       },
       evFromAudioeditorCut (blockId, start, end) {
         if (blockId == this.check_id) {
           this.audStop();
-          this._audDeletePart(start, end, this.footnoteIdx);
+          this.isAudioChanged = true;
+          this.$emit('audDeletePart', start, end, null, this.blockPartIdx, this.check_id);
         }
       },
       evFromAudioeditorSave (blockId) {
         if (blockId == this.check_id) {
           this.audStop();
-          this.assembleBlockAudioEdit(this.footnoteIdx, false, false);
+          this.$emit('assembleBlockAudioEdit', this.blockPartIdx, this.blockAudio.map, this.block.getPartAudiosrc(this.blockPartIdx, null, false), false);
           this.flushChanges();
           this.isChanged = false;
           this.isAudioChanged = false;
@@ -2888,7 +2854,8 @@ export default {
       evFromAudioeditorInsertSilence (blockId, position, length) {
         if (blockId == this.check_id) {
           this.audStop();
-          this.insertSilence(position, length, this.footnoteIdx);
+          this.$emit('insertSilence', position, length, null, this.blockPartIdx, this.check_id);
+          this.isAudioChanged = true;
         }
       },
       evFromAudioeditorUndo (blockId, audio, text, isModified) {
@@ -3144,82 +3111,13 @@ export default {
         //this.blockO.checked = checked;
         this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
       },
-      updateVoicework() {
-        if (!this.voiceworkChange) {
-          return false;
-        }
-        this.voiceworkUpdating = true;
-        let api_url = this.API_URL + 'book/block/' + this.block._uRid + '/set_voicework';
-        let api = this.$store.state.auth.getHttp();
-        return api.post(api_url, {
-          voicework: this.voiceworkChange,
-          updateType: this.voiceworkUpdateType
-        }, {})
-          .then(response => {
-            this.voiceworkUpdating = false;
-            if (this.isCompleted) {
-              this.tc_loadBookTask();
-            }
-            //if (this.currentJobInfo && this.currentJobInfo.published) {
-              //this.updateBookVersion({major: true});
-            //}
-            this.getCurrentJobInfo();
-            if (response.status == 200) {
-              this.$root.$emit('from-bookblockview:voicework-type-changed');
-              this.getAlignCount();
-              if (response && response.data) {
-                //response.data.updField = 'voicework';
-                this.$root.$emit('bookBlocksUpdates', response.data);
-                this.block.voicework = this.voiceworkChange;
-                //this.setCurrentBookBlocksLeft(this.block.bookid);
-              }
-            }
-            this.voiceworkChange = false;
-          })
-          .catch(err => {
-            this.voiceworkUpdating = false;
-            this.voiceworkChange = false;
-          });
-      },
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
-      selectLang(event){
-        event.preventDefault();
-        event.cancelBubble = true;
-        return false;
-      },
-      selectLangSubmit(block){
-        this.isChanged = true;
-        this.pushChange('language');
-        this.$refs.blockMenu.close();
-      },
-      setNumVal: _.debounce(function(ev){
-        let val = ev.target.value;
-        //if (val && this.$refs.parnumRef) this.$refs.parnumRef.innerText = val;
-        this.putNumBlockO({
-          bookId: this.block.bookid,
-          rid: this.blockO.rid,
-          type: this.block.type,
-          secnum: this.blockO.secnum,
-          parnum: this.blockO.parnum,
-          isManual: true,
-        }).then((blocks)=>{
-          //console.log('setNumVal then', blocks[0]);
-          if (['header', 'title'].indexOf(this.block.type) !== -1) {
-            this.loadBookToc({bookId: this.block.bookid, isWait: true});
-          }
-          this.updateBookVersion({major: true});
-        });
-      }, 1000),
 
       setSecnumHidden() {
         this.block.secHide = !this.block.secHide;
         this.putBlockPart({block: this.block, field: 'secHide'}).then(()=>{});
-      },
-
-      allowVoiceworkChange() {
-        return this.block && this.tc_allowVoiceworkChange(this.block);
       },
       pushChange(change) {
         if (this.changes.indexOf(change) === -1) {
@@ -3338,57 +3236,13 @@ export default {
           }
         }
       },
-      spotCheck: function() {
-        let length = 3;
-        if (this.player && this.player.audio_element) {
-          let menuHeight = $('div.top-menu-wrapper').height() + $('div.toolbar').height();
-          let blockOffset =this.$refs.viewBlock.offsetTop;
-          if (menuHeight > blockOffset) {
-            this.$root.$emit('for-bookedit:scroll-to-block', this.block._id);
-          }
-          let w = $('#content-'+this.block._id + ' w[data-map]').last();
-          if (w.length > 0) {
-            w = w[0];
-          }
-          if (!w || !w.dataset || !w.dataset.map) {
-            return;
-          }
-          let map = w.dataset.map.split(',');
-          map[0] = parseInt(map[0]);
-          map[1] = parseInt(map[1]);
-          if (map[0] + map[1] < (2 * length + 1) * 1000) {
-            this.player.playBlock('content-' + this.block._id);
-          } else {
-            //this.player.audio_element.onended = () => {
-              //console.log('ENDED')
-            //};
-
-            this.player.audio_element.onpause = () => {
-              //console.log('PAUSE')
-              let delay = 1000;
-              if (this.player.load_delay) {
-                delay+=this.player.load_delay;
-              }
-              this.$root.$emit('for-bookedit:scroll-to-block-end', this.block._id);
-              setTimeout(() => {
-                this.player.playRange('content-' + this.block._id, map[0] + map[1] - length * 1000, map[0] + map[1]);
-              }, delay);
-
-              //console.log(this.player);
-              this.player.audio_element.onpause = null;
-            };
-            this.player.playRange('content-' + this.block._id, 0, length * 1000);
-          }
-
-        }
-      },
       refreshBlockAudio: function(map = true, src = true) {
-        if (this.block) {
+        if (this.blockPart) {
           if (map) {
-            this.blockAudio.map = this.block.content;
+            this.blockAudio.map = this.blockPart.content;
           }
           if (src) {
-            this.blockAudio.src = this.block.getAudiosrc('m4a');
+            this.blockAudio.src = this.block.getPartAudiosrc(this.blockPartIdx, 'm4a');
           }
         }
       },
@@ -3397,90 +3251,30 @@ export default {
           this.$forceUpdate();
           this.pushChange('classes');
         }
+      },
+      generateAudioCheckId() {
+        return this.isSplittedBlock ? this.block.blockid + '-part-' + this.blockPartIdx : this.block.blockid;
       }
   },
   watch: {
-      'isLocked': {
+      'blockPart.content': {
         handler(val) {
-          //console.log('IS LOCKED', val, this.block)
-          if (this.block.audiosrc) {
-            this.blockAudio.src = this.block.getAudiosrc('m4a');
-          }
-          if (val === false) {
-            this.$parent.refreshTmpl();
-            if (this.isCompleted) {
-              this.tc_loadBookTask();
-              this.getCurrentJobInfo();
-            }
-          }
+          this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
         }
       },
       'hasLock': {
         handler(val) {
           if (!val) {
             if (this.isAudioEditing) {
-              //this.$root.$emit('for-audioeditor:set-process-run', false);
-              if (this.check_id === this.block.blockid) {
+              if (this.check_id === this.generateAudioCheckId()) {
                 this.refreshBlockAudio();
                 this.showAudioEditor();
-              } else {
-                let ftn = this.block.footnotes[this.footnoteIdx];
-                this.showFootnoteAudioEditor(ftn, this.footnoteIdx);
               }
             }
           }
           
         }
       },
-      'block.isUpdated' (newVal, oldVal) {
-        if (newVal===true) {
-          this.isUpdated = true;
-          this.block.isUpdated = false;
-          setTimeout(() => {
-            this.isUpdated = false;
-          }, 2000);
-        }
-      },
-      'block._id' (newVal) {
-        //this.isUpdated = false;
-      },
-      'block._rev' (newVal, oldVal) {
-        //console.log('block._rev: ', this.block._rev, 'newVal: ', newVal, 'oldVal: ', oldVal);
-        if (oldVal) {
-          this.isUpdated = true;
-          setTimeout(() => {
-            this.isUpdated = false;
-          }, 2000);
-        }
-        if (!this.block) {
-          return;
-        }
-        if (newVal !== this.block._rev)
-        {
-          if (this.block.illustration) {
-            this.block.illustration = this.block.illustration.split('?').shift() + '?' + Date.now()
-          }
-          this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
-          if (this.$refs.blockContent) {
-            this.addContentListeners();
-          }
-        } else {
-          this.blockAudio = {
-            'src': this.block.getAudiosrc('m4a'),
-            'map': this.block.content
-          };
-        }
-      },
-//       'block.type' (newVal) {
-//         console.log('block.type' , newVal);
-//         if (this.blockTypes[newVal] && Object.keys(this.blockTypes[newVal])[0] !== '') {
-//           this.classSel = Object.keys(this.blockTypes[newVal])[0];
-//         }
-//         if (this.block) {
-//           this.block.classes = {};
-//         }
-//         this.$root.$emit('from-block-edit:set-style');
-//       },
       'classSel' (newVal, oldVal) {
         let styleCurr = this.block.setClass(newVal);
         if (styleCurr) this.styleSel = styleCurr;
@@ -3514,36 +3308,6 @@ export default {
           }
         }
       },
-      'block.footnotes': {
-        handler: function (val, oldVal) {
-          if (this.block && this.block.footnotes && this.block.footnotes.length) {
-            this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-              if (footnote.audiosrc && !this.FtnAudio.player) {
-                this.initFootnotePlayer(this.FtnAudio);
-                return true;
-              }
-            });
-          }
-        },
-        deep: true
-      },
-      'blockAudio.map' (newVal, oldVal) {
-
-      },
-      'isCompleted': {
-        handler(val, oldVal) {
-          Vue.nextTick(() => {
-            this.updateFlagStatus(this.block._id);
-          });
-        }
-      },
-      'voiceworkChange': {
-        handler(val) {
-          if (val === false) {
-            this.hideModal('voicework-change');
-          }
-        }
-      },
       'isChanged' : {
         handler(val) {
           if (val === false) {
@@ -3572,37 +3336,6 @@ export default {
             this.unsetChange('illustration');
           }
           this.block.isIllustrationChanged = val;
-        }
-      },
-      'block.content': {
-        handler(val) {
-          this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
-          Vue.nextTick(() => {
-            if (this.$refs.blockContent) {
-              this.addContentListeners();
-            }
-          });
-        }
-      },
-      'blockReindexProcess': {
-        handler(val, oldVal) {
-          if (this.deletePending && oldVal && !val) {
-            this.deleteBlock();
-          }
-        }
-      },
-      'block.flags': {
-        handler(val) {
-          if (this.isCompleted) {
-            Vue.nextTick(() => {
-              if (this.$refs.blockContent) {
-                this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-                  flag.addEventListener('click', this.handleFlagClick);
-                });
-              }
-            });
-            this.updateFlagStatus(this.block._id);
-          }
         }
       },
       'allowEditing': {
@@ -3679,11 +3412,6 @@ export default {
       'approveWaiting': {
         handler(val) {
           //console.log(this.block._id, 'approveWaiting', val);
-        }
-      },
-      'block.audiosrc': {
-        handler(val) {
-          this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
         }
       }
   }

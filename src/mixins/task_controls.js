@@ -407,7 +407,7 @@ export default {
             if (this.editor_tasks.indexOf(task.type) === -1 && this.editor_resolve_tasks.indexOf(task.type) === -1) {
               return true;
             }
-            if (['tts', 'audio_file'].indexOf(block.voicework) !== -1 && !block.audiosrc) {
+            if (['tts', 'audio_file'].indexOf(block.voicework) !== -1 && !block.hasCompleteAudio()) {
               return true;
             }
             if (block.footnotes && Array.isArray(block.footnotes)) {
@@ -424,7 +424,7 @@ export default {
               return true;
             }
             
-            if (['narration'].indexOf(block.voicework) !== -1 && !block.audiosrc) {
+            if (['narration'].indexOf(block.voicework) !== -1 && !block.hasCompleteAudio()) {
               return true;
             }
             break;
