@@ -633,6 +633,7 @@ export default {
   mounted() {
     let self = this;
     self.getTaskUsers();
+    console.log(this.tasks_counter);
 
     //this.loadAudiobook(true)
     this.getAudioBook(this.currentBookid)
@@ -1494,9 +1495,12 @@ export default {
       var self = this
       axios.get(this.API_URL + 'tasks/users').then(users => {
         for (var role in self.users) {
-          self.users[role] = [{'_id':'unassigned', 'email':'', 'name':'Unassigned'}]
+          self.users[role] = [{'_id':'unassigned', 'email':'', 'name':'Unassigned', isMatchBookLang: true}]
           for (var i in users.data) {
             if (users.data[i].roles.indexOf(role) != -1 && users.data[i].enable === true) {
+              if(users.data[i].languages.indexOf(this.currentBookMeta.language) != -1){  
+                users.data[i].isMatchBookLang = true;
+              }
               self.users[role].push(users.data[i])
             }
           }
@@ -1504,13 +1508,13 @@ export default {
       })
       .catch(error => {})
     },
-
-
+    
+          
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection'])
   }
 }
 
-
+          
 Vue.component('resizable-textarea', {
   methods: {
     resizeTextarea (event) {
