@@ -212,20 +212,22 @@
               :blockPart="blockPart"
               :blockPartIdx="blockPartIdx"
               :isSplittedBlock="isSplittedBlock"
-              @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
               :joinBlocks="joinBlocks"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
-              @recordingState="$emit('recordingState')"
+              @startRecording="startRecording"
+              @cancelRecording="cancelRecording"
               @save="saveBlockPart"
               @stopRecording="stopRecording"
               @assembleBlockAudioEdit="assembleBlockPartAudioEdit"
               @audDeletePart="_audDeletePart"
               @insertSilence="insertSilence"
+              @hasChanges="onPartChanges"
           /></BookBlockPartView>
+            <div v-if="blockParts.length === 1" class="hidden" ref="blockContent" v-html="blockParts[0].content"></div>
             <!-- <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(), {'checked': blockO.checked}]"
@@ -495,12 +497,16 @@
                   <a class="go-to-block" v-on:click="scrollToBlock(selectionEnd)">View end({{displaySelectionEnd}})</a>
                 </template>
               </div>
-              <div v-if="isRecording" class="recording-hover-controls" ref="recordingCtrls">
-                <i class="fa fa-ban" v-if="isRecording" @click="cancelRecording()"></i>
-                <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i>
-                <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i>
-              </div>
               <div class="par-ctrl -hidden -right">
+                  <div class="save-block -right" @click="discardBlock"
+                       v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
+                    Discard
+                  </div>
+                  <div class="save-block -right"
+                  v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+                  @click="assembleBlockProxy(true)">
+                    {{saveBlockLabel}}
+                  </div>
                   <template v-if="!isCompleted">
                   <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
                     @click.prevent="reworkBlock">
@@ -983,7 +989,8 @@ export default {
               {
                 content: this.block.content,
                 audiosrc: this.block.audiosrc,
-                audiosrc_ver: this.block.audiosrc_ver
+                audiosrc_ver: this.block.audiosrc_ver,
+                manual_boundaries: this.block.manual_boundaries
               }
             ];
           }
@@ -1438,9 +1445,12 @@ export default {
         this.getBlock(this.block._id)
         .then((block)=>{
 
-          if (this.$refs.blockContent) {
+          if (this.$refs.blocks) {
             if (this.mode !== 'narrate') {
-              this.$refs.blockContent.innerHTML = block.content;
+              this.$refs.blocks[0].$refs.blockContent.innerHTML = block.content;
+              this.block.setPartContent(0, block.content);
+              this.$refs.blocks[0].flushChanges();
+              this.$refs.blocks[0].isChanged = false;
             } else {
               this.block.content = block.content;
             }
@@ -1919,9 +1929,9 @@ export default {
           let data = {};
           if (footnoteIdx === null) {
             data = {
-              audiosrc: this.block.getAudiosrc(null, false),
-              content: this.blockAudio.map,
-              manual_boundaries: this.block.manual_boundaries
+              audiosrc: this.block.getPartAudiosrc(0, null, false),
+              content: this.block.getPartContent(0),
+              manual_boundaries: this.block.getPartManualBoundaries(0)
             };
           } else {
             data = {
@@ -2722,8 +2732,8 @@ export default {
         this.$refs.blockFlagPopup.reset();
       },
 
-      startRecording() {
-        this.$emit('recordingState', 'recording', this.block._id);
+      startRecording(blockPartIdx) {
+        this.$emit('recordingState', 'recording', this.block._id, blockPartIdx);
         this.recordTimer()
         .then(() => {
           //this.recordStartCounter = 0;
@@ -2754,7 +2764,7 @@ export default {
       },
       stopRecording(partIdx, reRecordPosition, start_next = false) {
         let self = this;
-
+        this.isRecording = false;
         this.isUpdating = true;
         if (!this.isSplittedBlock) {
           partIdx = null;
@@ -2762,7 +2772,7 @@ export default {
         this.recorder.stopRecording(function(audioUrl) {
           this.getDataURL(function(dataURL) {
             if (start_next) {
-              self.stopRecordingAndNext();
+              self.stopRecordingAndNext(partIdx);
             }
             self.saveNarrated({
               'audio': dataURL.split(',').pop(),
@@ -2858,11 +2868,8 @@ export default {
           return BPromise.reject();
         }
       },
-      stopRecordingAndNext() {
-        //this.stopRecording();
-        //let offset = document.getElementById(this.block._id).getBoundingClientRect()
-        //window.scrollTo(0, window.pageYOffset + offset.bottom - 100);
-        this.$emit('stopRecordingAndNext', this.block);
+      stopRecordingAndNext(blockPartIdx) {
+        this.$emit('stopRecordingAndNext', this.block, blockPartIdx);
       },
       pauseRecording() {
         this.isRecordingPaused = true;
@@ -3682,7 +3689,7 @@ export default {
           if (menuHeight > blockOffset) {
             this.$root.$emit('for-bookedit:scroll-to-block', this.block._id);
           }
-          let w = $('#content-'+this.block._id + ' w[data-map]').last();
+          let w = $('#content-'+this.block._id + '-part-0 w[data-map]').last();
           if (w.length > 0) {
             w = w[0];
           }
@@ -3693,7 +3700,7 @@ export default {
           map[0] = parseInt(map[0]);
           map[1] = parseInt(map[1]);
           if (map[0] + map[1] < (2 * length + 1) * 1000) {
-            this.player.playBlock('content-' + this.block._id);
+            this.player.playBlock('content-' + this.block._id + '-part-0');
           } else {
             //this.player.audio_element.onended = () => {
               //console.log('ENDED')
@@ -3737,6 +3744,13 @@ export default {
       isPartAudioChanged(part_idx) {
         let ref = this.$refs['blocks'][part_idx];
         return ref && ref.isAudioChanged;
+      },
+      onPartChanges(val) {
+        if (val) {
+          this.isChanged = true;
+        } else {
+          
+        }
       }
   },
   watch: {
@@ -3973,7 +3987,6 @@ export default {
       },
       'isRecording': {
         handler(val) {
-          this.$emit('recordingState', val ? 'recording' : 'stopped', this.block._id);
           if (val === true) {
             Vue.nextTick(()=>{
               if (this.$refs.recordingCtrls && this.$refs.blockContent) {
@@ -4000,6 +4013,7 @@ export default {
               }
             })
           } else {
+            this.$emit('recordingState', 'stopped', this.block._id);
             $('body').off('keypress', this._handleSpacePress);
           }
         }
@@ -4246,6 +4260,11 @@ export default {
       border: 1px solid #afacac;
       /*border-radius: 7px;*/
     }
+  }
+}
+.table-body {
+  &.-mode-narrate {
+    position: relative;
   }
 }
 

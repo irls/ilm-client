@@ -20,6 +20,7 @@
             :block = "block"
             :blockPart="blockPart"
             :blockPartIdx="blockPartIdx"
+            :id="'v-' + blockId + '-' + blockPartIdx"
             ></BookBlockPartPreview>
         </template>
         <!--<div :class="['table-row ilm-block']">-->

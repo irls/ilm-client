@@ -243,7 +243,7 @@ export const store = new Vuex.Store({
 
     isBlocked: state => state.blockers.length > 0,
     blockers: state => state.blockers,
-    isBlockLocked: state => (id) => {
+    isBlockLocked: state => (id, partIdx = null) => {
       //if (typeof localStorage === 'undefined') {
         //return false;
       //}
@@ -256,7 +256,7 @@ export const store = new Vuex.Store({
       }
       if (!locked && state.aligningBlocks.length > 0) {
         let l = state.aligningBlocks.find(_l => _l._id === id);
-        locked = l ? true : false;
+        locked = l && (l.partIdx === partIdx) ? true : false;
       }
       return locked;
     },
@@ -746,7 +746,7 @@ export const store = new Vuex.Store({
     set_aligning_blocks(state, blocks) {
       state.aligningBlocks = [];
       if (blocks.length) blocks.forEach(b => {
-        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id});
+        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx});
       });
     },
     set_storeList (state, blockObj) {

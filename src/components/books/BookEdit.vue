@@ -842,41 +842,45 @@ export default {
         });
       }
     },
-    setRecordingState(state, blockId) {
+    setRecordingState(state, blockId, blockPartIdx = null) {
       this.recordingState = state;
       if (state == 'recording') {
         this.recordingBlockId = blockId;
-        this.scrollToBlock(blockId);
+        this.scrollToBlock(blockId, blockPartIdx);
       } else {
         this.recordingBlockId = null;
       }
     },
-    stopRecordingAndNext(block) {
+    stopRecordingAndNext(block, blockPartIdx) {
+      if (block.parts && block.parts.length - 1 > blockPartIdx) {
+        let element = document.getElementById(`${block.blockid}-${blockPartIdx + 1}`);
+        if (element) {
+          element.scrollIntoView();
+          this.$root.$emit('start-narration-part-' + block.blockid + '-part-' + (blockPartIdx + 1));
+        }
+        return;
+      }
       let next = this.findNextBlock(block, 'narrate');
       if (next) {
-        let el = this.$children.find(c => {
-          return c.$el.id == next._id;
+        this.scrollToBlock(next.blockid);
+        this.handleScroll(true);
+        Vue.nextTick(()=>{
+          this.$root.$emit('start-narration-part-' + next.blockid + '-part-0');
+          //el.startRecording();
         });
-        if (el) {
-          this.scrollToBlock(next._id);
-          this.handleScroll(true);
-          Vue.nextTick(()=>{
-            el.startRecording();
-          })
-        }
       }
     },
 
     findNextBlock(block, task) {
       let next = false;
-      let curr = Object.assign({}, block);
+      let curr = block.blockid;
       do {
-        curr = this.parlist.get(curr.chainid);
+        curr = this.parlistO.getOutId(curr);
         if (curr) {
           if (task) {
             switch (task) {
               case 'narrate':
-                if (this.tc_showBlockNarrate(curr._id)) {
+                if (this.tc_showBlockNarrate(curr)) {
                   next = curr;
                 }
                 break;
@@ -884,7 +888,7 @@ export default {
           }
         }
       } while (curr && !next);
-      return next;
+      return next ? this.parlist.get(next) : false;
     },
 
     createEmptyBlock(bookid, block_id) {
@@ -1607,10 +1611,14 @@ export default {
       }
     },
 
-    scrollToBlock(blockId, force = false)
+    scrollToBlock(blockId, blockPartIdx = null)
     {
-      //console.log('scrollToBlock', blockId);
-      let vBlock = document.getElementById('v-'+ blockId);
+      //console.log('scrollToBlock', blockId, blockPartIdx);
+      let id = 'v-'+ blockId;
+      if (blockPartIdx !== null) {
+        id+= '-' + blockPartIdx;
+      }
+      let vBlock = document.getElementById(id);
       if (vBlock) {
         let firstId = this.parlistO.idsViewArray()[0];
         if (firstId) {
@@ -2183,12 +2191,14 @@ export default {
       }
 
       .recording-block {
-        .-content {
-          background-color: white;
-          border-radius: 5px;
-          .content-wrap {
-            overflow-y: scroll;
-            max-height: 80vh;
+        .-recording {
+          .-content {
+            background-color: white;
+            border-radius: 5px;
+            .content-wrap {
+              overflow-y: scroll;
+              max-height: 80vh;
+            }
           }
         }
       }
