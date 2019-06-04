@@ -105,7 +105,7 @@
     <div slot="modal-footer" class="modal-footer">
       <!--<form id="book_select" enctype="multipart/form-data" @submit.prevent ref="book_select">-->
       <div class="col-sm-3 pull-right non-modal-submit">
-        <button class="btn btn-primary" type="button" @click.prevent="save" :disabled="saveDisabled">Submit</button>
+        <button class="btn btn-primary" type="button" @click.prevent="save" :disabled="saveDisabled" v-show='!isUploading'>Submit</button>
       </div>
       <div class="col-sm-9 pull-right non-modal-form">
         <!-- Import Books Modal Popup -->
@@ -195,7 +195,8 @@ export default {
       description: '',
       id: [''],
       createdJob: {},
-      importingBooksList: []
+      importingBooksList: [],
+      isUploading: false
     }
   },
   methods: {
@@ -226,6 +227,7 @@ export default {
       }
       axios.post(TASKS_URL, task)
         .then(response => {
+          this.isUploading = true;
           self.errors = null
           self.errors = {}// force re render errors
           if (Object.keys(response.data.errors).length > 0) {
@@ -240,18 +242,21 @@ export default {
                 self.errors['name'].push(self.id[_id] + ': ' + response.data.errors[self.id[_id]])
               }
             }
+            this.isUploading = false;
           } else {
             self.createdJob = response.data.insert_jobs[0]
             this.$nextTick(()=>{
               if (!this.$refs.bookImport.saveDisabled) {
                 this.$refs.bookImport.onFormSubmit()
                 .then((res)=>{
+                  this.isUploading = false;
                   self.$emit('closed', true);
                   //from Tasks.vue :
                   //this.$store.dispatch('tc_loadBookTask')
                   //this.$router.replace({ path: '/books/' + this.import_book_id })
                 }).catch(error => {
                   //this.uploadError(error);
+                  this.isUploading = false;
                   this.deleteTask();
                 })
               } else {
@@ -415,7 +420,7 @@ export default {
         //this.roles['engineer'] = this.users['engineer'][0]._id;
       }
       this.bookUploadError = false;
-      this.$refs.bookImport.isDummyBook = false;
+      this.$refs.bookImport.isDummyBook = true;
     },
     'name': {
       handler(val) {
