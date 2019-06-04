@@ -4412,6 +4412,10 @@ export default {
       /*border-radius: 7px;*/
     }
   }
+  .controls-left {
+    width: 44px;
+    vertical-align: middle;
+  }
 }
 .table-body {
   &.-mode-narrate {
@@ -5071,6 +5075,10 @@ export default {
     .fa-pause-circle-o {
       color: red;
     }
+  }
+  .narrate-mode-left {
+    width: 44px; 
+    vertical-align: middle;
   }
 
 </style>

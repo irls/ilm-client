@@ -2,6 +2,9 @@
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block', '-mode-' + mode, blockOutPaddings, {'-recording': isRecording}]">
     <div v-if="isLocked" class="locked-block-cover"></div>
+    <div class="table-cell controls-left" v-if="mode === 'narrate'">
+      <span v-if="parnumComp.length && isSplittedBlock">{{parnumComp}}_{{blockPartIdx+1}}</span>
+    </div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
         <template v-if="mode === 'narrate'">
           <div class="table-row" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged && !isRecording">
@@ -1304,7 +1307,7 @@ export default {
         } else if (this.mode === 'narrate') {
           return this.assembleBlockNarrate();
         }
-        if (check_realign === true && this.needsRealignment && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
+        if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
           this.$root.$emit('from-block:save-and-realign-warning', () => {
                   this.$root.$emit('hide-modal');
                 }, 
@@ -3429,124 +3432,6 @@ export default {
     }
 }
 
-.table-cell {
-    display: table-cell;
-
-    &.controls-left {
-        width: 36px;
-        padding-left: 8px;
-        padding-top: 0px;
-
-        &.-check-green {
-          /*border-left: 6px solid darkgreen;*/
-          /*background-color: lightgreen;*/
-          background: linear-gradient(to right, lightgreen , white);
-          /*padding-left: 9px;
-          width: 48px;*/
-        }
-
-        .table-row.parnum-row {
-          height: 25px;
-        }
-
-        .table-row.check-row {
-          height: 25px;
-          width: 17px;
-
-         .set-range {
-            /*cursor: pointer;*/
-            margin: 5px 0 0 1px;
-            .fa {
-              font-size: 20px;
-            }
-          }
-
-          .fa {
-            display: block;
-            margin: 5px 0 0 2px;
-            cursor: pointer;
-          }
-        }
-
-        .-hidden {
-            visibility: hidden;
-        }
-
-        &:hover {
-            .-hidden {
-                visibility: visible;
-            }
-        }
-
-        .-hidden-hover {
-            display: block;
-        }
-
-        &:hover {
-            .-hidden-hover {
-                display: none;
-            }
-        }
-
-        .-hidden-block {
-            display: none;
-        }
-
-        &:hover {
-            .-hidden-block {
-                display: block;
-            }
-        }
-
-        .parnum {
-          font-size: 1.1em;
-          font-family: serif;
-          margin-top: 1px;
-
-          &.-bold {
-            font-weight: bold;
-          }
-          &.-auto {
-            letter-spacing: -1px;
-            margin-left: -6px;
-          }
-        }
-        .secnum {
-          font-size: 15px;
-          font-family: serif;
-          padding: 0;
-          width: 38px;
-
-          margin-left: -3px;
-          margin-top: -1px;
-/*          &.-hidden {
-            display: none;
-            &:hover {
-              display: block;
-            }
-          }*/
-        }
-    }
-
-    &.controls-right {
-        width: 20px;
-    }
-
-    &.completed {
-      background: #EFEFEF;
-      border-radius: 7px;
-      padding: 0;
-    }
-
-}
-.-mode-narrate {
-  .table-cell {
-    &.completed {
-      border: 1px solid #afacac;
-      /*border-radius: 7px;*/
-    }
-  }
-}
 
 .table-row {
     display: table-row;

@@ -2388,4 +2388,7 @@ export default {
     padding: 0px;
   }
 }
+.table-body.-block {
+  position: relative;
+}
 </style>
