@@ -2383,4 +2383,9 @@ export default {
     }
   }
 }
+.ilm-block {
+  &.flag-popup-container {
+    padding: 0px;
+  }
+}
 </style>

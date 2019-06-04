@@ -255,8 +255,8 @@ export const store = new Vuex.Store({
         locked = l ? true : false;
       }
       if (!locked && state.aligningBlocks.length > 0) {
-        let l = state.aligningBlocks.find(_l => _l._id === id);
-        locked = l && (l.partIdx === partIdx) ? true : false;
+        let l = state.aligningBlocks.find(_l => _l._id === id && (_l.partIdx === partIdx));
+        locked = l ? true : false;
       }
       return locked;
     },
@@ -1675,19 +1675,32 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    putBlockNarrate({state, dispatch, commit}, block) {
+    putBlockNarrate({state, dispatch, commit}, [block, realign, partIdx]) {
       commit('set_blocker', 'putBlock');
-      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/narrate', {
+      let url = `${state.API_URL}book/block/${block.blockid}/narrate`;
+      if (realign) {
+        url+= '?realign=true';
+      }
+      let update = {
         block: {
           blockid: block.blockid, 
           bookid: block.bookid, 
           flags: block.flags,
           content: block.content
         }
-      })
+      };
+      if (typeof partIdx !== 'undefined') {
+        update.block.partIdx = partIdx;
+      } else {
+        update.block.parts = block.parts;
+      }
+      return axios.put(url, update)
         .then((response) => {
-          commit('clear_blocker', 'putBlock');
-          return Promise.resolve(response.data);
+          return dispatch('getBookAlign')
+            .then(() => {
+              commit('clear_blocker', 'putBlock');
+              return Promise.resolve(response.data);
+            })
         })
         .catch(err => {
           commit('clear_blocker', 'putBlock');
@@ -2662,7 +2675,7 @@ export const store = new Vuex.Store({
       }
       return axios.put(state.API_URL + url, update)
         .then((response) => {
-          console.log(response);
+          return Promise.resolve(response);
         });
     }
   }

@@ -226,8 +226,114 @@
               @audDeletePart="_audDeletePart"
               @insertSilence="insertSilence"
               @hasChanges="onPartChanges"
+              @addFootnote="addFootnote"
+              @partAudioComplete="partAudioComplete"
+              @addFlagPart="onAddFlagPart"
+              @addFlag="addFlag"
+              @inputFlag="onInputFlag"
+              @resolveFlagPart="onResolveFlagPart"
           /></BookBlockPartView>
             <div v-if="blockParts.length === 1" class="hidden" ref="blockContent" v-html="blockParts[0].content"></div>
+          <div class="ilm-block flag-popup-container">
+            <block-flag-popup
+                ref="blockFlagPopup"
+                dir="top"
+                :isHideArchFlags="isHideArchFlags"
+                :isHideArchParts="isHideArchParts"
+                :toggleHideArchParts="toggleHideArchParts"
+                :countArchParts="countArchParts"
+            >
+              <template v-if="flagsSel">
+              <template v-for="(part, partIdx) in flagsSel.parts">
+                <template v-if="part.status!=='hidden' || !isHideArchFlags || !isHideArchParts">
+                <li>
+
+                <div class="flag-header -left">
+
+                  <i class="glyphicon glyphicon-triangle-bottom"
+                    v-if="!part.collapsed"
+                    @click.prevent="toggleFlagPart($event, partIdx)"></i>
+                  <i class="glyphicon glyphicon-triangle-right"
+                    v-if="part.collapsed"
+                    @click.prevent="toggleFlagPart($event, partIdx)"></i>
+
+                  <span v-if="part.type == 'editor'">Editing</span>
+                  <span v-if="part.type == 'narrator'">Narrating</span>
+                  <span class="flag-date">{{moment(part.created_at).format("D MMM")}}</span>
+                  <i v-if="part.status == 'resolved'" class="glyphicon glyphicon-flag flag-resolved"></i>
+                  <i v-if="part.status == 'open'" class="glyphicon glyphicon-flag flag-open"></i>
+                  <i v-if="part.status == 'hidden'" class="glyphicon glyphicon-flag flag-hidden"></i>
+                </div>
+
+
+
+                <a href="#" class="flag-control -right -top"
+                  v-if="_is('proofer', true) && part.status == 'resolved' && !isCompleted"
+                  @click.prevent="hideFlagPart($event, partIdx)">
+                  Archive flag</a>
+
+                <a href="#" class="flag-control -right -top"
+                  v-if="_is('proofer', true) && part.status == 'hidden' && (!isCompleted || isProofreadUnassigned())"
+                  @click.prevent="unHideFlagPart($event, partIdx)">
+                  Unarchive flag</a>
+
+                <a href="#" class="flag-control -right -top"
+                  v-if="canDeleteFlagPart(part) && part.status == 'open'"
+                  @click.prevent="delFlagPart($event, partIdx)">
+                  <i class="fa fa-trash"></i></a>
+
+                <div class="clearfix"></div>
+
+                <template v-if="!part.collapsed">
+
+                <p v-if="part.content" class="flag-content">"{{part.content}}"</p>
+
+                <p v-for="comment in part.comments" class="flag-comment">
+                  <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}
+                </p>
+
+                <textarea v-if="part.status !== 'hidden'"
+                  class="flag-comment"
+                  v-model="part.newComment"
+                  placeholder="Enter description here ..."
+                  @input="onInputFlag"
+                  @focusout="onFocusoutFlag(partIdx, $event)"
+                  :disabled="!canCommentFlagPart(part)">
+                </textarea>
+
+                </template>
+
+                <template v-if="block.isNeedAlso(flagsSel._id)">
+                  <a v-if="isCanFlag('narrator', false) && part.type == 'editor'"
+                  href="#" class="flag-control -right"
+                  @click.prevent="addFlagPart(part.content, 'narrator')">
+                  Flag for narration also</a>
+                  <a v-if="isCanFlag('editor', false) && part.type == 'narrator'"
+                  href="#" class="flag-control -right"
+                  @click.prevent="addFlagPart(part.content, 'editor')">
+                  Flag for editing also</a>
+                </template>
+
+                <a v-if="isCanReopen(flagsSel, partIdx)"
+                  href="#" class="flag-control"
+                  @click.prevent="reopenFlagPart($event, partIdx)">
+                  Re-open flag</a>
+
+                <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned())"
+                  href="#" class="flag-control -left"
+                  @click.prevent="resolveFlagPart($event, partIdx)">
+                  Resolve flag</a>
+
+                <div class="clearfix"></div>
+
+                </li>
+
+                </template>
+              </template>
+              </template>
+
+            </block-flag-popup>
+          </div>
             <!-- <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(), {'checked': blockO.checked}]"
@@ -1422,7 +1528,7 @@ export default {
       onInputFlag: function(ev) {
         this.isChanged = true;
         this.pushChange('flags');
-        ev.target.focus();
+        //ev.target.focus();
       },
       onFocusoutFlag: function(partIdx, ev) {
         if (ev && ev.target) {
@@ -1447,10 +1553,12 @@ export default {
 
           if (this.$refs.blocks) {
             if (this.mode !== 'narrate') {
-              this.$refs.blocks[0].$refs.blockContent.innerHTML = block.content;
-              this.block.setPartContent(0, block.content);
-              this.$refs.blocks[0].flushChanges();
-              this.$refs.blocks[0].isChanged = false;
+              this.blockParts.forEach((part, partIdx) => {
+                this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = part.content;
+                this.block.setPartContent(partIdx, part.content);
+                this.$refs.blocks[partIdx].flushChanges();
+                this.$refs.blocks[partIdx].isChanged = false;
+              });
             } else {
               this.block.content = block.content;
             }
@@ -1609,10 +1717,15 @@ export default {
             this.block.voicework = 'no_audio';
             break;
           default:
-            this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+            this.block.content = this.clearBlockContent();
+            if (this.isSplittedBlock) {
+              this.$refs.blocks.forEach((blk, blkIdx) => {
+                this.block.setPartContent(blkIdx, blk.clearBlockContent());
+              });
+            }
             if (this.mode !== 'narrate') {
               if (this.block.footnotes && this.block.footnotes.length) {
-                let footnotesInText = this.$refs.blockContent.querySelectorAll(`sup[data-idx]`);
+                let footnotesInText = document.getElementById(this.block.blockid).querySelectorAll(`sup[data-idx]`);
                 if (footnotesInText) {
                   footnotesInText = footnotesInText.length;
                 } else {
@@ -1628,7 +1741,7 @@ export default {
                     }
                   });
                   this.delFootnote(delIdxList, false);
-                  this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+                  this.block.content = this.clearBlockContent();
                 }
                 if (!delCount) {
                   this.block.footnotes.forEach((footnote, footnoteIdx)=>{
@@ -1651,6 +1764,9 @@ export default {
             let fullUpdate = false;
             this.block.clean();
             let partUpdate = {blockid: this.block.blockid, bookid: this.block.bookid};
+            if (this.isSplittedBlock) {
+              partUpdate.parts = this.block.parts;
+            }
             if (this.changes && Array.isArray(this.changes)) {
               this.changes.forEach(c => {
                 switch(c) {
@@ -1833,7 +1949,7 @@ export default {
       },
       assembleBlockProofread() {
         if (this.$refs.blockContent) {
-          this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+          this.block.content = this.clearBlockContent();
         }
         this.isSaving = true;
         return this.putBlockProofread(this.block.clean())
@@ -1850,9 +1966,9 @@ export default {
           });
       },
       assembleBlockNarrate() {
-        this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+        this.block.content = this.clearBlockContent();
         this.isSaving = true;
-        return this.putBlockNarrate(this.block.clean())
+        return this.putBlockNarrate([this.block.clean(), false])
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
@@ -1861,7 +1977,15 @@ export default {
             return Promise.reject(err);
           });
       },
-      clearBlockContent: function(content) {
+      clearBlockContent: function(content = false) {
+        if (!content) {
+          content = '';
+          this.$refs.blocks.forEach((blk, idx) => {
+            let cnt = blk.clearBlockContent();
+            content+= cnt;
+            this.block.setPartContent(idx, cnt);
+          });
+        }
         //console.log(content)
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
         content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
@@ -1886,7 +2010,9 @@ export default {
       checkBlockContentFlags: function() {
         if (this.block.flags) this.block.flags.forEach((flag, flagIdx)=>{
           if (flag._id !== this.block._id) {
-            let node = this.$refs.blockContent.querySelector(`[data-flag="${flag._id}"]`);
+            let node = this.$refs.blocks.find(blk => {
+              return blk.$refs.blockContent.querySelector(`[data-flag="${flag._id}"]`);
+            });
             if (!node) this.block.mergeFlags(flagIdx);
           }
         });
@@ -2407,9 +2533,9 @@ export default {
       },
       addFootnote: function() {
         //console.log('this.range', this.range);
-        let el = document.createElement('SUP');
+        /*let el = document.createElement('SUP');
         el.setAttribute('data-idx', this.block.footnotes.length + 1);
-        this.range.insertNode(el);
+        this.range.insertNode(el);*/
         this.block.footnotes.forEach((ftn, ftnIdx) => {
           let ref = this.$refs['footnoteContent_' + ftnIdx]
           if (ref && ref[0]) {
@@ -2433,7 +2559,7 @@ export default {
       delFootnote: function(pos, checkText = true) {
         if (checkText) {
           pos.forEach(p => {
-            let footnote = this.$refs.blockContent.querySelector(`[data-idx='${p+1}']`);
+            let footnote = document.getElementById(this.block.blockid).querySelector(`[data-idx='${p+1}']`);
             if (footnote) {
               footnote.remove();
             }
@@ -2458,11 +2584,15 @@ export default {
       },
       updFootnotes: function(c_pos = 0) {
         let pos = 0;
-        this.$refs.blockContent.querySelectorAll('[data-idx]').forEach(function(el, idx) {
-          if (el.getAttribute('data-idx') == c_pos) pos = idx;
-          el.textContent = idx+1;
-          el.setAttribute('data-idx', idx+1);
-        });
+        let idx = 0;
+        this.$refs.blocks.forEach((blk) => {
+          blk.$refs.blockContent.querySelectorAll('[data-idx]').forEach(function(el) {
+            if (el.getAttribute('data-idx') == c_pos) pos = idx;
+            el.textContent = idx+1;
+            el.setAttribute('data-idx', idx+1);
+            ++idx;
+          });
+        })
         return pos;
       },
       commitFootnote: function(pos, ev, field = null) {
@@ -2480,7 +2610,7 @@ export default {
       },
 
       addFlag: function(ev, type = 'editor') {
-        if (window.getSelection) {
+        /*if (window.getSelection) {
           let startPos = this.$refs.blockContent.compareDocumentPosition(this.range.startContainer);
           let endPos = this.$refs.blockContent.compareDocumentPosition(this.range.endContainer);
           if (startPos != 20) {
@@ -2540,7 +2670,9 @@ export default {
           this.$refs.blockFlagPopup.scrollBottom();
           this.isChanged = true;
           this.pushChange('flags');
-        }
+        }*/
+        this.isChanged = true;
+        this.pushChange('flags');
       },
 
       addFlagPart: function(content, type = 'editor') {
@@ -2550,6 +2682,11 @@ export default {
         this.$refs.blockFlagPopup.reset();
 
         this.$refs.blockFlagPopup.scrollBottom();
+        this.isChanged = true;
+        this.pushChange('flags');
+      },
+      
+      onAddFlagPart: function(content, type = 'editor') {
         this.isChanged = true;
         this.pushChange('flags');
       },
@@ -2695,6 +2832,11 @@ export default {
         this.flagsSel.parts[partIdx].status = 'resolved';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
+        this.isChanged = true;
+        this.pushChange('flags');
+      },
+      
+      onResolveFlagPart: function(ev, partIdx) {
         this.isChanged = true;
         this.pushChange('flags');
       },
@@ -3751,6 +3893,14 @@ export default {
         } else {
           
         }
+      },
+      partAudioComplete(partIdx) {
+        if (this.block.parts && this.block.parts[partIdx + 1]) {
+          let ref = this.$refs.blocks[partIdx + 1];
+          if (ref) {
+            ref.audPlay();
+          }
+        }
       }
   },
   watch: {
@@ -4102,6 +4252,7 @@ export default {
 
         .-hidden-hover {
           display: block;
+          height: 31px;
         }
 
         &:hover {

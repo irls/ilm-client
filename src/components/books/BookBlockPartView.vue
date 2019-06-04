@@ -252,7 +252,7 @@
             </div>
             <!--<div class="table-row ilm-block">-->
 
-            <div class="table-row content-footnotes"
+            <!-- <div class="table-row content-footnotes"
               v-if="block.footnotes.length > 0 && mode !== 'narrate'">
               <div class="table-body footnote"
                 v-for="(footnote, ftnIdx) in block.footnotes">
@@ -278,7 +278,7 @@
                     </template>
                   </div>
                   <div class="table-cell -audio -right">
-                    <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && ((_is('editor', true) || adminOrLibrarian) && tc_isShowEdit(block._id))"> <!--&& !isAudioChanged"-->
+                    <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && ((_is('editor', true) || adminOrLibrarian) && tc_isShowEdit(block._id))">
                       <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor(footnote, ftnIdx, $event)" v-if="allowEditing"></i>
                     </template>
                     <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
@@ -294,7 +294,6 @@
                             @click="FtnAudio.audResume(block._id, ftnIdx)"></i>
                           <i class="fa fa-stop-circle-o"
                             @click="FtnAudio.audStop(block._id, ftnIdx)"></i>
-                          <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
                         </template>
                     </template>
                   </div>
@@ -317,7 +316,7 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </div> -->
 
             <div class="table-row controls-bottom">
               <div v-if="isRecording" class="recording-hover-controls" ref="recordingCtrls">
@@ -927,7 +926,7 @@ export default {
                 canFlag = false;
               } else {
                 if (this.block.status && this.block.status.stage === 'audio_mastering') canFlag = false;
-                else if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
+                else if (!(this.blockPart.audiosrc && this.blockPart.audiosrc.length)) canFlag = false;
                 else if (this._is('narrator', true)) canFlag = false;
               }
               if (this.mode === 'narrate') {
@@ -1032,7 +1031,7 @@ export default {
             toolbar = {
                 buttons: ['suggestButton']
               };
-            this.editor = new MediumEditor('#content-' + this.block._id, {
+            this.editor = new MediumEditor('#content-' + this.block.blockid + '-part-' + this.blockPartIdx, {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: [],
@@ -1162,8 +1161,9 @@ export default {
         ev.target.focus();
       },
       onInputFlag: function(ev) {
-        this.isChanged = true;
-        this.pushChange('flags');
+        //this.isChanged = true;
+        //this.pushChange('flags');
+        this.$emit('inputFlag');
         ev.target.focus();
       },
       onFocusoutFlag: function(partIdx, ev) {
@@ -1191,25 +1191,19 @@ export default {
             if (this.mode !== 'narrate') {
               this.$refs.blockContent.innerHTML = content;
             } else {
-              //this.block.setPartContent(content);
+              this.block.setPartContent(this.blockPartIdx, content);
+              this.$refs.blockContent.innerHTML = content;
             }
             //this.$refs.blockContent.focus();
           }
           if (this.$refs.blockFlagPopup) {
             this.$refs.blockFlagPopup.close();
           }
-          this.block.footnotes = block.footnotes ? block.footnotes : [];
-          this.block.footnotes.forEach((ftn, ftnIdx) => {
-            let ref = this.$refs['footnoteContent_' + ftnIdx];
-            if (ref && ref[0]) {
-              ref[0].innerHTML = ftn.content;
-            }
-          });
-          if (this.block.footnotes.length > 0) {
-            this.initFtnEditor(true);
+          let part = this.isSplittedBlock ? this.block.parts[this.blockPartIdx] : this.block;
+          if (part) {
+            this.block.setPartAudiosrc(this.blockPartIdx, part.audiosrc, part.audiosrc_ver);
+            this.refreshBlockAudio();
           }
-          this.block.setPartAudiosrc(this.blockPartIdx, block.audiosrc, block.audiosrc_ver);
-          this.refreshBlockAudio();
 
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
@@ -1565,10 +1559,40 @@ export default {
             return Promise.reject(err);
           });
       },
-      assembleBlockNarrate() {
-        this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+      assembleBlockNarrate(check_realign = true, realign = false) {
+        if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
+          this.$root.$emit('from-block:save-and-realign-warning', () => {
+                  this.$root.$emit('hide-modal');
+                }, 
+                () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.assembleBlockNarrate(false, false)
+                    }
+                  }, 50);
+                }, 
+                () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.assembleBlockNarrate(false, true)
+                    }
+                  }, 50);
+                });
+          return;
+        }
+        if (check_realign === true && this.needsRealignment) {
+          realign = true;
+        }
+        this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isSaving = true;
-        return this.putBlockNarrate(this.block.clean())
+        return this.putBlockNarrate([Object.assign(this.blockPart, {
+            blockid: this.block.blockid,
+            bookid: this.block.bookid,
+        }), realign, this.blockPartIdx])
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
@@ -1577,8 +1601,11 @@ export default {
             return Promise.reject(err);
           });
       },
-      clearBlockContent: function(content) {
+      clearBlockContent: function(content = false) {
         //console.log(content)
+        if (!content) {
+          content = this.$refs.blockContent.innerHTML;
+        }
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
         content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
@@ -2033,7 +2060,7 @@ export default {
         let el = document.createElement('SUP');
         el.setAttribute('data-idx', this.block.footnotes.length + 1);
         this.range.insertNode(el);
-        this.block.footnotes.forEach((ftn, ftnIdx) => {
+        /*this.block.footnotes.forEach((ftn, ftnIdx) => {
           let ref = this.$refs['footnoteContent_' + ftnIdx]
           if (ref && ref[0]) {
             this.block.setContentFootnote(ftnIdx, ref[0].innerHTML);
@@ -2042,16 +2069,18 @@ export default {
         let pos = this.updFootnotes(this.block.footnotes.length + 1);
         this.block.footnotes.splice(pos, 0, new FootNote({}));
         this.$forceUpdate();
-        this.isChanged = true;
+        //this.isChanged = true;
         let ref = this.$refs['footnoteContent_' + pos];
         if (ref && ref[0]) {
           ref[0].innerHTML = this.block.footnotes[pos].content;
-        }
-        this.pushChange('footnotes');
-        Vue.nextTick(() => {
+        }*/
+        //this.pushChange('footnotes');
+        /*Vue.nextTick(() => {
           //this.destroyEditor();
           this.initFtnEditor(true);
-        });
+        });*/
+        this.$emit('addFootnote');
+        return;
       },
       delFootnote: function(pos, checkText = true) {
         if (checkText) {
@@ -2161,8 +2190,9 @@ export default {
             this.handleFlagClick({target: existsFlag, layerY: ev.layerY, clientY: ev.clientY});
           }
           this.$refs.blockFlagPopup.scrollBottom();
-          this.isChanged = true;
-          this.pushChange('flags');
+          //this.isChanged = true;
+          //this.pushChange('flags');
+          this.$emit('addFlag');
         }
       },
 
@@ -2173,8 +2203,9 @@ export default {
         this.$refs.blockFlagPopup.reset();
 
         this.$refs.blockFlagPopup.scrollBottom();
-        this.isChanged = true;
-        this.pushChange('flags');
+        //this.isChanged = true;
+        //this.pushChange('flags');
+        this.$emit('addFlagPart');
       },
 
       detectExistingFlag: function(ev) {
@@ -2318,8 +2349,9 @@ export default {
         this.flagsSel.parts[partIdx].status = 'resolved';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
-        this.isChanged = true;
-        this.pushChange('flags');
+        //this.isChanged = true;
+        //this.pushChange('flags');
+        this.$emit('resolveFlagPart');
       },
 
       reopenFlagPart: function(ev, partIdx) {
@@ -2465,6 +2497,7 @@ export default {
                 this.isAudStarted = false;
                 this.isAudPaused = false;
                 this.audCleanClasses(this.block._id, {});
+                this.$emit('partAudioComplete', this.blockPartIdx);
             }
         });
         var self = this;
