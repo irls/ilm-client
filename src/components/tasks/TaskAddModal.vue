@@ -223,7 +223,8 @@ export default {
         roles: self.roles,
         description: self.description,
         id: self.id,
-        hasBooks: this.importingBooksList.length > 0
+        hasBooks: this.importingBooksList.length > 0,
+        language: this.lang
       }
       axios.post(TASKS_URL, task)
         .then(response => {
