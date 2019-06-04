@@ -1909,7 +1909,8 @@ export default {
             data = {
               audiosrc: this.block.getAudiosrc(null, false),
               content: this.blockAudio.map,
-              manual_boundaries: this.block.manual_boundaries
+              manual_boundaries: this.block.manual_boundaries,
+              mode: this.mode
             };
           } else {
             data = {
