@@ -1951,6 +1951,14 @@ export default {
                   this.blockAudio.map = response.data.content;
                   this.blockAudio.src = this.block.getAudiosrc('m4a');
                   this.block.manual_boundaries = response.data.manual_boundaries || [];
+                  Vue.nextTick(() => {
+                    if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
+                      this.block.flags.forEach(f => {
+                        this.updateFlagStatus(f._id);
+                      });
+                      //console.log(this.$refs.blockContent.innerHTML)
+                    }
+                  })
                   //return this.putBlock(this.block);
                   if (!realign) {
                     this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
