@@ -2166,7 +2166,7 @@ export const store = new Vuex.Store({
             if (block.isChanged || block.isAudioChanged) {
               if ((block.voicework === 'audio_file' && data.voicework === 'audio_file') ||
                       (block.voicework === 'tts' && data.voicework === 'tts')) {
-                wait_tasks.push(dispatch('putBlock', block)
+                wait_tasks.push(dispatch('putBlock', [block])
                         .then(() => {
                           block.isChanged = false;
                           block.isAudioChanged = false;
