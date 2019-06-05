@@ -1155,7 +1155,7 @@ export default {
                     el.evFromAudioeditorClosed(currBlockRef.blockid);
                   }
                   this.$root.$emit('for-audioeditor:force-close');
-                  currBlockRef.assembleBlockProxy()
+                  currBlockRef.assembleBlockProxy(false)
                   .then(()=>{
                     prevBlockRef.isAudioChanged = false;
                     let el = this.$children.find(c => {
@@ -1164,7 +1164,7 @@ export default {
                     if (el) {
                       el.evFromAudioeditorClosed(prevBlockRef.blockid);
                     }
-                    prevBlockRef.assembleBlockProxy()
+                    prevBlockRef.assembleBlockProxy(false)
                     .then(()=>{
                       this.doJoinBlocks.show = false;
                       this.doJoinBlocks.showAudio = false;
@@ -1287,7 +1287,7 @@ export default {
                     el.evFromAudioeditorClosed(currBlockRef.blockid);
                   }
                   this.$root.$emit('for-audioeditor:force-close');
-                  currBlockRef.assembleBlockProxy()
+                  currBlockRef.assembleBlockProxy(false)
                   .then(()=>{
                     nextBlockRef.isAudioChanged = false;
                     let el = this.$children.find(c => {
@@ -1296,7 +1296,7 @@ export default {
                     if (el) {
                       el.evFromAudioeditorClosed(nextBlockRef.blockid);
                     }
-                    nextBlockRef.assembleBlockProxy()
+                    nextBlockRef.assembleBlockProxy(false)
                     .then(()=>{
                       this.doJoinBlocks.show = false;
                       this.doJoinBlocks.showAudio = false;
