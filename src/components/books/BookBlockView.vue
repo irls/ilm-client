@@ -511,7 +511,7 @@
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
                   <div class="save-block -right" @click="discardBlock"
-                       v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
+                       v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned()) && isChanged)}">
                     Discard
                   </div>
                   <div class="save-block -right"
@@ -1749,7 +1749,7 @@ export default {
             this.blockAudio.map = this.block.content;
           }
           if (this.isAudioEditing && !realign) {
-            this.$root.$emit('for-audioeditor:flush');
+            this.$root.$emit('for-audioeditor:set-process-run', false);
             this.$root.$emit('for-audioeditor:reload-text', this.block.content, this.block);
           }
           this.$refs.blockContent.dataset.has_suggestion = false;
@@ -1956,15 +1956,15 @@ export default {
                     this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
                   }
                   this.isAudioChanged = false;
-                  this.isChanged = false;
+                  //this.isChanged = false;
                   this.block.isAudioChanged = false;
-                  this.block.isChanged = false;
+                  //this.block.isChanged = false;
                   return BPromise.resolve();
                 } else {
                   this.isAudioChanged = false;
-                  this.isChanged = false;
+                  //this.isChanged = false;
                   this.block.isAudioChanged = false;
-                  this.block.isChanged = false;
+                  //this.block.isChanged = false;
                   let resp_block = response.data;
                   let resp_f = resp_block.footnotes[footnoteIdx];
                   this.block.setContentFootnote(footnoteIdx, resp_f.content);
@@ -3089,7 +3089,7 @@ export default {
               this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.block);
               this.block.content = this.$refs.blockContent.innerHTML;
               this.blockAudio.map = this.block.content;
-              this.pushChange('content');
+              //this.pushChange('content');
             }
           }
         }
@@ -3101,8 +3101,8 @@ export default {
           //this.doReAlign(this.footnoteIdx)
             //.then(() => {
               this.assembleBlockAudioEdit(this.footnoteIdx, true, false);
-              this.flushChanges();
-              this.isChanged = false;
+              //this.flushChanges();
+              //this.isChanged = false;
               this.isAudioChanged = false;
             //});
         }
@@ -3117,8 +3117,8 @@ export default {
         if (blockId == this.check_id) {
           this.audStop();
           this.assembleBlockAudioEdit(this.footnoteIdx, false, false);
-          this.flushChanges();
-          this.isChanged = false;
+          //this.flushChanges();
+          //this.isChanged = false;
           this.isAudioChanged = false;
         }
       },
@@ -3658,7 +3658,7 @@ export default {
             if (this.isAudioEditing) {
               //this.$root.$emit('for-audioeditor:set-process-run', false);
               if (this.check_id === this.block.blockid) {
-                this.refreshBlockAudio();
+                this.refreshBlockAudio(!this.isChanged);
                 this.showAudioEditor();
               } else {
                 let ftn = this.block.footnotes[this.footnoteIdx];
@@ -3792,12 +3792,12 @@ export default {
       },
       'isAudioChanged': {
         handler(val) {
-          if (val) {
+          /*if (val) {
             this.pushChange('audio');  //TODO ask !
             //this.voiceworkSel('audio');
           } else {
             this.unsetChange('audio');
-          }
+          }*/
           this.block.isAudioChanged = val;
         }
       },
@@ -3813,6 +3813,9 @@ export default {
       },
       'block.content': {
         handler(val) {
+          if (this.isChanged && val !== this.$refs.blockContent.innerHTML) {
+            this.block.content = this.$refs.blockContent.innerHTML;
+          }
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
