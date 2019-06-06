@@ -1335,7 +1335,7 @@ export default {
       },
       //-- } -- end -- Checkers --//
 
-      destroyEditor() {
+      destroyEditor(destroyPart = false) {
         if (this.editor) {
           //this.editor.removeElements();
           this.editor.destroy();
@@ -1354,6 +1354,11 @@ export default {
         }
         if (this.editorFootn) {
           this.editorFootn.destroy();
+        }
+        if (destroyPart) {
+          this.$refs.blocks.forEach(blk => {
+            blk.destroyEditor();
+          });
         }
       },
 
@@ -2281,6 +2286,9 @@ export default {
             //this.$router.push({name: this.$route.name, params:  { block: 'unresolved', task_type: true }});
             this.recountApprovedInRange();
             //this.getBloksUntil('unresolved', true, this.block._id)
+            if (this.mode === 'narrate') {// after block was moved from narrator
+              this.destroyEditor(true);
+            }
           }
         })
         .catch(err => {
