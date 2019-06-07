@@ -213,6 +213,9 @@
               :blockPartIdx="blockPartIdx"
               :isSplittedBlock="isSplittedBlock"
               :parnum="parnumComp"
+              :assembleBlockAudioEdit="assembleBlockAudioEdit"
+              :insertSilence="insertSilence"
+              :audDeletePart="_audDeletePart"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
@@ -223,9 +226,6 @@
               @cancelRecording="cancelRecording"
               @save="saveBlockPart"
               @stopRecording="stopRecording"
-              @assembleBlockAudioEdit="assembleBlockPartAudioEdit"
-              @audDeletePart="_audDeletePart"
-              @insertSilence="insertSilence"
               @hasChanges="onPartChanges"
               @addFootnote="addFootnote"
               @partAudioComplete="partAudioComplete"
@@ -2165,69 +2165,6 @@ export default {
         }
         //this.isAudioChanged = false;
       },
-      assembleBlockPartAudioEdit(blockPartIdx, content, audiosrc, realign) {
-        let blockPart = this.block.parts[blockPartIdx];
-        if (!this.isSplittedBlock) {
-          this.block.setAudiosrc(audiosrc);
-          this.block.setContent(content);
-          return this.assembleBlockAudioEdit(null, realign);
-        }
-        if (!blockPart) {
-          return Promise.reject(new Error('Block part not found'));
-        }
-        let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/audio_edit/part/' + blockPartIdx;
-        let api = this.$store.state.auth.getHttp();
-        let data = {
-          audiosrc: audiosrc,
-          content: content,
-          manual_boundaries: blockPart.manual_boundaries || []
-        };
-        this.isSaving = true;
-        if (realign) {
-          api_url+= '?realign=true';
-        }
-        return api.post(api_url, data, {})
-          .then(response => {
-            if (!realign) {
-              this.isSaving = false;
-            } else {
-              this.getBookAlign()
-                .then(() => {
-                  this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
-                  this.isSaving = false;
-                })
-            }
-            if (response.status == 200) {
-              if (this.isCompleted) {
-                this.tc_loadBookTask();
-              }
-              this.getCurrentJobInfo();
-
-              if (this.block.status.marked != response.data.status.marked) {
-                this.block.status.marked = response.data.status.marked;
-              }
-              let part = response.data.parts[blockPartIdx];
-              this.block.setPartContent(blockPartIdx, part.content);
-              this.block.setPartAudiosrc(blockPartIdx, part.audiosrc, part.audiosrc_ver);
-              this.block.setPartManualBoundaries(part.manual_boundaries || []);
-              //return this.putBlock(this.block);
-              if (!realign) {
-                this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(blockPartIdx, 'm4a'), this.block.getPartContent(blockPartIdx), false);
-              }
-              this.isAudioChanged = false;
-              this.isChanged = false;
-              this.block.isAudioChanged = false;
-              this.block.isChanged = false;
-              return BPromise.resolve();
-            }
-          })
-          .catch(err => {
-            this.isSaving = false;
-            this.checkError(err);
-            BPromise.reject(err)
-          });
-      },
-
       reworkBlock: function(ev) {
         if (!this.isNeedWorkDisabled) {
 
@@ -2398,7 +2335,7 @@ export default {
         }
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_remove';
         let api = this.$store.state.auth.getHttp();
-        this.isUpdating = true;
+        this.isUpdating = part_idx === null;
         let formData = {};
         let position = [start, end];
         formData.position = position;
@@ -2419,7 +2356,7 @@ export default {
           formData.footnote_idx = footnoteIdx;
           formData.manual_boundaries = this.audioEditFootnote.footnote.manual_boundaries || [];
         }
-        api.post(api_url, formData, {})
+        return api.post(api_url, formData, {})
           .then(response => {
             this.isUpdating = false;
             if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
@@ -2451,12 +2388,14 @@ export default {
               this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
               this.$root.$emit('for-audioeditor:set-process-run', false);
             }
+            return Promise.resolve();
           })
           .catch(err => {
             this.checkError(err);
             this.isUpdating = false;
             this.$root.$emit('for-audioeditor:set-process-run', false);
             this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+            return Promise.reject(err);
           });
       },
       insertSilence(position, length, footnoteIdx = null, partIdx = null, check_id = null) {
@@ -2465,7 +2404,7 @@ export default {
         }
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio/insert_silence';
         let api = this.$store.state.auth.getHttp();
-        this.isUpdating = true;
+        this.isUpdating = partIdx === null;
         let formData = {};
         formData.position = position;
         formData.length = length;
@@ -2489,7 +2428,7 @@ export default {
         if (footnoteIdx !== null) {
           formData.footnote_idx = footnoteIdx
         }
-        api.post(api_url, formData, {})
+        return api.post(api_url, formData, {})
           .then(response => {
             this.isUpdating = false;
             if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
@@ -2520,12 +2459,14 @@ export default {
               this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
               this.$root.$emit('for-audioeditor:set-process-run', false);
             }
+            return Promise.resolve();
           })
           .catch(err => {
             this.checkError(err);
             this.isUpdating = false;
             this.$root.$emit('for-audioeditor:set-process-run', false);
             this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+            return Promise.reject(err);
           });
       },
       audCleanClasses: function(block_id, ev) {
