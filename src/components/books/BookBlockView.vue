@@ -212,6 +212,7 @@
               :blockPart="blockPart"
               :blockPartIdx="blockPartIdx"
               :isSplittedBlock="isSplittedBlock"
+              :parnum="parnumComp"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
@@ -587,21 +588,6 @@
                     @click="handleBlockFlagClick"
                   ></i>
                 </span>
-              </div>
-              <div class="align-range -hidden -left" v-if="false && allowEditing">
-                Set block range: <label>
-                <input type="checkbox" v-on:change="setRangeSelection('start', $event)"
-                class="set-range-start" :disabled="!allowSetStart(block._id)"
-                v-model="block.checkedStart"/>&nbsp;Start</label>
-                <label>&nbsp;&nbsp;
-                <input type="checkbox" v-on:change="setRangeSelection('end', $event)" class="set-range-end" :disabled="!allowSetEnd(block._id)"
-                v-model="block.checkedEnd"/>&nbsp;End</label>
-                <template v-if="displaySelectionStart">
-                  <a class="go-to-block" v-on:click="scrollToBlock(selectionStart)">View start({{displaySelectionStart}})</a>
-                </template>
-                <template v-if="displaySelectionEnd">
-                  <a class="go-to-block" v-on:click="scrollToBlock(selectionEnd)">View end({{displaySelectionEnd}})</a>
-                </template>
               </div>
               <div class="par-ctrl -hidden -right">
                   <div class="save-block -right" @click="discardBlock"
@@ -1045,7 +1031,8 @@ export default {
             }
           }
           return false;
-        }
+        },
+        cache: false
       },
       isSplittedBlock: {
         get() {
@@ -1558,16 +1545,15 @@ export default {
 
           if (this.$refs.blocks) {
             if (this.mode !== 'narrate') {
-              this.blockParts.forEach((part, partIdx) => {
-                this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = part.content;
-                this.block.setPartContent(partIdx, part.content);
-                this.$refs.blocks[partIdx].flushChanges();
-                this.$refs.blocks[partIdx].isChanged = false;
-              });
             } else {
               this.block.content = block.content;
             }
             //this.$refs.blockContent.focus();
+            this.blockParts.forEach((part, partIdx) => {
+              this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = part.content;
+              this.block.setPartContent(partIdx, part.content);
+              this.$refs.blocks[partIdx].isChanged = false;
+            });
           }
           if (this.$refs.blockFlagPopup) {
             this.$refs.blockFlagPopup.close();
@@ -1823,11 +1809,20 @@ export default {
               partUpdate['status'] = partUpdate['status'] || {};
               partUpdate.status.marked = false;
             }
+            let updateTask = null;
             if (fullUpdate) {
-              return this.assembleBlock(partUpdate, realign);
+              updateTask = this.assembleBlock(partUpdate, realign);
             } else {
-              return this.assembleBlockPart(partUpdate);
+              updateTask = this.assembleBlockPart(partUpdate);
             }
+            return updateTask
+              .then(() => {
+                if (!this.isSplittedBlock) {
+                  if (this.$refs.blocks && this.$refs.blocks[0]) {
+                    this.$refs.blocks[0].isChanged = false;
+                  }
+                }
+              });
           }
         }
         return BPromise.resolve();
@@ -1940,17 +1935,29 @@ export default {
             //update.parts[blockPartIdx][k] = blockPart[k];
           //});
         //}
+        let updateTask;
         if (!isPartUpdate) {
           update.blockid = this.block.blockid;
           update.bookid = this.block.bookid;
           if (!realign) {
-            return this.assembleBlockPart(update);
+            updateTask = this.assembleBlockPart(update);
           } else {
-            return this.assembleBlock(update, realign);
+            updateTask = this.assembleBlock(update, realign);
           }
         } else {
-          return this.updateBlockPart([this.block._rid, update, blockPartIdx, realign]);
+          updateTask = this.updateBlockPart([this.block._rid, update, blockPartIdx, realign]);
         }
+        return updateTask
+          .then(() => {
+            if (this.$refs && this.$refs.blocks[blockPartIdx]) {
+              this.$refs.blocks[blockPartIdx].isSaving = false;
+            }
+          })
+          .catch(err => {
+            if (this.$refs && this.$refs.blocks[blockPartIdx]) {
+              this.$refs.blocks[blockPartIdx].isSaving = false;
+            }
+          })
       },
       assembleBlockProofread() {
         if (this.$refs.blockContent) {
@@ -3717,6 +3724,7 @@ export default {
       pushChange(change) {
         if (this.changes.indexOf(change) === -1) {
           this.changes.push(change);
+          this.isChanged = true;
         }
       },
       flushChanges() {
@@ -3896,11 +3904,12 @@ export default {
         return ref && ref.isAudioChanged;
       },
       onPartChanges(val) {
-        if (val) {
+        /*if (val) {
           this.isChanged = true;
         } else {
           
-        }
+        }*/
+        this.pushChange(val);
       },
       partAudioComplete(partIdx) {
         if (this.block.parts && this.block.parts[partIdx + 1]) {
@@ -4237,7 +4246,10 @@ export default {
     width: 100%;
 
     &.-block {
-
+      &.-subblock.-mode-narrate {
+        width: 700px;
+        margin: 0px auto;
+      }
     }
 
     &.-content {
@@ -5053,6 +5065,7 @@ export default {
     text-align: center;
     background-position: center;
     background-color: #8080807d;
+    z-index: 999;
   }
   .recording-hover-controls {
     position: absolute;

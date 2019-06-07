@@ -1,9 +1,9 @@
 <template>
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
-    :class="['table-body -block', '-mode-' + mode, blockOutPaddings, {'-recording': isRecording}]">
+    :class="['table-body -block -subblock', '-mode-' + mode, blockOutPaddings, {'-recording': isRecording}]">
     <div v-if="isLocked" class="locked-block-cover"></div>
     <div class="table-cell controls-left" v-if="mode === 'narrate'">
-      <span v-if="parnumComp.length && isSplittedBlock">{{parnumComp}}_{{blockPartIdx+1}}</span>
+      <span v-if="parnumComp.length && isSplittedBlock">{{parnumComp}}</span>
     </div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
         <template v-if="mode === 'narrate'">
@@ -465,10 +465,13 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
+        if (!this.isSplittedBlock) {
+          return false;
+        }
         if (this.isSaving) {
           return true;
         }
@@ -479,6 +482,9 @@ export default {
       },
       hasLock: {
         get() {
+          if (!this.isSplittedBlock) {
+            return false;
+          }
           return this.block ? this.isBlockLocked(this.block.blockid) : false;
         },
         cache: false
@@ -488,14 +494,10 @@ export default {
         return (this.blockO && this.blockO.checked === true);
       }},
       parnumComp: { cache: false,
+
       get: function () {
-          if (this.blockO.type == 'header' && this.blockO.isNumber && !this.blockO.isHidden) {
-            return this.blockO.secnum;
-          }
-          if (this.blockO.type == 'par' && this.blockO.isNumber && !this.blockO.isHidden) {
-            return this.blockO.parnum;
-          }
-          return '';
+          //_{{blockPartIdx+1}}
+          return (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx+1);
       }},
       isNumbered: { cache: false,
       get: function () {
@@ -1336,6 +1338,7 @@ export default {
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isChanged = false;
+        this.isSaving = true;
         return this.$emit('save', this.blockPart, this.blockPartIdx, realign);
         switch (this.block.type) {
           case 'illustration':
@@ -2750,7 +2753,6 @@ export default {
         if (blockId == this.check_id) {
           this.audStop();
           this.$emit('assembleBlockAudioEdit', this.blockPartIdx, this.blockAudio.map, this.block.getPartAudiosrc(this.blockPartIdx, null, false), true);
-          this.flushChanges();
           this.isChanged = false;
           this.isAudioChanged = false;
         }
@@ -2766,7 +2768,6 @@ export default {
         if (blockId == this.check_id) {
           this.audStop();
           this.$emit('assembleBlockAudioEdit', this.blockPartIdx, this.blockAudio.map, this.block.getPartAudiosrc(this.blockPartIdx, null, false), false);
-          this.flushChanges();
           this.isChanged = false;
           this.isAudioChanged = false;
         }
@@ -3028,10 +3029,16 @@ export default {
       pushChange(change) {
         if (this.changes.indexOf(change) === -1) {
           this.changes.push(change);
+          if (!this.isSplittedBlock) {
+            this.$emit('hasChanges', change);
+          }
         }
       },
       flushChanges() {
         this.changes = [];
+        if (this.$refs.blockFlagPopup) {
+          this.$refs.blockFlagPopup.close();
+        }
       },
       hasChange(change) {
         return this.changes && this.changes.indexOf(change) !== -1;
@@ -3320,771 +3327,19 @@ export default {
           //console.log(this.block._id, 'approveWaiting', val);
         }
       },
-      'hasChanges' :{
+      /*'hasChanges' :{
         handler(val) {
-          console.log('hasChanges', val)
           if (!this.isSplittedBlock) {
             this.$emit('hasChanges', val);
           }
         }
-      }
+      }*/
   }
 }
 </script>
 
 <style lang='less'>
 
-@variable: 90px;
-.ilm-block {
-    padding: 0;
-    .medium-editor-placeholder:after {
-      top: -6px;
-    }
-/*    .content-wrap {
-      &.par {
-        min-height: 54px;
-      }
-      &.title {
-        min-height: 77.5px;
-      }
-      &.header {
-        min-height: 62.5px;
-      }
-      &.subhead {
-        min-height: 54.5px;
-      }
-    }*/
-    hr {
-      position: static;
-    }
-    &.-marked {
-      background-color: rgba(219, 255, 255, 0.5);
-    }
-}
 
-.table-body {
-    display: table;
-    width: 100%;
-
-    &.-block {
-
-    }
-
-    &.-content {
-        margin-bottom: 20px;
-
-        .-hidden {
-            visibility: hidden;
-        }
-
-        &:hover {
-            .-hidden {
-                visibility: visible;
-            }
-        }
-        &.editing {
-            .-hidden.-audio {
-                visibility: visible;
-            }
-        }
-
-        .-hidden-hover {
-          display: block;
-        }
-
-        &:hover {
-          .-hidden-hover {
-            display: none;
-          }
-        }
-    }
-
-    .-left {
-        float: left;
-    }
-    .-right {
-        float: right;
-    }
-
-    &.footnote {
-      margin-top: 5px;
-      margin-bottom: 10px;
-
-      .table-row {
-
-      }
-
-      .-num {
-        padding-right: 5px;
-        padding-top: 3px;
-      }
-      .-text {
-        width: 100%;
-        background: rgba(51, 122, 183, 0.04);
-        padding: 3px;
-        height: 21px;
-        min-height: 21px;
-      }
-      .-control {
-        padding-left: 10px;
-
-      }
-    }
-}
-
-
-.table-row {
-    display: table-row;
-    &.-relative {
-        position: relative;
-    }
-    &.controls-top {
-         i, select {
-            margin-right: 15px;
-         }
-         label {
-            margin-bottom: 0;
-            font-weight: normal;
-         }
-         select {
-            border: none;
-         }
-    }
-
-    &.controls-bottom {
-        height: 24px;
-        span {
-          margin-right: 15px;
-          cursor: pointer;
-          color: gray;
-          &:hover {
-            color: #303030;
-            .fa, .glyphicon, {
-              color: #303030;
-            }
-          }
-        }
-        span.-disabled {
-          color: lightgray;
-          .fa, .glyphicon, {
-            color: lightgray;
-          }
-          &:hover {
-            color: lightgray;
-            .fa, .glyphicon, {
-              color: lightgray;
-            }
-          }
-        }
-        .save-block {
-          cursor: pointer;
-          border: 1px solid silver;
-          border-radius: 3px;
-          padding: 1px 5px;
-          margin-right: 10px;
-          background: rgba(204, 255, 217, 0.5);
-          &:hover {
-              background: rgba(204, 255, 217, 0.9);
-          }
-
-          &.-disabled {
-/*                cursor: not-allowed;
-              &:hover {
-                  background: rgba(100, 100, 100, 0.2);
-              }*/
-              /*visibility: hidden;*/
-              display: none;
-          }
-          .fa-save {
-            color: green;
-          }
-          &.approve-waiting {
-            color: gray;
-            cursor: not-allowed;
-          }
-        }
-    }
-
-    .content-wrap {
-      margin: 6px auto 4px auto;
-      /*padding: 6px 11px;*/
-      /*padding: 11px;*/
-      border-radius: 8px;
-      box-shadow: none;
-      transition: box-shadow 900ms;
-
-      &.-hover:hover {
-          border: 1px solid silver;
-          /*padding: 5px 10px;*/
-          padding: 10px;
-          background: rgba(219, 232, 255, .3);
-      }
-      &.-focus:focus {
-          outline: none;
-          /*border-color: #9ecaed;*/
-          box-shadow: 0 0 10px #9ecaed;
-      }
-      &.checked {
-          outline: none;
-          border-color: #9ecaed;
-          box-shadow: 0 0 10px #9ecaed;
-      }
-      &.updated {
-          box-shadow: 0 0 10px rgba(56, 171, 53, 0.7);
-          transition: box-shadow 200ms;
-      }
-
-    }
-
-    .hr.checked {
-          outline: none;
-          border-color: #9ecaed;
-          box-shadow: 0 0 10px #9ecaed;
-      }
-
-    &.content-description {
-        line-height: 24pt;
-        .content-wrap-desc {
-          p {
-            margin: 0;
-          }
-        }
-    }
-
-    .content-wrap-footn {
-        p {
-          margin: 0;
-        }
-    }
-
-    &.ilm-block {
-      .content-wrap {
-        &.header, &.subhead {
-          margin: 4px;
-        }
-      }
-    }
-
-    .illustration-block {
-      img {
-        border: solid grey 2px;
-        /*max-height: 85vh;*/
-        padding: 4px;
-      }
-      .fa.fa-eye {
-        margin-right: 6px;
-      }
-      .fa.fa-undo {
-        margin-right: 7px;
-        margin-left: 2px;
-      }
-      &.checked {
-        outline: none;
-        border-color: #9ecaed;
-        box-shadow: 0 0 10px #9ecaed;
-      }
-    }
-}
-
-.table-row-flex {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-
-    &.controls-top {
-      width: 100%;
-      height: 26px;
-      position: relative;
-
-      .par-ctrl {
-        width: 440px;
-        /*background: green;*/
-
-        display: flex;
-        flex-wrap: nowrap;
-        align-items: center;
-        justify-content: flex-start;
-
-        &.-audio {
-          width: 65px;
-          justify-content: space-between;
-          margin-right: 50px;
-        }
-        &.-par-num {
-          width: 180px;
-
-          label.par-num {
-            padding-left: 12px;
-            position: relative;
-            top: 2px;
-            font-size: 18px;
-            font-style: italic;
-
-            &.has-num:before {
-              content: '\0023';/*'\2116';*/
-              font-size: smaller;
-              padding-right: 10px;
-            }
-            &.hide-from {
-              opacity: 0;
-            }
-          }
-        }
-
-        .par-ctrl-divider {
-          width: 10px;
-        }
-
-        label {
-          display: block;
-          margin-bottom: 0px;
-          padding-left: 4px;
-          line-height: 20px;
-          height: 20px;
-          font-weight: normal;
-        }
-        select {
-          /*border: none;*/
-          border: 1px solid lightgray;
-        }
-
-        .parnum-row {
-          width: 120px;
-          height: 20px;
-          position: relative;
-
-            &.-locked:after {
-              font-family: 'FontAwesome';
-              content: "\f023";
-              color: gray;
-              position: absolute;
-              left: 105px;
-              top: 0px;
-              /*&:hover {
-                content: "\f09c";
-              }*/
-            }
-
-          input.num {
-            width: 120px;
-            height: 20px;
-            padding-left: 3px;
-          }
-        }
-
-        .fa {
-          cursor: default;
-        }
-        .fa-lock, .fa-unlock {
-          height: 16px;
-          line-height: 18px;
-          &.-invisible {
-            color: transparent;
-          }
-        }
-
-        .block-menu {
-          /*display: inline-block;
-          vertical-align: bottom;*/
-          /*position: relative;*/
-          /*width: 40px;*/
-          height: 20px;
-          .fa, .glyphicon {
-            /*margin-right: 5px;*/
-            &.menu-preloader {
-              background: url(/static/preloader-snake-transparent-small.gif);
-              width: 18px;
-              height: 16px;
-              display: inline-block;
-              background-repeat: no-repeat;
-              text-align: center;
-              background-position: 0 0;
-              background-size: 83%;
-              margin-bottom: -3px;
-              margin-right: -1px;
-            }
-          }
-          .disabled {
-            color: gray;
-          }
-          select {
-            color: black;
-          }
-
-        }
-      }
-    }
-}
-
-.fa, .glyphicon {
-    cursor: pointer;
-    color: gray;
-    font-size: 18px;
-    position: static;
-}
-
-.medium-editor-toolbar .fa {
-    color: #FFFFFF;
-}
-
-.fa:hover, .glyphicon:hover {
-    color: #303030;
-}
-
-.par-ctrl, .controls-top {
-    width: auto;
-    .fa-paragraph, .fa-header {
-        margin-left: 4px;
-        &.-active {
-          color: #303030;
-        }
-    }
-    .glyphicon-volume-up, .glyphicon-volume-off {
-        margin-left: 3px;
-     }
-    .glyphicon-menu-hamburger {
-        font-size: 20px;
-        top: 5px;
-    }
-    .-audio {
-        width: 160px;
-        .fa {
-            font-size: 18px;
-        }
-    }
-    i.fa-volume-off {
-        font-size: 27px;
-        /*margin-right: 5px;*/
-    }
-    label {
-      select, span {
-          display: inline-block;
-          vertical-align: super;
-      }
-    }
-}
-
-  /* A tricky way to create a lightweight highlight effect */
-  .content-wrap[data-audiosrc].playing,
-  .content-wrap-footn[data-audiosrc].playing {
-      w[data-map] {
-        background: linear-gradient(
-            transparent,
-            transparent 50%,
-            rgba(0,255,0,.3) 55%,
-            transparent 70%,
-            transparent
-        );
-        /*cursor: pointer*/
-      }
-
-      w:not([data-map]), w.alignment-changed {
-        background: linear-gradient(
-            transparent,
-            transparent 30%,
-            rgba(255,0,0,.3) 55%,
-            transparent 80%,
-            transparent
-        );
-      }
-
-      [data-idx], [data-pg] {
-        w:not([data-map]) {
-          background: none;
-        }
-      }
-
-      /* hover effect to show which word is affected */
-      w.audio-highlight {
-          border-bottom: 5px solid rgb(226,226,226);
-          border-radius: 3px;
-      }
-      w.audio-trail {
-          border-bottom: 5px solid rgb(240,240,240);
-          border-radius: 3px;
-      }
-      /* gap markers -- although CSS content messes up wrapping and is tricky to detect clicks */
-      w[data-gap] {margin-right: 52px} /* Make room for marker */
-      w[data-gapbefore] {margin-left: 50px} /* Make room marker */
-      w[data-gap]:after, w[data-gapbefore]:before {
-        cursor: pointer;
-        padding: 5px;
-        margin: 5px;
-        position: absolute;
-        width: auto;
-        border-radius: .5em;
-        border: 1px solid gray;
-        background: silver;
-        font: 10pt 'FontAwesome';
-      }
-      w[data-gap]:after {
-          content: '\f060\00A0\f1c7';
-          margin-left: 4px;
-      }
-      w[data-gapbefore]:before {
-          content: '\f1c7\00A0\f061';
-          left: -50px;
-      }
-      w.audio-highlight, w.selected {
-          background: linear-gradient(
-              transparent 20%,
-              rgba(255,255,0,.8) 55%,
-              transparent 80%
-          );
-      }
-      w.audio-trail {
-          background: linear-gradient(
-              transparent 30%,
-              rgba(255,255,0,.4) 55%,
-              transparent 70%
-          );
-      }
-  }
-
-  [data-author] {
-    color: teal;
-  }
-
-  [data-suggestion] {
-    background: yellow;
-  }
-
-  [data-flag] {
-    border-bottom: 2px solid red;
-    pointer-events: none;
-    &:before {
-      pointer-events: all;
-      /*content: "\F024";*/
-      content: "\e034";
-      /*font-family: 'FontAwesome';*/
-      font-family: 'Glyphicons Halflings';
-      color: red;
-      cursor: pointer;
-      display: inline-block;
-      margin-right: 1px;
-      vertical-align: middle;
-    }
-
-    &[data-status="open"] {
-      border-bottom: 2px solid red;
-      &:before {
-        color: red;
-      }
-    }
-    &[data-status="resolved"] {
-      border-bottom: 2px solid green;
-      &:before {
-        color: green;
-      }
-    }
-    &[data-status="hidden"] {
-      border-bottom: 2px solid gray;
-      &:before {
-        color: gray;
-      }
-    }
-  }
-  .glyphicon-flag.flag-disabled {
-    color: lightgray;
-    &:before {
-      color: lightgray;
-    }
-  }
-
-  .hide-archive {
-    [data-flag] {
-      &[data-status="hidden"] {
-        border-bottom: none;
-        &:before {
-          content: '';
-        }
-      }
-    }
-  }
-
-  i[data-flag] {
-    &[data-status] {
-      border-bottom: none;
-    }
-  }
-
-  .preloader-small {
-      background: url(/static/preloader-snake-small.gif);
-      width: 34px;
-      height: 34px;
-      left: 50%;
-      top: 30px;
-      position: absolute;
-  }
-  .preloader-container {
-    position: relative;
-  }
-  .empty-control {
-    width: 22px; display: inline-block;
-  }
-  .menu-separator {
-    width: 100%;
-    border-bottom: 1px solid black;
-    height: 10px;
-  }
-
-  .medium-editor-toolbar-form {
-
-    .medium-editor-toolbar-input {
-
-      &.quote-input {
-        position: relative;
-        font-size: 16px;
-        padding-left: 8px;
-        /*line-height: 20px;*/
-      }
-
-      &.suggest-input {
-        position: relative;
-        font-size: 16px;
-        padding-left: 8px;
-      }
-    }
-
-    ul.quotes-list {
-      display: flex;
-      flex-direction: column;
-      margin-top: -4px;
-      border: 1px solid #dbdbdb;
-      border-radius: 0 0 3px 3px;
-      position: absolute;
-      width: 100%;
-      overflow: hidden;
-      z-index: 999999;
-
-      li {
-        width: 100%;
-        flex-wrap: wrap;
-        background: white;
-        margin: 0;
-        border-bottom: 1px solid #eee;
-        color: #363636;
-        padding: 7px;
-        cursor: pointer;
-
-        &.highlighted {
-          background: #f8f8f8
-        }
-      }
-    }
-  }
-
-  .drag-uploader {
-    /*display: table-row;*/
-    .picture-input {
-      .preview-container, .picture-preview {
-        max-height: 80vh;
-        width: auto;
-        position: static;
-      }
-    }
-    .save-illustration {
-      float: left !important;
-      width: 100% !important;
-      text-align: center !important;
-    }
-  }
-  .drag-uploader.no-picture {
-    /*display: table-row;*/
-    .picture-input {
-      .preview-container, .picture-preview {
-        max-height: 100px;
-        width: auto;
-        float: left;
-        background-color: transparent !important;
-        width: 100%;
-      }
-      .picture-inner {
-        top: -90px !important;
-        z-index: 0 !important;
-        margin-bottom: 0px !important;
-        font-size: 15px !important;
-      }
-    }
-  }
-  .modal-content {
-    .modal-header {
-      padding-left: 15px;
-      padding-right: 15px;
-    }
-  }
-
-  .block-html-modal {
-    .modal-header {
-      width: 100%;
-      .modal-title {
-        float: left;
-        margin-left: 15px;
-        width: 80%;
-      }
-      .modal-close-button {
-        float: right;
-        margin-right: 15px;
-      }
-    }
-    .modal-body {
-      overflow: visible;
-    }
-    textarea.block-html {
-      width: 100%;
-      height: 250px;
-      resize: vertical;
-    }
-  }
-  .voicework-preloader {
-      background: url(/static/preloader-snake-small.gif);
-      width: 100%;
-      height: 34px;
-      display: inline-block;
-      margin: 4px 0px;
-      background-repeat: no-repeat;
-      text-align: center;
-      background-position: center;
-  }
-  .locked-block-cover {
-    width: 100%;
-    position: absolute;
-    height: 100%;
-    background: url(/static/preloader-snake-small.gif);
-    background-repeat: no-repeat;
-    text-align: center;
-    background-position: center;
-    background-color: #8080807d;
-  }
-  .recording-hover-controls {
-    position: absolute;
-    right: 34px;
-    margin-top: -35px;
-    i {
-      font-size: 27px;
-      margin: 0px 5px;
-      color: red;
-      &:hover {
-        color: #ff7a7a;
-      }
-    }
-  }
-  .fa.disabled {
-    color: #dddddd;
-  }
-  .fa.paused {
-    color: red;
-  }
-  .controls-left {
-    .fa {
-      font-size: 27px;
-      margin: 7px 0px;
-    }
-  }
-  .narrate-controls {
-    .fa-pause-circle-o {
-      color: red;
-    }
-  }
 
 </style>
