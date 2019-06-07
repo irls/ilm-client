@@ -517,5 +517,30 @@ export default {
     background-image: url(/static/preloader-loading.gif);
   }
 }
+.content-process-run {
+  height: 150px;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  
+  &.locked-block-cover {
+    width: 100%;
+    position: absolute;
+    height: 100%;
+    background-color: #0000006b;
+  }
+  &.preloader-loading {
+    background-image: url(/static/preloader-loading.gif);
+  }
+  &.preloader-save {
+    background-image: url(/static/preloader-save.gif);
+  }
+  &.preloader-editing-audio {
+    background-image: url(/static/preloader-editing-audio.gif);
+  }
+  &.preloader-align {
+    background-image: url(/static/preloader-align.gif);
+  }
+}
 
 </style>

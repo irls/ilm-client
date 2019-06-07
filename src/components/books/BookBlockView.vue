@@ -1,7 +1,7 @@
 <template>
   <div ref="viewBlock" :id="block._id"
     :class="['table-body -block', '-mode-' + mode, blockOutPaddings]">
-    <div v-if="isLocked" class="locked-block-cover"></div>
+    <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
 
         <!-- <div class="table-row" v-if="meta.numbering !== 'none'">
@@ -791,11 +791,28 @@ export default {
         if (this.isUpdating) {
           return true;
         }
-        return this.block ? this.isBlockLocked(this.block.blockid) : false;
+        return this.hasLock;
       },
       hasLock: {
         get() {
           return this.block ? this.isBlockLocked(this.block.blockid) : false;
+        }
+      },
+      lockedType: {
+        get() {
+          if (this.isSaving) {
+            return 'save';
+          }
+          if (this.isUpdating) {
+            return 'editing-audio';
+          }
+          let lockType = this.blockLockType(this.block.blockid);
+          switch (lockType) {
+            case 'align':
+              return 'align';
+            default:
+              return 'save';
+          }
         },
         cache: false
       },
@@ -1058,7 +1075,8 @@ export default {
           storeListO: 'storeListO',
           approveBlocksList: 'approveBlocksList',
           adminOrLibrarian: 'adminOrLibrarian',
-          currentJobInfo: 'currentJobInfo'
+          currentJobInfo: 'currentJobInfo',
+          blockLockType: 'blockLockType'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image

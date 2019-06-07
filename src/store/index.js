@@ -260,6 +260,23 @@ export const store = new Vuex.Store({
       }
       return locked;
     },
+    blockLockType: state => (id) => {
+      if (state.aligningBlocks.length > 0) {
+        let l = state.aligningBlocks.find(b => {
+          return b._id === id;
+        });
+        if (l) {
+          return 'align';
+        }
+      }
+      if (state.lockedBlocks.length > 0) {
+        let l = state.lockedBlocks.find(_l => _l._id === id);
+        if (l) {
+          return l.type;
+        }
+      }
+      return '';
+    },
 
     storeList: state => state.storeList, // global parlist
     storeListO: state => state.storeListO, // global parlistO

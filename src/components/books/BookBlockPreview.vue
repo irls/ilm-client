@@ -64,7 +64,7 @@
 
   </div>
   <!--<div v-if="loaded === true || blockO.loaded === true"-->
-  <div v-else :class="['in-loading']">
+  <div v-else :class="['content-process-run', 'preloader-loading']">
     <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
   </div>
 </div>
