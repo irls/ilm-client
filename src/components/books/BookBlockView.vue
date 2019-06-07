@@ -1717,7 +1717,10 @@ export default {
         }
         switch (this.block.type) {
           case 'illustration':
-            this.block.description = this.$refs.blockDescription.innerHTML;
+            if (!this.$refs.blocks || !this.$refs.blocks[0]) {
+              return Promise.reject();
+            }
+            this.block.description = this.$refs.blocks[0].$refs.blockDescription.innerHTML;
             this.block.voicework = 'no_audio';
             this.block.content = '';
             break;
@@ -3507,20 +3510,25 @@ export default {
         }
       },
       uploadIllustration(event) {
+        if (!this.$refs.blocks || !this.$refs.blocks[0]) {
+          return Promise.reject();
+        }
         let formData = new FormData();
-        formData.append('illustration', this.$refs.illustrationInput.file, this.$refs.illustrationInput.file.name);
-        formData.append('block', JSON.stringify({'description': this.$refs.blockDescription.innerHTML}));
+        formData.append('illustration', this.$refs.blocks[0].$refs.illustrationInput.file, this.$refs.blocks[0].$refs.illustrationInput.file.name);
+        formData.append('block', JSON.stringify({'description': this.$refs.blocks[0].$refs.blockDescription.innerHTML}));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
+        this.isSaving = true;
         api.post(api_url, formData, {}).then((response) => {
+          this.isSaving = false;
           if (response.status===200) {
             if (this.isCompleted) {
               this.tc_loadBookTask();
               this.getCurrentJobInfo();
             }
             // hide modal after one second
-            this.$refs.illustrationInput.removeImage();
+            this.$refs.blocks[0].$refs.illustrationInput.removeImage();
             this.$emit('blockUpdated', this.block._id);
             //let offset = document.getElementById(self.block._id).getBoundingClientRect()
             //window.scrollTo(0, window.pageYOffset + offset.top);
@@ -3528,6 +3536,8 @@ export default {
             this.isChanged = false;
             this.block.isIllustrationChanged = false;
             this.block.isChanged = false;
+            this.$refs.blocks[0].isChanged = false;
+            this.$refs.blocks[0].isIllustrationChanged = false;
             this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
             //if (self.editor) {
               //self.editor.destroy();
@@ -3568,6 +3578,7 @@ export default {
           //}
         }).catch((err) => {
           console.log(err)
+          this.isSaving = false;
         });
       },
       onIllustrationChange() {
@@ -3869,6 +3880,9 @@ export default {
           
         }*/
         this.pushChange(val);
+        if (val === 'illustration') {
+          this.isIllustrationChanged = true;
+        }
       },
       partAudioComplete(partIdx) {
         if (this.block.parts && this.block.parts[partIdx + 1]) {
