@@ -975,8 +975,25 @@ export default {
           if (partsDisabled || this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.isRecording || this.isUpdating) {
             return true;
           }
+          if (this.hasLockedPart) {
+            return true;
+          }
           return this.tc_isApproveDisabled(this.block, this.mode);
         }
+      },
+      hasLockedPart: {
+        get() {
+          let hasLocked = false;
+          if (this.$refs.blocks) {
+            this.$refs.blocks.forEach(ref => {
+              if (ref.isLocked) {
+                hasLocked = true;
+              }
+            })
+          }
+          return hasLocked;
+        },
+        cache: false
       },
       isCanApproveWithoutTask: function() {
         if (this._is('editor', true)) {
@@ -1568,11 +1585,15 @@ export default {
             }
             //this.$refs.blockContent.focus();
             this.blockParts.forEach((part, partIdx) => {
-              this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = part.content;
-              this.block.setPartContent(partIdx, part.content);
-              this.$refs.blocks[partIdx].isChanged = false;
+              if (this.$refs.blocks[partIdx].$refs.blockContent) {
+                this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = part.content;
+                this.block.setPartContent(partIdx, part.content);
+              }
+              this.$refs.blocks[partIdx].isIllustrationChanged = false;
             });
           }
+          this.isChanged = false;
+          this.isIllustrationChanged = false;
           if (this.$refs.blockFlagPopup) {
             this.$refs.blockFlagPopup.close();
           }
@@ -1597,13 +1618,13 @@ export default {
 
           this.isChanged = false;
           this.updateFlagStatus(block._id);
-          if (this.block.type === 'illustration') {
-            if (this.$refs.illustrationInput) {
-              this.$refs.illustrationInput.removeImage();
+          if (this.block.type === 'illustration' && this.$refs.blocks && this.$refs.blocks[0]) {
+            if (this.$refs.blocks[0].$refs.illustrationInput) {
+              this.$refs.blocks[0].$refs.illustrationInput.removeImage();
             }
             this.block.description = block.description;
-            if (this.$refs.blockDescription) {
-              this.$refs.blockDescription.innerHTML = block.description;
+            if (this.$refs.blocks[0].$refs.blockDescription) {
+              this.$refs.blocks[0].$refs.blockDescription.innerHTML = block.description;
             }
           }
 
@@ -1768,7 +1789,11 @@ export default {
           if (this.isIllustrationChanged) {
             return this.uploadIllustration();
           } else if (this.isChanged) {
-            return this.assembleBlock();
+            return this.assembleBlock({
+              description: this.block.description,
+              voicework: this.block.voicework,
+              content: this.block.content
+            });
           }
         } else {
           if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
@@ -1838,11 +1863,7 @@ export default {
             }
             return updateTask
               .then(() => {
-                if (!this.isSplittedBlock) {
-                  if (this.$refs.blocks && this.$refs.blocks[0]) {
-                    this.$refs.blocks[0].isChanged = false;
-                  }
-                }
+                
               });
           }
         }
@@ -3536,7 +3557,6 @@ export default {
             this.isChanged = false;
             this.block.isIllustrationChanged = false;
             this.block.isChanged = false;
-            this.$refs.blocks[0].isChanged = false;
             this.$refs.blocks[0].isIllustrationChanged = false;
             this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
             //if (self.editor) {
@@ -3689,6 +3709,9 @@ export default {
       },
 
       allowVoiceworkChange() {
+        if (this.hasLockedPart) {
+          return false;
+        }
         return this.block && this.tc_allowVoiceworkChange(this.block);
       },
       pushChange(change) {
@@ -3921,6 +3944,12 @@ export default {
                 let ftn = this.block.footnotes[this.footnoteIdx];
                 this.showFootnoteAudioEditor(ftn, this.footnoteIdx);
               }
+            } else if (!this.isSplittedBlock) {
+              if (this.$refs.blocks && this.$refs.blocks[0]) {
+                if (this.$refs.blocks[0].isAudioEditing) {
+                  this.$refs.blocks[0].showAudioEditor();
+                }
+              }
             }
           }
           
@@ -4042,6 +4071,11 @@ export default {
         handler(val) {
           if (val === false) {
             this.flushChanges();
+            if (this.$refs.blocks) {
+              this.blockParts.forEach((part, partIdx) => {
+                this.$refs.blocks[partIdx].isChanged = false;
+              });
+            }
           }
           this.block.isChanged = val;
           this.recountApprovedInRange();
