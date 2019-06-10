@@ -2297,15 +2297,6 @@ export default {
 
 <style lang='less'>
 .block-preview {
-  .in-loading {
-    height: 150px;
-    background: url(/static/preloader-snake-small.gif);
-    width: 100%;
-    /*margin: 0 auto;*/
-    background-repeat: no-repeat;
-    text-align: center;
-    background-position: center;
-  }
 
   .in-back {
     visibility: hidden;
