@@ -31,6 +31,7 @@ let defBlock = [
   'status',
   'audiosrc_ver',
   'blockid',
+  'manual_boundaries'
 ]
 
 let BlockTypes = {
@@ -193,6 +194,7 @@ class BookBlock {
     this.illustration_width = init.illustration_width || false;
     this.illustration_height = init.illustration_height || false;
     this.blockid = init.blockid || false;
+    this.manual_boundaries = init.manual_boundaries || [];
   }
 
   clean() {
@@ -453,6 +455,10 @@ class BookBlock {
     this.set('audiosrc', path);
     this.set('audiosrc_ver', ver);
   }
+  
+  setManualBoundaries(boundaries = []) {
+    this.set('manual_boundaries', boundaries);
+  }
 
   undoContent() {
     this.undo('content');
@@ -461,6 +467,10 @@ class BookBlock {
   undoAudiosrc() {
     this.undo('audiosrc');
     this.undo('audiosrc_ver');
+  }
+  
+  undoManualBoundaries() {
+    this.undo('manual_boundaries');
   }
 
   setAudiosrcFootnote(idx, path, ver) {
@@ -471,6 +481,10 @@ class BookBlock {
   setContentFootnote(idx, content) {
     this.set('footnotes.' + idx + '.content', content);
   }
+  
+  setManualBoundariesFootnote(idx, boundaries = []) {
+    this.set('footnotes.' + idx + '.manual_boundaries', boundaries);
+  }
 
   undoContentFootnote(idx) {
     this.undo('footnotes.' + idx + '.content');
@@ -479,6 +493,10 @@ class BookBlock {
   undoAudiosrcFootnote(idx) {
     this.undo('footnotes.' + idx + '.audiosrc');
     this.undo('footnotes.' + idx + '.audiosrc_ver');
+  }
+  
+  undoManualBoundariesFootnote(idx) {
+    this.undo('footnotes.' + idx + '.manual_boundaries');
   }
 
   needsText() {
