@@ -1070,7 +1070,7 @@ export default {
       },
       isSplittedBlock: {
         get() {
-          if (this.block.voicework === 'narration' && Array.isArray(this.block.parts) && this.block.parts.length > 0) {
+          if (this.block.voicework === 'narration' && !this.currentJobInfo.text_cleanup && Array.isArray(this.block.parts) && this.block.parts.length > 0) {
             return true;
           }
           return false;
@@ -1110,7 +1110,7 @@ export default {
       },
       blockParts: {
         get() {
-          if (this.block.parts && this.block.parts.length > 0) {
+          if (this.block.parts && this.block.parts.length > 0 && !this.currentJobInfo.text_cleanup) {
             return this.block.parts;
           } else {
             return [
