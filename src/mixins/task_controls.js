@@ -81,6 +81,7 @@ export default {
         }
         return !this.tc_getBlockTask(block._id) && !this.tc_getBlockTaskOtherRole(block._id);
       }
+      return true;
     },
     tc_enableMarkAsDone(block) {
       if (this.tc_getBlockTask(block._id) || this.tc_getBlockTaskOtherRole(block._id)) {
