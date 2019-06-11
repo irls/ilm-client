@@ -169,7 +169,8 @@ export const store = new Vuex.Store({
     jobInfoRequest: null,
     jobInfoTimer: null,
     jobStatusError: '',
-    bookMode: null
+    bookMode: null,
+    processQueueWatch: null
   },
 
   getters: {
@@ -2712,7 +2713,6 @@ export const store = new Vuex.Store({
                   return _r.blockid === b._id && _r.taskType === b.type;
                 });
                 if (!r) {
-                  dispatch('clearBlockLock', {block: {blockid: b._id}});
                   oldIds.push(b._id);
                   /*dispatch('getBlock', b._id)
                     .then(block => {
@@ -2722,17 +2722,38 @@ export const store = new Vuex.Store({
                 }
               });
               if (oldIds.length > 0) {
-                dispatch('getBlocks', oldIds);
+                dispatch('getBlocks', oldIds)
+                  .then((blocks) => {
+                    blocks.forEach(block => {
+                      commit('set_storeList', new BookBlock(block));
+                      dispatch('clearBlockLock', {block: {blockid: block.blockid}});
+                    });
+                  });
               }
               if (response.data.length > 0) {
                 response.data.forEach(r => {
                   delete r.content;
                   dispatch('addBlockLock', {block: r, type: r.taskType, inProcess: true});
                 });
+                dispatch('startProcessQueueWatch');
+              } else {
+                dispatch('stopProcessQueueWatch');
               }
               //console.log(state.lockedBlocks)
             }
           });
+      }
+    },
+    startProcessQueueWatch({state, dispatch}) {
+      if (!state.processQueueWatch) {
+        state.processQueueWatch = setInterval(() => {
+          dispatch('getProcessQueue');
+        }, 20000);
+      }
+    },
+    stopProcessQueueWatch({state}) {
+      if (state.processQueueWatch) {
+        clearInterval(state.processQueueWatch);
       }
     }
   }
