@@ -10,7 +10,7 @@
           <div class="table-row" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged && !isRecording">
             <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
           </div>
-          <template v-if="player && blockAudio.src && !isRecording && tc_showBlockNarrate(block.blockid)">
+          <template v-if="player && blockAudio.src && !isRecording">
             <div class="table-row" v-if="!isAudStarted">
               <i class="fa fa-play-circle-o"
                 @click="audPlay($event)"></i>

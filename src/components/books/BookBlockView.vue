@@ -4252,13 +4252,6 @@ export default {
     display: table;
     width: 100%;
 
-    &.-block {
-      &.-subblock.-mode-narrate {
-        width: 700px;
-        margin: 0px auto;
-      }
-    }
-
     &.-content {
         margin-bottom: 20px;
 

@@ -64,9 +64,12 @@
 
   </div>
   <!--<div v-if="loaded === true || blockO.loaded === true"-->
-  <div v-else :class="['content-process-run', 'preloader-loading']">
+  <template v-else v-for="(blockPart, blockPartIdx) in blockParts">
     <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
-  </div>
+    <div :class="['content-process-run', 'preloader-loading']">
+      
+    </div>
+  </template>
 </div>
 </template>
 
@@ -132,6 +135,9 @@ import BookBlockPartPreview from './BookBlockPartPreview';
       },
       blockParts: {
         get() {
+          if (!this.block) {
+            return [{}];
+          }
           if (this.block.parts && this.block.parts.length > 0) {
             return this.block.parts;
           } else {

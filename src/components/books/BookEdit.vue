@@ -1937,6 +1937,7 @@ export default {
       this.checkMode();
       this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
+        this.getProcessQueue();
         if (this.meta._id && initBlocks.blocks && initBlocks.blocks.length) {
           this.tc_loadBookTask()
           .then(()=>{
@@ -2382,5 +2383,9 @@ export default {
 }
 .table-body.-block {
   position: relative;
+  &.-subblock.-mode-narrate {
+    width: 700px;
+    margin: 0px auto;
+  }
 }
 </style>

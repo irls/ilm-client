@@ -1,7 +1,11 @@
 <template>
 <div ref="viewBlock" class="block-preview">
   <div v-if="block && (block.type != 'par' || (loaded === true || blockO.loaded === true))"
-    :class="['table-body -block -subbblock -mode-' + mode, blockOutPaddings]">
+    :class="['table-body -block -subblock -mode-' + mode, blockOutPaddings]">
+    
+    <div class="table-cell controls-left" v-if="mode === 'narrate'">
+      <!-- {{parnumComp}} -->
+    </div>
 
     <div :class="['table-cell', 'controls-left']">
       <div class="table-row"></div>
@@ -46,7 +50,7 @@
         </div>
         <!--<div :class="['table-row ilm-block']">-->
 
-        <div class="table-row content-footnotes"
+        <!-- <div class="table-row content-footnotes"
           v-if="block.footnotes.length > 0 && mode !== 'narrate'">
           <div class="table-body footnote"
             v-for="(footnote, ftnIdx) in block.footnotes">
@@ -62,11 +66,9 @@
               </div>
               <div class="table-cell -control"></div>
             </div>
-            <!--<div class="table-row">-->
 
           </div>
-          <!--<div class="table-body footnote"-->
-        </div>
+        </div> -->
         <!--<div class="table-row content-footnotes"-->
 
         <div class="table-row controls-bottom">
