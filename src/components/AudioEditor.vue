@@ -182,7 +182,8 @@
           annotations: [],
           minWordSize: 0.05,
           wordSelectionMode: false,
-          processRun: false
+          processRun: false,
+          processRunType: null
         }
       },
       mounted() {
@@ -200,6 +201,7 @@
           this.alignProcess = false;
         })
         this.$root.$on('for-audioeditor:set-process-run', this.setProcessRun);
+        this.$root.$on('for-audioeditor:flush', this.flush);
       },
       beforeDestroy() {
         if (this.audioContext) {
@@ -214,6 +216,7 @@
         this.$root.$off('for-audioeditor:reload-text', this._setText);
         this.$root.$off('for-audioeditor:select', this.select);
         this.$root.$off('for-audioeditor:set-process-run', this.setProcessRun);
+        this.$root.$off('for-audioeditor:flush', this.flush);
       },
       methods: {
         select (block_id, start, end) {
@@ -368,7 +371,7 @@
               this.audiosourceEditor.getEventEmitter().off('dragged', this.audiosourceEditor.getEventEmitter().__ee__['dragged']);
             }
           } catch(e) {}*/
-          this._setText(text);
+          this._setText(text, block);
           this.audiosourceEditor.load([
             {
               src: this.audiofile,
@@ -778,7 +781,7 @@
           }
           this._clearWordSelection();
         },
-        setAudio(audio, text, saveToHistory) {
+        setAudio(audio, text, saveToHistory = true, block = null) {
           if (this.plEventEmitter) {
             this.plEventEmitter.emit('clear');
           }
@@ -788,7 +791,7 @@
           if (saveToHistory && this.content && this.audiofile) {
             this._addHistory(this.content, this.audiofile);
           }
-          this.load(audio, text, this.block);
+          this.load(audio, text, block ? block : this.block);
         },
         play(cursorPosition) {
           if (typeof cursorPosition === 'undefined') {
@@ -1033,8 +1036,31 @@
             }
           }
         },
-        saveAndRealign() {
+        saveAndRealign(check_realign = true) {
           if (this.isModified) {
+            if (check_realign && this.block && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
+              this.$root.$emit('from-block:save-and-realign-warning', () => {
+                this.$root.$emit('hide-modal');
+                this.$root.$emit('for-audioeditor:set-process-run', false);
+              }, () => {
+                this.$root.$emit('hide-modal');
+                let i = setInterval(() => {
+                  if ($('.align-modal').length == 0) {
+                    clearInterval(i);
+                    this.save();
+                  }
+                }, 50);
+              }, () => {
+                this.$root.$emit('hide-modal');
+                let i = setInterval(() => {
+                  if ($('.align-modal').length == 0) {
+                    clearInterval(i);
+                    this.saveAndRealign(false);
+                  }
+                }, 50);
+              });
+              return;
+            }
             this.setProcessRun(true, 'align');
             this.$root.$emit('from-audioeditor:save-and-realign', this.blockId);
             this.isModified = false;
@@ -1324,7 +1350,7 @@
             this._showSelectionBorders();
           }
         },
-        _setText(text) {
+        _setText(text, block) {
           this.content = text;
           let self = this;
           let annotations = [];
@@ -1368,6 +1394,29 @@
                 isContinuousPlay: false,
                 linkEndpoints: true
               });
+            $('.resize-handle').removeClass('manual');
+            if (block && block.manual_boundaries && block.manual_boundaries.length > 0) {
+              let waitAnnotations = setInterval(() => {
+                if ($('.annotation-box').length > 0) {
+                  clearInterval(waitAnnotations);
+                  block.manual_boundaries.forEach(mb => {
+                    let position = parseInt(mb) / 1000;
+                    let annotations = self.audiosourceEditor.annotationList.annotations.filter(al => {
+                      return al.start == position || al.end == position;
+                    });
+                    if (annotations && annotations.length > 0) {
+                      annotations.forEach(al => {
+                        if (al.start == position) {
+                          $('.annotation-box[data-id="' + al.id + '"] .resize-handle.resize-w').addClass('manual');
+                        } else if (al.end == position) {
+                          $('.annotation-box[data-id="' + al.id + '"] .resize-handle.resize-e').addClass('manual');
+                        }
+                      });
+                    }
+                  });
+                }
+              }, 100);
+            }
             if (self.audiosourceEditor.annotationList.annotations.length > 0) {
               $('.annotation-box').each(function(i, el) {
                 if(typeof annotations[i] !== 'undefined') {
@@ -1691,11 +1740,17 @@
         
         setProcessRun(val, type) {
           this.processRun = val;
+          this.processRunType = type;
           if (val) {
             this.$root.$emit('preloader-toggle', true, type);
           } else {
             this.$root.$emit('preloader-toggle', false, '');
           }
+        },
+        
+        flush() {
+          this.setProcessRun(false);
+          this.isModified = false;
         }
 
       },
@@ -2017,6 +2072,9 @@
                 background: grey;
                 opacity: 0.3;
                 cursor: ew-resize;
+                &.manual {
+                  background: #6aa84f;
+                }
             }
             .id {
                 height: 100%;

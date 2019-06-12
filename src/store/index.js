@@ -260,6 +260,23 @@ export const store = new Vuex.Store({
       }
       return locked;
     },
+    blockLockType: state => (id) => {
+      if (state.aligningBlocks.length > 0) {
+        let l = state.aligningBlocks.find(b => {
+          return b._id === id;
+        });
+        if (l) {
+          return 'align';
+        }
+      }
+      if (state.lockedBlocks.length > 0) {
+        let l = state.lockedBlocks.find(_l => _l._id === id);
+        if (l) {
+          return l.type;
+        }
+      }
+      return '';
+    },
 
     storeList: state => state.storeList, // global parlist
     storeListO: state => state.storeListO, // global parlistO
@@ -1618,7 +1635,7 @@ export const store = new Vuex.Store({
         });
     },
 
-    putBlock ({commit, state, dispatch}, block) {
+    putBlock ({commit, state, dispatch}, [block, realign = false]) {
       let cleanBlock = Object.assign({}, block);
       if (typeof block.clean === 'function') {
         cleanBlock = block.clean();
@@ -1627,7 +1644,11 @@ export const store = new Vuex.Store({
       delete cleanBlock.secnum;
       delete cleanBlock.isNumber;
       commit('set_blocker', 'putBlock');
-      return axios.put(state.API_URL + 'book/block/' + block.blockid,
+      let url = state.API_URL + 'book/block/' + block.blockid;
+      if (realign) {
+        url+= '?realign=true';
+      }
+      return axios.put(url,
         {
           'block': cleanBlock,
         })
@@ -2162,7 +2183,7 @@ export const store = new Vuex.Store({
             if (block.isChanged || block.isAudioChanged) {
               if ((block.voicework === 'audio_file' && data.voicework === 'audio_file') ||
                       (block.voicework === 'tts' && data.voicework === 'tts')) {
-                wait_tasks.push(dispatch('putBlock', block)
+                wait_tasks.push(dispatch('putBlock', [block])
                         .then(() => {
                           block.isChanged = false;
                           block.isAudioChanged = false;
@@ -2291,7 +2312,7 @@ export const store = new Vuex.Store({
     getBookAlign({state, commit, dispatch}) {
       if (state.currentBookid) {
         let api_url = state.API_URL + 'align_queue/' + state.currentBookid;
-        axios.get(api_url, {})
+        return axios.get(api_url, {})
           .then(response => {
             if (response.status == 200) {
               let oldBlocks = state.aligningBlocks;
@@ -2318,7 +2339,7 @@ export const store = new Vuex.Store({
                   }
                 });
               }
-              Promise.all(checks)
+              return Promise.all(checks)
                 .then(() => {
                   if (oldBlocks.length != blocks.length) {
                     dispatch('getAudioBook');
@@ -2330,6 +2351,7 @@ export const store = new Vuex.Store({
                     dispatch('recountApprovedInRange');
                     state.storeListO.refresh();
                   }
+                  return Promise.resolve();
                 })
             }
             return Promise.resolve();
@@ -2593,7 +2615,10 @@ export const store = new Vuex.Store({
           donorBlock_id: data.donorBlock_id
         })
         .then(response => {
-          return dispatch('checkResponse', response);
+          return dispatch('getBookAlign')
+            .then(() => {
+              return dispatch('checkResponse', response);
+            });
         })
         .catch(err => {
           return Promise.reject(err);
@@ -2612,7 +2637,10 @@ export const store = new Vuex.Store({
       return axios.post(state.API_URL + 'book/block/' + data.blockid + '/audio', data, {})
         .then(response => {
           //console.log(response);
-          return Promise.resolve(response);
+          return dispatch('getBookAlign')
+            .then(() => {
+              return Promise.resolve(response);
+            });
         })
         .catch(err => {
           return dispatch('checkError', err);

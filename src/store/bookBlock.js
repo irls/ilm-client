@@ -31,6 +31,7 @@ let defBlock = [
   'status',
   'audiosrc_ver',
   'blockid',
+  'manual_boundaries'
 ]
 
 let BlockTypes = {
@@ -193,6 +194,7 @@ class BookBlock {
     this.illustration_width = init.illustration_width || false;
     this.illustration_height = init.illustration_height || false;
     this.blockid = init.blockid || false;
+    this.manual_boundaries = init.manual_boundaries || [];
   }
 
   clean() {
@@ -265,7 +267,19 @@ class BookBlock {
     else return _id(this._id + ':');
   }
 
-  newFlag(range, type, isBlockFlag = false) {
+  newFlag(range, type, isBlockFlag = false, mode = null) {
+    let creator_role = null;
+    switch (mode) {
+      case 'edit':
+        creator_role = 'editor';
+        break;
+      case 'narrate':
+        creator_role = 'narrator';
+        break;
+      case 'proofread':
+        creator_role = 'proofer';
+        break;
+    }
     let _id = this.genFlagId(isBlockFlag);
     let _at = (new Date()).toJSON();
     let userId = superlogin.getSession().user_id;
@@ -274,13 +288,15 @@ class BookBlock {
       created_at: _at,
       type: type,
       content: (isBlockFlag ? false : range.cloneContents().textContent),
-      updated_at: _at
+      updated_at: _at,
+      creator_role: creator_role
     })
 
     this.flags.push ({
       _id: _id,
       creator: userId,
       created_at: _at,
+      creator_role: creator_role,
       parts: [flagPart]
     });
 
@@ -288,7 +304,19 @@ class BookBlock {
     return _id;
   }
 
-  addFlag(_id, range, type) {
+  addFlag(_id, range, type, mode) {
+    let creator_role = null;
+    switch (mode) {
+      case 'edit':
+        creator_role = 'editor';
+        break;
+      case 'narrate':
+        creator_role = 'narrator';
+        break;
+      case 'proofread':
+        creator_role = 'proofer';
+        break;
+    }
     this.flags.forEach((flag, flagIdx)=>{
       if (flag._id === _id) {
         let _at = (new Date()).toJSON();
@@ -298,7 +326,8 @@ class BookBlock {
           created_at: _at,
           type: type,
           content: range.cloneContents().textContent,
-          updated_at: _at
+          updated_at: _at,
+          creator_role: creator_role
         })
         flag.parts.push(flagPart);
       }
@@ -313,7 +342,19 @@ class BookBlock {
     });
   }
 
-  addPart(_id, content, type) {
+  addPart(_id, content, type, mode) {
+    let creator_role = null;
+    switch (mode) {
+      case 'edit':
+        creator_role = 'editor';
+        break;
+      case 'narrate':
+        creator_role = 'narrator';
+        break;
+      case 'proofread':
+        creator_role = 'proofer';
+        break;
+    }
     this.flags.forEach((flag, flagIdx)=>{
       if (flag._id === _id) {
         let _at = (new Date()).toJSON();
@@ -323,7 +364,8 @@ class BookBlock {
           created_at: _at,
           type: type,
           content: content,
-          updated_at: _at
+          updated_at: _at,
+          creator_role: creator_role
         })
         flag.parts.push(flagPart);
       }
@@ -453,6 +495,10 @@ class BookBlock {
     this.set('audiosrc', path);
     this.set('audiosrc_ver', ver);
   }
+  
+  setManualBoundaries(boundaries = []) {
+    this.set('manual_boundaries', boundaries);
+  }
 
   undoContent() {
     this.undo('content');
@@ -461,6 +507,10 @@ class BookBlock {
   undoAudiosrc() {
     this.undo('audiosrc');
     this.undo('audiosrc_ver');
+  }
+  
+  undoManualBoundaries() {
+    this.undo('manual_boundaries');
   }
 
   setAudiosrcFootnote(idx, path, ver) {
@@ -471,6 +521,10 @@ class BookBlock {
   setContentFootnote(idx, content) {
     this.set('footnotes.' + idx + '.content', content);
   }
+  
+  setManualBoundariesFootnote(idx, boundaries = []) {
+    this.set('footnotes.' + idx + '.manual_boundaries', boundaries);
+  }
 
   undoContentFootnote(idx) {
     this.undo('footnotes.' + idx + '.content');
@@ -479,6 +533,10 @@ class BookBlock {
   undoAudiosrcFootnote(idx) {
     this.undo('footnotes.' + idx + '.audiosrc');
     this.undo('footnotes.' + idx + '.audiosrc_ver');
+  }
+  
+  undoManualBoundariesFootnote(idx) {
+    this.undo('footnotes.' + idx + '.manual_boundaries');
   }
 
   needsText() {
@@ -587,6 +645,7 @@ class FlagPart {
     this.updated_at = init.updated_at;
     this.newComment = '';
     this.collapsed = false;
+    this.creator_role = init.creator_role || null;
   }
 }
 

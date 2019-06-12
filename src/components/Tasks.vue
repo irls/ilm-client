@@ -216,6 +216,9 @@ export default {
       axios.get(this.API_URL + 'tasks/users').then(users => {
         for (var role in self.users) {
           self.users[role] = []
+          //let's add unassigned user to narrators:
+          if (role == 'narrator')
+            self.users[role] = [{'_id':'unassigned', 'email':'Unassigned', 'name':'Unassigned'}]
           for (var i in users.data) {
             if (users.data[i].roles.indexOf(role) != -1 && users.data[i].enable === true) {
               self.users[role].push(users.data[i])
