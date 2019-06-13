@@ -2149,6 +2149,10 @@ export default {
                   this.block.status.marked = response.data.status.marked;
                 }
                 //this.$emit('blockUpdated', this.block._id);
+                this.isAudioChanged = false;
+                this.isChanged = false;
+                this.block.isAudioChanged = false;
+                this.block.isChanged = false;
                 if (footnoteIdx === null) {
                   this.block.content = response.data.content;
                   this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
@@ -2159,16 +2163,8 @@ export default {
                   if (!realign) {
                     this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
                   }
-                  this.isAudioChanged = false;
-                  this.isChanged = false;
-                  this.block.isAudioChanged = false;
-                  this.block.isChanged = false;
                   return BPromise.resolve();
                 } else {
-                  this.isAudioChanged = false;
-                  this.isChanged = false;
-                  this.block.isAudioChanged = false;
-                  this.block.isChanged = false;
                   let resp_block = response.data;
                   let resp_f = resp_block.footnotes[footnoteIdx];
                   this.block.setContentFootnote(footnoteIdx, resp_f.content);
