@@ -198,7 +198,7 @@ class BookBlock {
     this.blockid = init.blockid || false;
     this.manual_boundaries = init.manual_boundaries || [];
     let parts = init.parts || [];
-    if (Vue.prototype.currentJobInfo.id && (Vue.prototype.currentJobInfo.mastering || Vue.prototype.currentJobInfo.mastering_complete)) {
+    if (Vue.prototype.globalJobInfo.id && (Vue.prototype.globalJobInfo.mastering || Vue.prototype.globalJobInfo.mastering_complete)) {
       this.parts = [];
     } else {
       this.parts = parts;

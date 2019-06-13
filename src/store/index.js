@@ -16,7 +16,7 @@ PouchDB.plugin(hoodie)
 Vue.use(Vuex)
 
 
-Vue.prototype.currentJobInfo ={};
+Vue.prototype.globalJobInfo ={};
 
 const ILM_CONTENT = 'ilm_content';
 const ILM_CONTENT_META = 'ilm_content_meta';
@@ -2427,7 +2427,7 @@ export const store = new Vuex.Store({
                 commit('SET_ALLOW_BOOK_PUBLISH', true);
               }
             }
-            Vue.prototype.currentJobInfo = state.currentJobInfo;
+            Vue.prototype.globalJobInfo = state.currentJobInfo;
             return Promise.resolve();
           })
           .catch(err => {
