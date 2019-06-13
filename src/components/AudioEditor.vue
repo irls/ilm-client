@@ -400,56 +400,6 @@
               return;
             }
             let self = this;;
-            this.audiosourceEditor.annotationList.resizeHandlers.forEach((rh, i) => {
-              this.audiosourceEditor.annotationList.resizeHandlers[i].ondragover = (e) => {
-                if ($('.annotation-resize-pos').length == 0) {
-                  $('.annotations').prepend('<div class="annotation-resize-pos"></div>')
-                }
-                if ((rh.data.direction === 'left' && rh.data.index == 0) ||
-                        (rh.data.direction === 'right' && rh.data.index == this.annotations.length - 1)) {
-                  return;
-                }
-                var deltaX = e.clientX - rh.prevX;
-                $('.annotation-resize-pos').show();
-                $('.annotation-resize-pos').css('left', (e.clientX - 10) + 'px');// show resize marker
-                rh.prevX = e.clientX;
-
-                // emit shift event if not 0
-                if (deltaX) {
-                  //let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
-                  var deltaTime = deltaX * this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate;
-                  var annotationIndex = rh.data.index;
-                  var annotations = this.audiosourceEditor.annotationList.annotations;
-                  var note = annotations[annotationIndex];
-
-                  // resizing to the left
-                  if (rh.data.direction === 'left') {
-                    var originalVal = note.start;
-                    note.start += deltaTime;
-
-                    if (note.start < 0) {
-                      note.start = 0;
-                    }
-
-                    if (annotations[annotationIndex - 1]) {
-                      annotations[annotationIndex - 1].end = note.start;
-                    }
-                  } else {
-                    // resizing to the right
-                    var _originalVal = note.end;
-                    note.end += deltaTime;
-
-                    if (note.end > this.audiosourceEditor.duration) {
-                      note.end = this.audiosourceEditor.duration;
-                    }
-
-                    if (annotations[annotationIndex + 1]) {
-                      annotations[annotationIndex + 1].start = note.end;
-                    }
-                  }
-                }
-              };
-            })
             if (this.blockId) {
               this.$root.$emit('from-audioeditor:block-loaded', this.blockId);
             } else if (bookAudiofile && bookAudiofile.id) {
@@ -1399,20 +1349,19 @@
               let waitAnnotations = setInterval(() => {
                 if ($('.annotation-box').length > 0) {
                   clearInterval(waitAnnotations);
+                  $('.annotation-box').each(function(index) {// set indexes for manual class
+                    $(this).attr('data-index', index);
+                  });
                   block.manual_boundaries.forEach(mb => {
                     let position = parseInt(mb) / 1000;
-                    let annotations = self.audiosourceEditor.annotationList.annotations.filter(al => {
-                      return al.start == position || al.end == position;
+                    self.audiosourceEditor.annotationList.annotations.forEach((al, index) => {
+                      if (al.start == position) {
+                        $(`.annotation-box[data-index="${index}"] .resize-handle.resize-w`).addClass('manual');
+                      }
+                      if (al.end == position) {
+                        $(`.annotation-box[data-index="${index}"] .resize-handle.resize-e`).addClass('manual');
+                      }
                     });
-                    if (annotations && annotations.length > 0) {
-                      annotations.forEach(al => {
-                        if (al.start == position) {
-                          $('.annotation-box[data-id="' + al.id + '"] .resize-handle.resize-w').addClass('manual');
-                        } else if (al.end == position) {
-                          $('.annotation-box[data-id="' + al.id + '"] .resize-handle.resize-e').addClass('manual');
-                        }
-                      });
-                    }
                   });
                 }
               }, 100);
@@ -1430,6 +1379,59 @@
           $('.channel-wrapper.block-audio').trigger('scroll');
           $('.playlist-tracks').scrollLeft(0);
           $('.playlist-tracks').scrollLeft(this.playlistScrollPosition || 0);
+          Vue.nextTick(() => {
+            
+            this.audiosourceEditor.annotationList.resizeHandlers.forEach((rh, i) => {
+              this.audiosourceEditor.annotationList.resizeHandlers[i].ondragover = (e) => {
+                if ($('.annotation-resize-pos').length == 0) {
+                  $('.annotations').prepend('<div class="annotation-resize-pos"></div>')
+                }
+                if ((rh.data.direction === 'left' && rh.data.index == 0) ||
+                        (rh.data.direction === 'right' && rh.data.index == this.annotations.length - 1)) {
+                  return;
+                }
+                var deltaX = e.clientX - rh.prevX;
+                $('.annotation-resize-pos').show();
+                $('.annotation-resize-pos').css('left', (e.clientX - 10) + 'px');// show resize marker
+                rh.prevX = e.clientX;
+
+                // emit shift event if not 0
+                if (deltaX) {
+                  //let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
+                  var deltaTime = deltaX * this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate;
+                  var annotationIndex = rh.data.index;
+                  var annotations = this.audiosourceEditor.annotationList.annotations;
+                  var note = annotations[annotationIndex];
+
+                  // resizing to the left
+                  if (rh.data.direction === 'left') {
+                    var originalVal = note.start;
+                    note.start += deltaTime;
+
+                    if (note.start < 0) {
+                      note.start = 0;
+                    }
+
+                    if (annotations[annotationIndex - 1]) {
+                      annotations[annotationIndex - 1].end = note.start;
+                    }
+                  } else {
+                    // resizing to the right
+                    var _originalVal = note.end;
+                    note.end += deltaTime;
+
+                    if (note.end > this.audiosourceEditor.duration) {
+                      note.end = this.audiosourceEditor.duration;
+                    }
+
+                    if (annotations[annotationIndex + 1]) {
+                      annotations[annotationIndex + 1].start = note.end;
+                    }
+                  }
+                }
+              };
+            })
+          });
           //this.$forceUpdate();
         },
         _isAnnotationsEditable() {
