@@ -155,7 +155,6 @@
             if (!doc.data.error) {
               //this.currentBook.private = false;
               this.$root.$emit('set-alert', 'Text cleanup task finished');
-              this.$root.$emit('book-reimported');
             } else {
               this.$root.$emit('set-error-alert', doc.data.error);
             }

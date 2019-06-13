@@ -1070,7 +1070,7 @@ export default {
       },
       isSplittedBlock: {
         get() {
-          if (this.block.voicework === 'narration' && !this.currentJobInfo.text_cleanup && Array.isArray(this.block.parts) && this.block.parts.length > 0) {
+          if (this.block.voicework === 'narration' && !this.currentJobInfo.text_cleanup && Array.isArray(this.block.parts) && this.block.parts.length > 1 && !(this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
             return true;
           }
           return false;
@@ -1110,7 +1110,7 @@ export default {
       },
       blockParts: {
         get() {
-          if (this.block.parts && this.block.parts.length > 0 && !this.currentJobInfo.text_cleanup) {
+          if (this.isSplittedBlock) {
             return this.block.parts;
           } else {
             return [
@@ -2109,9 +2109,9 @@ export default {
           let data = {};
           if (footnoteIdx === null) {
             data = {
-              audiosrc: this.block.getPartAudiosrc(0, null, false),
-              content: this.block.getPartContent(0),
-              manual_boundaries: this.block.getPartManualBoundaries(0)
+              audiosrc: this.block.getAudiosrc(null, false),
+              content: this.blockAudio.map,
+              manual_boundaries: this.block.manual_boundaries
             };
           } else {
             data = {

@@ -138,7 +138,7 @@ import BookBlockPartPreview from './BookBlockPartPreview';
           if (!this.block) {
             return [{}];
           }
-          if (this.block.parts && this.block.parts.length > 0) {
+          if (Array.isArray(this.block.parts) && this.block.parts.length > 1 && !this.currentJobInfo.text_cleanup && !(this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
             return this.block.parts;
           } else {
             return [

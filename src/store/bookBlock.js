@@ -434,7 +434,7 @@ class BookBlock {
   
   getPartAudiosrc(partIdx, ver = false, full = true) {
     let part = this.parts[partIdx];
-    if (!part && (!this.parts || this.parts.length === 0)) {
+    if (!part || this.parts.length < 2) {
       part = this;
     }
     if (!part) {

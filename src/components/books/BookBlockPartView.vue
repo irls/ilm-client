@@ -254,73 +254,6 @@
 
             </div>
             <!--<div class="table-row ilm-block">-->
-
-            <!-- <div class="table-row content-footnotes"
-              v-if="block.footnotes.length > 0 && mode !== 'narrate'">
-              <div class="table-body footnote"
-                v-for="(footnote, ftnIdx) in block.footnotes">
-
-                <div class="table-row controls-top -hidden">
-                  <div class="table-cell"></div>
-                  <div class="table-cell">
-                    <template v-if="allowEditing">
-                      <template v-if="allowVoiceworkChange">
-                        <label>
-                          <i class="fa fa-volume-off"></i>
-
-                          <select v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
-                            <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
-                          </select>
-                        </label>
-                        <label><i class="fa fa-language" aria-hidden="true"></i>
-                        <select v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
-                          <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
-                        </select>
-                        </label>
-                      </template>
-                    </template>
-                  </div>
-                  <div class="table-cell -audio -right">
-                    <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && ((_is('editor', true) || adminOrLibrarian) && tc_isShowEdit(block._id))">
-                      <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor(footnote, ftnIdx, $event)" v-if="allowEditing"></i>
-                    </template>
-                    <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
-                        <template v-if="!FtnAudio.isStarted || FtnAudio.isStarted!==`${block._id}_${ftnIdx}`">
-                          <i class="fa fa-play-circle-o"
-                            @click="FtnAudio.audPlay(block._id, ftnIdx)"></i>
-                          <i class="fa fa-stop-circle-o disabled"></i>
-                        </template>
-                        <template v-else>
-                          <i class="fa fa-pause-circle-o" v-if="!FtnAudio.isPaused"
-                            @click="FtnAudio.audPause(block._id, ftnIdx)"></i>
-                          <i class="fa fa-play-circle-o paused" v-else
-                            @click="FtnAudio.audResume(block._id, ftnIdx)"></i>
-                          <i class="fa fa-stop-circle-o"
-                            @click="FtnAudio.audStop(block._id, ftnIdx)"></i>
-                        </template>
-                    </template>
-                  </div>
-                </div>
-
-                <div class="table-row">
-                  <div class="table-cell -num">{{ftnIdx+1}}.</div>
-                  <div class="content-wrap-footn table-cell -text"
-                    :id="block._id +'_'+ ftnIdx"
-                    :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
-                    :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + footnote.language]"
-                    @input="commitFootnote(ftnIdx, $event)"
-                    @inputSuggestion="commitFootnote(ftnIdx, $event, 'suggestion')"
-                    v-html="footnote.content"
-                    :ref="'footnoteContent_' + ftnIdx">
-                  </div>
-                  <div class="table-cell -control" v-if="allowEditing">
-                    <span @click="delFootnote([ftnIdx])"><i class="fa fa-trash"></i></span>
-                  </div>
-                </div>
-              </div>
-            </div> -->
-
             <div class="table-row controls-bottom">
               <div v-if="isRecording" class="recording-hover-controls" ref="recordingCtrls">
                 <i class="fa fa-ban" v-if="isRecording" @click="cancelRecording()"></i>
@@ -774,28 +707,9 @@ export default {
   mounted: function() {
       //this.initEditor();
       //console.log('mounted', this.block._id);
-      this.blockAudio = {'map': this.blockPart.content, 'src': this.block.getPartAudiosrc(this.blockPartIdx, 'm4a')};
+      this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
       if (!this.player && this.blockAudio.src) {
           this.initPlayer();
-      }
-
-      if (this.block.footnotes && this.block.footnotes.length) {
-        this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-          if (footnote.audiosrc && !this.FtnAudio.player) {
-            this.initFootnotePlayer(this.FtnAudio);
-            return true;
-          }
-        });
-      }
-
-      this.updateFlagStatus(this.block._id);
-      if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
-        this.classSel = Object.keys(this.blockTypes[this.block.type])[0];
-      } else {
-        let blockClasses = Object.keys(this.block.classes);
-        if (blockClasses.length) {
-          this.classSel = blockClasses[0];
-        }
       }
 
       //this.voiceworkSel = this.block.voicework;
@@ -2464,7 +2378,7 @@ export default {
         if (blockId == this.check_id) {
           this.audStop();
           if (!this.isSplittedBlock) {
-            this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
+            this.block.setAudiosrc(this.blockAudiosrc(null, false));
             this.block.setContent(this.blockAudio.map);
             return this.assembleBlockAudioEdit(null, true);
           } else {
@@ -2490,7 +2404,7 @@ export default {
         if (blockId == this.check_id) {
           this.audStop();
           if (!this.isSplittedBlock) {
-            this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
+            this.block.setAudiosrc(this.blockAudiosrc(null, false));
             this.block.setContent(this.blockAudio.map);
             return this.assembleBlockAudioEdit(null, false);
           } else {
@@ -2885,7 +2799,7 @@ export default {
             this.blockAudio.map = this.blockPart.content;
           }
           if (src) {
-            this.blockAudio.src = this.block.getPartAudiosrc(this.blockPartIdx, 'm4a');
+            this.blockAudio.src = this.blockAudiosrc('m4a');
           }
         }
       },
@@ -2902,7 +2816,7 @@ export default {
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/audio_edit/part/' + this.blockPartIdx;
         let api = this.$store.state.auth.getHttp();
         let data = {
-          audiosrc: this.block.getPartAudiosrc(this.blockPartIdx, null, false),
+          audiosrc: this.blockAudiosrc(null, false),
           content: this.blockAudio.map,
           manual_boundaries: this.blockPart.manual_boundaries || []
         };
@@ -2937,7 +2851,7 @@ export default {
               //return this.putBlock(this.block);
               if (!realign) {
                 this.$root.$emit('for-audioeditor:load', 
-                this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), 
+                this.blockAudiosrc('m4a'), 
                 this.block.getPartContent(this.blockPartIdx), false);
               }
               this.isAudioChanged = false;
@@ -2952,6 +2866,14 @@ export default {
             this.checkError(err);
             BPromise.reject(err)
           });
+      },
+      
+      blockAudiosrc(ver = null, full = true) {
+        if (this.isSplittedBlock) {
+          return this.block.getPartAudiosrc(this.blockPartIdx, ver, full);
+        } else {
+          return this.block.getAudiosrc(ver, full);
+        }
       }
 
   },
