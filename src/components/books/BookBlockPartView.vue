@@ -2405,7 +2405,7 @@ export default {
           this.audStop();
           if (!this.isSplittedBlock) {
             this.block.setAudiosrc(this.blockAudiosrc(null, false));
-            this.block.setContent(this.blockAudio.map);
+            this.block.setContent(this.blockContent());
             return this.assembleBlockAudioEdit(null, false);
           } else {
             this.assembleBlockPartAudioEdit(false);
@@ -2822,8 +2822,9 @@ export default {
         let api = this.$store.state.auth.getHttp();
         let data = {
           audiosrc: this.blockAudiosrc(null, false),
-          content: this.blockAudio.map,
-          manual_boundaries: this.blockPart.manual_boundaries || []
+          content: this.blockContent(),
+          manual_boundaries: this.blockPart.manual_boundaries || [],
+          mode: this.mode
         };
         this.isSaving = true;
         if (realign) {

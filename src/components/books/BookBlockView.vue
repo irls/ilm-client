@@ -2459,7 +2459,7 @@ export default {
               if (partIdx !== null) {
                 this.block.setPartContent(partIdx, response.data.content);
                 this.block.setPartAudiosrc(partIdx, response.data.audiosrc, response.data.audiosrc_ver);
-                this.block.setPartManualBoundaries(response.data.manual_boundaries || []);
+                this.block.setPartManualBoundaries(partIdx, response.data.manual_boundaries || []);
                 let part = this.block.parts[partIdx];
                 part._id = check_id;
                 this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(partIdx, 'm4a'), this.block.getPartContent(partIdx), true, part);
