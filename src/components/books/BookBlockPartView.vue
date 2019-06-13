@@ -2427,10 +2427,15 @@ export default {
         if (blockId == this.check_id) {
           this.audStop();
           if (this.footnoteIdx === null) {
-            this.block.undoContent();
-            this.block.undoAudiosrc();
-            this.blockAudio.map = this.block.content;
-            this.blockAudio.src = this.block.getAudiosrc('m4a');
+            if (this.isSplittedBlock) {
+              this.block.undoPartContent(this.blockPartIdx);
+              this.block.undoPartAudiosrc(this.blockPartIdx);
+            } else {
+              this.block.undoContent();
+              this.block.undoAudiosrc();
+            }
+            this.blockAudio.map = this.blockContent();
+            this.blockAudio.src = this.blockAudiosrc('m4a');
             this.block.undoManualBoundaries();
             this.isAudioChanged = isModified;
           } else {

@@ -524,10 +524,19 @@ class BookBlock {
   undoContent() {
     this.undo('content');
   }
+  
+  undoPartContent(partIdx) {
+    this.undo(`parts.${partIdx}.content`);
+  }
 
   undoAudiosrc() {
     this.undo('audiosrc');
     this.undo('audiosrc_ver');
+  }
+  
+  undoPartAudiosrc(partIdx) {
+    this.undo(`parts.${partIdx}.audiosrc`);
+    this.undo(`parts.${partIdx}.audiosrc_ver`);
   }
   
   undoManualBoundaries() {
