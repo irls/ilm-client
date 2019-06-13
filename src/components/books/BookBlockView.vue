@@ -2109,9 +2109,12 @@ export default {
           let data = {};
           if (footnoteIdx === null) {
             data = {
-              audiosrc: this.block.getAudiosrc(null, false),
-              content: this.blockAudio.map,
-              manual_boundaries: this.block.manual_boundaries
+              //audiosrc: this.block.getAudiosrc(null, false),
+              //content: this.blockAudio.map,
+              //manual_boundaries: this.block.manual_boundaries
+              audiosrc: this.block.getPartAudiosrc(0, null, false),
+              content: this.block.getPartContent(0),
+              manual_boundaries: this.block.getPartManualBoundaries(0)
             };
           } else {
             data = {

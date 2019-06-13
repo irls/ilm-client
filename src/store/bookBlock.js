@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const _id = require('uniqid');
 import superlogin from 'superlogin-client';
+import Vue from 'vue';
 
 let defBlock = [
   '_id',
@@ -196,7 +197,13 @@ class BookBlock {
     this.illustration_height = init.illustration_height || false;
     this.blockid = init.blockid || false;
     this.manual_boundaries = init.manual_boundaries || [];
-    this.parts = init.parts || [];
+    let parts = init.parts || [];
+    if (Vue.prototype.currentJobInfo.id && (Vue.prototype.currentJobInfo.mastering || Vue.prototype.currentJobInfo.mastering_complete)) {
+      this.parts = [];
+    } else {
+      this.parts = parts;
+    }
+    
   }
 
   clean() {

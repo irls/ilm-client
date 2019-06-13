@@ -1125,7 +1125,8 @@ export default {
         .then((block)=>{
 
           if (this.$refs.blockContent) {
-            let content = this.blockContent();
+            //let content = this.blockContent();
+            let content = block.getPartContent(this.blockPartIdx);
             //if (this.mode !== 'narrate') {
               this.$refs.blockContent.innerHTML = content;
             //} else {
@@ -2324,7 +2325,7 @@ export default {
                 }
               }
             });
-            this.blockPart.manual_boundaries = manual_boundaries;
+            /*this.blockPart.manual_boundaries = manual_boundaries;
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries);
             this.blockAudio.map = this.blockPart.content;
@@ -2334,7 +2335,13 @@ export default {
               this.block.setContent(this.blockPart.content);
               this.$parent.refreshBlockAudio();
             }
+            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);*/
+            this.blockPart.manual_boundaries = manual_boundaries;
+            this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries);
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            this.blockPart.content = this.$refs.blockContent.innerHTML;
+            this.blockAudio.map = this.blockPart.content;
+            this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
             this.pushChange('content');
           }
         }
@@ -2344,7 +2351,8 @@ export default {
         if (blockId == this.check_id) {
           this.audStop();
           if (!this.isSplittedBlock) {
-            this.block.setAudiosrc(this.blockAudiosrc(null, false));
+            //this.block.setAudiosrc(this.blockAudiosrc(null, false));
+            this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
             this.block.setContent(this.blockAudio.map);
             return this.assembleBlockAudioEdit(null, true);
           } else {
@@ -2370,8 +2378,10 @@ export default {
         if (blockId == this.check_id) {
           this.audStop();
           if (!this.isSplittedBlock) {
-            this.block.setAudiosrc(this.blockAudiosrc(null, false));
+            //this.block.setAudiosrc(this.blockAudiosrc(null, false));
+            this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
             this.block.setContent(this.blockContent());
+            //this.block.setContent(this.blockContent());
             return this.assembleBlockAudioEdit(null, false);
           } else {
             this.assembleBlockPartAudioEdit(false);
@@ -2766,9 +2776,9 @@ export default {
       },
       refreshBlockAudio: function(map = true, src = true) {
         if (this.blockPart) {
-          if (!this.isSplittedBlock) {
-            this.blockPart.content = this.block.content;
-          }
+          //if (!this.isSplittedBlock) {
+            //this.blockPart.content = this.block.content;
+          //}
           if (map) {
             this.blockAudio.map = this.blockPart.content;
           }
@@ -2791,7 +2801,7 @@ export default {
         let api = this.$store.state.auth.getHttp();
         let data = {
           audiosrc: this.blockAudiosrc(null, false),
-          content: this.blockContent(),
+          content: this.blockAudio.map,//content: this.blockContent(),
           manual_boundaries: this.blockPart.manual_boundaries || [],
           mode: this.mode
         };
