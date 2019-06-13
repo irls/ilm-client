@@ -3947,6 +3947,7 @@ export default {
             } else if (!this.isSplittedBlock) {
               if (this.$refs.blocks && this.$refs.blocks[0]) {
                 if (this.$refs.blocks[0].isAudioEditing) {
+                  this.$refs.blocks[0].refreshBlockAudio();
                   this.$refs.blocks[0].showAudioEditor();
                 }
               }

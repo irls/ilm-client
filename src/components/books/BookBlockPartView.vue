@@ -1125,13 +1125,13 @@ export default {
         .then((block)=>{
 
           if (this.$refs.blockContent) {
-            let content = block.getPartContent(this.blockPartIdx);
-            if (this.mode !== 'narrate') {
+            let content = this.blockContent();
+            //if (this.mode !== 'narrate') {
               this.$refs.blockContent.innerHTML = content;
-            } else {
-              this.block.setPartContent(this.blockPartIdx, content);
-              this.$refs.blockContent.innerHTML = content;
-            }
+            //} else {
+              //this.block.setPartContent(this.blockPartIdx, content);
+              //this.$refs.blockContent.innerHTML = content;
+            //}
             //this.$refs.blockContent.focus();
           }
           if (this.$refs.blockFlagPopup) {
@@ -2873,6 +2873,13 @@ export default {
           return this.block.getPartAudiosrc(this.blockPartIdx, ver, full);
         } else {
           return this.block.getAudiosrc(ver, full);
+        }
+      },
+      blockContent() {
+        if (this.isSplittedBlock) {
+          return this.block.getPartContent(this.blockPartIdx);
+        } else {
+          return this.block.content;
         }
       }
 
