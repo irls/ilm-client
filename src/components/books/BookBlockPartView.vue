@@ -28,7 +28,7 @@
               </div>
             </template>
           </template>
-          <div class="table-row narrate-controls" v-if="recorder && tc_showBlockNarrate(block._id) && !isAudStarted">
+          <div class="table-row narrate-controls" v-if="tc_showBlockNarrate(block._id) && !isAudStarted">
             <!-- <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i> -->
             <!-- <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i> -->
             <i class="fa fa-microphone" v-if="!isRecording && !isChanged" @click="startRecording($event)"></i>
@@ -2020,8 +2020,29 @@ export default {
       },
 
       startRecording() {
-        this.$emit('startRecording', this.blockPartIdx);
-        this.isRecording = true;
+        if (this.recorder) {
+          this.$emit('startRecording', this.blockPartIdx);
+          this.isRecording = true;
+        } else {
+          this.$root.$emit('show-modal', {
+            title: '<center><h4>Microphone is not working</h4></center>',
+            text: `<center>Please ensure:</center>
+<ul>
+<li>You have a working microphone connected to your computer with the volume turned up.</li>
+<li>Your browser allows accessing your microphone.</li>
+</ul>`,
+            buttons: [
+              {
+                title: 'OK',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+        }
       },
       stopRecording(start_next = false) {
         if (!this.isRecording) {

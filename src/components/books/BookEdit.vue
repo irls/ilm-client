@@ -839,24 +839,7 @@ export default {
           audio: true
         }, this.onMediaSuccess_msr, (e) => {
           //console.error('media error', e);
-          this.$root.$emit('show-modal', {
-            title: '<center><h4>Microphone is not working</h4></center>',
-            text: `<center>Please ensure:</center>
-<ul>
-<li>You have a working microphone connected to your computer with the volume turned up.</li>
-<li>Your browser allows accessing your microphone.</li>
-</ul>`,
-            buttons: [
-              {
-                title: 'OK',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                },
-                class: ['btn btn-primary']
-              }
-            ],
-            class: ['align-modal']
-          });
+          
         });
       }
     },

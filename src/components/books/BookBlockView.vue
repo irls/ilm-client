@@ -2872,13 +2872,15 @@ export default {
       },
 
       startRecording(blockPartIdx) {
-        this.$emit('recordingState', 'recording', this.block._id, blockPartIdx);
-        this.recordTimer()
-        .then(() => {
-          //this.recordStartCounter = 0;
-          this.isRecording = true;
-          this.recorder.startRecording();
-        })
+        if (this.recorder) {
+          this.$emit('recordingState', 'recording', this.block._id, blockPartIdx);
+          this.recordTimer()
+          .then(() => {
+            //this.recordStartCounter = 0;
+            this.isRecording = true;
+            this.recorder.startRecording();
+          })
+        }
       },
       recordTimer() {
         let self = this;
