@@ -2758,6 +2758,7 @@ export const store = new Vuex.Store({
     stopProcessQueueWatch({state}) {
       if (state.processQueueWatch) {
         clearInterval(state.processQueueWatch);
+        state.processQueueWatch = null;
       }
     }
   }
