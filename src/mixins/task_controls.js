@@ -424,7 +424,7 @@ export default {
               return true;
             }
             
-            if (['narration'].indexOf(block.voicework) !== -1 && !block.hasCompleteAudio()) {
+            if (['narration'].indexOf(block.voicework) !== -1 && !block.hasCompleteAudio()) {//check complete audio on all subblocks
               return true;
             }
             break;
