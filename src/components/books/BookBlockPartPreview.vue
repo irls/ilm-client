@@ -3,7 +3,7 @@
   <div v-if="block && (block.type != 'par' || (loaded === true || blockO.loaded === true))"
     :class="['table-body -block -subblock -mode-' + mode, blockOutPaddings]">
     
-    <div class="table-cell controls-left" v-if="mode === 'narrate'">
+    <div class="table-cell controls-left">
       <!-- {{parnumComp}} -->
     </div>
 

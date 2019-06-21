@@ -4444,6 +4444,13 @@ export default {
 .table-body {
   &.-mode-narrate {
     position: relative;
+    .sub-parnum {
+      padding-bottom: 0px;
+    }
+  }
+  .sub-parnum {
+    vertical-align: middle;
+    padding-bottom: 20px;
   }
 }
 

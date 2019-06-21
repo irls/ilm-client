@@ -2,7 +2,7 @@
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block -subblock', '-mode-' + mode, blockOutPaddings, {'-recording': isRecording}]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
-    <div class="table-cell controls-left" v-if="mode === 'narrate'">
+    <div class="table-cell controls-left sub-parnum">
       <span v-if="parnumComp.length && isSplittedBlock">{{parnumComp}}</span>
     </div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
