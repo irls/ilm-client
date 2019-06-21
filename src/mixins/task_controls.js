@@ -407,7 +407,7 @@ export default {
             if (this.editor_tasks.indexOf(task.type) === -1 && this.editor_resolve_tasks.indexOf(task.type) === -1) {
               return true;
             }
-            if (['tts', 'audio_file'].indexOf(block.voicework) !== -1 && !block.hasCompleteAudio()) {
+            if (['tts', 'audio_file'].indexOf(block.voicework) !== -1 && !block.hasCompleteAudio()) {//check complete audio on all subblocks
               return true;
             }
             if (block.footnotes && Array.isArray(block.footnotes)) {
