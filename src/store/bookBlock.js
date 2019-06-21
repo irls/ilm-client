@@ -592,7 +592,7 @@ class BookBlock {
   
   hasCompleteAudio() {
     let hasAudio = (this.audiosrc && this.audiosrc.length);
-    if (Array.isArray(this.parts) && this.parts.length > 0) {
+    if (Array.isArray(this.parts) && this.parts.length > 1) {
       let noAudio = this.parts.find(p => {
         return !p.audiosrc || !p.audiosrc.length;
       });
