@@ -2423,27 +2423,17 @@ export default {
       evFromAudioeditorUndo (blockId, audio, text, isModified) {
         if (blockId == this.check_id) {
           this.audStop();
-          if (this.footnoteIdx === null) {
-            if (this.isSplittedBlock) {
-              this.block.undoPartContent(this.blockPartIdx);
-              this.block.undoPartAudiosrc(this.blockPartIdx);
-            } else {
-              this.block.undoContent();
-              this.block.undoAudiosrc();
-            }
-            this.blockAudio.map = this.blockContent();
-            this.blockAudio.src = this.blockAudiosrc('m4a');
-            this.block.undoManualBoundaries();
-            this.isAudioChanged = isModified;
+          if (this.isSplittedBlock) {
+            this.block.undoPartContent(this.blockPartIdx);
+            this.block.undoPartAudiosrc(this.blockPartIdx);
           } else {
-            //this.audioEditFootnote.footnote.content = text;
-            //this.block.setAudiosrcFootnote(footnoteIdx, audio);
-            //this.audioEditFootnote.isAudioChanged = isModified;
-            this.block.undoContentFootnote(this.footnoteIdx);
-            this.block.undoAudiosrcFootnote(this.footnoteIdx);
-            this.block.undoManualBoundariesFootnote(this.footnoteIdx);
-            this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(this.footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
+            this.block.undoContent();
+            this.block.undoAudiosrc();
           }
+          this.blockAudio.map = this.blockContent();
+          this.blockAudio.src = this.blockAudiosrc('m4a');
+          this.block.undoManualBoundaries();
+          this.isAudioChanged = isModified;
         }
       },
       evFromAudioeditorDiscard (blockId) {

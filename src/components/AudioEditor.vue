@@ -1625,6 +1625,7 @@
           let shifted = false;
 
           if (shiftedAnnotation) {
+            this._addHistory(this.content, this.audiofile);
             if (shiftedAnnotation.end - shiftedAnnotation.start < this.minWordSize) {// find words with length less than minimum
               let shift = this.minWordSize - (shiftedAnnotation.end - shiftedAnnotation.start);
               let found = false;
