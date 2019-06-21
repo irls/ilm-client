@@ -2363,6 +2363,7 @@ export default {
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
             this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
+            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(), this.blockAudiosrc('m4a'));
             this.pushChange('content');
           }
         }
