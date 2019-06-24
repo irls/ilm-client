@@ -117,7 +117,8 @@
                   'checked': blockO.checked,
                   'playing': blockAudio.src,
                   'hide-archive': isHideArchFlags
-                }]"
+                },
+                  'part-' + blockPartIdx]"
                 :data-audiosrc="blockAudio.src"
                 @click="onClick($event)"
                 @selectionchange.prevent="onSelect"
