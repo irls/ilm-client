@@ -991,6 +991,7 @@
           }
         },
         forceClose() {
+          this.setProcessRun(false);
           if (this.audiosourceEditor) this.audiosourceEditor.stopAnimation();
           if (this.plEventEmitter) {
             this.plEventEmitter.emit('automaticscroll', false);

@@ -1577,6 +1577,15 @@ export default {
         let checked = this.block.checked;
         this.getBlock(this.block._id)
         .then((block)=>{
+          this.isChanged = false;
+          this.isIllustrationChanged = false;
+          if (this._isDestroyed) {
+            this.block.isChanged = false;
+            this.block.isIllustrationChanged = false;
+            this.block.isAudioEditing = false;
+            this.block.changes = [];
+            return Promise.resolve();
+          }
 
           if (this.$refs.blocks) {
             if (this.mode !== 'narrate') {
@@ -1592,8 +1601,6 @@ export default {
               this.$refs.blocks[partIdx].isIllustrationChanged = false;
             });
           }
-          this.isChanged = false;
-          this.isIllustrationChanged = false;
           if (this.$refs.blockFlagPopup) {
             this.$refs.blockFlagPopup.close();
           }
@@ -1616,7 +1623,6 @@ export default {
             }
           });
 
-          this.isChanged = false;
           this.updateFlagStatus(block._id);
           if (this.block.type === 'illustration' && this.$refs.blocks && this.$refs.blocks[0]) {
             if (this.$refs.blocks[0].$refs.illustrationInput) {
@@ -2413,6 +2419,10 @@ export default {
         }
         return api.post(api_url, formData, {})
           .then(response => {
+            if (this._isDestroyed) {
+              this.discardBlock();
+              return Promise.resolve();
+            }
             this.isUpdating = false;
             if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
 
@@ -2485,6 +2495,10 @@ export default {
         }
         return api.post(api_url, formData, {})
           .then(response => {
+            if (this._isDestroyed) {
+              this.discardBlock();
+              return Promise.resolve();
+            }
             this.isUpdating = false;
             if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
               if (partIdx !== null) {
