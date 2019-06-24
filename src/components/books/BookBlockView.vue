@@ -1765,7 +1765,7 @@ export default {
                   footnotesInText = 0;
                 }
                 let delCount = this.block.footnotes.length - footnotesInText;
-                if (this.block.footnotes.length > footnotesInText) {
+                if (this.block.footnotes.length > footnotesInText && this.$refs.blockContent) {
                   let delIdxList = [];
                   this.block.footnotes.forEach((ftn, ftnIdx) => {
                     let footnote = this.$refs.blockContent.querySelector(`sup[data-idx='${ftnIdx + 1}']`);
@@ -1978,6 +1978,37 @@ export default {
           //});
         //}
         let updateTask;
+        if (this.mode !== 'narrate') {
+          if (this.block.footnotes && this.block.footnotes.length) {
+            let footnotesInText = document.getElementById(this.block.blockid).querySelectorAll(`sup[data-idx]`);
+            if (footnotesInText) {
+              footnotesInText = footnotesInText.length;
+            } else {
+              footnotesInText = 0;
+            }
+            let delCount = this.block.footnotes.length - footnotesInText;
+            if (this.block.footnotes.length > footnotesInText && this.$refs.blocks) {
+              let delIdxList = [];
+              let contentMerged = '';
+              this.$refs.blocks.forEach(blk => {
+                contentMerged+= blk.$refs.blockContent.innerHTML;
+              })
+              this.block.footnotes.forEach((ftn, ftnIdx) => {
+                let footnote = $(`<div>${contentMerged}</div>`).find(`sup[data-idx='${ftnIdx + 1}']`);
+                if (!footnote || footnote.length === 0) {
+                  delIdxList.push(ftnIdx);
+                }
+              });
+              this.delFootnote(delIdxList, false);
+              this.block.content = this.clearBlockContent();
+            }
+            if (!delCount) {
+              this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+                this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
+              });
+            }
+          }
+        }
         if (!isPartUpdate) {
           update.blockid = this.block.blockid;
           update.bookid = this.block.bookid;
@@ -1991,6 +2022,7 @@ export default {
         }
         return updateTask
           .then(() => {
+            this.isChanged = false;
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
               this.$refs.blocks[blockPartIdx].isSaving = false;
             }
