@@ -1842,24 +1842,27 @@ export default {
         this.flagsSel.parts[partIdx].status = 'open';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
-        this.isChanged = true;
-        this.pushChange('flags');
+        //this.isChanged = true;
+        //this.pushChange('flags');
+        this.$emit('reopenFlagPart');
       },
 
       hideFlagPart: function(ev, partIdx) {
         this.flagsSel.parts[partIdx].status = 'hidden';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
-        this.isChanged = true;
-        this.pushChange('flags');
+        //this.isChanged = true;
+        //this.pushChange('flags');
+        this.$emit('hideFlagPart');
       },
 
       unHideFlagPart: function(ev, partIdx) {
         this.flagsSel.parts[partIdx].status = 'resolved';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
-        this.isChanged = true;
-        this.pushChange('flags');
+        //this.isChanged = true;
+        //this.pushChange('flags');
+        this.$emit('unHideFlagPart');
       },
 
       toggleArchFlags: function(ev, partIdx) {
@@ -2758,6 +2761,12 @@ export default {
       'blockPart.content': {
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
+          
+          Vue.nextTick(() => {
+            if (this.$refs.blockContent) {
+              this.addContentListeners();
+            }
+          });
         }
       },
       'hasLock': {

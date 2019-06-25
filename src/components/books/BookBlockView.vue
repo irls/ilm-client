@@ -235,6 +235,9 @@
               @inputFlag="onInputFlag"
               @resolveFlagPart="onResolveFlagPart"
               @delFlagPart="delFlagPart"
+              @reopenFlagPart="onReopenFlagPart"
+              @hideFlagPart="onHideFlagPart"
+              @unHideFlagPart="onUnHideFlagPart"
           /></BookBlockPartView>
             <div v-if="blockParts.length === 1" class="hidden" ref="blockContent" v-html="blockParts[0].content"></div>
           <div class="ilm-block flag-popup-container">
@@ -1599,8 +1602,14 @@ export default {
               if (this.$refs.blocks[partIdx].$refs.blockContent) {
                 this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = part.content;
                 this.block.setPartContent(partIdx, part.content);
+                Vue.nextTick(() => {
+                  this.$refs.blocks[partIdx].addContentListeners();
+                });
               }
               this.$refs.blocks[partIdx].isIllustrationChanged = false;
+              if (this.$refs.blocks[partIdx].$refs.blockFlagPopup) {
+                this.$refs.blocks[partIdx].$refs.blockFlagPopup.close();
+              }
             });
           }
           if (this.$refs.blockFlagPopup) {
@@ -2828,6 +2837,11 @@ export default {
         this.isChanged = true;
         this.pushChange('flags');
       },
+      
+      onReopenFlagPart: function() {
+        this.isChanged = true;
+        this.pushChange('flags');
+      },
 
       hideFlagPart: function(ev, partIdx) {
         this.flagsSel.parts[partIdx].status = 'hidden';
@@ -2836,11 +2850,21 @@ export default {
         this.isChanged = true;
         this.pushChange('flags');
       },
+      
+      onHideFlagPart: function() {
+        this.isChanged = true;
+        this.pushChange('flags');
+      },
 
       unHideFlagPart: function(ev, partIdx) {
         this.flagsSel.parts[partIdx].status = 'resolved';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
+        this.isChanged = true;
+        this.pushChange('flags');
+      },
+      
+      onUnHideFlagPart: function() {
         this.isChanged = true;
         this.pushChange('flags');
       },
