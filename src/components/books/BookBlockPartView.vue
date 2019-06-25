@@ -2153,6 +2153,10 @@ export default {
               .then(() => {
                 this.isAudioChanged = false;
                 this.isChanged = false;
+                this.unsetChange('audio');
+                this.unsetChange('content');
+                
+                this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
               });
           }
           //$('nav.fixed-bottom').addClass('hidden');
@@ -2291,7 +2295,8 @@ export default {
           this.block.undoManualBoundaries();
           this.isAudioChanged = isModified;
           if (!isModified) {
-            this.$emit('hasChanges', 'audio', isModified);
+            this.unsetChange('audio');
+            this.unsetChange('content');
           }
         }
       },
@@ -2303,6 +2308,9 @@ export default {
               
                 this.isAudioChanged = false;
                 this.isChanged = false;
+                this.unsetChange('audio');
+                this.unsetChange('content');
+                this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
             });
         }
       },
@@ -2547,6 +2555,7 @@ export default {
         let index = this.changes.indexOf(change);
         if (index !== -1) {
           this.changes.splice(index, 1);
+          this.$emit('hasChanges', change, false);
         }
       },
       setHtml() {
