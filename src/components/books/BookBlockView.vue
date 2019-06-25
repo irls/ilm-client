@@ -1729,6 +1729,11 @@ export default {
       },
 
       assembleBlockProxy: function (check_realign = true, realign = false) {
+        if (this.isSplittedBlock && this.$refs.blocks) {
+          this.$refs.blocks.forEach((blk, blkIdx) => {
+            this.block.setPartContent(blkIdx, blk.clearBlockContent());
+          });
+        }
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
@@ -1776,11 +1781,6 @@ export default {
             break;
           default:
             this.block.content = this.clearBlockContent();
-            if (this.isSplittedBlock) {
-              this.$refs.blocks.forEach((blk, blkIdx) => {
-                this.block.setPartContent(blkIdx, blk.clearBlockContent());
-              });
-            }
             if (this.mode !== 'narrate') {
               if (this.block.footnotes && this.block.footnotes.length) {
                 let footnotesInText = document.getElementById(this.block.blockid).querySelectorAll(`sup[data-idx]`);
@@ -1869,6 +1869,7 @@ export default {
                     this.updateFlagStatus(this.block._id);
                     partUpdate['flags'] = this.block.flags;
                     partUpdate['content'] = this.block.content;
+                    partUpdate['parts'] = this.block.parts;
                     break;
                   default:
                     partUpdate[c] = this.block[c];
@@ -2671,68 +2672,7 @@ export default {
         this.pushChange('description');
       },
 
-      addFlag: function(ev, type = 'editor') {
-        /*if (window.getSelection) {
-          let startPos = this.$refs.blockContent.compareDocumentPosition(this.range.startContainer);
-          let endPos = this.$refs.blockContent.compareDocumentPosition(this.range.endContainer);
-          if (startPos != 20) {
-            this.range.setStart(this.$refs.blockContent.childNodes[0], 0);
-          }
-          if (endPos != 20) {
-            let endNode = this.$refs.blockContent.lastChild;
-            let selectionLength = endNode.nodeType == 3 ? endNode.textContent.length: 1;
-            this.range.setEnd(endNode, selectionLength);
-          }
-          let flag = document.createElement(this.flagEl);
-          let existsFlag = this.detectExistingFlag();
-          if (!existsFlag) {
-            flag.dataset.flag = this.block.newFlag(this.range, type);
-            flag.dataset.status = 'open';
-            flag.appendChild(this.range.extractContents());
-            flag.childNodes.forEach((n, i) => {
-              if (n.dataset && n.dataset.map) {
-                let ch = this.$refs.blockContent.querySelector('[data-map="' + n.dataset.map + '"]');
-                if (ch) {
-                  //if (i == 0) {
-                    //n.innerHTML = ch.innerHTML+n.innerHTML
-                  //} else {
-                    //n.innerHTML+= ch.innerHTML
-                  //}
-                  if (!ch.innerHTML) {
-                    this.$refs.blockContent.removeChild(ch);
-                  } else if (!ch.innerHTML.trim()) {
-                    ch.dataset.map = ''
-                  } else {
-                    let map = n.dataset.map.split(',');
-                    map[0] = parseInt(map[0]);
-                    let half = parseInt(map[1]) / 2;
-                    let secondHalf = half;
-                    if (parseInt(secondHalf) != secondHalf) {
-                      half+=0.5;
-                      secondHalf-=0.5
-                    }
-                    if (i == 0) {
-                      ch.dataset.map = map[0] + ',' + half;
-                      n.dataset.map = map[0] + half + ',' + secondHalf;
-                    } else {
-                      n.dataset.map = map[0] + ',' + half;
-                      ch.dataset.map = map[0] + half + ',' + secondHalf;
-                    }
-                  }
-                }
-              }
-            });
-            this.range.insertNode(flag);
-            flag.addEventListener('click', this.handleFlagClick);
-            this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
-          } else {
-            this.block.addFlag(existsFlag.dataset.flag, this.range, type);
-            this.handleFlagClick({target: existsFlag, layerY: ev.layerY, clientY: ev.clientY});
-          }
-          this.$refs.blockFlagPopup.scrollBottom();
-          this.isChanged = true;
-          this.pushChange('flags');
-        }*/
+      addFlag: function() {
         this.isChanged = true;
         this.pushChange('flags');
       },

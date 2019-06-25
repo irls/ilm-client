@@ -1676,14 +1676,18 @@ export const store = new Vuex.Store({
     },
     putBlockProofread({state, dispatch, commit}, block) {
       commit('set_blocker', 'putBlock');
-      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', {
+      let update = {
         block: {
           blockid: block.blockid, 
           bookid: block.bookid, 
           flags: block.flags,
           content: block.content
         }
-      })
+      };
+      if (typeof block.parts !== 'undefined' && Array.isArray(block.parts) && block.parts.length > 1) {
+        update.block.parts = block.parts;
+      }
+      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', update)
         .then((response) => {
           commit('clear_blocker', 'putBlock');
           dispatch('tc_loadBookTask', block.bookid);
@@ -1713,6 +1717,9 @@ export const store = new Vuex.Store({
       if (typeof partIdx !== 'undefined') {
         update.block.partIdx = partIdx;
       } else {
+        update.block.parts = block.parts;
+      }
+      if (typeof block.parts !== 'undefined' && Array.isArray(block.parts) && block.parts.length > 1) {
         update.block.parts = block.parts;
       }
       return axios.put(url, update)
