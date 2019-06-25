@@ -1079,7 +1079,8 @@ export default {
         e.stopPropagation();
         this.range = window.getSelection().getRangeAt(0).cloneRange();
         if (this.$refs.blockCntx) {
-          this.$refs.blockCntx.open(e, this.range, this.mode === 'narrate' ? 400 : 0);//400px for specific width
+          let narrationShift = ($('.content-scroll-wrapper').outerWidth() - $('.-block.-subblock.-mode-narrate').outerWidth()) / 2;//shift for specific width
+          this.$refs.blockCntx.open(e, this.range, this.mode === 'narrate' ? narrationShift : 0);
         }
       },
       update: function() {
