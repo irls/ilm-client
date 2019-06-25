@@ -399,7 +399,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -1200,44 +1200,6 @@ export default {
 //
 //           });
       },
-
-      discardAudioEdit: function(footnoteIdx = null, reload = true) {
-        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
-        if (footnoteIdx !== null) {
-          api_url+= '/footnote/' + footnoteIdx;
-        }
-        let api = this.$store.state.auth.getHttp();
-        api.delete(api_url, {}, {})
-          .then(response => {
-            if (response.status == 200 && response.data) {
-              if (footnoteIdx === null) {
-                this.block.content = response.data.content;
-                this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
-                this.blockAudio.map = response.data.content;
-                //this.block.audiosrc = this.blockAudio.src;
-                this.blockAudio.src = this.block.getAudiosrc('m4a');
-                this.block.manual_boundaries = response.data.manual_boundaries || [];
-                this.isAudioChanged = false;
-                if (reload) {
-                  this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
-                }
-              } else {
-                let resp_block = response.data;
-                let resp_f = resp_block.footnotes[footnoteIdx];
-                this.block.setContentFootnote(footnoteIdx, resp_f.content);
-                this.block.setAudiosrcFootnote(footnoteIdx, resp_f.audiosrc, resp_f.audiosrc_ver);
-                if (reload) {
-                  this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
-                }
-                this.audioEditFootnote.isAudioChanged = false;
-              }
-            }
-          })
-          .catch(err => {
-
-          });
-      },
-
       assembleBlockProxy: function (check_realign = true, realign = false) {
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
@@ -2187,7 +2149,11 @@ export default {
         if (blockId === this.check_id) {
           this.isAudioEditing = false;
           if (this.isAudioChanged) {
-            this.discardAudioEdit(this.footnoteIdx, false);
+            this.discardAudioEdit(this.footnoteIdx, false)
+              .then(() => {
+                this.isAudioChanged = false;
+                this.isChanged = false;
+              });
           }
           //$('nav.fixed-bottom').addClass('hidden');
 
@@ -2324,12 +2290,20 @@ export default {
           this.blockAudio.src = this.blockAudiosrc('m4a');
           this.block.undoManualBoundaries();
           this.isAudioChanged = isModified;
+          if (!isModified) {
+            this.$emit('hasChanges', 'audio', isModified);
+          }
         }
       },
       evFromAudioeditorDiscard (blockId) {
         if (blockId == this.check_id) {
           this.audStop();
-          this.discardAudioEdit(this.footnoteIdx);
+          this.discardAudioEdit(null, true, this.blockPartIdx, this.check_id)
+            .then(() => {
+              
+                this.isAudioChanged = false;
+                this.isChanged = false;
+            });
         }
       },
       evFromAudioeditorSelect (blockId, start, end) {

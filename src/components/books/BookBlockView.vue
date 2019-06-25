@@ -220,6 +220,7 @@
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
               :joinBlocks="joinBlocks"
+              :discardAudioEdit="discardAudioEdit"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @startRecording="startRecording"
@@ -1672,16 +1673,32 @@ export default {
 //           });
       },
 
-      discardAudioEdit: function(footnoteIdx = null, reload = true) {
+      discardAudioEdit: function(footnoteIdx = null, reload = true, partIdx = null, check_id = null) {
+        if (!this.isSplittedBlock) {
+          partIdx = null;
+        }
         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
         if (footnoteIdx !== null) {
           api_url+= '/footnote/' + footnoteIdx;
         }
+        if (partIdx !== null) {
+          api_url+= '/part/' + partIdx;
+        }
         let api = this.$store.state.auth.getHttp();
-        api.delete(api_url, {}, {})
+        return api.delete(api_url, {}, {})
           .then(response => {
             if (response.status == 200 && response.data) {
-              if (footnoteIdx === null) {
+              if (partIdx !== null) {
+                
+                let part = response.data.parts[partIdx];
+                this.block.setPartContent(partIdx, part.content);
+                this.block.setPartAudiosrc(partIdx, part.audiosrc, part.audiosrc_ver);
+                this.block.setPartManualBoundaries(partIdx, part.manual_boundaries || []);
+                part._id = check_id;
+                if (reload) {
+                  this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(partIdx, 'm4a'), this.block.getPartContent(partIdx), true, part);
+                }
+              } else if (footnoteIdx === null) {
                 this.block.content = response.data.content;
                 this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                 this.blockAudio.map = response.data.content;
@@ -1689,6 +1706,7 @@ export default {
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
                 this.block.manual_boundaries = response.data.manual_boundaries || [];
                 this.isAudioChanged = false;
+                this.unsetChange('audio');
                 if (reload) {
                   this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
                 }
@@ -1703,9 +1721,10 @@ export default {
                 this.audioEditFootnote.isAudioChanged = false;
               }
             }
+            return Promise.resolve();
           })
           .catch(err => {
-
+            return Promise.reject(err);
           });
       },
 
@@ -3778,6 +3797,9 @@ export default {
         if (index !== -1) {
           this.changes.splice(index, 1);
         }
+        if (this.changes.length === 0) {
+          this.isChanged = false;
+        }
       },
       setHtml() {
         if (this.$refs.blockContent) {
@@ -3943,15 +3965,21 @@ export default {
         let ref = this.$refs['blocks'][part_idx];
         return ref && ref.isAudioChanged;
       },
-      onPartChanges(val) {
+      onPartChanges(val, set = true) {
         /*if (val) {
           this.isChanged = true;
         } else {
           
         }*/
-        this.pushChange(val);
+        if (set) {
+          this.pushChange(val);
+        } else {
+          this.unsetChange(val);
+        }
         if (val === 'illustration') {
-          this.isIllustrationChanged = true;
+          this.isIllustrationChanged = set;
+        } else if (val === 'audio') {
+          this.isAudioChanged = set;
         }
       },
       partAudioComplete(partIdx) {
