@@ -234,6 +234,7 @@
               @addFlag="addFlag"
               @inputFlag="onInputFlag"
               @resolveFlagPart="onResolveFlagPart"
+              @delFlagPart="delFlagPart"
           /></BookBlockPartView>
             <div v-if="blockParts.length === 1" class="hidden" ref="blockContent" v-html="blockParts[0].content"></div>
           <div class="ilm-block flag-popup-container">
@@ -2797,31 +2798,8 @@ export default {
       },
 
       delFlagPart: function(ev, partIdx) {
-        if (this.canDeleteFlagPart(this.flagsSel.parts[partIdx])) {
-
-            this.flagsSel.parts.splice(partIdx, 1);
-
-            if (this.flagsSel.parts.length == 0) {
-              if (this.flagsSel._id !== this.block._id) {
-                let node = this.$refs.blockContent.querySelector(`[data-flag="${this.flagsSel._id}"]`);
-                let parent = node.parentNode;
-                while (node.firstChild) parent.insertBefore(node.firstChild, node);
-                parent.removeChild(node);
-                this.block.delFlag(this.flagsSel._id);
-              } else {
-                this.$refs.blockFlagControl.removeAttribute('data-flag');
-                this.$refs.blockFlagControl.removeAttribute('data-status');
-                this.block.delFlag(this.flagsSel._id);
-              }
-              this.$root.$emit('closeFlagPopup', true);
-            }
-            else {
-              this.$refs.blockFlagPopup.reset();
-              this.updateFlagStatus(this.flagsSel._id);
-            }
-            this.isChanged = true;
-            this.pushChange('flags');
-        }
+        this.isChanged = true;
+        this.pushChange('flags');
       },
 
       toggleFlagPart: function(ev, partIdx) {

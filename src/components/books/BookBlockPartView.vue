@@ -1818,8 +1818,8 @@ export default {
               this.$refs.blockFlagPopup.reset();
               this.updateFlagStatus(this.flagsSel._id);
             }
-            this.isChanged = true;
-            this.pushChange('flags');
+            //this.pushChange('flags');
+            this.$emit('delFlagPart');
         }
       },
 
