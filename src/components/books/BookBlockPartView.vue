@@ -1079,7 +1079,7 @@ export default {
         e.stopPropagation();
         this.range = window.getSelection().getRangeAt(0).cloneRange();
         if (this.$refs.blockCntx) {
-          this.$refs.blockCntx.open(e, this.range);
+          this.$refs.blockCntx.open(e, this.range, this.mode === 'narrate' ? 400 : 0);//400px for specific width
         }
       },
       update: function() {
