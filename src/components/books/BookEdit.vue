@@ -132,6 +132,7 @@ export default {
       //parlist: new Map(),
       //autoload: true,
       recorder: false,
+      recorderStream: null,
       blockOrderChanged: false,
       //isAllLoaded: false,
       selectionStart: {},
@@ -828,12 +829,19 @@ export default {
         if (key.code==='Escape' || key.keyCode===27) this.$events.emit('currentEditingBlock_id', key);
     },
     onMediaSuccess_msr(stream) {
-      if (!this.recorder) {
+      if (!this.recorder || (this.recorderStream && !this.recorderStream.active && this.recorderStream.id !== stream.id && stream.active)) {
+        this.recorderStream = stream;
+        if (this.recorder) {
+          this.recorder.destroy()
+          this.recorder = null;
+        }
         this.recorder = new mediaStreamRecorder(stream, {
           recorderType: mediaStreamRecorder.MediaStreamRecorder,
           mimeType: 'audio/ogg',
           disableLogs: true
         });
+      } else {
+        //console.log(this.recorder, this.recorder.getInternalRecorder());
       }
     },
     initRecorder() {
