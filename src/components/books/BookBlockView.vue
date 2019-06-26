@@ -238,6 +238,7 @@
               @reopenFlagPart="onReopenFlagPart"
               @hideFlagPart="onHideFlagPart"
               @unHideFlagPart="onUnHideFlagPart"
+              @isAudioEditing="onIsAudioEditing"
           /></BookBlockPartView>
             <div v-if="blockParts.length === 1" class="hidden" ref="blockContent" v-html="blockParts[0].content"></div>
           <div class="ilm-block flag-popup-container">
@@ -3931,6 +3932,9 @@ export default {
             ref.audPlay();
           }
         }
+      },
+      onIsAudioEditing(val) {
+        this.isAudioEditing = val;
       }
   },
   watch: {

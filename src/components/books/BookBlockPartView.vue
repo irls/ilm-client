@@ -2103,20 +2103,6 @@ export default {
         .then(()=>{})
         .catch(()=>{})
       },
-      showFootnoteAudioEditor(footnote, ftnIdx) {
-        this.FtnAudio.isEditing = true;
-        this.FtnAudio.map = footnote.content;
-        if (this.FtnAudio.isChanged) {
-          this.discardFtnAudio();
-        }
-
-        //this.$root.$emit('for-audioeditor:load-and-play', this.block.getAudiosrcFootnote(ftnIdx, 'm4a', true), this.FtnAudio.map, `${this.block._id}_${ftnIdx}`);
-
-        //$('nav.fixed-bottom').removeClass('hidden');
-        this.audioEditFootnote.footnote = footnote;
-        this.showAudioEditor(ftnIdx, footnote);
-        this.isAudioEditing = true;
-      },
       showAudioEditor(footnoteIdx = null, footnote = null) {
         //$('.table-body.-content').removeClass('editing');
         //$('#' + this.block._id + ' .table-body.-content').addClass('editing');
@@ -2222,7 +2208,7 @@ export default {
             this.blockAudio.map = this.blockPart.content;
             this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
             this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), this.blockAudiosrc('m4a', false));
-            this.pushChange('content');
+            //this.pushChange('content');
           }
         }
         this.isAudioChanged = true;
@@ -2821,12 +2807,12 @@ export default {
       },
       'isAudioChanged': {
         handler(val) {
-          if (val) {
+          /*if (val) {
             this.pushChange('audio');  //TODO ask !
             //this.voiceworkSel('audio');
           } else {
             this.unsetChange('audio');
-          }
+          }*/
           this.block.isAudioChanged = val;
         }
       },
@@ -2923,6 +2909,13 @@ export default {
           }
         }
       }*/
+      'isAudioEditing':  {
+        handler(val) {
+          if (!this.isSplittedBlock) {
+            this.$emit('isAudioEditing', val)
+          }
+        }
+      }
   }
 }
 </script>
