@@ -245,10 +245,6 @@
                     <li @click="audPlayFromSelection()">Play from here</li>
                     <li @click="audPlaySelection()">Play selection</li>
                   </template>
-                  <template v-if="!range.collapsed && tc_showBlockNarrate(block._id) && mode === 'narrate' && !isAudioEditing">
-                    <li class="separator"></li>
-                    <li @click="reRecord">Re-record audio</li>
-                  </template>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
 
