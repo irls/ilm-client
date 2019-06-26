@@ -345,6 +345,7 @@ export default {
 
       isAudStarted: false,
       isAudPaused: false,
+      isAudPartStarted: false,
       isRecording: false,
       isRecordingPaused: false,
       isAudioChanged: false,
@@ -842,7 +843,7 @@ export default {
         //if (this.tc_allowAdminFlagging(this.block, flagType)) {
           //return true;
         //}
-        if (!this.tc_getBlockTask(this.block._id) && !this.tc_getBlockTaskOtherRole(this.block._id)) {
+        if (!this.tc_getBlockTask(this.block._id, this.mode) && !this.tc_getBlockTaskOtherRole(this.block._id, this.mode)) {
           return false;
         }
         let canFlag = true;
@@ -1475,6 +1476,7 @@ export default {
 
           this.player.playRange('content-' + this.block.blockid + '-part-' + this.blockPartIdx, startRange[0], endRange[0] + endRange[1]);
           this.isAudStarted = true;
+          this.isAudPartStarted = true;
           this.$root.$emit('playBlock', this.block._id);
         }
       },
@@ -1870,9 +1872,13 @@ export default {
 
       _startRecording() {
           //this.$emit('startRecording', this.blockPartIdx);
+          this.isRecording = true;
           this.startRecording(this.blockPartIdx)
             .then(() => {
-                this.isRecording = true;
+                
+            })
+            .catch(err => {
+              this.isRecording = false;
             });
       },
       stopRecording(start_next = false) {
@@ -1981,7 +1987,10 @@ export default {
                 this.isAudStarted = false;
                 this.isAudPaused = false;
                 this.audCleanClasses(this.block._id, {});
-                this.$emit('partAudioComplete', this.blockPartIdx);
+                if (!this.isAudPartStarted) {
+                  this.$emit('partAudioComplete', this.blockPartIdx);
+                }
+                this.isAudPartStarted = false;
             }
         });
         var self = this;
@@ -2844,7 +2853,7 @@ export default {
               if (this.$refs.recordingCtrls && this.$refs.blockContent) {
                 let w = this.$refs.blockContent.querySelectorAll('w');
                 if (w.length === 0) {
-                   w = this.$refs.blockContent.querySelectorAll('*');
+                   w = this.$refs.blockContent.querySelectorAll('*');//element.childNodes
                 }
 
                 let ctrl_pos = $(this.$refs.recordingCtrls).position();

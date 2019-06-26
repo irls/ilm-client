@@ -28,12 +28,30 @@ export default {
         })
         return task ? task : {}
       },
-      tc_getBlockTask(blockid) {
-        let tasks = this.$store.state.tc_currentBookTasks.tasks.find((t) => {
+      tc_getBlockTask(blockid, mode = null) {
+        let task = this.$store.state.tc_currentBookTasks.tasks.find((t) => {
           return t.blockid == blockid;
-        })
-        if (tasks && tasks.isArray) return tasks[0];
-        return tasks;
+        });
+        if (task && mode) {
+          switch(mode) {
+            case 'edit': 
+              if (this.editor_tasks.indexOf(task.type) === -1) {
+                return false;
+              }
+              break;
+            case 'narrate':
+              if (this.narrator_tasks.indexOf(task.type) === -1) {
+                return false;
+              }
+              break;
+            case 'proofread':
+              if (this.proofer_tasks.indexOf(task.type) === -1) {
+                return false;
+              }
+              break;
+          }
+        }
+        return task;
       },
       tc_isShowRejectBlockAction(blockid) {
         return this.tc_hasTask('content_approve') && this.$store.state.tc_currentBookTasks.rejected_blocks.content.indexOf(blockid) === -1;
@@ -231,20 +249,39 @@ export default {
           return t.type === type;
         });
       },
-      tc_getBlockTaskOtherRole(blockid) {
-        let tasks = false;
+      tc_getBlockTaskOtherRole(blockid, mode = null) {
+        let task = false;
         if (this.$store.state.tc_currentBookTasks.can_resolve_tasks) {
-          tasks = this.$store.state.tc_currentBookTasks.can_resolve_tasks.find((t) => {
+          task = this.$store.state.tc_currentBookTasks.can_resolve_tasks.find((t) => {
             return t.blockid == blockid;
           })
         }
-        if (!tasks && this.currentJobInfo.can_resolve_tasks) {
-          tasks = this.currentJobInfo.can_resolve_tasks.find(t => {
+        if (!task && this.currentJobInfo.can_resolve_tasks) {
+          task = this.currentJobInfo.can_resolve_tasks.find(t => {
             return t.blockid == blockid;
           });
         }
+        if (task && mode) {
+          switch(mode) {
+            case 'edit': 
+              if (this.editor_tasks.indexOf(task.type) === -1) {
+                return false;
+              }
+              break;
+            case 'narrate':
+              if (this.narrator_tasks.indexOf(task.type) === -1) {
+                return false;
+              }
+              break;
+            case 'proofread':
+              if (this.proofer_tasks.indexOf(task.type) === -1) {
+                return false;
+              }
+              break;
+          }
+        }
         //if (tasks && tasks.isArray) return tasks[0];
-        return tasks;
+        return task;
       },
       tc_showBlockAudioEdit(blockid) {
         if (this._is('editor', true) && this.currentJobInfo.workflow.status === 'active') {
