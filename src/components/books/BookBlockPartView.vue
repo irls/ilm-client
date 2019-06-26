@@ -1454,7 +1454,7 @@ export default {
           let startElement = this._getParent(this.range.startContainer, 'w');
           if (startElement) {
             this.isAudStarted = true;
-            this.player.playFromWordElement(startElement, 'content-'+this.block._id);
+            this.player.playFromWordElement(startElement, 'content-'+this.block.blockid+'-part-'+this.blockPartIdx);
           }
         }
       },
@@ -1473,7 +1473,7 @@ export default {
             endRange = this._getClosestAligned(endElement, 1)
           }
 
-          this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]);
+          this.player.playRange('content-' + this.block.blockid + '-part-' + this.blockPartIdx, startRange[0], endRange[0] + endRange[1]);
           this.isAudStarted = true;
           this.$root.$emit('playBlock', this.block._id);
         }

@@ -41,7 +41,7 @@
                 <label ref="parnumRef" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
               </div>
               <div class="par-ctrl -hidden">
-                <div class="block-menu">
+                <div class="block-menu" v-if="mode !== 'narrate'">
                   <i class="glyphicon glyphicon-menu-hamburger"
                   @click.prevent="$refs.blockMenu.open($event, block._id)">
                   </i><!-- {{changes}} -->
@@ -4950,7 +4950,9 @@ export default {
   .recording-hover-controls {
     position: absolute;
     right: 34px;
-    margin-top: -35px;
+    margin-top: -10px;
+    background-color: white;
+    border-radius: 5px;
     i {
       font-size: 27px;
       margin: 0px 5px;
