@@ -55,6 +55,7 @@
               :mode="mode"
               :putBlockProofread="putBlockProofreadProxy"
               :putBlockNarrate="putBlockNarrateProxy"
+              :initRecorder="initRecorder"
               @stopRecordingAndNext="stopRecordingAndNext"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
@@ -827,21 +828,30 @@ export default {
         if (key.code==='Escape' || key.keyCode===27) this.$events.emit('currentEditingBlock_id', key);
     },
     onMediaSuccess_msr(stream) {
-      this.recorder = new mediaStreamRecorder(stream, {
-        recorderType: mediaStreamRecorder.MediaStreamRecorder,
-        mimeType: 'audio/ogg',
-        disableLogs: true
-      });
-    },
-    initRecorder() {
-      if (!this.recorder && this._is('narrator')) {
-        navigator.getUserMedia({
-          audio: true
-        }, this.onMediaSuccess_msr, (e) => {
-          //console.error('media error', e);
-          
+      if (!this.recorder) {
+        this.recorder = new mediaStreamRecorder(stream, {
+          recorderType: mediaStreamRecorder.MediaStreamRecorder,
+          mimeType: 'audio/ogg',
+          disableLogs: true
         });
       }
+    },
+    initRecorder() {
+      return new Promise((resolve, reject) => {
+        if (this._is('narrator')) {
+          navigator.getUserMedia({
+            audio: true
+          }, (stream) => {
+            this.onMediaSuccess_msr(stream);
+            resolve();
+          }, (e) => {
+            console.log('media error', e);
+            reject(e);
+          });
+        } else {
+          resolve();
+        }
+      });
     },
     setRecordingState(state, blockId, blockPartIdx = null) {
       this.recordingState = state;

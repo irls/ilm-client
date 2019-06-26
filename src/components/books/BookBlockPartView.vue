@@ -28,7 +28,7 @@
           <div class="table-row narrate-controls" v-if="tc_showBlockNarrate(block._id) && !isAudStarted">
             <!-- <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i> -->
             <!-- <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i> -->
-            <i class="fa fa-microphone" v-if="!isRecording && !isChanged" @click="startRecording($event)"></i>
+            <i class="fa fa-microphone" v-if="!isRecording && !isChanged" @click="_startRecording($event)"></i>
             <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i>
             <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i>
           </div>
@@ -390,7 +390,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -744,7 +744,7 @@ export default {
       });
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
-      this.$root.$on('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this.startRecording);
+      this.$root.$on('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
 
 //       Vue.nextTick(() => {
 //
@@ -812,7 +812,7 @@ export default {
     this.destroyEditor();
     this.$root.$off('prepare-alignment', this._saveContent);
     this.$root.$off('from-styles:styles-change-' + this.block.blockid, this.setClasses);
-    this.$root.$off('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this.startRecording);
+    this.$root.$off('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
   },
   methods: {
       ...mapActions([
@@ -1868,30 +1868,12 @@ export default {
         this.$refs.blockFlagPopup.reset();
       },
 
-      startRecording() {
-        if (this.recorder) {
-          this.$emit('startRecording', this.blockPartIdx);
-          this.isRecording = true;
-        } else {
-          this.$root.$emit('show-modal', {
-            title: '<center><h4>Microphone is not working</h4></center>',
-            text: `<center>Please ensure:</center>
-<ul>
-<li>You have a working microphone connected to your computer with the volume turned up.</li>
-<li>Your browser allows accessing your microphone.</li>
-</ul>`,
-            buttons: [
-              {
-                title: 'OK',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                },
-                class: ['btn btn-primary']
-              }
-            ],
-            class: ['align-modal']
-          });
-        }
+      _startRecording() {
+          //this.$emit('startRecording', this.blockPartIdx);
+          this.startRecording(this.blockPartIdx)
+            .then(() => {
+                this.isRecording = true;
+            });
       },
       stopRecording(start_next = false) {
         if (!this.isRecording) {

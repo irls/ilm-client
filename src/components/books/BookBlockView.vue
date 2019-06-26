@@ -216,6 +216,7 @@
               :assembleBlockAudioEdit="assembleBlockAudioEdit"
               :insertSilence="insertSilence"
               :audDeletePart="_audDeletePart"
+              :startRecording="startRecording"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
@@ -223,7 +224,6 @@
               :discardAudioEdit="discardAudioEdit"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
-              @startRecording="startRecording"
               @cancelRecording="cancelRecording"
               @save="saveBlockPart"
               @stopRecording="stopRecording"
@@ -609,7 +609,7 @@ export default {
       'vue-picture-input': VuePictureInput,
       BookBlockPartView: BookBlockPartView
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -2702,15 +2702,42 @@ export default {
       },
 
       startRecording(blockPartIdx) {
-        if (this.recorder) {
-          this.$emit('recordingState', 'recording', this.block._id, blockPartIdx);
-          this.recordTimer()
+        return this.initRecorder()
           .then(() => {
-            //this.recordStartCounter = 0;
-            this.isRecording = true;
-            this.recorder.startRecording();
+            this.$emit('recordingState', 'recording', this.block._id, blockPartIdx);
+            return this.recordTimer()
+            .then(() => {
+              //this.recordStartCounter = 0;
+              this.isRecording = true;
+              this.recorder.startRecording();
+              //} catch(err) {
+                //return Promise.reject(err);
+              //}
+              return Promise.resolve();
+            })
           })
-        }
+          .catch(err => {
+            this.isRecording = false;
+            this.$root.$emit('show-modal', {
+              title: '<center><h4>Microphone is not working</h4></center>',
+              text: `<center>Please ensure:</center>
+  <ul>
+  <li>You have a working microphone connected to your computer with the volume turned up.</li>
+  <li>Your browser allows accessing your microphone.</li>
+  </ul>`,
+              buttons: [
+                {
+                  title: 'OK',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                  },
+                  class: ['btn btn-primary']
+                }
+              ],
+              class: ['align-modal']
+            });
+            return Promise.reject(err);
+          });
       },
       recordTimer() {
         let self = this;
