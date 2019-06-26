@@ -21,6 +21,7 @@
             :blockPart="blockPart"
             :blockPartIdx="blockPartIdx"
             :id="'v-' + blockId + '-' + blockPartIdx"
+            :isSplittedBlock="isSplittedBlock"
             ></BookBlockPartPreview>
         </template>
         <!--<div :class="['table-row ilm-block']">-->
@@ -166,6 +167,15 @@ import BookBlockPartPreview from './BookBlockPartPreview';
         get() {
           return false;
         }
+      },
+      isSplittedBlock: {
+        get() {
+          if (this.block.voicework === 'narration' && !this.currentJobInfo.text_cleanup && Array.isArray(this.block.parts) && this.block.parts.length > 1 && !(this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
+            return true;
+          }
+          return false;
+        },
+        cache: false
       },
     },
     methods: {

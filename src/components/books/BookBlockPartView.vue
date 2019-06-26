@@ -2,11 +2,8 @@
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block -subblock', '-mode-' + mode, blockOutPaddings, {'-recording': isRecording}]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
-    <div class="table-cell controls-left sub-parnum">
-      <span v-if="parnumComp.length && isSplittedBlock">{{parnumComp}}</span>
-    </div>
-    <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
-        <template v-if="mode === 'narrate'">
+    <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]" v-if="mode === 'narrate'"> 
+        <template>
           <div class="table-row" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged && !isRecording">
             <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
           </div>
@@ -42,7 +39,9 @@
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
-              <div class="par-ctrl -hidden"></div>
+              <div class="par-ctrl -hidden">
+                <span v-if="parnumComp.length && isSplittedBlock">{{parnumComp}}</span>
+              </div>
               <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
@@ -255,15 +254,13 @@
 
             </div>
             <!--<div class="table-row ilm-block">-->
-            <div class="table-row controls-bottom">
-              <div v-if="isRecording" class="recording-hover-controls" ref="recordingCtrls">
-                <i class="fa fa-ban" v-if="isRecording" @click="cancelRecording()"></i>
-                <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i>
-                <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i>
-                <!-- <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i> -->
-                <!-- <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i> -->
-              </div>
-              <div class="par-ctrl -hidden -right" v-if="isSplittedBlock">
+            <div v-if="isRecording" class="recording-hover-controls" ref="recordingCtrls">
+              <i class="fa fa-ban" v-if="isRecording" @click="cancelRecording()"></i>
+              <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i>
+              <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i>
+            </div>
+            <div class="table-row controls-bottom" v-if="isSplittedBlock">
+              <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
                   <div class="save-block -right" @click="discardBlock"
                        v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">

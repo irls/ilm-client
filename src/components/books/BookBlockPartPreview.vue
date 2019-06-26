@@ -2,12 +2,8 @@
 <div ref="viewBlock" class="block-preview">
   <div v-if="block && (block.type != 'par' || (loaded === true || blockO.loaded === true))"
     :class="['table-body -block -subblock -mode-' + mode, blockOutPaddings]">
-    
-    <div class="table-cell controls-left">
-      <!-- {{parnumComp}} -->
-    </div>
 
-    <div :class="['table-cell', 'controls-left']">
+    <div :class="['table-cell', 'controls-left']" v-if="mode === 'narrate'">
       <div class="table-row"></div>
       <div class="table-row check-row"></div>
     </div>
@@ -49,29 +45,7 @@
 
         </div>
         <!--<div :class="['table-row ilm-block']">-->
-
-        <!-- <div class="table-row content-footnotes"
-          v-if="block.footnotes.length > 0 && mode !== 'narrate'">
-          <div class="table-body footnote"
-            v-for="(footnote, ftnIdx) in block.footnotes">
-
-            <div :class="['table-row controls-top', {'completed': isCompleted}]">
-            </div>
-
-            <div class="table-row">
-              <div class="table-cell -num">{{ftnIdx+1}}.</div>
-              <div
-                :class="['content-wrap-footn-preview table-cell -text', {'js-hidden': blockO.loaded !== true}]"
-                v-html="footnote.content">
-              </div>
-              <div class="table-cell -control"></div>
-            </div>
-
-          </div>
-        </div> -->
-        <!--<div class="table-row content-footnotes"-->
-
-        <div class="table-row controls-bottom">
+        <div class="table-row controls-bottom" v-if="isSplittedBlock">
           <div class="-left">
             <span>
               <i :class="['glyphicon']"></i>
@@ -102,7 +76,7 @@ import {mapGetters} from 'vuex'
   export default {
     name: 'book-block-preview',
     props: [
-      'blockRid', 'blockO', 'block', 'blockPart', 'blockPartIdx'
+      'blockRid', 'blockO', 'block', 'blockPart', 'blockPartIdx', 'isSplittedBlock'
     ],// loaded property is necessary for updating first part of loaded blocks, VueJS is not updating automatically
     data() {
       return {
