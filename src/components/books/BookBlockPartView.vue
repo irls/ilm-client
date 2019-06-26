@@ -39,7 +39,7 @@
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
-              <div class="par-ctrl -hidden">
+              <div class="par-ctrl">
                 <span v-if="parnumComp.length && isSplittedBlock">{{parnumComp}}</span>
               </div>
               <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
@@ -796,6 +796,9 @@ export default {
       this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
         flag.removeEventListener('click', this.handleFlagClick);
       });
+    }
+    if (this.isRecording) {
+      this.cancelRecording();
     }
   },
   destroyed: function () {
@@ -2849,6 +2852,9 @@ export default {
               this.destroyEditor();
               this.initEditor(true);
             }
+          }
+          if (this.isRecording) {
+            this.cancelRecording();
           }
         }
       },
