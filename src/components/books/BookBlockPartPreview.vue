@@ -57,7 +57,6 @@
       <!--<div :class="['table-body', '-content']">-->
     </div>
     <!--<div :class="['table-cell']">-->
-    <div class="table-cell controls-right"></div>
 
   </div>
   <!--<div v-if="loaded === true || blockO.loaded === true"-->

@@ -2,7 +2,7 @@
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block -subblock', '-mode-' + mode, blockOutPaddings, {'-recording': isRecording}]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
-    <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]" v-if="mode === 'narrate'"> 
+    <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]" v-if="mode === 'narrate'">
         <template>
           <div class="table-row" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged && !isRecording">
             <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
@@ -279,8 +279,6 @@
         <!--<div :class="['table-body', '-content',-->
     </div>
     <!--<div :class="['table-cell'-->
-    <div class="table-cell controls-right">
-    </div>
     <modal :name="'block-html' + block._id" height="auto" width="90%" class="block-html-modal" :clickToClose="false" @opened="setHtml">
     <div v-on:wheel.stop="">
       <div class="modal-header">
