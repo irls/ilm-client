@@ -846,7 +846,7 @@ export default {
     },
     initRecorder() {
       return new Promise((resolve, reject) => {
-        if (this._is('narrator')) {
+        if (this._is('narrator', true)) {
           navigator.getUserMedia({
             audio: true
           }, (stream) => {
