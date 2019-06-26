@@ -1445,12 +1445,14 @@ export default {
       },
       audPlay: function(ev) {
         if (this.player) {
+          this.isAudPartStarted = false;
           this.audCleanClasses(this.block.blockid, ev);
           this.player.playBlock('content-'+this.block.blockid+'-part-'+this.blockPartIdx);
         }
       },
       audPlayFromSelection() {
         if (this.player) {
+          this.isAudPartStarted = false;
           this.player.loadBlock(this.block._id);
           let startElement = this._getParent(this.range.startContainer, 'w');
           if (startElement) {
@@ -1493,6 +1495,7 @@ export default {
       },
       audStop: function(block_id, ev) {
         if (this.player) {
+          this.isAudPartStarted = false;
           this.player.pause();
           this.isAudStarted = false;
           this.isAudPaused = false;
@@ -1990,7 +1993,6 @@ export default {
                 if (!this.isAudPartStarted) {
                   this.$emit('partAudioComplete', this.blockPartIdx);
                 }
-                this.isAudPartStarted = false;
             }
         });
         var self = this;
