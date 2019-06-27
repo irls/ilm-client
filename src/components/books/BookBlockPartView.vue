@@ -2853,13 +2853,17 @@ export default {
           if (val === true) {
             Vue.nextTick(()=>{
               if (this.$refs.recordingCtrls && this.$refs.blockContent) {
+                var checkNode = false;
                 let w = this.$refs.blockContent.querySelectorAll('w');
                 if (w.length === 0) {
-                   w = this.$refs.blockContent.querySelectorAll('*');//element.childNodes
+                  checkNode = document.createElement('span');
+                  checkNode.className = 'check-span';
+                  this.$refs.blockContent.appendChild(checkNode);
+                   w = this.$refs.blockContent.querySelectorAll('.check-span');//element.childNodes
                 }
 
                 let ctrl_pos = $(this.$refs.recordingCtrls).position();
-                ctrl_pos.top+=parseInt(this.$refs.recordingCtrls.style['margin-top']);
+                ctrl_pos.top+=parseInt(getComputedStyle(this.$refs.recordingCtrls).marginTop);
 
                 if (w.length > 0) {
                   w.forEach(_w => {
@@ -2869,6 +2873,16 @@ export default {
                       return;
                     }
                   });
+                }
+                if (checkNode) {
+                  this.$refs.blockContent.lastChild.remove();
+                }
+                let lang = this.block.language;
+                if (!lang) {
+                  lang = this.meta.language;
+                }
+                if (lang && ['ar', 'fa'].indexOf(lang) !== -1) {
+                  this.$refs.recordingCtrls.style['margin-top'] = '-15px';
                 }
 
                 $('body').off('keypress', this._handleSpacePress);

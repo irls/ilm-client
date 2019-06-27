@@ -4950,7 +4950,7 @@ export default {
   .recording-hover-controls {
     position: absolute;
     right: 34px;
-    margin-top: -10px;
+    margin-top: -40px;
     background-color: white;
     border-radius: 5px;
     i {
@@ -4982,6 +4982,10 @@ export default {
   .narrate-mode-left {
     width: 44px; 
     vertical-align: middle;
+  }
+  span.check-span {
+      position: absolute;
+      height: 10px;
   }
 
 </style>
