@@ -252,7 +252,7 @@ export const store = new Vuex.Store({
         //return false;
       //}
       let locked = false;
-      if (state.lockedBlocks.length > 0) {
+      if (state.lockedBlocks.length > 0 && partIdx === null) {
         //let lock = localStorage.getItem('lock_' + id);
         //console.log(lock, id)
         let l = state.lockedBlocks.find(_l => _l._id === id);

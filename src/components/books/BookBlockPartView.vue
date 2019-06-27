@@ -820,7 +820,6 @@ export default {
         'putMetaAuthors',
         'tc_approveBookTask',
         'setCurrentBookCounters',
-        'addBlockLock',
         'getAlignCount',
         'recountApprovedInRange',
         'loadBookToc',
