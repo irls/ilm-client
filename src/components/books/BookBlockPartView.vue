@@ -40,7 +40,7 @@
         @click="onBlur">
             <div class="table-row-flex controls-top">
               <div class="par-ctrl">
-                <span v-if="parnumComp.length && isSplittedBlock">{{parnumComp}}</span>
+                <span v-if="parnumComp.length && isSplittedBlock" class="sub-parnum">{{parnumComp}}</span>
               </div>
               <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
@@ -252,8 +252,8 @@
             <!--<div class="table-row ilm-block">-->
             <div v-if="isRecording" class="recording-hover-controls" ref="recordingCtrls">
               <i class="fa fa-ban" v-if="isRecording" @click="cancelRecording()"></i>
-              <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i>
-              <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i>
+              <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="_stopRecording(true, $event)"></i>
+              <i class="fa fa-stop-circle-o" v-if="isRecording" @click="_stopRecording(false, $event)"></i>
             </div>
             <div class="table-row controls-bottom" v-if="isSplittedBlock">
               <div class="par-ctrl -hidden -right">
@@ -391,7 +391,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -1884,14 +1884,23 @@ export default {
               this.isRecording = false;
             });
       },
-      stopRecording(start_next = false) {
+      _stopRecording(start_next = false) {
         if (!this.isRecording) {
           return false;
         }
         this.isRecording = false;
         this.isRecordingPaused = false;
         this.reRecordPosition = false;
-        return this.$emit('stopRecording', this.blockPartIdx, this.reRecordPosition, start_next);
+        if (this.isSplittedBlock) {
+          this.isUpdating = true;
+        }
+        return this.stopRecording(this.blockPartIdx, this.reRecordPosition, start_next)
+          .then(() => {
+            this.isUpdating = false;
+          })
+          .catch(err => {
+            this.isUpdating = false;
+          });
       },
       cancelRecording() {
         this.$emit('cancelRecording');

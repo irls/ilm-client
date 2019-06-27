@@ -212,7 +212,7 @@
               :blockPart="blockPart"
               :blockPartIdx="blockPartIdx"
               :isSplittedBlock="isSplittedBlock"
-              :parnum="parnumComp"
+              :parnum="subBlockParnumComp"
               :assembleBlockAudioEdit="assembleBlockAudioEdit"
               :insertSilence="insertSilence"
               :audDeletePart="_audDeletePart"
@@ -222,11 +222,11 @@
               @deleteBlock="deleteBlock"
               :joinBlocks="joinBlocks"
               :discardAudioEdit="discardAudioEdit"
+              :stopRecording="stopRecording"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
               @save="saveBlockPart"
-              @stopRecording="stopRecording"
               @hasChanges="onPartChanges"
               @addFootnote="addFootnote"
               @partAudioComplete="partAudioComplete"
@@ -658,6 +658,18 @@ export default {
           }
           return '';
       }},
+      subBlockParnumComp: {
+        get: function() {
+          if (this.blockO.type == 'header' && this.blockO.isNumber) {
+            return this.blockO.secnum;
+          }
+          if (this.blockO.type == 'par' && this.blockO.isNumber) {
+            return this.blockO.parnum;
+          }
+          return '';
+        },
+        cache: false
+      },
       isNumbered: { cache: false,
       get: function () {
         if (this.block.type == 'par' && this.blockO.isNumber == true) return true;
@@ -2763,39 +2775,43 @@ export default {
       stopRecording(partIdx, reRecordPosition, start_next = false) {
         let self = this;
         this.isRecording = false;
-        this.isUpdating = true;
         if (!this.isSplittedBlock) {
           partIdx = null;
+          this.isUpdating = true;
         }
-        this.recorder.stopRecording(function(audioUrl) {
-          this.getDataURL(function(dataURL) {
-            if (start_next) {
-              self.stopRecordingAndNext(partIdx);
-            }
-            self.saveNarrated({
-              'audio': dataURL.split(',').pop(),
-              'position': reRecordPosition,
-              'isTemp': false,
-              'blockid': self.block.blockid,
-              'partIdx': partIdx
-            })
-              .then(response => {
-                self.isUpdating = false;
-                if (response.status == 200) {
-                  //self.blockAudio.map = response.data.content;
-                  self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
-                  //self.block.setContent(response.data.content);
-                  //self.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
-                  //self.blockAudio.src = self.block.getAudiosrc('m4a');
-                  //self.blockAudio.map = self.block.content;
-                  //self.isAudioChanged = true;
-                }
-                self.reRecordPosition = false;
+        return new Promise((resolve, reject) => {
+          this.recorder.stopRecording(function(audioUrl) {
+            this.getDataURL(function(dataURL) {
+              if (start_next) {
+                self.stopRecordingAndNext(partIdx);
+              }
+              self.saveNarrated({
+                'audio': dataURL.split(',').pop(),
+                'position': reRecordPosition,
+                'isTemp': false,
+                'blockid': self.block.blockid,
+                'partIdx': partIdx
               })
-              .catch(err => {
-                self.reRecordPosition = false;
-                self.isUpdating = false;
-              });
+                .then(response => {
+                  self.isUpdating = false;
+                  if (response.status == 200) {
+                    //self.blockAudio.map = response.data.content;
+                    self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
+                    //self.block.setContent(response.data.content);
+                    //self.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+                    //self.blockAudio.src = self.block.getAudiosrc('m4a');
+                    //self.blockAudio.map = self.block.content;
+                    //self.isAudioChanged = true;
+                  }
+                  self.reRecordPosition = false;
+                  resolve();
+                })
+                .catch(err => {
+                  self.reRecordPosition = false;
+                  self.isUpdating = false;
+                  reject(err);
+                });
+            });
           });
         });
       },
@@ -4313,13 +4329,11 @@ export default {
 .table-body {
   &.-mode-narrate {
     position: relative;
-    .sub-parnum {
-      padding-bottom: 0px;
-    }
   }
   .sub-parnum {
     vertical-align: middle;
-    padding-bottom: 20px;
+    padding-left: 8px;
+    padding-top: 8px;
   }
 }
 
