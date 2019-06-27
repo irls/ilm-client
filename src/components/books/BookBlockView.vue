@@ -3864,7 +3864,7 @@ export default {
       'hasLock': {
         handler(val) {
           if (!val) {
-            if (this.isAudioEditing) {
+            if (this.isAudioEditing && (this.check_id !== null || this.footnoteIdx !== null)) {
               //this.$root.$emit('for-audioeditor:set-process-run', false);
               if (this.check_id === this.block.blockid) {
                 this.refreshBlockAudio();
