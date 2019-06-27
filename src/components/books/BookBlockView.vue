@@ -223,6 +223,7 @@
               :joinBlocks="joinBlocks"
               :discardAudioEdit="discardAudioEdit"
               :stopRecording="stopRecording"
+              :delFlagPart="delFlagPart"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -234,7 +235,6 @@
               @addFlag="addFlag"
               @inputFlag="onInputFlag"
               @resolveFlagPart="onResolveFlagPart"
-              @delFlagPart="delFlagPart"
               @reopenFlagPart="onReopenFlagPart"
               @hideFlagPart="onHideFlagPart"
               @unHideFlagPart="onUnHideFlagPart"
@@ -2611,15 +2611,25 @@ export default {
         this.updateFlagStatus(flagId);
       },
 
-      updateFlagStatus: function (flagId) {
-        let node;
-        if (flagId ===  this.block._id) {
-          node = this.$refs.blockFlagControl;
-          if (node) node.dataset.flag = flagId;
+      updateFlagStatus: function (flagId, blockPartIdx = null) {
+        let _this = null;
+        if (blockPartIdx !== null) {
+          if (this.$refs.blocks && this.$refs.blocks[blockPartIdx]) {
+            _this = this.$refs.blocks[blockPartIdx];
+          }
         } else {
-          node = this.$refs.blockContent.querySelector(`[data-flag="${flagId}"]`);
+          _this = this;
         }
-        if (node) node.dataset.status = this.block.calcFlagStatus(flagId);
+        let node;
+        if (_this) {
+          if (flagId ===  this.block._id) {
+            node = _this.$refs.blockFlagControl;
+            if (node) node.dataset.flag = flagId;
+          } else {
+            node = _this.$refs.blockContent.querySelector(`[data-flag="${flagId}"]`);
+          }
+          if (node) node.dataset.status = this.block.calcFlagStatus(flagId);
+        }
       },
 
       canResolveFlagPart: function (flagPart) {
@@ -2641,9 +2651,43 @@ export default {
           return result;
       },
 
-      delFlagPart: function(ev, partIdx) {
-        this.isChanged = true;
-        this.pushChange('flags');
+      delFlagPart: function(ev, partIdx, blockPartIdx = null) {
+        let _this = null;
+        if (blockPartIdx !== null) {
+          if (this.$refs.blocks && this.$refs.blocks[blockPartIdx]) {
+            _this = this.$refs.blocks[blockPartIdx];
+          }
+        } else {
+          _this = this;
+        }
+        if (_this && this.canDeleteFlagPart(_this.flagsSel.parts[partIdx])) {
+
+          _this.flagsSel.parts.splice(partIdx, 1);
+
+          if (_this.flagsSel.parts.length == 0) {
+            if (_this.flagsSel._id !== this.block._id) {
+              let node = _this.$refs.blockContent.querySelector(`[data-flag="${_this.flagsSel._id}"]`);
+              let parent = node.parentNode;
+              while (node.firstChild) parent.insertBefore(node.firstChild, node);
+              parent.removeChild(node);
+              this.block.delFlag(_this.flagsSel._id);
+            } else {
+              this.$refs.blockFlagControl.removeAttribute('data-flag');
+              this.$refs.blockFlagControl.removeAttribute('data-status');
+              this.block.delFlag(_this.flagsSel._id);
+            }
+            _this.$root.$emit('closeFlagPopup', true);
+          }
+          else {
+            _this.$refs.blockFlagPopup.reset();
+            this.updateFlagStatus(_this.flagsSel._id, blockPartIdx);
+          }
+          //this.pushChange('flags');
+          //this.$emit('delFlagPart');
+
+          this.isChanged = true;
+          this.pushChange('flags');
+        }
       },
 
       toggleFlagPart: function(ev, partIdx) {

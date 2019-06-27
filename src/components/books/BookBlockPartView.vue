@@ -173,7 +173,7 @@
 
                     <a href="#" class="flag-control -right -top"
                       v-if="canDeleteFlagPart(part) && part.status == 'open'"
-                      @click.prevent="delFlagPart($event, partIdx)">
+                      @click.prevent="delFlagPart($event, partIdx, blockPartIdx)">
                       <i class="fa fa-trash"></i></a>
 
                     <div class="clearfix"></div>
@@ -391,7 +391,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -1794,34 +1794,7 @@ export default {
           return result;
       },
 
-      delFlagPart: function(ev, partIdx) {
-        if (this.canDeleteFlagPart(this.flagsSel.parts[partIdx])) {
-
-            this.flagsSel.parts.splice(partIdx, 1);
-
-            if (this.flagsSel.parts.length == 0) {
-              if (this.flagsSel._id !== this.block._id) {
-                let node = this.$refs.blockContent.querySelector(`[data-flag="${this.flagsSel._id}"]`);
-                let parent = node.parentNode;
-                while (node.firstChild) parent.insertBefore(node.firstChild, node);
-                parent.removeChild(node);
-                this.block.delFlag(this.flagsSel._id);
-              } else {
-                this.$refs.blockFlagControl.removeAttribute('data-flag');
-                this.$refs.blockFlagControl.removeAttribute('data-status');
-                this.block.delFlag(this.flagsSel._id);
-              }
-              this.$root.$emit('closeFlagPopup', true);
-            }
-            else {
-              this.$refs.blockFlagPopup.reset();
-              this.updateFlagStatus(this.flagsSel._id);
-            }
-            //this.pushChange('flags');
-            this.$emit('delFlagPart');
-        }
-      },
-
+      
       toggleFlagPart: function(ev, partIdx) {
         if (!this.flagsSel.parts[partIdx].collapsed) this.flagsSel.parts[partIdx].collapsed = true;
         else this.flagsSel.parts[partIdx].collapsed = !this.flagsSel.parts[partIdx].collapsed;
