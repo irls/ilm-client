@@ -4020,12 +4020,12 @@ export default {
       },
       'isAudioChanged': {
         handler(val) {
-          if (val) {
+          /*if (val) {
             this.pushChange('audio');  //TODO ask !
             //this.voiceworkSel('audio');
           } else {
             this.unsetChange('audio');
-          }
+          }*/
           this.block.isAudioChanged = val;
         }
       },
