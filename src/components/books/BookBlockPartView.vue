@@ -2774,7 +2774,7 @@ export default {
           if (val === false) {
             this.flushChanges();
           }
-          this.block.isChanged = val;
+          //this.block.isChanged = val;
           this.recountApprovedInRange();
         }
       },
