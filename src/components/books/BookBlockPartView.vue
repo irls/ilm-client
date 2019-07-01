@@ -2778,7 +2778,7 @@ export default {
             this.block.isChanged = val;
           } else {
             if (this.block.parts[this.blockPartIdx]) {
-              this.block.parts[this.blockPartIdx].isChanged = true;
+              this.block.parts[this.blockPartIdx].isChanged = val;
             }
           }
           this.recountApprovedInRange();
@@ -2792,7 +2792,13 @@ export default {
           } else {
             this.unsetChange('audio');
           }*/
-          this.block.isAudioChanged = val;
+          if (!this.isSplittedBlock) {
+            this.block.isAudioChanged = val;
+          } else {
+            if (this.block.parts[this.blockPartIdx]) {
+              this.block.parts[this.blockPartIdx].isAudioChanged = val;
+            }
+          }
         }
       },
       'isIllustrationChanged': {

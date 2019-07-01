@@ -1135,8 +1135,8 @@ export default {
                 this.doJoinBlocks.direction = direction;
                 this.doJoinBlocks.show = true;
               } else if (!this.doJoinBlocks.showAudio &&
-                      (this.parlist.get(block.blockid).isAudioChanged ||
-                      this.parlist.get(blockBefore.blockid).isAudioChanged ||
+                      (this.parlist.get(block.blockid).getIsAudioChanged() ||
+                      this.parlist.get(blockBefore.blockid).getIsAudioChanged() ||
                       (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
                       (elNext && elNext.audioEditFootnote.isAudioChanged))) {
                 this.doJoinBlocks.block = block;
@@ -1267,8 +1267,8 @@ export default {
                 this.doJoinBlocks.show = true;
 
               } else if (!this.doJoinBlocks.showAudio &&
-                      (this.parlist.get(block.blockid).isAudioChanged ||
-                      this.parlist.get(chainId).isAudioChanged ||
+                      (this.parlist.get(block.blockid).getIsAudioChanged() ||
+                      this.parlist.get(chainId).getIsAudioChanged() ||
                       (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
                       (elNext && elNext.audioEditFootnote.isAudioChanged))) {
                 this.doJoinBlocks.block = block;

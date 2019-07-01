@@ -695,6 +695,16 @@ class BookBlock {
     });
     return part ? true : false;
   }
+  
+  getIsAudioChanged() {
+    if (this.isAudioChanged) {
+      return true;
+    }
+    let part = this.parts.find(p => {
+      return p.isAudioChanged === true;
+    });
+    return part ? true : false;
+  }
 
 }
 
