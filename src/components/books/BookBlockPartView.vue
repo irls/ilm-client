@@ -2774,7 +2774,13 @@ export default {
           if (val === false) {
             this.flushChanges();
           }
-          //this.block.isChanged = val;
+          if (!this.isSplittedBlock) {
+            this.block.isChanged = val;
+          } else {
+            if (this.block.parts[this.blockPartIdx]) {
+              this.block.parts[this.blockPartIdx].isChanged = true;
+            }
+          }
           this.recountApprovedInRange();
         }
       },

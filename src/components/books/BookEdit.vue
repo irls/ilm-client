@@ -1127,7 +1127,7 @@ export default {
               });
 
               if (!this.doJoinBlocks.show
-                  && (this.parlist.get(block.blockid).isChanged || this.parlist.get(blockBefore.blockid).isChanged))
+                  && (this.parlist.get(block.blockid).getIsChanged() || this.parlist.get(blockBefore.blockid).getIsChanged()))
               {
                 // save current block reference
                 // and show confirmation pop-up to save changes
@@ -1260,7 +1260,7 @@ export default {
                 return c.$el.id == chainId;
               });
               if (!this.doJoinBlocks.show
-              && (this.parlist.get(block.blockid).isChanged || this.parlist.get(chainId).isChanged))
+              && (this.parlist.get(block.blockid).getIsChanged() || this.parlist.get(chainId).getIsChanged()))
               {
                 this.doJoinBlocks.block = block;
                 this.doJoinBlocks.direction = direction;

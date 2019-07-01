@@ -1626,19 +1626,24 @@ export default {
           default:
             this.block.content = this.clearBlockContent();
             if (this.mode !== 'narrate') {
-              if (this.block.footnotes && this.block.footnotes.length) {
-                let footnotesInText = document.getElementById(this.block.blockid).querySelectorAll(`sup[data-idx]`);
-                if (footnotesInText) {
-                  footnotesInText = footnotesInText.length;
-                } else {
-                  footnotesInText = 0;
-                }
-                let delCount = this.block.footnotes.length - footnotesInText;
-                if (this.block.footnotes.length > footnotesInText && this.$refs.blockContent) {
+              if (this.block.footnotes && this.block.footnotes.length && this.$refs.blocks) {
+                let footnotesInText = [];
+                this.$refs.blocks.forEach((blk, blkIdx) => {
+                  let blkFootnotes = document.getElementById(`${this.block.blockid}-${blkIdx}`).querySelectorAll(`sup[data-idx]`);
+                  if (blkFootnotes) {
+                    blkFootnotes.forEach(bf => {
+                      footnotesInText.push(bf.getAttribute('data-idx'));
+                    })
+                  }
+                });
+                let delCount = this.block.footnotes.length - footnotesInText.length;
+                if (delCount > 0) {
                   let delIdxList = [];
                   this.block.footnotes.forEach((ftn, ftnIdx) => {
-                    let footnote = this.$refs.blockContent.querySelector(`sup[data-idx='${ftnIdx + 1}']`);
-                    if (!footnote || footnote.length === 0) {
+                    let footnote = footnotesInText.find(fin => {
+                      return fin == ftnIdx + 1
+                    });
+                    if (!footnote) {
                       delIdxList.push(ftnIdx);
                     }
                   });

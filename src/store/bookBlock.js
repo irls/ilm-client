@@ -685,6 +685,16 @@ class BookBlock {
       }
     }
   }
+  
+  getIsChanged() {
+    if (this.isChanged) {
+      return true;
+    }
+    let part = this.parts.find(p => {
+      return p.isChanged === true;
+    });
+    return part ? true : false;
+  }
 
 }
 
