@@ -2219,7 +2219,7 @@ export default {
             .content-wrap {
               overflow-y: scroll;
               max-height: 80vh;
-              width: 665px;
+              width: 678px;
             }
           }
         }

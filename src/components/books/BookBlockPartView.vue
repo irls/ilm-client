@@ -2842,7 +2842,6 @@ export default {
       },
       'isRecording': {
         handler(val) {
-          this.$emit('recordingState', val ? 'recording' : 'stopped', this.block._id);
           if (val === true) {
             Vue.nextTick(()=>{
               if (this.$refs.recordingCtrls && this.$refs.blockContent) {
