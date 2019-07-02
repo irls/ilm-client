@@ -2406,12 +2406,6 @@ export default {
   &.-subblock.-mode-narrate {
     width: 700px;
     margin: 0px auto;
-    .illustration-block {
-      img {
-        max-width: 700px;
-        height: auto !important;
-      }
-    }
   }
 }
 </style>

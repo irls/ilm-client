@@ -78,7 +78,7 @@
                 :class="['table-body illustration-block', {'checked': blockO.checked}]"
                 @click="onClick($event)">
                   <img v-if="block.illustration" :src="block.getIllustration()"
-                  :height="block.illustration_height"
+                  :height="illustrationHeight"
                   :class="[block.getClass()]"/>
                   <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing">
                     <vue-picture-input
@@ -654,6 +654,16 @@ export default {
           }
           return false;
         }
+      },
+      illustrationHeight: {
+        get() {
+          if (this.mode === 'narrate') {
+            return parseInt((700 * this.block.illustration_height) / this.block.illustration_width);
+          } else {
+            return this.block.illustration_height;
+          }
+        },
+        cache: false
       },
       ...mapGetters({
           auth: 'auth',

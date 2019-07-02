@@ -139,14 +139,15 @@ import BookBlockPartPreview from './BookBlockPartPreview';
           if (!this.block) {
             return [{}];
           }
-          if (Array.isArray(this.block.parts) && this.block.parts.length > 1 && !this.currentJobInfo.text_cleanup && !(this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
+          if (this.isSplittedBlock) {
             return this.block.parts;
           } else {
             return [
               {
                 content: this.block.content,
                 audiosrc: this.block.audiosrc,
-                audiosrc_ver: this.block.audiosrc_ver
+                audiosrc_ver: this.block.audiosrc_ver,
+                manual_boundaries: this.block.manual_boundaries
               }
             ];
           }

@@ -20,7 +20,7 @@
         <div v-else-if="block.type == 'illustration'"
         :class="['table-body illustration-block']">
           <img v-if="block.illustration" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
-          :height="block.illustration_height"
+          :height="illustrationHeight"
           :class="[getClass]"/>
           <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': isChanged && !isIllustrationChanged}]" v-if="allowEditing">
             <div class="preview-container"></div>
@@ -153,6 +153,16 @@ import {mapGetters} from 'vuex'
         get() {
           return false;
         }
+      },
+      illustrationHeight: {
+        get() {
+          if (this.mode === 'narrate') {
+            return parseInt((700 * this.block.illustration_height) / this.block.illustration_width);
+          } else {
+            return this.block.illustration_height;
+          }
+        },
+        cache: false
       },
       ...mapGetters({
         mode: 'bookMode'
