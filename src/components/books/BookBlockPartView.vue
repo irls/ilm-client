@@ -255,7 +255,7 @@
               <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="_stopRecording(true, $event)"></i>
               <i class="fa fa-stop-circle-o" v-if="isRecording" @click="_stopRecording(false, $event)"></i>
             </div>
-            <div class="table-row controls-bottom" v-if="isSplittedBlock">
+            <div class="table-row controls-bottom" v-if="isSplittedBlock || isRecording"><!-- isRecording for margin under block -->
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
                   <div class="save-block -right" @click="discardBlock"
