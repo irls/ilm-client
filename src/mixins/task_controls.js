@@ -538,6 +538,9 @@ export default {
           switch (mode) {
             case 'edit':
               if (flags_summary.dir === 'narrator') {
+                if (block.voicework !== 'narration') {
+                  return true;
+                }
                 return this.editor_resolve_tasks.indexOf(task.type) === -1 ? false : true;
               }
               break;
