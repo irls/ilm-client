@@ -67,7 +67,7 @@
   <!--<div v-if="loaded === true || blockO.loaded === true"-->
   <template v-else v-for="(blockPart, blockPartIdx) in blockParts">
     <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
-    <div :class="['content-process-run', 'preloader-loading']">
+    <div :id="'v-' + blockId + '-' + blockPartIdx" :class="['content-process-run', 'preloader-loading']">
       
     </div>
   </template>
