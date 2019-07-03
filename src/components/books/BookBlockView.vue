@@ -5048,7 +5048,7 @@ export default {
   }
   span.check-span {
       position: absolute;
-      height: 10px;
+      height: 20px;
   }
 
 </style>
