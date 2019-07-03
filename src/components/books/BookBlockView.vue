@@ -4372,6 +4372,7 @@ export default {
   .controls-left {
     width: 44px;
     vertical-align: middle;
+    height: 123px;
   }
 }
 .table-body {
