@@ -601,9 +601,9 @@ class BookBlock {
     return hasAudio ? true : false;
   }
 
-  getClass() {
+  getClass(mode = null) {
     let result = this.type;
-    if (this.classes && typeof this.classes === 'object') {
+    if (mode !== 'narrate' && this.classes && typeof this.classes === 'object') {
       for (let key in this.classes) {
         if (key) {
           if (this.classes[key] && this.classes[key] !== '') result += ' '+ this.classes[key];

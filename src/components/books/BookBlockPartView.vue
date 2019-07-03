@@ -111,7 +111,7 @@
                 :id="'content-'+block._id+'-part-'+blockPartIdx"
                 ref="blockContent"
                 v-html="blockPart.content"
-                :class="[ block.getClass(), {
+                :class="[ block.getClass(mode), {
                   'updated': isUpdated,
                   'checked': blockO.checked,
                   'playing': blockAudio.src,

@@ -37,7 +37,7 @@
 
         <template v-else>
           <div v-cloak
-          :class="['content-wrap-preview', getClass, {'js-hidden': blockO.loaded !== true}]"
+          :class="['content-wrap-preview', block.getClass(mode), {'js-hidden': blockO.loaded !== true}]"
           v-html="blockPart.content">
           </div>
         </template>
@@ -110,7 +110,7 @@ import {mapGetters} from 'vuex'
       },
       getClass: { cache: true,
         get: function () {
-          return this.block.getClass();
+          return this.block.getClass(this.mode);
         }
       },
       getIllustration: { cache: true,
