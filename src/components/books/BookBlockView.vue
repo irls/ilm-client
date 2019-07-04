@@ -36,7 +36,7 @@
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
-              <div v-if="isNumbered" class="par-ctrl -par-num -hidden-hover">
+              <div v-if="isNumbered" :class="['par-ctrl', '-par-num', {'-hidden-hover': mode !== 'narrate'}]">
                 <!--<i class="fa fa-hashtag"></i>-->
                 <label ref="parnumRef" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
               </div>
@@ -1666,7 +1666,8 @@ export default {
             return this.assembleBlock({
               description: this.block.description,
               voicework: this.block.voicework,
-              content: this.block.content
+              content: this.block.content,
+              blockid: this.block.blockid
             });
           }
         } else {
@@ -4378,6 +4379,22 @@ export default {
 .table-body {
   &.-mode-narrate {
     position: relative;
+    .controls-bottom, .controls-top {
+      width: 700px;
+      margin: 0px auto;
+      display: block;
+      .-left {
+          padding: 0px 25px;
+      }
+      .-right {
+          margin-right: 0px;
+      }
+      .par-ctrl.-par-num {
+        label.par-num {
+            padding-left: 20px;
+        }
+      }
+    }
   }
   .sub-parnum {
     vertical-align: middle;

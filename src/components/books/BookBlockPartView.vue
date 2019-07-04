@@ -35,7 +35,7 @@
         </template>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
-        <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + (block.language || 'undefined')]"
+        <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
@@ -664,6 +664,16 @@ export default {
           }
         },
         cache: false
+      },
+      getBlockLang: {
+        cache: false,
+        get() {
+          if (this.block.language && this.block.language.length) {
+            return this.block.language;
+          } else {
+            return this.meta.language;
+          }
+        }
       },
       ...mapGetters({
           auth: 'auth',
