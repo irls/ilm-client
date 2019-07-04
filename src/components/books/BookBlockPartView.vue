@@ -2861,7 +2861,8 @@ export default {
                   checkNode = document.createElement('span');
                   checkNode.className = 'check-span';
                   this.$refs.blockContent.appendChild(checkNode);
-                   w = this.$refs.blockContent.querySelectorAll('.check-span');//element.childNodes
+                   w = this.$refs.blockContent.querySelectorAll('*');//element.childNodes
+                   $(this.$refs.blockContent).find('*').addClass('in-recording');
                 }
 
                 let ctrl_pos = $(this.$refs.recordingCtrls).position();
@@ -2870,7 +2871,7 @@ export default {
                 if (w.length > 0) {
                   w.forEach(_w => {
                     let _w_pos = $(_w).position();
-                    if (_w_pos.left + _w.offsetWidth >= ctrl_pos.left && _w_pos.top + _w.offsetHeight >= ctrl_pos.top) {
+                    if (_w_pos.left + _w.offsetWidth >= ctrl_pos.left && _w_pos.top + $(_w).height() >= ctrl_pos.top) {
                       this.$refs.recordingCtrls.style['margin-top'] = '-15px';
                       return;
                     }
@@ -2878,6 +2879,7 @@ export default {
                 }
                 if (checkNode) {
                   this.$refs.blockContent.lastChild.remove();
+                  $(this.$refs.blockContent).find('*').removeClass('in-recording');
                 }
                 let lang = this.block.language;
                 if (!lang) {

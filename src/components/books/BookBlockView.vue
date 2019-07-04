@@ -5050,6 +5050,9 @@ export default {
       position: absolute;
       height: 100%;
   }
+  .in-recording {
+      height: 100%;
+  }
 
 </style>
 
