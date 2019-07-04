@@ -846,7 +846,7 @@ export default {
         cache: false,
         get() {
 
-          return this.mode != 'edit' || !this.block || this.tc_isSpotCheckDisabled(this.block);
+          return this.mode != 'edit' || !this.block || this.isSplittedBlock || this.tc_isSpotCheckDisabled(this.block);
         }
       },
       isCompleted: { cache: false,
@@ -3791,13 +3791,13 @@ export default {
               }
               this.$root.$emit('for-bookedit:scroll-to-block-end', this.block._id);
               setTimeout(() => {
-                this.player.playRange('content-' + this.block._id, map[0] + map[1] - length * 1000, map[0] + map[1]);
+                this.player.playRange(`content-${this.block._id}-part-0`, map[0] + map[1] - length * 1000, map[0] + map[1]);
               }, delay);
 
               //console.log(this.player);
               this.player.audio_element.onpause = null;
             };
-            this.player.playRange('content-' + this.block._id, 0, length * 1000);
+            this.player.playRange(`content-${this.block._id}-part-0`, 0, length * 1000);
           }
 
         }

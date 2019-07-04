@@ -116,6 +116,9 @@ export default {
         if (!block.audiosrc || (!this._is('editor', true) && !this.adminOrLibrarian)) {
           return true;
         }
+        if (block.voicework === 'narration' && !this.currentJobInfo.text_cleanup && !(this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
+          return true;
+        }
         if (block.isAudioChanged) {
           return false;
         }
