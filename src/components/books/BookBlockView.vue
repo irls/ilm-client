@@ -94,9 +94,9 @@
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Join with next block</li>
                       <li class="separator"></li>
-                      <li @click.prevent="selectLang($event)"  v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
+                      <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
                           <i class="fa fa-language" aria-hidden="true"></i>
-                          Language: <select v-model='block.language' style="min-width: 100px;" @input="selectLangSubmit(block);">
+                          Language: <select v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
                           <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
                         </select>
                       </li>
@@ -1043,6 +1043,8 @@ export default {
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
 
+      if (!this.block.language) this.block.language = this.meta.language;
+
 //       Vue.nextTick(() => {
 //
 //       });
@@ -1274,7 +1276,7 @@ export default {
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
     //       this.editor.subscribe('positionToolbar', ()=>{})
-        }  else if (this.editor) { 
+        }  else if (this.editor) {
           this.editor.setup();
         }
 
@@ -1533,7 +1535,7 @@ export default {
           .then(response => {
             if (response.status == 200 && response.data) {
               if (partIdx !== null) {
-                
+
                 let part = response.data.parts[partIdx];
                 this.block.setPartContent(partIdx, part.content);
                 this.block.setPartAudiosrc(partIdx, part.audiosrc, part.audiosrc_ver);
@@ -1586,7 +1588,7 @@ export default {
         if (check_realign === true && this.needsRealignment && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
           this.$root.$emit('from-block:save-and-realign-warning', () => {
                   this.$root.$emit('hide-modal');
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1595,7 +1597,7 @@ export default {
                       this.assembleBlockProxy(false, false)
                     }
                   }, 50);
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1739,7 +1741,7 @@ export default {
             }
             return updateTask
               .then(() => {
-                
+
               });
           }
         }
@@ -2499,7 +2501,7 @@ export default {
           this.block.footnotes.splice(p - posDecr, 1);
           ++posDecr;
         });
-        
+
         this.isChanged = false; // to be shure to update view
         this.isChanged = true;
         this.pushChange('footnotes');
@@ -2546,7 +2548,7 @@ export default {
         this.isChanged = true;
         this.pushChange('flags');
       },
-      
+
       onAddFlagPart: function(content, type = 'editor') {
         this.isChanged = true;
         this.pushChange('flags');
@@ -2717,7 +2719,7 @@ export default {
         this.isChanged = true;
         this.pushChange('flags');
       },
-      
+
       onResolveFlagPart: function(ev, partIdx) {
         this.isChanged = true;
         this.pushChange('flags');
@@ -2730,7 +2732,7 @@ export default {
         this.isChanged = true;
         this.pushChange('flags');
       },
-      
+
       onReopenFlagPart: function() {
         this.isChanged = true;
         this.pushChange('flags');
@@ -2743,7 +2745,7 @@ export default {
         this.isChanged = true;
         this.pushChange('flags');
       },
-      
+
       onHideFlagPart: function() {
         this.isChanged = true;
         this.pushChange('flags');
@@ -2756,7 +2758,7 @@ export default {
         this.isChanged = true;
         this.pushChange('flags');
       },
-      
+
       onUnHideFlagPart: function() {
         this.isChanged = true;
         this.pushChange('flags');
@@ -3606,14 +3608,9 @@ export default {
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
-      selectLang(event){
-        event.preventDefault();
-        event.cancelBubble = true;
-        return false;
-      },
-      selectLangSubmit(block){
-        this.isChanged = true;
-        this.pushChange('language');
+      selectLangSubmit(ev){
+        this.block.language = ev.target.value;
+        this.setChanged(true, 'language');
         this.$refs.blockMenu.close();
       },
       setNumVal: _.debounce(function(ev){
@@ -3835,7 +3832,7 @@ export default {
         /*if (val) {
           this.isChanged = true;
         } else {
-          
+
         }*/
         if (set) {
           this.pushChange(val);
@@ -3899,7 +3896,7 @@ export default {
               }
             }
           }
-          
+
         }
       },
       'block.isUpdated' (newVal, oldVal) {
@@ -5072,7 +5069,7 @@ export default {
     }
   }
   .narrate-mode-left {
-    width: 44px; 
+    width: 44px;
     vertical-align: middle;
   }
   span.check-span {
