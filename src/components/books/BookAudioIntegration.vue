@@ -1017,7 +1017,7 @@
           return false;
         }
       },
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'saveChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');

@@ -31,8 +31,8 @@ import Vue from 'vue'
 
             let dir = this.$refs.menu.getAttribute('dir') || 'top';
             x+= 2;
-            if (x + $(this.$refs.menu).outerWidth() > window.innerWidth) {
-              x = window.innerWidth - $(this.$refs.menu).outerWidth() - 10;
+            if (x + $(this.$refs.menu).outerWidth() > $('.content-scroll-wrapper').outerWidth()) {
+              x = $('.content-scroll-wrapper').outerWidth() - $(this.$refs.menu).outerWidth() - 10;
             }
             this.left = x + 'px';
             this.top = y + 'px';
