@@ -1,6 +1,6 @@
 import axios from 'axios'
-import api_config from './api_config.js'
-import access from './access.js';
+        import api_config from './api_config.js'
+        import access from './access.js';
 import {mapGetters} from 'vuex';
 
 export default {
