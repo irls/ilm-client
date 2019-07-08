@@ -4210,7 +4210,7 @@ export default {
 
         .-hidden-hover {
           display: block;
-          height: 31px;
+          height: 32px;
         }
 
         &:hover {
