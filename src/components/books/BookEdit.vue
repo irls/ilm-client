@@ -2224,6 +2224,17 @@ export default {
           }
         }
       }
+      .table-body {
+
+        &.-content {
+
+          &:hover {
+            .-hidden {
+              visibility: hidden;
+            }
+          }
+        }
+      }
     }
 
 
