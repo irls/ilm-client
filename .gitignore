@@ -11,3 +11,5 @@ config/env.prod.sh
 Dockerfile
 *.orig
 .directory
+*.kate-swp
+*.swp

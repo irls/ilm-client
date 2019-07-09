@@ -74,6 +74,7 @@
                   <span v-if="$refs.upload">
                   {{$refs.upload.uploaded}}
                   </span>
+                  <span><input type="checkbox" id="checkbox" v-model="autoAlign"> Align automatically </span>
                 </div>
 
                 <br><br><br><br>
@@ -142,6 +143,7 @@ export default {
       uploadProgress: "Uploading Files...",
       audioURL: '',
       audioFiles: [],
+      autoAlign: false,
 
       file_name_book : '',
       file_name_audio : '',
@@ -394,6 +396,7 @@ export default {
         // upload updated file by engineer or another file by editor
         //vm.audiobook.importFiles = [];
         //this.formData.append('audiobook', JSON.stringify(vm.audiobook));
+        toUpload.autoAlign = this.autoAlign;
         api.post(api_url + '/' + this.audiobook._id, toUpload, {}).then((response) => {
           if (response.status===200) {
             // hide modal after one second

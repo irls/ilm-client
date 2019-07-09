@@ -15,6 +15,9 @@ PouchDB.plugin(hoodie)
 
 Vue.use(Vuex)
 
+
+Vue.prototype.globalJobInfo ={};
+
 const ILM_CONTENT = 'ilm_content';
 const ILM_CONTENT_META = 'ilm_content_meta';
 const ILM_CONTENT_FILES = 'ilm_library_files';
@@ -169,7 +172,8 @@ export const store = new Vuex.Store({
     jobInfoRequest: null,
     jobInfoTimer: null,
     jobStatusError: '',
-    bookMode: null
+    bookMode: null,
+    processQueueWatch: null
   },
 
   getters: {
@@ -243,19 +247,19 @@ export const store = new Vuex.Store({
 
     isBlocked: state => state.blockers.length > 0,
     blockers: state => state.blockers,
-    isBlockLocked: state => (id) => {
+    isBlockLocked: state => (id, partIdx = null) => {
       //if (typeof localStorage === 'undefined') {
         //return false;
       //}
       let locked = false;
-      if (state.lockedBlocks.length > 0) {
+      if (state.lockedBlocks.length > 0 && partIdx === null) {
         //let lock = localStorage.getItem('lock_' + id);
         //console.log(lock, id)
         let l = state.lockedBlocks.find(_l => _l._id === id);
         locked = l ? true : false;
       }
       if (!locked && state.aligningBlocks.length > 0) {
-        let l = state.aligningBlocks.find(_l => _l._id === id);
+        let l = state.aligningBlocks.find(_l => _l._id === id && (_l.partIdx === partIdx));
         locked = l ? true : false;
       }
       return locked;
@@ -647,7 +651,7 @@ export const store = new Vuex.Store({
           } else {
             lock = data;
           }
-          localStorage.setItem('lock_' + data.block.blockid, JSON.stringify(lock));
+          //localStorage.setItem('lock_' + data.block.blockid, JSON.stringify(lock));
           let r = state.lockedBlocks.find(l => l._id === data.block.blockid);
           if (!r) {
             state.lockedBlocks.push({_id: data.block.blockid, type: lock.type});
@@ -712,7 +716,7 @@ export const store = new Vuex.Store({
                 //state.lockedBlocks = [];
                 remove_lock();
               } else {
-                localStorage.setItem('lock_' + data.block.blockid, JSON.stringify(lock));
+                //localStorage.setItem('lock_' + data.block.blockid, JSON.stringify(lock));
                 //state.lockedBlocks[data.block._id] = {type: lock.type};
                 let r = state.lockedBlocks.find(l => l._id === data.block.blockid);
                 if (!r) {
@@ -763,7 +767,7 @@ export const store = new Vuex.Store({
     set_aligning_blocks(state, blocks) {
       state.aligningBlocks = [];
       if (blocks.length) blocks.forEach(b => {
-        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id});
+        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx});
       });
     },
     set_storeList (state, blockObj) {
@@ -1672,14 +1676,18 @@ export const store = new Vuex.Store({
     },
     putBlockProofread({state, dispatch, commit}, block) {
       commit('set_blocker', 'putBlock');
-      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', {
+      let update = {
         block: {
           blockid: block.blockid, 
           bookid: block.bookid, 
           flags: block.flags,
           content: block.content
         }
-      })
+      };
+      if (typeof block.parts !== 'undefined' && Array.isArray(block.parts) && block.parts.length > 1) {
+        update.block.parts = block.parts;
+      }
+      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', update)
         .then((response) => {
           commit('clear_blocker', 'putBlock');
           dispatch('tc_loadBookTask', block.bookid);
@@ -1692,19 +1700,35 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    putBlockNarrate({state, dispatch, commit}, block) {
+    putBlockNarrate({state, dispatch, commit}, [block, realign, partIdx]) {
       commit('set_blocker', 'putBlock');
-      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/narrate', {
+      let url = `${state.API_URL}book/block/${block.blockid}/narrate`;
+      if (realign) {
+        url+= '?realign=true';
+      }
+      let update = {
         block: {
           blockid: block.blockid, 
           bookid: block.bookid, 
           flags: block.flags,
           content: block.content
         }
-      })
+      };
+      if (typeof partIdx !== 'undefined') {
+        update.block.partIdx = partIdx;
+      } else {
+        update.block.parts = block.parts;
+      }
+      if (typeof block.parts !== 'undefined' && Array.isArray(block.parts) && block.parts.length > 1) {
+        update.block.parts = block.parts;
+      }
+      return axios.put(url, update)
         .then((response) => {
-          commit('clear_blocker', 'putBlock');
-          return Promise.resolve(response.data);
+          return dispatch('getBookAlign')
+            .then(() => {
+              commit('clear_blocker', 'putBlock');
+              return Promise.resolve(response.data);
+            })
         })
         .catch(err => {
           commit('clear_blocker', 'putBlock');
@@ -2410,6 +2434,7 @@ export const store = new Vuex.Store({
                 commit('SET_ALLOW_BOOK_PUBLISH', true);
               }
             }
+            Vue.prototype.globalJobInfo = state.currentJobInfo;
             return Promise.resolve();
           })
           .catch(err => {
@@ -2482,6 +2507,7 @@ export const store = new Vuex.Store({
             .then((doc) => {
               if (!doc.data.error) {
                 state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
+                dispatch('getProcessQueue');
                 return Promise.all([dispatch('tc_loadBookTask', state.currentBookMeta.bookid),
                   dispatch('getCurrentJobInfo'),
                   dispatch('setCurrentBookCounters')])
@@ -2672,5 +2698,75 @@ export const store = new Vuex.Store({
           return Promise.reject();
         });
     },
+    updateBlockPart({state, dispatch}, [id, update, blockIdx, realign]) {
+      let url = `books/blocks/${encodeURIComponent(id)}/part/${blockIdx}`;
+      if (realign) {
+        url+= '?realign=true';
+      }
+      return axios.put(state.API_URL + url, update)
+        .then((response) => {
+          return Promise.all([dispatch('getBookAlign'), dispatch('getCurrentJobInfo')])
+            .then(() => {
+              return Promise.resolve(response);
+            });
+        });
+    },
+    getProcessQueue({state, dispatch, commit}) {
+      if (state.currentBookMeta.bookid) {
+        return axios.get(state.API_URL + 'process_queue/' + state.currentBookMeta.bookid)
+          .then(response => {
+            //locks
+            //console.log(response.data);
+            let oldIds = [];
+            if (typeof response.data !== 'undefined' && Array.isArray(response.data)) {
+              state.lockedBlocks.forEach(b => {
+                let r = response.data.find(_r => {
+                  return _r.blockid === b._id && _r.taskType === b.type;
+                });
+                if (!r) {
+                  oldIds.push(b._id);
+                  /*dispatch('getBlock', b._id)
+                    .then(block => {
+                      store.commit('set_storeList', new BookBlock(block));
+                      return Promise.resolve();
+                    });*/
+                }
+              });
+              if (oldIds.length > 0) {
+                dispatch('getBlocks', oldIds)
+                  .then((blocks) => {
+                    blocks.forEach(block => {
+                      commit('set_storeList', new BookBlock(block));
+                      dispatch('clearBlockLock', {block: {blockid: block.blockid}});
+                    });
+                  });
+              }
+              if (response.data.length > 0) {
+                response.data.forEach(r => {
+                  delete r.content;
+                  dispatch('addBlockLock', {block: r, type: r.taskType, inProcess: true});
+                });
+                dispatch('startProcessQueueWatch');
+              } else {
+                dispatch('stopProcessQueueWatch');
+              }
+              //console.log(state.lockedBlocks)
+            }
+          });
+      }
+    },
+    startProcessQueueWatch({state, dispatch}) {
+      if (!state.processQueueWatch) {
+        state.processQueueWatch = setInterval(() => {
+          dispatch('getProcessQueue');
+        }, 20000);
+      }
+    },
+    stopProcessQueueWatch({state}) {
+      if (state.processQueueWatch) {
+        clearInterval(state.processQueueWatch);
+        state.processQueueWatch = null;
+      }
+    }
   }
 })

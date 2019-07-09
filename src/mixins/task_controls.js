@@ -1,19 +1,19 @@
 import axios from 'axios'
-import api_config from './api_config.js'
-import access from './access.js';
+        import api_config from './api_config.js'
+        import access from './access.js';
 import {mapGetters} from 'vuex';
 
 export default {
-    data() {
-      return {
+  data() {
+    return {
         tc_test: 'Test property',
         editor_tasks: ['fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block', 'text-cleanup', 'master-audio'],
         narrator_tasks: ['narrate-block', 'fix-block-narration'],
         proofer_tasks: ['approve-block', 'approve-revoked-block'],
         editor_resolve_tasks: ['fix-block-narration']
-      }
-    },
-    mounted() {
+    }
+  },
+  mounted() {
   },
   mixins: [api_config, access],
   methods: {
@@ -26,12 +26,30 @@ export default {
       })
       return task ? task : {}
     },
-    tc_getBlockTask(blockid) {
-      let tasks = this.$store.state.tc_currentBookTasks.tasks.find((t) => {
+    tc_getBlockTask(blockid, mode = null) {
+      let task = this.$store.state.tc_currentBookTasks.tasks.find((t) => {
         return t.blockid == blockid;
-      })
-      if (tasks && tasks.isArray) return tasks[0];
-      return tasks;
+      });
+      if (task && mode) {
+        switch(mode) {
+          case 'edit': 
+            if (this.editor_tasks.indexOf(task.type) === -1) {
+              return false;
+            }
+            break;
+          case 'narrate':
+            if (this.narrator_tasks.indexOf(task.type) === -1) {
+              return false;
+            }
+            break;
+          case 'proofread':
+            if (this.proofer_tasks.indexOf(task.type) === -1) {
+              return false;
+            }
+            break;
+        }
+      }
+      return task;
     },
     tc_isShowRejectBlockAction(blockid) {
       return this.tc_hasTask('content_approve') && this.$store.state.tc_currentBookTasks.rejected_blocks.content.indexOf(blockid) === -1;
@@ -94,6 +112,9 @@ export default {
     },
     tc_isSpotCheckDisabled(block) {
       if (!block.audiosrc || (!this._is('editor', true) && !this.adminOrLibrarian)) {
+        return true;
+      }
+      if (block.voicework === 'narration' && !this.currentJobInfo.text_cleanup && !(this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
         return true;
       }
       if (block.isAudioChanged) {
@@ -266,20 +287,39 @@ export default {
       }
       return false;
     },
-    tc_getBlockTaskOtherRole(blockid) {
-      let tasks = false;
+    tc_getBlockTaskOtherRole(blockid, mode = null) {
+      let task = false;
       if (this.$store.state.tc_currentBookTasks.can_resolve_tasks) {
-        tasks = this.$store.state.tc_currentBookTasks.can_resolve_tasks.find((t) => {
+        task = this.$store.state.tc_currentBookTasks.can_resolve_tasks.find((t) => {
           return t.blockid == blockid;
         })
       }
-      if (!tasks && this.currentJobInfo.can_resolve_tasks) {
-        tasks = this.currentJobInfo.can_resolve_tasks.find(t => {
+      if (!task && this.currentJobInfo.can_resolve_tasks) {
+        task = this.currentJobInfo.can_resolve_tasks.find(t => {
           return t.blockid == blockid;
         });
       }
+      if (task && mode) {
+        switch(mode) {
+          case 'edit': 
+            if (this.editor_tasks.indexOf(task.type) === -1) {
+              return false;
+            }
+            break;
+          case 'narrate':
+            if (this.narrator_tasks.indexOf(task.type) === -1) {
+              return false;
+            }
+            break;
+          case 'proofread':
+            if (this.proofer_tasks.indexOf(task.type) === -1) {
+              return false;
+            }
+            break;
+        }
+      }
       //if (tasks && tasks.isArray) return tasks[0];
-      return tasks;
+      return task;
     },
     tc_showBlockAudioEdit(blockid) {
       if (this._is('editor', true) && this.currentJobInfo.workflow.status === 'active') {
@@ -399,7 +439,7 @@ export default {
           if (this.editor_tasks.indexOf(task.type) === -1 && this.editor_resolve_tasks.indexOf(task.type) === -1) {
             return true;
           }
-          if (['tts', 'audio_file'].indexOf(block.voicework) !== -1 && !block.audiosrc) {
+          if (['tts', 'audio_file'].indexOf(block.voicework) !== -1 && !block.hasCompleteAudio()) {//check complete audio on all subblocks
             return true;
           }
           if (block.footnotes && Array.isArray(block.footnotes)) {
@@ -416,7 +456,7 @@ export default {
             return true;
           }
 
-          if (['narration'].indexOf(block.voicework) !== -1 && !block.audiosrc) {
+          if (['narration'].indexOf(block.voicework) !== -1 && !block.hasCompleteAudio()) {//check complete audio on all subblocks
             return true;
           }
           break;
@@ -493,6 +533,9 @@ export default {
         switch (mode) {
           case 'edit':
             if (flags_summary.dir === 'narrator') {
+              if (block.voicework !== 'narration') {
+                return true;
+              }
               return this.editor_resolve_tasks.indexOf(task.type) === -1 ? false : true;
             }
             break;

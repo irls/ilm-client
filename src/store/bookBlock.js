@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const _id = require('uniqid');
 import superlogin from 'superlogin-client';
+import Vue from 'vue';
 
 let defBlock = [
   '_id',
@@ -31,7 +32,8 @@ let defBlock = [
   'status',
   'audiosrc_ver',
   'blockid',
-  'manual_boundaries'
+  'manual_boundaries',
+  'parts'
 ]
 
 let BlockTypes = {
@@ -195,6 +197,13 @@ class BookBlock {
     this.illustration_height = init.illustration_height || false;
     this.blockid = init.blockid || false;
     this.manual_boundaries = init.manual_boundaries || [];
+    let parts = init.parts || [];
+    if (Vue.prototype.globalJobInfo.id && (Vue.prototype.globalJobInfo.mastering || Vue.prototype.globalJobInfo.mastering_complete)) {
+      this.parts = [];
+    } else {
+      this.parts = parts;
+    }
+    
   }
 
   clean() {
@@ -469,6 +478,37 @@ class BookBlock {
     }
     return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
   }
+  
+  getPartAudiosrc(partIdx, ver = false, full = true) {
+    let part = this.parts[partIdx];
+    if (!part || this.parts.length < 2) {
+      part = this;
+    }
+    if (!part) {
+      return '';
+    }
+    let path = !part.audiosrc_ver || typeof part.audiosrc_ver[ver] === 'undefined' ? part.audiosrc : part.audiosrc_ver[ver];
+    if (!path) {
+      return false;
+    }
+    return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
+  }
+  
+  getPartContent(partIdx) {
+    if (!(Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined') && partIdx === 0) {
+      return this.content;
+    } else {
+      return this.parts[partIdx].content;
+    }
+  }
+  
+  getPartManualBoundaries(partIdx) {
+    if (!(Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined') && partIdx === 0) {
+      return this.manual_boundaries || [];
+    } else {
+      return this.parts[partIdx].manual_boundaries || [];
+    }
+  }
 
   getAudiosrcFootnote(idx, ver = false, full = true) {
     let f = this.footnotes && this.footnotes[idx] ? this.footnotes[idx] : false;
@@ -490,23 +530,60 @@ class BookBlock {
   setContent(content) {
     this.set('content', content);
   }
+  
+  setPartContent(partIdx, content) {
+    let partCheck = Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+    if (partCheck) {
+      this.set(`parts.${partIdx}.content`, content);
+    } else if (partIdx === 0) {
+      this.setContent(content);
+    }
+  }
 
   setAudiosrc(path, ver = {}) {
     this.set('audiosrc', path);
     this.set('audiosrc_ver', ver);
   }
   
+  setPartAudiosrc(partIdx, path, ver = {}) {
+    let partCheck = Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+    if (partCheck) {
+      this.set(`parts.${partIdx}.audiosrc`, path);
+      this.set(`parts.${partIdx}.audiosrc_ver`, ver);
+    } else if (partIdx === 0) {
+      this.setAudiosrc(path, ver);
+    }
+  }
+  
   setManualBoundaries(boundaries = []) {
     this.set('manual_boundaries', boundaries);
+  }
+  
+  setPartManualBoundaries(partIdx, boundaries = []) {
+    let partCheck = Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+    if (partCheck) {
+      this.set(`parts.${partIdx}.manual_boundaries`, boundaries);
+    } else if (partIdx === 0) {
+      this.setManualBoundaries(boundaries);
+    }
   }
 
   undoContent() {
     this.undo('content');
   }
+  
+  undoPartContent(partIdx) {
+    this.undo(`parts.${partIdx}.content`);
+  }
 
   undoAudiosrc() {
     this.undo('audiosrc');
     this.undo('audiosrc_ver');
+  }
+  
+  undoPartAudiosrc(partIdx) {
+    this.undo(`parts.${partIdx}.audiosrc`);
+    this.undo(`parts.${partIdx}.audiosrc_ver`);
   }
   
   undoManualBoundaries() {
@@ -544,12 +621,29 @@ class BookBlock {
   }
 
   hasAudio() {
-    return (this.audiosrc && this.audiosrc.length);
+    let hasAudio = (this.audiosrc && this.audiosrc.length);
+    if (!hasAudio && Array.isArray(this.parts) && this.parts.length > 0) {
+      hasAudio = this.parts.find(p => {
+        return p.audiosrc && p.audiosrc.length;
+      });
+    }
+    return hasAudio ? true : false;
+  }
+  
+  hasCompleteAudio() {
+    let hasAudio = (this.audiosrc && this.audiosrc.length);
+    if (this.voicework === 'narration' && Array.isArray(this.parts) && this.parts.length > 1) {
+      let noAudio = this.parts.find(p => {
+        return !p.audiosrc || !p.audiosrc.length;
+      });
+      hasAudio = noAudio ? false : true;
+    }
+    return hasAudio ? true : false;
   }
 
-  getClass() {
+  getClass(mode = null) {
     let result = this.type;
-    if (this.classes && typeof this.classes === 'object') {
+    if (mode !== 'narrate' && this.classes && typeof this.classes === 'object') {
       for (let key in this.classes) {
         if (key) {
           if (this.classes[key] && this.classes[key] !== '') result += ' '+ this.classes[key];
@@ -630,6 +724,26 @@ class BookBlock {
         o[f] = this.history[field].pop();
       }
     }
+  }
+  
+  getIsChanged() {
+    if (this.isChanged) {
+      return true;
+    }
+    let part = this.parts.find(p => {
+      return p.isChanged === true;
+    });
+    return part ? true : false;
+  }
+  
+  getIsAudioChanged() {
+    if (this.isAudioChanged) {
+      return true;
+    }
+    let part = this.parts.find(p => {
+      return p.isAudioChanged === true;
+    });
+    return part ? true : false;
   }
 
 }

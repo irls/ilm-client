@@ -1,55 +1,51 @@
 <template>
 <div ref="viewBlock" class="block-preview">
   <div v-if="block && (block.type != 'par' || (loaded === true || blockO.loaded === true))"
-    :class="['table-body -block', blockOutPaddings]">
+    :class="['table-body -block -subblock -mode-' + mode, blockOutPaddings]">
 
-    <div :class="['table-cell', 'controls-left']">
+    <div :class="['table-cell', 'controls-left']" v-if="mode === 'narrate'">
       <div class="table-row"></div>
       <div class="table-row check-row"></div>
     </div>
     <!--<div :class="['table-cell', 'controls-left']">-->
     <div :class="['table-cell', {'completed': isCompleted}]">
-      <div :class="['table-body', '-content', '-langblock-' + getBlockLang]">
+      <div :class="['table-body', '-content']">
         <div class="table-row-flex controls-top"></div>
         <!--<div class="table-row-flex controls-top">-->
-        <template v-for="(blockPart, blockPartIdx) in blockParts">
-          <BookBlockPartPreview
-            :blockRid = "blockRid"
-            :blockId = "blockId"
-            :blockO = "blockO"
-            :block = "block"
-            :blockPart="blockPart"
-            :blockPartIdx="blockPartIdx"
-            :id="'v-' + blockId + '-' + blockPartIdx"
-            :isSplittedBlock="isSplittedBlock"
-            ></BookBlockPartPreview>
-        </template>
-        <!--<div :class="['table-row ilm-block']">-->
+        <div :class="['table-row ilm-block']">
 
-        <div class="table-row content-footnotes"
-          v-if="block.footnotes.length > 0 && mode !== 'narrate'">
-          <div class="table-body footnote"
-            v-for="(footnote, ftnIdx) in block.footnotes">
+        <hr v-if="block.type=='hr'"
+          :class="[getClass]"/>
 
-            <div :class="['table-row controls-top', {'completed': isCompleted}]">
-            </div>
-
-            <div class="table-row">
-              <div class="table-cell -num">{{ftnIdx+1}}.</div>
-              <div
-                :class="['content-wrap-footn-preview table-cell -text', {'js-hidden': blockO.loaded !== true}, '-langftn-' + getFtnLang(footnote.language)]"
-                v-html="footnote.content">
-              </div>
-              <div class="table-cell -control"></div>
-            </div>
-            <!--<div class="table-row">-->
-
+        <div v-else-if="block.type == 'illustration'"
+        :class="['table-body illustration-block']">
+          <img v-if="block.illustration" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+          :height="illustrationHeight"
+          :class="[getClass]"/>
+          <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': isChanged && !isIllustrationChanged}]" v-if="allowEditing">
+            <div class="preview-container"></div>
           </div>
-          <!--<div class="table-body footnote"-->
-        </div>
-        <!--<div class="table-row content-footnotes"-->
 
-        <div class="table-row controls-bottom">
+          <div :class="['table-row content-description', getClass]">
+            <div class="content-wrap-desc description"
+              v-html="block.description">
+            </div>
+          </div>
+
+        </div>
+        <!--<img v-if="block.illustration"-->
+
+        <template v-else>
+          <div v-cloak
+          :class="['content-wrap-preview', block.getClass(mode), {'js-hidden': blockO.loaded !== true}]"
+          v-html="blockPart.content">
+          </div>
+        </template>
+        <!--<div class="content-wrap">-->
+
+        </div>
+        <!--<div :class="['table-row ilm-block']">-->
+        <div class="table-row controls-bottom" v-if="isSplittedBlock">
           <div class="-left">
             <span>
               <i :class="['glyphicon']"></i>
@@ -61,16 +57,12 @@
       <!--<div :class="['table-body', '-content']">-->
     </div>
     <!--<div :class="['table-cell']">-->
-    <div class="table-cell controls-right"></div>
 
   </div>
   <!--<div v-if="loaded === true || blockO.loaded === true"-->
-  <template v-else v-for="(blockPart, blockPartIdx) in blockParts">
+  <div v-else :class="['in-loading']">
     <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
-    <div :id="'v-' + blockId + '-' + blockPartIdx" :class="['content-process-run', 'preloader-loading']">
-      
-    </div>
-  </template>
+  </div>
 </div>
 </template>
 
@@ -78,13 +70,12 @@
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import access             from '../../mixins/access.js';
-import BookBlockPartPreview from './BookBlockPartPreview';
-import { mapGetters }     from 'vuex';
+import {mapGetters} from 'vuex'
 
   export default {
     name: 'book-block-preview',
     props: [
-      'blockRid', 'blockO', 'block', 'mode'
+      'blockRid', 'blockO', 'block', 'blockPart', 'blockPartIdx', 'isSplittedBlock'
     ],// loaded property is necessary for updating first part of loaded blocks, VueJS is not updating automatically
     data() {
       return {
@@ -92,15 +83,12 @@ import { mapGetters }     from 'vuex';
       }
     },
     mixins: [access, taskControls, apiConfig],
-    components: {
-      BookBlockPartPreview: BookBlockPartPreview
-    },
     computed: {
-      ...mapGetters({
+      /*...mapGetters({
         meta: 'currentBookMeta',
-//         parlist: 'storeList',
-//         parlistO: 'storeListO'
-      }),
+        parlist: 'storeList',
+        parlistO: 'storeListO'
+      }),*/
       blockId: function() {
         return this.blockO.blockid;
       },
@@ -122,7 +110,7 @@ import { mapGetters }     from 'vuex';
       },
       getClass: { cache: true,
         get: function () {
-          return this.block.getClass();
+          return this.block.getClass(this.mode);
         }
       },
       getIllustration: { cache: true,
@@ -137,18 +125,14 @@ import { mapGetters }     from 'vuex';
       },
       blockParts: {
         get() {
-          if (!this.block) {
-            return [{}];
-          }
-          if (this.isSplittedBlock) {
+          if (this.block.parts && this.block.parts.length > 0) {
             return this.block.parts;
           } else {
             return [
               {
                 content: this.block.content,
                 audiosrc: this.block.audiosrc,
-                audiosrc_ver: this.block.audiosrc_ver,
-                manual_boundaries: this.block.manual_boundaries
+                audiosrc_ver: this.block.audiosrc_ver
               }
             ];
           }
@@ -170,34 +154,23 @@ import { mapGetters }     from 'vuex';
           return false;
         }
       },
-      isSplittedBlock: {
+      illustrationHeight: {
         get() {
-          if (this.block.voicework === 'narration' && !this.currentJobInfo.text_cleanup && Array.isArray(this.block.parts) && this.block.parts.length > 1 && !(this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
-            return true;
+          if (this.mode === 'narrate') {
+            return parseInt((700 * this.block.illustration_height) / this.block.illustration_width);
+          } else {
+            return this.block.illustration_height;
           }
-          return false;
         },
         cache: false
       },
-      getBlockLang: {
-        cache: false,
-        get() {
-          if (this.block.language && this.block.language.length) {
-            return this.block.language;
-          } else {
-            return this.meta.language;
-          }
-        }
-      },
+      ...mapGetters({
+        mode: 'bookMode'
+      })
     },
     methods: {
-      getFtnLang: function(ftnLang) {
-        if (ftnLang && ftnLang.length) {
-          return ftnLang;
-        } else {
-          return this.meta.language;
-        }
-      }
+
     }
   }
 </script>
+

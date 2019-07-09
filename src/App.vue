@@ -27,6 +27,7 @@ export default {
 
   watch: {
     '$route' () {
+      this.$root.$emit('for-audioeditor:force-close');
       let mode = this.$route.meta && this.$route.meta.mode ? this.$route.meta.mode : null;
       this.$store.commit('set_book_mode', mode);
       if (this.$route.params.hasOwnProperty('bookid')) {
