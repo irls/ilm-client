@@ -2330,7 +2330,7 @@ export default {
                 this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
                 this.block.setManualBoundaries(response.data.manual_boundaries || []);
-                this.isAudioChanged = true;
+                //this.isAudioChanged = true;
                 this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, true, this.block);
               } else {
                 this.block.setContentFootnote(footnoteIdx, response.data.content);
@@ -2406,7 +2406,7 @@ export default {
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
                 this.block.setManualBoundaries(response.data.manual_boundaries || []);
                 this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, true, this.block);
-                this.isAudioChanged = true;
+                //this.isAudioChanged = true;
               } else {
                 this.block.setContentFootnote(footnoteIdx, response.data.content);
                 this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
