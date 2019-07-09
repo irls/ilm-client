@@ -2814,6 +2814,7 @@ export default {
           }*/
           if (!this.isSplittedBlock) {
             this.block.isAudioChanged = val;
+            this.$emit('isAudioChanged', val);
           } else {
             if (this.block.parts[this.blockPartIdx]) {
               this.block.parts[this.blockPartIdx].isAudioChanged = val;
