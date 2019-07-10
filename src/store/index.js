@@ -795,17 +795,21 @@ export const store = new Vuex.Store({
     set_block_selection(state, selection) {
       state.blockSelection.start = typeof selection.start !== 'undefined' ? selection.start : {};
       state.blockSelection.end = typeof selection.end !== 'undefined' ? selection.end : {};
+      const blockIdRgx = /.*(?:\-|\_){1}([a-zA-Z0-9]+)$/;
+
       if (state.blockSelection.start._id) {
-        let _id_short = state.blockSelection.start._id.split('_').pop();
+        let _id_short = blockIdRgx.exec(state.blockSelection.start._id);
+        _id_short = (_id_short && _id_short.length == 2) ? _id_short[1] : state.blockSelection.start._id;
         if (_id_short.length > 7) {
-          _id_short = _id_short.substr(0, 2) + '...' + _id_short.substr(_id_short.length - 3, 2);
+          _id_short = _id_short.substr(0, 4) + '...' + _id_short.substr(_id_short.length - 4, 4);
         }
         state.blockSelection.start._id_short = _id_short;
       }
       if (state.blockSelection.end._id) {
-        let _id_short = state.blockSelection.end._id.split('_').pop();
+        let _id_short = blockIdRgx.exec(state.blockSelection.end._id);
+        _id_short = (_id_short && _id_short.length == 2) ? _id_short[1] : state.blockSelection.end._id;
         if (_id_short.length > 7) {
-          _id_short = _id_short.substr(0, 2) + '...' + _id_short.substr(_id_short.length - 3, 2);
+          _id_short = _id_short.substr(0, 4) + '...' + _id_short.substr(_id_short.length - 4, 4);
         }
         state.blockSelection.end._id_short = _id_short;
       }
@@ -822,7 +826,7 @@ export const store = new Vuex.Store({
     set_job_status_error(state, error) {
       state.jobStatusError = error;
     },
-    
+
     set_book_mode(state, mode) {
       state.bookMode = mode || null;
     }
@@ -1678,8 +1682,8 @@ export const store = new Vuex.Store({
       commit('set_blocker', 'putBlock');
       let update = {
         block: {
-          blockid: block.blockid, 
-          bookid: block.bookid, 
+          blockid: block.blockid,
+          bookid: block.bookid,
           flags: block.flags,
           content: block.content
         }
@@ -1708,8 +1712,8 @@ export const store = new Vuex.Store({
       }
       let update = {
         block: {
-          blockid: block.blockid, 
-          bookid: block.bookid, 
+          blockid: block.blockid,
+          bookid: block.bookid,
           flags: block.flags,
           content: block.content
         }

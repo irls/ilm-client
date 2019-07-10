@@ -1511,6 +1511,10 @@ export default {
       .catch(error => {})
     },
 
+    goToBlock(blockId, ev) {
+      this.$router.push({name: this.$route.name, params: {}});
+      this.$router.push({name: this.$route.name, params:  { block: blockId }});
+    },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection'])
   }
