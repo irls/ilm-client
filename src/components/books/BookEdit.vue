@@ -725,7 +725,7 @@ export default {
       })
       .catch((err)=>{})
     },
-    
+
     putBlockProofreadProxy: function(block) {
       return this.putBlockProofread(block)
         .then(response => {
@@ -735,7 +735,7 @@ export default {
           return Promise.reject(err);
         });
     },
-    
+
     putBlockNarrateProxy: function(block) {
       return this.putBlockNarrate(block)
         .then(response => {
@@ -745,7 +745,7 @@ export default {
           return Promise.reject(err);
         });
     },
-    
+
     _refreshAfterUpdate(block) {
       this.updateVisibleBlocks();
       this.refreshPreviewTmpl([block.blockid]);
@@ -1148,17 +1148,17 @@ export default {
                 if (block.type !== blockBefore.type) {
                   this.doJoinBlocks.show = false;
                   this.unableJoinMessage();
-                  return Promise.reject('type');
+                  return Promise.reject(new Error('types_missmatch'));
                 }
                 if (!this.parlist.has(blockBefore.blockid)) {
                   this.doJoinBlocks.show = false;
                   this.unableJoinMessage();
-                  return Promise.reject('type');
+                  return Promise.reject(new Error('types_missmatch'));
                 }
                 if (block.voicework !== blockBefore.voicework) {
                   this.doJoinBlocks.show = false;
                   this.unableToJoinVoiceworkMessage();
-                  return Promise.reject('type');
+                  return Promise.reject(new Error('types_missmatch'));
                 }
                 this.doJoinBlocks.block = {};
                 let currBlockRef = this.$refs.blocks.find((blockRef)=>{
@@ -1280,17 +1280,17 @@ export default {
                 if (block.type !== blockAfter.type) {
                   this.doJoinBlocks.show = false;
                   this.unableJoinMessage();
-                  return Promise.reject('type');
+                  return Promise.reject(new Error('types_missmatch'));
                 }
                 if (!this.parlist.has(this.parlistO.getOutId(block.blockid))) {
                   this.doJoinBlocks.show = false;
                   this.unableJoinMessage();
-                  return Promise.reject('type');
+                  return Promise.reject(new Error('types_missmatch'));
                 }
                 if (block.voicework !== blockAfter.voicework) {
                   this.doJoinBlocks.show = false;
                   this.unableToJoinVoiceworkMessage();
-                  return Promise.reject('type');
+                  return Promise.reject(new Error('types_missmatch'));
                 }
                 this.doJoinBlocks.block = {};
                 let currBlockRef = this.$refs.blocks.find((blockRef)=>{
