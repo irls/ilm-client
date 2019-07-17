@@ -395,7 +395,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -1884,33 +1884,58 @@ export default {
       },
 
       _startRecording() {
-        this.$modal.show(RecordingBlock, {
-          text: this.narrationBlockContent,
-          cancelRecording: this.cancelRecording,
-          stopRecording: this._stopRecording,
-          pauseRecording: this.pauseRecording,
-          resumeRecording: this.resumeRecording
-        }, 
-        {
-          clickToClose: false,
-          resizable: false,
-          draggable: false,
-          scrollable: false,
-          height: 'auto',
-          width: '700px'
-        });
-        //this.$root.$emit('show-modal', {
-          //template: RecordingBlock
-        //})
-          //this.$emit('startRecording', this.blockPartIdx);
-          this.isRecording = true;
-          this.startRecording(this.blockPartIdx)
-            .then(() => {
-                
-            })
-            .catch(err => {
-              this.isRecording = false;
+        return this.initRecorder()
+          .then(() => {
+            
+            this.$modal.show(RecordingBlock, {
+              text: this.narrationBlockContent,
+              cancelRecording: this.cancelRecording,
+              stopRecording: this._stopRecording,
+              pauseRecording: this.pauseRecording,
+              resumeRecording: this.resumeRecording
+            }, 
+            {
+              clickToClose: false,
+              resizable: false,
+              draggable: false,
+              scrollable: false,
+              height: 'auto',
+              width: '700px'
             });
+            //this.$root.$emit('show-modal', {
+              //template: RecordingBlock
+            //})
+              //this.$emit('startRecording', this.blockPartIdx);
+              this.isRecording = true;
+              this.startRecording(this.blockPartIdx)
+                .then(() => {
+
+                })
+                .catch(err => {
+                  this.isRecording = false;
+                });
+          })
+          .catch(err => {
+            
+            this.$root.$emit('show-modal', {
+              title: '<center><h4>Microphone is not working</h4></center>',
+              text: `<center>Please ensure:</center>
+  <ul>
+  <li>You have a working microphone connected to your computer with the volume turned up.</li>
+  <li>Your browser allows accessing your microphone.</li>
+  </ul>`,
+              buttons: [
+                {
+                  title: 'OK',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                  },
+                  class: ['btn btn-primary']
+                }
+              ],
+              class: ['align-modal']
+            });
+          })
       },
       _stopRecording(start_next = false) {
         if (!this.isRecording) {
@@ -2896,55 +2921,7 @@ export default {
             this.cancelRecording();
           }
         }
-      }/*,
-      'isRecording': {
-        handler(val) {
-          if (val === true) {
-            Vue.nextTick(()=>{
-              if (this.$refs.recordingCtrls && this.$refs.blockContent) {
-                var checkNode = false;
-                let w = this.$refs.blockContent.querySelectorAll('w');
-                if (w.length === 0) {
-                  checkNode = document.createElement('span');
-                  checkNode.className = 'check-span';
-                  this.$refs.blockContent.appendChild(checkNode);
-                   w = this.$refs.blockContent.querySelectorAll('*');//element.childNodes
-                   $(this.$refs.blockContent).find('*').addClass('in-recording');
-                }
-
-                let ctrl_pos = $(this.$refs.recordingCtrls).position();
-                ctrl_pos.top+=parseInt(getComputedStyle(this.$refs.recordingCtrls).marginTop);
-
-                if (w.length > 0) {
-                  w.forEach(_w => {
-                    let _w_pos = $(_w).position();
-                    if (_w_pos.left + _w.offsetWidth >= ctrl_pos.left && _w_pos.top + $(_w).height() >= ctrl_pos.top) {
-                      this.$refs.recordingCtrls.style['margin-top'] = '-15px';
-                      return;
-                    }
-                  });
-                }
-                if (checkNode) {
-                  this.$refs.blockContent.lastChild.remove();
-                  $(this.$refs.blockContent).find('*').removeClass('in-recording');
-                }
-                let lang = this.block.language;
-                if (!lang) {
-                  lang = this.meta.language;
-                }
-                if (lang && ['ar', 'fa'].indexOf(lang) !== -1) {
-                  this.$refs.recordingCtrls.style['margin-top'] = '-15px';
-                }
-
-                $('body').off('keypress', this._handleSpacePress);
-                $('body').on('keypress', this._handleSpacePress);
-              }
-            })
-          } else {
-            $('body').off('keypress', this._handleSpacePress);
-          }
-        }
-      }*/,
+      },
       'isAudStarted': {
         handler(val) {
           if (this.mode === 'narrate') {

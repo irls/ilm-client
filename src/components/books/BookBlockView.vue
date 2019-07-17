@@ -217,6 +217,7 @@
               :insertSilence="insertSilence"
               :audDeletePart="_audDeletePart"
               :startRecording="startRecording"
+              :initRecorder="initRecorder"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
@@ -2785,39 +2786,18 @@ export default {
       },
 
       startRecording(blockPartIdx) {
-        return this.initRecorder()
+        return this.recordTimer()
           .then(() => {
-            return this.recordTimer()
-            .then(() => {
-              //this.recordStartCounter = 0;
-              this.isRecording = true;
-              this.recorder.startRecording();
-              //} catch(err) {
-                //return Promise.reject(err);
-              //}
-              return Promise.resolve();
-            })
+            //this.recordStartCounter = 0;
+            this.isRecording = true;
+            this.recorder.startRecording();
+            //} catch(err) {
+              //return Promise.reject(err);
+            //}
+            return Promise.resolve();
           })
           .catch(err => {
             this.isRecording = false;
-            this.$root.$emit('show-modal', {
-              title: '<center><h4>Microphone is not working</h4></center>',
-              text: `<center>Please ensure:</center>
-  <ul>
-  <li>You have a working microphone connected to your computer with the volume turned up.</li>
-  <li>Your browser allows accessing your microphone.</li>
-  </ul>`,
-              buttons: [
-                {
-                  title: 'OK',
-                  handler: () => {
-                    this.$root.$emit('hide-modal');
-                  },
-                  class: ['btn btn-primary']
-                }
-              ],
-              class: ['align-modal']
-            });
             return Promise.reject(err);
           });
       },
@@ -4123,38 +4103,6 @@ export default {
               this.destroyEditor();
               this.initEditor(true);
             }
-          }
-        }
-      },
-      'isRecording': {
-        handler(val) {
-          if (val === true) {
-            Vue.nextTick(()=>{
-              if (this.$refs.recordingCtrls && this.$refs.blockContent) {
-                let w = this.$refs.blockContent.querySelectorAll('w');
-                if (w.length === 0) {
-                   w = this.$refs.blockContent.querySelectorAll('*');
-                }
-
-                let ctrl_pos = $(this.$refs.recordingCtrls).position();
-                ctrl_pos.top+=parseInt(this.$refs.recordingCtrls.style['margin-top']);
-
-                if (w.length > 0) {
-                  w.forEach(_w => {
-                    let _w_pos = $(_w).position();
-                    if (_w_pos.left + _w.offsetWidth >= ctrl_pos.left && _w_pos.top + _w.offsetHeight >= ctrl_pos.top) {
-                      this.$refs.recordingCtrls.style['margin-top'] = '-15px';
-                      return;
-                    }
-                  });
-                }
-
-                $('body').off('keypress', this._handleSpacePress);
-                $('body').on('keypress', this._handleSpacePress);
-              }
-            })
-          } else {
-            $('body').off('keypress', this._handleSpacePress);
           }
         }
       },

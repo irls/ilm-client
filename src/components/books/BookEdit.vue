@@ -850,7 +850,7 @@ export default {
             this.onMediaSuccess_msr(stream);
             resolve();
           }, (e) => {
-            console.log('media error', e);
+            //console.log('media error', e);
             reject(e);
           });
         } else {
