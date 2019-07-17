@@ -1,44 +1,51 @@
 <template>
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
-    :class="['table-body -block -subblock', '-mode-' + mode, blockOutPaddings, {'-recording': isRecording}]">
+    :class="['table-body -block -subblock', blockOutPaddings]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
-    <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]" v-if="mode === 'narrate'">
-        <template>
-          <div class="table-row" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged && !isRecording">
+    <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'">
+      <div class="table-row">
+        <div class="table-cell">
+          <span v-if="parnumComp.length" :class="[{'sub-parnum-main': !isSplittedBlock}]">{{parnumComp}}</span>
+        </div>
+      </div>
+    </div>
+    <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
+      <div class="table-body">
+        <div class="table-row">
+          <div class="table-cell -hidden-subblock" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged">
             <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
           </div>
+          <template v-if="tc_showBlockNarrate(block.blockid) && !isAudStarted">
+            <div class="table-cell -hidden-subblock">
+              <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording($event)"></i>
+            </div>
+          </template>
           <template v-if="player && blockAudio.src && !isRecording">
-            <div class="table-row" v-if="!isAudStarted">
+            <div class="table-cell -hidden-subblock" v-if="!isAudStarted">
               <i class="fa fa-play-circle-o"
                 @click="audPlay($event)"></i>
             </div>
             <template v-else>
-              <div class="table-row">
+              <div class="table-cell">
                 <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
                   @click="audPause(block._id, $event)"></i>
                 <i class="fa fa-play-circle-o paused" v-else
                   @click="audResume(block._id, $event)"></i>
               </div>
-              <div class="table-row">
+              <div class="table-cell">
                 <i class="fa fa-stop-circle-o"
                   @click="audStop(block._id, $event)"></i>
               </div>
             </template>
           </template>
-          <div class="table-row narrate-controls" v-if="tc_showBlockNarrate(block._id) && !isAudStarted">
-            <!-- <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="stopRecording(true, $event)"></i> -->
-            <!-- <i class="fa fa-stop-circle-o" v-if="isRecording" @click="stopRecording(false, $event)"></i> -->
-            <i class="fa fa-microphone" v-if="!isRecording && !isChanged" @click="_startRecording($event)"></i>
-            <i class="fa fa-microphone paused" v-if="isRecordingPaused" @click="resumeRecording($event)"></i>
-            <i class="fa fa-pause-circle-o" v-if="isRecording && !isRecordingPaused" @click="pauseRecording($event)"></i>
-          </div>
-        </template>
+        </div>
+      </div>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
         @click="onBlur">
-            <div class="table-row-flex controls-top">
+            <div class="table-row-flex controls-top" v-if="mode !== 'narrate'">
               <div class="par-ctrl">
                 <span v-if="parnumComp.length && isSplittedBlock" class="sub-parnum">{{parnumComp}}</span>
               </div>
@@ -71,7 +78,7 @@
 
             <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
                 <hr v-if="block.type=='hr'"
-                  :class="[block.getClass(), {'checked': blockO.checked}]"
+                  :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
 
                 <div v-else-if="block.type == 'illustration'"
@@ -79,7 +86,7 @@
                 @click="onClick($event)">
                   <img v-if="block.illustration" :src="block.getIllustration()"
                   :height="illustrationHeight"
-                  :class="[block.getClass()]"/>
+                  :class="[block.getClass(mode)]"/>
                   <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing">
                     <vue-picture-input
                       @change="onIllustrationChange"
@@ -95,7 +102,7 @@
                     </div> -->
                   </div>
 
-                  <div :class="['table-row content-description', block.getClass()]">
+                  <div :class="['table-row content-description', block.getClass(mode)]">
                     <div class="content-wrap-desc description" 
                       ref="blockDescription"
                       @input="commitDescription($event)"
@@ -107,26 +114,27 @@
                 </div>
                 <!--<img v-if="block.illustration"-->
 
-                <div v-else class="content-wrap -hover -focus"
-                :id="'content-'+block._id+'-part-'+blockPartIdx"
-                ref="blockContent"
-                v-html="blockPart.content"
-                :class="[ block.getClass(mode), {
-                  'updated': isUpdated,
-                  'checked': blockO.checked,
-                  'playing': blockAudio.src,
-                  'hide-archive': isHideArchFlags
-                },
-                  'part-' + blockPartIdx]"
-                :data-audiosrc="blockAudio.src"
-                @click="onClick($event)"
-                @selectionchange.prevent="onSelect"
-                @input="onInput"
-                @mouseenter="onHover"
-                @contextmenu.prevent="onContext"
-                @focusout="onFocusout"
-                @inputSuggestion="onInputSuggestion">
+                <div v-else class="content-wrap -focus -hover"
+                  :id="'content-'+block._id+'-part-'+blockPartIdx"
+                  ref="blockContent"
+                  v-html="blockPart.content"
+                  :class="[ block.getClass(mode), {
+                    'updated': isUpdated,
+                    'checked': blockO.checked,
+                    'playing': blockAudio.src,
+                    'hide-archive': isHideArchFlags
+                  },
+                    'part-' + blockPartIdx]"
+                  :data-audiosrc="blockAudio.src"
+                  @click="onClick($event)"
+                  @selectionchange.prevent="onSelect"
+                  @input="onInput"
+                  @mouseenter="onHover"
+                  @contextmenu.prevent="onContext"
+                  @focusout="onFocusout"
+                  @inputSuggestion="onInputSuggestion">
                 </div>
+                <!-- <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div> -->
                 <!--<div class="content-wrap">-->
 
                 <block-flag-popup
@@ -250,11 +258,6 @@
 
             </div>
             <!--<div class="table-row ilm-block">-->
-            <div v-if="isRecording" class="recording-hover-controls" ref="recordingCtrls">
-              <i class="fa fa-ban" v-if="isRecording" @click="cancelRecording()"></i>
-              <i class="fa fa-arrow-circle-o-down" v-if="isRecording" @click="_stopRecording(true, $event)"></i>
-              <i class="fa fa-stop-circle-o" v-if="isRecording" @click="_stopRecording(false, $event)"></i>
-            </div>
             <div class="table-row controls-bottom" v-if="isSplittedBlock || isRecording"><!-- isRecording for margin under block -->
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
@@ -315,8 +318,9 @@ import access             from '../../mixins/access.js';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
 import VuePictureInput    from 'vue-picture-input'
+import RecordingBlock from './block/RecordingBlock';
 var BPromise = require('bluebird');
-Vue.use(v_modal, { dialog: true });
+Vue.use(v_modal, { dialog: true, dynamic: true });
 
 export default {
   data () {
@@ -440,7 +444,12 @@ export default {
       parnumComp: { cache: false,
 
       get: function () {
-          //_{{blockPartIdx+1}}
+          if (this.mode === 'narrate') {
+            if (!this.parnum) {
+              return '';
+            }
+            return this.isSplittedBlock ? `${this.parnum}_${this.blockPartIdx+1}` : this.parnum;
+          }
           return (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx+1);
       }},
       isNumbered: { cache: false,
@@ -674,6 +683,15 @@ export default {
             return this.meta.language;
           }
         }
+      },
+      narrationBlockContent: {
+        get() {
+          let content = this.blockPart.content.replace(/<sup[^>]*>[^<]*<\/sup>/img, '');
+          content = $(`<div>${content}</div>`).text();
+          content = content.replace(/(\.\W*)([A-Z])/img, '$1<br><br>$2');
+          return content;
+        },
+        cache: false
       },
       ...mapGetters({
           auth: 'auth',
@@ -1093,7 +1111,7 @@ export default {
         e.stopPropagation();
         this.range = window.getSelection().getRangeAt(0).cloneRange();
         if (this.$refs.blockCntx) {
-          let narrationShift = ($('.content-scroll-wrapper').outerWidth() - $('.-block.-subblock.-mode-narrate').outerWidth()) / 2;//shift for specific width
+          let narrationShift = ($('.content-scroll-wrapper').outerWidth() - $('.-block.-subblock').outerWidth()) / 2;//shift for specific width
           this.$refs.blockCntx.open(e, this.range, this.mode === 'narrate' ? narrationShift : 0);
         }
       },
@@ -1866,6 +1884,24 @@ export default {
       },
 
       _startRecording() {
+        this.$modal.show(RecordingBlock, {
+          text: this.narrationBlockContent,
+          cancelRecording: this.cancelRecording,
+          stopRecording: this._stopRecording,
+          pauseRecording: this.pauseRecording,
+          resumeRecording: this.resumeRecording
+        }, 
+        {
+          clickToClose: false,
+          resizable: false,
+          draggable: false,
+          scrollable: false,
+          height: 'auto',
+          width: '700px'
+        });
+        //this.$root.$emit('show-modal', {
+          //template: RecordingBlock
+        //})
           //this.$emit('startRecording', this.blockPartIdx);
           this.isRecording = true;
           this.startRecording(this.blockPartIdx)
@@ -2860,7 +2896,7 @@ export default {
             this.cancelRecording();
           }
         }
-      },
+      }/*,
       'isRecording': {
         handler(val) {
           if (val === true) {
@@ -2908,7 +2944,7 @@ export default {
             $('body').off('keypress', this._handleSpacePress);
           }
         }
-      },
+      }*/,
       'isAudStarted': {
         handler(val) {
           if (this.mode === 'narrate') {

@@ -1,16 +1,13 @@
 <template>
 <div ref="viewBlock" class="block-preview">
   <div v-if="block && (block.type != 'par' || (loaded === true || blockO.loaded === true))"
-    :class="['table-body -block -subblock -mode-' + mode, blockOutPaddings]">
+    :class="['table-body -block -subblock', blockOutPaddings]">
 
-    <div :class="['table-cell', 'controls-left']" v-if="mode === 'narrate'">
-      <div class="table-row"></div>
-      <div class="table-row check-row"></div>
-    </div>
-    <!--<div :class="['table-cell', 'controls-left']">-->
+    <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'"></div>
+    <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div>
     <div :class="['table-cell', {'completed': isCompleted}]">
       <div :class="['table-body', '-content']">
-        <div class="table-row-flex controls-top"></div>
+        <div class="table-row-flex controls-top" v-if="mode !== 'narrate'"></div>
         <!--<div class="table-row-flex controls-top">-->
         <div :class="['table-row ilm-block']">
 

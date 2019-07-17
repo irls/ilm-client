@@ -35,6 +35,7 @@
     </nav>
 
     <v-dialog :clickToClose="false"/>
+    <modals-container/>
     <alert v-model="hasErrorAlert" placement="top" :duration="5000" type="danger" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
       <p>{{errorAlert}}</p>
@@ -64,7 +65,7 @@ import Vue from 'vue';
 import {alert} from 'vue-strap';
 var modal = require('vue-js-modal');
 
-Vue.use(modal, {dialog: true});
+Vue.use(modal, {dialog: true, dynamic: true});
 Vue.use(Clipboard)
 
 
