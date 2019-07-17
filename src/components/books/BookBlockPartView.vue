@@ -96,7 +96,7 @@
                   </div>
 
                   <div :class="['table-row content-description', block.getClass()]">
-                    <div class="content-wrap-desc description" 
+                    <div class="content-wrap-desc description"
                       ref="blockDescription"
                       @input="commitDescription($event)"
                       v-html="block.description"
@@ -665,16 +665,6 @@ export default {
         },
         cache: false
       },
-      getBlockLang: {
-        cache: false,
-        get() {
-          if (this.block.language && this.block.language.length) {
-            return this.block.language;
-          } else {
-            return this.meta.language;
-          }
-        }
-      },
       ...mapGetters({
           auth: 'auth',
           book: 'currentBook',
@@ -694,6 +684,16 @@ export default {
           mode: 'bookMode',
           blockLockType: 'blockLockType'
       }),
+      getBlockLang: {
+        cache: false,
+        get() {
+          if (this.block.language && this.block.language.length) {
+            return this.block.language;
+          } else {
+            return this.meta.language;
+          }
+        }
+      },
       illustrationChaged() {
         return this.$refs.illustrationInput.image
       },
@@ -996,7 +996,7 @@ export default {
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
     //       this.editor.subscribe('positionToolbar', ()=>{})
-        }  else if (this.editor) { 
+        }  else if (this.editor) {
           this.editor.setup();
         }
 
@@ -1224,7 +1224,7 @@ export default {
         if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
           this.$root.$emit('from-block:save-and-realign-warning', () => {
                   this.$root.$emit('hide-modal');
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1233,7 +1233,7 @@ export default {
                       this.assembleBlockProxy(false, false)
                     }
                   }, 50);
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1369,7 +1369,7 @@ export default {
         if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
           this.$root.$emit('from-block:save-and-realign-warning', () => {
                   this.$root.$emit('hide-modal');
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1378,7 +1378,7 @@ export default {
                       this.assembleBlockNarrate(false, false)
                     }
                   }, 50);
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1605,7 +1605,7 @@ export default {
           this.block.footnotes.splice(p - posDecr, 1);
           ++posDecr;
         });
-        
+
         this.isChanged = false; // to be shure to update view
         this.isChanged = true;
         this.pushChange('footnotes');
@@ -1813,7 +1813,7 @@ export default {
           return result;
       },
 
-      
+
       toggleFlagPart: function(ev, partIdx) {
         if (!this.flagsSel.parts[partIdx].collapsed) this.flagsSel.parts[partIdx].collapsed = true;
         else this.flagsSel.parts[partIdx].collapsed = !this.flagsSel.parts[partIdx].collapsed;
@@ -1870,7 +1870,7 @@ export default {
           this.isRecording = true;
           this.startRecording(this.blockPartIdx)
             .then(() => {
-                
+
             })
             .catch(err => {
               this.isRecording = false;
@@ -2133,7 +2133,7 @@ export default {
                 this.isChanged = false;
                 this.unsetChange('audio');
                 this.unsetChange('content');
-                
+
                 this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
               });
           }
@@ -2283,7 +2283,7 @@ export default {
           this.audStop();
           this.discardAudioEdit(null, true, this.blockPartIdx, this.check_id)
             .then(() => {
-              
+
                 this.isAudioChanged = false;
                 this.isChanged = false;
                 this.unsetChange('audio');
@@ -2697,8 +2697,8 @@ export default {
               this.block.setPartManualBoundaries(this.blockPartIdx, part.manual_boundaries || []);
               //return this.putBlock(this.block);
               if (!realign) {
-                this.$root.$emit('for-audioeditor:load', 
-                this.blockAudiosrc('m4a'), 
+                this.$root.$emit('for-audioeditor:load',
+                this.blockAudiosrc('m4a'),
                 this.block.getPartContent(this.blockPartIdx), false);
               }
               this.isAudioChanged = false;
@@ -2714,7 +2714,7 @@ export default {
             BPromise.reject(err)
           });
       },
-      
+
       blockAudiosrc(ver = null, full = true) {
         if (this.isSplittedBlock) {
           return this.block.getPartAudiosrc(this.blockPartIdx, ver, full);
@@ -2735,7 +2735,7 @@ export default {
       'blockPart.content': {
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
-          
+
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
               this.addContentListeners();
@@ -2753,7 +2753,7 @@ export default {
               }
             }
           }
-          
+
         }
       },
       'classSel' (newVal, oldVal) {
