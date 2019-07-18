@@ -2451,6 +2451,7 @@ export default {
       }
       .content-wrap, .content-wrap-preview, .content-wrap-desc.description {
         color: #bebebe;
+        background: inherit;
         &[data-audiosrc] {
           &.playing {
             w[data-map] {
