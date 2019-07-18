@@ -1,6 +1,6 @@
 <template>
-  <div ref="viewBlock" :id="block._id"
-    :class="['table-body -block', '-mode-' + mode, blockOutPaddings]">
+  <div ref="viewBlock" :id="block.blockid"
+    :class="['table-body -block', '-mode-' + mode, blockOutPaddings, '-voicework-'  +block.voicework]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
 
@@ -36,7 +36,7 @@
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
-              <div v-if="isNumbered" :class="['par-ctrl', '-par-num', {'-hidden-hover': mode !== 'narrate'}]">
+              <div v-if="isNumbered && (mode !== 'narrate' || isSplittedBlock)" :class="['par-ctrl', '-par-num', {'-hidden-hover': mode !== 'narrate'}]">
                 <!--<i class="fa fa-hashtag"></i>-->
                 <label ref="parnumRef" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
               </div>
@@ -217,6 +217,7 @@
               :insertSilence="insertSilence"
               :audDeletePart="_audDeletePart"
               :startRecording="startRecording"
+              :initRecorder="initRecorder"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
@@ -2785,40 +2786,18 @@ export default {
       },
 
       startRecording(blockPartIdx) {
-        return this.initRecorder()
+        return this.recordTimer()
           .then(() => {
-            this.$emit('recordingState', 'recording', this.block._id, blockPartIdx);
-            return this.recordTimer()
-            .then(() => {
-              //this.recordStartCounter = 0;
-              this.isRecording = true;
-              this.recorder.startRecording();
-              //} catch(err) {
-                //return Promise.reject(err);
-              //}
-              return Promise.resolve();
-            })
+            //this.recordStartCounter = 0;
+            this.isRecording = true;
+            this.recorder.startRecording();
+            //} catch(err) {
+              //return Promise.reject(err);
+            //}
+            return Promise.resolve();
           })
           .catch(err => {
             this.isRecording = false;
-            this.$root.$emit('show-modal', {
-              title: '<center><h4>Microphone is not working</h4></center>',
-              text: `<center>Please ensure:</center>
-  <ul>
-  <li>You have a working microphone connected to your computer with the volume turned up.</li>
-  <li>Your browser allows accessing your microphone.</li>
-  </ul>`,
-              buttons: [
-                {
-                  title: 'OK',
-                  handler: () => {
-                    this.$root.$emit('hide-modal');
-                  },
-                  class: ['btn btn-primary']
-                }
-              ],
-              class: ['align-modal']
-            });
             return Promise.reject(err);
           });
       },
@@ -4127,39 +4106,6 @@ export default {
           }
         }
       },
-      'isRecording': {
-        handler(val) {
-          if (val === true) {
-            Vue.nextTick(()=>{
-              if (this.$refs.recordingCtrls && this.$refs.blockContent) {
-                let w = this.$refs.blockContent.querySelectorAll('w');
-                if (w.length === 0) {
-                   w = this.$refs.blockContent.querySelectorAll('*');
-                }
-
-                let ctrl_pos = $(this.$refs.recordingCtrls).position();
-                ctrl_pos.top+=parseInt(this.$refs.recordingCtrls.style['margin-top']);
-
-                if (w.length > 0) {
-                  w.forEach(_w => {
-                    let _w_pos = $(_w).position();
-                    if (_w_pos.left + _w.offsetWidth >= ctrl_pos.left && _w_pos.top + _w.offsetHeight >= ctrl_pos.top) {
-                      this.$refs.recordingCtrls.style['margin-top'] = '-15px';
-                      return;
-                    }
-                  });
-                }
-
-                $('body').off('keypress', this._handleSpacePress);
-                $('body').on('keypress', this._handleSpacePress);
-              }
-            })
-          } else {
-            this.$emit('recordingState', 'stopped', this.block._id);
-            $('body').off('keypress', this._handleSpacePress);
-          }
-        }
-      },
       'isAudStarted': {
         handler(val) {
           if (this.mode === 'narrate') {
@@ -4288,7 +4234,7 @@ export default {
 
     &.controls-left {
         width: 36px;
-        padding-left: 8px;
+        /*padding-left: 8px;*/
         padding-top: 0px;
 
         &.-check-green {
@@ -4393,46 +4339,6 @@ export default {
     }
 
 }
-.-mode-narrate {
-  .table-cell {
-    &.completed {
-      border: 1px solid #afacac;
-      /*border-radius: 7px;*/
-    }
-  }
-  .controls-left {
-    width: 44px;
-    vertical-align: middle;
-    height: 123px;
-  }
-}
-.table-body {
-  &.-mode-narrate {
-    position: relative;
-    .controls-bottom, .controls-top {
-      width: 700px;
-      margin: 0px auto;
-      display: block;
-      .-left {
-          padding: 0px 25px;
-      }
-      .-right {
-          margin-right: 0px;
-      }
-      .par-ctrl.-par-num {
-        label.par-num {
-            padding-left: 20px;
-        }
-      }
-    }
-  }
-  .sub-parnum {
-    vertical-align: middle;
-    padding-left: 8px;
-    padding-top: 8px;
-  }
-}
-
 .table-row {
     display: table-row;
     &.-relative {

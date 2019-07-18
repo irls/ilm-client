@@ -133,7 +133,7 @@ import {dateFormat} from '../../filters';
 import v_modal from 'vue-js-modal';
 import dropzone from 'vue2-dropzone';
 import {mapGetters, mapActions} from 'vuex';
-Vue.use(v_modal, { dialog: true });
+Vue.use(v_modal, { dialog: true, dynamic: true });
 
 export default {
   data() {
