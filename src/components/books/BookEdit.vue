@@ -2097,6 +2097,9 @@ export default {
     'mode': {
       handler(val) {
         Vue.nextTick(() => {
+          if (this.parlistO.firstVisibleId) {
+            this.scrollToBlock(this.parlistO.firstVisibleId);
+          }
           this.correctEditWrapper();
         })
       }
