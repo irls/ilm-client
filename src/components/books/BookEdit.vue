@@ -2497,6 +2497,10 @@ export default {
         }
       }
     }
+    [data-author] {
+      color: inherit;
+      font-style: inherit;
+    }
   }
 }
 
