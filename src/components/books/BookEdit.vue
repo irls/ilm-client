@@ -2416,6 +2416,7 @@ export default {
       .controls-left {
         &.sub-parnum {
           width: 5%;
+          max-width: 70px;
           .sub-parnum-main {
             font-size: 24px;
             font-weight: bold;
