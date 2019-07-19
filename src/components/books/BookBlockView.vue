@@ -3119,8 +3119,8 @@ export default {
             }
             if (event.target.value === 'illustration') {
               let i = setInterval(() => {
-                if (this.$refs.blockDescription) {
-                  this.initEditor();
+                if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs && this.$refs.blocks[0].$refs.blockDescription) {
+                  this.$refs.blocks[0].initEditor();
                   clearInterval(i);
                 }
               }, 500);
@@ -3959,16 +3959,6 @@ export default {
           };
         }
       },
-//       'block.type' (newVal) {
-//         console.log('block.type' , newVal);
-//         if (this.blockTypes[newVal] && Object.keys(this.blockTypes[newVal])[0] !== '') {
-//           this.classSel = Object.keys(this.blockTypes[newVal])[0];
-//         }
-//         if (this.block) {
-//           this.block.classes = {};
-//         }
-//         this.$root.$emit('from-block-edit:set-style');
-//       },
       'classSel' (newVal, oldVal) {
         let styleCurr = this.block.setClass(newVal);
         if (styleCurr) this.styleSel = styleCurr;
