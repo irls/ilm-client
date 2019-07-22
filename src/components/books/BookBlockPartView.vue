@@ -914,7 +914,14 @@ export default {
           if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned()) {
             let result = this.block.flags.find(f => {
 
-              return f.creator === this.auth.getSession().user_id
+              if ((f.creator === this.auth.getSession().user_id) || (f.creator_role && this._is(f.creator_role, true))) {
+                return true;
+              } else if (Array.isArray(f.parts) && f.parts.length > 0) {
+                return f.parts.find(p => {
+                  return p.creator === this.auth.getSession().user_id || (p.creator_role && this._is(p.creator_role, true));
+                })
+              }
+              return false;
             });
             return result;
           }
@@ -1648,7 +1655,7 @@ export default {
           let flag = document.createElement(this.flagEl);
           let existsFlag = this.detectExistingFlag();
           if (!existsFlag) {
-            flag.dataset.flag = this.block.newFlag(this.range, type);
+            flag.dataset.flag = this.block.newFlag(this.range, type, false, this.mode);
             flag.dataset.status = 'open';
             flag.appendChild(this.range.extractContents());
             flag.childNodes.forEach((n, i) => {
@@ -1688,7 +1695,7 @@ export default {
             flag.addEventListener('click', this.handleFlagClick);
             this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
           } else {
-            this.block.addFlag(existsFlag.dataset.flag, this.range, type);
+            this.block.addFlag(existsFlag.dataset.flag, this.range, type, this.mode);
             this.handleFlagClick({target: existsFlag, layerY: ev.layerY, clientY: ev.clientY});
           }
           this.$refs.blockFlagPopup.scrollBottom();
@@ -1699,7 +1706,7 @@ export default {
       },
 
       addFlagPart: function(content, type = 'editor') {
-        this.block.addPart(this.flagsSel._id, content, type);
+        this.block.addPart(this.flagsSel._id, content, type, this.mode);
 
         this.updateFlagStatus(this.flagsSel._id);
         this.$refs.blockFlagPopup.reset();
@@ -1764,7 +1771,7 @@ export default {
                 type = 'narrator';
               }
             }
-            flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true);
+            flagId = this.$refs.blockFlagControl.dataset.flag = this.block.newFlag({}, type, true, this.mode);
             this.$refs.blockFlagControl.dataset.status = 'open';
             this.isChanged = true;
             this.pushChange('flags');
