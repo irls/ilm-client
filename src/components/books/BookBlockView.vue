@@ -4466,6 +4466,9 @@ export default {
           box-shadow: 0 0 10px rgba(56, 171, 53, 0.7);
           transition: box-shadow 200ms;
       }
+      &.par {
+        min-height: 50px;
+      }
 
     }
 
