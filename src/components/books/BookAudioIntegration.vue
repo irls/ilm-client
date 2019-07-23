@@ -19,16 +19,16 @@
               <button class="btn btn-danger btn-small" :disabled="selectionLength == 0" v-on:click="deleteAudio()">Delete<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
             </div>
             <dropdown text="" type="default" ref="allAudioDropdownSort" class="all-audio-dropdown aad-sort">
-                <li>
+                <li :class="this.aad_sort == 'name_asc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('name', 'asc')">File name (A to Z)</span>
                 </li>
-                <li>
+                <li :class="this.aad_sort == 'name_desc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('name', 'desc')">File name (Z to A)</span>
                 </li>
-                <li>
+                <li :class="this.aad_sort == 'date_asc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('date', 'asc')">Date imported (Newest to Oldest)</span>
                 </li>
-                <li>
+                <li :class="this.aad_sort == 'date_desc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('date', 'desc')">Date imported (Oldest to Newest)</span>
                 </li>
             </dropdown>
@@ -227,7 +227,9 @@
         alignProcess: false,
         audioOpening: false,
         activeTabIndex: 0,
-        audio_element: false
+        audio_element: false,
+        aad_sort: 'name_asc',
+        aad_filter: 'all'
       }
     },
     mixins: [task_controls, api_config, access],
@@ -945,17 +947,21 @@
         if (field == 'name'){
           if (direction == 'asc'){
             this.audiobook.importFiles.sort((a,b) => (a.origName > b.origName) ? 1 : ((b.origName > a.origName) ? -1 : 0));
+            this.aad_sort = 'name_asc';
           }
           if (direction == 'desc'){
             this.audiobook.importFiles.sort((a,b) => (a.origName < b.origName) ? 1 : ((b.origName < a.origName) ? -1 : 0));
+            this.aad_sort = 'name_desc';
           }
         }
         if (field == 'date'){
           if (direction == 'asc'){
             this.audiobook.importFiles.sort((a,b) => (a.tstamp > b.tstamp) ? 1 : ((b.tstamp > a.tstamp) ? -1 : 0));
+            this.aad_sort = 'date_asc';
           }
           if (direction == 'desc'){
             this.audiobook.importFiles.sort((a,b) => (a.tstamp < b.tstamp) ? 1 : ((b.tstamp < a.tstamp) ? -1 : 0));
+            this.aad_sort = 'date_desc';
           }
         }
         console.log(this.audiobook.importFiles);
@@ -1420,6 +1426,10 @@
       content: "\e138";
       margin-right: -10px;
     }
+    .aad_selected {
+     background: #95BCF2;
+    }
+
   }
   h4.panel-title {
     font-size: 14px;
