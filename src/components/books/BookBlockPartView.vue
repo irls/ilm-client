@@ -904,7 +904,6 @@ export default {
               } else {
                 if (this.block.status && this.block.status.stage === 'audio_mastering') canFlag = false;
                 else if (!(this.blockPart.audiosrc && this.blockPart.audiosrc.length)) canFlag = false;
-                else if (this._is('narrator', true)) canFlag = false;
               }
               if (this.mode === 'narrate') {
                 canFlag = false;
