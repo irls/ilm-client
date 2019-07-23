@@ -91,7 +91,7 @@ import {mapGetters} from 'vuex'
       },
       blockOutPaddings: function () {
         if (this.block) {
-          return (this.block.classes && this.block.classes.hasOwnProperty('outsize-padding')) ? this.block.classes['outsize-padding'] : ''
+          return (this.mode !== 'narrate' && this.block.classes && this.block.classes.hasOwnProperty('outsize-padding')) ? this.block.classes['outsize-padding'] : ''
         } else return '';
       },
       parnum: { cache: true,
