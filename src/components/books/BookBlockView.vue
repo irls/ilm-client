@@ -693,7 +693,7 @@ export default {
 //         if (!this.block.getClass) return '';
 //         let match = this.block.getClass().match(/out[^\s]*/ig);
 //         return (match && match.length) ? match.join(' ') : '';
-        return (this.block && this.block.classes && this.block.classes.hasOwnProperty('outsize-padding')) ? this.block.classes['outsize-padding'] : ''
+        return (this.mode !== 'narrate' && this.block && this.block.classes && this.block.classes.hasOwnProperty('outsize-padding')) ? this.block.classes['outsize-padding'] : ''
       },
       blockVoiceworks: function () {
         return {
@@ -4462,6 +4462,9 @@ export default {
       &.updated {
           box-shadow: 0 0 10px rgba(56, 171, 53, 0.7);
           transition: box-shadow 200ms;
+      }
+      &.par {
+        min-height: 50px;
       }
 
     }
