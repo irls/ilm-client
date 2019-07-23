@@ -115,6 +115,7 @@
                 <!--<img v-if="block.illustration"-->
 
                 <div v-else class="content-wrap -focus -hover"
+                  :data-iseditor="block._id"
                   :id="'content-'+block._id+'-part-'+blockPartIdx"
                   ref="blockContent"
                   v-html="blockPart.content"
@@ -1131,7 +1132,22 @@ export default {
       onContext: function(e) {
         e.preventDefault();
         e.stopPropagation();
-        this.range = window.getSelection().getRangeAt(0).cloneRange();
+
+        let windowSelRange = window.getSelection().getRangeAt(0).cloneRange();
+        // ILM-2108: - because a last tag in selection was not cropped
+        // and it was duplicated after addina a flag
+        let startElementWrapper = windowSelRange.startContainer.parentElement;
+        let startElementWrapperName = startElementWrapper.nodeName.toLowerCase();
+        if (startElementWrapperName !== 'div') {
+          windowSelRange.setStartBefore(startElementWrapper)
+        }
+        let endElementWrapper = windowSelRange.endContainer.parentElement;
+        let endElementWrapperName = endElementWrapper.nodeName.toLowerCase();
+        if (endElementWrapperName !== 'div') {
+          windowSelRange.setEndAfter(endElementWrapper)
+        }
+        this.range = windowSelRange;
+
         if (this.$refs.blockCntx) {
           let narrationShift = ($('.content-scroll-wrapper').outerWidth() - $('.-block.-subblock').outerWidth()) / 2;//shift for specific width
           this.$refs.blockCntx.open(e, this.range, this.mode === 'narrate' ? narrationShift : 0);
@@ -1675,7 +1691,8 @@ export default {
 
       addFlag: function(ev, type = 'editor') {
         if (window.getSelection) {
-          let startPos = this.$refs.blockContent.compareDocumentPosition(this.range.startContainer);
+          //TODO:-- ILM-2108: is this fragmet still actual ? -- { --//
+          /*let startPos = this.$refs.blockContent.compareDocumentPosition(this.range.startContainer);
           let endPos = this.$refs.blockContent.compareDocumentPosition(this.range.endContainer);
           if (startPos != 20) {
             this.range.setStart(this.$refs.blockContent.childNodes[0], 0);
@@ -1684,9 +1701,12 @@ export default {
             let endNode = this.$refs.blockContent.lastChild;
             let selectionLength = endNode.nodeType == 3 ? endNode.textContent.length: 1;
             this.range.setEnd(endNode, selectionLength);
-          }
+          }*/
+          //-- } -- end -- ILM-2108 --//
+
           let flag = document.createElement(this.flagEl);
           let existsFlag = this.detectExistingFlag();
+
           if (!existsFlag) {
             flag.dataset.flag = this.block.newFlag(this.range, type, false, this.mode);
             flag.dataset.status = 'open';
@@ -1728,7 +1748,7 @@ export default {
             flag.addEventListener('click', this.handleFlagClick);
             this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
           } else {
-            this.block.addFlag(existsFlag.dataset.flag, this.range, type, this.mode);
+            this.block.addFlag(existsFlag.dataset.flag, this.range, type);
             this.handleFlagClick({target: existsFlag, layerY: ev.layerY, clientY: ev.clientY});
           }
           this.$refs.blockFlagPopup.scrollBottom();
@@ -1753,15 +1773,17 @@ export default {
       detectExistingFlag: function(ev) {
         let node = this.range.startContainer;
         let endNode = this.range.endContainer;
+        // ILM-2108: .iseditor has been added, because in proofread mode
+        // there is no an editor in fact and we need to stop traverse
         let target = MediumEditor.util.traverseUp(node, (element)=>{
-          return element.dataset.flag;
+          return element.dataset.flag || element.dataset.iseditor;
         })
         while (target === false && node && node != endNode) {
           target = MediumEditor.util.traverseUp(node = this.nextNode(node), (element)=>{
-            return element.dataset.flag;
+            return element.dataset.flag || element.dataset.iseditor;
           })
         }
-        return target;
+        return target.dataset.flag ? target : false;
       },
 
       nextNode: function (node) {
@@ -1908,7 +1930,7 @@ export default {
       _startRecording() {
         return this.initRecorder()
           .then(() => {
-            
+
             this.$modal.show(RecordingBlock, {
               text: this.narrationBlockContent,
               cancelRecording: this.cancelRecording,
@@ -1916,7 +1938,7 @@ export default {
               pauseRecording: this.pauseRecording,
               resumeRecording: this.resumeRecording,
               lang: this.getBlockLang
-            }, 
+            },
             {
               clickToClose: false,
               resizable: false,
@@ -1939,7 +1961,7 @@ export default {
                 });
           })
           .catch(err => {
-            
+
             this.$root.$emit('show-modal', {
               title: '<center><h4>Microphone is not working</h4></center>',
               text: `<center>Please ensure:</center>
