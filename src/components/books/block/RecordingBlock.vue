@@ -1,5 +1,5 @@
 <template>
-  <div class="recording-block">
+  <div :class="['recording-block', '-langblock-' + lang]">
     <!-- <div class="row"> -->
       <div class="recording-text" v-html="text" ref="recordingText">
         
@@ -51,7 +51,7 @@
         isPaused: false
       }
     },
-    props: ['text', 'cancelRecording', 'stopRecording', 'pauseRecording', 'resumeRecording'],
+    props: ['text', 'cancelRecording', 'stopRecording', 'pauseRecording', 'resumeRecording', 'lang'],
     methods: {
       _cancelRecording() {
         this.isPaused = false;
@@ -79,6 +79,11 @@
 </script>
 <style lang="less">
   .recording-block {
+    &.-langblock-fa, &.-langblock-ar {
+      .recording-text {
+        text-align: justify;
+      }
+    }
     .recording-text {
       font-size: 17pt;
       padding: 15px 30px;

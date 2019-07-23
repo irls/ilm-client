@@ -473,7 +473,7 @@ export default {
 //         if (!this.block.getClass) return '';
 //         let match = this.block.getClass().match(/out[^\s]*/ig);
 //         return (match && match.length) ? match.join(' ') : '';
-        return (this.block && this.block.classes && this.block.classes.hasOwnProperty('outsize-padding')) ? this.block.classes['outsize-padding'] : ''
+        return (this.mode !== 'narrate' && this.block && this.block.classes && this.block.classes.hasOwnProperty('outsize-padding')) ? this.block.classes['outsize-padding'] : ''
       },
       blockVoiceworks: function () {
         return {
@@ -1898,7 +1898,8 @@ export default {
               cancelRecording: this.cancelRecording,
               stopRecording: this._stopRecording,
               pauseRecording: this.pauseRecording,
-              resumeRecording: this.resumeRecording
+              resumeRecording: this.resumeRecording,
+              lang: this.getBlockLang
             }, 
             {
               clickToClose: false,

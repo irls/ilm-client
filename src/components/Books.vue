@@ -445,7 +445,7 @@ export default {
 .-langblock-ru,
 .-langblock-sv,
 .-langblock-tr  {
-  .ilm-block {
+  .ilm-block, .recording-text {
     direction: ltr;
   }
   &.ilm-block {
@@ -455,7 +455,7 @@ export default {
 /* Edit mode */
 .-langblock-ar,
 .-langblock-fa  {
-  .ilm-block {
+  .ilm-block, .recording-text {
     direction: rtl;
     .content-wrap, .content-wrap-preview, .content-wrap-desc {
       font-family: 'Times New Roman', 'Liberation Serif';
