@@ -96,7 +96,7 @@
                   </div>
 
                   <div :class="['table-row content-description', block.getClass()]">
-                    <div class="content-wrap-desc description" 
+                    <div class="content-wrap-desc description"
                       ref="blockDescription"
                       @input="commitDescription($event)"
                       v-html="block.description"
@@ -108,6 +108,7 @@
                 <!--<img v-if="block.illustration"-->
 
                 <div v-else class="content-wrap -hover -focus"
+                :data-iseditor="block._id"
                 :id="'content-'+block._id+'-part-'+blockPartIdx"
                 ref="blockContent"
                 v-html="blockPart.content"
@@ -996,7 +997,7 @@ export default {
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
     //       this.editor.subscribe('positionToolbar', ()=>{})
-        }  else if (this.editor) { 
+        }  else if (this.editor) {
           this.editor.setup();
         }
 
@@ -1091,7 +1092,22 @@ export default {
       onContext: function(e) {
         e.preventDefault();
         e.stopPropagation();
-        this.range = window.getSelection().getRangeAt(0).cloneRange();
+
+        let windowSelRange = window.getSelection().getRangeAt(0).cloneRange();
+        // ILM-2108: - because a last tag in selection was not cropped
+        // and it was duplicated after addina a flag
+        let startElementWrapper = windowSelRange.startContainer.parentElement;
+        let startElementWrapperName = startElementWrapper.nodeName.toLowerCase();
+        if (startElementWrapperName !== 'div') {
+          windowSelRange.setStartBefore(startElementWrapper)
+        }
+        let endElementWrapper = windowSelRange.endContainer.parentElement;
+        let endElementWrapperName = endElementWrapper.nodeName.toLowerCase();
+        if (endElementWrapperName !== 'div') {
+          windowSelRange.setEndAfter(endElementWrapper)
+        }
+        this.range = windowSelRange;
+
         if (this.$refs.blockCntx) {
           let narrationShift = ($('.content-scroll-wrapper').outerWidth() - $('.-block.-subblock.-mode-narrate').outerWidth()) / 2;//shift for specific width
           this.$refs.blockCntx.open(e, this.range, this.mode === 'narrate' ? narrationShift : 0);
@@ -1224,7 +1240,7 @@ export default {
         if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
           this.$root.$emit('from-block:save-and-realign-warning', () => {
                   this.$root.$emit('hide-modal');
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1233,7 +1249,7 @@ export default {
                       this.assembleBlockProxy(false, false)
                     }
                   }, 50);
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1369,7 +1385,7 @@ export default {
         if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
           this.$root.$emit('from-block:save-and-realign-warning', () => {
                   this.$root.$emit('hide-modal');
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1378,7 +1394,7 @@ export default {
                       this.assembleBlockNarrate(false, false)
                     }
                   }, 50);
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1605,7 +1621,7 @@ export default {
           this.block.footnotes.splice(p - posDecr, 1);
           ++posDecr;
         });
-        
+
         this.isChanged = false; // to be shure to update view
         this.isChanged = true;
         this.pushChange('footnotes');
@@ -1635,7 +1651,8 @@ export default {
 
       addFlag: function(ev, type = 'editor') {
         if (window.getSelection) {
-          let startPos = this.$refs.blockContent.compareDocumentPosition(this.range.startContainer);
+          //TODO:-- ILM-2108: is this fragmet still actual ? -- { --//
+          /*let startPos = this.$refs.blockContent.compareDocumentPosition(this.range.startContainer);
           let endPos = this.$refs.blockContent.compareDocumentPosition(this.range.endContainer);
           if (startPos != 20) {
             this.range.setStart(this.$refs.blockContent.childNodes[0], 0);
@@ -1644,10 +1661,12 @@ export default {
             let endNode = this.$refs.blockContent.lastChild;
             let selectionLength = endNode.nodeType == 3 ? endNode.textContent.length: 1;
             this.range.setEnd(endNode, selectionLength);
-          }
+          }*/
+          //-- } -- end -- ILM-2108 --//
+
           let flag = document.createElement(this.flagEl);
           let existsFlag = this.detectExistingFlag();
-          if (!existsFlag) {
+         if (!existsFlag) {
             flag.dataset.flag = this.block.newFlag(this.range, type);
             flag.dataset.status = 'open';
             flag.appendChild(this.range.extractContents());
@@ -1687,10 +1706,10 @@ export default {
             this.range.insertNode(flag);
             flag.addEventListener('click', this.handleFlagClick);
             this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
-          } else {
+         } else {
             this.block.addFlag(existsFlag.dataset.flag, this.range, type);
             this.handleFlagClick({target: existsFlag, layerY: ev.layerY, clientY: ev.clientY});
-          }
+         }
           this.$refs.blockFlagPopup.scrollBottom();
           //this.isChanged = true;
           //this.pushChange('flags');
@@ -1713,15 +1732,17 @@ export default {
       detectExistingFlag: function(ev) {
         let node = this.range.startContainer;
         let endNode = this.range.endContainer;
+        // ILM-2108: .iseditor has been added, because in proofread mode
+        // there is no an editor in fact and we need to stop traverse
         let target = MediumEditor.util.traverseUp(node, (element)=>{
-          return element.dataset.flag;
+          return element.dataset.flag || element.dataset.iseditor;
         })
         while (target === false && node && node != endNode) {
           target = MediumEditor.util.traverseUp(node = this.nextNode(node), (element)=>{
-            return element.dataset.flag;
+            return element.dataset.flag || element.dataset.iseditor;
           })
         }
-        return target;
+        return target.dataset.flag ? target : false;
       },
 
       nextNode: function (node) {
@@ -1813,7 +1834,7 @@ export default {
           return result;
       },
 
-      
+
       toggleFlagPart: function(ev, partIdx) {
         if (!this.flagsSel.parts[partIdx].collapsed) this.flagsSel.parts[partIdx].collapsed = true;
         else this.flagsSel.parts[partIdx].collapsed = !this.flagsSel.parts[partIdx].collapsed;
@@ -1870,7 +1891,7 @@ export default {
           this.isRecording = true;
           this.startRecording(this.blockPartIdx)
             .then(() => {
-                
+
             })
             .catch(err => {
               this.isRecording = false;
@@ -2133,7 +2154,7 @@ export default {
                 this.isChanged = false;
                 this.unsetChange('audio');
                 this.unsetChange('content');
-                
+
                 this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
               });
           }
@@ -2283,7 +2304,7 @@ export default {
           this.audStop();
           this.discardAudioEdit(null, true, this.blockPartIdx, this.check_id)
             .then(() => {
-              
+
                 this.isAudioChanged = false;
                 this.isChanged = false;
                 this.unsetChange('audio');
@@ -2697,8 +2718,8 @@ export default {
               this.block.setPartManualBoundaries(this.blockPartIdx, part.manual_boundaries || []);
               //return this.putBlock(this.block);
               if (!realign) {
-                this.$root.$emit('for-audioeditor:load', 
-                this.blockAudiosrc('m4a'), 
+                this.$root.$emit('for-audioeditor:load',
+                this.blockAudiosrc('m4a'),
                 this.block.getPartContent(this.blockPartIdx), false);
               }
               this.isAudioChanged = false;
@@ -2714,7 +2735,7 @@ export default {
             BPromise.reject(err)
           });
       },
-      
+
       blockAudiosrc(ver = null, full = true) {
         if (this.isSplittedBlock) {
           return this.block.getPartAudiosrc(this.blockPartIdx, ver, full);
@@ -2735,7 +2756,7 @@ export default {
       'blockPart.content': {
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
-          
+
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
               this.addContentListeners();
@@ -2753,7 +2774,7 @@ export default {
               }
             }
           }
-          
+
         }
       },
       'classSel' (newVal, oldVal) {
