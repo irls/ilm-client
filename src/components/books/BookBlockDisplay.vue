@@ -158,6 +158,14 @@ import { mapGetters, mapState, mapActions } from 'vuex'
   }
 </script>
 
-<style lang='less' scoped>
-  
+<style lang='less'>
+  .ilm-display {
+    [data-flag] {
+      pointer-events: all;
+      cursor: default;
+      &:before {
+        cursor: default;
+      }
+    }
+  }
 </style>

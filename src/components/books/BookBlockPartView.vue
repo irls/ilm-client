@@ -1093,20 +1093,7 @@ export default {
         e.preventDefault();
         e.stopPropagation();
 
-        let windowSelRange = window.getSelection().getRangeAt(0).cloneRange();
-        // ILM-2108: - because a last tag in selection was not cropped
-        // and it was duplicated after addina a flag
-        let startElementWrapper = windowSelRange.startContainer.parentElement;
-        let startElementWrapperName = startElementWrapper.nodeName.toLowerCase();
-        if (startElementWrapperName !== 'div') {
-          windowSelRange.setStartBefore(startElementWrapper)
-        }
-        let endElementWrapper = windowSelRange.endContainer.parentElement;
-        let endElementWrapperName = endElementWrapper.nodeName.toLowerCase();
-        if (endElementWrapperName !== 'div') {
-          windowSelRange.setEndAfter(endElementWrapper)
-        }
-        this.range = windowSelRange;
+        this.range = window.getSelection().getRangeAt(0).cloneRange();
 
         if (this.$refs.blockCntx) {
           let narrationShift = ($('.content-scroll-wrapper').outerWidth() - $('.-block.-subblock.-mode-narrate').outerWidth()) / 2;//shift for specific width
@@ -1651,8 +1638,7 @@ export default {
 
       addFlag: function(ev, type = 'editor') {
         if (window.getSelection) {
-          //TODO:-- ILM-2108: is this fragmet still actual ? -- { --//
-          /*let startPos = this.$refs.blockContent.compareDocumentPosition(this.range.startContainer);
+          let startPos = this.$refs.blockContent.compareDocumentPosition(this.range.startContainer);
           let endPos = this.$refs.blockContent.compareDocumentPosition(this.range.endContainer);
           if (startPos != 20) {
             this.range.setStart(this.$refs.blockContent.childNodes[0], 0);
@@ -1661,15 +1647,29 @@ export default {
             let endNode = this.$refs.blockContent.lastChild;
             let selectionLength = endNode.nodeType == 3 ? endNode.textContent.length: 1;
             this.range.setEnd(endNode, selectionLength);
-          }*/
-          //-- } -- end -- ILM-2108 --//
+          }
+
+          let existsFlag = this.detectExistingFlag();
+
+          let windowSelRange = this.range;
+          // ILM-2108: - because the last tag in the selection was not cropped
+          // and was duplicated after adding a flag
+          let startElementWrapper = windowSelRange.startContainer.parentElement;
+          let startElementWrapperName = startElementWrapper.nodeName.toLowerCase();
+          if (startElementWrapperName !== 'div') {
+            windowSelRange.setStartBefore(startElementWrapper)
+          }
+          let endElementWrapper = windowSelRange.endContainer.parentElement;
+          let endElementWrapperName = endElementWrapper.nodeName.toLowerCase();
+          if (endElementWrapperName !== 'div') {
+            windowSelRange.setEndAfter(endElementWrapper)
+          }
 
           let flag = document.createElement(this.flagEl);
-          let existsFlag = this.detectExistingFlag();
-         if (!existsFlag) {
-            flag.dataset.flag = this.block.newFlag(this.range, type);
+          if (!existsFlag) {
+            flag.dataset.flag = this.block.newFlag(windowSelRange, type);
             flag.dataset.status = 'open';
-            flag.appendChild(this.range.extractContents());
+            flag.appendChild(windowSelRange.extractContents());
             flag.childNodes.forEach((n, i) => {
               if (n.dataset && n.dataset.map) {
                 let ch = this.$refs.blockContent.querySelector('[data-map="' + n.dataset.map + '"]');
@@ -1703,13 +1703,13 @@ export default {
                 }
               }
             });
-            this.range.insertNode(flag);
+            windowSelRange.insertNode(flag);
             flag.addEventListener('click', this.handleFlagClick);
             this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
-         } else {
-            this.block.addFlag(existsFlag.dataset.flag, this.range, type);
+          } else {
+            this.block.addFlag(existsFlag.dataset.flag, windowSelRange, type);
             this.handleFlagClick({target: existsFlag, layerY: ev.layerY, clientY: ev.clientY});
-         }
+          }
           this.$refs.blockFlagPopup.scrollBottom();
           //this.isChanged = true;
           //this.pushChange('flags');

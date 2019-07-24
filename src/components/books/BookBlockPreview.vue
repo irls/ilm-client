@@ -31,7 +31,7 @@
           <div class="table-body footnote"
             v-for="(footnote, ftnIdx) in block.footnotes">
 
-            <div :class="['table-row controls-top', {'completed': isCompleted}]">
+            <div v-if="allowEditing" :class="['table-row controls-top', {'completed': isCompleted}]">
             </div>
 
             <div class="table-row">
@@ -68,7 +68,7 @@
   <template v-else v-for="(blockPart, blockPartIdx) in blockParts">
     <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
     <div :id="'v-' + blockId + '-' + blockPartIdx" :class="['content-process-run', 'preloader-loading']">
-      
+
     </div>
   </template>
 </div>
@@ -187,6 +187,11 @@ import { mapGetters }     from 'vuex';
           } else {
             return this.meta.language;
           }
+        }
+      },
+      allowEditing: {
+        get() {
+          return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
         }
       },
     },
