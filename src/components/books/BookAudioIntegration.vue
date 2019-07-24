@@ -34,13 +34,13 @@
             </dropdown>
             <dropdown text="" type="default" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
                 <li>
-                  <span v-on:click="markSelected()">All</span>
+                  <span v-on:click="filterAll()">All</span>
                 </li>
                 <li>
-                  <span v-on:click="unmarkSelected()">Pending</span>
+                  <span v-on:click="filterPending()">Pending</span>
                 </li>
                 <li>
-                  <span v-on:click="unmarkSelected()">Aligned</span>
+                  <span v-on:click="filterAligned()">Aligned</span>
                 </li>
             </dropdown>
             <div class="align-audio">
@@ -52,7 +52,7 @@
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
           <div class="file-catalogue-files-wrapper">
             <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
-              <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}]">
+              <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]">
                 <template v-if="audiofile.status == 'processing'">
                   <div class="audiofile-info">
                     <i>Processing, {{audiofile.title}}</i>
@@ -964,8 +964,21 @@
             this.aad_sort = 'date_desc';
           }
         }
-        console.log(this.audiobook.importFiles);
+        //console.log(this.audiobook.importFiles);
+        //this.saveAudiobook()
         this.$refs.allAudioDropdownSort.toggle();
+      },
+      filterAll() {
+        this.aad_filter = 'all';
+        this.$refs.allAudioDropdownFilter.toggle();
+      },
+      filterAligned() {
+        this.aad_filter = 'aligned';
+        this.$refs.allAudioDropdownFilter.toggle();
+      },
+      filterPending() {
+        this.aad_filter = 'pending';
+        this.$refs.allAudioDropdownFilter.toggle();
       },
       markSelected() {
         this._setDone(true);
@@ -1061,6 +1074,14 @@
           return false;
         }
       },
+      isAudiofileAligned(audiofile) {
+        if ('done' in audiofile && audiofile.done == true){
+          return true;
+        } else {
+          return false;
+        }
+      },
+
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'saveChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
     },
     beforeDestroy() {
@@ -1309,6 +1330,9 @@
           &.red {
               color: red;
           }
+        }
+        &.-hidden {
+            display: none;
         }
         span {
           display: inline-block;
