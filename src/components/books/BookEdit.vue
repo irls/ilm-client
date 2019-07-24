@@ -2455,7 +2455,7 @@ export default {
         background: inherit;
         &[data-audiosrc] {
           &.playing {
-            w[data-map] {
+            w {
               background: inherit;
             }
           }
