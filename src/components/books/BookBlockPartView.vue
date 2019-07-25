@@ -696,7 +696,7 @@ export default {
           content = content.replace(rg, '$1$2<br><br>');*/
           let parts = [];
           let regEx = new RegExp(`[\.\!\?\…\؟]+[ \r\n](?![\\W]*[a-z])`, 'mg')
-          let regExAbbr = new RegExp(`(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\b)cf|(?=\b)Cap|(?=\b)ca|(?=\b)cca|(?=\b)fl|(?=\b)gen|(?=\b)gov|(?=\b)vs|(?=\b)v|i\.e|i\.a|e\.g|n\.b|p\.s|p\.p\.s|(?=\b)scil|(?=\b)ed|(?=\b)p|(?=\b)viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
+          let regExAbbr = new RegExp(`(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\b)cf|(?=\b)Cap|(?=\b)ca|(?=\b)cca|(?=\b)fl|(?=\b)gen|(?=\b)gov|(?=\b)vs|(?=\b)v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|(?=\b)scil|(?=\b)ed|(?=\b)p|(?=\b)viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
           let regExColon = new RegExp(`([\:\;\؛])`, 'mg');
           //var regExLower = new RegExp('$([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])')
           let match;
