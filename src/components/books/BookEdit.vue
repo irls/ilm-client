@@ -2387,6 +2387,9 @@ export default {
 }
 
 .table-body {
+  &.-subblock {
+    position: relative;
+  }
   &.-mode-narrate {
     position: relative;
     /*.controls-bottom, .controls-top {
