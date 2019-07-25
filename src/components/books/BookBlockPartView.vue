@@ -689,10 +689,11 @@ export default {
         get() {
           let content = this.blockPart.content.replace(/<sup[^>]*>.*?<\/sup>/img, '');
           //content = $(`<div>${content}</div>`).text();
-          let replaceHTMLRg = new RegExp(`<(?!\/|ol|ul|li|u)[^>]*>([^<]+?)<\/[^>]+>`, 'mg');
+          /*let replaceHTMLRg = new RegExp(`<(?!\/|ol|ul|li|u)[^>]*>([^<]+?)<\/[^>]+>`, 'mg');
           while (content.match(replaceHTMLRg)) {
             content = content.replace(replaceHTMLRg, '$1');
-          }
+          }*/
+          content = content.replace(/(<\/?(?:ol|ul|li|u)[^>]*>)|<[^>]+>/img, '$1');
           /*let rg = new RegExp('((?<!St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\\b)cf|(?=\\b)Cap|(?=\\b)ca|(?=\\b)cca|(?=\\b)fl|(?=\\b)gen|(?=\\b)gov|(?=\\b)vs|(?=\\b)v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|(?=\\b)scil|(?=\\b)ed|(?=\\b)p|(?=\\b)viz|\\W[A-Z]))([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])', 'img');
           content = content.replace(rg, '$1$2<br><br>');*/
           let parts = [];

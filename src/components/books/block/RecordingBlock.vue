@@ -103,5 +103,8 @@
         color: red;
       }
     }
+    [data-suggestion] {
+      background: inherit;
+    }
   }
 </style>
