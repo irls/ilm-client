@@ -689,13 +689,64 @@ export default {
         get() {
           let content = this.blockPart.content.replace(/<sup[^>]*>.*?<\/sup>/img, '');
           //content = $(`<div>${content}</div>`).text();
-          let replaceHTMLRg = new RegExp('<(?!ol|ul|li)[^>]*>([^<]+)<\\/[^>]+>', 'mg');
+          let replaceHTMLRg = new RegExp(`<(?!\/|ol|ul|li|u)[^>]*>([^<]+?)<\/[^>]+>`, 'mg');
           while (content.match(replaceHTMLRg)) {
             content = content.replace(replaceHTMLRg, '$1');
           }
-          let rg = new RegExp('((?<!St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\\b)cf|(?=\\b)Cap|(?=\\b)ca|(?=\\b)cca|(?=\\b)fl|(?=\\b)gen|(?=\\b)gov|(?=\\b)vs|(?=\\b)v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|(?=\\b)scil|(?=\\b)ed|(?=\\b)p|(?=\\b)viz|\\W[A-Z]))([\\.\\!\\?\\…\\؟])(?!\\W*[a-z])', 'mg');
-          content = content.replace(rg, '$1$2<br><br>');
-          content = content.replace(/([\:\;\؛])/mg, '$1<br>');
+          /*let rg = new RegExp('((?<!St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\\b)cf|(?=\\b)Cap|(?=\\b)ca|(?=\\b)cca|(?=\\b)fl|(?=\\b)gen|(?=\\b)gov|(?=\\b)vs|(?=\\b)v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|(?=\\b)scil|(?=\\b)ed|(?=\\b)p|(?=\\b)viz|\\W[A-Z]))([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])', 'img');
+          content = content.replace(rg, '$1$2<br><br>');*/
+          let parts = [];
+          let regEx = new RegExp(`[\.\!\?\…\؟]+[ \r\n](?![\\W]*[a-z])`, 'mg')
+          let regExAbbr = new RegExp(`(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\b)cf|(?=\b)Cap|(?=\b)ca|(?=\b)cca|(?=\b)fl|(?=\b)gen|(?=\b)gov|(?=\b)vs|(?=\b)v|i\.e|i\.a|e\.g|n\.b|p\.s|p\.p\.s|(?=\b)scil|(?=\b)ed|(?=\b)p|(?=\b)viz|\\W[A-Z])([\.\!\?\…\؟])$`, 'img');
+          let regExColon = new RegExp(`([\:\;\؛])`, 'mg');
+          //var regExLower = new RegExp('$([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])')
+          let match;
+          let shift = 0;
+          while ((match = regEx.exec(content))) {
+            //console.log(match)
+            let pos = match.index + match[0].length;
+            let substr = content.substring(shift > 10 ? shift : 0, match.index < content.length ? pos : null).trim();
+            //var substrLower = str.substring(match.index);
+            //console.log(`"${substr}"`);
+            //console.log('MATCH: ', substr.match(regExAbbr))
+            if (!substr.match(regExAbbr) && substr.match(/\w/)) {
+              parts.push(substr);
+              shift = pos;
+            }
+          }
+          if (parts.length > 0) {
+            if (shift < content.length) {
+              let substr = content.substring(shift);
+              if (substr.match(/\w/)) {
+                parts.push(substr);
+              } else {
+                parts[parts.length - 1]+=substr;
+              }
+            }
+            content = parts.join('<br><br>');
+          }
+          parts = [];
+          shift = 0;
+          while ((match = regExColon.exec(content))) {
+            let pos = match.index + match[0].length;
+            let substr = content.substring(shift > 10 ? shift : 0, match.index < content.length ? pos : null).trim();
+            if (substr.match(/\w/)) {
+              parts.push(substr);
+              shift = pos;
+            }
+          }
+          if (parts.length > 0) {
+            if (shift < content.length) {
+              let substr = content.substring(shift);
+              if (substr.match(/\w/)) {
+                parts.push(substr);
+              } else {
+                parts[parts.length - 1]+=substr;
+              }
+            }
+            content = parts.join('<br>');
+          }
+          //content = content.replace(, '$1<br>');
           return content;
         },
         cache: false
