@@ -940,10 +940,17 @@
       listReorder(info) {
         if (info && typeof info.newIndex !== 'undefined' && typeof info.oldIndex !== 'undefined' && info.newIndex !== info.oldIndex) {
           this.saveAudiobook([[info.oldIndex, info.newIndex]]);
+          console.log('indexes: ', info.oldIndex, info.newIndex)
         }
       },
       //field: 'name', 'date'; direction: 'asc', 'desc'
       listSort(field, direction){
+        //let's save prev order:
+        let oldOrder = [];
+        for (let i = 0; i < this.audiobook.importFiles.length; i++) {
+          oldOrder.push(this.audiobook.importFiles[i].id);
+        }
+
         if (field == 'name'){
           if (direction == 'asc'){
             this.audiobook.importFiles.sort((a,b) => (a.origName > b.origName) ? 1 : ((b.origName > a.origName) ? -1 : 0));
@@ -964,8 +971,12 @@
             this.aad_sort = 'date_desc';
           }
         }
-        //console.log(this.audiobook.importFiles);
-        //this.saveAudiobook()
+
+        let reIndexArr = [];
+        for (let i = 0; i < this.audiobook.importFiles.length; i++) {
+            reIndexArr.push([oldOrder.indexOf(this.audiobook.importFiles[i].id), i]);
+        }
+        this.saveAudiobook(reIndexArr);
         this.$refs.allAudioDropdownSort.toggle();
       },
       filterAll() {
