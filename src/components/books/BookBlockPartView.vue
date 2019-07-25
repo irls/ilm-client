@@ -688,7 +688,7 @@ export default {
         get() {
           let content = this.blockPart.content.replace(/<sup[^>]*>.*?<\/sup>/img, '');
           //content = $(`<div>${content}</div>`).text();
-          let replaceHTMLRg = new RegExp('<(?!ol|ul|li)[^>]*>([^<]+)<\\/[^>]+>', 'mg');
+          let replaceHTMLRg = new RegExp(`<(?!\/|ol|ul|li|u)[^>]*>([^<]+?)<\/[^>]+>`, 'mg');
           while (content.match(replaceHTMLRg)) {
             content = content.replace(replaceHTMLRg, '$1');
           }
