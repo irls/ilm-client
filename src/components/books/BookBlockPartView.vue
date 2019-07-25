@@ -259,7 +259,7 @@
 
             </div>
             <!--<div class="table-row ilm-block">-->
-            <div class="table-row controls-bottom" v-if="isSplittedBlock || isRecording"><!-- isRecording for margin under block -->
+            <div class="table-row controls-bottom" v-if="isSplittedBlock">
               <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
                   <div class="save-block -right" @click="discardBlock"
