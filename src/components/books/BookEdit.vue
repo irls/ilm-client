@@ -1623,6 +1623,7 @@ export default {
       }
       let vBlock = document.getElementById(id);
       if (vBlock) {
+        this.parlistO.setFirstVisibleId(blockId);
         let firstId = this.parlistO.idsViewArray()[0];
         if (firstId) {
           firstId = firstId.blockRid;
