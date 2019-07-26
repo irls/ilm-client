@@ -697,10 +697,11 @@ export default {
           /*let rg = new RegExp('((?<!St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\\b)cf|(?=\\b)Cap|(?=\\b)ca|(?=\\b)cca|(?=\\b)fl|(?=\\b)gen|(?=\\b)gov|(?=\\b)vs|(?=\\b)v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|(?=\\b)scil|(?=\\b)ed|(?=\\b)p|(?=\\b)viz|\\W[A-Z]))([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])', 'img');
           content = content.replace(rg, '$1$2<br><br>');*/
           let parts = [];
-          let regEx = new RegExp(`[\.\!\?\…\؟]+[ \r\n](?![\\W]*[a-z])`, 'mg')
+          let lettersPattern = 'a-zA-Zа-яА-Я\\u0600-\\u06FF';
+          let regEx = new RegExp(`[\.\!\?\…\؟]+[^${lettersPattern}]*?[ \r\n](?![\\W]*[a-z])`, 'mg')
           let regExAbbr = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
           let regExColon = new RegExp(`[\:\;\؛]\\W* `, 'mg');
-          let regExLetters = new RegExp('[a-zA-Zа-яА-Я\\u0600-\\u06FF]');
+          let regExLetters = new RegExp(`[${lettersPattern}]`);
           //var regExLower = new RegExp('$([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])')
           let match;
           let shift = 0;
