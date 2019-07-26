@@ -643,9 +643,9 @@ class BookBlock {
 
   getClass(mode = null) {
     let result = this.type;
-    if (mode !== 'narrate' && this.classes && typeof this.classes === 'object') {
+    if (this.classes && typeof this.classes === 'object') {
       for (let key in this.classes) {
-        if (key) {
+        if (key && (mode !== 'narrate' || key === 'whitespace')) {
           if (this.classes[key] && this.classes[key] !== '') result += ' '+ this.classes[key];
           else if (Object.keys(BlockTypes[this.type])[0] === '') result += ' ' + key.replace(/\s/g, '-');
         }
