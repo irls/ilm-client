@@ -699,17 +699,18 @@ export default {
           let regEx = new RegExp(`[\.\!\?\…\؟]+[ \r\n](?![\\W]*[a-z])`, 'mg')
           let regExAbbr = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
           let regExColon = new RegExp(`[\:\;\؛]\\W* `, 'mg');
+          let regExLetters = new RegExp('[a-zA-Zа-яА-Я\\u0600-\\u06FF]');
           //var regExLower = new RegExp('$([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])')
           let match;
           let shift = 0;
           while ((match = regEx.exec(content))) {
             //console.log(match)
             let pos = match.index + match[0].length;
-            let substr = content.substring(shift > 10 ? shift : 0, match.index < content.length ? pos : null).trim();
+            let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
             //var substrLower = str.substring(match.index);
             //console.log(`"${substr}"`);
             //console.log('MATCH: ', substr.match(regExAbbr))
-            if (!substr.match(regExAbbr) && substr.match(/\w/)) {
+            if (!substr.match(regExAbbr) && substr.match(regExLetters)) {
               parts.push(substr);
               shift = pos;
             }
@@ -717,7 +718,7 @@ export default {
           if (parts.length > 0) {
             if (shift < content.length) {
               let substr = content.substring(shift);
-              if (substr.match(/\w/)) {
+              if (substr.match(regExLetters)) {
                 parts.push(substr);
               } else {
                 parts[parts.length - 1]+=substr;
@@ -729,8 +730,8 @@ export default {
           shift = 0;
           while ((match = regExColon.exec(content))) {
             let pos = match.index + match[0].length;
-            let substr = content.substring(shift > 10 ? shift : 0, match.index < content.length ? pos : null).trim();
-            if (substr.match(/\w/)) {
+            let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
+            if (substr.match(regExLetters)) {
               parts.push(substr);
               shift = pos;
             }
@@ -738,7 +739,7 @@ export default {
           if (parts.length > 0) {
             if (shift < content.length) {
               let substr = content.substring(shift);
-              if (substr.match(/\w/)) {
+              if (substr.match(regExLetters)) {
                 parts.push(substr);
               } else {
                 parts[parts.length - 1]+=substr;
