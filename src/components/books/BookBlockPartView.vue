@@ -705,7 +705,7 @@ export default {
           let regExAbbr = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
           let regExColon = new RegExp(`[\:\;\؛]\\W* `, 'mg');
           let regExLetters = new RegExp(`[${lettersPattern}]`);
-          let regExNewline = new RegExp(`<br[^>]*>[^${lettersPattern}]*$`);
+          let regExNewline = new RegExp(`[^\.\!\?\…\؟]<br[^>]*>[^${lettersPattern}]*$`);
           //var regExLower = new RegExp('$([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])')
           let match;
           let shift = 0;
@@ -753,6 +753,7 @@ export default {
             }
             content = parts.join('<br>');
           }
+          content = content.replace(/<br><br><br>/gm, '<br><br>');
           //content = content.replace(, '$1<br>');
           return content;
         },
