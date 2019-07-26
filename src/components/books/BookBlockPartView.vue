@@ -701,7 +701,7 @@ export default {
           content = content.replace(rg, '$1$2<br><br>');*/
           let parts = [];
           let lettersPattern = 'a-zA-Zа-яА-Я\\u0600-\\u06FF';
-          let regEx = new RegExp(`[\.\!\?\…\؟]+[^${lettersPattern}]*?[ \r\n](?![\\W]*[a-z])`, 'mg')
+          let regEx = new RegExp(`[\.\!\?\…\؟]+[^${lettersPattern}]*?( |\r\n|<br[^>]*>)(?![\\W]*[a-z])`, 'mg')
           let regExAbbr = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
           let regExColon = new RegExp(`[\:\;\؛]\\W* `, 'mg');
           let regExLetters = new RegExp(`[${lettersPattern}]`);
