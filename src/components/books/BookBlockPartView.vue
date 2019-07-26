@@ -694,6 +694,9 @@ export default {
             content = content.replace(replaceHTMLRg, '$1');
           }*/
           content = content.replace(/(<\/?(?:ol|ul|li|u)[^>]*>)|<[^>]+>/img, '$1');
+          if (this.block.classes && typeof this.block.classes === 'object' && typeof this.block.classes.whitespace !== 'undefined' && this.block.classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
+            content = content.replace(/[\r\n]/mg, '<br>');
+          }
           /*let rg = new RegExp('((?<!St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\\b)cf|(?=\\b)Cap|(?=\\b)ca|(?=\\b)cca|(?=\\b)fl|(?=\\b)gen|(?=\\b)gov|(?=\\b)vs|(?=\\b)v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|(?=\\b)scil|(?=\\b)ed|(?=\\b)p|(?=\\b)viz|\\W[A-Z]))([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])', 'img');
           content = content.replace(rg, '$1$2<br><br>');*/
           let parts = [];
@@ -702,6 +705,7 @@ export default {
           let regExAbbr = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
           let regExColon = new RegExp(`[\:\;\؛]\\W* `, 'mg');
           let regExLetters = new RegExp(`[${lettersPattern}]`);
+          let regExNewline = new RegExp(`<br[^>]*>[^${lettersPattern}]*$`);
           //var regExLower = new RegExp('$([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])')
           let match;
           let shift = 0;
@@ -712,7 +716,7 @@ export default {
             //var substrLower = str.substring(match.index);
             //console.log(`"${substr}"`);
             //console.log('MATCH: ', substr.match(regExAbbr))
-            if (!substr.match(regExAbbr) && substr.match(regExLetters)) {
+            if (!substr.match(regExAbbr) && substr.match(regExLetters) && !substr.match(regExNewline)) {
               parts.push(substr);
               shift = pos;
             }
@@ -720,7 +724,7 @@ export default {
           if (parts.length > 0) {
             if (shift < content.length) {
               let substr = content.substring(shift);
-              if (substr.match(regExLetters)) {
+              if (substr.match(regExLetters) && !substr.match(regExNewline)) {
                 parts.push(substr);
               } else {
                 parts[parts.length - 1]+=substr;
