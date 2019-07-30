@@ -25,11 +25,11 @@
                 <li :class="this.aad_sort == 'name_desc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('name', 'desc')">File name (Z to A)</span>
                 </li>
-                <li :class="this.aad_sort == 'date_asc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('date', 'asc')">Date imported (Newest to Oldest)</span>
-                </li>
                 <li :class="this.aad_sort == 'date_desc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('date', 'desc')">Date imported (Oldest to Newest)</span>
+                  <span v-on:click="listSort('date', 'desc')">Date imported (Newest to Oldest)</span>
+                </li>
+                <li :class="this.aad_sort == 'date_asc' ? ' aad_selected' : ' '">
+                  <span v-on:click="listSort('date', 'asc')">Date imported (Oldest to Newest)</span>
                 </li>
             </dropdown>
             <dropdown text="" type="default" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
