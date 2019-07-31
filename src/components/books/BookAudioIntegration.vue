@@ -964,11 +964,13 @@
         }
         if (field == 'date'){
           if (direction == 'asc'){
-            this.audiobook.importFiles.sort((a,b) => (a.tstamp > b.tstamp) ? 1 : ((b.tstamp > a.tstamp) ? -1 : 0));
+            //this.audiobook.importFiles.sort((a,b) => (a.tstamp > b.tstamp) ? 1 : ((b.tstamp > a.tstamp) ? -1 : 0));
+            this.audiobook.importFiles.sort((a,b) => (a.tstamp > b.tstamp) ? 1 : ((b.tstamp > a.tstamp) ? -1 : (a.origName > b.origName) ? 1 : ((b.origName > a.origName) ? -1 : 0)));
             this.aad_sort = 'date_asc';
           }
           if (direction == 'desc'){
-            this.audiobook.importFiles.sort((a,b) => (a.tstamp < b.tstamp) ? 1 : ((b.tstamp < a.tstamp) ? -1 : 0));
+            //this.audiobook.importFiles.sort((a,b) => (a.tstamp < b.tstamp) ? 1 : ((b.tstamp < a.tstamp) ? -1 : 0));
+            this.audiobook.importFiles.sort((a,b) => (a.tstamp < b.tstamp) ? 1 : ((b.tstamp < a.tstamp) ? -1 : (a.origName > b.origName) ? 1 : ((b.origName > a.origName) ? -1 : 0)));
             this.aad_sort = 'date_desc';
           }
         }
