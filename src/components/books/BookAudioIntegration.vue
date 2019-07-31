@@ -25,13 +25,13 @@
                 </li>
             </dropdown>
             <dropdown text="" type="default" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
-                <li>
+                <li :class="this.aad_filter != 'pending' && this.aad_filter != 'aligned' ? ' aad_selected' : ' '">
                   <span v-on:click="filterAll()">All</span>
                 </li>
-                <li>
+                <li :class="this.aad_filter == 'pending' ? ' aad_selected' : ' '">
                   <span v-on:click="filterPending()">Pending</span>
                 </li>
-                <li>
+                <li :class="this.aad_filter == 'aligned' ? ' aad_selected' : ' '">
                   <span v-on:click="filterAligned()">Aligned</span>
                 </li>
             </dropdown>
