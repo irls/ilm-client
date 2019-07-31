@@ -10,14 +10,6 @@
                 <span class="checkmark"></span>
               </label>
             </div>
-            <div class="upload-audio">
-              <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload btn-small">
-                Import Audio
-              </button>
-            </div>
-            <div class="delete-audio">
-              <button class="btn btn-danger btn-small" :disabled="selectionLength == 0" v-on:click="deleteAudio()">Delete<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
-            </div>
             <dropdown text="" type="default" ref="allAudioDropdownSort" class="all-audio-dropdown aad-sort">
                 <li :class="this.aad_sort == 'name_asc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('name', 'asc')">File name (A to Z)</span>
@@ -25,11 +17,11 @@
                 <li :class="this.aad_sort == 'name_desc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('name', 'desc')">File name (Z to A)</span>
                 </li>
-                <li :class="this.aad_sort == 'date_asc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('date', 'asc')">Date imported (Newest to Oldest)</span>
-                </li>
                 <li :class="this.aad_sort == 'date_desc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('date', 'desc')">Date imported (Oldest to Newest)</span>
+                  <span v-on:click="listSort('date', 'desc')">Newest to Oldest</span>
+                </li>
+                <li :class="this.aad_sort == 'date_asc' ? ' aad_selected' : ' '">
+                  <span v-on:click="listSort('date', 'asc')">Oldest to Newest</span>
                 </li>
             </dropdown>
             <dropdown text="" type="default" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
@@ -43,6 +35,15 @@
                   <span v-on:click="filterAligned()">Aligned</span>
                 </li>
             </dropdown>
+            <span class="divider">|</span>
+            <div class="upload-audio">
+              <button id="show-modal" type="button" @click="uploadAudio" class="btn btn-default btn_audio_upload btn-small" >
+                <i class="fa" ></i>Import
+              </button>
+            </div>
+            <div class="delete-audio">
+              <button class="btn btn-default btn-small" :disabled="selectionLength == 0" v-on:click="deleteAudio()" ><i class="fa fa-trash" style="color:red"></i><span v-if="selectionLength > 0" style="color:red">({{selectionLength}})</span></button>
+            </div>
             <div class="align-audio">
               <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)" v-if="!alignProcess">Align&nbsp;<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
               <span v-else class="align-preloader -small"></span>
@@ -1303,6 +1304,8 @@
           /*width: 100px;*/
         }
       }
+      .btn {height: 34px;}
+      .divider {color: grey;}
     }
     .file-catalogue-files-wrapper {
         height: 100%;
@@ -1464,7 +1467,6 @@
     .aad_selected {
      background: #95BCF2;
     }
-
   }
   h4.panel-title {
     font-size: 14px;
