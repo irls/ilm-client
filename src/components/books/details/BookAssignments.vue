@@ -140,7 +140,7 @@
         }, {})
           .then(response => {
             if (response.status == 200) {
-               //console.log(this.tasks_counter); 
+               //console.log(this.tasks_counter);
                //this.tasks_counter.forEach(function(el, index) {
                //  console.log(el.key, el.data);
                //  this.tasks_counter[index].data
@@ -214,7 +214,7 @@
           });
       },
       toggleMastering() {
-        if (this.tc_allowToggleMetaMastering()) {
+        if (this.tc_allowToggleMetaMastering() && !this.currentJobInfo.mastering && this.currentJobInfo.workflow.status == 'active') {
           if (!this.currentBookMeta.masteringRequired) {
             this.$root.$emit('show-modal', {
               title: ``,
@@ -251,7 +251,7 @@
       ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering']),
     },
     mounted() {
-      
+
     }
   }
 </script>
