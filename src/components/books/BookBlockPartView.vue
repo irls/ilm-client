@@ -103,7 +103,7 @@
                   </div>
 
                   <div :class="['table-row content-description', block.getClass(mode)]">
-                    <div class="content-wrap-desc description" 
+                    <div class="content-wrap-desc description"
                       ref="blockDescription"
                       @input="commitDescription($event)"
                       v-html="block.description"
@@ -115,6 +115,7 @@
                 <!--<img v-if="block.illustration"-->
 
                 <div v-else class="content-wrap -focus -hover"
+                  :data-iseditor="block._id"
                   :id="'content-'+block._id+'-part-'+blockPartIdx"
                   ref="blockContent"
                   v-html="blockPart.content"
@@ -1085,7 +1086,7 @@ export default {
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
     //       this.editor.subscribe('positionToolbar', ()=>{})
-        }  else if (this.editor) { 
+        }  else if (this.editor) {
           this.editor.setup();
         }
 
@@ -1180,7 +1181,9 @@ export default {
       onContext: function(e) {
         e.preventDefault();
         e.stopPropagation();
+
         this.range = window.getSelection().getRangeAt(0).cloneRange();
+
         if (this.$refs.blockCntx) {
           let narrationShift = ($('.content-scroll-wrapper').outerWidth() - $('.-block.-subblock').outerWidth()) / 2;//shift for specific width
           this.$refs.blockCntx.open(e, this.range, this.mode === 'narrate' ? narrationShift : 0);
@@ -1313,7 +1316,7 @@ export default {
         if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
           this.$root.$emit('from-block:save-and-realign-warning', () => {
                   this.$root.$emit('hide-modal');
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1322,7 +1325,7 @@ export default {
                       this.assembleBlockProxy(false, false)
                     }
                   }, 50);
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1458,7 +1461,7 @@ export default {
         if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
           this.$root.$emit('from-block:save-and-realign-warning', () => {
                   this.$root.$emit('hide-modal');
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1467,7 +1470,7 @@ export default {
                       this.assembleBlockNarrate(false, false)
                     }
                   }, 50);
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1694,7 +1697,7 @@ export default {
           this.block.footnotes.splice(p - posDecr, 1);
           ++posDecr;
         });
-        
+
         this.isChanged = false; // to be shure to update view
         this.isChanged = true;
         this.pushChange('footnotes');
@@ -1734,12 +1737,28 @@ export default {
             let selectionLength = endNode.nodeType == 3 ? endNode.textContent.length: 1;
             this.range.setEnd(endNode, selectionLength);
           }
-          let flag = document.createElement(this.flagEl);
+
           let existsFlag = this.detectExistingFlag();
+
+          let windowSelRange = this.range;
+          // ILM-2108: - because the last tag in the selection was not cropped
+          // and was duplicated after adding a flag
+          let startElementWrapper = windowSelRange.startContainer.parentElement;
+          let startElementWrapperName = startElementWrapper.nodeName.toLowerCase();
+          if (startElementWrapperName !== 'div') {
+            windowSelRange.setStartBefore(startElementWrapper)
+          }
+          let endElementWrapper = windowSelRange.endContainer.parentElement;
+          let endElementWrapperName = endElementWrapper.nodeName.toLowerCase();
+          if (endElementWrapperName !== 'div') {
+            windowSelRange.setEndAfter(endElementWrapper)
+          }
+
+          let flag = document.createElement(this.flagEl);
           if (!existsFlag) {
-            flag.dataset.flag = this.block.newFlag(this.range, type, false, this.mode);
+            flag.dataset.flag = this.block.newFlag(windowSelRange, type, false, this.mode);
             flag.dataset.status = 'open';
-            flag.appendChild(this.range.extractContents());
+            flag.appendChild(windowSelRange.extractContents());
             flag.childNodes.forEach((n, i) => {
               if (n.dataset && n.dataset.map) {
                 let ch = this.$refs.blockContent.querySelector('[data-map="' + n.dataset.map + '"]');
@@ -1773,11 +1792,11 @@ export default {
                 }
               }
             });
-            this.range.insertNode(flag);
+            windowSelRange.insertNode(flag);
             flag.addEventListener('click', this.handleFlagClick);
             this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
           } else {
-            this.block.addFlag(existsFlag.dataset.flag, this.range, type, this.mode);
+            this.block.addFlag(existsFlag.dataset.flag, windowSelRange, type, this.mode);
             this.handleFlagClick({target: existsFlag, layerY: ev.layerY, clientY: ev.clientY});
           }
           this.$refs.blockFlagPopup.scrollBottom();
@@ -1802,15 +1821,17 @@ export default {
       detectExistingFlag: function(ev) {
         let node = this.range.startContainer;
         let endNode = this.range.endContainer;
+        // ILM-2108: .iseditor has been added, because in proofread mode
+        // there is no an editor in fact and we need to stop traverse
         let target = MediumEditor.util.traverseUp(node, (element)=>{
-          return element.dataset.flag;
+          return element.dataset.flag || element.dataset.iseditor;
         })
         while (target === false && node && node != endNode) {
           target = MediumEditor.util.traverseUp(node = this.nextNode(node), (element)=>{
-            return element.dataset.flag;
+            return element.dataset.flag || element.dataset.iseditor;
           })
         }
-        return target;
+        return target.dataset.flag ? target : false;
       },
 
       nextNode: function (node) {
@@ -1902,7 +1923,7 @@ export default {
           return result;
       },
 
-      
+
       toggleFlagPart: function(ev, partIdx) {
         if (!this.flagsSel.parts[partIdx].collapsed) this.flagsSel.parts[partIdx].collapsed = true;
         else this.flagsSel.parts[partIdx].collapsed = !this.flagsSel.parts[partIdx].collapsed;
@@ -1957,7 +1978,7 @@ export default {
       _startRecording() {
         return this.initRecorder()
           .then(() => {
-            
+
             this.$modal.show(RecordingBlock, {
               text: this.narrationBlockContent,
               cancelRecording: this.cancelRecording,
@@ -1965,7 +1986,7 @@ export default {
               pauseRecording: this.pauseRecording,
               resumeRecording: this.resumeRecording,
               lang: this.getBlockLang
-            }, 
+            },
             {
               clickToClose: false,
               resizable: false,
@@ -1988,7 +2009,7 @@ export default {
                 });
           })
           .catch(err => {
-            
+
             this.$root.$emit('show-modal', {
               title: '<center><h4>Microphone is not working</h4></center>',
               text: `<center>Please ensure:</center>
@@ -2266,7 +2287,7 @@ export default {
                 this.isChanged = false;
                 this.unsetChange('audio');
                 this.unsetChange('content');
-                
+
                 this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
               });
           }
@@ -2416,7 +2437,7 @@ export default {
           this.audStop();
           this.discardAudioEdit(null, true, this.blockPartIdx, this.check_id)
             .then(() => {
-              
+
                 this.isAudioChanged = false;
                 this.isChanged = false;
                 this.unsetChange('audio');
@@ -2830,8 +2851,8 @@ export default {
               this.block.setPartManualBoundaries(this.blockPartIdx, part.manual_boundaries || []);
               //return this.putBlock(this.block);
               if (!realign) {
-                this.$root.$emit('for-audioeditor:load', 
-                this.blockAudiosrc('m4a'), 
+                this.$root.$emit('for-audioeditor:load',
+                this.blockAudiosrc('m4a'),
                 this.block.getPartContent(this.blockPartIdx), false);
               }
               this.isAudioChanged = false;
@@ -2847,7 +2868,7 @@ export default {
             BPromise.reject(err)
           });
       },
-      
+
       blockAudiosrc(ver = null, full = true) {
         if (this.isSplittedBlock) {
           return this.block.getPartAudiosrc(this.blockPartIdx, ver, full);
@@ -2868,7 +2889,7 @@ export default {
       'blockPart.content': {
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
-          
+
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
               this.addContentListeners();
@@ -2886,7 +2907,7 @@ export default {
               }
             }
           }
-          
+
         }
       },
       'classSel' (newVal, oldVal) {
