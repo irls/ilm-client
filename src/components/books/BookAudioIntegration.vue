@@ -11,16 +11,16 @@
               </label>
             </div>
             <dropdown text="" type="default" ref="allAudioDropdownSort" class="all-audio-dropdown aad-sort">
-                <li :class="this.aad_sort == 'name_asc' ? ' aad_selected' : ' '">
+                <li :class="audiobook.sortDirection == 'name_asc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('name', 'asc')">File name (A to Z)</span>
                 </li>
-                <li :class="this.aad_sort == 'name_desc' ? ' aad_selected' : ' '">
+                <li :class="audiobook.sortDirection == 'name_desc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('name', 'desc')">File name (Z to A)</span>
                 </li>
-                <li :class="this.aad_sort == 'date_desc' ? ' aad_selected' : ' '">
+                <li :class="audiobook.sortDirection == 'date_desc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('date', 'desc')">Newest to Oldest</span>
                 </li>
-                <li :class="this.aad_sort == 'date_asc' ? ' aad_selected' : ' '">
+                <li :class="audiobook.sortDirection == 'date_asc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('date', 'asc')">Oldest to Newest</span>
                 </li>
             </dropdown>
@@ -229,14 +229,12 @@
         audioOpening: false,
         activeTabIndex: 0,
         audio_element: false,
-        aad_sort: 'name_asc',
+        aad_sort: null,
         aad_filter: 'all'
       }
     },
     mixins: [task_controls, api_config, access],
     mounted() {
-      //console.log('MOUNTED')
-
       /*let ac = new (window.AudioContext || window.webkitAudioContext);
       this.player = WaveformPlaylist.init({
         ac: ac,
@@ -248,7 +246,7 @@
         timescale: false,
         linkEndpoints: false
       });*/
-      var self = this;
+
       this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
         if (audiofileId && self.playing === audiofileId) {
           self.playing = false;
@@ -363,7 +361,7 @@
       renameAudiofile(id) {
         this.renaming = id;
       },
-      saveAudiobook(reorder = [], removeFiles = [], done = []) {
+      saveAudiobook(reorder = [], removeFiles = [], done = [], sortDirection = null) {
         if (removeFiles) {
           removeFiles.forEach(rf => {
             if (typeof this.positions_tmp[rf] !== 'undefined') {
@@ -384,6 +382,7 @@
         //formData.append('audiobook', JSON.stringify(save_data));
         formData.append('reorder', JSON.stringify(reorder));
         formData.append('removeFiles', JSON.stringify(removeFiles));
+        formData.append('sortDirection', sortDirection);
         let rename = [];
         if (this.renaming) {
           let renaming = this.audiobook.importFiles.find(aif => aif.id == this.renaming);
@@ -947,6 +946,7 @@
       //field: 'name', 'date'; direction: 'asc', 'desc'
       listSort(field, direction){
         //let's save prev order:
+
         let oldOrder = [];
         for (let i = 0; i < this.audiobook.importFiles.length; i++) {
           oldOrder.push(this.audiobook.importFiles[i].id);
@@ -979,7 +979,7 @@
         for (let i = 0; i < this.audiobook.importFiles.length; i++) {
             reIndexArr.push([oldOrder.indexOf(this.audiobook.importFiles[i].id), i]);
         }
-        this.saveAudiobook(reIndexArr);
+        this.saveAudiobook(reIndexArr, [], [], this.aad_sort);
         this.$refs.allAudioDropdownSort.toggle();
       },
       filterAll() {
