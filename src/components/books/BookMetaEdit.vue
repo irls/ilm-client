@@ -1251,7 +1251,7 @@ export default {
                   }
                   this.$root.$emit('from-styles:styles-change-' + pBlock.blockid, pBlock.classes);
                 } else {
-                  pBlock.partUpdate = true;
+                  //pBlock.partUpdate = true;
                   if (oBlock.isNumber !== updateNum) {
                     updateNums.push(oBlock.rid);
                     pBlock.isNumber = updateNum;

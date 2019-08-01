@@ -35,6 +35,7 @@
     </nav>
 
     <v-dialog :clickToClose="false"/>
+    <modals-container/>
     <alert v-model="hasErrorAlert" placement="top" :duration="5000" type="danger" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
       <p>{{errorAlert}}</p>
@@ -64,7 +65,7 @@ import Vue from 'vue';
 import {alert} from 'vue-strap';
 var modal = require('vue-js-modal');
 
-Vue.use(modal, {dialog: true});
+Vue.use(modal, {dialog: true, dynamic: true});
 Vue.use(Clipboard)
 
 
@@ -444,7 +445,7 @@ export default {
 .-langblock-ru,
 .-langblock-sv,
 .-langblock-tr  {
-  .ilm-block {
+  .ilm-block, .recording-text {
     direction: ltr;
   }
   &.ilm-block {
@@ -454,7 +455,7 @@ export default {
 /* Edit mode */
 .-langblock-ar,
 .-langblock-fa  {
-  .ilm-block {
+  .ilm-block, .recording-text {
     direction: rtl;
     .content-wrap, .content-wrap-preview, .content-wrap-desc {
       font-family: 'Times New Roman', 'Liberation Serif';

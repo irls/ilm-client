@@ -1,7 +1,7 @@
 <template>
-<div :class="['content-scroll-wrapper', {'recording-background': recordingState == 'recording'}]"
+<div :class="['content-scroll-wrapper']"
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
-
+  
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <div class="content-background">
       <div v-for="(viewObj, listIdx) in getListObjs"
@@ -32,7 +32,7 @@
   <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
-      <div :class="['row content-scroll-item front', {'recording-block': recordingBlockId == viewObj.blockId}]"
+      <div class="row content-scroll-item front"
         v-for="(viewObj, blockIdx) in parlistO.idsViewArray()"
         v-bind:id="'s-'+ viewObj.blockId"
         v-bind:key="viewObj.blockId"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
@@ -63,7 +63,6 @@
               :joinBlocks="joinBlocks"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="blockUpdated"
-              @recordingState="setRecordingState"
           /></BookBlockView>
         </div>
         <!--<div class='col'>-->
@@ -161,9 +160,7 @@ export default {
 
       lazyLoaderDir: 'up',
       isNeedUp: true,
-      isNeedDown: true,
-      recordingState: '',
-      recordingBlockId: null
+      isNeedDown: true
 
     }
   },
@@ -853,22 +850,13 @@ export default {
             this.onMediaSuccess_msr(stream);
             resolve();
           }, (e) => {
-            console.log('media error', e);
+            //console.log('media error', e);
             reject(e);
           });
         } else {
           resolve();
         }
       });
-    },
-    setRecordingState(state, blockId, blockPartIdx = null) {
-      this.recordingState = state;
-      if (state == 'recording') {
-        this.recordingBlockId = blockId;
-        this.scrollToBlock(blockId, blockPartIdx);
-      } else {
-        this.recordingBlockId = null;
-      }
     },
     stopRecordingAndNext(block, blockPartIdx) {
       if (block.parts && block.parts.length - 1 > blockPartIdx) {
@@ -1499,10 +1487,6 @@ export default {
 
     scrollContent(ev, step = 60)
     {
-      if (this.recordingState == 'recording') {
-        return;
-      }
-
       if (ev.deltaY !== false && ev.hasOwnProperty('preventDefault')) ev.preventDefault();
 
       if (ev.deltaY < 0 && this.blockers.indexOf('loadBook') >-1) return;
@@ -1639,6 +1623,7 @@ export default {
       }
       let vBlock = document.getElementById(id);
       if (vBlock) {
+        this.parlistO.setFirstVisibleId(blockId);
         let firstId = this.parlistO.idsViewArray()[0];
         if (firstId) {
           firstId = firstId.blockRid;
@@ -1720,9 +1705,6 @@ export default {
     }, 100),
 
     handleScroll(force = false) {
-      if (this.recordingState == 'recording') {
-        return false;
-      }
       if (!this.$refs.viewBlocks || !this.$refs.viewBlocks.length) {
         return false;
       }
@@ -1953,6 +1935,9 @@ export default {
   mounted: function() {
       //this.onScrollBookDown();
       //console.log('book mounted', this.meta._id);
+      window.onresize = () => {
+        this.correctEditWrapper();
+      };
       this.checkMode();
       this.loadBookMeta() // also handle route params
       .then((initBlocks)=>{
@@ -2112,8 +2097,10 @@ export default {
     },
     'mode': {
       handler(val) {
-        this.recordingState == '';
         Vue.nextTick(() => {
+          if (this.parlistO.firstVisibleId) {
+            this.scrollToBlock(this.parlistO.firstVisibleId);
+          }
           this.correctEditWrapper();
         })
       }
@@ -2208,20 +2195,6 @@ export default {
       .content-scroll-item{
         &.front {
           background-color: rgba(0,0,0,0.5);
-        }
-      }
-
-      .recording-block {
-        .-recording {
-          .-content {
-            background-color: white;
-            border-radius: 5px;
-            .content-wrap {
-              overflow-y: scroll;
-              max-height: 80vh;
-              width: 715px;
-            }
-          }
         }
       }
       .table-body {
@@ -2412,11 +2385,128 @@ export default {
     padding: 0px;
   }
 }
-.table-body.-block {
-  position: relative;
-  &.-subblock.-mode-narrate {
-    width: 700px;
-    margin: 0px auto;
+
+.table-body {
+  &.-subblock {
+    position: relative;
+  }
+  &.-mode-narrate {
+    position: relative;
+    /*.controls-bottom, .controls-top {
+      margin: 0px auto;
+      display: block;
+      .-left {
+          padding: 0px 25px;
+      }
+      .-right {
+          margin-right: 0px;
+      }
+      .par-ctrl.-par-num {
+        label.par-num {
+            padding-left: 20px;
+        }
+      }
+    }*/
+    .controls-bottom {
+      margin: 5px auto;
+      display: block;
+    }
+    .-subblock {
+      position: relative;
+      .-content {
+        width: 650px;
+        /*margin: 0px auto;*/
+      }
+      .controls-left {
+        &.sub-parnum {
+          width: 5%;
+          max-width: 70px;
+          .sub-parnum-main {
+            font-size: 24px;
+            font-weight: bold;
+          }
+        }
+        &.audio-controls {
+          width: 20%;
+          .table-body {
+            width: 100px;
+            margin: 0px 0px 0px auto;
+            .table-cell {
+              text-align: right;
+              i.fa {
+                width: 45px;
+                text-align: center;
+              }
+            }
+          }
+        }
+      }
+      .-hidden-subblock {
+        visibility: hidden;
+      }
+      &:hover {
+        .-hidden-subblock {
+          visibility: visible;
+        }
+      }
+    }
+    &:not(.-voicework-narration) {
+      .completed {
+        background: inherit;
+      }
+      .content-wrap, .content-wrap-preview, .content-wrap-desc.description {
+        color: #bebebe;
+        background: inherit;
+        &[data-audiosrc] {
+          &.playing {
+            w {
+              background: inherit;
+            }
+          }
+        }
+      }
+    }
+    .controls-bottom {
+      width: 650px;
+      margin-left: 25%;
+    }
+    .-subblock {
+      .controls-bottom {
+        margin-left: 0px;
+        margin-right: 0px;
+      }
+    }
+
+    .controls-left {
+      /*height: 123px;*/
+    }
+    .table-row-flex.controls-top {
+      .par-ctrl.-par-num {
+        label.par-num {
+          font-size: 24px;
+          font-style: inherit;
+          font-weight: bold;
+          padding: 0px;
+          &:before {
+            content: '';
+            padding-right: 0px;
+          }
+        }
+      }
+    }
+    .content-wrap {
+      &.header, &.par, &.title {
+        &.-hover:hover {
+          border: 1px solid transparent;
+          background: inherit;
+        }
+      }
+    }
+    [data-author] {
+      color: inherit;
+      font-style: inherit;
+    }
   }
 }
+
 </style>
