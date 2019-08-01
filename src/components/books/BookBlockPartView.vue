@@ -675,16 +675,6 @@ export default {
         },
         cache: false
       },
-      getBlockLang: {
-        cache: false,
-        get() {
-          if (this.block.language && this.block.language.length) {
-            return this.block.language;
-          } else {
-            return this.meta.language;
-          }
-        }
-      },
       narrationBlockContent: {
         get() {
           let content = this.blockPart.content.replace(/<sup[^>]*>.*?<\/sup>/img, '');
@@ -778,6 +768,16 @@ export default {
           mode: 'bookMode',
           blockLockType: 'blockLockType'
       }),
+      getBlockLang: {
+        cache: false,
+        get() {
+          if (this.block.language && this.block.language.length) {
+            return this.block.language;
+          } else {
+            return this.meta.language;
+          }
+        }
+      },
       illustrationChaged() {
         return this.$refs.illustrationInput.image
       },
