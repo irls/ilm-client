@@ -32,7 +32,7 @@ export default {
       });
       if (task && mode) {
         switch(mode) {
-          case 'edit': 
+          case 'edit':
             if (this.editor_tasks.indexOf(task.type) === -1) {
               return false;
             }
@@ -301,7 +301,7 @@ export default {
       }
       if (task && mode) {
         switch(mode) {
-          case 'edit': 
+          case 'edit':
             if (this.editor_tasks.indexOf(task.type) === -1) {
               return false;
             }

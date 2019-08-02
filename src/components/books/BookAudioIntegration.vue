@@ -35,8 +35,7 @@
                   <span v-on:click="filterAligned()">Aligned</span>
                 </li>
             </dropdown>
-            <span class="divider">|</span>
-            <div class="upload-audio">
+            <div class="upload-audio left-divider">
               <button id="show-modal" type="button" @click="uploadAudio" class="btn btn-default btn_audio_upload btn-small" >
                 <i class="fa" ></i>Import
               </button>
@@ -44,7 +43,7 @@
             <div class="delete-audio">
               <button class="btn btn-default btn-small" :disabled="selectionLength == 0" v-on:click="deleteAudio()" ><i class="fa fa-trash" style="color:red"></i><span v-if="selectionLength > 0" style="color:red">({{selectionLength}})</span></button>
             </div>
-            <div class="align-audio">
+            <div class="align-audio left-divider">
               <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)" v-if="!alignProcess">Align&nbsp;<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
               <span v-else class="align-preloader -small"></span>
               <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign(true)" title="Cancel aligning"><i class="fa fa-ban"></i></button>
@@ -1307,7 +1306,6 @@
         }
       }
       .btn {height: 34px;}
-      .divider {color: grey;}
     }
     .file-catalogue-files-wrapper {
         height: 100%;
@@ -1451,6 +1449,9 @@
           }
         }
       }
+      span.caret {
+        margin-top: -5px;
+      }
     }
     .aad-sort button{
       font-family: 'Glyphicons Halflings';
@@ -1468,6 +1469,11 @@
     }
     .aad_selected {
      background: #95BCF2;
+    }
+    .left-divider {
+      border-left: 1px solid #ccc;
+      margin-left: 3px;
+      padding-left: 7px;
     }
   }
   h4.panel-title {
