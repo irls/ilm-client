@@ -1744,14 +1744,19 @@ export default {
           // ILM-2108: - because the last tag in the selection was not cropped
           // and was duplicated after adding a flag
           let startElementWrapper = windowSelRange.startContainer.parentElement;
-          let startElementWrapperName = startElementWrapper.nodeName.toLowerCase();
-          if (startElementWrapperName !== 'div') {
-            windowSelRange.setStartBefore(startElementWrapper)
+          if (startElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
+            while (startElementWrapper.parentElement && startElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
+              startElementWrapper = startElementWrapper.parentElement;
+            }
+            windowSelRange.setStartBefore(startElementWrapper);
           }
+
           let endElementWrapper = windowSelRange.endContainer.parentElement;
-          let endElementWrapperName = endElementWrapper.nodeName.toLowerCase();
-          if (endElementWrapperName !== 'div') {
-            windowSelRange.setEndAfter(endElementWrapper)
+          if (endElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
+            while (endElementWrapper.parentElement && endElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
+              endElementWrapper = endElementWrapper.parentElement;
+            }
+            windowSelRange.setEndAfter(endElementWrapper);
           }
 
           let flag = document.createElement(this.flagEl);
