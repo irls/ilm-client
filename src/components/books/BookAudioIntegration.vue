@@ -246,6 +246,8 @@
         linkEndpoints: false
       });*/
 
+      var self = this;
+
       this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
         if (audiofileId && self.playing === audiofileId) {
           self.playing = false;
@@ -317,7 +319,7 @@
             }
           } else {
             delete this.positions_tmp[this.playing];
-            
+
           }
         }
       });
@@ -1038,7 +1040,7 @@
             console.log(err)
           })
       },
-      
+
       initSplit() {
         if (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0) {
           let parentHeight = false;
@@ -1145,14 +1147,14 @@
         return this._is('editor', true) || this.adminOrLibrarian;
       },
       ...mapGetters({
-        currentBookCounters: 'currentBookCounters', 
-        ttsVoices: 'ttsVoices', 
-        currentBookid: 'currentBookid', 
-        currentBookMeta: 'currentBookMeta', 
-        blockSelection: 'blockSelection', 
-        alignCounter: 'alignCounter', 
-        hasLocks: 'hasLocks', 
-        lockedBlocks: 'lockedBlocks', 
+        currentBookCounters: 'currentBookCounters',
+        ttsVoices: 'ttsVoices',
+        currentBookid: 'currentBookid',
+        currentBookMeta: 'currentBookMeta',
+        blockSelection: 'blockSelection',
+        alignCounter: 'alignCounter',
+        hasLocks: 'hasLocks',
+        lockedBlocks: 'lockedBlocks',
         audiobook: 'currentAudiobook',
         currentJobInfo: 'currentJobInfo',
         adminOrLibrarian: 'adminOrLibrarian'})
@@ -1596,7 +1598,7 @@
     background-repeat: no-repeat;
     background-position: center;
   }
-  
+
   .checkbox-container {
     display: block;
     position: relative;
