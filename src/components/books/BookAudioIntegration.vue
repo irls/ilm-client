@@ -946,41 +946,23 @@
       },
       //field: 'name', 'date'; direction: 'asc', 'desc'
       listSort(field, direction){
-        //let's save prev order:
-
-        let oldOrder = [];
-        for (let i = 0; i < this.audiobook.importFiles.length; i++) {
-          oldOrder.push(this.audiobook.importFiles[i].id);
-        }
-
         if (field == 'name'){
           if (direction == 'asc'){
-            this.audiobook.importFiles.sort((a,b) => (a.origName > b.origName) ? 1 : ((b.origName > a.origName) ? -1 : 0));
             this.aad_sort = 'name_asc';
           }
           if (direction == 'desc'){
-            this.audiobook.importFiles.sort((a,b) => (a.origName < b.origName) ? 1 : ((b.origName < a.origName) ? -1 : 0));
             this.aad_sort = 'name_desc';
           }
         }
         if (field == 'date'){
           if (direction == 'asc'){
-            //this.audiobook.importFiles.sort((a,b) => (a.tstamp > b.tstamp) ? 1 : ((b.tstamp > a.tstamp) ? -1 : 0));
-            this.audiobook.importFiles.sort((a,b) => (a.tstamp > b.tstamp) ? 1 : ((b.tstamp > a.tstamp) ? -1 : (a.origName > b.origName) ? 1 : ((b.origName > a.origName) ? -1 : 0)));
             this.aad_sort = 'date_asc';
           }
           if (direction == 'desc'){
-            //this.audiobook.importFiles.sort((a,b) => (a.tstamp < b.tstamp) ? 1 : ((b.tstamp < a.tstamp) ? -1 : 0));
-            this.audiobook.importFiles.sort((a,b) => (a.tstamp < b.tstamp) ? 1 : ((b.tstamp < a.tstamp) ? -1 : (a.origName > b.origName) ? 1 : ((b.origName > a.origName) ? -1 : 0)));
             this.aad_sort = 'date_desc';
           }
         }
-
-        let reIndexArr = [];
-        for (let i = 0; i < this.audiobook.importFiles.length; i++) {
-            reIndexArr.push([oldOrder.indexOf(this.audiobook.importFiles[i].id), i]);
-        }
-        this.saveAudiobook(reIndexArr, [], [], this.aad_sort);
+        this.saveAudiobook([], [], [], this.aad_sort);
         this.$refs.allAudioDropdownSort.toggle();
       },
       filterAll() {
