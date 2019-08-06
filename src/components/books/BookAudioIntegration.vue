@@ -228,7 +228,7 @@
         audioOpening: false,
         activeTabIndex: 0,
         audio_element: false,
-        aad_sort: null,
+        aad_sort: '',
         aad_filter: 'all'
       }
     },
@@ -362,7 +362,7 @@
       renameAudiofile(id) {
         this.renaming = id;
       },
-      saveAudiobook(reorder = [], removeFiles = [], done = [], sortDirection = null) {
+      saveAudiobook(reorder = [], removeFiles = [], done = [], sortDirection = '') {
         if (removeFiles) {
           removeFiles.forEach(rf => {
             if (typeof this.positions_tmp[rf] !== 'undefined') {
