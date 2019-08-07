@@ -10,23 +10,40 @@
                 <span class="checkmark"></span>
               </label>
             </div>
-            <div class="upload-audio">
-              <button id="show-modal" @click="uploadAudio" class="btn btn-primary btn_audio_upload btn-small">
-                Import Audio
+            <dropdown text="" type="default" ref="allAudioDropdownSort" class="all-audio-dropdown aad-sort">
+                <li :class="audiobook.sortDirection == 'name_asc' ? ' aad_selected' : ' '">
+                  <span v-on:click="listSort('name', 'asc')">File name (A to Z)</span>
+                </li>
+                <li :class="audiobook.sortDirection == 'name_desc' ? ' aad_selected' : ' '">
+                  <span v-on:click="listSort('name', 'desc')">File name (Z to A)</span>
+                </li>
+                <li :class="audiobook.sortDirection == 'date_desc' ? ' aad_selected' : ' '">
+                  <span v-on:click="listSort('date', 'desc')">Newest to Oldest</span>
+                </li>
+                <li :class="audiobook.sortDirection == 'date_asc' ? ' aad_selected' : ' '">
+                  <span v-on:click="listSort('date', 'asc')">Oldest to Newest</span>
+                </li>
+            </dropdown>
+            <dropdown text="" type="default" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
+                <li :class="this.aad_filter != 'pending' && this.aad_filter != 'aligned' ? ' aad_selected' : ' '">
+                  <span v-on:click="filterAll()">All</span>
+                </li>
+                <li :class="this.aad_filter == 'pending' ? ' aad_selected' : ' '">
+                  <span v-on:click="filterPending()">Pending</span>
+                </li>
+                <li :class="this.aad_filter == 'aligned' ? ' aad_selected' : ' '">
+                  <span v-on:click="filterAligned()">Aligned</span>
+                </li>
+            </dropdown>
+            <div class="upload-audio left-divider">
+              <button id="show-modal" type="button" @click="uploadAudio" class="btn btn-default btn_audio_upload btn-small" >
+                <i class="fa" ></i>Import
               </button>
             </div>
             <div class="delete-audio">
-              <button class="btn btn-danger btn-small" :disabled="selectionLength == 0" v-on:click="deleteAudio()">Delete<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
+              <button class="btn btn-default btn-small" :disabled="selectionLength == 0" v-on:click="deleteAudio()" ><i class="fa fa-trash" style="color:red"></i><span v-if="selectionLength > 0" style="color:red">({{selectionLength}})</span></button>
             </div>
-            <dropdown text="Mark" type="default" :disabled="selectionLength == 0" ref="allAudioDropdown" class="all-audio-dropdown">
-                <li>
-                  <span v-on:click="markSelected()" class="mark-done">Mark done</span>
-                </li>
-                <li>
-                  <span v-on:click="unmarkSelected()">Mark pending</span>
-                </li>
-            </dropdown>
-            <div class="align-audio">
+            <div class="align-audio left-divider">
               <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)" v-if="!alignProcess">Align&nbsp;<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
               <span v-else class="align-preloader -small"></span>
               <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign(true)" title="Cancel aligning"><i class="fa fa-ban"></i></button>
@@ -35,7 +52,7 @@
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
           <div class="file-catalogue-files-wrapper">
             <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
-              <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}]">
+              <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]">
                 <template v-if="audiofile.status == 'processing'">
                   <div class="audiofile-info">
                     <i>Processing, {{audiofile.title}}</i>
@@ -210,13 +227,13 @@
         alignProcess: false,
         audioOpening: false,
         activeTabIndex: 0,
-        audio_element: false
+        audio_element: false,
+        aad_sort: null,
+        aad_filter: 'all'
       }
     },
     mixins: [task_controls, api_config, access],
     mounted() {
-      //console.log('MOUNTED')
-
       /*let ac = new (window.AudioContext || window.webkitAudioContext);
       this.player = WaveformPlaylist.init({
         ac: ac,
@@ -228,7 +245,9 @@
         timescale: false,
         linkEndpoints: false
       });*/
+
       var self = this;
+
       this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
         if (audiofileId && self.playing === audiofileId) {
           self.playing = false;
@@ -300,7 +319,7 @@
             }
           } else {
             delete this.positions_tmp[this.playing];
-            
+
           }
         }
       });
@@ -343,7 +362,7 @@
       renameAudiofile(id) {
         this.renaming = id;
       },
-      saveAudiobook(reorder = [], removeFiles = [], done = []) {
+      saveAudiobook(reorder = [], removeFiles = [], done = [], sortDirection = null) {
         if (removeFiles) {
           removeFiles.forEach(rf => {
             if (typeof this.positions_tmp[rf] !== 'undefined') {
@@ -364,6 +383,7 @@
         //formData.append('audiobook', JSON.stringify(save_data));
         formData.append('reorder', JSON.stringify(reorder));
         formData.append('removeFiles', JSON.stringify(removeFiles));
+        formData.append('sortDirection', sortDirection);
         let rename = [];
         if (this.renaming) {
           let renaming = this.audiobook.importFiles.find(aif => aif.id == this.renaming);
@@ -921,15 +941,67 @@
       listReorder(info) {
         if (info && typeof info.newIndex !== 'undefined' && typeof info.oldIndex !== 'undefined' && info.newIndex !== info.oldIndex) {
           this.saveAudiobook([[info.oldIndex, info.newIndex]]);
+          console.log('indexes: ', info.oldIndex, info.newIndex)
         }
+      },
+      //field: 'name', 'date'; direction: 'asc', 'desc'
+      listSort(field, direction){
+        //let's save prev order:
+
+        let oldOrder = [];
+        for (let i = 0; i < this.audiobook.importFiles.length; i++) {
+          oldOrder.push(this.audiobook.importFiles[i].id);
+        }
+
+        if (field == 'name'){
+          if (direction == 'asc'){
+            this.audiobook.importFiles.sort((a,b) => (a.origName > b.origName) ? 1 : ((b.origName > a.origName) ? -1 : 0));
+            this.aad_sort = 'name_asc';
+          }
+          if (direction == 'desc'){
+            this.audiobook.importFiles.sort((a,b) => (a.origName < b.origName) ? 1 : ((b.origName < a.origName) ? -1 : 0));
+            this.aad_sort = 'name_desc';
+          }
+        }
+        if (field == 'date'){
+          if (direction == 'asc'){
+            //this.audiobook.importFiles.sort((a,b) => (a.tstamp > b.tstamp) ? 1 : ((b.tstamp > a.tstamp) ? -1 : 0));
+            this.audiobook.importFiles.sort((a,b) => (a.tstamp > b.tstamp) ? 1 : ((b.tstamp > a.tstamp) ? -1 : (a.origName > b.origName) ? 1 : ((b.origName > a.origName) ? -1 : 0)));
+            this.aad_sort = 'date_asc';
+          }
+          if (direction == 'desc'){
+            //this.audiobook.importFiles.sort((a,b) => (a.tstamp < b.tstamp) ? 1 : ((b.tstamp < a.tstamp) ? -1 : 0));
+            this.audiobook.importFiles.sort((a,b) => (a.tstamp < b.tstamp) ? 1 : ((b.tstamp < a.tstamp) ? -1 : (a.origName > b.origName) ? 1 : ((b.origName > a.origName) ? -1 : 0)));
+            this.aad_sort = 'date_desc';
+          }
+        }
+
+        let reIndexArr = [];
+        for (let i = 0; i < this.audiobook.importFiles.length; i++) {
+            reIndexArr.push([oldOrder.indexOf(this.audiobook.importFiles[i].id), i]);
+        }
+        this.saveAudiobook(reIndexArr, [], [], this.aad_sort);
+        this.$refs.allAudioDropdownSort.toggle();
+      },
+      filterAll() {
+        this.aad_filter = 'all';
+        this.$refs.allAudioDropdownFilter.toggle();
+      },
+      filterAligned() {
+        this.aad_filter = 'aligned';
+        this.$refs.allAudioDropdownFilter.toggle();
+      },
+      filterPending() {
+        this.aad_filter = 'pending';
+        this.$refs.allAudioDropdownFilter.toggle();
       },
       markSelected() {
         this._setDone(true);
-        this.$refs.allAudioDropdown.toggle();
+        this.$refs.allAudioDropdownFilter.toggle();
       },
       unmarkSelected() {
         this._setDone(false);
-        this.$refs.allAudioDropdown.toggle();
+        this.$refs.allAudioDropdownFilter.toggle();
       },
       mark(id) {
         this._setDone(true, [id]);
@@ -968,7 +1040,7 @@
             console.log(err)
           })
       },
-      
+
       initSplit() {
         if (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0) {
           let parentHeight = false;
@@ -1017,6 +1089,14 @@
           return false;
         }
       },
+      isAudiofileAligned(audiofile) {
+        if ('done' in audiofile && audiofile.done == true){
+          return true;
+        } else {
+          return false;
+        }
+      },
+
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'saveChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
     },
     beforeDestroy() {
@@ -1067,14 +1147,14 @@
         return this._is('editor', true) || this.adminOrLibrarian;
       },
       ...mapGetters({
-        currentBookCounters: 'currentBookCounters', 
-        ttsVoices: 'ttsVoices', 
-        currentBookid: 'currentBookid', 
-        currentBookMeta: 'currentBookMeta', 
-        blockSelection: 'blockSelection', 
-        alignCounter: 'alignCounter', 
-        hasLocks: 'hasLocks', 
-        lockedBlocks: 'lockedBlocks', 
+        currentBookCounters: 'currentBookCounters',
+        ttsVoices: 'ttsVoices',
+        currentBookid: 'currentBookid',
+        currentBookMeta: 'currentBookMeta',
+        blockSelection: 'blockSelection',
+        alignCounter: 'alignCounter',
+        hasLocks: 'hasLocks',
+        lockedBlocks: 'lockedBlocks',
         audiobook: 'currentAudiobook',
         currentJobInfo: 'currentJobInfo',
         adminOrLibrarian: 'adminOrLibrarian'})
@@ -1227,6 +1307,7 @@
           /*width: 100px;*/
         }
       }
+      .btn {height: 34px;}
     }
     .file-catalogue-files-wrapper {
         height: 100%;
@@ -1265,6 +1346,9 @@
           &.red {
               color: red;
           }
+        }
+        &.-hidden {
+            display: none;
         }
         span {
           display: inline-block;
@@ -1367,6 +1451,31 @@
           }
         }
       }
+      span.caret {
+        margin-top: -5px;
+      }
+    }
+    .aad-sort button{
+      font-family: 'Glyphicons Halflings';
+    }
+    .aad-sort button:before {
+      content: "\e151";
+      margin-right: -10px;
+    }
+    .aad-filter button{
+      font-family: 'Glyphicons Halflings';
+    }
+    .aad-filter button:before {
+      content: "\e138";
+      margin-right: -10px;
+    }
+    .aad_selected {
+     background: #95BCF2;
+    }
+    .left-divider {
+      border-left: 1px solid #ccc;
+      margin-left: 3px;
+      padding-left: 7px;
     }
   }
   h4.panel-title {
@@ -1489,7 +1598,7 @@
     background-repeat: no-repeat;
     background-position: center;
   }
-  
+
   .checkbox-container {
     display: block;
     position: relative;
