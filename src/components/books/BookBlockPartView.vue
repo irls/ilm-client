@@ -1744,7 +1744,7 @@ export default {
           // ILM-2108: - because the last tag in the selection was not cropped
           // and was duplicated after adding a flag
           let startElementWrapper = windowSelRange.startContainer.parentElement;
-          if (startElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
+          if (startElementWrapper.nodeName.toLowerCase() !== 'div') {
             while (startElementWrapper.parentElement && startElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
               startElementWrapper = startElementWrapper.parentElement;
             }
@@ -1752,7 +1752,7 @@ export default {
           }
 
           let endElementWrapper = windowSelRange.endContainer.parentElement;
-          if (endElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
+          if (endElementWrapper.nodeName.toLowerCase() !== 'div') {
             while (endElementWrapper.parentElement && endElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
               endElementWrapper = endElementWrapper.parentElement;
             }
