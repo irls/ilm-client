@@ -10,7 +10,7 @@
                 <span class="checkmark"></span>
               </label>
             </div>
-            <dropdown text="" type="default" ref="allAudioDropdownSort" class="all-audio-dropdown aad-sort">
+            <dropdown text="" :type="audiobook.sortDirection == '' ? 'default' : 'button'" ref="allAudioDropdownSort" class="all-audio-dropdown aad-sort">
                 <li :class="audiobook.sortDirection == 'name_asc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('name', 'asc')">File name (A to Z)</span>
                 </li>
@@ -24,7 +24,7 @@
                   <span v-on:click="listSort('date', 'asc')">Oldest to Newest</span>
                 </li>
             </dropdown>
-            <dropdown text="" type="default" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
+            <dropdown text="" :type="this.aad_filter == 'all' ? 'default' : 'button'" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
                 <li :class="this.aad_filter != 'pending' && this.aad_filter != 'aligned' ? ' aad_selected' : ' '">
                   <span v-on:click="filterAll()">All</span>
                 </li>
