@@ -32,7 +32,7 @@ export default {
       });
       if (task && mode) {
         switch(mode) {
-          case 'edit': 
+          case 'edit':
             if (this.editor_tasks.indexOf(task.type) === -1) {
               return false;
             }
@@ -256,14 +256,9 @@ export default {
       });
     },
     tc_displayAudiointegrationTab() {
-      if ([
-        'CollectionBookEditDisplay',
-        'BookEditDisplay',
-        'BooksGrid',
-        'CollectionBook',
-        'BookProofread',
-        'CollectionBookProofread'
-      ].indexOf(this.$route.name) !== -1) {
+      if (this.bookMode !== 'edit' || [
+        'BookEdit', 'CollectionBookEdit'
+      ].indexOf(this.$route.name) === -1) {
         return false;
       }
       if (this.adminOrLibrarian || this._is('editor', true)) {
@@ -272,14 +267,9 @@ export default {
       return false;
     },
     tc_displayStylesTab() {
-      if ([
-        'CollectionBookEditDisplay',
-        'BookEditDisplay',
-        'BooksGrid',
-        'CollectionBook',
-        'BookProofread',
-        'CollectionBookProofread'
-      ].indexOf(this.$route.name) !== -1) {
+      if (this.bookMode !== 'edit' || [
+        'BookEdit', 'CollectionBookEdit'
+      ].indexOf(this.$route.name) === -1) {
         return false;
       }
       if (this.adminOrLibrarian || this._is('editor', true)) {
@@ -301,7 +291,7 @@ export default {
       }
       if (task && mode) {
         switch(mode) {
-          case 'edit': 
+          case 'edit':
             if (this.editor_tasks.indexOf(task.type) === -1) {
               return false;
             }

@@ -139,7 +139,7 @@ class BookBlock {
     this.index = typeof init.index !== 'undefined' ? init.index : '';
 
     this.tag = init.tag || '';
-    this.content = typeof init.content !== 'undefined' ? init.content : '<p><br></p>';
+    this.content = typeof init.content !== 'undefined' ? init.content : '';
     this.type = init.type || 'par';
     this.classes = init.classes || {};
     if (Array.isArray(this.classes)) this.classes = {};
@@ -159,7 +159,7 @@ class BookBlock {
     this.illustration = init.illustration;
     this.illustration_width = init.illustration_width;
     this.illustration_height = init.illustration_height;
-    this.description = init.description || '<p></p>';
+    this.description = init.description || '';
     this.voicework = init.voicework;
     this.partUpdate = false;
 
@@ -643,9 +643,9 @@ class BookBlock {
 
   getClass(mode = null) {
     let result = this.type;
-    if (mode !== 'narrate' && this.classes && typeof this.classes === 'object') {
+    if (this.classes && typeof this.classes === 'object') {
       for (let key in this.classes) {
-        if (key) {
+        if (key && (mode !== 'narrate' || key === 'whitespace')) {
           if (this.classes[key] && this.classes[key] !== '') result += ' '+ this.classes[key];
           else if (Object.keys(BlockTypes[this.type])[0] === '') result += ' ' + key.replace(/\s/g, '-');
         }
