@@ -10,7 +10,7 @@
                 <span class="checkmark"></span>
               </label>
             </div>
-            <dropdown text="" :type="audiobook.sortDirection == '' ? 'default' : 'button'" ref="allAudioDropdownSort" class="all-audio-dropdown aad-sort">
+            <dropdown text="" :type="audiobook.hasOwnProperty('sortDirection') == false || audiobook.sortDirection == '' ? 'default' : 'button'" ref="allAudioDropdownSort" class="all-audio-dropdown aad-sort">
                 <li :class="audiobook.sortDirection == 'name_asc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('name', 'asc')">File name (A to Z)</span>
                 </li>
