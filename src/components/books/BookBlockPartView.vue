@@ -675,16 +675,6 @@ export default {
         },
         cache: false
       },
-      getBlockLang: {
-        cache: false,
-        get() {
-          if (this.block.language && this.block.language.length) {
-            return this.block.language;
-          } else {
-            return this.meta.language;
-          }
-        }
-      },
       narrationBlockContent: {
         get() {
           let content = this.blockPart.content.replace(/<sup[^>]*>.*?<\/sup>/img, '');
@@ -1756,7 +1746,7 @@ export default {
           // ILM-2108: - because the last tag in the selection was not cropped
           // and was duplicated after adding a flag
           let startElementWrapper = windowSelRange.startContainer.parentElement;
-          if (startElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
+          if (startElementWrapper.nodeName.toLowerCase() !== 'div') {
             while (startElementWrapper.parentElement && startElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
               startElementWrapper = startElementWrapper.parentElement;
             }
@@ -1764,7 +1754,7 @@ export default {
           }
 
           let endElementWrapper = windowSelRange.endContainer.parentElement;
-          if (endElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
+          if (endElementWrapper.nodeName.toLowerCase() !== 'div') {
             while (endElementWrapper.parentElement && endElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
               endElementWrapper = endElementWrapper.parentElement;
             }
@@ -1813,7 +1803,7 @@ export default {
             flag.addEventListener('click', this.handleFlagClick);
             this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
           } else {
-            this.block.addFlag(existsFlag.dataset.flag, windowSelRange, type);
+            this.block.addFlag(existsFlag.dataset.flag, windowSelRange, type, this.mode);
             this.handleFlagClick({target: existsFlag, layerY: ev.layerY, clientY: ev.clientY});
           }
           this.$refs.blockFlagPopup.scrollBottom();
