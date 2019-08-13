@@ -25,7 +25,7 @@
                 </li>
             </dropdown>
             <dropdown text="" type="default" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
-                <li :class="this.aad_filter != 'pending' && this.aad_filter != 'aligned' ? ' aad_selected' : ' '">
+                <li :class="this.aad_filter != 'pending' && this.aad_filter != 'aligned' && this.aad_filter != 'filename' ? ' aad_selected' : ' '">
                   <span v-on:click="filterAll()">All</span>
                 </li>
                 <li :class="this.aad_filter == 'pending' ? ' aad_selected' : ' '">
@@ -34,6 +34,7 @@
                 <li :class="this.aad_filter == 'aligned' ? ' aad_selected' : ' '">
                   <span v-on:click="filterAligned()">Aligned</span>
                 </li>
+                <div style="padding: 7px 12px 7px 12px;"  :class="this.aad_filter == 'filename' ? ' aad_selected flexContainer ' : ' flexContainer '"><input style="padding: 3px" v-model="filterFilename" @input="filterFileNameInput()" placeholder="Filename" class="inputField" v-on:keyup.enter="filterFileName()"><button type="submit" @click="filterFileNameReset()">&nbsp;X&nbsp;</button></div>
             </dropdown>
             <div class="upload-audio left-divider">
               <button id="show-modal" type="button" @click="uploadAudio" class="btn btn-default btn_audio_upload btn-small" >
@@ -58,7 +59,7 @@
                     <i>Processing, {{audiofile.title}}</i>
                   </div>
                 </template>
-                <template v-else>
+                <template v-else-if="audiofile.title.includes(filterFilename)">
                   <div v-if="allowEditing"
                            class="audiofile-options">
                     <label class="checkbox-container">
@@ -229,7 +230,8 @@
         activeTabIndex: 0,
         audio_element: false,
         aad_sort: '',
-        aad_filter: 'all'
+        aad_filter: 'all',
+        filterFilename: ''
       }
     },
     mixins: [task_controls, api_config, access],
@@ -977,6 +979,17 @@
         this.aad_filter = 'pending';
         this.$refs.allAudioDropdownFilter.toggle();
       },
+      filterFileNameInput() {
+        this.aad_filter = 'filename';
+      },
+      filterFileNameReset() {
+        this.filterFilename = '';
+        this.aad_filter = '';
+      },
+      filterFileName() {
+        this.aad_filter = 'filename';
+        this.$refs.allAudioDropdownFilter.toggle();
+      },
       markSelected() {
         this._setDone(true);
         this.$refs.allAudioDropdownFilter.toggle();
@@ -1444,10 +1457,10 @@
       content: "\e151";
       margin-right: -10px;
     }
-    .aad-filter button{
+    .aad-filter > button{
       font-family: 'Glyphicons Halflings';
     }
-    .aad-filter button:before {
+    .aad-filter > button:before {
       content: "\e138";
       margin-right: -10px;
     }
@@ -1640,5 +1653,13 @@
     -webkit-transform: rotate(45deg);
     -ms-transform: rotate(45deg);
     transform: rotate(45deg);
+  }
+
+  .flexContainer {
+      display: flex;
+  }
+
+  .inputField {
+      flex: 1;
   }
 </style>
