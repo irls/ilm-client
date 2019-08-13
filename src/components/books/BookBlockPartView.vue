@@ -2729,7 +2729,7 @@ export default {
             }
             if (startRange && endRange) {
               //console.log(startRange[0], endRange[0] + endRange[1])
-              this.$root.$emit('for-audioeditor:select', id, startRange[0], endRange[0] + endRange[1]);
+              this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null);
             }
             //console.log(startElement, endElement, startRange, endRange)
           }
