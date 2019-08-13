@@ -219,7 +219,7 @@
         this.$root.$off('for-audioeditor:flush', this.flush);
       },
       methods: {
-        select (block_id, start, end) {
+        select (block_id, start, end, selectElement = false) {
           if (this.blockId === block_id) {
             this.blockSelectionEmit = true;
             this.selection.start = start / 1000;
@@ -228,6 +228,17 @@
             this._clearWordSelection();
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
             this._showSelectionBorders(true);
+            if (selectElement) {
+              let index = this.contentContainer.find('w[data-map]').index($(selectElement));
+              if (typeof index =='undefined' || index === false || index < 0) {
+                let index_no_data = this.contentContainer.find('w:not([data-map])').index($(selectElement));
+                let total_index = this.contentContainer.find('w').index($(selectElement));
+                index = total_index - index_no_data;
+              }
+              if (index >= 0) {
+                this._setWordSelection(index, false, false);
+              }
+            }
           }
         },
         load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
@@ -589,7 +600,7 @@
             } else if (autostart) {
               this.play();
             }
-            $('#' + this.blockId).find('#content-' + this.blockId).on('click', 'w', {blockId: this.blockId}, this.showSelection)
+            //$(`#content-${this.blockId}`).on('click', 'w', {blockId: this.blockId}, this.showSelection)
           })
           .catch(err => {
             //console.log(err)
@@ -935,7 +946,7 @@
             this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
             console.log('AudioEditor close this.blockId', this.blockId);
             $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
-            $('#' + this.blockId).find('#content-' + this.blockId).off('click', 'w', this.showSelection);
+            $(`#content-${this.blockId}`).off('click', 'w', this.showSelection);
             this.$root.$off('for-audioeditor:select', this.select);
             this.$root.$off('for-audioeditor:reload-text', this._setText);
           }
@@ -953,7 +964,7 @@
           this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
           this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
           $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
-          $('#' + this.blockId).find('#content-' + this.blockId).off('click', 'w', this.showSelection);
+          $(`#content-${this.blockId}`).off('click', 'w', this.showSelection);
           this.$root.$off('for-audioeditor:select', this.select);
         },
         addSilence() {
