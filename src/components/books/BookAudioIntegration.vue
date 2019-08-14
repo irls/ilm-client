@@ -12,16 +12,10 @@
             </div>
             <dropdown text="" type="default" ref="allAudioDropdownSort" class="all-audio-dropdown aad-sort">
                 <li :class="audiobook.sortDirection == 'name_asc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('name', 'asc')">File name (A to Z)</span>
-                </li>
-                <li :class="audiobook.sortDirection == 'name_desc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('name', 'desc')">File name (Z to A)</span>
+                  <span v-on:click="listSort('name', 'asc')">Filename</span>
                 </li>
                 <li :class="audiobook.sortDirection == 'date_desc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('date', 'desc')">Newest to Oldest</span>
-                </li>
-                <li :class="audiobook.sortDirection == 'date_asc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('date', 'asc')">Oldest to Newest</span>
+                  <span v-on:click="listSort('date', 'desc')">Date imported</span>
                 </li>
             </dropdown>
             <dropdown text="" type="default" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
