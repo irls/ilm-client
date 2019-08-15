@@ -173,7 +173,8 @@ export const store = new Vuex.Store({
     jobInfoTimer: null,
     jobStatusError: '',
     bookMode: null,
-    processQueueWatch: null
+    processQueueWatch: null,
+    allowBookSplitPreview: false
   },
 
   getters: {
@@ -323,7 +324,15 @@ export const store = new Vuex.Store({
       }
       return count;
     },
-    bookMode: state => state.bookMode
+    bookMode: state => state.bookMode,
+    allowBookSplitPreview: state => state.allowBookSplitPreview,
+    bookSplitDemoTime: state => {
+      if (state.currentBookMeta) {
+        return state.currentBookMeta.split_demo_time;
+      } else {
+        return null;
+      }
+    }
   },
 
   mutations: {
@@ -999,6 +1008,10 @@ export const store = new Vuex.Store({
             .then(() => {
               dispatch('tc_loadBookTask');
             });
+          dispatch('getConfig', 'custom')
+            .then(config => {
+              state.allowBookSplitPreview = config && config.book_split_preview_users && config.book_split_preview_users.indexOf(state.auth.getSession().user_id) !== -1;
+            })
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -2771,6 +2784,26 @@ export const store = new Vuex.Store({
         clearInterval(state.processQueueWatch);
         state.processQueueWatch = null;
       }
+    },
+    generateSplitDemo({state, commit}) {
+      if (state.currentBookMeta.bookid) {
+        state.currentBookMeta.split_demo_time = -1;
+        return axios.post(state.API_URL + 'books/split_demo/' + state.currentBookMeta.bookid)
+          .then((response) => {
+            commit('SET_CURRENTBOOK_META', response.data);
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      }
+    },
+    getConfig({state}, config) {
+      return axios.get(`${state.API_URL}config/${config}`).then(data => {
+        return Promise.resolve(data.data);
+      })
+      .catch(error => {
+        return Promise.reject({})
+      })
     }
   }
 })
