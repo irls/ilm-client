@@ -31,7 +31,8 @@
     computed: {
       isGenerating: {
         get() {
-          return this.bookSplitDemoTime === -1;
+          let dt = new Date(this.bookSplitDemoTime);
+          return this.bookSplitDemoTime === -1 || (this.bookSplitDemoTime && dt.getTime() <= 0);
         },
         cache: false
       },

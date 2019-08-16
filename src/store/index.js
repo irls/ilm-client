@@ -2790,7 +2790,9 @@ export const store = new Vuex.Store({
         state.currentBookMeta.split_demo_time = -1;
         return axios.post(state.API_URL + 'books/split_demo/' + state.currentBookMeta.bookid)
           .then((response) => {
-            commit('SET_CURRENTBOOK_META', response.data);
+            if (response.data.bookid === state.currentBookMeta.bookid) {
+              commit('SET_CURRENTBOOK_META', response.data);
+            }
           })
           .catch(err => {
             return Promise.reject(err);
