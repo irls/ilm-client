@@ -214,7 +214,7 @@
           });
       },
       toggleMastering() {
-        if (this.tc_allowToggleMetaMastering() && !this.currentJobInfo.mastering && this.currentJobInfo.workflow.status == 'active') {
+        if (this.tc_allowToggleMetaMastering() && !this.currentJobInfo.mastering && this.currentJobInfo.workflow.status == 'active' && !this.currentBookMeta.isMastered) {
           if (!this.currentBookMeta.masteringRequired) {
             this.$root.$emit('show-modal', {
               title: ``,
