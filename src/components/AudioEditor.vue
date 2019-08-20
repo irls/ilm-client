@@ -229,14 +229,16 @@
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
             this._showSelectionBorders(true);
             if (selectElement) {
-              let index = this.contentContainer.find('w[data-map]').index($(selectElement));
+              let index = this.contentContainer.find('w[data-map!=""]').index($(selectElement));
               if (typeof index =='undefined' || index === false || index < 0) {
                 let index_no_data = this.contentContainer.find('w:not([data-map])').index($(selectElement));
                 let total_index = this.contentContainer.find('w').index($(selectElement));
                 index = total_index - index_no_data;
               }
               if (index >= 0) {
-                this._setWordSelection(index, false, false);
+                Vue.nextTick(() => {
+                  this._setWordSelection(index, false, false);
+                });
               }
             }
           }
@@ -1198,7 +1200,7 @@
           if (annotations[index]) {
             $(annotations[index]).addClass('selected');
           }
-          let words = this.contentContainer.find('w[data-map]');
+          let words = this.contentContainer.find('w[data-map!=""]');
           if (words[index]) {
             $(words[index]).addClass('selected');
           }
