@@ -18,7 +18,7 @@
                   <span v-on:click="listSort('date', 'desc')">Date imported</span>
                 </li>
             </dropdown>
-            <dropdown text="" type="default" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
+            <dropdown text="" :type="this.aad_filter == 'all' ? 'default' : 'button'" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
                 <li :class="this.aad_filter != 'pending' && this.aad_filter != 'aligned' && this.aad_filter != 'filename' ? ' aad_selected' : ' '">
                   <span v-on:click="filterAll()">All</span>
                 </li>
