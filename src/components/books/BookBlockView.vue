@@ -4147,6 +4147,24 @@ export default {
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
         }
+      },
+      'isSaving': {
+        handler(val) {
+          if (!val && this.$refs.blocks) {
+            let ref = this.$refs.blocks.find(rb => {
+              return rb.$refs && rb.$refs.blockFlagPopup && rb.flagsSel;
+            });
+            if (!ref && this.flagsSel && this.flagsSel._id === this.block.blockid && this.$refs.blockFlagPopup) {
+              ref = this;
+            }
+            if (ref) {// reset flag selection on save
+              
+              ref.flagsSel = this.block.flags.find((flag)=>{
+                return flag._id === ref.flagsSel._id;
+              });
+            }
+          }
+        }
       }
   }
 }
