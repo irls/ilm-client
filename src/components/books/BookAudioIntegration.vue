@@ -978,7 +978,7 @@
       },
       filterFileNameReset() {
         this.filterFilename = '';
-        this.aad_filter = '';
+        this.aad_filter = 'all';
       },
       filterFileName() {
         this.aad_filter = 'filename';
