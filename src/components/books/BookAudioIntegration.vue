@@ -48,12 +48,12 @@
           <div class="file-catalogue-files-wrapper">
             <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
               <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]">
-                <template v-if="audiofile.status == 'processing'">
+                <template v-if="audiofile.status == 'processing' && audiofile.title.includes(filterFilename)">
                   <div class="audiofile-info">
                     <i>Processing, {{audiofile.title}}</i>
                   </div>
                 </template>
-                <template v-else-if="audiofile.title.includes(filterFilename)">
+                <template v-if="audiofile.title.includes(filterFilename)">
                   <div v-if="allowEditing"
                            class="audiofile-options">
                     <label class="checkbox-container">
