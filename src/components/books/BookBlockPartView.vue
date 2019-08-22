@@ -1061,8 +1061,8 @@ export default {
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  //'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  //'superscript', 'subscript','orderedlist', 
+                  'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
                 ]
