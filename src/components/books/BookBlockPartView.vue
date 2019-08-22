@@ -1527,8 +1527,8 @@ export default {
           content = content.replace(/<\/div>/gm, '\n')
         }
         content = content.replace(/<p[^>]*>([\s\S]*?)<br[^>]*><\/p>/gm, '<p>$1</p>');
-        content = content.replace(/(?<!<\/ul>|<\/ol>)<p[^>]*>([\s\S]*?)<\/p>/gm, '<br/>$1')//paragrapth not preceeded by list
-        content = content.replace(/(?<=<\/ul>|<\/ol>)<p[^>]*>([\s\S]*?)<\/p>/gm, '$1')//paragrapth preceeded by list
+        content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
+        content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
         content = content.replace(/<span[^>]*>([\s\S]*?)<\/span>/gm, '$1')
