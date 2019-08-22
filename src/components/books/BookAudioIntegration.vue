@@ -48,45 +48,47 @@
           <div class="file-catalogue-files-wrapper">
             <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
               <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]">
-                <template v-if="audiofile.status == 'processing' && audiofile.title.includes(filterFilename)">
-                  <div class="audiofile-info">
-                    <i>Processing, {{audiofile.title}}</i>
-                  </div>
-                </template>
                 <template v-if="audiofile.title.includes(filterFilename)">
-                  <div v-if="allowEditing"
-                           class="audiofile-options">
-                    <label class="checkbox-container">
-                      <input type="checkbox" :checked="selections.indexOf(audiofile.id) !== -1"
-                           v-on:click="addSelection(audiofile.id, selections.indexOf(audiofile.id) === -1)"/>
-                      <span class="checkmark"></span>
-                    </label>
-                  </div>
-                  <div :class="['audiofile-info', {'playing': playing == audiofile.id, done: audiofile.done}]">
-                    <div class="audiofile-player-controls">
-                      <span class="audio-opening" v-if="audioOpening === audiofile.id"></span>
-                      <!-- <i v-else class="fa fa-play-circle-o" v-on:click="audiofileClick(audiofile.id, true, $event)"></i> -->
-                      <template v-else>
-                        <i v-if="audiofile.preview && audiofile.preview.start" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'start', $event)"></i>
-                      </template>
-                      <!-- <i class="fa fa-play-circle-o red" v-on:click="play()" v-if="paused === audiofile.id"></i>
-                      <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
-                      <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
+                  <template v-if="audiofile.status == 'processing' && audiofile.title.includes(filterFilename)">
+                    <div class="audiofile-info">
+                      <i>Processing, {{audiofile.title}}</i>
                     </div>
-                    <div class="audiofile-name">
-                      <span v-if="renaming !== audiofile.id"
-                            :class="['audiofile-name-edit']"
-                            @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.title ? audiofile.title : audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
-                      <input id="rename-input" type="text" v-model="audiofile.title" class="audiofile-name-edit"
-                           @focusout="saveAudiobook()"
-                           v-else />
+                  </template>
+                  <template v-else>
+                    <div v-if="allowEditing"
+                             class="audiofile-options">
+                      <label class="checkbox-container">
+                        <input type="checkbox" :checked="selections.indexOf(audiofile.id) !== -1"
+                             v-on:click="addSelection(audiofile.id, selections.indexOf(audiofile.id) === -1)"/>
+                        <span class="checkmark"></span>
+                      </label>
                     </div>
-                    <div class="audiofile-player-controls">
-                      <i v-if="audiofile.preview && audiofile.preview.end" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'end')"></i>
+                    <div :class="['audiofile-info', {'playing': playing == audiofile.id, done: audiofile.done}]">
+                      <div class="audiofile-player-controls">
+                        <span class="audio-opening" v-if="audioOpening === audiofile.id"></span>
+                        <!-- <i v-else class="fa fa-play-circle-o" v-on:click="audiofileClick(audiofile.id, true, $event)"></i> -->
+                        <template v-else>
+                          <i v-if="audiofile.preview && audiofile.preview.start" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'start', $event)"></i>
+                        </template>
+                        <!-- <i class="fa fa-play-circle-o red" v-on:click="play()" v-if="paused === audiofile.id"></i>
+                        <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
+                        <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
+                      </div>
+                      <div class="audiofile-name">
+                        <span v-if="renaming !== audiofile.id"
+                              :class="['audiofile-name-edit']"
+                              @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.title ? audiofile.title : audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
+                        <input id="rename-input" type="text" v-model="audiofile.title" class="audiofile-name-edit"
+                             @focusout="saveAudiobook()"
+                             v-else />
+                      </div>
+                      <div class="audiofile-player-controls">
+                        <i v-if="audiofile.preview && audiofile.preview.end" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'end')"></i>
+                      </div>
+                      <div class="audiofile-duration"><span>{{ parseAudioLength(audiofile) }}</span></div>
                     </div>
-                    <div class="audiofile-duration"><span>{{ parseAudioLength(audiofile) }}</span></div>
-                  </div>
 
+                  </template>
                 </template>
               </div>
             </draggable>
