@@ -1260,7 +1260,7 @@ export default {
                 buttons: [
                   'bold', 'italic', 'underline',
                   //'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
                 ]
@@ -1310,7 +1310,7 @@ export default {
                 buttons: [
                   'bold', 'italic', 'underline',
                   'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  'unorderedlist',
                   'quoteButton', 'suggestButton'
                 ]
               };
@@ -1346,7 +1346,7 @@ export default {
                 buttons: [
                   'bold', 'italic', 'underline',
                   'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  'unorderedlist',
                   'quoteButton', 'suggestButton'
                 ]
               };

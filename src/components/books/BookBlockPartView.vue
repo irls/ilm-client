@@ -1102,7 +1102,7 @@ export default {
                 buttons: [
                   'bold', 'italic', 'underline',
                   'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  'unorderedlist',
                   'quoteButton', 'suggestButton'
                 ]
               };
@@ -1138,7 +1138,7 @@ export default {
                 buttons: [
                   'bold', 'italic', 'underline',
                   'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  'unorderedlist',
                   'quoteButton', 'suggestButton'
                 ]
               };
