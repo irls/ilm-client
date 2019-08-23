@@ -704,22 +704,30 @@
               {
                 title: 'Save&Align',
                 handler: () => {
-                  this.saveChangedBlocks({voicework: 'audio_file'})
-                    .then(ids => {
-                      if (ids && Array.isArray(ids)) {
-                        ids.forEach(id => {
-                          this.$root.$emit('saved-block:' + id);
-                        });
-                      }
-                      //console.log('saved ids', ids);
-                      this.$root.$emit('hide-modal');
-                      let i = setInterval(() => {
-                        if ($('.align-modal').length == 0) {
-                          clearInterval(i);
-                          this.align(id, false)
+                    this.getChangedBlocks({voicework: 'audio_file'})
+                      .then(ids => {
+                        if (!Array.isArray(ids)) {
+                          return Promise.reject();
                         }
-                      }, 50);
-                    });
+                        let wait = [];
+                        ids.forEach(blockid => {
+                          let promise = Promise.resolve();
+                          let evt = {};
+                          evt.waitUntil = p => promise = p
+                          this.$root.$emit(`save-block:${blockid}`, evt)
+                          wait.push(promise);
+                        })
+                        Promise.all(wait)
+                          .then(() => {
+                            this.$root.$emit('hide-modal');
+                            let i = setInterval(() => {
+                              if ($('.align-modal').length == 0) {
+                                clearInterval(i);
+                                this.align(id, false)
+                              }
+                            }, 50);
+                          });
+                      });
                 },
                 'class': 'btn btn-primary'
               }
@@ -866,22 +874,30 @@
               {
                 title: 'Save&Align',
                 handler: () => {
-                  this.saveChangedBlocks({voicework: 'tts'})
-                    .then(ids => {
-                      if (ids && Array.isArray(ids)) {
-                        ids.forEach(id => {
-                          this.$root.$emit('saved-block:' + id);
-                        });
-                      }
-                      //console.log('saved ids', ids);
-                      this.$root.$emit('hide-modal');
-                      let i = setInterval(() => {
-                        if ($('.align-modal').length == 0) {
-                          clearInterval(i);
-                          this.alignTts(false)
+                    this.getChangedBlocks({voicework: 'tts'})
+                      .then(ids => {
+                        if (!Array.isArray(ids)) {
+                          return Promise.reject();
                         }
-                      }, 50);
-                    });
+                        let wait = [];
+                        ids.forEach(blockid => {
+                          let promise = Promise.resolve();
+                          let evt = {};
+                          evt.waitUntil = p => promise = p
+                          this.$root.$emit(`save-block:${blockid}`, evt)
+                          wait.push(promise);
+                        })
+                        Promise.all(wait)
+                          .then(() => {
+                            this.$root.$emit('hide-modal');
+                            let i = setInterval(() => {
+                              if ($('.align-modal').length == 0) {
+                                clearInterval(i);
+                                this.alignTts(false)
+                              }
+                            }, 50);
+                          });
+                      });
                 },
                 'class': 'btn btn-primary'
               }
@@ -1088,7 +1104,7 @@
         }
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'saveChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');

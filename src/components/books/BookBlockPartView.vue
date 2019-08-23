@@ -851,12 +851,6 @@ export default {
       this.addContentListeners();
 
       this.$root.$on('block-state-refresh-' + this.block._id, this.$forceUpdate);
-      this.$root.$on('saved-block:' + this.block._id, () => {
-        this.isChanged = false;
-        this.isAudioChanged = false;
-        this.isIllustrationChanged = false;
-        this.recountApprovedInRange();
-      });
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
       this.$root.$on('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
@@ -917,8 +911,6 @@ export default {
     this.$root.$off('playBlock');
 
     if(this.block) {
-
-      this.$root.$off('saved-block:' + this.block._id);
 
       this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
 

@@ -2212,10 +2212,8 @@ export const store = new Vuex.Store({
         });
       }
     },
-
-    saveChangedBlocks({state, dispatch, commit}, data = {}) {
+    getChangedBlocks({state}, data) {
       if (state.blockSelection.start._id && state.blockSelection.end._id) {
-        let wait_tasks = [];
         let crossId = state.blockSelection.start._id;
         let ids = [];
         for (var idx=0; idx < state.storeList.size; idx++) {
@@ -2224,13 +2222,6 @@ export const store = new Vuex.Store({
             if (block.isChanged || block.isAudioChanged) {
               if ((block.voicework === 'audio_file' && data.voicework === 'audio_file') ||
                       (block.voicework === 'tts' && data.voicework === 'tts')) {
-                wait_tasks.push(dispatch('putBlock', [block])
-                        .then(() => {
-                          block.isChanged = false;
-                          block.isAudioChanged = false;
-                          //commit('set_storeList', block);
-                          return Promise.resolve(block);
-                        }));
                 ids.push(block._id);
               }
             }
@@ -2240,14 +2231,7 @@ export const store = new Vuex.Store({
             crossId = state.storeListO.getOutId(block.blockid);
           } else break;
         }
-        return Promise.all(wait_tasks)
-          .then((results) => {
-            return Promise.resolve(ids);
-          })
-          .catch(err => {
-            console.log(err);
-            return Promise.resolve(ids);
-          });
+        return Promise.resolve(ids);
       }
     },
     recountApprovedInRange({state, commit}, selection = null) {
