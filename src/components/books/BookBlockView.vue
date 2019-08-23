@@ -1052,6 +1052,14 @@ export default {
         this.isIllustrationChanged = false;
         this.recountApprovedInRange();
       });
+      this.$root.$on(`save-block:${this.block.blockid}`, (evt) => {
+        evt.waitUntil(new Promise((resolve, reject) => {
+          this.assembleBlockProxy(false, false)
+            .then(() => {
+              resolve();
+            })
+        }));
+      });
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
 
