@@ -1122,6 +1122,7 @@ export default {
       this.$root.$off('saved-block:' + this.block._id);
 
       this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+      this.$root.$off(`save-block:${this.block.blockid}`);
 
     }
 
