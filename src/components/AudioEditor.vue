@@ -220,7 +220,7 @@
       },
       methods: {
         select (block_id, start, end, selectElement = false) {
-          if (this.blockId === block_id) {
+          if (block_id && this.blockId === block_id) {
             this.blockSelectionEmit = true;
             this.selection.start = start / 1000;
             this.selection.end = end / 1000;
