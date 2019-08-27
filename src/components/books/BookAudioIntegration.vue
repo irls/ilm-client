@@ -11,11 +11,11 @@
               </label>
             </div>
             <dropdown text="" :type="audiobook.hasOwnProperty('sortDirection') == false || audiobook.sortDirection == '' ? 'default' : 'button'" ref="allAudioDropdownSort" class="all-audio-dropdown aad-sort">
-                <li :class="audiobook.sortDirection == 'name_asc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('name', 'asc')">Filename</span>
-                </li>
                 <li :class="audiobook.sortDirection == 'date_desc' ? ' aad_selected' : ' '">
                   <span v-on:click="listSort('date', 'desc')">Date imported</span>
+                </li>
+                <li :class="audiobook.sortDirection == 'name_asc' ? ' aad_selected' : ' '">
+                  <span v-on:click="listSort('name', 'asc')">Filename</span>
                 </li>
             </dropdown>
             <dropdown text="" :type="this.aad_filter == 'all' ? 'default' : 'button'" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
