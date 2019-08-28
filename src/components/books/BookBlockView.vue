@@ -1105,6 +1105,13 @@ export default {
             this._saveContent();
             break;
         }
+        if (this.isSplittedBlock) {
+          this.blockParts.forEach((part, partIdx) => {
+            if (!this.$refs.blocks[partIdx].isChanged && this.$refs.blocks[partIdx].$refs.blockContent) {
+              this.block.setPartContent(partIdx, this.$refs.blocks[partIdx].clearBlockContent());
+            }
+          });
+        }
     }
 
     if (this.$refs.blockContent) {
@@ -3783,17 +3790,17 @@ export default {
         }
       },
       _saveContent() {
-        if (this.$refs.blockContent) {
-          this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+        if (!this.isSplittedBlock && this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
+          this.block.content = this.$refs.blocks[0].$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
           this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
-          if (this.block.footnotes && this.block.footnotes.length) {
-            this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-              let ref = this.$refs['footnoteContent_' + footnoteIdx];
-              if (ref && ref[0]) {
-                this.block.footnotes[footnoteIdx].content = ref[0].innerHTML;
-              }
-            });
-          }
+        }
+        if (this.block.footnotes && this.block.footnotes.length) {
+          this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+            let ref = this.$refs['footnoteContent_' + footnoteIdx];
+            if (ref && ref[0]) {
+              this.block.footnotes[footnoteIdx].content = ref[0].innerHTML;
+            }
+          });
         }
       },
       spotCheck: function() {

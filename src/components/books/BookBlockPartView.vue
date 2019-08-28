@@ -820,12 +820,14 @@ export default {
       }
 
       //this.voiceworkSel = this.block.voicework;
-      this.isChanged = this.block.isChanged;
-      this.isAudioChanged = this.block.isAudioChanged;
-      this.isIllustrationChanged = this.block.isIllustrationChanged;
-      if (this.block.changes) {
-        this.changes = this.block.changes;
-        delete this.block.changes;
+      if (Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
+        this.isChanged = this.block.parts[this.blockPartIdx].isChanged;
+        this.isAudioChanged = this.block.parts[this.blockPartIdx].isAudioChanged;
+        this.isIllustrationChanged = this.block.parts[this.blockPartIdx].isIllustrationChanged;
+        if (this.block.parts[this.blockPartIdx].changes) {
+          this.changes = this.block.parts[this.blockPartIdx].changes;
+          delete this.block.parts[this.blockPartIdx].changes;
+        }
       }
       if (this.block.check_id) {
         this.check_id = this.block.check_id;
@@ -881,8 +883,8 @@ export default {
     if (this.isAudioEditing) {
       this.block.isAudioEditing = this.isAudioEditing;
     }
-    if (this.block && this.isChanged) {
-        this.block.changes = this.changes;
+    if (this.block && this.isChanged && Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
+        this.block.parts[this.blockPartIdx].changes = this.changes;
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
@@ -2787,17 +2789,9 @@ export default {
         }
       },
       _saveContent() {
-        if (this.$refs.blockContent) {
-          this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
-          this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
-          if (this.block.footnotes && this.block.footnotes.length) {
-            this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-              let ref = this.$refs['footnoteContent_' + footnoteIdx];
-              if (ref && ref[0]) {
-                this.block.footnotes[footnoteIdx].content = ref[0].innerHTML;
-              }
-            });
-          }
+        if (this.$refs.blockContent && this.isSplittedBlock && Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
+          this.block.parts[this.blockPartIdx].content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+          this.block.parts[this.blockPartIdx].content = this.block.parts[this.blockPartIdx].content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
         }
       },
       refreshBlockAudio: function(map = true, src = true) {
