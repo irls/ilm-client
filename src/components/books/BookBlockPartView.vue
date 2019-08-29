@@ -686,7 +686,7 @@ export default {
           content = content.replace(/<br[^>]*>$/, '');//remove <br> at the end of the block
           content = content.replace(/(<\/?(?:ol|ul|li|u|br)[^>]*>)|<[^>]+>/img, '$1');
           content = content.replace(/([\.\!\?\…\؟]+[^${lettersPattern}]*?)(<\/li><li[^>]*>)/img, '$1<br>$2');
-          let is_list = content.match(/<br[^>]*>/m) || content.match(/<li[^>]*>/m);
+          let is_list = this.block.content.match(/<br[^>]*>/m) || content.match(/<li[^>]*>/m);
           if (this.block.classes && typeof this.block.classes === 'object' && typeof this.block.classes.whitespace !== 'undefined' && this.block.classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
             content = content.replace(/[\r\n]/mg, '<br>');
             is_list = true;
@@ -750,7 +750,7 @@ export default {
             }
             content = parts.join('<split/>');
           }
-          content = content.replace(/<br[^>]*>(?!<split\/>)/gm, `<br>${separator}`);// lists with br should have empty line
+          content = content.replace(/(?<!<split\/>)<br[^>]*>(?!<split\/>)/gm, `<br>${separator}`);// lists with br should have empty line
           content = content.replace(/([\.\!\?\…\؟])(<\/li>)/img, '$1<br><br>$2');// make lists with new lines
           content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
           content = content.replace(/<br><br><br>/gm, '<br><br>');
