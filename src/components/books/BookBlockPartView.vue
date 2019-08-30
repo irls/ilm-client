@@ -749,7 +749,7 @@ export default {
             }
             content = parts.join('<split/>');
           }
-          content = content.replace(/(?<!<split\/>)<br[^>]*>(?!<split\/>)/gm, `<br>${separator}`);// lists with br should have empty line
+          content = content.replace(new RegExp('(?<!<split\\/>)<br[^>]*>(?!<split\\/>)', 'gm'), `<br>${separator}`);// lists with br should have empty line
           content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
           content = content.replace(/<br><br><br>/gm, '<br><br>');
           content = content.replace(/<br><br>/gm, '<br><div class="part-separator"></div>');
