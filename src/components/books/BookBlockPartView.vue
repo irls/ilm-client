@@ -1060,8 +1060,8 @@ export default {
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  //'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  //'superscript', 'subscript','orderedlist', 
+                  'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
                 ]
@@ -1111,7 +1111,7 @@ export default {
                 buttons: [
                   'bold', 'italic', 'underline',
                   'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  'unorderedlist',
                   'quoteButton', 'suggestButton'
                 ]
               };
@@ -1147,7 +1147,7 @@ export default {
                 buttons: [
                   'bold', 'italic', 'underline',
                   'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  'unorderedlist',
                   'quoteButton', 'suggestButton'
                 ]
               };
@@ -1521,10 +1521,13 @@ export default {
         if (/\r\n|\r|\n/.test(content) && this.block && this.block.classes.whitespace && ['verse', 'pre', 'list'].indexOf(this.block.classes.whitespace) !== -1) {
           content = content.replace(/<p><br[\/]?><\/p>/gm, '\n');
           content = content.replace(/<p[^>]*>([\s\S]+?)<\/p>([\s\S]+?)/gm, `$1\n$2`)// remove Editor's p instead of line breaks
+          content = content.replace(/<\/div><div>/gm, '')
           content = content.replace(/<div>/gm, '')
           content = content.replace(/<\/div>/gm, '\n')
         }
-        content = content.replace(/<p[^>]*>([\s\S]*?)<\/p>/gm, '<br/>$1')
+        content = content.replace(/<p[^>]*>([\s\S]*?)<br[^>]*><\/p>/gm, '<p>$1</p>');
+        content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
+        content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
         content = content.replace(/<span[^>]*>([\s\S]*?)<\/span>/gm, '$1')
