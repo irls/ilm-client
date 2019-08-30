@@ -106,5 +106,14 @@
     [data-suggestion] {
       background: inherit;
     }
+    /*br {
+      display: block;
+      margin: 15px 0;
+      line-height: 24px;
+      content: " ";
+    }*/
+    .part-separator {
+      height: 15px;
+    }
   }
 </style>

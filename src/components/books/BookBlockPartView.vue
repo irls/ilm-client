@@ -683,10 +683,16 @@ export default {
           while (content.match(replaceHTMLRg)) {
             content = content.replace(replaceHTMLRg, '$1');
           }*/
-          content = content.replace(/(<\/?(?:ol|ul|li|u)[^>]*>)|<[^>]+>/img, '$1');
+          content = content.replace(/<br[^>]*>$/, '');//remove <br> at the end of the block
+          content = content.replace(/(<\/?(?:ol|ul|li|u|br)[^>]*>)|<[^>]+>/img, '$1');
+          content = content.replace(/([\.\!\?\…\؟]+[^${lettersPattern}]*?)(<\/li><li[^>]*>)/img, '$1<br>$2');
+          let is_list = this.block.content.match(/<br[^>]*>/m) || content.match(/<br[^>]*>/m) || this.block.content.match(/<li[^>]*>/m) || content.match(/<li[^>]*>/m);
           if (this.block.classes && typeof this.block.classes === 'object' && typeof this.block.classes.whitespace !== 'undefined' && this.block.classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
             content = content.replace(/[\r\n]/mg, '<br>');
+            is_list = true;
           }
+          let separator = '<div class="part-separator"></div>'
+          let joinBy = is_list ? '<split/>' : `<split/><split/>`;
           /*let rg = new RegExp('((?<!St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\\b)cf|(?=\\b)Cap|(?=\\b)ca|(?=\\b)cca|(?=\\b)fl|(?=\\b)gen|(?=\\b)gov|(?=\\b)vs|(?=\\b)v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|(?=\\b)scil|(?=\\b)ed|(?=\\b)p|(?=\\b)viz|\\W[A-Z]))([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])', 'img');
           content = content.replace(rg, '$1$2<br><br>');*/
           let parts = [];
@@ -704,7 +710,7 @@ export default {
             let pos = match.index + match[0].length;
             let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
             //var substrLower = str.substring(match.index);
-            //console.log(`"${substr}"`);
+            //console.log(`CHECK "${substr}"`);
             //console.log('MATCH: ', substr.match(regExAbbr))
             if (!substr.match(regExAbbr) && substr.match(regExLetters) && !substr.match(regExNewline)) {
               parts.push(substr);
@@ -720,7 +726,7 @@ export default {
                 parts[parts.length - 1]+=substr;
               }
             }
-            content = parts.join('<br><br>');
+            content = parts.join(joinBy);
           }
           parts = [];
           shift = 0;
@@ -741,9 +747,12 @@ export default {
                 parts[parts.length - 1]+=substr;
               }
             }
-            content = parts.join('<br>');
+            content = parts.join('<split/>');
           }
+          content = content.replace(new RegExp('(?<!<split\\/>)<br[^>]*>(?!<split\\/>)', 'gm'), `<br>${separator}`);// lists with br should have empty line
+          content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
           content = content.replace(/<br><br><br>/gm, '<br><br>');
+          content = content.replace(/<br><br>/gm, '<br><div class="part-separator"></div>');
           //content = content.replace(, '$1<br>');
           return content;
         },
