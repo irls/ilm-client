@@ -59,6 +59,8 @@
               </div>
           </fieldset>
           <BookPublish></BookPublish>
+          <SplitPreview v-if="allowBookSplitPreview"
+            :convertTime="convertTime"></SplitPreview>
           </vue-tab>
           <vue-tab title="Meta" id="book-content">
             <fieldset>
@@ -451,6 +453,7 @@ import { VueTabs, VTab } from 'vue-nav-tabs'
 import BookAssignments from './details/BookAssignments';
 import BookWorkflow from './details/BookWorkflow';
 import BookPublish from './details/BookPublish';
+import SplitPreview from './details/SplitPreview';
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -472,7 +475,8 @@ export default {
     panel,
     BookAssignments,
     BookWorkflow,
-    BookPublish
+    BookPublish,
+    SplitPreview
   },
 
   data () {
@@ -561,7 +565,8 @@ export default {
       subjectCategories: 'bookCategories',
       tasks_counter: 'tasks_counter',
       taskTypes: 'taskTypes',
-      adminOrLibrarian: 'adminOrLibrarian'
+      adminOrLibrarian: 'adminOrLibrarian',
+      allowBookSplitPreview: 'allowBookSplitPreview'
     }),
     collectionsList: {
       get() {
