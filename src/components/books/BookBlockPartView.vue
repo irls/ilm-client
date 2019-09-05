@@ -683,10 +683,16 @@ export default {
           while (content.match(replaceHTMLRg)) {
             content = content.replace(replaceHTMLRg, '$1');
           }*/
-          content = content.replace(/(<\/?(?:ol|ul|li|u)[^>]*>)|<[^>]+>/img, '$1');
+          content = content.replace(/<br[^>]*>$/, '');//remove <br> at the end of the block
+          content = content.replace(/(<\/?(?:ol|ul|li|u|br)[^>]*>)|<[^>]+>/img, '$1');
+          content = content.replace(/([\.\!\?\…\؟]+[^${lettersPattern}]*?)(<\/li><li[^>]*>)/img, '$1<br>$2');
+          let is_list = this.block.content.match(/<br[^>]*>/m) || content.match(/<br[^>]*>/m) || this.block.content.match(/<li[^>]*>/m) || content.match(/<li[^>]*>/m);
           if (this.block.classes && typeof this.block.classes === 'object' && typeof this.block.classes.whitespace !== 'undefined' && this.block.classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
             content = content.replace(/[\r\n]/mg, '<br>');
+            is_list = true;
           }
+          let separator = '<div class="part-separator"></div>'
+          let joinBy = is_list ? '<split/>' : `<split/><split/>`;
           /*let rg = new RegExp('((?<!St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\\b)cf|(?=\\b)Cap|(?=\\b)ca|(?=\\b)cca|(?=\\b)fl|(?=\\b)gen|(?=\\b)gov|(?=\\b)vs|(?=\\b)v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|(?=\\b)scil|(?=\\b)ed|(?=\\b)p|(?=\\b)viz|\\W[A-Z]))([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])', 'img');
           content = content.replace(rg, '$1$2<br><br>');*/
           let parts = [];
@@ -704,7 +710,7 @@ export default {
             let pos = match.index + match[0].length;
             let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
             //var substrLower = str.substring(match.index);
-            //console.log(`"${substr}"`);
+            //console.log(`CHECK "${substr}"`);
             //console.log('MATCH: ', substr.match(regExAbbr))
             if (!substr.match(regExAbbr) && substr.match(regExLetters) && !substr.match(regExNewline)) {
               parts.push(substr);
@@ -720,7 +726,7 @@ export default {
                 parts[parts.length - 1]+=substr;
               }
             }
-            content = parts.join('<br><br>');
+            content = parts.join(joinBy);
           }
           parts = [];
           shift = 0;
@@ -741,9 +747,12 @@ export default {
                 parts[parts.length - 1]+=substr;
               }
             }
-            content = parts.join('<br>');
+            content = parts.join('<split/>');
           }
+          content = content.replace(new RegExp('(?<!<split\\/>)<br[^>]*>(?!<split\\/>)', 'gm'), `<br>${separator}`);// lists with br should have empty line
+          content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
           content = content.replace(/<br><br><br>/gm, '<br><br>');
+          content = content.replace(/<br><br>/gm, '<br><div class="part-separator"></div>');
           //content = content.replace(, '$1<br>');
           return content;
         },
@@ -810,12 +819,14 @@ export default {
       }
 
       //this.voiceworkSel = this.block.voicework;
-      this.isChanged = this.block.isChanged;
-      this.isAudioChanged = this.block.isAudioChanged;
-      this.isIllustrationChanged = this.block.isIllustrationChanged;
-      if (this.block.changes) {
-        this.changes = this.block.changes;
-        delete this.block.changes;
+      if (Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
+        this.isChanged = this.block.parts[this.blockPartIdx].isChanged;
+        this.isAudioChanged = this.block.parts[this.blockPartIdx].isAudioChanged;
+        this.isIllustrationChanged = this.block.parts[this.blockPartIdx].isIllustrationChanged;
+        if (this.block.parts[this.blockPartIdx].changes) {
+          this.changes = this.block.parts[this.blockPartIdx].changes;
+          delete this.block.parts[this.blockPartIdx].changes;
+        }
       }
       if (this.block.check_id) {
         this.check_id = this.block.check_id;
@@ -841,12 +852,6 @@ export default {
       this.addContentListeners();
 
       this.$root.$on('block-state-refresh-' + this.block._id, this.$forceUpdate);
-      this.$root.$on('saved-block:' + this.block._id, () => {
-        this.isChanged = false;
-        this.isAudioChanged = false;
-        this.isIllustrationChanged = false;
-        this.recountApprovedInRange();
-      });
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
       this.$root.$on('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
@@ -877,8 +882,8 @@ export default {
     if (this.isAudioEditing) {
       this.block.isAudioEditing = this.isAudioEditing;
     }
-    if (this.block && this.isChanged) {
-        this.block.changes = this.changes;
+    if (this.block && this.isChanged && Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
+        this.block.parts[this.blockPartIdx].changes = this.changes;
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
             this.block.description = this.$refs.blockDescription.innerHTML;
@@ -907,8 +912,6 @@ export default {
     this.$root.$off('playBlock');
 
     if(this.block) {
-
-      this.$root.$off('saved-block:' + this.block._id);
 
       this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
@@ -1051,8 +1054,8 @@ export default {
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  //'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  //'superscript', 'subscript','orderedlist', 
+                  'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
                 ]
@@ -1102,7 +1105,7 @@ export default {
                 buttons: [
                   'bold', 'italic', 'underline',
                   'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  'unorderedlist',
                   'quoteButton', 'suggestButton'
                 ]
               };
@@ -1138,7 +1141,7 @@ export default {
                 buttons: [
                   'bold', 'italic', 'underline',
                   'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  'unorderedlist',
                   'quoteButton', 'suggestButton'
                 ]
               };
@@ -1512,10 +1515,13 @@ export default {
         if (/\r\n|\r|\n/.test(content) && this.block && this.block.classes.whitespace && ['verse', 'pre', 'list'].indexOf(this.block.classes.whitespace) !== -1) {
           content = content.replace(/<p><br[\/]?><\/p>/gm, '\n');
           content = content.replace(/<p[^>]*>([\s\S]+?)<\/p>([\s\S]+?)/gm, `$1\n$2`)// remove Editor's p instead of line breaks
+          content = content.replace(/<\/div><div>/gm, '')
           content = content.replace(/<div>/gm, '')
           content = content.replace(/<\/div>/gm, '\n')
         }
-        content = content.replace(/<p[^>]*>([\s\S]*?)<\/p>/gm, '<br/>$1')
+        content = content.replace(/<p[^>]*>([\s\S]*?)<br[^>]*><\/p>/gm, '<p>$1</p>');
+        content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
+        content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
         content = content.replace(/<span[^>]*>([\s\S]*?)<\/span>/gm, '$1')
@@ -2727,7 +2733,7 @@ export default {
             }
             if (startRange && endRange) {
               //console.log(startRange[0], endRange[0] + endRange[1])
-              this.$root.$emit('for-audioeditor:select', id, startRange[0], endRange[0] + endRange[1]);
+              this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null);
             }
             //console.log(startElement, endElement, startRange, endRange)
           }
@@ -2782,17 +2788,9 @@ export default {
         }
       },
       _saveContent() {
-        if (this.$refs.blockContent) {
-          this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
-          this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
-          if (this.block.footnotes && this.block.footnotes.length) {
-            this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-              let ref = this.$refs['footnoteContent_' + footnoteIdx];
-              if (ref && ref[0]) {
-                this.block.footnotes[footnoteIdx].content = ref[0].innerHTML;
-              }
-            });
-          }
+        if (this.$refs.blockContent && this.isSplittedBlock && Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
+          this.block.parts[this.blockPartIdx].content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+          this.block.parts[this.blockPartIdx].content = this.block.parts[this.blockPartIdx].content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
         }
       },
       refreshBlockAudio: function(map = true, src = true) {

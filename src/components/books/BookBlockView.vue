@@ -1052,6 +1052,14 @@ export default {
         this.isIllustrationChanged = false;
         this.recountApprovedInRange();
       });
+      this.$root.$on(`save-block:${this.block.blockid}`, (evt) => {
+        evt.waitUntil(new Promise((resolve, reject) => {
+          this.assembleBlockProxy(false, false)
+            .then(() => {
+              resolve();
+            })
+        }));
+      });
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
 
@@ -1097,6 +1105,13 @@ export default {
             this._saveContent();
             break;
         }
+        if (this.isSplittedBlock) {
+          this.blockParts.forEach((part, partIdx) => {
+            if (!this.$refs.blocks[partIdx].isChanged && this.$refs.blocks[partIdx].$refs.blockContent) {
+              this.block.setPartContent(partIdx, this.$refs.blocks[partIdx].clearBlockContent());
+            }
+          });
+        }
     }
 
     if (this.$refs.blockContent) {
@@ -1114,6 +1129,7 @@ export default {
       this.$root.$off('saved-block:' + this.block._id);
 
       this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+      this.$root.$off(`save-block:${this.block.blockid}`);
 
     }
 
@@ -1260,7 +1276,7 @@ export default {
                 buttons: [
                   'bold', 'italic', 'underline',
                   //'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
                 ]
@@ -1310,7 +1326,7 @@ export default {
                 buttons: [
                   'bold', 'italic', 'underline',
                   'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  'unorderedlist',
                   'quoteButton', 'suggestButton'
                 ]
               };
@@ -1346,7 +1362,7 @@ export default {
                 buttons: [
                   'bold', 'italic', 'underline',
                   'superscript', 'subscript',
-                  'orderedlist', 'unorderedlist',
+                  'unorderedlist',
                   'quoteButton', 'suggestButton'
                 ]
               };
@@ -2004,10 +2020,13 @@ export default {
         if (/\r\n|\r|\n/.test(content) && this.block && this.block.classes.whitespace && ['verse', 'pre', 'list'].indexOf(this.block.classes.whitespace) !== -1) {
           content = content.replace(/<p><br[\/]?><\/p>/gm, '\n');
           content = content.replace(/<p[^>]*>([\s\S]+?)<\/p>([\s\S]+?)/gm, `$1\n$2`)// remove Editor's p instead of line breaks
+          content = content.replace(/<\/div><div>/gm, '')
           content = content.replace(/<div>/gm, '')
           content = content.replace(/<\/div>/gm, '\n')
         }
-        content = content.replace(/<p[^>]*>([\s\S]*?)<\/p>/gm, '<br/>$1')
+        content = content.replace(/<p[^>]*>([\s\S]*?)<br[^>]*><\/p>/, '<p>$1</p>');
+        content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
+        content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
         content = content.replace(/<span[^>]*>([\s\S]*?)<\/span>/gm, '$1')
@@ -3771,17 +3790,17 @@ export default {
         }
       },
       _saveContent() {
-        if (this.$refs.blockContent) {
-          this.block.content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+        if (!this.isSplittedBlock && this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
+          this.block.content = this.$refs.blocks[0].$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
           this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
-          if (this.block.footnotes && this.block.footnotes.length) {
-            this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-              let ref = this.$refs['footnoteContent_' + footnoteIdx];
-              if (ref && ref[0]) {
-                this.block.footnotes[footnoteIdx].content = ref[0].innerHTML;
-              }
-            });
-          }
+        }
+        if (this.block.footnotes && this.block.footnotes.length) {
+          this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+            let ref = this.$refs['footnoteContent_' + footnoteIdx];
+            if (ref && ref[0]) {
+              this.block.footnotes[footnoteIdx].content = ref[0].innerHTML;
+            }
+          });
         }
       },
       spotCheck: function() {
@@ -4146,6 +4165,24 @@ export default {
       'block.audiosrc': {
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
+        }
+      },
+      'isSaving': {
+        handler(val) {
+          if (!val && this.$refs.blocks) {
+            let ref = this.$refs.blocks.find(rb => {
+              return rb.$refs && rb.$refs.blockFlagPopup && rb.flagsSel;
+            });
+            if (!ref && this.flagsSel && this.flagsSel._id === this.block.blockid && this.$refs.blockFlagPopup) {
+              ref = this;
+            }
+            if (ref) {// reset flag selection on save
+              
+              ref.flagsSel = this.block.flags.find((flag)=>{
+                return flag._id === ref.flagsSel._id;
+              });
+            }
+          }
         }
       }
   }
