@@ -1703,7 +1703,8 @@ export default {
               description: this.block.description,
               voicework: this.block.voicework,
               content: this.block.content,
-              blockid: this.block.blockid
+              blockid: this.block.blockid,
+              type: this.block.type
             });
           }
         } else {
