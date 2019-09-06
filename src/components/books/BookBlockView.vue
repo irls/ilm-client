@@ -2004,7 +2004,7 @@ export default {
           });
       },
       clearBlockContent: function(content = false) {
-        if (!content) {
+        if (content === false) {
           content = '';
           this.$refs.blocks.forEach((blk, idx) => {
             let cnt = blk.clearBlockContent();

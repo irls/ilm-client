@@ -1504,7 +1504,7 @@ export default {
       },
       clearBlockContent: function(content = false) {
         //console.log(content)
-        if (!content) {
+        if (content === false) {
           content = this.$refs.blockContent.innerHTML;
         }
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
