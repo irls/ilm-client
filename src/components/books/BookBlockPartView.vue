@@ -750,16 +750,11 @@ export default {
             }
             content = parts.join('<split/>');
           }
-<<<<<<< HEAD
-          content = content.replace(new RegExp('(?<!<split\\/>)<br[^>]*>(?!<split\\/>)', 'gm'), `<br>${separator}`);// lists with br should have empty line
-          content = content.replace(/([\.\!\?\…\؟])(<\/li>)/img, '$1<br><br>$2');// make lists with new lines
-=======
           try {
             content = content.replace(new RegExp('(?<!<split\\/>)<br[^>]*>(?!<split\\/>)', 'gm'), `<br>${separator}`);// lists with br should have empty line
           } catch (e) {// Firefox does not support negative lookbehind
-            
+
           }
->>>>>>> master
           content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
           content = content.replace(/<br><br><br>/gm, '<br><br>');
           content = content.replace(/<br><br>/gm, '<br><div class="part-separator"></div>');
@@ -1064,7 +1059,7 @@ export default {
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  //'superscript', 'subscript','orderedlist', 
+                  //'superscript', 'subscript','orderedlist',
                   'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
@@ -1534,7 +1529,7 @@ export default {
           content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
           content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         } catch (e) {// Firefox does not support negative lookbehind
-          
+
         }
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
