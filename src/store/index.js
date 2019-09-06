@@ -849,6 +849,19 @@ export const store = new Vuex.Store({
 
     // login event
     connectDB ({ state, commit, dispatch }, session) {
+        
+        // check if any response contains 401
+        axios.interceptors.response.use(function (response) {
+            return response;
+          }, function (error) {
+            let session = state.auth.getSession();
+            if ((!error.response || error.response.status === 401) && session && session.token) {// if response is absent then it means that server is stopped
+              location.href = '/';
+            } else {
+              return Promise.reject(error);
+            }
+          });
+
         dispatch('startJobInfoTimer');
         state.liveDB.setSubscriberId(state.auth.getSession().token);
         state.adminOrLibrarian = superlogin.confirmRole('admin') || superlogin.confirmRole('librarian');
