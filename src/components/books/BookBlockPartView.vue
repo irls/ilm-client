@@ -756,7 +756,7 @@ export default {
           }
           content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
           content = content.replace(/<br><br><br>/gm, '<br><br>');
-          content = content.replace(/<br><br>/gm, '<br><div class="part-separator"></div>');
+          content = content.replace(/<br[^>]*><br[^>]*>/gm, '<br><div class="part-separator"></div>');
           //content = content.replace(, '$1<br>');
           return content;
         },
