@@ -412,7 +412,7 @@
 
             <div class="table-row controls-bottom">
               <div class="-hidden -left">
-                <span>
+                <span v-if="showBlockFlag">
                   <i :class="['glyphicon', 'glyphicon-flag']"
                     ref="blockFlagControl"
                     @click="handleBlockFlagClick"
@@ -985,6 +985,25 @@ export default {
           return true;
         }
         return false;
+      },
+      showBlockFlag: {
+        get() {
+          if (this.mode !== 'narrate') {
+            return true;
+          }
+          let task = this.tc_getBlockTask(this.block.blockid);
+          if (task) {
+            return true;
+          }
+          let blockFlag = Array.isArray(this.block.flags) ? this.block.flags.find(blk => {
+            let parts = Array.isArray(blk.parts) ? blk.parts.filter(part => {
+              return part.status !== 'hidden';
+            }) : [];
+            return blk._id === this.block.blockid && parts.length > 0;
+          }) : false;
+          return blockFlag;
+        },
+        cache: false
       }
   },
   mounted: function() {

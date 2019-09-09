@@ -1509,6 +1509,9 @@ export default {
       },
       clearBlockContent: function(content = false) {
         //console.log(content)
+        if (content === false && !this.$refs.blockContent) {
+          return '';
+        }
         if (content === false) {
           content = this.$refs.blockContent.innerHTML;
         }
