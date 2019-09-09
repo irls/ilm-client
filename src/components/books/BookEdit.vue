@@ -1,7 +1,7 @@
 <template>
 <div :class="['content-scroll-wrapper']"
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
-  
+
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <div class="content-background">
       <div v-for="(viewObj, listIdx) in getListObjs"
@@ -2427,7 +2427,8 @@ export default {
           }
         }
         &.audio-controls {
-          width: 20%;
+          width: 135px;
+          min-width: 135px;
           .table-body {
             width: 100px;
             margin: 0px 0px 0px auto;

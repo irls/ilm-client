@@ -351,9 +351,10 @@ export default {
     flex-grow: 2;
     display:flex;
     flex-direction: column;
+    overflow: hidden;
 
     &.meta-visible {
-      max-width: 73%;
+      // max-width: 73%;
     }
 
     .toolbar {
@@ -370,6 +371,11 @@ export default {
       .pull-right {
         min-width: 460px;
         text-align: right;
+      }
+      .title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
 
