@@ -5,7 +5,7 @@
 
     <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'"></div>
     <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div>
-    <div :class="['table-cell', {'completed': isCompleted}, {'-content-block': mode === 'narrate'}]">
+    <div :class="['table-cell', {'completed': isCompleted}]">
       <div :class="['table-body', '-content']">
         <div class="table-row-flex controls-top" v-if="mode !== 'narrate'"></div>
         <!--<div class="table-row-flex controls-top">-->
