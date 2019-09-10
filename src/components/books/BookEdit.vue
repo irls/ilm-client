@@ -2419,6 +2419,11 @@ export default {
         @media all and (max-width: 1100px) {
            margin: 0;
         }
+        .meta-visible & {
+           @media all and (max-width: 1540px) {
+              margin: 0;
+           }
+        }
       }
       .controls-left {
         &.sub-parnum {

@@ -353,10 +353,6 @@ export default {
     flex-direction: column;
     overflow: hidden;
 
-    &.meta-visible {
-      // max-width: 73%;
-    }
-
     .toolbar {
       min-height: 36px;
       display: flex;
