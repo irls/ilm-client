@@ -41,7 +41,7 @@
         </div>
       </div>
     </div>
-    <div class="table-cell" :class="{'completed': isCompleted, {'-content-block': mode === 'narrate'}}" >
+    <div class="table-cell" :class="[{'completed': isCompleted }, {'-content-block': mode === 'narrate'}]" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
         @click="onBlur">
