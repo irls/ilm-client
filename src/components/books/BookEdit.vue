@@ -2415,7 +2415,10 @@ export default {
       position: relative;
       .-content {
         width: 650px;
-        /*margin: 0px auto;*/
+        margin: 0px auto;
+        @media ~"all and (max-width: 1100px)" {
+           margin: 0;
+        }
       }
       .controls-left {
         &.sub-parnum {
