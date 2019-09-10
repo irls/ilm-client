@@ -3068,7 +3068,7 @@ export default {
 
    .-content-block {
       padding-inline-end: 200px;
-      @media ~"all and (max-width: 1100px)" {
+      @media all and (max-width: 1100px) {
          padding-inline-end: 0;
       }
    }

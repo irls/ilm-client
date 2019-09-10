@@ -2416,7 +2416,7 @@ export default {
       .-content {
         width: 650px;
         margin: 0px auto;
-        @media ~"all and (max-width: 1100px)" {
+        @media all and (max-width: 1100px) {
            margin: 0;
         }
       }
