@@ -31,7 +31,7 @@
           </div>
         </div>
     </div>
-    <div class="table-cell" :class="{'completed': isCompleted}" >
+    <div class="table-cell" :class="{'completed': isCompleted}, {'-content-block': mode === 'narrate'}" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
         @click="onBlur">
@@ -1951,7 +1951,7 @@ export default {
         if (check_realign === true && this.needsRealignment && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
           this.$root.$emit('from-block:save-and-realign-warning', () => {
                   this.$root.$emit('hide-modal');
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1960,7 +1960,7 @@ export default {
                       this.assembleBlockNarrate(false, false)
                     }
                   }, 50);
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -4355,7 +4355,7 @@ export default {
     &.completed {
       background: #EFEFEF;
       border-radius: 7px;
-      padding: 0;
+      /*padding: 0;*/
     }
 
 }
