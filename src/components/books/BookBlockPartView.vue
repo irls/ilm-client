@@ -3067,9 +3067,11 @@ export default {
 <style lang='less'>
 
    .-content-block {
-      padding-inline-end: 200px;
-      @media all and (max-width: 1100px) {
-         padding-inline-end: 0;
+      .-mode-narrate & {
+         padding-inline-end: 200px;
+         @media all and (max-width: 1100px) {
+            padding-inline-end: 0;
+         }
       }
    }
 
