@@ -3072,6 +3072,11 @@ export default {
          @media all and (max-width: 1100px) {
             padding-inline-end: 0;
          }
+         .meta-visible & {
+            @media all and (max-width: 1540px) {
+               padding-inline-end: 0;
+            }
+         }
       }
    }
 
