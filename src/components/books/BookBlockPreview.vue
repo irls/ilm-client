@@ -8,7 +8,7 @@
       <div class="table-row check-row"></div>
     </div>
     <!--<div :class="['table-cell', 'controls-left']">-->
-    <div :class="['table-cell', {'completed': isCompleted}]">
+    <div :class="['table-cell', {'completed': isCompleted}, {'-content-block': mode === 'narrate'}]">
       <div :class="['table-body', '-content', '-langblock-' + getBlockLang]">
         <div class="table-row-flex controls-top"></div>
         <!--<div class="table-row-flex controls-top">-->
