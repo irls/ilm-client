@@ -4355,7 +4355,6 @@ export default {
     &.completed {
       background: #EFEFEF;
       border-radius: 7px;
-      /*padding: 0;*/
     }
 
 }
