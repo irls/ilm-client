@@ -3059,7 +3059,7 @@ export default {
 
    .-content-block {
       .-mode-narrate & {
-         padding-inline-end: 200px;
+         padding-inline-end: 185px;
          @media all and (max-width: 1100px) {
             padding-inline-end: 0;
          }

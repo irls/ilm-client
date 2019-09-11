@@ -411,40 +411,42 @@
             </div>
 
             <div class="table-row controls-bottom">
-              <div class="-hidden -left">
-                <span>
-                  <i :class="['glyphicon', 'glyphicon-flag']"
-                    ref="blockFlagControl"
-                    @click="handleBlockFlagClick"
-                  ></i>
-                </span>
-              </div>
-              <div class="par-ctrl -hidden -right">
-                  <div class="save-block -right" @click="discardBlock"
-                       v-bind:class="{'-disabled': !hasChanges || isAudioEditing}">
-                    Discard
-                  </div>
-                  <div class="save-block -right"
-                  v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-                  @click="assembleBlockProxy(true)">
-                    {{saveBlockLabel}}
-                  </div>
-                  <template v-if="!isCompleted">
-                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
-                    @click.prevent="reworkBlock">
-                    Need work</div>
-                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
-                    @click.prevent="approveBlock">
-                    Approve</div>
+              <div class="controls-bottom-wrapper">
+                <div class="-hidden -left">
+                  <span>
+                    <i :class="['glyphicon', 'glyphicon-flag']"
+                      ref="blockFlagControl"
+                      @click="handleBlockFlagClick"
+                    ></i>
+                  </span>
+                </div>
+                <div class="par-ctrl -hidden -right">
+                    <div class="save-block -right" @click="discardBlock"
+                        v-bind:class="{'-disabled': !hasChanges || isAudioEditing}">
+                      Discard
+                    </div>
+                    <div class="save-block -right"
+                    v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+                    @click="assembleBlockProxy(true)">
+                      {{saveBlockLabel}}
+                    </div>
+                    <template v-if="!isCompleted">
+                    <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
+                      @click.prevent="reworkBlock">
+                      Need work</div>
+                    <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
+                      @click.prevent="approveBlock">
+                      Approve</div>
 
-                  <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
-                    @click.prevent="markBlock">
-                    Approve</div>
-                  <div :class="['save-block', '-right', {'-disabled': isSpotCheckDisabled }]" @click.prevent="spotCheck">
-                    Spot check
-                  </div>
+                    <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
+                      @click.prevent="markBlock">
+                      Approve</div>
+                    <div :class="['save-block', '-right', {'-disabled': isSpotCheckDisabled }]" @click.prevent="spotCheck">
+                      Spot check
+                    </div>
 
-                  </template>
+                    </template>
+                </div>
               </div>
               <!--<div class="-hidden">-->
             </div>

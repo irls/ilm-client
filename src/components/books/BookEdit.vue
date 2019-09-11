@@ -2427,8 +2427,8 @@ export default {
       }
       .controls-left {
         &.sub-parnum {
-          width: 5%;
-          max-width: 70px;
+          width: 50px;
+          min-width: 50px;
           .sub-parnum-main {
             font-size: 24px;
             font-weight: bold;
@@ -2476,8 +2476,12 @@ export default {
       }
     }
     .controls-bottom {
+      display: flex;
+      margin-inline-start: 185px;
+    }
+    .controls-bottom-wrapper {
       width: 650px;
-      margin-left: 25%;
+      margin: 0 auto;
     }
     .-subblock {
       .controls-bottom {
