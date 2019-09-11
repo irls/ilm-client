@@ -1466,7 +1466,7 @@ export default {
         if (e !== BreakException) throw e;
         else return found;
       }
-      return false;idsViewArray
+      return false;//idsViewArray
     },
     updateVisibleBlocks() {
       if (this.$refs.blocks && this.$refs.blocks.length) {

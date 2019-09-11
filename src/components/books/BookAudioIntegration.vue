@@ -10,22 +10,16 @@
                 <span class="checkmark"></span>
               </label>
             </div>
-            <dropdown text="" type="default" ref="allAudioDropdownSort" class="all-audio-dropdown aad-sort">
-                <li :class="audiobook.sortDirection == 'name_asc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('name', 'asc')">File name (A to Z)</span>
-                </li>
-                <li :class="audiobook.sortDirection == 'name_desc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('name', 'desc')">File name (Z to A)</span>
-                </li>
+            <dropdown text="" :type="audiobook.hasOwnProperty('sortDirection') == false || audiobook.sortDirection == '' ? 'default' : 'button'" ref="allAudioDropdownSort" class="all-audio-dropdown aad-sort">
                 <li :class="audiobook.sortDirection == 'date_desc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('date', 'desc')">Newest to Oldest</span>
+                  <span v-on:click="listSort('date', 'desc')">Date imported</span>
                 </li>
-                <li :class="audiobook.sortDirection == 'date_asc' ? ' aad_selected' : ' '">
-                  <span v-on:click="listSort('date', 'asc')">Oldest to Newest</span>
+                <li :class="audiobook.sortDirection == 'name_asc' ? ' aad_selected' : ' '">
+                  <span v-on:click="listSort('name', 'asc')">Filename</span>
                 </li>
             </dropdown>
             <dropdown text="" :type="this.aad_filter == 'all' ? 'default' : 'button'" ref="allAudioDropdownFilter" class="all-audio-dropdown aad-filter">
-                <li :class="this.aad_filter != 'pending' && this.aad_filter != 'aligned' ? ' aad_selected' : ' '">
+                <li :class="this.aad_filter != 'pending' && this.aad_filter != 'aligned' && this.aad_filter != 'filename' ? ' aad_selected' : ' '">
                   <span v-on:click="filterAll()">All</span>
                 </li>
                 <li :class="this.aad_filter == 'pending' ? ' aad_selected' : ' '">
@@ -34,6 +28,7 @@
                 <li :class="this.aad_filter == 'aligned' ? ' aad_selected' : ' '">
                   <span v-on:click="filterAligned()">Aligned</span>
                 </li>
+                <div style="padding: 7px 12px 7px 12px;"  :class="this.aad_filter == 'filename' ? ' aad_selected flexContainer ' : ' flexContainer '"><input style="padding: 3px" v-model="filterFilename" @input="filterFileNameInput()" placeholder="Filename" class="inputField" v-on:keyup.enter="filterFileName()"><button type="submit" @click="filterFileNameReset()">&nbsp;X&nbsp;</button></div>
             </dropdown>
             <div class="upload-audio left-divider">
               <button id="show-modal" type="button" @click="uploadAudio" class="btn btn-default btn_audio_upload btn-small" >
@@ -52,46 +47,48 @@
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
           <div class="file-catalogue-files-wrapper">
             <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
-              <div v-for="(audiofile, index) in audiobook.importFiles" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]">
-                <template v-if="audiofile.status == 'processing'">
-                  <div class="audiofile-info">
-                    <i>Processing, {{audiofile.title}}</i>
-                  </div>
-                </template>
-                <template v-else>
-                  <div v-if="allowEditing"
-                           class="audiofile-options">
-                    <label class="checkbox-container">
-                      <input type="checkbox" :checked="selections.indexOf(audiofile.id) !== -1"
-                           v-on:click="addSelection(audiofile.id, selections.indexOf(audiofile.id) === -1)"/>
-                      <span class="checkmark"></span>
-                    </label>
-                  </div>
-                  <div :class="['audiofile-info', {'playing': playing == audiofile.id, done: audiofile.done}]">
-                    <div class="audiofile-player-controls">
-                      <span class="audio-opening" v-if="audioOpening === audiofile.id"></span>
-                      <!-- <i v-else class="fa fa-play-circle-o" v-on:click="audiofileClick(audiofile.id, true, $event)"></i> -->
-                      <template v-else>
-                        <i v-if="audiofile.preview && audiofile.preview.start" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'start', $event)"></i>
-                      </template>
-                      <!-- <i class="fa fa-play-circle-o red" v-on:click="play()" v-if="paused === audiofile.id"></i>
-                      <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
-                      <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
+              <div v-for="(audiofile, index) in audiobook.importFiles" v-if="audiofile.title.includes(filterFilename.trim())" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]" >
+                <template v-if="audiofile.title.includes(filterFilename.trim())">
+                  <template v-if="audiofile.status == 'processing' && audiofile.title.includes(filterFilename.trim())">
+                    <div class="audiofile-info">
+                      <i>Processing, {{audiofile.title}}</i>
                     </div>
-                    <div class="audiofile-name">
-                      <span v-if="renaming !== audiofile.id"
-                            :class="['audiofile-name-edit']"
-                            @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.title ? audiofile.title : audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
-                      <input id="rename-input" type="text" v-model="audiofile.title" class="audiofile-name-edit"
-                           @focusout="saveAudiobook()"
-                           v-else />
+                  </template>
+                  <template v-else>
+                    <div v-if="allowEditing"
+                             class="audiofile-options">
+                      <label class="checkbox-container">
+                        <input type="checkbox" :checked="selections.indexOf(audiofile.id) !== -1"
+                             v-on:click="addSelection(audiofile.id, selections.indexOf(audiofile.id) === -1)"/>
+                        <span class="checkmark"></span>
+                      </label>
                     </div>
-                    <div class="audiofile-player-controls">
-                      <i v-if="audiofile.preview && audiofile.preview.end" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'end')"></i>
+                    <div :class="['audiofile-info', {'playing': playing == audiofile.id, done: audiofile.done}]">
+                      <div class="audiofile-player-controls">
+                        <span class="audio-opening" v-if="audioOpening === audiofile.id"></span>
+                        <!-- <i v-else class="fa fa-play-circle-o" v-on:click="audiofileClick(audiofile.id, true, $event)"></i> -->
+                        <template v-else>
+                          <i v-if="audiofile.preview && audiofile.preview.start" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'start', $event)"></i>
+                        </template>
+                        <!-- <i class="fa fa-play-circle-o red" v-on:click="play()" v-if="paused === audiofile.id"></i>
+                        <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
+                        <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
+                      </div>
+                      <div class="audiofile-name">
+                        <span v-if="renaming !== audiofile.id"
+                              :class="['audiofile-name-edit']"
+                              @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.title ? audiofile.title : audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
+                        <input id="rename-input" type="text" v-model="audiofile.title" class="audiofile-name-edit"
+                             @focusout="saveAudiobook()"
+                             v-else />
+                      </div>
+                      <div class="audiofile-player-controls">
+                        <i v-if="audiofile.preview && audiofile.preview.end" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'end')"></i>
+                      </div>
+                      <div class="audiofile-duration"><span>{{ parseAudioLength(audiofile) }}</span></div>
                     </div>
-                    <div class="audiofile-duration"><span>{{ parseAudioLength(audiofile) }}</span></div>
-                  </div>
 
+                  </template>
                 </template>
               </div>
             </draggable>
@@ -229,7 +226,8 @@
         activeTabIndex: 0,
         audio_element: false,
         aad_sort: '',
-        aad_filter: 'all'
+        aad_filter: 'all',
+        filterFilename: ''
       }
     },
     mixins: [task_controls, api_config, access],
@@ -706,22 +704,30 @@
               {
                 title: 'Save&Align',
                 handler: () => {
-                  this.saveChangedBlocks({voicework: 'audio_file'})
-                    .then(ids => {
-                      if (ids && Array.isArray(ids)) {
-                        ids.forEach(id => {
-                          this.$root.$emit('saved-block:' + id);
-                        });
-                      }
-                      //console.log('saved ids', ids);
-                      this.$root.$emit('hide-modal');
-                      let i = setInterval(() => {
-                        if ($('.align-modal').length == 0) {
-                          clearInterval(i);
-                          this.align(id, false)
+                    this.getChangedBlocks({voicework: 'audio_file'})
+                      .then(ids => {
+                        if (!Array.isArray(ids)) {
+                          return Promise.reject();
                         }
-                      }, 50);
-                    });
+                        let wait = [];
+                        ids.forEach(blockid => {
+                          let promise = Promise.resolve();
+                          let evt = {};
+                          evt.waitUntil = p => promise = p
+                          this.$root.$emit(`save-block:${blockid}`, evt)
+                          wait.push(promise);
+                        })
+                        Promise.all(wait)
+                          .then(() => {
+                            this.$root.$emit('hide-modal');
+                            let i = setInterval(() => {
+                              if ($('.align-modal').length == 0) {
+                                clearInterval(i);
+                                this.align(id, false)
+                              }
+                            }, 50);
+                          });
+                      });
                 },
                 'class': 'btn btn-primary'
               }
@@ -868,22 +874,30 @@
               {
                 title: 'Save&Align',
                 handler: () => {
-                  this.saveChangedBlocks({voicework: 'tts'})
-                    .then(ids => {
-                      if (ids && Array.isArray(ids)) {
-                        ids.forEach(id => {
-                          this.$root.$emit('saved-block:' + id);
-                        });
-                      }
-                      //console.log('saved ids', ids);
-                      this.$root.$emit('hide-modal');
-                      let i = setInterval(() => {
-                        if ($('.align-modal').length == 0) {
-                          clearInterval(i);
-                          this.alignTts(false)
+                    this.getChangedBlocks({voicework: 'tts'})
+                      .then(ids => {
+                        if (!Array.isArray(ids)) {
+                          return Promise.reject();
                         }
-                      }, 50);
-                    });
+                        let wait = [];
+                        ids.forEach(blockid => {
+                          let promise = Promise.resolve();
+                          let evt = {};
+                          evt.waitUntil = p => promise = p
+                          this.$root.$emit(`save-block:${blockid}`, evt)
+                          wait.push(promise);
+                        })
+                        Promise.all(wait)
+                          .then(() => {
+                            this.$root.$emit('hide-modal');
+                            let i = setInterval(() => {
+                              if ($('.align-modal').length == 0) {
+                                clearInterval(i);
+                                this.alignTts(false)
+                              }
+                            }, 50);
+                          });
+                      });
                 },
                 'class': 'btn btn-primary'
               }
@@ -975,6 +989,17 @@
       },
       filterPending() {
         this.aad_filter = 'pending';
+        this.$refs.allAudioDropdownFilter.toggle();
+      },
+      filterFileNameInput() {
+        this.aad_filter = 'filename';
+      },
+      filterFileNameReset() {
+        this.filterFilename = '';
+        this.aad_filter = 'all';
+      },
+      filterFileName() {
+        this.aad_filter = 'filename';
         this.$refs.allAudioDropdownFilter.toggle();
       },
       markSelected() {
@@ -1079,7 +1104,7 @@
         }
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'saveChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
@@ -1444,10 +1469,10 @@
       content: "\e151";
       margin-right: -10px;
     }
-    .aad-filter button{
+    .aad-filter > button{
       font-family: 'Glyphicons Halflings';
     }
-    .aad-filter button:before {
+    .aad-filter > button:before {
       content: "\e138";
       margin-right: -10px;
     }
@@ -1640,5 +1665,13 @@
     -webkit-transform: rotate(45deg);
     -ms-transform: rotate(45deg);
     transform: rotate(45deg);
+  }
+
+  .flexContainer {
+      display: flex;
+  }
+
+  .inputField {
+      flex: 1;
   }
 </style>
