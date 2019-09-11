@@ -1,5 +1,5 @@
 <template>
-  <div id='booksarea'><!-- v-cloak-->
+  <div id='booksarea' :class="{'narrate': bookMode === 'narrate'}"><!-- v-cloak-->
     <div :class="['content-meta-wrapper', metaVisible ? 'meta-visible' : '']">
 
       <BookEditToolbar v-if="isEditMode()"
@@ -101,7 +101,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters', 'jobStatusError', 'adminOrLibrarian']),
+    ...mapGetters(['bookMode', 'bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters', 'jobStatusError', 'adminOrLibrarian']),
   },
 
   watch: {
@@ -339,6 +339,9 @@ export default {
   display:flex;
   flex-direction: row;
   overflow-y:auto;
+  &.narrate {
+    overflow-x: auto;
+  }
 
   .metaedit {
     flex-grow: 1;
@@ -352,6 +355,9 @@ export default {
     display:flex;
     flex-direction: column;
     overflow: hidden;
+    .narrate& {
+      min-width: 860px;
+    }
 
     .toolbar {
       min-height: 36px;
