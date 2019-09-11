@@ -351,10 +351,7 @@ export default {
     flex-grow: 2;
     display:flex;
     flex-direction: column;
-
-    &.meta-visible {
-      max-width: 73%;
-    }
+    overflow: hidden;
 
     .toolbar {
       min-height: 36px;
@@ -371,6 +368,11 @@ export default {
         min-width: 460px;
         text-align: right;
       }
+      .title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
 
     .scroll-wrapper {
@@ -381,6 +383,7 @@ export default {
 
       .container-fluid {
         width: 100%;
+        overflow-x: hidden;
       }
     }
   }
