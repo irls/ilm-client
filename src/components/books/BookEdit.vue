@@ -2527,6 +2527,10 @@ export default {
       color: inherit;
       font-style: inherit;
     }
+    .hr {
+      color: #bebebe;
+      filter: opacity(0.5);
+    }
   }
 }
 

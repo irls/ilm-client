@@ -987,6 +987,25 @@ export default {
           return true;
         }
         return false;
+      },
+      showBlockFlag: {
+        get() {
+          if (this.mode !== 'narrate') {
+            return true;
+          }
+          let task = this.tc_getBlockTask(this.block.blockid);
+          if (task) {
+            return true;
+          }
+          let blockFlag = Array.isArray(this.block.flags) ? this.block.flags.find(blk => {
+            let parts = Array.isArray(blk.parts) ? blk.parts.filter(part => {
+              return part.status !== 'hidden';
+            }) : [];
+            return blk._id === this.block.blockid && parts.length > 0;
+          }) : false;
+          return blockFlag;
+        },
+        cache: false
       }
   },
   mounted: function() {
@@ -1705,7 +1724,8 @@ export default {
               description: this.block.description,
               voicework: this.block.voicework,
               content: this.block.content,
-              blockid: this.block.blockid
+              blockid: this.block.blockid,
+              type: this.block.type
             });
           }
         } else {
@@ -2005,7 +2025,7 @@ export default {
           });
       },
       clearBlockContent: function(content = false) {
-        if (!content) {
+        if (content === false) {
           content = '';
           this.$refs.blocks.forEach((blk, idx) => {
             let cnt = blk.clearBlockContent();

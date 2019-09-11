@@ -685,7 +685,7 @@ export default {
           }*/
           content = content.replace(/<br[^>]*>$/, '');//remove <br> at the end of the block
           content = content.replace(/(<\/?(?:ol|ul|li|u|br)[^>]*>)|<[^>]+>/img, '$1');
-          content = content.replace(/([\.\!\?\…\؟]+[^${lettersPattern}]*?)(<\/li><li[^>]*>)/img, '$1<br>$2');
+          content = content.replace(/(<\/li><li[^>]*>)/img, '<br>$1');
           let is_list = this.block.content.match(/<br[^>]*>/m) || content.match(/<br[^>]*>/m) || this.block.content.match(/<li[^>]*>/m) || content.match(/<li[^>]*>/m);
           if (this.block.classes && typeof this.block.classes === 'object' && typeof this.block.classes.whitespace !== 'undefined' && this.block.classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
             content = content.replace(/[\r\n]/mg, '<br>');
@@ -698,7 +698,8 @@ export default {
           let parts = [];
           let lettersPattern = 'a-zA-Zа-яА-Я\\u0600-\\u06FF';
           let regEx = new RegExp(`[\.\!\?\…\؟]+[^${lettersPattern}]*?( |[\r\n]|<br[^>]*>)(?![\\W]*[a-z])`, 'mg')
-          let regExAbbr = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
+          let regExExcl = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
+          let regExAbbr = new RegExp(`[\\. ][A-ZА-Я]\\.$`);
           let regExColon = new RegExp(`[\:\;\؛]\\W* `, 'mg');
           let regExLetters = new RegExp(`[${lettersPattern}]`);
           let regExNewline = new RegExp(`[^\.\!\?\…\؟]<br[^>]*>[^${lettersPattern}]*$`);
@@ -711,8 +712,8 @@ export default {
             let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
             //var substrLower = str.substring(match.index);
             //console.log(`CHECK "${substr}"`);
-            //console.log('MATCH: ', substr.match(regExAbbr))
-            if (!substr.match(regExAbbr) && substr.match(regExLetters) && !substr.match(regExNewline)) {
+            //console.log('MATCH: ', substr.match(regExExcl))
+            if (!substr.match(regExExcl) && substr.match(regExLetters) && !substr.match(regExNewline) && !substr.match(regExAbbr)) {
               parts.push(substr);
               shift = pos;
             }
@@ -752,11 +753,11 @@ export default {
           try {
             content = content.replace(new RegExp('(?<!<split\\/>)<br[^>]*>(?!<split\\/>)', 'gm'), `<br>${separator}`);// lists with br should have empty line
           } catch (e) {// Firefox does not support negative lookbehind
-            
+
           }
           content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
           content = content.replace(/<br><br><br>/gm, '<br><br>');
-          content = content.replace(/<br><br>/gm, '<br><div class="part-separator"></div>');
+          content = content.replace(/<br[^>]*><br[^>]*>/gm, '<br><div class="part-separator"></div>');
           //content = content.replace(, '$1<br>');
           return content;
         },
@@ -1058,7 +1059,7 @@ export default {
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  //'superscript', 'subscript','orderedlist', 
+                  //'superscript', 'subscript','orderedlist',
                   'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
@@ -1508,7 +1509,10 @@ export default {
       },
       clearBlockContent: function(content = false) {
         //console.log(content)
-        if (!content) {
+        if (content === false && !this.$refs.blockContent) {
+          return '';
+        }
+        if (content === false) {
           content = this.$refs.blockContent.innerHTML;
         }
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
@@ -1528,7 +1532,7 @@ export default {
           content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
           content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         } catch (e) {// Firefox does not support negative lookbehind
-          
+
         }
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
