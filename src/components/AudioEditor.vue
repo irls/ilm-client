@@ -3,8 +3,9 @@
     <cntx-menu
       ref="waveformContext"
       dir="bottom">
-      <li v-on:click="setSelectionStart(null, $event)">Selection Start</li>
-      <li v-on:click="setSelectionEnd(null, $event)">Selection End</li>
+      <li v-on:click="setSelectionStart(null, $event)" v-if="mode == 'file'">Selection Start</li>
+      <li v-on:click="setSelectionEnd(null, $event)" v-if="mode == 'file'">Selection End</li>
+      <li v-on:click="unpinRight($event)" v-if="mode == 'block'">Unpin&gt;&gt;</li>
     </cntx-menu>
     <div class="waveform-playlist">
       <div class="close-player-container pull-right">
@@ -1314,7 +1315,10 @@
             this._showSelectionBorders();
           }
         },
-        _setText(text, block) {
+        _setText(text, block, saveToHistory = false) {
+          if (saveToHistory && this.content && this.audiofile) {
+            this._addHistory(this.content, this.audiofile);
+          }
           this.content = text;
           let self = this;
           let annotations = [];
@@ -1494,25 +1498,23 @@
           return false;
         },
         onContext: function(e) {
-          if (this.mode == 'file') {
-            if (this.mode === 'file' &&
-                    typeof this.selection.start !== 'undefined' &&
-                    typeof this.selection.end !== 'undefined') {
-              let t = setInterval(() => {
-                if ($('.selection.point').length > 0) {
-                  this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                  clearInterval(t);
-                }
-              }, 50);
-            }
-            this.contextPosition = e.clientX;
-            $('.medium-editor-toolbar').each(function(){
-                $(this).css('display', 'none');
-            });
-            if (this.$refs.waveformContext) {
-              this.$refs.waveformContext.open(e, {}, 0, e.layerY - 80);
-              $('body').one('click', this.$refs.waveformContext.close);
-            }
+          if (this.mode === 'file' &&
+                  typeof this.selection.start !== 'undefined' &&
+                  typeof this.selection.end !== 'undefined') {
+            let t = setInterval(() => {
+              if ($('.selection.point').length > 0) {
+                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                clearInterval(t);
+              }
+            }, 50);
+          }
+          this.contextPosition = e.clientX;
+          $('.medium-editor-toolbar').each(function(){
+              $(this).css('display', 'none');
+          });
+          if (this.$refs.waveformContext) {
+            this.$refs.waveformContext.open(e, {}, 0, e.layerY - 80);
+            $('body').one('click', this.$refs.waveformContext.close);
           }
         },
         setSelectionStart(val, event) {
@@ -1768,6 +1770,11 @@
         flush() {
           this.setProcessRun(false);
           this.isModified = false;
+        },
+        
+        unpinRight(event) {
+          let position = (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+          this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
         }
 
       },
