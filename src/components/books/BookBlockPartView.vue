@@ -2508,6 +2508,7 @@ export default {
       evFromAudioeditorUnpinRight(position, blockId) {
         if (this.check_id === blockId) {
           if (Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
+            let oldBoundaries = this.blockPart.manual_boundaries;
             this.blockPart.manual_boundaries = this.blockPart.manual_boundaries.filter(mb => {
               return mb <= position;
             });
@@ -2516,7 +2517,7 @@ export default {
             this.blockAudio.map = this.blockPart.content;
             this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
             this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), this.blockAudiosrc('m4a', false));
-            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, true);
+            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, oldBoundaries.length > this.blockPart.manual_boundaries.length ? true : false);
           }
         }
       },

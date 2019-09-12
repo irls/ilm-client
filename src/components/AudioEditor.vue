@@ -5,7 +5,7 @@
       dir="bottom">
       <li v-on:click="setSelectionStart(null, $event)" v-if="mode == 'file'">Selection Start</li>
       <li v-on:click="setSelectionEnd(null, $event)" v-if="mode == 'file'">Selection End</li>
-      <li v-on:click="unpinRight($event)" v-if="mode == 'block'">Unpin&gt;&gt;</li>
+      <li v-on:click="unpinRight($event)" v-if="mode == 'block'">Unpin Rightward</li>
     </cntx-menu>
     <div class="waveform-playlist">
       <div class="close-player-container pull-right">
@@ -1001,31 +1001,8 @@
             }
           }
         },
-        saveAndRealign(check_realign = true) {
+        saveAndRealign() {
           if (this.isModified) {
-            if (check_realign && this.block && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
-              this.$root.$emit('from-block:save-and-realign-warning', () => {
-                this.$root.$emit('hide-modal');
-                this.$root.$emit('for-audioeditor:set-process-run', false);
-              }, () => {
-                this.$root.$emit('hide-modal');
-                let i = setInterval(() => {
-                  if ($('.align-modal').length == 0) {
-                    clearInterval(i);
-                    this.save();
-                  }
-                }, 50);
-              }, () => {
-                this.$root.$emit('hide-modal');
-                let i = setInterval(() => {
-                  if ($('.align-modal').length == 0) {
-                    clearInterval(i);
-                    this.saveAndRealign(false);
-                  }
-                }, 50);
-              });
-              return;
-            }
             this.setProcessRun(true, 'align');
             this.$root.$emit('from-audioeditor:save-and-realign', this.blockId);
             this.isModified = false;
@@ -1317,6 +1294,7 @@
         },
         _setText(text, block, saveToHistory = false) {
           if (saveToHistory && this.content && this.audiofile) {
+            this.isModified = true;
             this._addHistory(this.content, this.audiofile);
           }
           this.content = text;
