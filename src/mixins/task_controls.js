@@ -207,13 +207,13 @@ export default {
       } else if (part.creator_role && this._is(part.creator_role, true)) {
         return true;
       } else {
-        if (this._is(part.type, true) && this.tc_getBlockTask(this.block._id)) {
+        if (this._is(part.type, true) && this.tc_getBlockTask(this.block._id, this.bookMode)) {
           result = true;
         }
-        if (!result && part.type === 'narrator' && (this._is('editor', true) || this.adminOrLibrarian)) {
+        if (!result && part.type === 'narrator' && (this._is('editor', true) || this.adminOrLibrarian) && this.bookMode === 'edit') {
           result = true;
         }
-        if (!result && part.type === 'editor' && this.adminOrLibrarian) {
+        if (!result && part.type === 'editor' && this.adminOrLibrarian && this.bookMode === 'edit') {
           result = true;
         }
       }
