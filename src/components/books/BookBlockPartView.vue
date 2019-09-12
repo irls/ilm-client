@@ -1508,10 +1508,10 @@ export default {
       },
       clearBlockContent: function(content = false) {
         //console.log(content)
-        if (!content && !this.$refs.blockContent) {
+        if (content === false && !this.$refs.blockContent) {
           return '';
         }
-        if (!content) {
+        if (content === false) {
           content = this.$refs.blockContent.innerHTML;
         }
         content = content.replace(/(<[^>]+)(selected)/g, '$1');

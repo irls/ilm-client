@@ -1722,7 +1722,8 @@ export default {
               description: this.block.description,
               voicework: this.block.voicework,
               content: this.block.content,
-              blockid: this.block.blockid
+              blockid: this.block.blockid,
+              type: this.block.type
             });
           }
         } else {
@@ -2022,7 +2023,7 @@ export default {
           });
       },
       clearBlockContent: function(content = false) {
-        if (!content) {
+        if (content === false) {
           content = '';
           this.$refs.blocks.forEach((blk, idx) => {
             let cnt = blk.clearBlockContent();
