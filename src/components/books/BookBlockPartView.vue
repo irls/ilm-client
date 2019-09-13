@@ -2757,7 +2757,7 @@ export default {
             if (!endRange) {
               endRange = this._getClosestAligned(endElement, 1)
             }
-            if (startRange && endRange) {
+            if (startRange && endRange && this.isAudioEditing) {
               //console.log(startRange[0], endRange[0] + endRange[1])
               this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null);
             }
