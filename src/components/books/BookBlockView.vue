@@ -416,6 +416,7 @@
                   <i :class="['glyphicon', 'glyphicon-flag']"
                     ref="blockFlagControl"
                     @click="handleBlockFlagClick"
+                    
                   ></i>
                 </span>
               </div>
