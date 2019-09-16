@@ -1619,30 +1619,6 @@ export default {
         } else if (this.mode === 'narrate') {
           return this.assembleBlockNarrate();
         }
-        if (check_realign === true && this.needsRealignment && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
-          this.$root.$emit('from-block:save-and-realign-warning', () => {
-                  this.$root.$emit('hide-modal');
-                },
-                () => {
-                  this.$root.$emit('hide-modal');
-                  let i = setInterval(() => {
-                    if ($('.align-modal').length == 0) {
-                      clearInterval(i);
-                      this.assembleBlockProxy(false, false)
-                    }
-                  }, 50);
-                },
-                () => {
-                  this.$root.$emit('hide-modal');
-                  let i = setInterval(() => {
-                    if ($('.align-modal').length == 0) {
-                      clearInterval(i);
-                      this.assembleBlockProxy(false, true)
-                    }
-                  }, 50);
-                });
-          return;
-        }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
