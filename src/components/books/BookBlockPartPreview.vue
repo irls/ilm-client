@@ -2,44 +2,45 @@
 <div ref="viewBlock" class="block-preview">
   <div v-if="block && (block.type != 'par' || (loaded === true || blockO.loaded === true))"
     :class="['table-body -block -subblock', blockOutPaddings]">
-
     <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'"></div>
-    <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div>
     <div :class="['table-cell', {'completed': isCompleted}]">
       <div :class="['table-body', '-content']">
         <div class="table-row-flex controls-top" v-if="mode !== 'narrate'"></div>
         <!--<div class="table-row-flex controls-top">-->
         <div :class="['table-row ilm-block']">
 
-        <hr v-if="block.type=='hr'"
-          :class="[getClass]"/>
+          <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div>
+          <div class="table-cell -content-wrapper">
 
-        <div v-else-if="block.type == 'illustration'"
-        :class="['table-body illustration-block']">
-          <img v-if="block.illustration" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
-          :height="illustrationHeight"
-          :class="[getClass]"/>
-          <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': isChanged && !isIllustrationChanged}]" v-if="allowEditing">
-            <div class="preview-container"></div>
-          </div>
+            <hr v-if="block.type=='hr'"
+              :class="[getClass]"/>
 
-          <div :class="['table-row content-description', getClass]">
-            <div class="content-wrap-desc description"
-              v-html="block.description">
+            <div v-else-if="block.type == 'illustration'"
+            :class="['table-body illustration-block']">
+              <img v-if="block.illustration" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+              :height="illustrationHeight"
+              :class="[getClass]"/>
+              <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': isChanged && !isIllustrationChanged}]" v-if="allowEditing">
+                <div class="preview-container"></div>
+              </div>
+
+              <div :class="['table-row content-description', getClass]">
+                <div class="content-wrap-desc description"
+                  v-html="block.description">
+                </div>
+              </div>
+
             </div>
+            <!--<img v-if="block.illustration"-->
+
+            <template v-else>
+              <div v-cloak
+              :class="['content-wrap-preview', block.getClass(mode), {'js-hidden': blockO.loaded !== true}]"
+              v-html="blockPart.content">
+              </div>
+            </template>
+            <!--<div class="content-wrap">-->
           </div>
-
-        </div>
-        <!--<img v-if="block.illustration"-->
-
-        <template v-else>
-          <div v-cloak
-          :class="['content-wrap-preview', block.getClass(mode), {'js-hidden': blockO.loaded !== true}]"
-          v-html="blockPart.content">
-          </div>
-        </template>
-        <!--<div class="content-wrap">-->
-
         </div>
         <!--<div :class="['table-row ilm-block']">-->
         <div class="table-row controls-bottom" v-if="isSplittedBlock">
