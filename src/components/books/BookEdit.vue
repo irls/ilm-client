@@ -2414,7 +2414,7 @@ export default {
     .-subblock {
       position: relative;
       .-content {
-        width: 650px;
+        width: 785px;
         margin: 0px auto;
         @media all and (max-width: 1100px) {
            margin: 0;
@@ -2477,10 +2477,12 @@ export default {
     }
     .controls-bottom {
       display: flex;
-      margin-inline-start: 185px;
+      margin-inline-start: 50px;
     }
     .controls-bottom-wrapper {
-      width: 650px;
+      width: 785px;
+      padding-inline-start: 135px;
+
       margin: 0 auto;
       @media all and (max-width: 1100px) {
         margin: 0;
