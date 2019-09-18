@@ -2336,7 +2336,7 @@ export default {
           this.audStop();
           //console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
           if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
-            let manual_boundaries = this.blockPart.manual_boundaries || [];
+            let manual_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
             this.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
               if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
                 let _m = map.shift();

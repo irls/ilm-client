@@ -1021,7 +1021,7 @@
               this.isModified = false;
             }
             if (record) {
-              this.block.manual_boundaries = record.manual_boundaries ? record.manual_boundaries.slice() : [];
+              //this.block.manual_boundaries = record.manual_boundaries ? record.manual_boundaries.slice() : [];
               this.setAudio(record.audio, record.text, false);
               this.$root.$emit('from-audioeditor:undo', this.blockId, record.audio, record.text, this.isModified);
             }
