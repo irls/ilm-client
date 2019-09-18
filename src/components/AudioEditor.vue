@@ -753,7 +753,7 @@
             saveToHistory = true;
           }
           if (saveToHistory && this.content && this.audiofile) {
-            this._addHistory(this.content, this.audiofile);
+            this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
           }
           this.load(audio, text, block ? block : this.block);
         },
@@ -1021,6 +1021,7 @@
               this.isModified = false;
             }
             if (record) {
+              this.block.manual_boundaries = record.manual_boundaries ? record.manual_boundaries.slice() : [];
               this.setAudio(record.audio, record.text, false);
               this.$root.$emit('from-audioeditor:undo', this.blockId, record.audio, record.text, this.isModified);
             }
@@ -1276,8 +1277,12 @@
             //this._showSelectionBorders(true);
           }
         },
-        _addHistory(text, audio) {
-          this.history.push({text: text, audio: audio});
+        _addHistory(text, audio, manual_boundaries) {
+          this.history.push({
+            text: text, 
+            audio: audio, 
+            manual_boundaries: manual_boundaries
+          });
           if (this.history.length >= 6) {
             this.history.shift();
             this.isHistoryFull = false;
@@ -1295,7 +1300,7 @@
         _setText(text, block, saveToHistory = false) {
           if (saveToHistory && this.content && this.audiofile) {
             this.isModified = true;
-            this._addHistory(this.content, this.audiofile);
+            this._addHistory(this.content, this.audiofile, block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
           }
           this.content = text;
           let self = this;
@@ -1621,7 +1626,7 @@
           let shifted = false;
 
           if (shiftedAnnotation) {
-            this._addHistory(this.content, this.audiofile);
+            this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
             if (shiftedAnnotation.end - shiftedAnnotation.start < this.minWordSize) {// find words with length less than minimum
               let shift = this.minWordSize - (shiftedAnnotation.end - shiftedAnnotation.start);
               let found = false;
