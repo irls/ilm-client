@@ -2510,6 +2510,22 @@ export default {
           }
         }
       },
+      evFromAudioeditorUnpinRight(position, blockId) {
+        if (this.check_id === blockId) {
+          if (Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
+            let oldBoundaries = this.blockPart.manual_boundaries;
+            this.blockPart.manual_boundaries = this.blockPart.manual_boundaries.filter(mb => {
+              return mb <= position;
+            });
+            this.block.setPartManualBoundaries(this.blockPartIdx, this.blockPart.manual_boundaries);
+            this.blockPart.content = this.$refs.blockContent.innerHTML;
+            this.blockAudio.map = this.blockPart.content;
+            this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
+            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), this.blockAudiosrc('m4a', false));
+            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, oldBoundaries.length > this.blockPart.manual_boundaries.length ? true : false);
+          }
+        }
+      },
       audioEditorEventsOn() {
         this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
         this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
@@ -2522,6 +2538,7 @@ export default {
         this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
 
         this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
+        this.$root.$on('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
       },
       audioEditorEventsOff() {
         this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
@@ -2534,6 +2551,7 @@ export default {
         this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
         this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+        this.$root.$off('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
       },
       //-- } -- end -- Events --//
 
@@ -2744,7 +2762,7 @@ export default {
             if (!endRange) {
               endRange = this._getClosestAligned(endElement, 1)
             }
-            if (startRange && endRange) {
+            if (startRange && endRange && this.isAudioEditing) {
               //console.log(startRange[0], endRange[0] + endRange[1])
               this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null);
             }
