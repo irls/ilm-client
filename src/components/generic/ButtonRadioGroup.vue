@@ -33,12 +33,5 @@
 
 
 <style scoped>
-.btn {
-  outline: none !important;
-}
-
-.btn-group {
-  display: flex;
-}
-
+  .btn {outline: none !important;}
 </style>

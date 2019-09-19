@@ -2180,9 +2180,8 @@ export default {
     display:flex;
 
     /*position: relative;*/
-    /*overflow-y: auto;*/ /*hidden;*/
-    /*overflow-x: auto;*/
-    min-width: 700px;
+    overflow-y: auto; /*hidden;*/
+    overflow-x: auto;
 
     &.recording-background {
       /*background-color: rgba(0,0,0,0.5);*/
