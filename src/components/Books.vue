@@ -371,9 +371,8 @@ export default {
       margin-bottom: 3px;
 
       .pull-right {
-        display: flex;
-        flex-shrink: 0;
-        justify-content: flex-end;
+        min-width: 460px;
+        text-align: right;
       }
       .title {
         white-space: nowrap;
@@ -386,7 +385,7 @@ export default {
       flex-grow: 2;
       display: flex;
       flex-direction: row;
-      overflow: auto;
+      overflow-y: hidden;
 
       .container-fluid {
         width: 100%;
