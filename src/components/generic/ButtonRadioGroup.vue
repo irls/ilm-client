@@ -33,12 +33,11 @@
 
 
 <style scoped>
-.btn {
-  outline: none !important;
-}
+  .btn {
+     outline: none !important;
+  }
 
-.btn-group {
-  display: flex;
-}
-
+  .btn-group {
+    display: flex;
+  }
 </style>
