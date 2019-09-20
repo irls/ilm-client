@@ -2240,8 +2240,8 @@ export default {
     }
   }
   .container-block-wrapper {
-    position: relative;
     display: flex;
+    flex-grow: 1;
     min-width: 700px;
   }
 
