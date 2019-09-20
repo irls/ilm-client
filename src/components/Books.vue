@@ -386,11 +386,11 @@ export default {
       flex-grow: 2;
       display: flex;
       flex-direction: row;
-      overflow: auto;
+      overflow: hidden;
 
       .container-fluid {
         width: 100%;
-        overflow-x: hidden;
+        overflow-x: auto;
       }
     }
   }
