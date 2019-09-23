@@ -1320,36 +1320,15 @@ export default {
         } else if (this.mode === 'narrate') {
           return this.assembleBlockNarrate();
         }
-        if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
-          this.$root.$emit('from-block:save-and-realign-warning', () => {
-                  this.$root.$emit('hide-modal');
-                },
-                () => {
-                  this.$root.$emit('hide-modal');
-                  let i = setInterval(() => {
-                    if ($('.align-modal').length == 0) {
-                      clearInterval(i);
-                      this.assembleBlockProxy(false, false)
-                    }
-                  }, 50);
-                },
-                () => {
-                  this.$root.$emit('hide-modal');
-                  let i = setInterval(() => {
-                    if ($('.align-modal').length == 0) {
-                      clearInterval(i);
-                      this.assembleBlockProxy(false, true)
-                    }
-                  }, 50);
-                });
-          return;
-        }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isChanged = false;
         this.isSaving = true;
+        if (this.isAudioEditing) {
+          this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
+        }
         return this.$emit('save', this.blockPart, this.blockPartIdx, realign);
       },
 
@@ -2369,6 +2348,7 @@ export default {
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);*/
             this.blockPart.manual_boundaries = manual_boundaries;
             this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries);
+            this.pushChange('manual_boundaries');
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
