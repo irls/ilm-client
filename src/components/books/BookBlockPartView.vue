@@ -396,7 +396,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -1350,7 +1350,7 @@ export default {
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isChanged = false;
         this.isSaving = true;
-        return this.$emit('save', this.blockPart, this.blockPartIdx, realign);
+        return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign);
       },
 
       assembleBlock: function(partUpdate = null, realign = false) {
@@ -1447,6 +1447,18 @@ export default {
           });
       },
       assembleBlockProofread() {
+        if (this.isSplittedBlock) {
+          this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+          this.isChanged = false;
+          this.isSaving = true;
+          let promise = Promise.resolve();
+          let evt = {};
+          evt.waitUntil = p => promise = p
+          this.$root.$emit(`save-block:${this.block.blockid}`, evt);
+          return promise.then(() => {
+            this.isSaving = false;
+          });
+        }
         if (this.$refs.blockContent) {
           this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         }
@@ -1822,9 +1834,9 @@ export default {
             this.handleFlagClick({target: existsFlag, layerY: ev.layerY, clientY: ev.clientY});
           }
           this.$refs.blockFlagPopup.scrollBottom();
-          //this.isChanged = true;
-          //this.pushChange('flags');
-          this.$emit('addFlag');
+          this.isChanged = true;
+          this.pushChange('flags');
+          //this.$emit('addFlag');
         }
       },
 
