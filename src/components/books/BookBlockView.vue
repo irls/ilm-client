@@ -31,7 +31,7 @@
           </div>
         </div>
     </div>
-    <div class="table-cell" :class="{'completed': isCompleted}" >
+    <div class="table-cell -content-block" :class="{'completed': isCompleted}" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
         @click="onBlur">
@@ -411,40 +411,42 @@
             </div>
 
             <div class="table-row controls-bottom">
-              <div class="-hidden -left">
-                <span v-if="showBlockFlag">
-                  <i :class="['glyphicon', 'glyphicon-flag']"
-                    ref="blockFlagControl"
-                    @click="handleBlockFlagClick"
-                  ></i>
-                </span>
-              </div>
-              <div class="par-ctrl -hidden -right">
-                  <div class="save-block -right" @click="discardBlock"
-                       v-bind:class="{'-disabled': !hasChanges || isAudioEditing}">
-                    Discard
-                  </div>
-                  <div class="save-block -right"
-                  v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-                  @click="assembleBlockProxy(true)">
-                    {{saveBlockLabel}}
-                  </div>
-                  <template v-if="!isCompleted">
-                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
-                    @click.prevent="reworkBlock">
-                    Need work</div>
-                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
-                    @click.prevent="approveBlock">
-                    Approve</div>
+              <div class="controls-bottom-wrapper">
+                <div class="-hidden -left">
+                  <span v-if="showBlockFlag">
+                    <i :class="['glyphicon', 'glyphicon-flag']"
+                      ref="blockFlagControl"
+                      @click="handleBlockFlagClick"
+                    ></i>
+                  </span>
+                </div>
+                <div class="par-ctrl -hidden -right">
+                    <div class="save-block -right" @click="discardBlock"
+                        v-bind:class="{'-disabled': !hasChanges || isAudioEditing}">
+                      Discard
+                    </div>
+                    <div class="save-block -right"
+                    v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+                    @click="assembleBlockProxy(true)">
+                      {{saveBlockLabel}}
+                    </div>
+                    <template v-if="!isCompleted">
+                    <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
+                      @click.prevent="reworkBlock">
+                      Need work</div>
+                    <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
+                      @click.prevent="approveBlock">
+                      Approve</div>
 
-                  <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
-                    @click.prevent="markBlock">
-                    Approve</div>
-                  <div :class="['save-block', '-right', {'-disabled': isSpotCheckDisabled }]" @click.prevent="spotCheck">
-                    Spot check
-                  </div>
+                    <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
+                      @click.prevent="markBlock">
+                      Approve</div>
+                    <div :class="['save-block', '-right', {'-disabled': isSpotCheckDisabled }]" @click.prevent="spotCheck">
+                      Spot check
+                    </div>
 
-                  </template>
+                    </template>
+                </div>
               </div>
               <!--<div class="-hidden">-->
             </div>
@@ -1987,7 +1989,7 @@ export default {
         if (check_realign === true && this.needsRealignment && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
           this.$root.$emit('from-block:save-and-realign-warning', () => {
                   this.$root.$emit('hide-modal');
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1996,7 +1998,7 @@ export default {
                       this.assembleBlockNarrate(false, false)
                     }
                   }, 50);
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -2049,7 +2051,7 @@ export default {
           content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
           content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         } catch (e) {// Firefox does not support negative lookbehind
-          
+
         }
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
@@ -4201,7 +4203,7 @@ export default {
               ref = this;
             }
             if (ref) {// reset flag selection on save
-              
+
               ref.flagsSel = this.block.flags.find((flag)=>{
                 return flag._id === ref.flagsSel._id;
               });
@@ -4239,7 +4241,9 @@ export default {
       position: static;
     }
     &.-marked {
-      background-color: rgba(219, 255, 255, 0.5);
+      #booksarea:not(.narrate) & {
+         background-color: rgba(219, 255, 255, 0.5);
+      }
     }
 }
 
@@ -4416,7 +4420,6 @@ export default {
     &.completed {
       background: #EFEFEF;
       border-radius: 7px;
-      padding: 0;
     }
 
 }

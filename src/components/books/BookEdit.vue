@@ -1,7 +1,7 @@
 <template>
 <div :class="['content-scroll-wrapper']"
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
-  
+
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <div class="content-background">
       <div v-for="(viewObj, listIdx) in getListObjs"
@@ -2415,19 +2415,28 @@ export default {
       position: relative;
       .-content {
         width: 650px;
-        /*margin: 0px auto;*/
+        margin: 0px auto;
+        @media all and (max-width: 1100px) {
+           margin: 0;
+        }
+        .meta-visible & {
+           @media all and (max-width: 1540px) {
+              margin: 0;
+           }
+        }
       }
       .controls-left {
         &.sub-parnum {
-          width: 5%;
-          max-width: 70px;
+          width: 50px;
+          min-width: 50px;
           .sub-parnum-main {
             font-size: 24px;
             font-weight: bold;
           }
         }
         &.audio-controls {
-          width: 20%;
+          width: 135px;
+          min-width: 135px;
           .table-body {
             width: 100px;
             margin: 0px 0px 0px auto;
@@ -2467,8 +2476,20 @@ export default {
       }
     }
     .controls-bottom {
+      display: flex;
+      margin-inline-start: 185px;
+    }
+    .controls-bottom-wrapper {
       width: 650px;
-      margin-left: 25%;
+      margin: 0 auto;
+      @media all and (max-width: 1100px) {
+        margin: 0;
+      }
+      .meta-visible & {
+        @media all and (max-width: 1540px) {
+          margin: 0;
+        }
+      }
     }
     .-subblock {
       .controls-bottom {

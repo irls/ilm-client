@@ -62,7 +62,6 @@ export default {
 <style lang="less">
   html, body, #app {
     height: 100%;
-    min-width: 1060px;
     overflow: hidden;
   }
   #app {

@@ -41,7 +41,7 @@
         </div>
       </div>
     </div>
-    <div class="table-cell" :class="{'completed': isCompleted}" >
+    <div class="table-cell" :class="{'completed': isCompleted}">
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
         @click="onBlur">
@@ -3066,6 +3066,18 @@ export default {
 
 <style lang='less'>
 
-
+   .-content-block {
+      .-mode-narrate & {
+         padding-inline-end: 185px;
+         @media all and (max-width: 1100px) {
+            padding-inline-end: 0;
+         }
+         .meta-visible & {
+            @media all and (max-width: 1540px) {
+               padding-inline-end: 0;
+            }
+         }
+      }
+   }
 
 </style>
