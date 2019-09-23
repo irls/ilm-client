@@ -4239,7 +4239,7 @@ export default {
       position: static;
     }
     &.-marked {
-      #booksarea:not(.narrate) {
+      #booksarea:not(.narrate) & {
          background-color: rgba(219, 255, 255, 0.5);
       }
     }
