@@ -1760,12 +1760,17 @@ export default {
           let windowSelRange = this.range;
           // ILM-2108: - because the last tag in the selection was not cropped
           // and was duplicated after adding a flag
+          let fixed_start = false;
+          let fixed_end = false;
           let startElementWrapper = windowSelRange.startContainer.parentElement;
           if (startElementWrapper.nodeName.toLowerCase() !== 'div') {
             while (startElementWrapper.parentElement && startElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
               startElementWrapper = startElementWrapper.parentElement;
             }
             windowSelRange.setStartBefore(startElementWrapper);
+            //if (startElementWrapper.nodeName.toLowerCase() !== 'u') {
+              fixed_start = true;
+            //}
           }
 
           let endElementWrapper = windowSelRange.endContainer.parentElement;
@@ -1774,53 +1779,112 @@ export default {
               endElementWrapper = endElementWrapper.parentElement;
             }
             windowSelRange.setEndAfter(endElementWrapper);
+            //if (endElementWrapper.nodeName.toLowerCase() !== 'u') {
+              fixed_end = true;
+            //}
           }
           if (!this.$refs.blockContent.innerHTML.match(/<w[^>]*>/)) {// no alignment
-            let checkWords = new RegExp('([\\w\\d]+?)([^\\w\\d]+?)', 'img');
+            let lettersPattern = 'a-zA-Zа-яА-ЯÀ-ÿ\\u0600-\\u06FF';
+            let checkWords = new RegExp(`([${lettersPattern}\\d]+?)([^${lettersPattern}\\d]+?)`, 'img');
             let match = false;
             let selection = {};
             let offset = 0;
             let found = false;
             let checkNodes = [startElementWrapper];
             let checkNode;
-            while(checkNode = checkNodes.pop()) {
-              if (checkNode !== windowSelRange.startContainer) {
-                if (!found) {
-                  if (checkNode.nodeType == 3) {
-                    offset+= checkNode.length;
-                  } else {
-                    let i = checkNode.childNodes.length;
-                    while (i--) {
-                      checkNodes.push(checkNode.childNodes[i]);
+            if (fixed_start) {
+              checkNodes = [this.$refs.blockContent];
+              while(checkNode = checkNodes.pop()) {
+                if (checkNode !== startElementWrapper) {
+                  if (!found) {
+                    if (checkNode.nodeType == 3) {
+                      offset+= checkNode.length;
+                    } else {
+                      let i = checkNode.childNodes.length;
+                      while (i--) {
+                        checkNodes.push(checkNode.childNodes[i]);
+                      }
                     }
                   }
+                } else {
+                  found = true;
+                  if (checkNode.nodeName.toLowerCase() === 'u') {
+                    fixed_start = false;
+                    //fixed_end = false;
+                    //offsetEnd+= checkNode.innerText.length;
+                    //console.log(checkNode)
+                    //return;
+                  } else {
+                    //selection.end = offsetEnd + checkNode.innerText.length;
+                  }
                 }
-              } else {
-                found = true;
+              }
+              selection.start = offset;
+            } else {
+              while(checkNode = checkNodes.pop()) {
+                if (checkNode !== windowSelRange.startContainer) {
+                  if (!found) {
+                    if (checkNode.nodeType == 3) {
+                      offset+= checkNode.length;
+                    } else {
+                      let i = checkNode.childNodes.length;
+                      while (i--) {
+                        checkNodes.push(checkNode.childNodes[i]);
+                      }
+                    }
+                  }
+                } else {
+                  found = true;
+                }
               }
             }
             let offsetEnd = 0;
             found = false;
-            checkNodes = [endElementWrapper];
-            checkNode;
-            while(checkNode = checkNodes.pop()) {
-              if (checkNode !== windowSelRange.endContainer) {
-                if (!found) {
-                  if (checkNode.nodeType == 3) {
-                    offsetEnd+= checkNode.length;
-                  } else {
-                    let i = checkNode.childNodes.length;
-                    while (i--) {
-                      checkNodes.push(checkNode.childNodes[i]);
+            if (fixed_end) {
+              checkNodes = [this.$refs.blockContent];
+              while(checkNode = checkNodes.pop()) {
+                if (checkNode !== endElementWrapper) {
+                  if (!found) {
+                    if (checkNode.nodeType == 3) {
+                      offsetEnd+= checkNode.length;
+                    } else {
+                      let i = checkNode.childNodes.length;
+                      while (i--) {
+                        checkNodes.push(checkNode.childNodes[i]);
+                      }
                     }
                   }
+                } else {
+                  found = true;
+                  if (checkNode.nodeName.toLowerCase() === 'u') {
+                    fixed_end = false;
+                    offsetEnd+= checkNode.innerText.length;
+                  } else {
+                    selection.end = offsetEnd + checkNode.innerText.length;
+                  }
                 }
-              } else {
-                found = true;
+              }
+            } else {
+              checkNodes = [endElementWrapper];
+              while(checkNode = checkNodes.pop()) {
+                if (checkNode !== windowSelRange.endContainer) {
+                  if (!found) {
+                    if (checkNode.nodeType == 3) {
+                      offsetEnd+= checkNode.length;
+                    } else {
+                      let i = checkNode.childNodes.length;
+                      while (i--) {
+                        checkNodes.push(checkNode.childNodes[i]);
+                      }
+                    }
+                  }
+                } else {
+                  found = true;
+                }
               }
             }
             while((match = checkWords.exec(this.$refs.blockContent.innerText))) {
-              if (match.index <= windowSelRange.startOffset + offset) {
+              if (match.index <= windowSelRange.startOffset + offset && !fixed_start) {
                 selection.start = match.index;
                 if (selection.start + match[0].length <= windowSelRange.startOffset + offset) {
                   selection.start = match.index + match[0].length;
@@ -2970,7 +3034,7 @@ export default {
           while (!stop && (node = nodeStack.pop())) {
               if (node.nodeType == 3) {
                   var nextCharIndex = charIndex + node.length;
-                  if (!foundStart && savedSel.start >= charIndex && savedSel.start <= nextCharIndex) {
+                  if (!foundStart && savedSel.start >= charIndex && savedSel.start < nextCharIndex) {
                       range.setStart(node, savedSel.start - charIndex);
                       foundStart = true;
                   }
