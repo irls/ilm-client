@@ -50,10 +50,12 @@
         <!--<div class="table-row content-footnotes"-->
 
         <div class="table-row controls-bottom">
-          <div class="-left">
-            <span>
-              <i :class="['glyphicon']"></i>
-            </span>
+          <div class="controls-bottom-wrapper">
+            <div class="-left">
+              <span>
+                <i :class="['glyphicon']"></i>
+              </span>
+            </div>
           </div>
         </div>
 

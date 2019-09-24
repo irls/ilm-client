@@ -2414,7 +2414,7 @@ export default {
     .-subblock {
       position: relative;
       .-content {
-        width: 650px;
+        width: 785px;
         margin: 0px auto;
         @media all and (max-width: 1100px) {
            margin: 0;

@@ -261,7 +261,8 @@
             </div>
             <!--<div class="table-row ilm-block">-->
             <div class="table-row controls-bottom" v-if="isSplittedBlock">
-              <div class="par-ctrl -hidden -right">
+              <div class="controls-bottom-wrapper">
+                <div class="par-ctrl -hidden -right">
                   <!--<span>isCompleted: {{isCompleted}}</span>-->
                   <div class="save-block -right" @click="discardBlock"
                        v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
@@ -272,8 +273,9 @@
                   @click="assembleBlockProxy(true)">
                     {{saveBlockLabel}}
                   </div>
+                </div>
+                <!--<div class="-hidden">-->
               </div>
-              <!--<div class="-hidden">-->
             </div>
             <!--<div class="table-row controls-bottom">-->
         </div>
