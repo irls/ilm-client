@@ -261,8 +261,7 @@
             </div>
             <!--<div class="table-row ilm-block">-->
             <div class="table-row controls-bottom" v-if="isSplittedBlock">
-              <div class="table-cell"></div>
-              <div class="table-cell">
+              <div class="controls-bottom-wrapper">
                 <div class="-hidden -left">
                 </div>
                 <div class="par-ctrl -hidden -right">
