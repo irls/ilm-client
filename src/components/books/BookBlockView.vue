@@ -411,8 +411,7 @@
             </div>
 
             <div class="table-row controls-bottom">
-              <div class="table-cell"></div>
-              <div class="table-cell">
+              <div class="controls-bottom-wrapper">
                 <div class="-hidden -left">
                   <span v-if="showBlockFlag">
                     <i :class="['glyphicon', 'glyphicon-flag']"

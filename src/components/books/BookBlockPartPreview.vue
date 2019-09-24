@@ -45,8 +45,7 @@
         </div>
         <!--<div :class="['table-row ilm-block']">-->
         <div class="table-row controls-bottom" v-if="isSplittedBlock">
-          <div class="table-cell"></div>
-          <div class="table-cell">
+          <div class="controls-bottom-wrapper">
             <div class="-left">
               <span>
                 <i :class="['glyphicon']"></i>
