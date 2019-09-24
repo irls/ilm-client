@@ -75,12 +75,14 @@
                         <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
                       </div>
                       <div class="audiofile-name">
-                        <span v-if="renaming !== audiofile.id"
-                              :class="['audiofile-name-edit']"
+                        <span v-if="audiofile.hasOwnProperty('duplicate')" @click="duplicateAudiofileClick(audiofile.id, audiofile.duplicate, $event)"><i>Duplicate: {{audiofile.title ? audiofile.title : audiofile.name}}</i></span>
+                        <span v-if="renaming !== audiofile.id && !audiofile.hasOwnProperty('duplicate')"
+                              :class="['audiofile-name-edit', audiofile.id.replace(/\./g, '')]"
                               @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.title ? audiofile.title : audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
-                        <input id="rename-input" type="text" v-model="audiofile.title" class="audiofile-name-edit"
+                        <input id="rename-input" type="text" v-model="audiofile.title" 
+                             class="audiofile-name-edit"
                              @focusout="saveAudiobook()"
-                             v-else />
+                             v-else-if="!audiofile.hasOwnProperty('duplicate')" />
                       </div>
                       <div class="audiofile-player-controls">
                         <i v-if="audiofile.preview && audiofile.preview.end" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'end')"></i>
@@ -511,6 +513,16 @@
           }
         }
       }, 500),
+      duplicateAudiofileClick(id, duplicate_id, event) {
+        console.log('click duplicate', duplicate_id.replace(/\./g, ''));
+        const el = this.$el.getElementsByClassName(duplicate_id.replace(/\./g, ''))[0];
+          if (el) {
+            let parent = el.closest('.audiofile');
+            parent.className += " -selected";
+
+            el.scrollIntoView();
+          }
+      },
       playPreview(id, preview) {
         if (!this.allowEditing) {
           return;
