@@ -2480,6 +2480,7 @@ export default {
       margin-inline-start: 185px;
     }
     .controls-bottom-wrapper {
+
       width: 650px;
       margin: 0 auto;
       @media all and (max-width: 1100px) {
