@@ -229,7 +229,8 @@
         audio_element: false,
         aad_sort: '',
         aad_filter: 'all',
-        filterFilename: ''
+        filterFilename: '',
+        highlightDuplicateId: ''
       }
     },
     mixins: [task_controls, api_config, access],
@@ -514,12 +515,9 @@
         }
       }, 500),
       duplicateAudiofileClick(id, duplicate_id, event) {
-        console.log('click duplicate', duplicate_id.replace(/\./g, ''));
         const el = this.$el.getElementsByClassName(duplicate_id.replace(/\./g, ''))[0];
           if (el) {
-            let parent = el.closest('.audiofile');
-            parent.className += " -selected";
-
+            this.highlightDuplicateId = duplicate_id.replace(/\./g, '');
             el.scrollIntoView();
           }
       },
@@ -967,7 +965,6 @@
       listReorder(info) {
         if (info && typeof info.newIndex !== 'undefined' && typeof info.oldIndex !== 'undefined' && info.newIndex !== info.oldIndex) {
           this.saveAudiobook([[info.oldIndex, info.newIndex]]);
-          console.log('indexes: ', info.oldIndex, info.newIndex)
         }
       },
       //field: 'name', 'date'; direction: 'asc', 'desc'
@@ -1099,6 +1096,7 @@
         }
       },
       isAudiofileHighlighted(audiofile) {
+        if (audiofile.id.replace(/\./g, '') == this.highlightDuplicateId) return true;
         if (this.alignCounter && this.alignCounter.blocks && audiofile.blockMap) {
           let hasMap = this.alignCounter.blocks.find(b => {
             return typeof audiofile.blockMap[b.blockid] !== 'undefined';
@@ -1280,6 +1278,7 @@
       },
       'blockSelection': {
         handler(val) {
+          this.highlightDuplicateId = '';
           var openAudio = this.$refs.panelAudiofile ? this.$refs.panelAudiofile.open : false;
           var openTTS = this.$refs.panelTTS ? this.$refs.panelTTS.open : false;
           if (!openAudio && openTTS) {
