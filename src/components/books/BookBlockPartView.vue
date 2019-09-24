@@ -9,38 +9,6 @@
         </div>
       </div>
     </div>
-    <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
-      <div class="table-body">
-        <div class="table-row">
-          <div class="table-cell -hidden-subblock" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged">
-            <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
-          </div>
-          <template v-if="tc_showBlockNarrate(block.blockid) && !isAudStarted">
-            <div class="table-cell -hidden-subblock">
-              <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording($event)"></i>
-            </div>
-          </template>
-          <template v-if="player && blockAudio.src && !isRecording">
-            <div class="table-cell -hidden-subblock" v-if="!isAudStarted">
-              <i class="fa fa-play-circle-o"
-                @click="audPlay($event)"></i>
-            </div>
-            <template v-else>
-              <div class="table-cell">
-                <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
-                  @click="audPause(block._id, $event)"></i>
-                <i class="fa fa-play-circle-o paused" v-else
-                  @click="audResume(block._id, $event)"></i>
-              </div>
-              <div class="table-cell">
-                <i class="fa fa-stop-circle-o"
-                  @click="audStop(block._id, $event)"></i>
-              </div>
-            </template>
-          </template>
-        </div>
-      </div>
-    </div>
     <div class="table-cell" :class="{'completed': isCompleted}">
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
@@ -77,6 +45,39 @@
             </div> -->
 
             <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
+              <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
+                <div class="table-body">
+                  <div class="table-row">
+                    <div class="table-cell -hidden-subblock" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged">
+                      <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
+                    </div>
+                    <template v-if="tc_showBlockNarrate(block.blockid) && !isAudStarted">
+                      <div class="table-cell -hidden-subblock">
+                        <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording($event)"></i>
+                      </div>
+                    </template>
+                    <template v-if="player && blockAudio.src && !isRecording">
+                      <div class="table-cell -hidden-subblock" v-if="!isAudStarted">
+                        <i class="fa fa-play-circle-o"
+                          @click="audPlay($event)"></i>
+                      </div>
+                      <template v-else>
+                        <div class="table-cell">
+                          <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
+                            @click="audPause(block._id, $event)"></i>
+                          <i class="fa fa-play-circle-o paused" v-else
+                            @click="audResume(block._id, $event)"></i>
+                        </div>
+                        <div class="table-cell">
+                          <i class="fa fa-stop-circle-o"
+                            @click="audStop(block._id, $event)"></i>
+                        </div>
+                      </template>
+                    </template>
+                  </div>
+                </div>
+              </div>
+              <div class="table-cell -content-wrapper">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
@@ -256,7 +257,7 @@
                   </template>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
-
+              </div>
             </div>
             <!--<div class="table-row ilm-block">-->
             <div class="table-row controls-bottom" v-if="isSplittedBlock">
@@ -752,7 +753,7 @@ export default {
           try {
             content = content.replace(new RegExp('(?<!<split\\/>)<br[^>]*>(?!<split\\/>)', 'gm'), `<br>${separator}`);// lists with br should have empty line
           } catch (e) {// Firefox does not support negative lookbehind
-            
+
           }
           content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
           content = content.replace(/<br><br><br>/gm, '<br><br>');
@@ -1058,7 +1059,7 @@ export default {
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  //'superscript', 'subscript','orderedlist', 
+                  //'superscript', 'subscript','orderedlist',
                   'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
@@ -1531,7 +1532,7 @@ export default {
           content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
           content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         } catch (e) {// Firefox does not support negative lookbehind
-          
+
         }
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
