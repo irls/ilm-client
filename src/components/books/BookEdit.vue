@@ -2407,10 +2407,6 @@ export default {
         }
       }
     }*/
-    .controls-bottom {
-      margin: 5px auto;
-      display: block;
-    }
     .-subblock {
       position: relative;
       .-content {
@@ -2474,10 +2470,6 @@ export default {
           }
         }
       }
-    }
-    .controls-bottom {
-      display: flex;
-      margin-inline-start: 185px;
     }
     .controls-bottom-wrapper {
       width: 650px;
