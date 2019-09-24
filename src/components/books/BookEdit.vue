@@ -2407,6 +2407,7 @@ export default {
         }
       }
     }*/
+
     .controls-bottom {
       margin: 5px auto;
       display: block;
