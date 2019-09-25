@@ -1,5 +1,5 @@
 <template>
-  <div id='booksarea' :class="{'narrate': bookMode === 'narrate'}"><!-- v-cloak-->
+  <div id='booksarea' :class="bookMode"><!-- v-cloak-->
     <div :class="['content-meta-wrapper', metaVisible ? 'meta-visible' : '']">
 
       <BookEditToolbar v-if="isEditMode()"
@@ -357,6 +357,9 @@ export default {
     overflow: hidden;
     .narrate& {
       min-width: 860px;
+    }
+    .edit& {
+      min-width: 700px;
     }
 
     .toolbar {
