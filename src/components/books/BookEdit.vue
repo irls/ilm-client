@@ -2414,14 +2414,17 @@ export default {
     .-subblock {
       position: relative;
       .-content {
-        width: 650px;
-        margin: 0px auto;
+        width: 785px;
+        margin-left: auto;
+        margin-right: auto;
         @media all and (max-width: 1100px) {
-           margin: 0;
+           margin-left: 0;
+           margin-right: 0;
         }
         .meta-visible & {
            @media all and (max-width: 1540px) {
-              margin: 0;
+              margin-left: 0;
+              margin-right: 0;
            }
         }
       }
@@ -2480,14 +2483,18 @@ export default {
       margin-inline-start: 185px;
     }
     .controls-bottom-wrapper {
+
       width: 650px;
-      margin: 0 auto;
+      margin-left: auto;
+      margin-right: auto;
       @media all and (max-width: 1100px) {
-        margin: 0;
+        margin-left: 0;
+        margin-right: 0;
       }
       .meta-visible & {
         @media all and (max-width: 1540px) {
-          margin: 0;
+          margin-left: 0;
+          margin-right: 0;
         }
       }
     }

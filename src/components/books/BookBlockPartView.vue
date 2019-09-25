@@ -1,6 +1,7 @@
 <template>
+<div>
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
-    :class="['table-body -block -subblock', blockOutPaddings]">
+    :class="['table-body -block -subblock block-preview', blockOutPaddings]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
     <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'">
       <div class="table-row">
@@ -260,22 +261,6 @@
               </div>
             </div>
             <!--<div class="table-row ilm-block">-->
-            <div class="table-row controls-bottom" v-if="isSplittedBlock">
-              <div class="par-ctrl -hidden -right">
-                  <!--<span>isCompleted: {{isCompleted}}</span>-->
-                  <div class="save-block -right" @click="discardBlock"
-                       v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
-                    Discard
-                  </div>
-                  <div class="save-block -right"
-                  v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-                  @click="assembleBlockProxy(true)">
-                    {{saveBlockLabel}}
-                  </div>
-              </div>
-              <!--<div class="-hidden">-->
-            </div>
-            <!--<div class="table-row controls-bottom">-->
         </div>
         <!--<div :class="['table-body', '-content',-->
     </div>
@@ -298,6 +283,27 @@
     </div>
     </modal>
   </div>
+  <div class="table-body">
+    <div class="table-row controls-bottom" v-if="isSplittedBlock">
+      <div class="controls-bottom-wrapper">
+        <div class="par-ctrl -hidden -right">
+          <!--<span>isCompleted: {{isCompleted}}</span>-->
+          <div class="save-block -right" @click="discardBlock"
+               v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
+            Discard
+          </div>
+          <div class="save-block -right"
+          v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+          @click="assembleBlockProxy(true)">
+            {{saveBlockLabel}}
+          </div>
+        </div>
+        <!--<div class="-hidden">-->
+      </div>
+    </div>
+    <!--<div class="table-row controls-bottom">-->
+  </div>
+</div>
 </template>
 
 <script>
@@ -2379,6 +2385,14 @@ export default {
             this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
             this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), this.blockAudiosrc('m4a', false));
             //this.pushChange('content');
+
+
+            //this.blockPart.manual_boundaries = manual_boundaries.slice();
+            //this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
+            //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            //this.blockPart.content = this.$refs.blockContent.innerHTML;
+            //this.blockAudio.map = this.$refs.blockContent.innerHTML;
+            //this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
           }
         }
         this.isAudioChanged = true;
