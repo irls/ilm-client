@@ -131,6 +131,7 @@
   //import Peaks from 'peaks.js';
   var WaveformPlaylist = require('waveform-playlist');
   var Draggable = require ('draggable')
+  var {TimeScale} = require('../store/AudioTimeScale.js');
   Vue.use(v_modal, { dialog: true });
 
   export default {
@@ -362,6 +363,13 @@
               timescale: true,
               linkEndpoints: true
             });
+            this.audiosourceEditor.renderTimeScale = function() {
+              const controlWidth = this.controls.show ? this.controls.width : 0;
+              const timeScale = new TimeScale(this.duration, this.scrollLeft,
+                this.samplesPerPixel, this.sampleRate, controlWidth);
+
+              return timeScale.render();
+            }
 //             var _this15 = this.audiosourceEditor;
 //             this.audiosourceEditor.drawRequest = function (){
 //               console.log('drawRequest', blockId);
