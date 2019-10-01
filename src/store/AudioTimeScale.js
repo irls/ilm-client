@@ -135,7 +135,7 @@ class TimeScale {
         h('canvas',
           {
             attributes: {
-              width: 1500,
+              width: widthX,
               height: 30,
               style: 'position: absolute; left: 0; right: 0; top: 0; bottom: 0;',
             },
