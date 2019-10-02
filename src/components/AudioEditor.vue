@@ -363,7 +363,7 @@
               timescale: true,
               linkEndpoints: true
             });
-            this.audiosourceEditor.renderTimeScale = function() {
+            this.audiosourceEditor.renderTimeScale = function() {// temporary solution for ILM-2453, need to have audio editor in local repositories
               const controlWidth = this.controls.show ? this.controls.width : 0;
               const timeScale = new TimeScale(this.duration, this.scrollLeft,
                 this.samplesPerPixel, this.sampleRate, controlWidth);
