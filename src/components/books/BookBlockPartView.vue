@@ -182,7 +182,7 @@
 
                     <a href="#" class="flag-control -right -top"
                       v-if="canDeleteFlagPart(part) && part.status == 'open'"
-                      @click.prevent="delFlagPart($event, partIdx, blockPartIdx)">
+                      @click.prevent="_delFlagPart($event, partIdx)">
                       <i class="fa fa-trash"></i></a>
 
                     <div class="clearfix"></div>
@@ -1214,10 +1214,10 @@ export default {
         ev.target.focus();
       },
       onInputFlag: function(ev) {
-        //this.isChanged = true;
-        //this.pushChange('flags');
-        this.$emit('inputFlag');
-        ev.target.focus();
+        this.isChanged = true;
+        this.pushChange('flags');
+        //this.$emit('inputFlag');
+        //ev.target.focus();
       },
       onFocusoutFlag: function(partIdx, ev) {
         if (ev && ev.target) {
@@ -1315,10 +1315,24 @@ export default {
 //           });
       },
       assembleBlockProxy: function (check_realign = true, realign = false) {
+        let modeUpdate = false;
+        let flagUpdate = this.hasChange('flags');
         if (this.mode === 'proofread') {
-          return this.assembleBlockProofread();
+          modeUpdate = this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
-          return this.assembleBlockNarrate();
+          modeUpdate = this.assembleBlockNarrate();
+        }
+        if (modeUpdate) {
+          return modeUpdate
+            .then(() => {
+              if (flagUpdate) {
+                return this.$parent.assembleBlockProxy(false, false)
+              }
+              return Promise.resolve();
+            })
+            .catch(err => {
+              return Promise.reject(err);
+            });
         }
         if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
           this.$root.$emit('from-block:save-and-realign-warning', () => {
@@ -1471,6 +1485,7 @@ export default {
               this.tc_loadBookTask(this.block.bookid);
               this.getCurrentJobInfo();
             }
+            return Promise.resolve();
           })
           .catch(err => {
             return Promise.reject(err);
@@ -1513,6 +1528,7 @@ export default {
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
+            return Promise.resolve();
           })
           .catch(err => {
             return Promise.reject(err);
@@ -1847,9 +1863,15 @@ export default {
         this.$refs.blockFlagPopup.reset();
 
         this.$refs.blockFlagPopup.scrollBottom();
-        //this.isChanged = true;
-        //this.pushChange('flags');
-        this.$emit('addFlagPart');
+        this.isChanged = true;
+        this.pushChange('flags');
+        //this.$emit('addFlagPart');
+      },
+      
+      _delFlagPart(ev, partIdx) {
+        this.delFlagPart(ev, partIdx, this.blockPartIdx);
+        this.isChanged = true;
+        this.pushChange('flags');
       },
 
       detectExistingFlag: function(ev) {
@@ -1968,9 +1990,9 @@ export default {
         this.flagsSel.parts[partIdx].status = 'resolved';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
-        //this.isChanged = true;
-        //this.pushChange('flags');
-        this.$emit('resolveFlagPart');
+        this.isChanged = true;
+        this.pushChange('flags');
+        //this.$emit('resolveFlagPart');
       },
 
       reopenFlagPart: function(ev, partIdx) {
