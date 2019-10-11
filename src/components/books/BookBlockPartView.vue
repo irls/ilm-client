@@ -1788,7 +1788,7 @@ export default {
             let checkWords = new RegExp(`([${lettersPattern}\\d]+?)([^${lettersPattern}\\d]+?)`, 'img');
             let match = false;
             let selection = {};
-            let offset = -1 * windowSelRange.startOffset;
+            let offset = 0;//-1 * windowSelRange.startOffset;
             let found = false;
             let checkNodes = [startElementWrapper];
             let checkNode;
@@ -1838,7 +1838,7 @@ export default {
                 }
               }
             }
-            let offsetEnd = -1 * windowSelRange.endOffset;
+            let offsetEnd = 0;//-1 * windowSelRange.endOffset;
             found = false;
             if (fixed_end) {
               checkNodes = [this.$refs.blockContent];
@@ -1886,7 +1886,7 @@ export default {
                 }
               }
             }
-            while((match = checkWords.exec(this.$refs.blockContent.innerText))) {
+            while((match = checkWords.exec(this.$refs.blockContent.textContent))) {
               if (match.index <= windowSelRange.startOffset + offset && !fixed_start) {
                 selection.start = match.index;
                 if (selection.start + match[0].length <= windowSelRange.startOffset + offset) {
