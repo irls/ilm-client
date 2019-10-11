@@ -1810,6 +1810,7 @@ export default {
                   found = true;
                   if (checkNode.nodeName.toLowerCase() === 'u') {
                     fixed_start = false;
+                    offset-= windowSelRange.startOffset;
                     //fixed_end = false;
                     //offsetEnd+= checkNode.innerText.length;
                     //console.log(checkNode)
@@ -1859,6 +1860,7 @@ export default {
                   if (checkNode.nodeName.toLowerCase() === 'u') {
                     fixed_end = false;
                     offsetEnd+= checkNode.innerText.length;
+                    offsetEnd-=windowSelRange.endOffset;
                     //if (!this.$refs.blockContent.innerText.charAt(offsetEnd) || this.$refs.blockContent.innerText.charAt(offsetEnd).trim().length == 0) {// if u at the end of word - do not make selection bigger
                       //--offsetEnd;
                     //}
