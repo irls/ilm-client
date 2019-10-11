@@ -218,6 +218,7 @@
               :audDeletePart="_audDeletePart"
               :startRecording="startRecording"
               :initRecorder="initRecorder"
+              :isCanReopen="isCanReopen"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
@@ -1218,11 +1219,31 @@ export default {
         if (typeof flag !== 'undefined' && typeof partIdx !== 'undefined') {
           let part = flag.parts && flag.parts[partIdx] ? flag.parts[partIdx] : false;
           if (part) {
-            if (this.mode !== 'proofread' && part.type === 'editor') {
-              return false;
-            }
-            if (this.mode === 'narrate' && part.type === 'narrator') {
-              return false;
+            if (part.creator_role) {// old flags do not have creator_role
+              switch (part.creator_role) {
+                case 'narrator':
+                  if (this.mode !== 'narrate') {
+                    return false;
+                  }
+                  break;
+                case 'proofer':
+                  if (this.mode !== 'proofread') {
+                    return false;
+                  }
+                  break;
+                case 'editor':
+                  if (this.mode !== 'edit') {
+                    return false;
+                  }
+                  break;
+              }
+            } else {
+              if (this.mode !== 'proofread' && part.type === 'editor') {
+                return false;
+              }
+              if (this.mode === 'narrate' && part.type === 'narrator') {
+                return false;
+              }
             }
             return part.status == 'resolved' && !part.collapsed && (!this.isCompleted || this.isProofreadUnassigned());
           }
