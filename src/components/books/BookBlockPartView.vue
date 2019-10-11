@@ -1784,7 +1784,7 @@ export default {
             //}
           }
           if (!this.$refs.blockContent.innerHTML.match(/<w[^>]*>/)) {// no alignment
-            let lettersPattern = 'a-zA-Zа-яА-ЯÀ-ÿ\\u0600-\\u06FF';
+            let lettersPattern = 'a-zA-Zа-яА-ЯÀ-ÿ\\u0600-\\u06FF\'’"\\?\\!:\\.,“‘«”’»\\(\\[\\{﴾\\)\\]\\}﴿؟؛…';
             let checkWords = new RegExp(`([${lettersPattern}\\d]+?)([^${lettersPattern}\\d]+?)`, 'img');
             let match = false;
             let selection = {};
