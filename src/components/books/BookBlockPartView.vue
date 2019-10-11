@@ -1960,9 +1960,6 @@ export default {
       },
 
       _startRecording() {
-        if (this.$refs.blockFlagPopup) {
-          this.$refs.blockFlagPopup.close();
-        }
         return this.initRecorder()
           .then(() => {
 
