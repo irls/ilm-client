@@ -2119,6 +2119,7 @@ export default {
       },
 
       _startRecording() {
+        this.$root.$emit('closeFlagPopup', null);
         return this.initRecorder()
           .then(() => {
 
