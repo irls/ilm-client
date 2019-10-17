@@ -218,6 +218,8 @@
               :audDeletePart="_audDeletePart"
               :startRecording="startRecording"
               :initRecorder="initRecorder"
+              :saveBlockPart="saveBlockPart"
+              :isCanReopen="isCanReopen"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
@@ -228,13 +230,11 @@
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
-              @save="saveBlockPart"
               @hasChanges="onPartChanges"
               @addFootnote="addFootnote"
               @partAudioComplete="partAudioComplete"
               @addFlagPart="onAddFlagPart"
               @addFlag="addFlag"
-              @inputFlag="onInputFlag"
               @resolveFlagPart="onResolveFlagPart"
               @reopenFlagPart="onReopenFlagPart"
               @hideFlagPart="onHideFlagPart"
@@ -771,10 +771,24 @@ export default {
           return this.block.flags && this.block.flags.length;
       },
       isNeedWorkDisabled: function () {
-        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.hasChangedPart) {
           return true;
         }
         return this.tc_isNeedWorkDisabled(this.block, this.mode);
+      },
+      hasChangedPart: {
+        get() {
+          if (this.isSplittedBlock) {
+            if (this.$refs && this.$refs.blocks) {
+              let changed = this.$refs.blocks.find(blk => {
+                return blk.isChanged || blk.isAudioChanged || blk.isAudioEditing;
+              });
+              return changed ? true : false;
+            }
+          }
+          return false;
+        },
+        cache: false
       },
       enableMarkAsDone: { cache: false,
         get() {
@@ -1218,11 +1232,31 @@ export default {
         if (typeof flag !== 'undefined' && typeof partIdx !== 'undefined') {
           let part = flag.parts && flag.parts[partIdx] ? flag.parts[partIdx] : false;
           if (part) {
-            if (this.mode !== 'proofread' && part.type === 'editor') {
-              return false;
-            }
-            if (this.mode === 'narrate' && part.type === 'narrator') {
-              return false;
+            if (part.creator_role) {// old flags do not have creator_role
+              switch (part.creator_role) {
+                case 'narrator':
+                  if (this.mode !== 'narrate') {
+                    return false;
+                  }
+                  break;
+                case 'proofer':
+                  if (this.mode !== 'proofread') {
+                    return false;
+                  }
+                  break;
+                case 'editor':
+                  if (this.mode !== 'edit') {
+                    return false;
+                  }
+                  break;
+              }
+            } else {
+              if (this.mode !== 'proofread' && part.type === 'editor') {
+                return false;
+              }
+              if (this.mode === 'narrate' && part.type === 'narrator') {
+                return false;
+              }
             }
             return part.status == 'resolved' && !part.collapsed && (!this.isCompleted || this.isProofreadUnassigned());
           }
@@ -1629,7 +1663,7 @@ export default {
           });
       },
 
-      assembleBlockProxy: function (check_realign = true, realign = false) {
+      assembleBlockProxy: function (check_realign = true, realign = false, update_fields = []) {
         if (this.isSplittedBlock && this.$refs.blocks) {
           this.$refs.blocks.forEach((blk, blkIdx) => {
             this.block.setPartContent(blkIdx, blk.clearBlockContent());
@@ -1706,13 +1740,14 @@ export default {
           }
         } else {
           if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
-          else if (this.isChanged) {
+          else if (this.isChanged || update_fields.length > 0) {
             let fullUpdate = false;
             this.block.clean();
             let partUpdate = {blockid: this.block.blockid, bookid: this.block.bookid};
             if (this.isSplittedBlock) {
               partUpdate.parts = this.block.parts;
             }
+            this.changes = this.changes.concat(update_fields);
             if (this.changes && Array.isArray(this.changes)) {
               this.changes.forEach(c => {
                 switch(c) {
@@ -2740,8 +2775,10 @@ export default {
           //this.pushChange('flags');
           //this.$emit('delFlagPart');
 
-          this.isChanged = true;
-          this.pushChange('flags');
+          if (blockPartIdx === null) {
+            this.isChanged = true;
+            this.pushChange('flags');
+          }
         }
       },
 
