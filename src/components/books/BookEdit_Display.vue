@@ -216,13 +216,15 @@ export default {
     },
 
     getAllBlocks(metaId, startBlock) {
+      console.log('getAllBlocks', metaId, startBlock);
       console.time('getAllBlocks');
       return this.loadBookBlocks({bookId: metaId})
       .then((res)=>{
-        let scrollId = this.parlistO.idsArray()[0];
-        this.parlistO.updateLookupsList(metaId, res);
+        //let scrollId = this.parlistO.idsArray()[0];
+        //this.parlistO.updateLookupsList(metaId, res);
+        this.parlistO.setLookupsList(metaId, res);
         console.timeEnd('getAllBlocks');
-        //console.log('scrollId', scrollId);
+        console.log('res', res);
         console.time('getAllBlocks foreach');
 
         if (res.blocks && res.blocks.length > 0) {
@@ -230,7 +232,7 @@ export default {
             if (!this.parlist.has(el._id)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
-              if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
+              if (el.type !== 'par' || idx < 500) this.parlistO.setLoaded(el.rid);
             } else {
               //this.parlistO.setLoaded(el.rid);
             }
@@ -328,7 +330,7 @@ export default {
     },
 
     loadBookMounted() {
-      console.time('loadBookMounted');
+      //console.time('loadBookMounted');
       if (this.$route.params.hasOwnProperty('bookid')) {
         let bookid = this.$route.params.bookid;
         if (!this.meta._id || bookid !== this.parlistO.meta.bookid) {
@@ -346,32 +348,31 @@ export default {
               bookId: this.$route.params.bookid,
               block: startBlock,
               taskType: taskType,
-              onPage: 200
+              onPage: 1
             }).then((answer)=>{
-              this.parlistO.setLookupsList(answer.meta.bookid, answer);
-              if (this.startId == false) {
-                this.startId = this.parlistO.idsArray()[0];
-                this.parlistO.setFirstVisibleId(this.startId);
-              }
-              this.loopPreparedBlocksChain({ids: this.parlistO.idsArray()})
-              .then((result)=>{
-                if (result.rows && result.rows.length > 0) {
-                  result.rows.forEach((el, idx, arr)=>{
-                    if (!this.parlist.has(el._id)) {
-                      let newBlock = new BookBlock(el);
-                      this.$store.commit('set_storeList', newBlock);
-                      this.parlistO.setLoaded(el.blockid);
-                    } else {
-                      this.parlistO.setLoaded(el.blockid);
-                    }
-                  });
-                }
-                console.timeEnd('loadBookMounted');
-                this.getAllBlocks(this.parlistO.meta.bookid, startBlock)
+                console.log('answer', answer);
+//               this.parlistO.setLookupsList(answer.meta.bookid, answer);
+//               if (this.startId == false) this.startId = this.parlistO.idsArray()[0];
+                if (this.startId == false) this.startId = answer.blocks[0].blockid;
+//               this.loopPreparedBlocksChain({ids: this.parlistO.idsArray()})
+//               .then((result)=>{
+//                 if (result.rows && result.rows.length > 0) {
+//                   result.rows.forEach((el, idx, arr)=>{
+//                     if (!this.parlist.has(el._id)) {
+//                       let newBlock = new BookBlock(el);
+//                       this.$store.commit('set_storeList', newBlock);
+//                       this.parlistO.setLoaded(el.blockid);
+//                     } else {
+//                       this.parlistO.setLoaded(el.blockid);
+//                     }
+//                   });
+//                 }
+//                 console.timeEnd('loadBookMounted');
+                this.getAllBlocks(answer.meta.bookid, this.startId)
                 .then((result)=>{
                   console.log('then result.blocks', result.blocks.length);
                 });
-              });
+//               });
             });
           })
         }

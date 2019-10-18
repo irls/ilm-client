@@ -7,7 +7,7 @@
 />-->
 <BookBlockDisplay
   blockRid="{block.blockRid}"
-  block="{blockView(block.blockRid)}"
+  block="{block.blockView}"
   blockListObj="{block}"
   idx="{idx}"
   lang="{lang}"
@@ -17,12 +17,28 @@
 </template>
 
 <script>
+  import { beforeUpdate } from 'svelte';
   import BookBlockDisplay from './BookBlockDisplay.svelte';
   export let lang = 'en';
   export let blocks = [];
   export let parlistO = {};
   export let parlist = {};
   let fntCounter = 0;
+
+  beforeUpdate(() => {
+    console.log('the component is about to update');
+    fntCounter = 0;
+    if (blocks.length) {
+      for (let i = 0; i < blocks.length; i++) {
+        blocks[i].blockView = blockView(blocks[i].blockRid)
+      }
+    }
+  });
+
+//   onMount(() => {
+//     console.log('onMount blocks', blocks);
+//   });
+
   const timestamp = (new Date()).toJSON();
 
   const blockId = (blockRid) => parlistO.getBlockByRid(blockRid).blockid;
@@ -33,8 +49,9 @@
 
   const blockView = (blockRid) => {
     let block = blockFull(blockRid);
+    let blockO = parlistO.getBlockByRid(blockRid);
     if (block) {
-      //console.log('blockView', block.blockid);
+      //console.log('blockView', block.blockid, fntCounter);
       let viewObj = { footnotes: block.footnotes, language: block.language || lang };
       viewObj.getIllustration = ()=>{
         if (block.illustration) {
@@ -45,10 +62,10 @@
       viewObj.blockid = block.blockid;
       viewObj.classes = block.classes;
       viewObj.type = block.type;
-      viewObj.isNumber = block.isNumber;
-      viewObj.isHidden = block.isHidden;
-      viewObj.secnum = block.secnum;
-      viewObj.parnum = block.parnum;
+      viewObj.isNumber = blockO.isNumber;
+      viewObj.isHidden = blockO.isHidden;
+      viewObj.secnum = blockO.secnum;
+      viewObj.parnum = blockO.parnum;
 
       viewObj.content = block.content.replace(
         /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/mig,

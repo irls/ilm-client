@@ -1,4 +1,5 @@
 <template>
+<!--{blockRid}->{blockListObj.blockId}->{blockListObj.loaded}-->
 {#if block && block.getClass}
   <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" class="ilm-block ilm-display -langblock-{block.language} {blockOutPaddings()}">
   {#if block.type === 'illustration'}
@@ -47,10 +48,10 @@
     if (blockListObj.loaded) res(blockListObj.blockId);
     else {
       let timer = window.setTimeout(()=>{
-        //console.log('T:', idx, blockListObj.blockId);
+        console.log('T:', idx, blockListObj.blockId);
         window.clearTimeout(timer);
         res(blockListObj.blockId);
-      }, 50+idx);
+      }, 500+idx);
     }
   })
 
@@ -60,7 +61,7 @@
 
   const blockOutPaddings = () => {
     if (block) {
-      console.log('blockOutPaddings');
+      //console.log('blockOutPaddings');
       return (block.classes && block.classes.hasOwnProperty('outsize-padding')) ? block.classes['outsize-padding'] : ''
     } else return '';
   }
