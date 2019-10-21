@@ -1684,7 +1684,7 @@ export default {
     checkVisible(elm, viewHeight = false) {
       var rect = elm.getBoundingClientRect();
       if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-      return !(rect.bottom < initialTopOffset+1 || rect.top - viewHeight >= 0);
+      return !(rect.bottom < initialTopOffset+30 || rect.top - viewHeight >= 0);
     },
 
     updatePositions() {
@@ -1709,6 +1709,7 @@ export default {
         return false;
       }
       //console.log('handleScroll', (new Date()).toJSON());
+      let scrolledBottom = this.$refs.contentScrollWrapRef.offsetHeight + this.$refs.contentScrollWrapRef.scrollTop >= this.$refs.contentScrollWrapRef.scrollHeight;
       if (!this.onScrollEv) {
         let firstVisible = false;
         let lastVisible = false;
@@ -1743,6 +1744,9 @@ export default {
               blockRef.$forceUpdate();
             }*/
           } else if (firstVisible) break;
+        }
+        if (scrolledBottom) {
+          this.parlistO.setFirstVisibleId(this.parlistO.listIds[this.parlistO.listIds.length - 1]);
         }
 
         /*if (fixJump !== 'true' && fixJump !== 'false') {
