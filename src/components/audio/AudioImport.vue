@@ -234,8 +234,10 @@ export default {
               return _f.origName == file.name || _f.group_id === file.name;
             });
           }
+          this.addFileToUpload(file);
+          /*
           if (exist) {
-            this.uploadFilesDuplicates.push(file);
+            //this.uploadFilesDuplicates.push(file);
           } else {
             let existInCurrent = this.audioFiles.find(_f => {
               return _f.name == file.name;
@@ -244,6 +246,7 @@ export default {
               this.addFileToUpload(file);
             }
           }
+          */
       }
       
       /*Array
@@ -357,6 +360,7 @@ export default {
       //this.isUploading = true
       if (!this.audiobook._id) {
         // first upload by editor
+        toUpload.autoAlign = this.autoAlign;
         api.post(api_url, toUpload, {}).then((response) => {
           if (response.status===200) {
             this.uploadFinished = true

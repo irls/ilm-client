@@ -184,7 +184,7 @@
 
                     <a href="#" class="flag-control -right -top"
                       v-if="canDeleteFlagPart(part) && part.status == 'open'"
-                      @click.prevent="delFlagPart($event, partIdx, blockPartIdx)">
+                      @click.prevent="_delFlagPart($event, partIdx)">
                       <i class="fa fa-trash"></i></a>
 
                     <div class="clearfix"></div>
@@ -403,7 +403,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -988,21 +988,6 @@ export default {
 
         return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
       },
-      isCanReopen(flag, partIdx) {
-        if (typeof flag !== 'undefined' && typeof partIdx !== 'undefined') {
-          let part = flag.parts && flag.parts[partIdx] ? flag.parts[partIdx] : false;
-          if (part) {
-            if (this.mode !== 'proofread' && part.type === 'editor') {
-              return false;
-            }
-            if (this.mode === 'narrate' && part.type === 'narrator') {
-              return false;
-            }
-            return part.status == 'resolved' && !part.collapsed && (!this.isCompleted || this.isProofreadUnassigned());
-          }
-        }
-        return false;
-      },
       isProofreadUnassigned: function() {
         if (this._is('proofer', true) && this.mode === 'proofread') {
           if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned()) {
@@ -1221,10 +1206,10 @@ export default {
         ev.target.focus();
       },
       onInputFlag: function(ev) {
-        //this.isChanged = true;
-        //this.pushChange('flags');
-        this.$emit('inputFlag');
-        ev.target.focus();
+        this.isChanged = true;
+        this.pushChange('flags');
+        //this.$emit('inputFlag');
+        //ev.target.focus();
       },
       onFocusoutFlag: function(partIdx, ev) {
         if (ev && ev.target) {
@@ -1322,6 +1307,11 @@ export default {
 //           });
       },
       assembleBlockProxy: function (check_realign = true, realign = false) {
+        let flagUpdate = this.hasChange('flags') ? this.block.flags : null;
+        if (flagUpdate) {
+          this.isChanged = false;
+          return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
+        }
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
@@ -1336,7 +1326,7 @@ export default {
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
-        return this.$emit('save', this.blockPart, this.blockPartIdx, realign);
+        return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign);
       },
 
       assembleBlock: function(partUpdate = null, realign = false) {
@@ -1433,6 +1423,18 @@ export default {
           });
       },
       assembleBlockProofread() {
+        if (this.isSplittedBlock) {
+          this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+          this.isChanged = false;
+          this.isSaving = true;
+          let promise = Promise.resolve();
+          let evt = {};
+          evt.waitUntil = p => promise = p
+          this.$root.$emit(`save-block:${this.block.blockid}`, evt);
+          return promise.then(() => {
+            this.isSaving = false;
+          });
+        }
         if (this.$refs.blockContent) {
           this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         }
@@ -1445,6 +1447,7 @@ export default {
               this.tc_loadBookTask(this.block.bookid);
               this.getCurrentJobInfo();
             }
+            return Promise.resolve();
           })
           .catch(err => {
             return Promise.reject(err);
@@ -1463,6 +1466,7 @@ export default {
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
+            return Promise.resolve();
           })
           .catch(err => {
             return Promise.reject(err);
@@ -1722,12 +1726,17 @@ export default {
           let windowSelRange = this.range;
           // ILM-2108: - because the last tag in the selection was not cropped
           // and was duplicated after adding a flag
+          let fixed_start = false;
+          let fixed_end = false;
           let startElementWrapper = windowSelRange.startContainer.parentElement;
           if (startElementWrapper.nodeName.toLowerCase() !== 'div') {
             while (startElementWrapper.parentElement && startElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
               startElementWrapper = startElementWrapper.parentElement;
             }
             windowSelRange.setStartBefore(startElementWrapper);
+            //if (startElementWrapper.nodeName.toLowerCase() !== 'u') {
+              fixed_start = true;
+            //}
           }
 
           let endElementWrapper = windowSelRange.endContainer.parentElement;
@@ -1736,6 +1745,134 @@ export default {
               endElementWrapper = endElementWrapper.parentElement;
             }
             windowSelRange.setEndAfter(endElementWrapper);
+            //if (endElementWrapper.nodeName.toLowerCase() !== 'u') {
+              fixed_end = true;
+            //}
+          }
+          if (!this.$refs.blockContent.innerHTML.match(/<w[^>]*>/)) {// no alignment
+            let lettersPattern = 'a-zA-Zа-яА-ЯÀ-ÿ\\u0600-\\u06FF\'’"\\?\\!:\\.,“‘«”’»\\(\\[\\{﴾\\)\\]\\}﴿؟؛…';
+            let checkWords = new RegExp(`([${lettersPattern}\\d]+?)([^${lettersPattern}\\d]+?)`, 'img');
+            let match = false;
+            let selection = {};
+            let offset = 0;//-1 * windowSelRange.startOffset;
+            let found = false;
+            let checkNodes = [startElementWrapper];
+            let checkNode;
+            if (fixed_start) {
+              checkNodes = [this.$refs.blockContent];
+              while(checkNode = checkNodes.pop()) {
+                if (checkNode !== startElementWrapper) {
+                  if (!found) {
+                    if (checkNode.nodeType == 3) {
+                      offset+= checkNode.length;
+                    } else {
+                      let i = checkNode.childNodes.length;
+                      while (i--) {
+                        checkNodes.push(checkNode.childNodes[i]);
+                      }
+                    }
+                  }
+                } else {
+                  found = true;
+                  if (checkNode.nodeName.toLowerCase() === 'u') {
+                    fixed_start = false;
+                    offset-= windowSelRange.startOffset;
+                    //fixed_end = false;
+                    //offsetEnd+= checkNode.innerText.length;
+                    //console.log(checkNode)
+                    //return;
+                  } else {
+                    //selection.end = offsetEnd + checkNode.innerText.length;
+                  }
+                }
+              }
+              selection.start = offset;
+            } else {
+              while(checkNode = checkNodes.pop()) {
+                if (checkNode !== windowSelRange.startContainer) {
+                  if (!found) {
+                    if (checkNode.nodeType == 3) {
+                      offset+= checkNode.length;
+                    } else {
+                      let i = checkNode.childNodes.length;
+                      while (i--) {
+                        checkNodes.push(checkNode.childNodes[i]);
+                      }
+                    }
+                  }
+                } else {
+                  found = true;
+                }
+              }
+            }
+            let offsetEnd = 0;//-1 * windowSelRange.endOffset;
+            found = false;
+            if (fixed_end) {
+              checkNodes = [this.$refs.blockContent];
+              while(checkNode = checkNodes.pop()) {
+                if (checkNode !== endElementWrapper) {
+                  if (!found) {
+                    if (checkNode.nodeType == 3) {
+                      offsetEnd+= checkNode.length;
+                    } else {
+                      let i = checkNode.childNodes.length;
+                      while (i--) {
+                        checkNodes.push(checkNode.childNodes[i]);
+                      }
+                    }
+                  }
+                } else {
+                  found = true;
+                  if (checkNode.nodeName.toLowerCase() === 'u') {
+                    fixed_end = false;
+                    offsetEnd+= checkNode.innerText.length;
+                    offsetEnd-=windowSelRange.endOffset;
+                    //if (!this.$refs.blockContent.innerText.charAt(offsetEnd) || this.$refs.blockContent.innerText.charAt(offsetEnd).trim().length == 0) {// if u at the end of word - do not make selection bigger
+                      //--offsetEnd;
+                    //}
+                  } else {
+                    selection.end = offsetEnd + checkNode.innerText.length;
+                  }
+                }
+              }
+            } else {
+              checkNodes = [endElementWrapper];
+              while(checkNode = checkNodes.pop()) {
+                if (checkNode !== windowSelRange.endContainer) {
+                  if (!found) {
+                    if (checkNode.nodeType == 3) {
+                      offsetEnd+= checkNode.length;
+                    } else {
+                      let i = checkNode.childNodes.length;
+                      while (i--) {
+                        checkNodes.push(checkNode.childNodes[i]);
+                      }
+                    }
+                  }
+                } else {
+                  found = true;
+                }
+              }
+            }
+            while((match = checkWords.exec(this.$refs.blockContent.textContent))) {
+              if (match.index <= windowSelRange.startOffset + offset && !fixed_start) {
+                selection.start = match.index;
+                if (selection.start + match[0].length <= windowSelRange.startOffset + offset) {
+                  selection.start = match.index + match[0].length;
+                }
+              } else if (typeof selection.start === 'undefined') {
+                selection.start = 0;
+              }
+              if (match.index + match[0].length >= windowSelRange.endOffset + offsetEnd && typeof selection.end === 'undefined') {
+                selection.end = match.index + match[0].length;
+              }
+            }
+            if (typeof selection.end === 'undefined') {
+              selection.end = startElementWrapper.innerText.length;
+            }
+            if (typeof selection.start !== 'undefined' && typeof selection.end !== 'undefined') {
+              windowSelRange = this.restoreSelection(this.$refs.blockContent, selection);
+            }
           }
 
           let flag = document.createElement(this.flagEl);
@@ -1784,9 +1921,9 @@ export default {
             this.handleFlagClick({target: existsFlag, layerY: ev.layerY, clientY: ev.clientY});
           }
           this.$refs.blockFlagPopup.scrollBottom();
-          //this.isChanged = true;
-          //this.pushChange('flags');
-          this.$emit('addFlag');
+          this.isChanged = true;
+          this.pushChange('flags');
+          //this.$emit('addFlag');
         }
       },
 
@@ -1797,9 +1934,15 @@ export default {
         this.$refs.blockFlagPopup.reset();
 
         this.$refs.blockFlagPopup.scrollBottom();
-        //this.isChanged = true;
-        //this.pushChange('flags');
-        this.$emit('addFlagPart');
+        this.isChanged = true;
+        this.pushChange('flags');
+        //this.$emit('addFlagPart');
+      },
+      
+      _delFlagPart(ev, partIdx) {
+        this.delFlagPart(ev, partIdx, this.blockPartIdx);
+        this.isChanged = true;
+        this.pushChange('flags');
       },
 
       detectExistingFlag: function(ev) {
@@ -1833,6 +1976,7 @@ export default {
       },
 
       handleFlagClick: function(ev) {
+        ev.cancelBubble = true;
         let flagId = ev.target.dataset.flag;
         this.flagsSel = this.block.flags.filter((flag)=>{
           return flag._id === flagId;
@@ -1918,9 +2062,9 @@ export default {
         this.flagsSel.parts[partIdx].status = 'resolved';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
-        //this.isChanged = true;
-        //this.pushChange('flags');
-        this.$emit('resolveFlagPart');
+        this.isChanged = true;
+        this.pushChange('flags');
+        //this.$emit('resolveFlagPart');
       },
 
       reopenFlagPart: function(ev, partIdx) {
@@ -1960,6 +2104,7 @@ export default {
       },
 
       _startRecording() {
+        this.$root.$emit('closeFlagPopup', null);
         return this.initRecorder()
           .then(() => {
 
@@ -2518,7 +2663,7 @@ export default {
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
             this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
-            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), this.blockAudiosrc('m4a', false));
+            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, oldBoundaries.length > this.blockPart.manual_boundaries.length ? true : false);
           }
         }
@@ -2912,6 +3057,45 @@ export default {
           return this.block.getPartContent(this.blockPartIdx);
         } else {
           return this.block.content;
+        }
+      },
+      restoreSelection(containerEl, savedSel) {
+        if (window.getSelection && document.createRange) {
+          var charIndex = 0, range = document.createRange();
+          range.setStart(containerEl, 0);
+          range.collapse(true);
+          var nodeStack = [containerEl], node, foundStart = false, stop = false;
+          while (!stop && (node = nodeStack.pop())) {
+              if (node.nodeType == 3) {
+                  var nextCharIndex = charIndex + node.length;
+                  if (!foundStart && savedSel.start >= charIndex && savedSel.start < nextCharIndex) {
+                      range.setStart(node, savedSel.start - charIndex);
+                      foundStart = true;
+                  }
+                  if (foundStart && savedSel.end >= charIndex && savedSel.end <= nextCharIndex) {
+                      range.setEnd(node, savedSel.end - charIndex);
+                      stop = true;
+                  }
+                  charIndex = nextCharIndex;
+              } else {
+                  var i = node.childNodes.length;
+                  while (i--) {
+                      nodeStack.push(node.childNodes[i]);
+                  }
+              }
+          }
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          return range;
+        } else if (document.selection) {
+          var textRange = document.body.createTextRange();
+          textRange.moveToElementText(containerEl);
+          textRange.collapse(true);
+          textRange.moveEnd("character", savedSel.end);
+          textRange.moveStart("character", savedSel.start);
+          textRange.select();
+          return textRange;
         }
       }
 
