@@ -216,23 +216,25 @@ export default {
     },
 
     getAllBlocks(metaId, startBlock) {
-      console.log('getAllBlocks', metaId, startBlock);
-      console.time('getAllBlocks');
+      //console.log('getAllBlocks', metaId, startBlock);
+      //console.time('getAllBlocks');
       return this.loadBookBlocks({bookId: metaId})
       .then((res)=>{
         //let scrollId = this.parlistO.idsArray()[0];
         //this.parlistO.updateLookupsList(metaId, res);
         this.parlistO.setLookupsList(metaId, res);
-        console.timeEnd('getAllBlocks');
-        console.log('res', res);
-        console.time('getAllBlocks foreach');
+        //console.timeEnd('getAllBlocks');
+        //console.log('res', res);
+        //console.time('getAllBlocks foreach');
 
         if (res.blocks && res.blocks.length > 0) {
           res.blocks.forEach((el, idx, arr)=>{
             if (!this.parlist.has(el._id)) {
               let newBlock = new BookBlock(el);
-              this.$store.commit('set_storeList', newBlock);
-              if (el.type !== 'par' || idx < 500) this.parlistO.setLoaded(el.rid);
+              this.$store.commit('set_storeList', newBlock);// || idx < 100
+              if (el.type !== 'par' || idx > res.blocks.length - 100) {
+                this.parlistO.setLoaded(el.rid);
+              }
             } else {
               //this.parlistO.setLoaded(el.rid);
             }
@@ -247,7 +249,7 @@ export default {
         }
         //console.log('parlistO.lookupList', this.parlistO.lookupList);
         //console.log('parlistO.listObjs', this.parlistO.listObjs);
-        console.timeEnd('getAllBlocks foreach');
+        //console.timeEnd('getAllBlocks foreach');
         return res;
 //         Vue.nextTick(()=>{
 //           this.scrollToBlock(scrollId);

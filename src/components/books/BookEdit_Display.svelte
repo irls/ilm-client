@@ -1,4 +1,5 @@
 <template>
+{#if blocks.length > 0}
 {#each blocks as block, idx (block.blockRid)}
 <!--{block.blockRid}->{block.blockId}->{block.loaded}<br/>-->
 <!--<BookBlockDisplay
@@ -14,6 +15,7 @@
 />
 
 {/each}
+{/if}
 </template>
 
 <script>
@@ -24,20 +26,77 @@
   export let parlistO = {};
   export let parlist = {};
   let fntCounter = 0;
+  //let blockPromise = new Promise();
+  let intBlocks = [];
+  let blockIdx = 0;
 
   beforeUpdate(() => {
-    console.log('the component is about to update');
+    //console.log('the component is about to update');
     fntCounter = 0;
     if (blocks.length) {
       for (let i = 0; i < blocks.length; i++) {
-        blocks[i].blockView = blockView(blocks[i].blockRid)
+        blocks[i].blockView = blockView(blocks[i].blockRid);
+        blocks[i].visible = blocks[i].loaded;
       }
+      //intBlocks = blocks;
+        var found = blocks.find(function(el, idx) {
+          if (parlistO.getBlockByRid(el.blockRid).loaded === false) {
+            blockIdx = idx;
+            return true;
+          }
+          return false;
+        });
+        if (found) {
+          startTimer();
+        }
+//         let timer = window.setTimeout(()=>{
+//           //console.log('T:', idx, blockListObj.blockId);
+//           window.clearTimeout(timer);
+//           //blocks[0].loaded = true;
+//           let blockDOMId = `display-${blocks[blockIdx].blockId}`;
+//           console.log('blockDOMId', blockDOMId, blocks[blockIdx].blockRid);
+//           document.getElementById(blockDOMId).insertAdjacentHTML('afterbegin', blocks[blockIdx].blockView.content);
+//           parlistO.setLoaded(blocks[blockIdx].blockRid);
+//           //blocks[blockIdx].visible = true;
+//         }, 8000);
     }
   });
 
 //   onMount(() => {
 //     console.log('onMount blocks', blocks);
 //   });
+
+var myDelay = 1000;
+var thisDelay = 1000;
+var start = Date.now();
+
+function startTimer() {
+    setTimeout(function() {
+        // your code here...
+        let execCount = 100;
+        let i;
+        for (i = 0; i < blocks.length; i++) {
+          if (execCount <= 0) break;
+          if (parlistO.getBlockByRid(blocks[i].blockRid).loaded === false) {
+            //console.log(blocks[i].blockRid, blocks[i].blockId);
+            let blockDOMId = `display-${blocks[i].blockId}`;
+          //console.log('blockDOMId', blockDOMId, blocks[i].blockRid);
+            document.getElementById(blockDOMId).insertAdjacentHTML('afterbegin', blocks[i].blockView.content);
+            parlistO.setLoaded(blocks[i].blockRid);
+            execCount--;
+          }
+        }
+        //console.log('i', i);
+
+        // calculate the actual number of ms since last time
+        var actual = Date.now() - start;
+        // subtract any extra ms from the delay for the next cycle
+        thisDelay = myDelay - (actual - myDelay);
+        start = Date.now();
+        // start the timer again
+        if (i < blocks.length) startTimer();
+    }, thisDelay);
+}
 
   const timestamp = (new Date()).toJSON();
 
@@ -66,6 +125,8 @@
       viewObj.isHidden = blockO.isHidden;
       viewObj.secnum = blockO.secnum;
       viewObj.parnum = blockO.parnum;
+
+      //viewObj.content = block.content
 
       viewObj.content = block.content.replace(
         /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/mig,
