@@ -1,5 +1,6 @@
 <template>
   <div>
+    <div class="hidden">({{storeListO.firstVisibleId}})</div>
     <div v-for="counter in tasks_counter">
       <div class="counters-container">
         <div class="counter-executor">
@@ -294,11 +295,19 @@
             this.taskBlockMap.map[type].next = null;
             this.taskBlockMap.map[type].prev = null;
             let found = false;
+            let lookup;
             for (let i = start + 1; i < this.storeListO.listObjs.length; ++i) {
               switch (type) {
                 case 'text-cleanup':
-                  let lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
+                  lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
                   if (lookup && lookup.status && lookup.status.stage === 'cleanup' && !lookup.status.marked) {
+                    this.taskBlockMap.map[type].next = this.storeListO.listObjs[i].blockId;
+                    found = true;
+                  }
+                  break;
+                case 'master-audio':
+                  lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
+                  if (lookup && lookup.status && lookup.status.stage === 'audio_mastering' && !lookup.status.marked) {
                     this.taskBlockMap.map[type].next = this.storeListO.listObjs[i].blockId;
                     found = true;
                   }
@@ -322,8 +331,15 @@
             for (let i = start - 1; i >= 0; --i) {
               switch (type) {
                 case 'text-cleanup':
-                  let lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
+                  lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
                   if (lookup && lookup.status && lookup.status.stage === 'cleanup' && !lookup.status.marked) {
+                    this.taskBlockMap.map[type].prev = this.storeListO.listObjs[i].blockId;
+                    found = true;
+                  }
+                  break;
+                case 'master-audio':
+                  lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
+                  if (lookup && lookup.status && lookup.status.stage === 'audio_mastering' && !lookup.status.marked) {
                     this.taskBlockMap.map[type].prev = this.storeListO.listObjs[i].blockId;
                     found = true;
                   }
@@ -391,6 +407,11 @@
     table.counters {
       border: 1px solid black;
       width: 94%;
+      -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+      -moz-user-select: none; /* Old versions of Firefox */
+      -ms-user-select: none; /* Internet Explorer/Edge */
+      user-select: none;
       thead {
         background-color: #c2c2c2;
         th {
@@ -437,11 +458,12 @@
                 color: #3187d5;
                 &.disabled {
                     color: #dddddd;
+                    cursor: default;
                 }
             }
           }
           &.task-action {
-            width: 130px;
+            width: 105px;
             .btn {
                 padding: 3px 12px;
             }

@@ -160,7 +160,8 @@ export default {
 
       lazyLoaderDir: 'up',
       isNeedUp: true,
-      isNeedDown: true
+      isNeedDown: true,
+      scrollToId: null
 
     }
   },
@@ -1628,6 +1629,7 @@ export default {
         if (firstId) {
           firstId = firstId.blockRid;
         }
+        this.scrollToId = blockId;
         vBlock.scrollIntoView();
         if (firstId) {
           let i = 0;
@@ -1717,7 +1719,9 @@ export default {
         let loadIdsArray = [];
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
         //let loadCount = 5;
-        for (var i = 0; i < this.parlistO.listObjs.length; i++) {
+        let startFrom = this.scrollToId ? this.parlistO.listIds.indexOf(this.scrollToId) : 0;
+        this.scrollToId = null;
+        for (var i = startFrom; i < this.parlistO.listObjs.length; i++) {
           let blockRef = this.$refs.viewBlocks.find(v => v.blockId === this.parlistO.listObjs[i].blockId);
           let visible = this.checkVisible(blockRef.$refs.viewBlock, viewHeight);
           if (visible) {
@@ -1781,6 +1785,11 @@ export default {
 //           });
 //         }
      } else this.onScrollEv = false;
+      this.parlistO.idsViewArray().forEach(l => {
+        let blockRef = this.$refs.viewBlocks.find(v => v.blockId === l.blockId);
+        this.parlistO.setLoaded(l.blockRid);
+        blockRef.$forceUpdate();
+      });
     },
 
     moveEditWrapper(firstVisible, lastVisible, force) {
@@ -1862,6 +1871,7 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  this.$store.commit('set_taskBlockMap');
                 }
                 this.loadBookToc({bookId: this.meta._id, isWait: true});
                 //this.lazyLoad();
@@ -1940,6 +1950,7 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  this.$store.commit('set_taskBlockMap');
                   //this.parlistO.refresh();
                   if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
                     Vue.nextTick(() => {

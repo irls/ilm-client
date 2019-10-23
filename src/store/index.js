@@ -1654,6 +1654,9 @@ export const store = new Vuex.Store({
                   dispatch('updateBookVersion', {major: true});
                 }
               });
+            state.storeListO.updBlockByRid(response.data.id, {
+              status: response.data.status
+            });
             return Promise.resolve(response.data);
           })
           .catch(err => {
