@@ -857,12 +857,6 @@ export const store = new Vuex.Store({
       });
       state.taskBlockMap.map = taskMap;
       state.taskBlockMap.refresh = Date.now();
-    },
-    
-    set_taskBlockMapPositions(state) {
-      if (state.storeListO.firstVisibleId) {
-        
-      }
     }
   },
 
