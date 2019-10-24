@@ -3919,6 +3919,21 @@ export default {
       },
       onIsAudioChanged(val) {
         this.isAudioChanged = val;
+      },
+      getIsAudioEditing() {
+        if (!this.isSplittedBlock) {
+          return this.isAudioEditing;
+        }
+        if (this.$refs && this.$refs.blocks) {
+          let editing = false;
+          this.$refs.blocks.forEach(blk => {
+            if (blk.isAudioEditing) {
+              editing = true;
+            }
+          });
+          return editing;
+        }
+        return false;
       }
   },
   watch: {

@@ -1166,7 +1166,10 @@ export default {
                   if (el) {
                     el.evFromAudioeditorClosed(currBlockRef.blockid);
                   }
-                  this.$root.$emit('for-audioeditor:force-close');
+                  if ((elBlock && elBlock.getIsAudioEditing()) || 
+                          (elNext && elNext.getIsAudioEditing())) {
+                    this.$root.$emit('for-audioeditor:force-close');
+                  }
                   currBlockRef.assembleBlockProxy(false)
                   .then(()=>{
                     prevBlockRef.isAudioChanged = false;
@@ -1298,7 +1301,10 @@ export default {
                   if (el) {
                     el.evFromAudioeditorClosed(currBlockRef.blockid);
                   }
-                  this.$root.$emit('for-audioeditor:force-close');
+                  if ((elBlock && elBlock.getIsAudioEditing()) || 
+                          (elNext && elNext.getIsAudioEditing())) {
+                    this.$root.$emit('for-audioeditor:force-close');
+                  }
                   currBlockRef.assembleBlockProxy(false)
                   .then(()=>{
                     nextBlockRef.isAudioChanged = false;
