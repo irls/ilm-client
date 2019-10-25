@@ -34,22 +34,36 @@ let defBlock = [
   'blockid',
   'manual_boundaries',
   'parts'
-]
+];
 
 let BlockTypes = {
-//   title: {
-//     '': [],
-//     subtitle: [],
-//     author: [],
-//     translator: []
-//   },
+  //   title: {
+  //     '': [],
+  //     subtitle: [],
+  //     author: [],
+  //     translator: []
+  //   },
   title: {
     'table of contents': ['', 'toc1'],
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
     style: ['', 'subtitle', 'author', 'translator', 'copyright', 'allcaps'],
     align: ['', 'left', 'center', 'right', 'justify'],
-    padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
-    'outsize-padding': ['', 'outpad-top', 'outpad-top-extra', 'outpad-bottom', 'outpad-bottom-extra'],
+    padding: [
+      '',
+      'nopad',
+      'nopad-top',
+      'nopad-bottom',
+      'extrapad',
+      'extrapad-top',
+      'extrapad-bottom'
+    ],
+    'outsize-padding': [
+      '',
+      'outpad-top',
+      'outpad-top-extra',
+      'outpad-bottom',
+      'outpad-bottom-extra'
+    ]
   },
   header: {
     //type: ['', 'subhead'],
@@ -58,78 +72,153 @@ let BlockTypes = {
     'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4'],
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
     style: ['', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline'],
-    padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
-    'outsize-padding': ['', 'outpad-top', 'outpad-top-extra', 'outpad-bottom', 'outpad-bottom-extra'],
+    padding: [
+      '',
+      'nopad',
+      'nopad-top',
+      'nopad-bottom',
+      'extrapad',
+      'extrapad-top',
+      'extrapad-bottom'
+    ],
+    'outsize-padding': [
+      '',
+      'outpad-top',
+      'outpad-top-extra',
+      'outpad-bottom',
+      'outpad-bottom-extra'
+    ]
   },
-//   subhead: {
-//     'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4'],
-//     align: ['', 'left', 'center', 'right', 'justify'],
-//     descriptor: ['', 'date', 'venue', 'subtitle']
-//   },
+  //   subhead: {
+  //     'table of contents': ['', 'toc1', 'toc2', 'toc3', 'toc4'],
+  //     align: ['', 'left', 'center', 'right', 'justify'],
+  //     descriptor: ['', 'date', 'venue', 'subtitle']
+  //   },
   par: {
-//     font: ['', 'typewriter', 'monospace', 'oldbook', 'modern'],
-    padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
-    'outsize-padding': ['', 'outpad-top', 'outpad-top-extra', 'outpad-bottom', 'outpad-bottom-extra'],
+    //     font: ['', 'typewriter', 'monospace', 'oldbook', 'modern'],
+    padding: [
+      '',
+      'nopad',
+      'nopad-top',
+      'nopad-bottom',
+      'extrapad',
+      'extrapad-top',
+      'extrapad-bottom'
+    ],
+    'outsize-padding': [
+      '',
+      'outpad-top',
+      'outpad-top-extra',
+      'outpad-bottom',
+      'outpad-bottom-extra'
+    ],
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
     width: ['', 'width-80', 'width-65', 'width-50', 'width-45', 'width-30'],
-    style: ['', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline'/*, 'rulebelow', 'bookgraphic'*/],
+    style: [
+      '',
+      'allcaps',
+      'smallcaps',
+      'italic',
+      'bold',
+      'underline' /*, 'rulebelow', 'bookgraphic'*/
+    ],
     align: ['', 'left', 'center', 'right', 'justify'],
     whitespace: ['', 'list', 'verse', 'pre'],
-    author: ['', 'bab', 'baha', 'abd', 'shoghi', 'sacred', 'bible', 'muhammad', 'quran', 'jesus', 'ali', 'tradition', 'husayn'],
-    'paragraph type': ['', 'dropcap', 'blockquote', 'centerquote', 'dedication', 'sitalcent', 'editor-note', 'question', 'signature', 'reference', 'preamble', 'prayer'],
+    author: [
+      '',
+      'bab',
+      'baha',
+      'abd',
+      'shoghi',
+      'sacred',
+      'bible',
+      'muhammad',
+      'quran',
+      'jesus',
+      'ali',
+      'tradition',
+      'husayn'
+    ],
+    'paragraph type': [
+      '',
+      'dropcap',
+      'blockquote',
+      'centerquote',
+      'dedication',
+      'sitalcent',
+      'editor-note',
+      'question',
+      'signature',
+      'reference',
+      'preamble',
+      'prayer'
+    ]
   },
   illustration: {
     size: ['', 'x-small', 'small', 'large', 'x-large'],
     align: ['', 'left', 'center', 'right']
   },
-//   footnote: {
-//     '': [],
-//     fn: []
-//   },
+  //   footnote: {
+  //     '': [],
+  //     fn: []
+  //   },
   hr: {
     size: ['', 'small', 'large'],
-    padding: ['', 'nopad', 'nopad-top', 'nopad-bottom', 'extrapad', 'extrapad-top', 'extrapad-bottom'],
-    'outsize-padding': ['', 'outpad-top', 'outpad-top-extra', 'outpad-bottom', 'outpad-bottom-extra'],
+    padding: [
+      '',
+      'nopad',
+      'nopad-top',
+      'nopad-bottom',
+      'extrapad',
+      'extrapad-top',
+      'extrapad-bottom'
+    ],
+    'outsize-padding': [
+      '',
+      'outpad-top',
+      'outpad-top-extra',
+      'outpad-bottom',
+      'outpad-bottom-extra'
+    ]
   }
-}
+};
 let BlockTypesAlias = {
   title: {
     'table of contents': {
       values: {
-        'toc1': 'level 1'
+        toc1: 'level 1'
       }
     }
   },
 
   header: {
     level: {
-      'title': 'type',
+      title: 'type',
       values: {
-        'h2': 'header',
-        'h3': 'subheader',
-        'h4': 'sub subheader'
+        h2: 'header',
+        h3: 'subheader',
+        h4: 'sub subheader'
       }
     },
     'table of contents': {
       values: {
-        'toc1': 'level 1',
-        'toc2': 'level 2',
-        'toc3': 'level 3',
-        'toc4': 'level 4'
+        toc1: 'level 1',
+        toc2: 'level 2',
+        toc3: 'level 3',
+        toc4: 'level 4'
       }
     }
   }
-}
+};
 
 class BookBlock {
   constructor(init) {
-
     // OrientDB properties
     this._rid = init.id || init.rid || '';
     this._uRid = encodeURIComponent(init.id || init.rid || init.blockid || '');
-//     this.in = init.in || '';
-//     this.out = init.out || '';
-//     this.blockid = init.blockid || '';
+    //     this.in = init.in || '';
+    //     this.out = init.out || '';
+    //     this.blockid = init.blockid || '';
 
     // CouchDB properties
     this._id = init.blockid || '';
@@ -147,8 +236,13 @@ class BookBlock {
     this.parnum = typeof init.parnum !== 'undefined' ? init.parnum : false;
     //this.section = typeof init.section !== 'undefined' ? init.section : false;
 
-    this.secVal  = typeof init.secVal  !== 'undefined' ? init.secVal  : false;
-    this.secnum  = typeof init.secnum  !== 'undefined' ? init.secnum  : (this.type === 'header' ? false : this.secVal);
+    this.secVal = typeof init.secVal !== 'undefined' ? init.secVal : false;
+    this.secnum =
+      typeof init.secnum !== 'undefined'
+        ? init.secnum
+        : this.type === 'header'
+        ? false
+        : this.secVal;
     this.secHide = typeof init.secHide !== 'undefined' ? init.secHide : false;
 
     this.audiosrc = init.audiosrc || '';
@@ -167,7 +261,7 @@ class BookBlock {
     this.language = init.language || false;
     this.status = init.status;
     if (!this.status) {
-      this.status = {}
+      this.status = {};
     }
     this.audiosrc_ver = init.audiosrc_ver || {};
     for (let k in this.audiosrc_ver) {
@@ -181,11 +275,11 @@ class BookBlock {
     this.changes = init.changes || [];
     this.isAudioChanged = init.isAudioChanged || false;
     this.isIllustrationChanged = init.isIllustrationChanged || false;
-    this.timestamp = (new Date()).toJSON();
+    this.timestamp = new Date().toJSON();
 
-//     this.checkedStart = init.checkedStart || false;
-//     this.checkedEnd = init.checkedEnd || false;
-//     this.checked = init.checked || false;
+    //     this.checkedStart = init.checkedStart || false;
+    //     this.checkedEnd = init.checkedEnd || false;
+    //     this.checked = init.checked || false;
     this.realigned = init.realigned || false;
     this.check_id = init.check_id || null;
     this.footnoteIdx = init.footnoteIdx || null;
@@ -198,27 +292,33 @@ class BookBlock {
     this.blockid = init.blockid || false;
     this.manual_boundaries = init.manual_boundaries || [];
     let parts = init.parts || [];
-    if (Vue.prototype.globalJobInfo.id && (Vue.prototype.globalJobInfo.mastering || Vue.prototype.globalJobInfo.mastering_complete)) {
+    if (
+      Vue.prototype.globalJobInfo.id &&
+      (Vue.prototype.globalJobInfo.mastering ||
+        Vue.prototype.globalJobInfo.mastering_complete)
+    ) {
       this.parts = [];
     } else {
       this.parts = parts;
     }
-    
   }
 
   clean() {
-    if (this.flags.length) this.flags.forEach ((flag, flagIdx)=>{
-      if (flag.parts.length) flag.parts.forEach ((part)=>{
-        let user_Id = superlogin.getSession().user_id;
-        if (part.newComment.length) part.comments.push ({
-          creator: user_Id,
-          created_at: (new Date()).toJSON(),
-          comment: part.newComment
-        });
-        part.newComment = '';
-      })
-      else this.flags.splice(flagIdx, 1);
-    });
+    if (this.flags.length)
+      this.flags.forEach((flag, flagIdx) => {
+        if (flag.parts.length)
+          flag.parts.forEach(part => {
+            let user_Id = superlogin.getSession().user_id;
+            if (part.newComment.length)
+              part.comments.push({
+                creator: user_Id,
+                created_at: new Date().toJSON(),
+                comment: part.newComment
+              });
+            part.newComment = '';
+          });
+        else this.flags.splice(flagIdx, 1);
+      });
     if (this.audiosrc) {
       this.audiosrc = this.audiosrc.replace(process.env.ILM_API, '');
       this.audiosrc = this.audiosrc.split('?').shift();
@@ -226,49 +326,67 @@ class BookBlock {
     }
     if (this.audiosrc_ver) {
       for (let t in this.audiosrc_ver) {
-        this.audiosrc_ver[t] = this.audiosrc_ver[t].replace(process.env.ILM_API, '');
+        this.audiosrc_ver[t] = this.audiosrc_ver[t].replace(
+          process.env.ILM_API,
+          ''
+        );
         this.audiosrc_ver[t] = this.audiosrc_ver[t].split('?').shift();
-        this.audiosrc_ver[t] = this.audiosrc_ver[t].replace(/(.*)-v-\d+(\..*)/, '$1$2');
+        this.audiosrc_ver[t] = this.audiosrc_ver[t].replace(
+          /(.*)-v-\d+(\..*)/,
+          '$1$2'
+        );
       }
     }
     if (this.illustration) {
       this.illustration = this.illustration.replace(process.env.ILM_API, '');
       this.illustration = this.illustration.split('?').shift();
     }
-    if (Array.isArray(this.classes) && this.classes.length) this.classes = this.classes[0];
+    if (Array.isArray(this.classes) && this.classes.length)
+      this.classes = this.classes[0];
     //if (this.parnum!==false) this.parnum = '';
 
-    this.content = this.content.replace(/data-(.*?)="(.*?)"/igm,
-    function(match, $1, $2) {
-      var tmp = document.createElement("DIV");
+    this.content = this.content.replace(/data-(.*?)="(.*?)"/gim, function(
+      match,
+      $1,
+      $2
+    ) {
+      var tmp = document.createElement('DIV');
       tmp.innerHTML = $2;
-      tmp = tmp.textContent || tmp.innerText || "";
-      return 'data-'+$1+'="'+_.escape(tmp)+'"';
-    })
+      tmp = tmp.textContent || tmp.innerText || '';
+      return 'data-' + $1 + '="' + _.escape(tmp) + '"';
+    });
     this.content = this.content
-    .replace(/(<[^>]+)(selected)/g, '$1')
-    .replace(/(<[^>]+)(audio-highlight)/g, '$1')
-    .replace(/(<sg\s*data-suggestion="[^"]*"[^>]*>\s*<\/sg>)/ig, '') // remove suggestions without text
-    .replace(/(<qq\s*data-author="[^"]*"[^>]*>\s*<\/qq>)/ig, ''); // remove quotes without text
+      .replace(/(<[^>]+)(selected)/g, '$1')
+      .replace(/(<[^>]+)(audio-highlight)/g, '$1')
+      .replace(/(<sg\s*data-suggestion="[^"]*"[^>]*>\s*<\/sg>)/gi, '') // remove suggestions without text
+      .replace(/(<qq\s*data-author="[^"]*"[^>]*>\s*<\/qq>)/gi, ''); // remove quotes without text
     return _.pick(this, defBlock); //<(qq*)\s*[^\/>]*>\s*<\/\1>
   }
 
   cleanField(fieldName) {
-    if (defBlock.indexOf(fieldName)<0) return false;
-    switch(fieldName) {
-      case 'illustration' : {
-      } break;
-      case 'section' : {
-        let result = _.pick(this, ['_id', 'section', 'secnum']);
-        if (!isNaN(parseInt(result.section))) result.section = parseInt(result.section);
-        if (result.section+'' === 'NaN') result.section = '';
-        if (!isNaN(parseInt(result.secnum))) result.secnum = parseInt(result.secnum);
-        return result;
-      } break;
-      default : {
-        return _.pick(this, ['_id'/*, '_rev'*/, fieldName]);
-      } break;
-    };
+    if (defBlock.indexOf(fieldName) < 0) return false;
+    switch (fieldName) {
+      case 'illustration':
+        {
+        }
+        break;
+      case 'section':
+        {
+          let result = _.pick(this, ['_id', 'section', 'secnum']);
+          if (!isNaN(parseInt(result.section)))
+            result.section = parseInt(result.section);
+          if (result.section + '' === 'NaN') result.section = '';
+          if (!isNaN(parseInt(result.secnum)))
+            result.secnum = parseInt(result.secnum);
+          return result;
+        }
+        break;
+      default:
+        {
+          return _.pick(this, ['_id' /*, '_rev'*/, fieldName]);
+        }
+        break;
+    }
   }
 
   genFlagId(isBlockFlag = false) {
@@ -290,18 +408,18 @@ class BookBlock {
         break;
     }
     let _id = this.genFlagId(isBlockFlag);
-    let _at = (new Date()).toJSON();
+    let _at = new Date().toJSON();
     let userId = superlogin.getSession().user_id;
     let flagPart = new FlagPart({
       creator: userId,
       created_at: _at,
       type: type,
-      content: (isBlockFlag ? false : range.cloneContents().textContent),
+      content: isBlockFlag ? false : range.cloneContents().textContent,
       updated_at: _at,
       creator_role: creator_role
-    })
+    });
 
-    this.flags.push ({
+    this.flags.push({
       _id: _id,
       creator: userId,
       created_at: _at,
@@ -326,9 +444,9 @@ class BookBlock {
         creator_role = 'proofer';
         break;
     }
-    this.flags.forEach((flag, flagIdx)=>{
+    this.flags.forEach((flag, flagIdx) => {
       if (flag._id === _id) {
-        let _at = (new Date()).toJSON();
+        let _at = new Date().toJSON();
         let userId = superlogin.getSession().user_id;
         let flagPart = new FlagPart({
           creator: userId,
@@ -337,16 +455,16 @@ class BookBlock {
           content: range.cloneContents().textContent,
           updated_at: _at,
           creator_role: creator_role
-        })
+        });
         flag.parts.push(flagPart);
       }
     });
   }
 
   delFlag(_id) {
-    this.flags.forEach((flag, flagIdx)=>{
+    this.flags.forEach((flag, flagIdx) => {
       if (flag._id === _id) {
-        this.flags.splice(flagIdx,1);
+        this.flags.splice(flagIdx, 1);
       }
     });
   }
@@ -364,9 +482,9 @@ class BookBlock {
         creator_role = 'proofer';
         break;
     }
-    this.flags.forEach((flag, flagIdx)=>{
+    this.flags.forEach((flag, flagIdx) => {
       if (flag._id === _id) {
-        let _at = (new Date()).toJSON();
+        let _at = new Date().toJSON();
         let userId = superlogin.getSession().user_id;
         let flagPart = new FlagPart({
           creator: userId,
@@ -375,29 +493,30 @@ class BookBlock {
           content: content,
           updated_at: _at,
           creator_role: creator_role
-        })
+        });
         flag.parts.push(flagPart);
       }
     });
   }
 
   mergeFlags(fromIdx) {
-
     let fromBlock = this.flags[fromIdx];
     let blockFlagIdx = this.flags.map(f => f._id).indexOf(this._id);
 
     if (blockFlagIdx < 0) {
       let _id = this.genFlagId(true);
-      let _at = (new Date()).toJSON();
+      let _at = new Date().toJSON();
       let userId = superlogin.getSession().user_id;
-      this.flags.push ({
+      this.flags.push({
         _id: _id,
         creator: userId,
         created_at: _at,
         parts: fromBlock.parts
       });
     } else {
-      this.flags[blockFlagIdx].parts = this.flags[blockFlagIdx].parts.concat(fromBlock.parts);
+      this.flags[blockFlagIdx].parts = this.flags[blockFlagIdx].parts.concat(
+        fromBlock.parts
+      );
     }
 
     this.flags.splice(fromIdx, 1);
@@ -405,21 +524,23 @@ class BookBlock {
 
   isNeedAlso(_id) {
     let checker = {};
-    this.flags.forEach((flag)=>{
-      if (flag._id === _id) flag.parts.forEach((part)=>{
-        checker[part.type] = true;
-      });
+    this.flags.forEach(flag => {
+      if (flag._id === _id)
+        flag.parts.forEach(part => {
+          checker[part.type] = true;
+        });
     });
     if (Object.keys(checker).length > 1) return false;
     return true;
   }
 
   calcFlagStatus(_id) {
-    let status = {'open': 0, 'resolved': 0, 'hidden': 0};
-    this.flags.forEach((flag)=>{
-      if (flag._id === _id) flag.parts.forEach((part)=>{
-        status[part.status] += 1;
-      });
+    let status = { open: 0, resolved: 0, hidden: 0 };
+    this.flags.forEach(flag => {
+      if (flag._id === _id)
+        flag.parts.forEach(part => {
+          status[part.status] += 1;
+        });
     });
     if (status.open > 0) return 'open';
     if (status.resolved > 0) return 'resolved';
@@ -427,12 +548,12 @@ class BookBlock {
   }
 
   calcFlagsSummary(block_level_only = false) {
-    let status = {'open': 0, 'resolved': 0, 'hidden': 0};
-    let direction = {'editor': 0, 'narrator': 0};
+    let status = { open: 0, resolved: 0, hidden: 0 };
+    let direction = { editor: 0, narrator: 0 };
     if (this.flags && this.flags.length) {
-      this.flags.forEach((flag)=>{
+      this.flags.forEach(flag => {
         if (flag.parts && flag.parts.length) {
-          flag.parts.forEach((part)=>{
+          flag.parts.forEach(part => {
             if (!block_level_only || !part.content) {
               status[part.status] += 1;
               if (part.status == 'open') direction[part.type] += 1;
@@ -449,15 +570,16 @@ class BookBlock {
     if (direction.narrator > 0) flagsDirection = 'narrator';
     if (direction.editor > 0) flagsDirection = 'editor';
 
-    return {stat: flagsStatus, dir: flagsDirection}
+    return { stat: flagsStatus, dir: flagsDirection };
   }
 
   countArchParts(_id) {
     let count = 0;
-    this.flags.forEach((flag)=>{
-      if (flag._id === _id) flag.parts.forEach((part)=>{
-        if (part.status === 'hidden') count++;
-      });
+    this.flags.forEach(flag => {
+      if (flag._id === _id)
+        flag.parts.forEach(part => {
+          if (part.status === 'hidden') count++;
+        });
     });
     return count;
   }
@@ -469,16 +591,19 @@ class BookBlock {
   }
 
   getAudiosrc(ver = false, full = true) {
-    if (!ver  || !this.audiosrc_ver) {
+    if (!ver || !this.audiosrc_ver) {
       return this.audiosrc;
     }
-    let path = typeof this.audiosrc_ver[ver] === 'undefined' ? this.audiosrc : this.audiosrc_ver[ver];
+    let path =
+      typeof this.audiosrc_ver[ver] === 'undefined'
+        ? this.audiosrc
+        : this.audiosrc_ver[ver];
     if (!path) {
       return false;
     }
-    return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
+    return full ? process.env.ILM_API + path + '?' + new Date().toJSON() : path;
   }
-  
+
   getPartAudiosrc(partIdx, ver = false, full = true) {
     let part = this.parts[partIdx];
     if (!part || this.parts.length < 2) {
@@ -487,23 +612,36 @@ class BookBlock {
     if (!part) {
       return '';
     }
-    let path = !part.audiosrc_ver || typeof part.audiosrc_ver[ver] === 'undefined' ? part.audiosrc : part.audiosrc_ver[ver];
+    let path =
+      !part.audiosrc_ver || typeof part.audiosrc_ver[ver] === 'undefined'
+        ? part.audiosrc
+        : part.audiosrc_ver[ver];
     if (!path) {
       return false;
     }
-    return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
+    return full ? process.env.ILM_API + path + '?' + new Date().toJSON() : path;
   }
-  
+
   getPartContent(partIdx) {
-    if (!(Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined') && partIdx === 0) {
+    if (
+      !(
+        Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined'
+      ) &&
+      partIdx === 0
+    ) {
       return this.content;
     } else {
       return this.parts[partIdx].content;
     }
   }
-  
+
   getPartManualBoundaries(partIdx) {
-    if (!(Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined') && partIdx === 0) {
+    if (
+      !(
+        Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined'
+      ) &&
+      partIdx === 0
+    ) {
       return this.manual_boundaries || [];
     } else {
       return this.parts[partIdx].manual_boundaries || [];
@@ -516,23 +654,27 @@ class BookBlock {
       return false;
     }
     let path = false;
-    if (!ver  || !f.audiosrc_ver) {
+    if (!ver || !f.audiosrc_ver) {
       path = f.audiosrc;
     } else {
-      path = typeof f.audiosrc_ver[ver] === 'undefined' ? f.audiosrc : f.audiosrc_ver[ver];
+      path =
+        typeof f.audiosrc_ver[ver] === 'undefined'
+          ? f.audiosrc
+          : f.audiosrc_ver[ver];
     }
     if (!path) {
       return false;
     }
-    return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
+    return full ? process.env.ILM_API + path + '?' + new Date().toJSON() : path;
   }
 
   setContent(content) {
     this.set('content', content);
   }
-  
+
   setPartContent(partIdx, content) {
-    let partCheck = Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+    let partCheck =
+      Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
     if (partCheck) {
       this.set(`parts.${partIdx}.content`, content);
     } else if (partIdx === 0) {
@@ -544,9 +686,10 @@ class BookBlock {
     this.set('audiosrc', path);
     this.set('audiosrc_ver', ver);
   }
-  
+
   setPartAudiosrc(partIdx, path, ver = {}) {
-    let partCheck = Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+    let partCheck =
+      Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
     if (partCheck) {
       this.set(`parts.${partIdx}.audiosrc`, path);
       this.set(`parts.${partIdx}.audiosrc_ver`, ver);
@@ -554,13 +697,14 @@ class BookBlock {
       this.setAudiosrc(path, ver);
     }
   }
-  
+
   setManualBoundaries(boundaries = []) {
     this.set('manual_boundaries', boundaries);
   }
-  
+
   setPartManualBoundaries(partIdx, boundaries = []) {
-    let partCheck = Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+    let partCheck =
+      Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
     if (partCheck) {
       this.set(`parts.${partIdx}.manual_boundaries`, boundaries);
     } else if (partIdx === 0) {
@@ -571,7 +715,7 @@ class BookBlock {
   undoContent() {
     this.undo('content');
   }
-  
+
   undoPartContent(partIdx) {
     this.undo(`parts.${partIdx}.content`);
   }
@@ -580,16 +724,16 @@ class BookBlock {
     this.undo('audiosrc');
     this.undo('audiosrc_ver');
   }
-  
+
   undoPartAudiosrc(partIdx) {
     this.undo(`parts.${partIdx}.audiosrc`);
     this.undo(`parts.${partIdx}.audiosrc_ver`);
   }
-  
+
   undoManualBoundaries() {
     this.undo('manual_boundaries');
   }
-  
+
   undoPartManualBoundaries(partIdx) {
     this.undo(`parts.${partIdx}.manual_boundaries`);
   }
@@ -602,7 +746,7 @@ class BookBlock {
   setContentFootnote(idx, content) {
     this.set('footnotes.' + idx + '.content', content);
   }
-  
+
   setManualBoundariesFootnote(idx, boundaries = []) {
     this.set('footnotes.' + idx + '.manual_boundaries', boundaries);
   }
@@ -615,7 +759,7 @@ class BookBlock {
     this.undo('footnotes.' + idx + '.audiosrc');
     this.undo('footnotes.' + idx + '.audiosrc_ver');
   }
-  
+
   undoManualBoundariesFootnote(idx) {
     this.undo('footnotes.' + idx + '.manual_boundaries');
   }
@@ -625,7 +769,7 @@ class BookBlock {
   }
 
   hasAudio() {
-    let hasAudio = (this.audiosrc && this.audiosrc.length);
+    let hasAudio = this.audiosrc && this.audiosrc.length;
     if (!hasAudio && Array.isArray(this.parts) && this.parts.length > 0) {
       hasAudio = this.parts.find(p => {
         return p.audiosrc && p.audiosrc.length;
@@ -633,10 +777,14 @@ class BookBlock {
     }
     return hasAudio ? true : false;
   }
-  
+
   hasCompleteAudio() {
-    let hasAudio = (this.audiosrc && this.audiosrc.length);
-    if (this.voicework === 'narration' && Array.isArray(this.parts) && this.parts.length > 1) {
+    let hasAudio = this.audiosrc && this.audiosrc.length;
+    if (
+      this.voicework === 'narration' &&
+      Array.isArray(this.parts) &&
+      this.parts.length > 1
+    ) {
       let noAudio = this.parts.find(p => {
         return !p.audiosrc || !p.audiosrc.length;
       });
@@ -649,9 +797,16 @@ class BookBlock {
     let result = this.type;
     if (this.classes && typeof this.classes === 'object') {
       for (let key in this.classes) {
-        if (key && (mode !== 'narrate' || key === 'whitespace' || (this.type === 'hr' && key === 'size'))) {
-          if (this.classes[key] && this.classes[key] !== '') result += ' '+ this.classes[key];
-          else if (Object.keys(BlockTypes[this.type])[0] === '') result += ' ' + key.replace(/\s/g, '-');
+        if (
+          key &&
+          (mode !== 'narrate' ||
+            key === 'whitespace' ||
+            (this.type === 'hr' && key === 'size'))
+        ) {
+          if (this.classes[key] && this.classes[key] !== '')
+            result += ' ' + this.classes[key];
+          else if (Object.keys(BlockTypes[this.type])[0] === '')
+            result += ' ' + key.replace(/\s/g, '-');
         }
       }
     }
@@ -672,11 +827,10 @@ class BookBlock {
       }
 
       if (!this.classes[val]) {
-        this.classes[val] = ''
+        this.classes[val] = '';
       } else {
         styleCurr = this.classes[val];
       }
-
     } else {
       if (val === '') this.classes = {};
     }
@@ -705,7 +859,7 @@ class BookBlock {
           return false;
         }
         o = o[f];
-      } while(path.length > 1);
+      } while (path.length > 1);
       f = path.shift();
       this.history[field].push(o[f]);
       o[f] = value;
@@ -715,7 +869,10 @@ class BookBlock {
   undo(field) {
     if (this.history[field]) {
       if (field.indexOf('.') === -1) {
-        if (Array.isArray(this.history[field]) && this.history[field].length > 0) {
+        if (
+          Array.isArray(this.history[field]) &&
+          this.history[field].length > 0
+        ) {
           this[field] = this.history[field].pop();
         }
       } else {
@@ -725,15 +882,18 @@ class BookBlock {
         do {
           f = path.shift();
           o = o[f];
-        } while(path.length > 1);
+        } while (path.length > 1);
         f = path.shift();
-        if (Array.isArray(this.history[field]) && this.history[field].length > 0) {
+        if (
+          Array.isArray(this.history[field]) &&
+          this.history[field].length > 0
+        ) {
           o[f] = this.history[field].pop();
         }
       }
     }
   }
-  
+
   getIsChanged() {
     if (this.isChanged) {
       return true;
@@ -743,7 +903,7 @@ class BookBlock {
     });
     return part ? true : false;
   }
-  
+
   getIsAudioChanged() {
     if (this.isAudioChanged) {
       return true;
@@ -753,7 +913,6 @@ class BookBlock {
     });
     return part ? true : false;
   }
-
 }
 
 class FlagPart {
@@ -780,60 +939,67 @@ class FootNote {
 
 let setBlockParnum = function(block, parCounter, numMask = 'x_x') {
   let result = false;
-  switch(block.type) {
-    case 'header' : case 'title' : {
-      // this.parCounter.curr = 1;
+  switch (block.type) {
+    case 'header':
+    case 'title':
+      {
+        // this.parCounter.curr = 1;
 
-      if (block.secnum === false) {
-        //this.parCounter.pref = false;
-        break;
+        if (block.secnum === false) {
+          //this.parCounter.pref = false;
+          break;
+        }
+        if (block.secnum.length === 0) {
+          //this.parCounter.curr = 1;
+          parCounter.curr = 1;
+          parCounter.prefCnt++;
+          parCounter.pref = parCounter.prefCnt;
+          result = parCounter.prefCnt;
+          break;
+        }
+        if (!isNaN(block.secnum)) {
+          // Number
+          parCounter.curr = 1;
+          parCounter.prefCnt = parseInt(block.secnum);
+          parCounter.pref = parCounter.prefCnt;
+        } else {
+          // String
+          parCounter.curr = 1;
+          parCounter.pref = block.secnum;
+        }
       }
-      if (block.secnum.length === 0) {
-        //this.parCounter.curr = 1;
-        parCounter.curr = 1;
-        parCounter.prefCnt++;
-        parCounter.pref = parCounter.prefCnt;
-        result = parCounter.prefCnt;
-        break;
-      }
-      if (!isNaN(block.secnum)) { // Number
-        parCounter.curr = 1;
-        parCounter.prefCnt = parseInt(block.secnum);
-        parCounter.pref = parCounter.prefCnt;
-      } else { // String
-        parCounter.curr = 1;
-        parCounter.pref = block.secnum;
-      }
-    } break;
-    case 'par' : {
-      if (block.parnum===false) {
-        break;
-      }
-      if (parCounter.pref === false) {
-        result = '';
-        break;
-      }
-      switch(numMask) {
-        case 'x' : {
-          result = parCounter.curr;
-        } break;
-        case 'x_x' : {
-          result = parCounter.pref+'.'+parCounter.curr;
-        } break;
-        default : {
+      break;
+    case 'par':
+      {
+        if (block.parnum === false) {
+          break;
+        }
+        if (parCounter.pref === false) {
           result = '';
-        } break;
+          break;
+        }
+        switch (numMask) {
+          case 'x':
+            {
+              result = parCounter.curr;
+            }
+            break;
+          case 'x_x':
+            {
+              result = parCounter.pref + '.' + parCounter.curr;
+            }
+            break;
+          default:
+            {
+              result = '';
+            }
+            break;
+        }
+        parCounter.curr++;
       }
-      parCounter.curr++;
-    } break;
-  };
+      break;
+  }
   return result;
-}
+};
 
-export {
-  BookBlock,
-  BlockTypes,
-  FootNote,
-  setBlockParnum,
-  BlockTypesAlias
-}
+export { BookBlock, BlockTypes, FootNote, setBlockParnum, BlockTypesAlias };

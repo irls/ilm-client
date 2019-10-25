@@ -1525,7 +1525,7 @@ export default {
   }
 }
 
-          
+
 Vue.component('resizable-textarea', {
   methods: {
     resizeTextarea (event) {
