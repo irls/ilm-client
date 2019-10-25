@@ -3232,7 +3232,7 @@ export default {
 
         if (blockId === this.block._id || blockId === this.block._id + '_' + this.footnoteIdx) {
           this.isAudioEditing = false;
-          if (this.isAudioChanged) {
+          if (this.isAudioChanged || this.audioEditFootnote.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false);
           }
           //$('nav.fixed-bottom').addClass('hidden');
