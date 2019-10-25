@@ -31,7 +31,7 @@
   let blockIdx = 0;
 
   beforeUpdate(() => {
-    //console.log('the component is about to update');
+    console.log('the component is about to update');
     fntCounter = 0;
     if (blocks.length) {
       for (let i = 0; i < blocks.length; i++) {
@@ -39,26 +39,16 @@
         blocks[i].visible = blocks[i].loaded;
       }
       //intBlocks = blocks;
-        var found = blocks.find(function(el, idx) {
-          if (parlistO.getBlockByRid(el.blockRid).loaded === false) {
-            blockIdx = idx;
-            return true;
-          }
-          return false;
-        });
-        if (found) {
-          startTimer();
+      let found = blocks.find(function(el, idx) {
+        if (parlistO.getBlockByRid(el.blockRid).loaded === false) {
+          blockIdx = idx;
+          return true;
         }
-//         let timer = window.setTimeout(()=>{
-//           //console.log('T:', idx, blockListObj.blockId);
-//           window.clearTimeout(timer);
-//           //blocks[0].loaded = true;
-//           let blockDOMId = `display-${blocks[blockIdx].blockId}`;
-//           console.log('blockDOMId', blockDOMId, blocks[blockIdx].blockRid);
-//           document.getElementById(blockDOMId).insertAdjacentHTML('afterbegin', blocks[blockIdx].blockView.content);
-//           parlistO.setLoaded(blocks[blockIdx].blockRid);
-//           //blocks[blockIdx].visible = true;
-//         }, 8000);
+        return false;
+      });
+      if (found) {
+        startTimer();
+      }
     }
   });
 
@@ -77,12 +67,12 @@ function startTimer() {
         let i;
         for (i = 0; i < blocks.length; i++) {
           if (execCount <= 0) break;
-          if (parlistO.getBlockByRid(blocks[i].blockRid).loaded === false) {
+          if (parlistO.getBlockByRid(blocks[i].blockRid).visible === false) {
             //console.log(blocks[i].blockRid, blocks[i].blockId);
             let blockDOMId = `display-${blocks[i].blockId}`;
           //console.log('blockDOMId', blockDOMId, blocks[i].blockRid);
             document.getElementById(blockDOMId).insertAdjacentHTML('afterbegin', blocks[i].blockView.content);
-            parlistO.setLoaded(blocks[i].blockRid);
+            parlistO.setVisible(blocks[i].blockRid);
             execCount--;
           }
         }
@@ -94,7 +84,11 @@ function startTimer() {
         thisDelay = myDelay - (actual - myDelay);
         start = Date.now();
         // start the timer again
-        if (i < blocks.length) startTimer();
+        if (i < blocks.length) {
+          startTimer();
+        } else {
+          console.log('done', i);
+        }
     }, thisDelay);
 }
 

@@ -12,24 +12,28 @@
     {/if}
 
     <div id="display-{block.blockid}" lang="{block.language}"
-      class="bview-content {block.getClass ? block.getClass() : ''} hide-archive"
+      class="bview-content part-0 {block.getClass ? block.getClass() : ''} hide-archive"
       data-parnum="{getParnum()}"
       data-type="{block.type}"
       on:click={handleFootnote}>
       {#if blockListObj.loaded}{@html block.content}{/if}
     </div>
 
-<!--    {#await prom()}
-    <div class="content-process-run preloader-loading"></div>
-    {:then value}
-    <div id="display-{block.blockid}" lang="{block.language}"
-      class="bview-content {block.getClass ? block.getClass() : ''} hide-archive"
-      data-parnum="{getParnum()}"
-      data-type="{block.type}"
-      on:click={handleFootnote}>
-      {@html block.content}
+    {#if block.footnotes.length > 0}
+    <div class="footnotes">
+      {#each block.footnotes as footnote, footnoteIdx}
+      <div class="-hidden" bind:this={footNotes[footnote.ftnIdx]}>
+        <div class="-langftn-{footnote.language}">
+          <div class="-num">[fn{footnote.ftnIdx+1}]</div>
+          <div  class="-text">
+            {@html footnote.content}
+          </div>
+        </div>
+      </div>
+      {/each}
     </div>
-    {/await}-->
+    {/if}
+
   {/if}
   </div>
 {:else}
@@ -47,26 +51,14 @@
   export let blockRid = '';
   export let isLoaded = false;
 
+  let footNotes = {};
+
   let getRandomInt = (min, max)=>{
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
   }
   //let rand = getRandomInt(0, 200);
-  let prom = () => {
-    //console.log('blockListObj:', idx, blockListObj.blockId, blockListObj.loaded);
-    return new Promise ((res, rej)=>{
-      if (blockListObj.loaded) res(blockListObj.blockId);
-      else {
-        rej(blockListObj.blockId);
-//         let timer = window.setTimeout(()=>{
-//           console.log('T:', idx, blockListObj.blockId);
-//           window.clearTimeout(timer);
-//           res(blockListObj.blockId);
-//         }, 10000+idx);
-      }
-    })
-  }
 
   const getIllustration = () => {
     return (block && block.getIllustration) ? block.getIllustration() : '';
@@ -74,7 +66,7 @@
 
   const blockOutPaddings = () => {
     if (block) {
-      //console.log('blockOutPaddings');
+      console.log('blockOutPaddings');
       return (block.classes && block.classes.hasOwnProperty('outsize-padding')) ? block.classes['outsize-padding'] : ''
     } else return '';
   }
@@ -91,23 +83,13 @@
     return false;
   }
 
-//   const getContent = () => {
-//     return new Promise((resolve, reject) => {
-//       let _content = block.content;
-//       window.setTimeout(function() {
-//         resolve(_content);
-//       }, 50);
-//     });
-//   }
-
   const handleFootnote = (ev) => {
-    console.log('handleFootnote', ev.target.dataset.idx);
-//     if (ev.target.dataset.idx && this.$refs.footNotes[ev.target.dataset.idx]) {
-//       let className = this.$refs.footNotes[ev.target.dataset.idx].className;
-//       if (className == '-hidden') {
-//         this.$refs.footNotes[ev.target.dataset.idx].className = '';
-//       } else this.$refs.footNotes[ev.target.dataset.idx].className = '-hidden';
-//     }
+    if (ev.target.dataset.idx && footNotes[ev.target.dataset.idx]) {
+      let className = footNotes[ev.target.dataset.idx].className;
+      if (className == '-hidden') {
+        footNotes[ev.target.dataset.idx].className = '';
+      } else footNotes[ev.target.dataset.idx].className = '-hidden';
+    }
   }
 
 </script>

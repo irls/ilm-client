@@ -234,6 +234,7 @@ export default {
               this.$store.commit('set_storeList', newBlock);// || idx < 100
               if (el.type !== 'par' || idx > res.blocks.length - 100) {
                 this.parlistO.setLoaded(el.rid);
+                this.parlistO.setVisible(el.rid);
               }
             } else {
               //this.parlistO.setLoaded(el.rid);
@@ -352,7 +353,7 @@ export default {
               taskType: taskType,
               onPage: 1
             }).then((answer)=>{
-                console.log('answer', answer);
+                //console.log('answer', answer);
 //               this.parlistO.setLookupsList(answer.meta.bookid, answer);
 //               if (this.startId == false) this.startId = this.parlistO.idsArray()[0];
                 if (this.startId == false) this.startId = answer.blocks[0].blockid;
