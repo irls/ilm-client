@@ -306,32 +306,87 @@
                   <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
                     <legend>Type</legend>
                     <label v-for="sVal in blockTypes[blockType]['level']"
-                          @click="selectStyle(blockType, 'level', sVal)"
-                          class="block-style-label"
-                          :key="blockType + 'level' + sVal"
-                          :id="blockType + 'level' + sVal">
+                      @click="selectStyle(blockType, 'level', sVal)"
+                      class="block-style-label"
+                      :key="blockType + 'level' + sVal"
+                      :id="blockType + 'level' + sVal">
 
-                          <template v-if="styleTabs.get(blockType).get('level').size > 1">
+                      <template v-if="styleTabs.get(blockType).get('level').size > 1">
+                        <i class="fa fa-dot-circle-o"
+                        v-if="styleTabs.get(blockType).get('level').has(sVal.length?sVal:'none')"
+                        ></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                      </template>
+
+                      <template v-else>
+                        <i v-if="styleTabs.get(blockType).get('level').has(sVal.length?sVal:'none')"
+                        class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                      </template>
+
+                      <template v-if="sVal.length">{{styleValue(blockType, 'level', sVal)}}</template>
+                      <template v-else>none</template>
+                    </label>
+                  </fieldset>
+                  <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                    <legend>{{styleCaption(blockType, 'table of contents')}}</legend>
+                    <ul >
+                      <li v-for="sVal in blockTypes[blockType]['table of contents']"
+                          :key="blockType + 'table of contents' + sVal">
+                        <label
+                          @click="selectStyle(blockType, 'table of contents', sVal)"
+                          class="block-style-label"
+
+                          :id="blockType + 'table of contents' + sVal">
+
+                          <template v-if="styleTabs.get(blockType).get('table of contents').size > 1">
                             <i class="fa fa-dot-circle-o"
-                            v-if="styleTabs.get(blockType).get('level').has(sVal.length?sVal:'none')"
+                            v-if="styleTabs.get(blockType).get('table of contents').has(sVal.length?sVal:'none')"
                             ></i>
                             <i v-else class="fa fa-circle-o"></i>
                           </template>
 
                           <template v-else>
-                            <i v-if="styleTabs.get(blockType).get('level').has(sVal.length?sVal:'none')"
+                            <i v-if="styleTabs.get(blockType).get('table of contents').has(sVal.length?sVal:'none')"
                             class="fa fa-check-circle-o"></i>
                             <i v-else class="fa fa-circle-o"></i>
                           </template>
 
-                          <template v-if="sVal.length">{{styleValue(blockType, 'level', sVal)}}</template>
+                          <template v-if="sVal.length">{{styleValue(blockType, 'table of contents', sVal)}}</template>
                           <template v-else>none</template>
                         </label>
+                      </li>
+                    </ul>
+                    <ul>
+                      <li>
+                        <label class="block-style-label">
+                          <i class="fa fa-circle-o"></i>
+                          level 1
+                        </label>
+                      </li>
+                      <li>
+                        <label class="block-style-label">
+                          <i class="fa fa-circle-o"></i>
+                          level 2
+                        </label>
+                      </li>
+                      <li>
+                        <label class="block-style-label">
+                          <i class="fa fa-circle-o"></i>
+                          level 3
+                        </label>
+                      </li>
+                      <li>
+                        <label class="block-style-label">
+                          <i class="fa fa-circle-o"></i>
+                          level 4
+                        </label>
+                      </li>
+                    </ul>
                   </fieldset>
-
                   <fieldset class="block-style-fieldset block-num-fieldset"
                   v-if="numProps.has(blockType) && ['par'].indexOf(blockType) > -1">
-                    <legend>numeration</legend>
+                    <legend>Numeration</legend>
                     <label class="block-style-label"
                       @click="selSecNum(blockType, 'parNum', numProps.get(blockType).get('parNum'))">
                       <template v-if="numProps.get(blockType).get('parNum') == 'mixed'">
@@ -362,7 +417,7 @@
                   <i>Please keep defaults unless you have a compelling reason to change them</i>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
-                      <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && (styleKey !== 'level' || blockType !== 'header')" :key="styleKey" class="block-style-fieldset">
+                    <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && ((styleKey !== 'level' && styleKey !== 'table of contents') || blockType !== 'header')" :key="styleKey" class="block-style-fieldset">
                       <legend>{{styleCaption(blockType, styleKey)}}</legend>
 
                         <label v-for="sVal in styleArr"
@@ -1837,6 +1892,28 @@ Vue.filter('prettyBytes', function (num) {
         .block-style-label {
           width: 50%;
           float: left;
+        }
+
+        ul, li {
+          padding: 0;
+          margin: 0;
+          list-style: none;
+        }
+        ul {
+          display: flex;
+          flex-wrap: wrap;
+          &:not(:first-of-type) {
+            border-top: 1px solid #b9b6b6;
+            margin-top: 5px;
+            padding-top: 10px;
+          }
+        }
+        li {
+          margin-inline-end: 20px;
+          .block-style-label {
+            float: none;
+            width: auto;
+          }
         }
       }
     }
