@@ -71,8 +71,6 @@
       </div>
       <!--<div class="content-background">-->
 
-      <!--<infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>-->
-
   </div>
   <!--<div class="container-block">   -->
 
