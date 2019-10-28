@@ -1109,12 +1109,12 @@ export default {
                 this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
                 this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
                 this.freeze('joinBlocks');
-                elBlock.isAudioChanged = false;
-                elBlock.evFromAudioeditorClosed(block.blockid);
                 if ((elBlock && elBlock.getIsAudioEditing()) || 
                         (elNext && elNext.getIsAudioEditing())) {
                   this.$root.$emit('for-audioeditor:force-close');
                 }
+                elBlock.isAudioChanged = false;
+                elBlock.evFromAudioeditorClosed(block.blockid);
                 elNext.isAudioChanged = false;
                 elNext.evFromAudioeditorClosed(blockBefore.blockid);
                 return this.blocksJoin({
@@ -1210,12 +1210,12 @@ export default {
                 this.freeze('joinBlocks');
                 this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
                 this.addBlockLock({block: blockAfter, watch: ['realigned'], type: 'join'})
-                elBlock.isAudioChanged = false;
-                elBlock.evFromAudioeditorClosed(block.blockid);
                 if ((elBlock && elBlock.getIsAudioEditing()) || 
                         (elNext && elNext.getIsAudioEditing())) {
                   this.$root.$emit('for-audioeditor:force-close');
                 }
+                elBlock.isAudioChanged = false;
+                elBlock.evFromAudioeditorClosed(block.blockid);
                 elNext.isAudioChanged = false;
                 elNext.evFromAudioeditorClosed(blockAfter.blockid);
                 return this.blocksJoin({
