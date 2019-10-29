@@ -362,7 +362,7 @@
         }
       },
       set_taskBlockMapPositionsFromRoute() {
-        if (this.$route && this.$route.name === 'BookEditDisplay' && this.$route.params && this.$route.params.block) {
+        if (this.$route && ['BookEditDisplay', 'CollectionBookEditDisplay'].indexOf(this.$route.name) !== -1 && this.$route.params && this.$route.params.block) {
           this.set_taskBlockMapPositions(this.$route.params.block);
         } else {
           this.set_taskBlockMapPositions();
