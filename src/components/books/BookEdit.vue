@@ -955,6 +955,7 @@ export default {
           if (!this.parlistO.getInId(blockO['@rid'])) {
             this.startId = blockO.blockid;
             this.parlistO.setStartId(blockO['@rid']);
+            this.parlistO.setFirstVisibleId(blockO['@rid']);
           }
           this.unfreeze('insertBlockBefore');
           this.tc_loadBookTask(block.bookid);
