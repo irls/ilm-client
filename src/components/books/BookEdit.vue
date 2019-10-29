@@ -1078,7 +1078,7 @@ export default {
             let elNext = this.$refs.blocks.find(c => {
               return c.$el.id == blockBefore.blockid;
             });
-            let isChanged = this.parlist.get(block.blockid).getIsChanged() || this.parlist.get(blockBefore.blockid).getIsChanged();
+            let isChanged = (elBlock && (elBlock.isChanged || elBlock.hasChangedPart)) || (elNext && (elNext.isChanged || elNext.hasChangedPart));
             if (!isChanged) {
               isChanged = this.parlist.get(block.blockid).getIsAudioChanged() ||
                     this.parlist.get(blockBefore.blockid).getIsAudioChanged() ||
@@ -1179,7 +1179,7 @@ export default {
             let elNext = this.$refs.blocks.find(c => {
               return c.$el.id == chainId;
             });
-            let isChanged = this.parlist.get(block.blockid).getIsChanged() || this.parlist.get(chainId).getIsChanged();
+            let isChanged = (elBlock && (elBlock.isChanged || elBlock.hasChangedPart)) || (elNext && (elNext.isChanged || elNext.hasChangedPart));
             if (!isChanged) {
               isChanged = this.parlist.get(block.blockid).getIsAudioChanged() ||
                     this.parlist.get(chainId).getIsAudioChanged() ||

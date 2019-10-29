@@ -771,7 +771,7 @@ export default {
           return this.block.flags && this.block.flags.length;
       },
       isNeedWorkDisabled: function () {
-        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.hasChangedPart) {
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.hasChangedPart || this.hasAudioEditingPart) {
           return true;
         }
         return this.tc_isNeedWorkDisabled(this.block, this.mode);
@@ -781,7 +781,21 @@ export default {
           if (this.isSplittedBlock) {
             if (this.$refs && this.$refs.blocks) {
               let changed = this.$refs.blocks.find(blk => {
-                return blk.isChanged || blk.isAudioChanged || blk.isAudioEditing;
+                return blk.isChanged || blk.isAudioChanged;
+              });
+              return changed ? true : false;
+            }
+          }
+          return false;
+        },
+        cache: false
+      },
+      hasAudioEditingPart: {
+        get() {
+          if (this.isSplittedBlock) {
+            if (this.$refs && this.$refs.blocks) {
+              let changed = this.$refs.blocks.find(blk => {
+                return blk.isAudioEditing;
               });
               return changed ? true : false;
             }
