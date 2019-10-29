@@ -506,6 +506,16 @@ class BookBlocks {
 //     if (block.out == this.meta.rid) {
 //       return this.lookupList[block.in].blockid;
 //     }
+    if (this.startId !== block.blockid) {
+      return this.startId;
+    } else {
+      if (this.lookupList.hasOwnProperty(block.out)) {
+        return this.lookupList[block.out].blockid;
+      }
+      if (this.lookupList.hasOwnProperty(block.in)) {
+        return this.lookupList[block.in].blockid;
+      }
+    }
     return this.startId;
   }
 

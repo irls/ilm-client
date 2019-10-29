@@ -1053,8 +1053,11 @@ export default {
             this.parlistO.setStartId(newStartId);
           } //else this.refreshTmpl();
           this.parlist.delete(block._id);
+          if (this.parlistO.firstVisibleId === block._id) {
+            this.parlistO.setFirstVisibleId(this.startId)
+          }
         }
-        this.getCurrentJobInfo();
+        //this.getCurrentJobInfo();
 
         this.putNumBlockOBatchProxy({bookId: block.bookid})
           .then(() => {
