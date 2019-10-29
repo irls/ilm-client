@@ -20,7 +20,7 @@
       :parlistO="parlistO"
       :parlist="parlist"
       :lang="meta.language"
-      :startId="startId"
+      :startId="displayStartId"
       :reloadBook="reloadBook"
       ref="viewBlocks"
     />
@@ -45,7 +45,8 @@ export default {
     return {
       startId: false,
       onScrollEv: false,
-      reloadBook: false
+      reloadBook: false,
+      displayStartId: false
     }
   },
   components: {
@@ -77,7 +78,7 @@ export default {
           'ctrl+home': (ev)=>{
             //console.log('ctrl+home');
             let firstRid = this.parlistO.getFirstRid();
-            console.log('firstRid', firstRid);
+            //console.log('firstRid', firstRid);
             if (firstRid) {
               let block = this.parlistO.getBlockByRid(firstRid);
               if (block) {
@@ -146,9 +147,12 @@ export default {
       //console.log('scrollToBlock', blockId, setStartId);
       let vBlock = document.getElementById(blockId);
       if (vBlock) {
-        if (setStartId) this.startId = blockId;
+        if (setStartId) {
+          this.startId = blockId;
+        }
         this.onScrollEv = true;
         vBlock.scrollIntoView();
+        this.onScroll();
       }
     },
 
@@ -275,7 +279,10 @@ export default {
               taskType: taskType,
               onPage: 1
             }).then((answer)=>{
-                if (this.startId == false) this.startId = answer.blocks[0].blockid;
+                if (this.startId == false) {
+                  this.startId = answer.blocks[0].blockid;
+                  this.displayStartId = this.startId;
+                }
                 this.getAllBlocks(answer.meta.bookid, this.startId)
                 .then((result)=>{
                   this.onScrollEv = true;

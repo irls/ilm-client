@@ -84,8 +84,8 @@
         let i, execCount = 100;
         for (i = 0; i < blocks.length; i++) {
           if (execCount <= 0) break;
-          if (blocks[i].visible === false && blocks[i].type === 'par') {
-            //console.log(blocks[i].blockRid, blocks[i].blockId);
+          if (blocks[i].visible === false) {
+            //console.log(blocks[i].blockView.type, blocks[i].blockRid, blocks[i].blockId);
             let blockDOMId = `display-${blocks[i].blockId}`;
             let blockElement = document.getElementById(blockDOMId);
             if (blockElement) {
