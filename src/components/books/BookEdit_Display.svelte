@@ -2,15 +2,11 @@
 {#if blocks.length > 0}
 {#each blocks as block, idx (block.blockRid)}
 <!--{block.blockRid}->{block.blockId}->{block.loaded}<br/>-->
-<!--<BookBlockDisplay
-  block="{block}"
-  lang="{lang}"
-/>-->
+
 <BookBlockDisplay
   blockRid="{block.blockRid}"
   block="{block.blockView}"
   blockListObj="{block}"
-  idx="{idx}"
   lang="{lang}"
 />
 
@@ -19,24 +15,39 @@
 </template>
 
 <script>
-  import { beforeUpdate } from 'svelte';
+  import { beforeUpdate } from 'svelte';//onMount,
   import BookBlockDisplay from './BookBlockDisplay.svelte';
+
   export let lang = 'en';
   export let blocks = [];
   export let parlistO = {};
   export let parlist = {};
+  export let startId;
+  export let reloadBook = false;
+
   let fntCounter = 0;
+  let scrollCounter = 0;
+  let loadedBookId = '';
   //let blockPromise = new Promise();
   let intBlocks = [];
   let blockIdx = 0;
 
   beforeUpdate(() => {
-    console.log('the component is about to update');
+    //console.log('the component is about to update', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
     fntCounter = 0;
-    if (blocks.length) {
+    if (parlistO.meta.bookid && blocks.length && loadedBookId === '') {
+      loadedBookId = parlistO.meta.bookid;
       for (let i = 0; i < blocks.length; i++) {
         blocks[i].blockView = blockView(blocks[i].blockRid);
         blocks[i].visible = blocks[i].loaded;
+        if (startId && blocks[i].blockId == startId) {
+          scrollCounter = 5;
+        }
+        if (scrollCounter > 0) {// set to visible blocks near startId
+          blocks[i].loaded = true;
+          blocks[i].visible = true;
+          scrollCounter--;
+        }
       }
       //intBlocks = blocks;
       let found = blocks.find(function(el, idx) {
@@ -47,8 +58,14 @@
         return false;
       });
       if (found) {
-        startTimer();
+        startShowTimer();
       }
+    } else {
+      if (reloadBook) {
+        blocks = [];
+        reloadBook = false;
+      }
+      if (loadedBookId !== '') loadedBookId = '';
     }
   });
 
@@ -56,27 +73,30 @@
 //     console.log('onMount blocks', blocks);
 //   });
 
-var myDelay = 1000;
-var thisDelay = 1000;
-var start = Date.now();
+  let myDelay = 1000;
+  let thisDelay = 1000;
+  let start = Date.now();
+  let checkCount = 0;
 
-function startTimer() {
+  function startShowTimer() {
     setTimeout(function() {
-        // your code here...
-        let execCount = 100;
-        let i;
+
+        let i, execCount = 100;
         for (i = 0; i < blocks.length; i++) {
           if (execCount <= 0) break;
-          if (parlistO.getBlockByRid(blocks[i].blockRid).visible === false) {
+          if (blocks[i].visible === false) {
             //console.log(blocks[i].blockRid, blocks[i].blockId);
             let blockDOMId = `display-${blocks[i].blockId}`;
-          //console.log('blockDOMId', blockDOMId, blocks[i].blockRid);
-            document.getElementById(blockDOMId).insertAdjacentHTML('afterbegin', blocks[i].blockView.content);
-            parlistO.setVisible(blocks[i].blockRid);
+            let blockElement = document.getElementById(blockDOMId);
+            if (blockElement) {
+              blockElement.innerHTML = "";
+              blockElement.insertAdjacentHTML('afterbegin', blocks[i].blockView.content);
+              parlistO.setVisible(blocks[i].blockRid);
+            }
             execCount--;
+            checkCount++;
           }
         }
-        //console.log('i', i);
 
         // calculate the actual number of ms since last time
         var actual = Date.now() - start;
@@ -85,12 +105,22 @@ function startTimer() {
         start = Date.now();
         // start the timer again
         if (i < blocks.length) {
-          startTimer();
+          startShowTimer();
         } else {
-          console.log('done', i);
+          console.log('done', i, checkCount, startId);
+          if (startId) scrollToBlock(startId);
         }
     }, thisDelay);
-}
+  }
+
+  const scrollToBlock = (blockId) => {
+    //console.log('scrollToBlockSvelte', blockId);
+    let vBlock = document.getElementById(blockId);
+    if (vBlock) {
+      //console.log('vBlock', vBlock);
+      vBlock.scrollIntoView();
+    }
+  }
 
   const timestamp = (new Date()).toJSON();
 

@@ -16,6 +16,7 @@
       data-parnum="{getParnum()}"
       data-type="{block.type}"
       on:click={handleFootnote}>
+      {#if !blockListObj.visible}<div class="content-process-run preloader-loading"></div>{/if}
       {#if blockListObj.loaded}{@html block.content}{/if}
     </div>
 
@@ -47,17 +48,15 @@
 
   export let block;
   export let blockListObj;
-  export let idx;
   export let blockRid = '';
-  export let isLoaded = false;
 
   let footNotes = {};
 
-  let getRandomInt = (min, max)=>{
+  /*let getRandomInt = (min, max)=>{
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
-  }
+  }*/
   //let rand = getRandomInt(0, 200);
 
   const getIllustration = () => {
@@ -66,7 +65,7 @@
 
   const blockOutPaddings = () => {
     if (block) {
-      console.log('blockOutPaddings');
+      //console.log('blockOutPaddings');
       return (block.classes && block.classes.hasOwnProperty('outsize-padding')) ? block.classes['outsize-padding'] : ''
     } else return '';
   }
