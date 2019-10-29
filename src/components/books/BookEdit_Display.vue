@@ -251,6 +251,7 @@ export default {
       this.$store.commit('clear_storeListO');
       Vue.nextTick(()=>{
         this.reloadBook = true;
+        this.displayStartId = false;
       });
       this.$router.push({
         name: 'BookEditDisplay', params: {}
@@ -281,8 +282,8 @@ export default {
             }).then((answer)=>{
                 if (this.startId == false) {
                   this.startId = answer.blocks[0].blockid;
-                  this.displayStartId = this.startId;
                 }
+                this.displayStartId = this.startId;
                 this.getAllBlocks(answer.meta.bookid, this.startId)
                 .then((result)=>{
                   this.onScrollEv = true;
