@@ -300,7 +300,7 @@
               switch (type) {
                 case 'text-cleanup':
                   lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
-                  if (lookup && lookup.status && lookup.status.stage === 'cleanup' && !lookup.status.marked) {
+                  if (lookup && this.currentBookMeta.importStatus === 'staging' && !lookup.status.marked) {
                     this.taskBlockMap.map[type].next = this.storeListO.listObjs[i].blockId;
                     found = true;
                   }
@@ -332,7 +332,7 @@
               switch (type) {
                 case 'text-cleanup':
                   lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
-                  if (lookup && lookup.status && lookup.status.stage === 'cleanup' && !lookup.status.marked) {
+                  if (lookup && this.currentBookMeta.importStatus === 'staging' && !lookup.status.marked) {
                     this.taskBlockMap.map[type].prev = this.storeListO.listObjs[i].blockId;
                     found = true;
                   }
