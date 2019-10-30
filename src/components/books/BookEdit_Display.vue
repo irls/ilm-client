@@ -199,6 +199,16 @@ export default {
       .then((answer)=>{
         let scrollId = this.parlistO.idsArray()[0];
         this.parlistO.updateLookupsList(metaId, answer);
+        if (answer.blocks && answer.blocks.length > 0) {
+          answer.blocks.forEach((el, idx, arr)=>{
+            if (!this.parlist.has(el._id)) {
+              let newBlock = new BookBlock(el);
+              this.$store.commit('set_storeList', newBlock);
+              //if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
+            }
+            //this.parlistO.setLoaded(el._id);
+          });
+        }
         //console.timeEnd('getAllBlocks');
         Vue.nextTick(()=>{
           this.scrollToBlock(scrollId);
@@ -294,6 +304,7 @@ export default {
 
             let startBlock = this.$route.params.block || false;
             this.startId = startBlock;
+            this.parlistO.setFirstVisibleId(startBlock);
             let taskType = this.$route.params.task_type || false;
 
             //console.log('startId', this.$route.params.block, this.startId);
@@ -304,7 +315,10 @@ export default {
               taskType: taskType
             }).then((answer)=>{
               this.parlistO.setLookupsList(answer.meta.bookid, answer);
-              if (this.startId == false) this.startId = this.parlistO.idsArray()[0];
+              if (this.startId == false) {
+                this.startId = this.parlistO.idsArray()[0];
+                this.parlistO.setFirstVisibleId(this.startId);
+              }
               this.loopPreparedBlocksChain({ids: this.parlistO.idsArray()})
               .then((result)=>{
                 //console.log('result', result);
