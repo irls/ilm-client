@@ -150,13 +150,16 @@
         currentCollectionId: 'currentCollectionId',
         storeListO: 'storeListO',
         taskBlockMap: 'taskBlockMap',
-        bookMode: 'bookMode'
+        bookMode: 'bookMode',
+        auth: 'auth'
       })
     },
     methods: {
       updateAssignee(role, user){
         let api_url = this.API_URL + 'books/' + this.currentBookMeta._id + '/assignee';
         let api = this.$store.state.auth.getHttp();
+        let loggedUserId = this.auth.getSession().user_id;
+        let reloadJobInfo = loggedUserId === user || loggedUserId === this.currentJobInfo.executors[role];
         return api.post(api_url, {
           bookid: this.currentBookMeta._id,
           role: role,
@@ -164,6 +167,10 @@
         }, {})
           .then(response => {
             if (response.status == 200) {
+              if (reloadJobInfo) {
+                this.getCurrentJobInfo();
+                this.tc_loadBookTask(this.currentBookMeta._id);
+              }
                //console.log(this.tasks_counter);
                //this.tasks_counter.forEach(function(el, index) {
                //  console.log(el.key, el.data);
@@ -261,6 +268,12 @@
                   handler: () => {
                     this.$root.$emit('hide-modal');
                     this.updateBookMeta({'masteringRequired': !this.currentBookMeta.masteringRequired})
+                      .then(() => {
+                        this.getCurrentJobInfo();
+                      })
+                      .catch(err => {
+                        this.getCurrentJobInfo();
+                      })
                   },
                   'class': 'btn btn-primary'
                 }
@@ -368,7 +381,7 @@
           this.set_taskBlockMapPositions();
         }
       },
-      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering']),
+      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering', 'getCurrentJobInfo', 'tc_loadBookTask']),
     },
     mounted() {
       this.set_taskBlockMapPositionsFromRoute();
