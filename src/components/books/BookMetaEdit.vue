@@ -330,9 +330,9 @@
                   </fieldset>
                   <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
                     <legend>{{styleCaption(blockType, 'table of contents')}}</legend>
-                    <ul >
-                      <li v-for="sVal in blockTypes[blockType]['table of contents']"
-                          :key="blockType + 'table of contents' + sVal">
+                    <ul v-for="(tocCategories, index) in tableOfContents(blockType)" :key="index">
+                      <li v-for="(sVal, index) in tocCategories"
+                          :key="index + sVal">
                         <label
                           @click="selectStyle(blockType, 'table of contents', sVal)"
                           class="block-style-label"
@@ -354,32 +354,6 @@
 
                           <template v-if="sVal.length">{{styleValue(blockType, 'table of contents', sVal)}}</template>
                           <template v-else>none</template>
-                        </label>
-                      </li>
-                    </ul>
-                    <ul>
-                      <li>
-                        <label class="block-style-label">
-                          <i class="fa fa-circle-o"></i>
-                          level 1
-                        </label>
-                      </li>
-                      <li>
-                        <label class="block-style-label">
-                          <i class="fa fa-circle-o"></i>
-                          level 2
-                        </label>
-                      </li>
-                      <li>
-                        <label class="block-style-label">
-                          <i class="fa fa-circle-o"></i>
-                          level 3
-                        </label>
-                      </li>
-                      <li>
-                        <label class="block-style-label">
-                          <i class="fa fa-circle-o"></i>
-                          level 4
                         </label>
                       </li>
                     </ul>
@@ -1574,6 +1548,11 @@ export default {
     goToBlock(blockId, ev) {
       this.$router.push({name: this.$route.name, params: {}});
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
+    },
+
+    tableOfContents(blockType) {
+      const toc = this.blockTypes[blockType]['table of contents']
+      return Array.isArray(toc[0]) ? toc : [toc];
     },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection'])
