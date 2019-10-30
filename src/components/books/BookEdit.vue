@@ -1791,9 +1791,15 @@ export default {
      } else this.onScrollEv = false;
       this.parlistO.idsViewArray().forEach(l => {
         let blockRef = this.$refs.viewBlocks.find(v => v.blockId === l.blockId);
-        if (this.parlist.get(l.blockid)) {
+        let viewBlockRef = this.$refs.blocks.find(v => v.blockId === l.blockId);
+        if (this.parlist.get(l.blockId)) {
           this.parlistO.setLoaded(l.blockRid);
-          blockRef.$forceUpdate();
+          if (blockRef) {
+            blockRef.$forceUpdate();
+          }
+          if (viewBlockRef) {
+            viewBlockRef.$forceUpdate();
+          }
         }
       });
     },

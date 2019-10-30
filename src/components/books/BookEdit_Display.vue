@@ -285,6 +285,7 @@ export default {
       if (this.$route.params.hasOwnProperty('bookid')) {
         let bookid = this.$route.params.bookid;
         if (!this.meta._id || bookid !== this.parlistO.meta.bookid) {
+          this.parlistO.setFirstVisibleId(null);
           this.$store.commit('clear_storeList');
           this.$store.commit('clear_storeListO');
           this.loadBook(bookid)
@@ -339,6 +340,7 @@ export default {
             }
           } else {
             this.startId = this.parlistO.idsArray()[0] || false;
+            this.parlistO.setFirstVisibleId(this.startId);
           }
         }
       }
