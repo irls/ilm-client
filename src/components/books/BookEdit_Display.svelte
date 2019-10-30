@@ -77,10 +77,14 @@
   let thisDelay = 1000;
   let start = Date.now();
   let checkCount = 0;
+  let wasScrolled = false;
 
   function startShowTimer() {
     setTimeout(function() {
-
+        if (startId && !wasScrolled) {
+          scrollToBlock(startId);
+          wasScrolled = !wasScrolled;
+        }
         let i, execCount = 100;
         for (i = 0; i < blocks.length; i++) {
           if (execCount <= 0) break;
@@ -108,13 +112,13 @@
           startShowTimer();
         } else {
           console.log('done', i, checkCount, startId);
-          if (startId) scrollToBlock(startId);
+          //if (startId) scrollToBlock(startId);
         }
     }, thisDelay);
   }
 
   const scrollToBlock = (blockId) => {
-    //console.log('scrollToBlockSvelte', blockId);
+    console.log('scrollToBlockSvelte', blockId);
     let vBlock = document.getElementById(blockId);
     if (vBlock) {
       //console.log('vBlock', vBlock);
