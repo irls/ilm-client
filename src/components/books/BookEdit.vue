@@ -1716,6 +1716,7 @@ export default {
       }
       //console.log('handleScroll', (new Date()).toJSON());
       let scrolledBottom = this.$refs.contentScrollWrapRef.offsetHeight + this.$refs.contentScrollWrapRef.scrollTop >= this.$refs.contentScrollWrapRef.scrollHeight;
+      this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);
       if (!this.onScrollEv) {
         let firstVisible = false;
         let lastVisible = false;
@@ -1753,9 +1754,9 @@ export default {
             }*/
           } else if (firstVisible) break;
         }
-        if (scrolledBottom) {
-          this.parlistO.setFirstVisibleId(this.parlistO.listIds[this.parlistO.listIds.length - 1]);
-        }
+        //if (scrolledBottom) {
+          //this.parlistO.setFirstVisibleId(this.parlistO.listIds[this.parlistO.listIds.length - 1]);
+        //}
 
         /*if (fixJump !== 'true' && fixJump !== 'false') {
           //this.scrollToBlock(fixJump.blockid);

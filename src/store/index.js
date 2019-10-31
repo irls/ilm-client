@@ -175,7 +175,7 @@ export const store = new Vuex.Store({
     bookMode: null,
     processQueueWatch: null,
     allowBookSplitPreview: false,
-    taskBlockMap: {map: {}, refresh: null}
+    taskBlockMap: {map: {}, refresh: null, allowNext: true}
   },
 
   getters: {
@@ -857,6 +857,10 @@ export const store = new Vuex.Store({
       });
       state.taskBlockMap.map = taskMap;
       state.taskBlockMap.refresh = Date.now();
+    },
+    
+    set_taskBlockMapAllowNext(state, allow) {
+      state.taskBlockMap.allowNext = allow;
     }
   },
 

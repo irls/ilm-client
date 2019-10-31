@@ -1,5 +1,5 @@
 <template>
-  <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]" @scroll="onScroll" v-hotkey="keymap">
+  <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]" @scroll="onScroll" v-hotkey="keymap" ref="scrollWrap">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
     <template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
@@ -141,6 +141,7 @@ export default {
       //console.log('onScroll', 'this.onScrollEv', this.onScrollEv);
       if (!this.onScrollEv) {
         //console.time('handleScroll');
+        this.checkScrollBottom();
         let firstVisibleId = false;
         let visible = false;
         let idsArray = [];
@@ -356,8 +357,13 @@ export default {
             this.startId = this.parlistO.idsArray()[0] || false;
             this.parlistO.setFirstVisibleId(this.startId);
           }
+          this.checkScrollBottom();
         }
       }
+    },
+    checkScrollBottom() {
+      let scrolledBottom = this.$refs.scrollWrap.offsetHeight + this.$refs.scrollWrap.scrollTop >= this.$refs.scrollWrap.scrollHeight;
+      this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);
     }
   },
   mounted: function() {

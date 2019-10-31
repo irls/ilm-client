@@ -45,8 +45,8 @@
                 </div>
                 <div>
                 <template v-if="task.blockid !== null && !task.complete && showTaskNavigation">
-                  <i :class="['fa fa-chevron-left', {'disabled': !taskBlockMap.map[task.type] || !taskBlockMap.map[task.type].prev}]" v-on:click="goToPrevious(task.type, counter.key)"></i>
-                  <i :class="['fa fa-chevron-right', {'disabled': !taskBlockMap.map[task.type] || !taskBlockMap.map[task.type].next}]" v-on:click="goToNext(task.type, counter.key)"></i>
+                  <i :class="['fa fa-chevron-left', {'disabled': !goToEnabled('prev', task.type)}]" v-on:click="goToPrevious(task.type, counter.key)"></i>
+                  <i :class="['fa fa-chevron-right', {'disabled': !goToEnabled('next', task.type)}]" v-on:click="goToNext(task.type, counter.key)"></i>
                 </template>
                 </div>
               </td>
@@ -380,6 +380,12 @@
         } else {
           this.set_taskBlockMapPositions();
         }
+      },
+      goToEnabled(direction, task) {
+        if (direction === 'next' && !this.taskBlockMap.allowNext) {
+          return false;
+        }
+        return this.taskBlockMap.map[task] && this.taskBlockMap.map[task][direction];
       },
       ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering', 'getCurrentJobInfo', 'tc_loadBookTask']),
     },
