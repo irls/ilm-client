@@ -135,7 +135,8 @@ export default {
 
       lazyLoaderDir: 'up',
       isNeedUp: true,
-      isNeedDown: true
+      isNeedDown: true,
+      scrollToId: null
 
     }
   },
@@ -928,6 +929,7 @@ export default {
           if (!this.parlistO.getInId(blockO['@rid'])) {
             this.startId = blockO.blockid;
             this.parlistO.setStartId(blockO['@rid']);
+            this.parlistO.setFirstVisibleId(blockO['@rid']);
           }
           this.unfreeze('insertBlockBefore');
           this.tc_loadBookTask(block.bookid);
@@ -1026,8 +1028,11 @@ export default {
             this.parlistO.setStartId(newStartId);
           } //else this.refreshTmpl();
           this.parlist.delete(block._id);
+          if (this.parlistO.firstVisibleId === block._id) {
+            this.parlistO.setFirstVisibleId(this.startId)
+          }
         }
-        this.getCurrentJobInfo();
+        //this.getCurrentJobInfo();
 
         this.putNumBlockOBatchProxy({bookId: block.bookid})
           .then(() => {
@@ -1546,6 +1551,7 @@ export default {
         if (firstId) {
           firstId = firstId.blockRid;
         }
+        this.scrollToId = blockId;
         vBlock.scrollIntoView();
         if (firstId) {
           let i = 0;
@@ -1602,7 +1608,7 @@ export default {
     checkVisible(elm, viewHeight = false) {
       var rect = elm.getBoundingClientRect();
       if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-      return !(rect.bottom < initialTopOffset+1 || rect.top - viewHeight >= 0);
+      return !(rect.bottom < initialTopOffset+30 || rect.top - viewHeight >= 0);
     },
 
     updatePositions() {
@@ -1627,6 +1633,8 @@ export default {
         return false;
       }
       //console.log('handleScroll', (new Date()).toJSON());
+      let scrolledBottom = this.$refs.contentScrollWrapRef.offsetHeight + this.$refs.contentScrollWrapRef.scrollTop >= this.$refs.contentScrollWrapRef.scrollHeight;
+      this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);
       if (!this.onScrollEv) {
         let firstVisible = false;
         let lastVisible = false;
@@ -1634,7 +1642,9 @@ export default {
         let loadIdsArray = [];
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
         //let loadCount = 5;
-        for (var i = 0; i < this.parlistO.listObjs.length; i++) {
+        let startFrom = this.scrollToId ? this.parlistO.listIds.indexOf(this.scrollToId) : 0;
+        this.scrollToId = null;
+        for (var i = startFrom; i < this.parlistO.listObjs.length; i++) {
           let blockRef = this.$refs.viewBlocks.find(v => v.blockId === this.parlistO.listObjs[i].blockId);
           let visible = this.checkVisible(blockRef.$refs.viewBlock, viewHeight);
           if (visible) {
@@ -1662,6 +1672,9 @@ export default {
             }*/
           } else if (firstVisible) break;
         }
+        //if (scrolledBottom) {
+          //this.parlistO.setFirstVisibleId(this.parlistO.listIds[this.parlistO.listIds.length - 1]);
+        //}
 
         /*if (fixJump !== 'true' && fixJump !== 'false') {
           //this.scrollToBlock(fixJump.blockid);
@@ -1695,6 +1708,15 @@ export default {
 //           });
 //         }
      } else this.onScrollEv = false;
+      this.parlistO.idsViewArray().forEach(l => {
+        let blockRef = this.$refs.viewBlocks.find(v => v.blockId === l.blockId);
+        if (this.parlist.has(l.blockId)) {
+          this.parlistO.setLoaded(l.blockRid);
+          if (blockRef) {
+            blockRef.$forceUpdate();
+          }
+        }
+      });
     },
 
     moveEditWrapper(firstVisible, lastVisible, force) {
@@ -1776,6 +1798,7 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  this.$store.commit('set_taskBlockMap');
                 }
                 this.loadBookToc({bookId: this.meta._id, isWait: true});
                 //this.lazyLoad();
@@ -1854,6 +1877,7 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  this.$store.commit('set_taskBlockMap');
                   //this.parlistO.refresh();
                   if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
                     Vue.nextTick(() => {

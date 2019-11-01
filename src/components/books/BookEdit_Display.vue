@@ -1,5 +1,5 @@
 <template>
-  <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]" @scroll="onScroll" v-hotkey="keymap">
+  <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]" @scroll="onScroll" v-hotkey="keymap" ref="scrollWrap">
     <!--<BookDisplayHeader />-->
     <!--<BookTOC />-->
     <template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
@@ -141,6 +141,7 @@ export default {
       //console.log('onScroll', 'this.onScrollEv', this.onScrollEv);
       if (!this.onScrollEv) {
         //console.time('handleScroll');
+        this.checkScrollBottom();
         let firstVisibleId = false;
         let visible = false;
         let idsArray = [];
@@ -199,6 +200,16 @@ export default {
       .then((answer)=>{
         let scrollId = this.parlistO.idsArray()[0];
         this.parlistO.updateLookupsList(metaId, answer);
+        if (answer.blocks && answer.blocks.length > 0) {
+          answer.blocks.forEach((el, idx, arr)=>{
+            if (!this.parlist.has(el._id)) {
+              let newBlock = new BookBlock(el);
+              this.$store.commit('set_storeList', newBlock);
+              //if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
+            }
+            //this.parlistO.setLoaded(el._id);
+          });
+        }
         //console.timeEnd('getAllBlocks');
         Vue.nextTick(()=>{
           this.scrollToBlock(scrollId);
@@ -285,6 +296,7 @@ export default {
       if (this.$route.params.hasOwnProperty('bookid')) {
         let bookid = this.$route.params.bookid;
         if (!this.meta._id || bookid !== this.parlistO.meta.bookid) {
+          this.parlistO.setFirstVisibleId(null);
           this.$store.commit('clear_storeList');
           this.$store.commit('clear_storeListO');
           this.loadBook(bookid)
@@ -293,6 +305,7 @@ export default {
 
             let startBlock = this.$route.params.block || false;
             this.startId = startBlock;
+            this.parlistO.setFirstVisibleId(startBlock);
             let taskType = this.$route.params.task_type || false;
 
             //console.log('startId', this.$route.params.block, this.startId);
@@ -303,7 +316,10 @@ export default {
               taskType: taskType
             }).then((answer)=>{
               this.parlistO.setLookupsList(answer.meta.bookid, answer);
-              if (this.startId == false) this.startId = this.parlistO.idsArray()[0];
+              if (this.startId == false) {
+                this.startId = this.parlistO.idsArray()[0];
+                this.parlistO.setFirstVisibleId(this.startId);
+              }
               this.loopPreparedBlocksChain({ids: this.parlistO.idsArray()})
               .then((result)=>{
                 //console.log('result', result);
@@ -339,9 +355,15 @@ export default {
             }
           } else {
             this.startId = this.parlistO.idsArray()[0] || false;
+            this.parlistO.setFirstVisibleId(this.startId);
           }
+          this.checkScrollBottom();
         }
       }
+    },
+    checkScrollBottom() {
+      let scrolledBottom = this.$refs.scrollWrap.offsetHeight + this.$refs.scrollWrap.scrollTop >= this.$refs.scrollWrap.scrollHeight;
+      this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);
     }
   },
   mounted: function() {
