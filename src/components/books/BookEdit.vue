@@ -70,23 +70,6 @@
       <!--<div class="row"-->
       </div>
       <!--<div class="content-background">-->
-      <modal v-model="doJoinBlocks.show" effect="fade" cancel-text="Close" title="Join blocks saving">
-        <div slot="modal-body" class="modal-body">Save changes and join blocks?</div>
-        <div slot="modal-footer" class="modal-footer">
-          <button type="button" class="btn btn-default" @click="doJoinBlocks.show = false;">Cancel</button>
-          <button v-if="doJoinBlocks.direction == 'previous'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
-          <button v-if="doJoinBlocks.direction == 'next'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
-        </div>
-      </modal>
-      <modal v-model="doJoinBlocks.showAudio" effect="fade" cancel-text="Cancel" title="Join blocks saving">
-        <div slot="modal-body" class="modal-body">Discard unsaved audio changes?</div>
-        <div slot="modal-footer" class="modal-footer">
-          <button type="button" class="btn btn-default" @click="doJoinBlocks.showAudio = false;">Cancel</button>
-          <button type="button" class="btn btn-primary" @click="joinBlocks()">Discard</button>
-        </div>
-      </modal>
-
-      <!--<infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>-->
 
   </div>
   <!--<div class="container-block">   -->
@@ -115,7 +98,6 @@ import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
 import { BookBlock }    from '../../store/bookBlock';
 import { BookBlocks }    from '../../store/bookBlocks';
-import { modal }        from 'vue-strap';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
 
@@ -138,13 +120,6 @@ export default {
       selectionEnd: {},
       parCounter: { pref: 0, prefCnt: 0, curr: 1 },
       blocksListQuery: false,
-      doJoinBlocks: {
-        show: false,
-        showAudio: false,
-        action: false,
-        block: {},
-        block_Idx: false
-      },
       blockReindexProcess: false,
 
       startId: false,
@@ -264,8 +239,7 @@ export default {
   },
   mixins: [access, taskControls, api_config],
   components: {
-      BookBlockView, BookBlockPreview,
-      modal, vueSlider
+      BookBlockView, BookBlockPreview, vueSlider
   },
   methods: {
     ...mapActions([
@@ -1076,284 +1050,211 @@ export default {
     },
     joinBlocks(block, block_Idx, direction) {
 
-      block = block || this.doJoinBlocks.block;
-      direction = direction || this.doJoinBlocks.direction;
+      switch(direction) {
+        case 'previous' : {
+          let getPrevBlock = new Promise((resolve, reject) => {
+            let _prevId = this.parlistO.getInId(block.blockid);
+            let _prev = this.parlist.get(_prevId);
+            if (_prev) {
+              resolve(_prev);
+            } else {
+              this.getBlock(_prevId)
+                .then(_prev => {
+                  resolve(_prev);
+                })
+                .catch(err => {
+                  reject(err);
+                });
+            }
+          });
+          return getPrevBlock
+          .then((blockBefore)=>{
+            //if (!checkArr.includes(block.type) || !checkArr.includes(blockBefore.type)) {
 
-      this.doJoinBlocks.block_Idx = false;
-      this.doJoinBlocks.block = {};
 
-      //console.log('joinBlocks', block, block_Idx, direction);
-      let checkArr = ['par', 'title', 'header'];
-
-        switch(direction) {
-          case 'previous' : {
-            let getPrevBlock = new Promise((resolve, reject) => {
-              let _prevId = this.parlistO.getInId(block.blockid);
-              let _prev = this.parlist.get(_prevId);
-              if (_prev && (this.doJoinBlocks.show || this.doJoinBlocks.showAudio)) {
-                resolve(_prev);
-              } else {
-                this.getBlock(_prevId)
-                  .then(_prev => {
-                    resolve(_prev);
-                  })
-                  .catch(err => {
-                    reject(err);
-                  });
-              }
+            let elBlock = this.$refs.blocks.find(c => {
+              return c.$el.id == block.blockid;
             });
-            return getPrevBlock
-            .then((blockBefore)=>{
-              //if (!checkArr.includes(block.type) || !checkArr.includes(blockBefore.type)) {
-
-
-              let elBlock = this.$children.find(c => {
-                return c.$el.id == block.blockid;
-              });
-              let elNext = this.$children.find(c => {
-                return c.$el.id == blockBefore.blockid;
-              });
-
-              if (!this.doJoinBlocks.show
-                  && (this.parlist.get(block.blockid).getIsChanged() || this.parlist.get(blockBefore.blockid).getIsChanged()))
-              {
-                // save current block reference
-                // and show confirmation pop-up to save changes
-                this.doJoinBlocks.block = block;
-                this.doJoinBlocks.direction = direction;
-                this.doJoinBlocks.show = true;
-              } else if (!this.doJoinBlocks.showAudio &&
-                      (this.parlist.get(block.blockid).getIsAudioChanged() ||
-                      this.parlist.get(blockBefore.blockid).getIsAudioChanged() ||
-                      (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
-                      (elNext && elNext.audioEditFootnote.isAudioChanged))) {
-                this.doJoinBlocks.block = block;
-                this.doJoinBlocks.direction = direction;
-                this.doJoinBlocks.showAudio = true;
-              }
-              else
-              {
-                if (block.type !== blockBefore.type) {
-                  this.doJoinBlocks.show = false;
-                  this.unableJoinMessage();
-                  return Promise.reject(new Error('types_missmatch'));
-                }
-                if (!this.parlist.has(blockBefore.blockid)) {
-                  this.doJoinBlocks.show = false;
-                  this.unableJoinMessage();
-                  return Promise.reject(new Error('types_missmatch'));
-                }
-                if (block.voicework !== blockBefore.voicework) {
-                  this.doJoinBlocks.show = false;
-                  this.unableToJoinVoiceworkMessage();
-                  return Promise.reject(new Error('types_missmatch'));
-                }
-                this.doJoinBlocks.block = {};
-                let currBlockRef = this.$refs.blocks.find((blockRef)=>{
-                  return blockRef.blockId == block.blockid;
-                });
-                let prevBlockRef = this.$refs.blocks.find((blockRef)=>{
-                  return blockRef.blockId == blockBefore.blockid;
-                });
-                if (currBlockRef && prevBlockRef) {
-                  this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
-                  this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
-                  this.freeze('joinBlocks');
-                  currBlockRef.isAudioChanged = false;
-                  let el = this.$children.find(c => {
-                    return c.$el.id == currBlockRef.blockid;
-                  });
-                  if (el) {
-                    el.evFromAudioeditorClosed(currBlockRef.blockid);
-                  }
-                  this.$root.$emit('for-audioeditor:force-close');
-                  currBlockRef.assembleBlockProxy(false)
-                  .then(()=>{
-                    prevBlockRef.isAudioChanged = false;
-                    let el = this.$children.find(c => {
-                      return c.$el.id == prevBlockRef.blockid;
-                    });
-                    if (el) {
-                      el.evFromAudioeditorClosed(prevBlockRef.blockid);
-                    }
-                    prevBlockRef.assembleBlockProxy(false)
-                    .then(()=>{
-                      this.doJoinBlocks.show = false;
-                      this.doJoinBlocks.showAudio = false;
-                      this.doJoinBlocks.block = {};
-                      return this.blocksJoin({
-                        resultBlock_id: blockBefore.blockid,
-                        donorBlock_id: block.blockid
-                      })
-                      .then((response)=>{
-                        //this.setBlockSelection({start: {}, end: {}});
-                        this.clearBlockLock({block: blockBefore, force: true});
-                        this.clearBlockLock({block: block, force: true});
-                        if (response.data.ok && response.data.blocks) {
-                          response.data.blocks.forEach((res)=>{
-                            this.refreshBlock({doc: res, deleted: res.deleted});
-                          });
-                        }
-                        if (response.data.blocks && response.data.blocks[2]) {
-                          this.parlistO.delBlock(response.data.blocks[2]);
-                        }
-
-                        this.putNumBlockOBatchProxy({bookId: block.bookid})
-                          .then(() => {
-                            if (['header', 'title'].indexOf(block.type) !== -1) {
-                              this.loadBookToc({bookId: block.bookid, isWait: true})
-                            }
-                          });
-                        this.refreshTmpl();
-                        this.unfreeze('joinBlocks');
-                        this.getCurrentJobInfo();
-                        return Promise.resolve();
-                      })
-                      .catch((err)=>{
-                        this.refreshTmpl();
-                        this.clearBlockLock({block: blockBefore, force: true});
-                        this.unfreeze('joinBlocks');
-                        return Promise.reject(err);
-                      })
-                    })
-                  })
-                }
-              }
-            })
-          } break;
-          case 'next' : {
-            let getNextBlock = new Promise((resolve, reject) => {
-              let _nextId = this.parlistO.getOutId(block.blockid);
-              let _next = this.parlist.get(_nextId);
-              if (_next) {
-                resolve(_next);
-              } else {
-                this.getBlock(_nextId)
-                  .then(_next => {
-                    resolve(_next);
-                  })
-                  .catch(err => {
-                    reject(err);
-                  });
-              }
+            let elNext = this.$refs.blocks.find(c => {
+              return c.$el.id == blockBefore.blockid;
             });
-            return getNextBlock
-            .then((blockAfter)=>{
-
-              let chainId = this.parlistO.getOutId(block.blockid);
-              let elBlock = this.$children.find(c => {
-                return c.$el.id == block.blockid;
-              });
-              let elNext = this.$children.find(c => {
-                return c.$el.id == chainId;
-              });
-              if (!this.doJoinBlocks.show
-              && (this.parlist.get(block.blockid).getIsChanged() || this.parlist.get(chainId).getIsChanged()))
-              {
-                this.doJoinBlocks.block = block;
-                this.doJoinBlocks.direction = direction;
-                this.doJoinBlocks.show = true;
-
-              } else if (!this.doJoinBlocks.showAudio &&
-                      (this.parlist.get(block.blockid).getIsAudioChanged() ||
-                      this.parlist.get(chainId).getIsAudioChanged() ||
-                      (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
-                      (elNext && elNext.audioEditFootnote.isAudioChanged))) {
-                this.doJoinBlocks.block = block;
-                this.doJoinBlocks.direction = direction;
-                this.doJoinBlocks.showAudio = true;
+            let isChanged = (elBlock && (elBlock.isChanged || elBlock.hasChangedPart)) || (elNext && (elNext.isChanged || elNext.hasChangedPart));
+            if (!isChanged) {
+              isChanged = this.parlist.get(block.blockid).getIsAudioChanged() ||
+                    this.parlist.get(blockBefore.blockid).getIsAudioChanged() ||
+                    (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
+                    (elNext && elNext.audioEditFootnote.isAudioChanged);
+            }
+            if (isChanged) {
+              this.unableToJoinChangedMessage();
+              return Promise.reject(new Error('unsaved_changes'));
+            }
+            else
+            {
+              if (block.type !== blockBefore.type) {
+                this.unableJoinMessage();
+                return Promise.reject(new Error('types_missmatch'));
               }
-              else
-              {
-                if (block.type !== blockAfter.type) {
-                  this.doJoinBlocks.show = false;
-                  this.unableJoinMessage();
-                  return Promise.reject(new Error('types_missmatch'));
-                }
-                if (!this.parlist.has(this.parlistO.getOutId(block.blockid))) {
-                  this.doJoinBlocks.show = false;
-                  this.unableJoinMessage();
-                  return Promise.reject(new Error('types_missmatch'));
-                }
-                if (block.voicework !== blockAfter.voicework) {
-                  this.doJoinBlocks.show = false;
-                  this.unableToJoinVoiceworkMessage();
-                  return Promise.reject(new Error('types_missmatch'));
-                }
-                this.doJoinBlocks.block = {};
-                let currBlockRef = this.$refs.blocks.find((blockRef)=>{
-                  return blockRef.blockId == block.blockid;
-                });
-                let nextBlockRef = this.$refs.blocks.find((blockRef)=>{
-                  return blockRef.blockId == chainId;
-                });
-                if (currBlockRef && nextBlockRef) {
-                  this.freeze('joinBlocks');
-                  this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
-                  this.addBlockLock({block: blockAfter, watch: ['realigned'], type: 'join'})
-                  currBlockRef.isAudioChanged = false;
-                  let el = this.$children.find(c => {
-                    return c.$el.id == currBlockRef.blockid;
-                  });
-                  if (el) {
-                    el.evFromAudioeditorClosed(currBlockRef.blockid);
-                  }
+              if (!this.parlist.has(blockBefore.blockid)) {
+                this.unableJoinMessage();
+                return Promise.reject(new Error('types_missmatch'));
+              }
+              if (block.voicework !== blockBefore.voicework) {
+                this.unableToJoinVoiceworkMessage();
+                return Promise.reject(new Error('types_missmatch'));
+              }
+              if (elBlock && elNext) {
+                this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
+                this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
+                this.freeze('joinBlocks');
+                if ((elBlock && elBlock.getIsAudioEditing()) || 
+                        (elNext && elNext.getIsAudioEditing())) {
                   this.$root.$emit('for-audioeditor:force-close');
-                  currBlockRef.assembleBlockProxy(false)
-                  .then(()=>{
-                    nextBlockRef.isAudioChanged = false;
-                    let el = this.$children.find(c => {
-                      return c.$el.id == nextBlockRef.blockid;
-                    });
-                    if (el) {
-                      el.evFromAudioeditorClosed(nextBlockRef.blockid);
-                    }
-                    nextBlockRef.assembleBlockProxy(false)
-                    .then(()=>{
-                      this.doJoinBlocks.show = false;
-                      this.doJoinBlocks.showAudio = false;
-                      this.doJoinBlocks.block = {};
-                      return this.blocksJoin({
-                        resultBlock_id: block.blockid,
-                        donorBlock_id: blockAfter.blockid
-                      })
-                      .then((response)=>{
-                        //this.setBlockSelection({start: {}, end: {}});
-                        this.clearBlockLock({block: block, force: true});
-                        this.clearBlockLock({block: blockAfter, force: true});
-                        if (response.data.ok && response.data.blocks) {
-                          response.data.blocks.forEach((res)=>{
-                            this.refreshBlock({doc: res, deleted: res.deleted});
-                          });
-                        }
-                        if (response.data.blocks && response.data.blocks[2]) {
-                          this.parlistO.delBlock(response.data.blocks[2]);
-                        }
-
-                        this.putNumBlockOBatchProxy({bookId: block.bookid})
-                          .then(() => {
-                            if (['header', 'title'].indexOf(block.type) !== -1) {
-                              this.loadBookToc({bookId: block.bookid, isWait: true});
-                            }
-                          });
-                        //this.refreshTmpl();
-                        this.unfreeze('joinBlocks');
-                        this.getCurrentJobInfo();
-                        return Promise.resolve();
-                      })
-                      .catch((err)=>{
-                        this.refreshTmpl();
-                        this.clearBlockLock({block: block, force: true});
-                        this.unfreeze('joinBlocks');
-                        return Promise.reject(err);
-                      })
-                    })
-                  })
                 }
+                elBlock.isAudioChanged = false;
+                elBlock.evFromAudioeditorClosed(block.blockid);
+                elNext.isAudioChanged = false;
+                elNext.evFromAudioeditorClosed(blockBefore.blockid);
+                return this.blocksJoin({
+                  resultBlock_id: blockBefore.blockid,
+                  donorBlock_id: block.blockid
+                })
+                .then((response)=>{
+                  //this.setBlockSelection({start: {}, end: {}});
+                  this.clearBlockLock({block: blockBefore, force: true});
+                  this.clearBlockLock({block: block, force: true});
+                  if (response.data.ok && response.data.blocks) {
+                    response.data.blocks.forEach((res)=>{
+                      this.refreshBlock({doc: res, deleted: res.deleted});
+                    });
+                  }
+                  if (response.data.blocks && response.data.blocks[2]) {
+                    this.parlistO.delBlock(response.data.blocks[2]);
+                  }
+
+                  this.putNumBlockOBatchProxy({bookId: block.bookid})
+                    .then(() => {
+                      if (['header', 'title'].indexOf(block.type) !== -1) {
+                        this.loadBookToc({bookId: block.bookid, isWait: true})
+                      }
+                    });
+                  this.refreshTmpl();
+                  this.unfreeze('joinBlocks');
+                  this.getCurrentJobInfo();
+                  return Promise.resolve();
+                })
+                .catch((err)=>{
+                  this.refreshTmpl();
+                  this.clearBlockLock({block: blockBefore, force: true});
+                  this.unfreeze('joinBlocks');
+                  return Promise.reject(err);
+                })
               }
-             })
-          } break;
-        };
+            }
+          })
+        } break;
+        case 'next' : {
+          let getNextBlock = new Promise((resolve, reject) => {
+            let _nextId = this.parlistO.getOutId(block.blockid);
+            let _next = this.parlist.get(_nextId);
+            if (_next) {
+              resolve(_next);
+            } else {
+              this.getBlock(_nextId)
+                .then(_next => {
+                  resolve(_next);
+                })
+                .catch(err => {
+                  reject(err);
+                });
+            }
+          });
+          return getNextBlock
+          .then((blockAfter)=>{
+
+            let chainId = this.parlistO.getOutId(block.blockid);
+            let elBlock = this.$refs.blocks.find(c => {
+              return c.$el.id == block.blockid;
+            });
+            let elNext = this.$refs.blocks.find(c => {
+              return c.$el.id == chainId;
+            });
+            let isChanged = (elBlock && (elBlock.isChanged || elBlock.hasChangedPart)) || (elNext && (elNext.isChanged || elNext.hasChangedPart));
+            if (!isChanged) {
+              isChanged = this.parlist.get(block.blockid).getIsAudioChanged() ||
+                    this.parlist.get(chainId).getIsAudioChanged() ||
+                    (elBlock && elBlock.audioEditFootnote.isAudioChanged) ||
+                    (elNext && elNext.audioEditFootnote.isAudioChanged);
+            }
+            if (isChanged) {
+              this.unableToJoinChangedMessage();
+              return Promise.reject(new Error('unsaved_changes'));
+            }
+            else
+            {
+              if (block.type !== blockAfter.type) {
+                this.unableJoinMessage();
+                return Promise.reject(new Error('types_missmatch'));
+              }
+              if (!this.parlist.has(this.parlistO.getOutId(block.blockid))) {
+                this.unableJoinMessage();
+                return Promise.reject(new Error('types_missmatch'));
+              }
+              if (block.voicework !== blockAfter.voicework) {
+                this.unableToJoinVoiceworkMessage();
+                return Promise.reject(new Error('types_missmatch'));
+              }
+              if (elBlock && elNext) {
+                this.freeze('joinBlocks');
+                this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
+                this.addBlockLock({block: blockAfter, watch: ['realigned'], type: 'join'})
+                if ((elBlock && elBlock.getIsAudioEditing()) || 
+                        (elNext && elNext.getIsAudioEditing())) {
+                  this.$root.$emit('for-audioeditor:force-close');
+                }
+                elBlock.isAudioChanged = false;
+                elBlock.evFromAudioeditorClosed(block.blockid);
+                elNext.isAudioChanged = false;
+                elNext.evFromAudioeditorClosed(blockAfter.blockid);
+                return this.blocksJoin({
+                  resultBlock_id: block.blockid,
+                  donorBlock_id: blockAfter.blockid
+                })
+                .then((response)=>{
+                  //this.setBlockSelection({start: {}, end: {}});
+                  this.clearBlockLock({block: block, force: true});
+                  this.clearBlockLock({block: blockAfter, force: true});
+                  if (response.data.ok && response.data.blocks) {
+                    response.data.blocks.forEach((res)=>{
+                      this.refreshBlock({doc: res, deleted: res.deleted});
+                    });
+                  }
+                  if (response.data.blocks && response.data.blocks[2]) {
+                    this.parlistO.delBlock(response.data.blocks[2]);
+                  }
+
+                  this.putNumBlockOBatchProxy({bookId: block.bookid})
+                    .then(() => {
+                      if (['header', 'title'].indexOf(block.type) !== -1) {
+                        this.loadBookToc({bookId: block.bookid, isWait: true});
+                      }
+                    });
+                  //this.refreshTmpl();
+                  this.unfreeze('joinBlocks');
+                  this.getCurrentJobInfo();
+                  return Promise.resolve();
+                })
+                .catch((err)=>{
+                  this.refreshTmpl();
+                  this.clearBlockLock({block: block, force: true});
+                  this.unfreeze('joinBlocks');
+                  return Promise.reject(err);
+                })
+              }
+            }
+           })
+        } break;
+      };
     },
 
     unableJoinMessage() {
@@ -1382,6 +1283,23 @@ export default {
             handler: () => {
               this.$root.$emit('hide-modal');
             },
+          }
+        ],
+        class: ['align-modal']
+      });
+    },
+    
+    unableToJoinChangedMessage() {
+      this.$root.$emit('show-modal', {
+        title: 'Unsaved Changes',
+        text: 'Blocks have unsaved changes.<br/>Please save or discard your changes before joining.',
+        buttons: [
+          {
+            title: 'Ok',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+            },
+            'class': 'btn btn-primary'
           }
         ],
         class: ['align-modal']
