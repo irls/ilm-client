@@ -2404,7 +2404,6 @@ export default {
                 this.block.setPartAudiosrc(part_idx, part.audiosrc, part.audiosrc_ver);
                 this.block.setPartManualBoundaries(part_idx, part.manual_boundaries || []);
                 this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(part_idx, 'm4a'), this.block.getPartContent(part_idx), true, Object.assign({_id: check_id}, part));
-                this.audioEditFootnote.isAudioChanged = true;
               } else if (footnoteIdx === null) {
                 this.blockAudio.map = response.data.content;
                 this.block.setContent(response.data.content);
