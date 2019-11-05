@@ -1,0 +1,126 @@
+<template>
+<section>
+<label v-for="sVal in styleArr"
+  @click="selectStyle(blockType, styleKey, sVal)"
+  class="block-style-label"
+  :key="blockType + styleKey.replace(' ', '') + sVal"
+  :id="blockType + styleKey.replace(' ', '') + sVal">
+
+  <template v-if="styleTabs.get(blockType).get(styleKey).size > 1">
+    <i class="fa fa-dot-circle-o"
+    v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
+    ></i>
+    <i v-else class="fa fa-circle-o"></i>
+  </template>
+
+  <template v-else>
+    <i v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
+    class="fa fa-check-circle-o"></i>
+    <i v-else class="fa fa-circle-o"></i>
+  </template>
+
+  <template v-if="sVal.length">{{styleValue(blockType, styleKey, sVal)}}</template>
+  <template v-else>none</template>
+</label>
+</section>
+</template>
+<script>
+  export default {
+    name: 'BlockStyleLabels',
+    data() {
+      return {}
+    },
+    props: ['blockType', 'styleArr', 'styleKey', 'styleTabs', 'styleValue'],
+    mixins: [],
+    computed: {
+    },
+    methods: {
+      selectStyle(blockType, styleKey, sVal) {
+        this.$emit('selectStyleEv', blockType, styleKey, sVal);
+      }
+    }
+  }
+</script>
+<style scoped lang="less">
+.block-style-tabs {
+    .block-style-fieldset {
+      float: left;
+      width: 32%;
+
+      &.block-num-fieldset {
+
+        width: 97%;
+        clear: both;
+        display: block;
+
+        i.fa-check-square-o.-checked {
+          color: #303030;
+          &:hover {
+            color: #303030;
+          }
+        }
+
+        i.fa-square-o:hover,
+        i.fa-check-square-o:hover,
+        i.fa-plus-square-o:hover {
+          color: gray;
+        }
+
+        .block-style-label {
+          width: 50%;
+          float: left;
+        }
+
+        ul, li {
+          padding: 0;
+          margin: 0;
+          list-style: none;
+        }
+        ul {
+          display: flex;
+          flex-wrap: wrap;
+          &:not(:first-of-type) {
+            border-top: 1px solid #b9b6b6;
+            margin-top: 5px;
+            padding-top: 10px;
+          }
+        }
+        li {
+          margin-inline-end: 20px;
+          .block-style-label {
+            float: none;
+            width: auto;
+          }
+        }
+      }
+    }
+
+    .tab-container {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .block-style-label {
+      display: block;
+      line-height: 12px;
+      font-weight: normal;
+      cursor: pointer;
+      input[type='radio'] {
+        margin-left: 0px;
+        margin-right: 5px;
+      }
+      span {
+        float: none;
+        width: auto;
+      }
+      i.fa-check-circle-o {
+        color: #303030;
+      }
+      i.fa-dot-circle-o:hover, i.fa-circle-o:hover {
+        color: gray;
+      }
+    }
+  }
+</style>

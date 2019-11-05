@@ -394,28 +394,15 @@
                     <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && ((styleKey !== 'level' && styleKey !== 'table of contents') || blockType !== 'header')" :key="styleKey" class="block-style-fieldset">
                       <legend>{{styleCaption(blockType, styleKey)}}</legend>
 
-                        <label v-for="sVal in styleArr"
-                          @click="selectStyle(blockType, styleKey, sVal)"
-                          class="block-style-label"
-                          :key="blockType + styleKey.replace(' ', '') + sVal"
-                          :id="blockType + styleKey.replace(' ', '') + sVal">
+                        <block-style-labels
+                          :blockType="blockType"
+                          :styleArr="styleArr"
+                          :styleKey="styleKey"
+                          :styleTabs="styleTabs"
+                          :styleValue="styleValue"
+                          @selectStyleEv="selectStyle"
+                        ></block-style-labels>
 
-                          <template v-if="styleTabs.get(blockType).get(styleKey).size > 1">
-                            <i class="fa fa-dot-circle-o"
-                            v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
-                            ></i>
-                            <i v-else class="fa fa-circle-o"></i>
-                          </template>
-
-                          <template v-else>
-                            <i v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
-                            class="fa fa-check-circle-o"></i>
-                            <i v-else class="fa fa-circle-o"></i>
-                          </template>
-
-                          <template v-if="sVal.length">{{styleValue(blockType, styleKey, sVal)}}</template>
-                          <template v-else>none</template>
-                        </label>
 
                       </fieldset>
 
@@ -483,6 +470,7 @@ import BookAssignments from './details/BookAssignments';
 import BookWorkflow from './details/BookWorkflow';
 import BookPublish from './details/BookPublish';
 import SplitPreview from './details/SplitPreview';
+import BlockStyleLabels from './details/BlockStyleLabels';
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -505,7 +493,8 @@ export default {
     BookAssignments,
     BookWorkflow,
     BookPublish,
-    SplitPreview
+    SplitPreview,
+    BlockStyleLabels
   },
 
   data () {
