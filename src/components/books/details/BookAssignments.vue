@@ -1,5 +1,6 @@
 <template>
   <div>
+    <div class="hidden">({{storeListO.firstVisibleId}})</div>
     <div v-for="counter in tasks_counter">
       <div class="counters-container">
         <div class="counter-executor">
@@ -26,8 +27,9 @@
           </thead>
           <tbody>
             <tr v-for="task in counter.data.tasks">
-              <td :class="['task-type', {'go-to-block': task.blockid != null && !task.complete}]" v-on:click="goToBlockCheck(task.blockid, counter.key)">
-                <div v-if="task.link && !task.complete">
+              <td :class="['task-type']">
+                <div :class="[{'go-to-block': task.blockid != null && !task.complete}]" v-on:click="goToBlockCheck(task.blockid, counter.key)">
+                <template v-if="task.link && !task.complete">
                   <template v-for="link in task.link">
                     <span v-if="link=='audio_dialog'" class="go-to-block" v-on:click="$emit('showModal_audio')">
                       {{task.title}}
@@ -36,9 +38,16 @@
                       {{task.title}}
                     </span>
                   </template>
-                </div>
-                <div v-else>
+                </template>
+                <template v-else>
                   {{task.title}}
+                </template>
+                </div>
+                <div>
+                <template v-if="task.blockid !== null && !task.complete && showTaskNavigation">
+                  <i :class="['fa fa-chevron-left', {'disabled': !goToEnabled('prev', task.type)}]" v-on:click="goToPrevious(task.type, counter.key)"></i>
+                  <i :class="['fa fa-chevron-right', {'disabled': !goToEnabled('next', task.type)}]" v-on:click="goToNext(task.type, counter.key)"></i>
+                </template>
                 </div>
               </td>
               <td :class="[{'go-to-block': task.blockid != null && !task.complete}, 'task-counter', '-' + counter.key]" v-on:click="goToBlockCheck(task.blockid, counter.key)">
@@ -121,18 +130,36 @@
           return this.tc_notMarkedBlocksCount() === 0;
         }
       },
+      startBlockId: {
+        get() {
+          return this.storeListO.firstVisibleId
+        },
+        cache: false
+      },
+      showTaskNavigation: {
+        get() {
+          return this.bookMode !== null;
+        },
+        cache: false
+      },
       ...mapGetters({
         tasks_counter: 'tasks_counter',
         adminOrLibrarian: 'adminOrLibrarian',
         currentBookCounters: 'currentBookCounters',
         currentBookMeta: 'currentBookMeta',
-        currentCollectionId: 'currentCollectionId'
+        currentCollectionId: 'currentCollectionId',
+        storeListO: 'storeListO',
+        taskBlockMap: 'taskBlockMap',
+        bookMode: 'bookMode',
+        auth: 'auth'
       })
     },
     methods: {
       updateAssignee(role, user){
         let api_url = this.API_URL + 'books/' + this.currentBookMeta._id + '/assignee';
         let api = this.$store.state.auth.getHttp();
+        let loggedUserId = this.auth.getSession().user_id;
+        let reloadJobInfo = loggedUserId === user || loggedUserId === this.currentJobInfo.executors[role];
         return api.post(api_url, {
           bookid: this.currentBookMeta._id,
           role: role,
@@ -140,6 +167,10 @@
         }, {})
           .then(response => {
             if (response.status == 200) {
+              if (reloadJobInfo) {
+                this.getCurrentJobInfo();
+                this.tc_loadBookTask(this.currentBookMeta._id);
+              }
                //console.log(this.tasks_counter);
                //this.tasks_counter.forEach(function(el, index) {
                //  console.log(el.key, el.data);
@@ -237,6 +268,12 @@
                   handler: () => {
                     this.$root.$emit('hide-modal');
                     this.updateBookMeta({'masteringRequired': !this.currentBookMeta.masteringRequired})
+                      .then(() => {
+                        this.getCurrentJobInfo();
+                      })
+                      .catch(err => {
+                        this.getCurrentJobInfo();
+                      })
                   },
                   'class': 'btn btn-primary'
                 }
@@ -248,10 +285,129 @@
           }
         }
       },
-      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering']),
+      goToPrevious(type, role) {
+        if (this.taskBlockMap.map[type] && this.taskBlockMap.map[type].prev) {
+          this.goToBlockCheck(this.taskBlockMap.map[type].prev, role);
+        }
+      },
+      goToNext(type, role) {
+        if (this.taskBlockMap.map[type] && this.taskBlockMap.map[type].next) {
+          this.goToBlockCheck(this.taskBlockMap.map[type].next, role);
+        }
+      },
+      set_taskBlockMapPositions(fromBlockId = null) {
+        if (!fromBlockId) {
+          fromBlockId = this.storeListO.firstVisibleId;
+        }
+        if (fromBlockId) {
+          //console.log(this.storeListO);
+          let start = this.storeListO.listIds.indexOf(fromBlockId);
+          //console.log(start)
+          for (let type in this.taskBlockMap.map) {//const [type, data] in this.taskBlockMap.map.entries()
+            //console.log(type, this.taskBlockMap.map[type])
+            this.taskBlockMap.map[type].next = null;
+            this.taskBlockMap.map[type].prev = null;
+            let found = false;
+            let lookup;
+            for (let i = start + 1; i < this.storeListO.listObjs.length; ++i) {
+              switch (type) {
+                case 'text-cleanup':
+                  lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
+                  if (lookup && this.currentBookMeta.importStatus === 'staging' && !lookup.status.marked) {
+                    this.taskBlockMap.map[type].next = this.storeListO.listObjs[i].blockId;
+                    found = true;
+                  }
+                  break;
+                case 'master-audio':
+                  lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
+                  if (lookup && lookup.status && lookup.status.stage === 'audio_mastering' && !lookup.status.marked) {
+                    this.taskBlockMap.map[type].next = this.storeListO.listObjs[i].blockId;
+                    found = true;
+                  }
+                  break;
+                default:
+                  let blk = this.taskBlockMap.map[type].blocks.find(b => {
+                    return b.blockId === this.storeListO.listObjs[i].blockId
+                  });
+                  //console.log(type, blk);
+                  if (blk) {
+                    found = true;
+                    this.taskBlockMap.map[type].next = blk.blockId;
+                  }
+                  break;
+              }
+              if (found) {
+                break;
+              }
+            }
+            found = false;
+            for (let i = start - 1; i >= 0; --i) {
+              switch (type) {
+                case 'text-cleanup':
+                  lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
+                  if (lookup && this.currentBookMeta.importStatus === 'staging' && !lookup.status.marked) {
+                    this.taskBlockMap.map[type].prev = this.storeListO.listObjs[i].blockId;
+                    found = true;
+                  }
+                  break;
+                case 'master-audio':
+                  lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
+                  if (lookup && lookup.status && lookup.status.stage === 'audio_mastering' && !lookup.status.marked) {
+                    this.taskBlockMap.map[type].prev = this.storeListO.listObjs[i].blockId;
+                    found = true;
+                  }
+                  break;
+                default:
+                  let blk = this.taskBlockMap.map[type].blocks.find(b => {
+                    return b.blockId === this.storeListO.listObjs[i].blockId
+                  });
+                  if (blk) {
+                    found = true;
+                    this.taskBlockMap.map[type].prev = blk.blockId;
+                  }
+                  break;
+              }
+              if (found) {
+                break;
+              }
+            }
+          }
+        }
+      },
+      set_taskBlockMapPositionsFromRoute() {
+        if (this.$route && ['BookEditDisplay', 'CollectionBookEditDisplay'].indexOf(this.$route.name) !== -1 && this.$route.params && this.$route.params.block) {
+          this.set_taskBlockMapPositions(this.$route.params.block);
+        } else {
+          this.set_taskBlockMapPositions();
+        }
+      },
+      goToEnabled(direction, task) {
+        if (direction === 'next' && !this.taskBlockMap.allowNext) {
+          return false;
+        }
+        return this.taskBlockMap.map[task] && this.taskBlockMap.map[task][direction];
+      },
+      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering', 'getCurrentJobInfo', 'tc_loadBookTask']),
     },
     mounted() {
-
+      this.set_taskBlockMapPositionsFromRoute();
+    },
+    watch: {
+      'startBlockId': {
+        handler(val) {
+          this.set_taskBlockMapPositions();
+        }
+      },
+      'taskBlockMap.refresh': {
+        handler() {
+          this.set_taskBlockMapPositions();
+        }
+      },
+      '$route': {
+        handler(val) {
+          this.set_taskBlockMapPositionsFromRoute();
+        }
+      }
     }
   }
 </script>
@@ -270,6 +426,11 @@
     table.counters {
       border: 1px solid black;
       width: 94%;
+      -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+      -moz-user-select: none; /* Old versions of Firefox */
+      -ms-user-select: none; /* Internet Explorer/Edge */
+      user-select: none;
       thead {
         background-color: #c2c2c2;
         th {
@@ -304,14 +465,24 @@
             width: 210px;
           }
           &.task-type {
-            &.go-to-block, span.go-to-block {
+            .go-to-block, span.go-to-block {
                 color: #3187d5;
                 text-decoration: underline;
                 cursor: pointer;
             }
+            div {
+                display: inline-block;
+            }
+            i {
+                color: #3187d5;
+                &.disabled {
+                    color: #dddddd;
+                    cursor: default;
+                }
+            }
           }
           &.task-action {
-            width: 130px;
+            width: 105px;
             .btn {
                 padding: 3px 12px;
             }

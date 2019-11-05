@@ -771,7 +771,7 @@ export default {
           return this.block.flags && this.block.flags.length;
       },
       isNeedWorkDisabled: function () {
-        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.hasChangedPart) {
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.hasChangedPart || this.hasAudioEditingPart) {
           return true;
         }
         return this.tc_isNeedWorkDisabled(this.block, this.mode);
@@ -781,7 +781,21 @@ export default {
           if (this.isSplittedBlock) {
             if (this.$refs && this.$refs.blocks) {
               let changed = this.$refs.blocks.find(blk => {
-                return blk.isChanged || blk.isAudioChanged || blk.isAudioEditing;
+                return blk.isChanged || blk.isAudioChanged;
+              });
+              return changed ? true : false;
+            }
+          }
+          return false;
+        },
+        cache: false
+      },
+      hasAudioEditingPart: {
+        get() {
+          if (this.isSplittedBlock) {
+            if (this.$refs && this.$refs.blocks) {
+              let changed = this.$refs.blocks.find(blk => {
+                return blk.isAudioEditing;
               });
               return changed ? true : false;
             }
@@ -2390,7 +2404,6 @@ export default {
                 this.block.setPartAudiosrc(part_idx, part.audiosrc, part.audiosrc_ver);
                 this.block.setPartManualBoundaries(part_idx, part.manual_boundaries || []);
                 this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(part_idx, 'm4a'), this.block.getPartContent(part_idx), true, Object.assign({_id: check_id}, part));
-                this.audioEditFootnote.isAudioChanged = true;
               } else if (footnoteIdx === null) {
                 this.blockAudio.map = response.data.content;
                 this.block.setContent(response.data.content);
@@ -3232,7 +3245,7 @@ export default {
 
         if (blockId === this.block._id || blockId === this.block._id + '_' + this.footnoteIdx) {
           this.isAudioEditing = false;
-          if (this.isAudioChanged) {
+          if (this.isAudioChanged || this.audioEditFootnote.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false);
           }
           //$('nav.fixed-bottom').addClass('hidden');
@@ -3919,6 +3932,21 @@ export default {
       },
       onIsAudioChanged(val) {
         this.isAudioChanged = val;
+      },
+      getIsAudioEditing() {
+        if (!this.isSplittedBlock) {
+          return this.isAudioEditing;
+        }
+        if (this.$refs && this.$refs.blocks) {
+          let editing = false;
+          this.$refs.blocks.forEach(blk => {
+            if (blk.isAudioEditing) {
+              editing = true;
+            }
+          });
+          return editing;
+        }
+        return false;
       }
   },
   watch: {
