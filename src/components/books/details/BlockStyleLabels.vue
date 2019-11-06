@@ -3,18 +3,18 @@
 <label v-for="sVal in styleArr"
   @click="selectStyle(blockType, styleKey, sVal)"
   class="block-style-label"
-  :key="blockType + styleKey.replace(' ', '') + sVal"
-  :id="blockType + styleKey.replace(' ', '') + sVal">
-
-  <template v-if="styleTabs.get(blockType).get(styleKey).size > 1">
+  :key="blockType + styleKey.replace(/\s/g, '') + sVal"
+  :id="blockType + styleKey.replace(/\s/g, '') + sVal">
+  <!--{{styleKey}}->{{sVal}}->{{parseStyle(styleTabs.get(blockType), styleKey)}}-->
+  <template v-if="parseStyle(styleTabs.get(blockType), styleKey).size > 1">
     <i class="fa fa-dot-circle-o"
-    v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
+    v-if="parseStyle(styleTabs.get(blockType), styleKey).has(sVal.length?sVal:'none')"
     ></i>
     <i v-else class="fa fa-circle-o"></i>
   </template>
 
   <template v-else>
-    <i v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
+    <i v-if="parseStyle(styleTabs.get(blockType), styleKey).has(sVal.length?sVal:'none')"
     class="fa fa-check-circle-o"></i>
     <i v-else class="fa fa-circle-o"></i>
   </template>
@@ -36,7 +36,17 @@
     },
     methods: {
       selectStyle(blockType, styleKey, sVal) {
+        console.log('selectStyle', blockType, styleKey, sVal);
         this.$emit('selectStyleEv', blockType, styleKey, sVal);
+      },
+      parseStyle(parentMap, styleKey) {
+        let tmpArr = styleKey.split('.');
+        let result = parentMap.get(tmpArr.shift());
+        while (tmpArr.length > 0) {
+          result = result.get(tmpArr.shift());
+        }
+        result = result || [];
+        return (result instanceof Map) ? result : new Map(result);
       }
     }
   }

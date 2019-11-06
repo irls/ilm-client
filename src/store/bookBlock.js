@@ -70,7 +70,10 @@ let BlockTypes = {
     //type: ['', 'subhead'],
     level: ['', 'h2', 'h3', 'h4'],
     align: ['', 'left', 'center', 'right', 'justify'],
-    'table of contents': {isInToc: ['on', 'off'], tocLevel: ['toc1', 'toc2', 'toc3', 'toc4']},
+    'table of contents': [
+      { isInToc: ['on', 'off'] },
+      { tocLevel: ['toc1', 'toc2', 'toc3', 'toc4'] }
+    ],
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
     style: ['', 'allcaps', 'smallcaps', 'italic', 'bold', 'underline'],
     padding: [

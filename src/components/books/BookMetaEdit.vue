@@ -330,33 +330,20 @@
                   </fieldset>
                   <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
                     <legend>{{styleCaption(blockType, 'table of contents')}}</legend>
-                    <ul v-for="(tocCategories, index) in tableOfContents(blockType)" :key="index">
-                      <li v-for="(sVal, index) in tocCategories"
-                          :key="index + sVal">
-                        <label
-                          @click="selectStyle(blockType, 'table of contents', sVal)"
-                          class="block-style-label"
-
-                          :id="blockType + 'table of contents' + sVal">
-
-                          <template v-if="styleTabs.get(blockType).get('table of contents').size > 1">
-                            <i class="fa fa-dot-circle-o"
-                            v-if="styleTabs.get(blockType).get('table of contents').has(sVal.length?sVal:'none')"
-                            ></i>
-                            <i v-else class="fa fa-circle-o"></i>
-                          </template>
-
-                          <template v-else>
-                            <i v-if="styleTabs.get(blockType).get('table of contents').has(sVal.length?sVal:'none')"
-                            class="fa fa-check-circle-o"></i>
-                            <i v-else class="fa fa-circle-o"></i>
-                          </template>
-
-                          <template v-if="sVal.length">{{styleValue(blockType, 'table of contents', sVal)}}</template>
-                          <template v-else>none</template>
-                        </label>
-                      </li>
-                    </ul>
+                      <ul v-for="(styleObj, styleIdx) in blockTypes[blockType]['table of contents']">
+                        <template v-for="(styleArr, styleKey) in styleObj">
+                        <li v-for="sVal in styleArr">
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="[sVal]"
+                            :styleKey="'table of contents'+'.'+styleKey"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="selectStyle"
+                          ></block-style-labels>
+                        </li>
+                        </template>
+                      </ul>
                   </fieldset>
                   <fieldset class="block-style-fieldset block-num-fieldset"
                   v-if="numProps.has(blockType) && ['par'].indexOf(blockType) > -1">
