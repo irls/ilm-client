@@ -1209,6 +1209,9 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
+      let styleKeyArr = styleKey.split('.');
+      styleKey = styleKeyArr.shift();
+      console.log('selectStyle-', 'styleKey:', styleKey, 'styleVal:', styleVal);
       let updateToc = (styleKey == 'table of contents' || (blockType == 'title' && styleKey == 'style') );
       let updateNum = !(styleKey == 'paragraph type' && ['sitalcent', 'editor-note', 'reference', 'signature'].indexOf(styleVal) >-1);
       let updatePromises = [], updateNums = [];
@@ -1241,15 +1244,25 @@ export default {
               }
 
               if (pBlock && pBlock.type == blockType) {
+              console.log('pBlock.classes1', pBlock.classes);
                   if (styleVal.length) {
-
-                    pBlock.classes[styleKey] = styleVal;
+                    if (styleKeyArr.length) {
+                      if (typeof pBlock.classes[styleKey] !== 'object') {
+                        pBlock.classes[styleKey] = {};
+                        pBlock.classes[styleKey][styleKeyArr.shift()] = styleVal;
+                      } else {
+                        pBlock.classes[styleKey][styleKeyArr.shift()] = styleVal;
+                      }
+                    }
+                    else pBlock.classes[styleKey] = styleVal;
                     if (blockType === 'header' && styleKey === 'level') {
                       updateToc = true;
                       pBlock.classes['table of contents'] = 'toc' + styleVal.replace(/\D/, '');
                     }
                   }
                 else pBlock.classes[styleKey] = '';
+                console.log('pBlock.classes2', pBlock.classes);
+                //return;
                 //console.log(oBlock.blockid, 'isNumber', oBlock.isNumber,  'updateNum', updateNum);
                 if (pBlock.isChanged || pBlock.isAudioChanged) {
                   pBlock.checked = false;
