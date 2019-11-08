@@ -275,7 +275,7 @@
 
                   <fieldset class="block-style-fieldset block-num-fieldset"
                   v-if="numProps.has(blockType) && ['header'].indexOf(blockType) > -1">
-                    <legend>numeration</legend>
+                    <legend>Numeration</legend>
                     <label class="block-style-label"
                       @click="selSecNum(blockType, 'secNum', numProps.get(blockType).get('secNum'))">
                       <template v-if="numProps.get(blockType).get('secNum') == 'mixed'">
@@ -328,7 +328,22 @@
                       <template v-else>none</template>
                     </label>
                   </fieldset>
-                  <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                  <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                    <legend>{{styleCaption(blockType, 'style')}}</legend>
+                      <ul>
+                        <li v-for="(sVal, styleKey) in blockTypes[blockType]['style']">
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="[sVal]"
+                            :styleKey="'style'"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="selectStyle"
+                          ></block-style-labels>
+                        </li>
+                      </ul>
+                  </fieldset>
+                  <fieldset v-if="(blockType === 'header' || blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
                     <legend>{{styleCaption(blockType, 'table of contents')}}</legend>
                       <ul v-for="(styleObj, styleKey) in blockTypes[blockType]['table of contents']">
                         <li v-for="(sVal, sIdx) in styleObj">
@@ -376,7 +391,7 @@
                   <i>Please keep defaults unless you have a compelling reason to change them</i>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
-                    <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && ((styleKey !== 'level' && styleKey !== 'table of contents') || blockType !== 'header')" :key="styleKey" class="block-style-fieldset">
+                    <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && styleKey !== 'table of contents' && !(styleKey == 'level' && blockType == 'header') && !(styleKey == 'style' && blockType == 'title')" :key="styleKey" class="block-style-fieldset">
                       <legend>{{styleCaption(blockType, styleKey)}}</legend>
 
                         <block-style-labels
