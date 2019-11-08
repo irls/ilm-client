@@ -1682,7 +1682,6 @@ export const store = new Vuex.Store({
       if (realign) {
         url+= '?realign=true';
       }
-      console.log('cleanBlock', cleanBlock);
       return axios.put(url,
         {
           'block': cleanBlock,

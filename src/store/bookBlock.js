@@ -808,7 +808,13 @@ class BookBlock {
             (this.type === 'hr' && key === 'size'))
         ) {
           if (this.classes[key] && this.classes[key] !== '')
-            result += ' ' + this.classes[key];
+            if (typeof this.classes[key] == 'object') {
+              for (let subKey in this.classes[key]) {
+                result += ' ' + this.classes[key][subKey];
+              }
+            } else {
+              result += ' ' + this.classes[key];
+            }
           else if (Object.keys(BlockTypes[this.type])[0] === '')
             result += ' ' + key.replace(/\s/g, '-');
         }

@@ -1206,8 +1206,8 @@ export default {
       this.styleTabs = result;
       this.numProps = nums;
 
-      console.log('result', result);
-      console.log('nums', nums);
+      //console.log('result', result);
+      //console.log('nums', nums);
 
       Vue.nextTick(()=>{
 
@@ -1225,7 +1225,7 @@ export default {
     {
       let styleKeyArr = styleKey.split('.');
       styleKey = styleKeyArr.shift();
-      console.log('selectStyle-', 'styleKey:', styleKey, 'styleVal:', styleVal);
+      //console.log('selectStyle-', 'styleKey:', styleKey, 'styleVal:', styleVal);
       let updateToc = (styleKey == 'table of contents' || (blockType == 'title' && styleKey == 'style') );
       let updateNum = !(styleKey == 'paragraph type' && ['sitalcent', 'editor-note', 'reference', 'signature'].indexOf(styleVal) >-1);
       let updatePromises = [], updateNums = [];
