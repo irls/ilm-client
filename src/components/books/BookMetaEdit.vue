@@ -330,9 +330,8 @@
                   </fieldset>
                   <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
                     <legend>{{styleCaption(blockType, 'table of contents')}}</legend>
-                      <ul v-for="(styleObj, styleIdx) in blockTypes[blockType]['table of contents']">
-                        <template v-for="(styleArr, styleKey) in styleObj">
-                        <li v-for="sVal in styleArr">
+                      <ul v-for="(styleObj, styleKey) in blockTypes[blockType]['table of contents']">
+                        <li v-for="(sVal, sIdx) in styleObj">
                           <block-style-labels
                             :blockType="blockType"
                             :styleArr="[sVal]"
@@ -342,7 +341,6 @@
                             @selectStyleEv="selectStyle"
                           ></block-style-labels>
                         </li>
-                        </template>
                       </ul>
                   </fieldset>
                   <fieldset class="block-style-fieldset block-num-fieldset"
@@ -1134,10 +1132,25 @@ export default {
 
               for (let styleKey in this.blockTypes[oBlock.type]) {
                 if (!result.get(oBlock.type).has(styleKey)) result.get(oBlock.type).set(styleKey, new Map());
-                if (pBlock.classes[styleKey]) {
-                  result.get(oBlock.type).get(styleKey).set(pBlock.classes[styleKey], true);
+
+                let styleSubKey = this.blockTypes[oBlock.type][styleKey];
+                if (typeof styleSubKey == 'object' && !Array.isArray(styleSubKey)) {
+                  for (let subKey in styleSubKey) {
+                    if (!result.get(oBlock.type).get(styleKey).has(subKey)) {
+                      result.get(oBlock.type).get(styleKey).set(subKey, new Map());
+                    }
+                    if (pBlock.classes[styleKey] && pBlock.classes[styleKey][subKey]) {
+                      result.get(oBlock.type).get(styleKey).get(subKey).set(pBlock.classes[styleKey][subKey], true);
+                    } else {
+                      result.get(oBlock.type).get(styleKey).get(subKey).set(this.blockTypes[oBlock.type][styleKey][subKey][0], true);
+                    }
+                  };
                 } else {
-                  result.get(oBlock.type).get(styleKey).set('none', true);
+                  if (pBlock.classes[styleKey]) {
+                    result.get(oBlock.type).get(styleKey).set(pBlock.classes[styleKey], true);
+                  } else {
+                    result.get(oBlock.type).get(styleKey).set('none', true);
+                  }
                 }
               }
 
@@ -1193,7 +1206,8 @@ export default {
       this.styleTabs = result;
       this.numProps = nums;
 
-      //console.log('nums', nums);
+      console.log('result', result);
+      console.log('nums', nums);
 
       Vue.nextTick(()=>{
 
@@ -1226,7 +1240,7 @@ export default {
               if (styleKey !== 'paragraph type') updateNum = oBlock.isNumber;
 
               if (pBlock && blockType == 'title' && styleKey == 'style' && styleVal != ''){
-                pBlock.classes['table of contents'] = '';
+                pBlock.classes['table of contents'] = {};
               }
 
               if (pBlock && blockType == 'title' && styleKey == 'table of contents' && styleVal != ''){
@@ -1244,7 +1258,6 @@ export default {
               }
 
               if (pBlock && pBlock.type == blockType) {
-              console.log('pBlock.classes1', pBlock.classes);
                   if (styleVal.length) {
                     if (styleKeyArr.length) {
                       if (typeof pBlock.classes[styleKey] !== 'object') {
@@ -1257,12 +1270,10 @@ export default {
                     else pBlock.classes[styleKey] = styleVal;
                     if (blockType === 'header' && styleKey === 'level') {
                       updateToc = true;
-                      pBlock.classes['table of contents'] = 'toc' + styleVal.replace(/\D/, '');
+                      pBlock.classes['table of contents'] = {};//'toc' + styleVal.replace(/\D/, '');
                     }
                   }
                 else pBlock.classes[styleKey] = '';
-                console.log('pBlock.classes2', pBlock.classes);
-                //return;
                 //console.log(oBlock.blockid, 'isNumber', oBlock.isNumber,  'updateNum', updateNum);
                 if (pBlock.isChanged || pBlock.isAudioChanged) {
                   pBlock.checked = false;

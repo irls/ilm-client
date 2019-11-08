@@ -849,7 +849,7 @@ export const store = new Vuex.Store({
 
     // login event
     connectDB ({ state, commit, dispatch }, session) {
-        
+
         // check if any response contains 401
         axios.interceptors.response.use(function (response) {
             return response;
@@ -1682,6 +1682,7 @@ export const store = new Vuex.Store({
       if (realign) {
         url+= '?realign=true';
       }
+      console.log('cleanBlock', cleanBlock);
       return axios.put(url,
         {
           'block': cleanBlock,

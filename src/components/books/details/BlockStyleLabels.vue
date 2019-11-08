@@ -36,7 +36,7 @@
     },
     methods: {
       selectStyle(blockType, styleKey, sVal) {
-        console.log('selectStyle', blockType, styleKey, sVal);
+        //console.log('selectStyle', blockType, styleKey, sVal);
         this.$emit('selectStyleEv', blockType, styleKey, sVal);
       },
       parseStyle(parentMap, styleKey) {
