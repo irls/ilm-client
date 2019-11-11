@@ -20,7 +20,7 @@
   </template>
 
   <template v-if="sVal.length">{{styleValue(blockType, styleKey, sVal)}}</template>
-  <template v-else>none</template>
+  <template v-else>{{styleValue(blockType, styleKey, 'none')}}</template>
 </label>
 </section>
 </template>

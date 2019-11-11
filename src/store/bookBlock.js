@@ -70,7 +70,7 @@ let BlockTypes = {
 
   header: {
     //type: ['', 'subhead'],
-    level: ['', 'h2', 'h3', 'h4'],
+    level: [/*'', */'h2', 'h3', 'h4'],
     align: ['', 'left', 'center', 'right', 'justify'],
     'table of contents': {
       isInToc: ['on', 'off'],
@@ -193,6 +193,12 @@ let BlockTypesAlias = {
     'table of contents': {
       values: {
         toc1: 'level 1'
+      }
+    },
+    style: {
+      title: 'type',
+      values: {
+        'none': 'title'
       }
     }
   },
