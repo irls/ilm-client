@@ -139,6 +139,9 @@
                   return _b.bookid === b;
                 });
                 if (book) {
+                  if (book.importStatus == 'staging' && book.blocksCount < 2){
+                    book.importStatus = 'staging_empty'
+                  }
                   books.push(book);
                 }
               });
@@ -215,6 +218,9 @@
                 path: 'importStatus',
                 render(val) {
                   switch (val) {
+                    case 'staging_empty':
+                      return 'No content';
+                      break;
                     case 'staging':
                       return 'Text Cleanup';
                       break;

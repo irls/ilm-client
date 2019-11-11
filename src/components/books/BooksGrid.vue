@@ -54,6 +54,9 @@ export default {
     booksMeta () { // because our grid does not work with nested values
       let result = []
       for (let book of this.books) { 
+        if (book.importStatus == 'staging' && book.blocksCount < 2){
+          book.importStatus = 'staging_empty'
+        }
         result.push(book)
       }
       return result
@@ -90,6 +93,9 @@ export default {
             path: 'importStatus',
             render(val) {
               switch (val) {
+                case 'staging_empty':
+                  return 'No content';
+                  break;
                 case 'staging':
                   return 'Text Cleanup';
                   break;
