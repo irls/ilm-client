@@ -234,7 +234,7 @@
                       return 'Mastering';
                       break;
                     case 'completed':
-                      return 'Completed';
+                      return 'Done';
                       break;
                     default:
                       return val ? val : 'Book Import';
