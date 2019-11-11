@@ -197,6 +197,28 @@ export const store = new Vuex.Store({
       state.books_meta.forEach(b => {
         b.pub_ver = b.publishedVersion && b.publishedVersion !== 'false' ? b.publishedVersion : '';
         b.cur_ver = typeof b.version !== 'undefined' && b.version !== b.publishedVersion ? b.version || '1.0' : (b.publishedVersion ? '' : '1.0');
+
+        //console.log(b.publishLog);
+        if (b.hasOwnProperty('publishLog')){
+          var pDate = new Date(b.publishLog.publishTime);
+          var pDay = pDate.getDate()
+          var pMonth = pDate.getMonth() + 1
+          var pYear = pDate.getFullYear()
+
+          var uDate = new Date(b.publishLog.updateTime);
+          var uDay = uDate.getDate()
+          var uMonth = uDate.getMonth() + 1
+          var uYear = uDate.getFullYear()
+
+          console.log(b.publishLog)
+          b.pub_ver = '' + pYear + '.' + pMonth + '.' + pDay + ' v.' + b.pub_ver
+          if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
+            console.log('updateTime', b.publishLog.updateTime);
+            b.cur_ver = '' + uYear + '.' + uMonth + '.' + uDay + ' v.' + b.cur_ver
+          }
+        }
+
+
       });
       return state.books_meta;
     },
@@ -849,7 +871,7 @@ export const store = new Vuex.Store({
 
     // login event
     connectDB ({ state, commit, dispatch }, session) {
-        
+
         // check if any response contains 401
         axios.interceptors.response.use(function (response) {
             return response;
@@ -1378,6 +1400,17 @@ export const store = new Vuex.Store({
             }
           }
         }
+        if (currMeta.hasOwnProperty('publishLog')){
+          var publishLogAction = currMeta.publishLog;
+          publishLogAction.updateTime = Date();
+        } else {
+          var publishLogAction = {
+            publishTime : false,
+            updateTime : Date()
+          };
+        }
+        update.publishLog = publishLogAction;
+
       } else {
         delete update.major;
       }
