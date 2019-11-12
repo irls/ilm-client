@@ -43,11 +43,9 @@
                   {{task.title}}
                 </template>
                 </div>
-                <div>
-                <template v-if="task.blockid !== null && !task.complete && showTaskNavigation">
-                  <i :class="['fa fa-chevron-left', {'disabled': !goToEnabled('prev', task.type)}]" v-on:click="goToPrevious(task.type, counter.key)"></i>
-                  <i :class="['fa fa-chevron-right', {'disabled': !goToEnabled('next', task.type)}]" v-on:click="goToNext(task.type, counter.key)"></i>
-                </template>
+                <div v-if="task.blockid !== null && !task.complete && showTaskNavigation" class="navigate-task-block">
+                  <i :class="['fa fa-angle-left', {'disabled': !goToEnabled('prev', task.type)}]" v-on:click="goToPrevious(task.type, counter.key)"></i>
+                  <i :class="['fa fa-angle-right', {'disabled': !goToEnabled('next', task.type)}]" v-on:click="goToNext(task.type, counter.key)"></i>
                 </div>
               </td>
               <td :class="[{'go-to-block': task.blockid != null && !task.complete}, 'task-counter', '-' + counter.key]" v-on:click="goToBlockCheck(task.blockid, counter.key)">
@@ -472,6 +470,9 @@
             }
             div {
                 display: inline-block;
+                &.go-to-block {
+                  vertical-align: sub;
+                }
             }
             i {
                 color: #3187d5;
@@ -505,6 +506,20 @@
   .master-switcher-warning {
     div {
       text-align: center;
+    }
+  }
+  .navigate-task-block {
+    float: right;
+    i.fa {
+      /*font-weight: bold;*/
+      font-size: 25px;
+      /*margin-top: -4px;*/
+    }
+    i.fa-angle-left {
+      padding: 0px 7px 0px 0px;
+    }
+    i.fa-angle-right {
+      padding: 0px 0px 0px 7px;
     }
   }
 </style>
