@@ -267,12 +267,21 @@
                   title: 'OK',
                   handler: () => {
                     this.$root.$emit('hide-modal');
-                    this.updateBookMeta({'masteringRequired': !this.currentBookMeta.masteringRequired})
-                      .then(() => {
-                        this.getCurrentJobInfo();
+                    return new Promise((resolve, reject) => {
+                      this.updateBookMeta({'masteringRequired': !this.currentBookMeta.masteringRequired})
+                        .then(() => {
+                          return resolve();
+                        })
+                        .catch(err => {
+                          return resolve();
+                        })
                       })
-                      .catch(err => {
-                        this.getCurrentJobInfo();
+                      .then(() => {
+                        return this.reloadBook()
+                          .then(() => {
+                            this.$root.$emit('book-reimported');
+                            console.log('EMIT REIMPORTED')
+                          })
                       })
                   },
                   'class': 'btn btn-primary'
@@ -387,7 +396,7 @@
         }
         return this.taskBlockMap.map[task] && this.taskBlockMap.map[task][direction];
       },
-      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering', 'getCurrentJobInfo', 'tc_loadBookTask']),
+      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook']),
     },
     mounted() {
       this.set_taskBlockMapPositionsFromRoute();

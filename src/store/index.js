@@ -2751,6 +2751,16 @@ export const store = new Vuex.Store({
       .catch(error => {
         return Promise.reject({})
       })
+    },
+    reloadBook({state, commit, dispatch}) {
+      commit('clear_storeList');
+      commit('clear_storeListO');
+      let bookid = state.currentBookid;
+      state.currentBookid = null;
+      return dispatch('loadBook', bookid)
+        .then((response) => {
+          return Promise.resolve(response);
+        })
     }
   }
 })
