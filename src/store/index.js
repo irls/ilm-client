@@ -210,11 +210,16 @@ export const store = new Vuex.Store({
           var uMonth = uDate.getMonth() + 1
           var uYear = uDate.getFullYear()
 
+          var pMin = pDate.getMinutes()
+          var pHours = pDate.getHours()
+          var uMin = uDate.getMinutes()
+          var uHours = uDate.getHours()
+
           console.log(b.publishLog)
-          b.pub_ver = '' + pYear + '.' + pMonth + '.' + pDay + ' v.' + b.pub_ver
+          b.pub_ver = '' + pYear + '.' + pMonth + '.' + pDay + ' ' + pHours + ':' + pMin + ' v.' + b.pub_ver
           if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
             console.log('updateTime', b.publishLog.updateTime);
-            b.cur_ver = '' + uYear + '.' + uMonth + '.' + uDay + ' v.' + b.cur_ver
+            b.cur_ver = '' + uYear + '.' + uMonth + '.' + uDay + ' ' + uHours + ':' + uMin + ' v.' + b.cur_ver
           }
         }
 
