@@ -200,27 +200,27 @@ export const store = new Vuex.Store({
 
         //console.log(b.publishLog);
         if (b.hasOwnProperty('publishLog')){
-          var pDate = new Date(b.publishLog.publishTime);
-          var pDay = pDate.getDate()
-          var pMonth = pDate.getMonth() + 1
-          var pYear = pDate.getFullYear()
-
-          var uDate = new Date(b.publishLog.updateTime);
-          var uDay = uDate.getDate()
-          var uMonth = uDate.getMonth() + 1
-          var uYear = uDate.getFullYear()
-
-          var pMin = pDate.getMinutes()
-          var pHours = pDate.getHours()
-          var uMin = uDate.getMinutes()
-          var uHours = uDate.getHours()
-
           console.log(b.publishLog)
-          b.pub_ver = '' + pYear + '.' + pMonth + '.' + pDay + ' ' + pHours + ':' + pMin + ' v.' + b.pub_ver
-          if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
-            console.log('updateTime', b.publishLog.updateTime);
-            b.cur_ver = '' + uYear + '.' + uMonth + '.' + uDay + ' ' + uHours + ':' + uMin + ' v.' + b.cur_ver
+          if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
+            var pDate = new Date(b.publishLog.publishTime);
+            var publishDate = '' + pDate.getFullYear() + '.' + (pDate.getMonth() + 1) + '.' + pDate.getDate() + ' ' + pDate.getHours() + ':' + pDate.getMinutes();
+          } else {
+            var publishDate = '';
           }
+
+          if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
+            var uDate = new Date(b.publishLog.updateTime);
+            var updateDate = '' + uDate.getFullYear() + '.' + (uDate.getMonth() + 1) + '.' + uDate.getDate() + ' ' + uDate.getHours() + ':' + uDate.getMinutes();
+          } else {
+            var updateDate = '';
+          }
+
+
+          b.pub_ver = publishDate + ' v.' + b.pub_ver
+          b.cur_ver = updateDate + ' v.' + b.cur_ver
+          //if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
+          //  console.log('updateTime', b.publishLog.updateTime);
+          //}
         }
 
 

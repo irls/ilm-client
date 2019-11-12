@@ -3,7 +3,7 @@
   <!-- Fieldset Legend -->
     <legend>{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}</legend>
     <div>
-      Version #{{ currentBookMeta.version ? currentBookMeta.version : '1.0' }}
+      Version #{{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} 
     </div>
     <div v-if="publicationStatus" >
       Status #{{ publicationStatus }}
@@ -84,7 +84,35 @@
           });
       }
     },
+
+
     computed: {
+      publishDate: {
+        get() {
+          var pDate = new Date(this.currentBookMeta.publishLog.publishTime);
+          var pDay = pDate.getDate()
+          var pMonth = pDate.getMonth() + 1
+          var pYear = pDate.getFullYear()
+          var pMin = pDate.getMinutes()
+          var pHours = pDate.getHours()
+
+          return pYear + '.' + pMonth + '.' + pDay + ' ' + pHours + ':' + pMin;
+        },
+        cache: false
+      },
+      updateDate: {
+        get() {
+          var uDate = new Date(this.currentBookMeta.publishLog.updateTime);
+          var uDay = uDate.getDate()
+          var uMonth = uDate.getMonth() + 1
+          var uYear = uDate.getFullYear()
+          var uMin = uDate.getMinutes()
+          var uHours = uDate.getHours()
+
+          return uYear + '.' + uMonth + '.' + uDay + ' ' + uHours + ':' + uMin;
+        },
+        cache: false
+      },
       ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'currentJobInfo'])
     },
     mounted() {
