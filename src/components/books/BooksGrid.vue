@@ -81,11 +81,11 @@ export default {
             }
           },
           {
-            title: 'Pub. Ver.',
+            title: 'Published',
             path: 'pub_ver'
           },
           {
-            title: 'Current Ver.',
+            title: 'Updated',
             path: 'cur_ver'
           },
           {
