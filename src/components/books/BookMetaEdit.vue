@@ -661,6 +661,7 @@ export default {
     });
     this.setCurrentBookCounters();
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
+    this.$root.$on('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
 
     if (this.selectionStart && this.selectionEnd) {
       this.collectCheckedStyles(this.selectionStart, this.selectionEnd)
@@ -685,6 +686,7 @@ export default {
     this.$root.$off('from-bookblockview:voicework-type-changed');
     this.$root.$off('book-reimported');
     this.$root.$off('from-block-edit:set-style', this.listenSetStyle);
+    this.$root.$off('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
   },
 
   watch: {
@@ -1124,6 +1126,8 @@ export default {
       let result = new Map();
       let nums = new Map();
 
+      //console.log('collectCheckedStyles', startId, endId);
+
       if (this.storeListO.getBlock(startId)) {
         let idsArrayRange = this.storeListO.ridsArrayRange(startId, endId);
         idsArrayRange.forEach((blockRid)=>{
@@ -1148,11 +1152,7 @@ export default {
                     if (pBlock.classes[styleKey] && pBlock.classes[styleKey][subKey]) {
                       result.get(oBlock.type).get(styleKey).get(subKey).set(pBlock.classes[styleKey][subKey], true);
                     } else {
-                      if (subKey == 'tocLevel') {
-                        result.get(oBlock.type).get(styleKey).get(subKey).set(this.blockTypes[oBlock.type][styleKey][subKey][1], true);
-                      } else {
-                        result.get(oBlock.type).get(styleKey).get(subKey).set(this.blockTypes[oBlock.type][styleKey][subKey][0], true);
-                      }
+                      result.get(oBlock.type).get(styleKey).get(subKey).set(this.blockTypes[oBlock.type][styleKey][subKey][0], true);
                     }
                   };
                 } else {
@@ -1235,7 +1235,7 @@ export default {
     {
       let styleKeyArr = styleKey.split('.');
       styleKey = styleKeyArr.shift();
-      console.log('selectStyle-', 'blockType:', blockType, 'styleKey:', styleKey, 'styleVal:', styleVal);
+      //console.log('selectStyle-', 'blockType:', blockType, 'styleKey:', styleKey, 'styleVal:', styleVal);
       let updateToc = (styleKey == 'table of contents' || (blockType == 'title' && styleKey == 'style') );
       let updateNum = !(styleKey == 'paragraph type' && ['sitalcent', 'editor-note', 'reference', 'signature'].indexOf(styleVal) >-1);
       let updatePromises = [], updateNums = [];
@@ -1361,8 +1361,16 @@ export default {
     },
 
     listenSetStyle () {
+      //console.log('listenSetStyle', this.selectionStart, this.selectionEnd);
       if (this.selectionStart && this.selectionEnd) {
         this.collectCheckedStyles(this.selectionStart, this.selectionEnd, false);
+      }
+    },
+
+    listenSetStyleSwitch () {
+      //console.log('listenSetStyleSwitch', this.selectionStart, this.selectionEnd);
+      if (this.selectionStart && this.selectionEnd) {
+        this.collectCheckedStyles(this.selectionStart, this.selectionEnd, true);
       }
     },
 
