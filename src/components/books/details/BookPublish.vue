@@ -2,14 +2,14 @@
   <fieldset class="publish">
   <!-- Fieldset Legend -->
     <legend>Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
-    <div>
-      Version #{{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} 
+    <div v-if="currentBookMeta.publishedVersion">
+      Published:  Version #{{currentBookMeta.publishedVersion}}
+    </div>
+    <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
+      Unpublished: Version #{{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} 
     </div>
     <div v-if="publicationStatus" >
       Status #{{ publicationStatus }}
-    </div>
-    <div v-if="currentBookMeta.publishedVersion">
-      Published version {{currentBookMeta.publishedVersion}}
     </div>
     <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'">
       <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
