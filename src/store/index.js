@@ -216,12 +216,12 @@ export const store = new Vuex.Store({
 
 
             if (b.pub_ver){
-                b.pub_ver = publishDate + ' v.' + b.pub_ver;
+                b.pub_ver = publishDate + ' v. ' + b.pub_ver;
             } else {
                  b.pub_ver = publishDate;
             }
             if (b.cur_ver){
-                b.cur_ver = updateDate + ' v.' + b.cur_ver;
+                b.cur_ver = updateDate + ' v. ' + b.cur_ver;
             } else {
                  b.cur_ver = updateDate;
             }
