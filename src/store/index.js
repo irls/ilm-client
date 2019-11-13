@@ -1725,6 +1725,8 @@ export const store = new Vuex.Store({
       if (realign) {
         url+= '?realign=true';
       }
+      // let's update update time in meta:
+      dispatch('updateBookMeta', {})
       return axios.put(url,
         {
           'block': cleanBlock,
