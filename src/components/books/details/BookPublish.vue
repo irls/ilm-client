@@ -1,7 +1,7 @@
 <template>
   <fieldset class="publish">
   <!-- Fieldset Legend -->
-    <legend>{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}</legend>
+    <legend>Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
     <div>
       Version #{{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} 
     </div>

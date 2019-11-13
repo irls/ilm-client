@@ -230,10 +230,10 @@ export const store = new Vuex.Store({
             //}
           } else {
             if (b.pub_ver){
-                b.pub_ver = ' v.' + b.pub_ver;
+                b.pub_ver = ' v. ' + b.pub_ver;
             }
             if (b.cur_ver){
-                b.cur_ver = ' v.' + b.cur_ver;
+                b.cur_ver = ' v. ' + b.cur_ver;
             }
           }
       });
