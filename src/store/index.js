@@ -199,31 +199,28 @@ export const store = new Vuex.Store({
         b.cur_ver = typeof b.version !== 'undefined' && b.version !== b.publishedVersion ? b.version || '1.0' : (b.publishedVersion ? '' : '1.0');
 
         //console.log(b.publishLog);
-        if (b.hasOwnProperty('publishLog')){
-          console.log(b.publishLog)
-          if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
-            var pDate = new Date(b.publishLog.publishTime);
-            var publishDate = '' + pDate.getFullYear() + '.' + (pDate.getMonth() + 1) + '.' + pDate.getDate() + ' ' + pDate.getHours() + ':' + pDate.getMinutes();
-          } else {
-            var publishDate = '';
+        if (b.hasOwnProperty('publishLog') && b.publishLog != null && b.publishLog != false && b.publishLog != undefined){
+            if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
+              var pDate = new Date(b.publishLog.publishTime);
+              var publishDate = '' + pDate.getFullYear() + '.' + (pDate.getMonth() + 1) + '.' + pDate.getDate() + ' ' + pDate.getHours() + ':' + pDate.getMinutes();
+            } else {
+              var publishDate = '';
+            }
+
+            if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
+              var uDate = new Date(b.publishLog.updateTime);
+              var updateDate = '' + uDate.getFullYear() + '.' + (uDate.getMonth() + 1) + '.' + uDate.getDate() + ' ' + uDate.getHours() + ':' + uDate.getMinutes();
+            } else {
+              var updateDate = '';
+            }
+
+
+            b.pub_ver = publishDate + ' v.' + b.pub_ver
+            b.cur_ver = updateDate + ' v.' + b.cur_ver
+            //if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
+            //  console.log('updateTime', b.publishLog.updateTime);
+            //}
           }
-
-          if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
-            var uDate = new Date(b.publishLog.updateTime);
-            var updateDate = '' + uDate.getFullYear() + '.' + (uDate.getMonth() + 1) + '.' + uDate.getDate() + ' ' + uDate.getHours() + ':' + uDate.getMinutes();
-          } else {
-            var updateDate = '';
-          }
-
-
-          b.pub_ver = publishDate + ' v.' + b.pub_ver
-          b.cur_ver = updateDate + ' v.' + b.cur_ver
-          //if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
-          //  console.log('updateTime', b.publishLog.updateTime);
-          //}
-        }
-
-
       });
       return state.books_meta;
     },
@@ -1361,6 +1358,9 @@ export const store = new Vuex.Store({
       update.bookid = state.currentBookMeta._id;
 
       let currMeta = state.currentBookMeta;
+      if (!currMeta.hasOwnProperty('publishLog')){
+        currMeta.publishLog = {publishTime: false, updateTime: false}
+      }
 
       let updateVersion = {minor: true};
       if (update['styles'] || update['numbering']) {
@@ -1406,8 +1406,12 @@ export const store = new Vuex.Store({
           }
         }
         if (currMeta.hasOwnProperty('publishLog')){
+          console.log('income publishLog: ', currMeta.publishLog);
           var publishLogAction = currMeta.publishLog;
-          publishLogAction.updateTime = Date();
+          publishLogAction = {
+            updateTime: Date(),
+            publishTime: false
+          }
         } else {
           var publishLogAction = {
             publishTime : false,
@@ -1422,6 +1426,7 @@ export const store = new Vuex.Store({
 
       let newMeta = Object.assign(state.currentBookMeta, update);
       commit('SET_CURRENTBOOK_META', newMeta);
+      console.log('update', update);
 
       return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id, update)
         .then(response => {
