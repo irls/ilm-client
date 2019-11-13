@@ -215,11 +215,26 @@ export const store = new Vuex.Store({
             }
 
 
-            b.pub_ver = publishDate + ' v.' + b.pub_ver
-            b.cur_ver = updateDate + ' v.' + b.cur_ver
+            if (b.pub_ver){
+                b.pub_ver = publishDate + ' v.' + b.pub_ver;
+            } else {
+                 b.pub_ver = publishDate;
+            }
+            if (b.cur_ver){
+                b.cur_ver = updateDate + ' v.' + b.cur_ver;
+            } else {
+                 b.cur_ver = updateDate;
+            }
             //if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
             //  console.log('updateTime', b.publishLog.updateTime);
             //}
+          } else {
+            if (b.pub_ver){
+                b.pub_ver = ' v.' + b.pub_ver;
+            }
+            if (b.cur_ver){
+                b.cur_ver = ' v.' + b.cur_ver;
+            }
           }
       });
       return state.books_meta;
