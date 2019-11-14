@@ -193,7 +193,7 @@
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
             <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + blockPartIdx" ref="blocks"
-              :block="block"
+              :block="storeListById(block.blockid)"
               :blockO="blockO"
               :blockId = "blockId"
               :putBlock ="putBlock"
@@ -975,7 +975,8 @@ export default {
           approveBlocksList: 'approveBlocksList',
           adminOrLibrarian: 'adminOrLibrarian',
           currentJobInfo: 'currentJobInfo',
-          blockLockType: 'blockLockType'
+          blockLockType: 'blockLockType',
+          storeListById: 'storeListById'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
