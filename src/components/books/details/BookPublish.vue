@@ -3,10 +3,10 @@
   <!-- Fieldset Legend -->
     <legend>Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
     <div v-if="currentBookMeta.publishedVersion">
-      Published:  Version #{{currentBookMeta.publishedVersion}}
+      Published:  Ver. {{currentBookMeta.publishedVersion}} {{publishDate}}
     </div>
     <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
-      Unpublished: Version #{{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} 
+      Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} {{updateDate}}
     </div>
     <div v-if="publicationStatus" >
       Status #{{ publicationStatus }}
@@ -89,27 +89,26 @@
     computed: {
       publishDate: {
         get() {
-          var pDate = new Date(this.currentBookMeta.publishLog.publishTime);
-          var pDay = pDate.getDate()
-          var pMonth = pDate.getMonth() + 1
-          var pYear = pDate.getFullYear()
-          var pMin = pDate.getMinutes()
-          var pHours = pDate.getHours()
+          if (this.currentBookMeta.publishLog.publishTime != false && this.currentBookMeta.publishLog.publishTime != undefined){
+            var pDate = new Date(this.currentBookMeta.publishLog.publishTime);
+            var publishDate = '' + pDate.getFullYear() + '.' + (pDate.getMonth() + 1) + '.' + pDate.getDate() + ' ' + pDate.getHours() + ':' + pDate.getMinutes();
+          } else {
+            var publishDate = '';
+          }
 
-          return pYear + '.' + pMonth + '.' + pDay + ' ' + pHours + ':' + pMin;
+          return publishDate;
         },
         cache: false
       },
       updateDate: {
         get() {
-          var uDate = new Date(this.currentBookMeta.publishLog.updateTime);
-          var uDay = uDate.getDate()
-          var uMonth = uDate.getMonth() + 1
-          var uYear = uDate.getFullYear()
-          var uMin = uDate.getMinutes()
-          var uHours = uDate.getHours()
-
-          return uYear + '.' + uMonth + '.' + uDay + ' ' + uHours + ':' + uMin;
+          if (this.currentBookMeta.publishLog.updateTime != false && this.currentBookMeta.publishLog.updateTime != undefined){
+            var uDate = new Date(this.currentBookMeta.publishLog.updateTime);
+            var updateDate = '' + uDate.getFullYear() + '.' + (uDate.getMonth() + 1) + '.' + uDate.getDate() + ' ' + uDate.getHours() + ':' + uDate.getMinutes();
+          } else {
+            var updateDate = '';
+          }
+          return updateDate;
         },
         cache: false
       },
