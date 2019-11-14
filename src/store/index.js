@@ -1348,9 +1348,16 @@ export const store = new Vuex.Store({
 
     updateBookVersion({state, dispatch}, update) {
       let currMeta = state.currentBookMeta;
+      if (currMeta.hasOwnProperty('publishLog')){
+          update.publishLog = currMeta.publishLog;
+          update.publishLog.updateTime = Date();
+      } else {
+          update.publishLog = {publishTime: false, updateTime: Date()}
+      }
+
       if (currMeta.bookid) {
         if (currMeta.published === true) {
-          console.log('updateBookVersion published', update);
+          //console.log('updateBookVersion published', update);
           return dispatch('updateBookMeta', update)
         } else if (update.major && update.major == true) {
           if (typeof currMeta.version !== 'undefined' && currMeta.publishedVersion) {
@@ -1360,12 +1367,12 @@ export const store = new Vuex.Store({
             if (parseInt(cVers[0]) === parseInt(pVers[0])) {
               delete update['major'];
               update['version'] = (parseInt(cVers[0]) + 1) + '.0';
-              console.log('updateBookVersion unpublished', update);
-              return dispatch('updateBookMeta', update);
+              //console.log('updateBookVersion unpublished', update);
             }
           }
         }
       }
+      return dispatch('updateBookMeta', update);
     },
 
     updateBookMeta({state, dispatch, commit}, update) {
