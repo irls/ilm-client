@@ -1250,10 +1250,12 @@ export default {
               if (styleKey !== 'paragraph type') updateNum = oBlock.isNumber;
 
               if (pBlock && blockType == 'title') { // ILM-2533
-                if (styleKey == 'style' && styleVal != '') {
-                  pBlock.classes['table of contents'] = {isInToc: 'off'};
-                } else {
-                  pBlock.classes['table of contents'] = {isInToc: 'on'};
+                if (styleKey == 'style') {
+                  if (styleVal != '') {
+                    pBlock.classes['table of contents'] = {isInToc: 'off'};
+                  } else {
+                    pBlock.classes['table of contents'] = {isInToc: 'on'};
+                  }
                 }
                 if (styleKey == 'table of contents' && styleVal == 'on') {
                   pBlock.classes['style'] = '';
