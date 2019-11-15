@@ -8,9 +8,9 @@
     <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
       Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} {{updateDate}}
     </div>
-    <div v-if="publicationStatus" >
+    <!--<div v-if="publicationStatus" >
       Status #{{ publicationStatus }}
-    </div>
+    </div>-->
     <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'">
       <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
       <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing">
