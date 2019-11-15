@@ -1432,8 +1432,8 @@ export const store = new Vuex.Store({
         }
         if (currMeta.hasOwnProperty('publishLog')){
           //console.log('income publishLog: ', currMeta.publishLog);
-          var publishLogAction = currMeta.publishLog;
-          publishLogActionupdateTime: Date();
+          var publishLogAction = currMeta.publishLog || {publishTime: false, updateTime: false};
+          publishLogAction.updateTime = Date();
         } else {
           var publishLogAction = {
             publishTime : false,
