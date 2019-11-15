@@ -213,6 +213,9 @@ export const store = new Vuex.Store({
               var updateDate = '';
             }
 
+            if (b.publishedVersion == b.version){
+              updateDate = '';
+            }
 
             if (b.pub_ver){
                 b.pub_ver = publishDate + ' v. ' + b.pub_ver;
