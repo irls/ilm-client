@@ -616,9 +616,15 @@
             this.liveUpdate('status', 'unpublished');
             // update unpublish time
             if (this.selectedBook.hasOwnProperty('publishLog')){
-                var publishLogAction = this.selectedBook.publishLog;
-                publishLogAction.updateTime = Date();
-                this.liveUpdate('publishLog', publishLogAction);
+              var publishLogAction = this.selectedBook.publishLog;
+              publishLogAction.updateTime = Date();
+              this.liveUpdate('publishLog', publishLogAction);
+            } else {
+              var publishLogAction  = {
+                  updateTime: Date(),
+                  publishTime: false
+                }
+              this.liveUpdate('publishLog', publishLogAction);
             }
           }
         },

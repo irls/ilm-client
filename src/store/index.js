@@ -1349,7 +1349,7 @@ export const store = new Vuex.Store({
     updateBookVersion({state, dispatch}, update) {
       let currMeta = state.currentBookMeta;
       if (currMeta.hasOwnProperty('publishLog')){
-          update.publishLog = currMeta.publishLog;
+          update.publishLog = currMeta.publishLog || {publishTime: false, updateTime: false};
           update.publishLog.updateTime = Date();
       } else {
           update.publishLog = {publishTime: false, updateTime: Date()}
