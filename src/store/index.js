@@ -1353,6 +1353,7 @@ export const store = new Vuex.Store({
       if (currMeta.hasOwnProperty('publishLog')){
           update.publishLog = currMeta.publishLog || {publishTime: false, updateTime: false};
           update.publishLog.updateTime = Date();
+          console.log('update', update.publishLog);
       } else {
           update.publishLog = {publishTime: false, updateTime: Date()}
       }
@@ -1430,12 +1431,9 @@ export const store = new Vuex.Store({
           }
         }
         if (currMeta.hasOwnProperty('publishLog')){
-          console.log('income publishLog: ', currMeta.publishLog);
+          //console.log('income publishLog: ', currMeta.publishLog);
           var publishLogAction = currMeta.publishLog;
-          publishLogAction = {
-            updateTime: Date(),
-            publishTime: false
-          }
+          publishLogActionupdateTime: Date();
         } else {
           var publishLogAction = {
             publishTime : false,
