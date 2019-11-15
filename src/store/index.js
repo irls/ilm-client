@@ -213,7 +213,7 @@ export const store = new Vuex.Store({
               var updateDate = '';
             }
 
-            if (b.publishedVersion == b.version){
+            if (b.publishedVersion && b.publishedVersion == b.version){
               updateDate = '';
             }
 
@@ -225,11 +225,8 @@ export const store = new Vuex.Store({
             if (b.cur_ver){
                 b.cur_ver = updateDate + ' v. ' + b.cur_ver;
             } else {
-                 b.cur_ver = updateDate;
+                b.cur_ver = updateDate;
             }
-            //if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
-            //  console.log('updateTime', b.publishLog.updateTime);
-            //}
           } else {
             if (b.pub_ver){
                 b.pub_ver = ' v. ' + b.pub_ver;
@@ -1379,7 +1376,7 @@ export const store = new Vuex.Store({
     },
 
     updateBookMeta({state, dispatch, commit}, update) {
-
+    
       update.bookid = state.currentBookMeta._id;
 
       let currMeta = state.currentBookMeta;
