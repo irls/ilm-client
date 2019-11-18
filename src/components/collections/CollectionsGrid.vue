@@ -139,10 +139,14 @@
                   return _b.bookid === b;
                 });
                 if (book) {
-                  if (book.importStatus == 'staging' && book.blocksCount < 2){
-                    book.importStatus = 'staging_empty'
+                  if (book.importStatus == 'staging' && book.blocksCount <= 2){
+                    if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
+                      book.importStatus = 'staging_empty'
+                    } else if (!book.publishLog.updateTime){
+                      book.importStatus = 'staging_empty'
+                    }
                   }
-                  books.push(book);
+                  result.push(book)
                 }
               });
               c.books_list = books;
