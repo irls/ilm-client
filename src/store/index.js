@@ -1437,7 +1437,8 @@ export const store = new Vuex.Store({
             updateTime : Date()
           };
         }
-        update.publishLog = publishLogAction;
+        if (!update.hasOwnProperty('private'))
+          update.publishLog = publishLogAction;
 
       } else {
         delete update.major;
