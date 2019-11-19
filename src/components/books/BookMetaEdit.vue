@@ -1938,7 +1938,7 @@ Vue.filter('prettyBytes', function (num) {
           }
         }
         li {
-          margin-inline-end: 20px;
+          width: 33%;
           .block-style-label {
             float: none;
             width: auto;
