@@ -34,7 +34,7 @@
       <div class="overflow-wrapper">
 
       <div class="table tasks-box">
-      <section v-for="job in tasks.list"><!-- tc_userTasks -->
+      <section v-for="job in tasks.list" :data-bookid="job.bookid"><!-- tc_userTasks -->
       <template v-if="job.total > 0">
         <div class="tr">
           <div class="td task-type">
