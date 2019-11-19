@@ -336,6 +336,9 @@ export const store = new Vuex.Store({
     },
     taskBlockMap: state => {
       return state.taskBlockMap;
+    },
+    storeListById: (state) => blockid => {
+      return state.storeList.get(blockid)
     }
   },
 
@@ -1775,9 +1778,11 @@ export const store = new Vuex.Store({
           .then(response => {
             commit('clear_blocker', 'putBlock');
             dispatch('getCurrentJobInfo');
+            dispatch('tc_loadBookTask', response.data.bookid);
             state.storeListO.updBlockByRid(response.data.id, {
               status: response.data.status
             });
+            commit('set_storeList', new BookBlock(response.data));
             return Promise.resolve(response.data);
           })
           .catch(err => {

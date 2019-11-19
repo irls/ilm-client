@@ -1263,7 +1263,14 @@ export default {
                     oBlock.isNumber = updateNum;
                     updatePromises.push(this.putNumBlock(pBlock));
                   } else {
-                    updatePromises.push(this.putBlock([pBlock]));
+                    //pBlock.status = pBlock.status || {};
+                    //pBlock.status.marked = false;
+                    updatePromises.push(this.putBlockPart({
+                      blockid: pBlock.blockid,
+                      bookid: pBlock.bookid,
+                      classes: pBlock.classes//,
+                      //status: pBlock.status
+                    }));
                   }
                 }
               }
@@ -1521,7 +1528,7 @@ export default {
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart'])
   }
 }
 
