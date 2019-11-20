@@ -1,28 +1,28 @@
 <template>
 <!--{blockRid}->{blockListObj.blockId}->{blockListObj.loaded}->{blockListObj.visible}-->
-{#if block && block.getClass}
-  <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" class="ilm-block ilm-display -langblock-{block.language} {blockOutPaddings()}">
+{#if blockListObj && blockListObj.blockId}
+  <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" class="ilm-block ilm-display -langblock-{block.language} {block.viewOutPaddings}">
   {#if block.type === 'illustration'}
-    <img alt="block.blockid" class="{block.getClass()}" src="{getIllustration()}"/>
+    <img alt="block.blockid" class="{block.getClass()}" src="{block.viewIllustration}"/>
   {:else if block.type === 'hr'}
     <hr class="{block.getClass()}"/>
   {:else}
-    {#if getParnum()}
-      <div class="bview-parnum">{getParnum()}</div>
+    {#if block.viewParnum}
+      <div class="bview-parnum">{block.viewParnum}</div>
     {/if}
 
     <div id="display-{block.blockid}" lang="{block.language}"
       class="bview-content part-0 {block.getClass ? block.getClass() : ''} hide-archive"
-      data-parnum="{getParnum()}"
+      data-parnum="{block.viewParnum}"
       data-type="{block.type}"
       on:click={handleFootnote}>
-      {#if !blockListObj.visible}<div class="content-process-run preloader-loading"></div>{/if}
-      {#if blockListObj.loaded}{@html block.content}{/if}
+      {#if blockListObj.visible}{@html block.content}
+      {:else}<div class="content-process-run preloader-loading"></div>{/if}
     </div>
 
-    {#if block.footnotes.length > 0}
+    {#if block.footnotes && block.footnotes.length > 0}
     <div class="footnotes">
-      {#each block.footnotes as footnote, footnoteIdx}
+      {#each block.footnotes as footnote, footnoteIdx (footnote)}
       <div class="-hidden" bind:this={footNotes[footnote.ftnIdx]}>
         <div class="-langftn-{footnote.language}">
           <div class="-num">[fn{footnote.ftnIdx+1}]</div>
@@ -58,29 +58,6 @@
     return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
   }*/
   //let rand = getRandomInt(0, 200);
-
-  const getIllustration = () => {
-    return (block && block.getIllustration) ? block.getIllustration() : '';
-  }
-
-  const blockOutPaddings = () => {
-    if (block) {
-      console.log('blockOutPaddings');
-      return (block.classes && block.classes.hasOwnProperty('outsize-padding')) ? block.classes['outsize-padding'] : ''
-    } else return '';
-  }
-
-  const getParnum = () => {
-    if (block) {
-      if (block.type == 'header' && block.isNumber && !block.isHidden) {
-        return block.secnum;
-      }
-      else if (block.type == 'par' && block.isNumber && !block.isHidden) {
-        return block.parnum;
-      }
-    }
-    return false;
-  }
 
   const handleFootnote = (ev) => {
     if (ev.target.dataset.idx && footNotes[ev.target.dataset.idx]) {

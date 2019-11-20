@@ -1,6 +1,6 @@
 <template>
-{#if blocks.length > 0}
-{#each blocks as block, idx (block.blockRid)}
+{#if intBlocks.length > 0}
+{#each intBlocks as block, idx (block.blockRid)}
 <!--{block.blockRid}->{block.blockId}->{block.loaded}<br/>-->
 
 <BookBlockDisplay
@@ -15,7 +15,7 @@
 </template>
 
 <script>
-  import { beforeUpdate } from 'svelte';//onMount,
+  import { beforeUpdate } from 'svelte';//onMount,tick
   import BookBlockDisplay from './BookBlockDisplay.svelte';
 
   export let lang = 'en';
@@ -33,10 +33,13 @@
   let blockIdx = 0;
 
   beforeUpdate(() => {
-    //console.log('the component is about to update', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
+    //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
+    //loadedBookId = parlistO.meta.bookid;
+
     fntCounter = 0;
-    if (parlistO.meta.bookid && blocks.length && loadedBookId === '') {
+    if (parlistO.meta.bookid && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== parlistO.meta.bookid)) {
       loadedBookId = parlistO.meta.bookid;
+      console.log('beforeUpdate, loadedBookId', loadedBookId);
       for (let i = 0; i < blocks.length; i++) {
         blocks[i].blockView = blockView(blocks[i].blockRid);
         blocks[i].visible = blocks[i].loaded;
@@ -49,7 +52,8 @@
           scrollCounter--;
         }
       }
-      //intBlocks = blocks;
+      intBlocks = blocks;
+      //console.log('beforeUpdate', intBlocks.length);
       let found = blocks.find(function(el, idx) {
         if (parlistO.getBlockByRid(el.blockRid).loaded === false) {
           blockIdx = idx;
@@ -60,18 +64,19 @@
       if (found) {
         startShowTimer();
       }
-    } else {
-      if (reloadBook) {
-        blocks = [];
-        reloadBook = false;
-      }
+    }
+    if (reloadBook) {
+      blocks = [];
+      reloadBook = false;
       if (loadedBookId !== '') loadedBookId = '';
     }
   });
 
-//   onMount(() => {
-//     console.log('onMount blocks', blocks);
-//   });
+  /*onMount(async () => {
+    console.log('onMount1', 'blocks.length:', blocks.length);
+    await tick();
+    console.log('onMount2', 'blocks.length:', blocks.length);
+  });*/
 
   let myDelay = 1000;
   let thisDelay = 1000;
@@ -86,17 +91,20 @@
           wasScrolled = !wasScrolled;
         }
         let i, execCount = 100;
-        for (i = 0; i < blocks.length; i++) {
+        for (i = 0; i < intBlocks.length; i++) {
           if (execCount <= 0) break;
-          if (blocks[i].visible === false) {
-            //console.log(blocks[i].blockView.type, blocks[i].blockRid, blocks[i].blockId);
-            let blockDOMId = `display-${blocks[i].blockId}`;
+          if (intBlocks[i].visible === false) {
+            //console.log('setTimeout'/*, intBlocks[i].blockView.type, intBlocks[i].blockRid, intBlocks[i].blockId*/);
+            let blockDOMId = `display-${intBlocks[i].blockId}`;
             let blockElement = document.getElementById(blockDOMId);
-            if (blockElement) {
-              blockElement.innerHTML = "";
-              blockElement.insertAdjacentHTML('afterbegin', blocks[i].blockView.content);
-              parlistO.setVisible(blocks[i].blockRid);
-            }
+            //parlistO.setVisible(intBlocks[i].blockRid);
+            intBlocks[i].visible = true;
+//             if (blockElement) {
+//               blockElement.innerHTML = "";
+//               blockElement.insertAdjacentHTML('afterbegin', intBlocks[i].blockView.content);
+//               intBlocks[i].visible = true;
+//               //parlistO.setVisible(intBlocks[i].blockRid);
+//             }
             execCount--;
             checkCount++;
           }
@@ -108,7 +116,7 @@
         thisDelay = myDelay - (actual - myDelay);
         start = Date.now();
         // start the timer again
-        if (i < blocks.length) {
+        if (i < intBlocks.length) {
           startShowTimer();
         } else {
           console.log('done', i, checkCount, startId);
@@ -132,6 +140,29 @@
 
   const blockFull = (blockRid) => {
     return parlist.has(blockId(blockRid)) ? parlist.get(blockId(blockRid)) : null;
+  }
+
+  const getOutPaddings = (block) => {
+    if (block) {
+      //console.log('blockOutPaddings');
+      return (block.classes && block.classes.hasOwnProperty('outsize-padding')) ? block.classes['outsize-padding'] : ''
+    } else return '';
+  }
+
+  const getIllustration = (block) => {
+    return (block && block.getIllustration) ? block.getIllustration() : '';
+  }
+
+  const getParnum = (block) => {
+    if (block) {
+      if (block.type == 'header' && block.isNumber && !block.isHidden) {
+        return block.secnum;
+      }
+      else if (block.type == 'par' && block.isNumber && !block.isHidden) {
+        return block.parnum;
+      }
+    }
+    return false;
   }
 
   const blockView = (blockRid) => {
@@ -188,6 +219,10 @@
           return `<sup class="service-info" data-idx="${fntCounter++}">[${fntCounter}]</sup>`
         }
       );
+
+      viewObj.viewOutPaddings = getOutPaddings(block);
+      viewObj.viewIllustration = getIllustration(block);
+      viewObj.viewParnum = getParnum(viewObj);
 
       return viewObj;
     } else return { footnotes: [], language: lang };
