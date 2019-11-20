@@ -146,7 +146,7 @@
                       book.importStatus = 'staging_empty'
                     }
                   }
-                  result.push(book)
+                  books.push(book);
                 }
               });
               c.books_list = books;
