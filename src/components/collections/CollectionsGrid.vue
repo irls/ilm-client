@@ -139,6 +139,13 @@
                   return _b.bookid === b;
                 });
                 if (book) {
+                  if (book.importStatus == 'staging' && book.blocksCount <= 2){
+                    if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
+                      book.importStatus = 'staging_empty'
+                    } else if (!book.publishLog.updateTime){
+                      book.importStatus = 'staging_empty'
+                    }
+                  }
                   books.push(book);
                 }
               });
@@ -203,11 +210,11 @@
                 }
               },
               {
-                title: 'Pub. Ver.',
+                title: 'Published',
                 path: 'pub_ver'
               },
               {
-                title: 'Current Ver.',
+                title: 'Updated',
                 path: 'cur_ver'
               },
               {
@@ -215,6 +222,9 @@
                 path: 'importStatus',
                 render(val) {
                   switch (val) {
+                    case 'staging_empty':
+                      return 'No content';
+                      break;
                     case 'staging':
                       return 'Text Cleanup';
                       break;
@@ -228,7 +238,7 @@
                       return 'Mastering';
                       break;
                     case 'completed':
-                      return 'Completed';
+                      return 'Done';
                       break;
                     default:
                       return val ? val : 'Book Import';
