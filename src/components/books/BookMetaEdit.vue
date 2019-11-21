@@ -275,7 +275,7 @@
 
                   <fieldset class="block-style-fieldset block-num-fieldset"
                   v-if="numProps.has(blockType) && ['header'].indexOf(blockType) > -1">
-                    <legend>numeration</legend>
+                    <legend>Numeration</legend>
                     <label class="block-style-label"
                       @click="selSecNum(blockType, 'secNum', numProps.get(blockType).get('secNum'))">
                       <template v-if="numProps.get(blockType).get('secNum') == 'mixed'">
@@ -304,34 +304,53 @@
                     </label>
                   </fieldset>
                   <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
-                    <legend>Type</legend>
-                    <label v-for="sVal in blockTypes[blockType]['level']"
-                          @click="selectStyle(blockType, 'level', sVal)"
-                          class="block-style-label"
-                          :key="blockType + 'level' + sVal"
-                          :id="blockType + 'level' + sVal">
-
-                          <template v-if="styleTabs.get(blockType).get('level').size > 1">
-                            <i class="fa fa-dot-circle-o"
-                            v-if="styleTabs.get(blockType).get('level').has(sVal.length?sVal:'none')"
-                            ></i>
-                            <i v-else class="fa fa-circle-o"></i>
-                          </template>
-
-                          <template v-else>
-                            <i v-if="styleTabs.get(blockType).get('level').has(sVal.length?sVal:'none')"
-                            class="fa fa-check-circle-o"></i>
-                            <i v-else class="fa fa-circle-o"></i>
-                          </template>
-
-                          <template v-if="sVal.length">{{styleValue(blockType, 'level', sVal)}}</template>
-                          <template v-else>none</template>
-                        </label>
+                    <legend>{{styleCaption('header', 'level')}}</legend>
+                    <ul>
+                      <li v-for="(sVal, styleKey) in blockTypes[blockType]['level']">
+                        <block-style-labels
+                          :blockType="blockType"
+                          :styleArr="[sVal]"
+                          :styleKey="'level'"
+                          :styleTabs="styleTabs"
+                          :styleValue="styleValue"
+                          @selectStyleEv="selectStyle"
+                        ></block-style-labels>
+                      </li>
+                    </ul>
                   </fieldset>
-
+                  <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                    <legend>{{styleCaption(blockType, 'style')}}</legend>
+                    <ul>
+                      <li v-for="(sVal, styleKey) in blockTypes[blockType]['style']">
+                        <block-style-labels
+                          :blockType="blockType"
+                          :styleArr="[sVal]"
+                          :styleKey="'style'"
+                          :styleTabs="styleTabs"
+                          :styleValue="styleValue"
+                          @selectStyleEv="selectStyle"
+                        ></block-style-labels>
+                      </li>
+                    </ul>
+                  </fieldset>
+                  <fieldset v-if="(blockType === 'header' || blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                    <legend>{{styleCaption(blockType, 'table of contents')}}</legend>
+                    <ul v-for="(styleObj, styleKey) in blockTypes[blockType]['table of contents']">
+                      <li v-for="(sVal, sIdx) in styleObj">
+                        <block-style-labels
+                          :blockType="blockType"
+                          :styleArr="[sVal]"
+                          :styleKey="'table of contents'+'.'+styleKey"
+                          :styleTabs="styleTabs"
+                          :styleValue="styleValue"
+                          @selectStyleEv="selectStyle"
+                        ></block-style-labels>
+                      </li>
+                    </ul>
+                  </fieldset>
                   <fieldset class="block-style-fieldset block-num-fieldset"
                   v-if="numProps.has(blockType) && ['par'].indexOf(blockType) > -1">
-                    <legend>numeration</legend>
+                    <legend>Numeration</legend>
                     <label class="block-style-label"
                       @click="selSecNum(blockType, 'parNum', numProps.get(blockType).get('parNum'))">
                       <template v-if="numProps.get(blockType).get('parNum') == 'mixed'">
@@ -362,31 +381,18 @@
                   <i>Please keep defaults unless you have a compelling reason to change them</i>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
-                      <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && (styleKey !== 'level' || blockType !== 'header')" :key="styleKey" class="block-style-fieldset">
+                    <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && styleKey !== 'table of contents' && !(styleKey == 'level' && blockType == 'header') && !(styleKey == 'style' && blockType == 'title')" :key="styleKey" class="block-style-fieldset">
                       <legend>{{styleCaption(blockType, styleKey)}}</legend>
 
-                        <label v-for="sVal in styleArr"
-                          @click="selectStyle(blockType, styleKey, sVal)"
-                          class="block-style-label"
-                          :key="blockType + styleKey.replace(' ', '') + sVal"
-                          :id="blockType + styleKey.replace(' ', '') + sVal">
+                        <block-style-labels
+                          :blockType="blockType"
+                          :styleArr="styleArr"
+                          :styleKey="styleKey"
+                          :styleTabs="styleTabs"
+                          :styleValue="styleValue"
+                          @selectStyleEv="selectStyle"
+                        ></block-style-labels>
 
-                          <template v-if="styleTabs.get(blockType).get(styleKey).size > 1">
-                            <i class="fa fa-dot-circle-o"
-                            v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
-                            ></i>
-                            <i v-else class="fa fa-circle-o"></i>
-                          </template>
-
-                          <template v-else>
-                            <i v-if="styleTabs.get(blockType).get(styleKey).has(sVal.length?sVal:'none')"
-                            class="fa fa-check-circle-o"></i>
-                            <i v-else class="fa fa-circle-o"></i>
-                          </template>
-
-                          <template v-if="sVal.length">{{styleValue(blockType, styleKey, sVal)}}</template>
-                          <template v-else>none</template>
-                        </label>
 
                       </fieldset>
 
@@ -454,6 +460,7 @@ import BookAssignments from './details/BookAssignments';
 import BookWorkflow from './details/BookWorkflow';
 import BookPublish from './details/BookPublish';
 import SplitPreview from './details/SplitPreview';
+import BlockStyleLabels from './details/BlockStyleLabels';
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -476,7 +483,8 @@ export default {
     BookAssignments,
     BookWorkflow,
     BookPublish,
-    SplitPreview
+    SplitPreview,
+    BlockStyleLabels
   },
 
   data () {
@@ -485,7 +493,8 @@ export default {
         'Public', 'Hidden', 'Encumbered', 'Research', 'Private'
       ],
       styleTitles: {
-        'title_style': 'type'
+        'title_style': 'type',
+        'header_level': 'type',
       },
       styleNotNumbered: ['sitalcent', 'editor-note', 'signature', 'reference'],
       languages: Languages,
@@ -652,6 +661,7 @@ export default {
     });
     this.setCurrentBookCounters();
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
+    this.$root.$on('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
 
     if (this.selectionStart && this.selectionEnd) {
       this.collectCheckedStyles(this.selectionStart, this.selectionEnd)
@@ -676,6 +686,7 @@ export default {
     this.$root.$off('from-bookblockview:voicework-type-changed');
     this.$root.$off('book-reimported');
     this.$root.$off('from-block-edit:set-style', this.listenSetStyle);
+    this.$root.$off('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
   },
 
   watch: {
@@ -1115,6 +1126,8 @@ export default {
       let result = new Map();
       let nums = new Map();
 
+      //console.log('collectCheckedStyles', startId, endId);
+
       if (this.storeListO.getBlock(startId)) {
         let idsArrayRange = this.storeListO.ridsArrayRange(startId, endId);
         idsArrayRange.forEach((blockRid)=>{
@@ -1129,10 +1142,25 @@ export default {
 
               for (let styleKey in this.blockTypes[oBlock.type]) {
                 if (!result.get(oBlock.type).has(styleKey)) result.get(oBlock.type).set(styleKey, new Map());
-                if (pBlock.classes[styleKey]) {
-                  result.get(oBlock.type).get(styleKey).set(pBlock.classes[styleKey], true);
+
+                let styleSubKey = this.blockTypes[oBlock.type][styleKey];
+                if (typeof styleSubKey == 'object' && !Array.isArray(styleSubKey)) {
+                  for (let subKey in styleSubKey) {
+                    if (!result.get(oBlock.type).get(styleKey).has(subKey)) {
+                      result.get(oBlock.type).get(styleKey).set(subKey, new Map());
+                    }
+                    if (pBlock.classes[styleKey] && pBlock.classes[styleKey][subKey]) {
+                      result.get(oBlock.type).get(styleKey).get(subKey).set(pBlock.classes[styleKey][subKey], true);
+                    } else {
+                      result.get(oBlock.type).get(styleKey).get(subKey).set(this.blockTypes[oBlock.type][styleKey][subKey][0], true);
+                    }
+                  };
                 } else {
-                  result.get(oBlock.type).get(styleKey).set('none', true);
+                  if (pBlock.classes[styleKey]) {
+                    result.get(oBlock.type).get(styleKey).set(pBlock.classes[styleKey], true);
+                  } else {
+                    result.get(oBlock.type).get(styleKey).set('none', true);
+                  }
                 }
               }
 
@@ -1188,6 +1216,7 @@ export default {
       this.styleTabs = result;
       this.numProps = nums;
 
+      //console.log('result', result);
       //console.log('nums', nums);
 
       Vue.nextTick(()=>{
@@ -1204,6 +1233,9 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
+      let styleKeyArr = styleKey.split('.');
+      styleKey = styleKeyArr.shift();
+      //console.log('selectStyle-', 'blockType:', blockType, 'styleKey:', styleKey, 'styleVal:', styleVal);
       let updateToc = (styleKey == 'table of contents' || (blockType == 'title' && styleKey == 'style') );
       let updateNum = !(styleKey == 'paragraph type' && ['sitalcent', 'editor-note', 'reference', 'signature'].indexOf(styleVal) >-1);
       let updatePromises = [], updateNums = [];
@@ -1217,31 +1249,72 @@ export default {
 
               if (styleKey !== 'paragraph type') updateNum = oBlock.isNumber;
 
-              if (pBlock && blockType == 'title' && styleKey == 'style' && styleVal != ''){
-                pBlock.classes['table of contents'] = '';
+              if (pBlock && blockType == 'title') { // ILM-2533
+                if (styleKey == 'style') {
+                  if (styleVal != '') {
+                    pBlock.classes['table of contents'] = {isInToc: 'off'};
+                  } else {
+                    pBlock.classes['table of contents'] = {isInToc: 'on'};
+                  }
+                }
+                if (styleKey == 'table of contents' && styleVal == 'on') {
+                  pBlock.classes['style'] = '';
+                } else {
+                  //pBlock.classes['style'] = this.blockTypes[blockType]['style'][1];
+                }
+              }
+              if (pBlock && blockType == 'header') { // ILM-2533
+                if (styleKey == 'level')
+                  switch(styleVal) {
+                    case 'h2' : {
+                      pBlock.classes['table of contents'] = {isInToc: 'on', tocLevel: 'toc2'};
+                    } break;
+                    case 'h3' : {
+                      pBlock.classes['table of contents'] = {isInToc: 'on', tocLevel: 'toc3'};
+                    } break;
+                    case 'h4' : {
+                      pBlock.classes['table of contents'] = {isInToc: 'off', tocLevel: 'toc4'};
+                    } break;
+                  };
+                if (styleKey == 'table of contents') {
+                  if (typeof pBlock.classes['table of contents'] !== 'object') {
+                    pBlock.classes['table of contents'] = {};
+                  }
+                  switch(styleVal) {
+                    case 'toc4' : {
+                      pBlock.classes['table of contents']['isInToc'] = 'off'
+                    } break;
+                    default: {
+                      pBlock.classes['table of contents']['isInToc'] = 'on'
+                    }
+                  };
+                }
               }
 
-              if (pBlock && blockType == 'title' && styleKey == 'table of contents' && styleVal != ''){
-                pBlock.classes['style'] = '';
-              }
-
-            if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) == -1 && this.styleNotNumbered.indexOf(styleVal) != -1){
+              if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) == -1 && this.styleNotNumbered.indexOf(styleVal) != -1){
                 pBlock.parnum = false;
                 pBlock.isNumber = false;
               }
 
-            if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) != -1 && this.styleNotNumbered.indexOf(styleVal) == -1){
+              if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) != -1 && this.styleNotNumbered.indexOf(styleVal) == -1){
                 pBlock.parnum = true;
                 pBlock.isNumber = true;
               }
 
               if (pBlock && pBlock.type == blockType) {
                   if (styleVal.length) {
-
-                    pBlock.classes[styleKey] = styleVal;
+                    if (styleKeyArr.length) {
+                      if (typeof pBlock.classes[styleKey] !== 'object') {
+                        pBlock.classes[styleKey] = {};
+                        pBlock.classes[styleKey][styleKeyArr.shift()] = styleVal;
+                      } else {
+                        pBlock.classes[styleKey][styleKeyArr.shift()] = styleVal;
+                      }
+                    }
+                    else pBlock.classes[styleKey] = styleVal;
                     if (blockType === 'header' && styleKey === 'level') {
                       updateToc = true;
-                      pBlock.classes['table of contents'] = 'toc' + styleVal.replace(/\D/, '');
+                      //pBlock.classes['table of contents'] = {};//'toc' + styleVal.replace(/\D/, '');
                     }
                   }
                 else pBlock.classes[styleKey] = '';
@@ -1301,8 +1374,16 @@ export default {
     },
 
     listenSetStyle () {
+      //console.log('listenSetStyle', this.selectionStart, this.selectionEnd);
       if (this.selectionStart && this.selectionEnd) {
         this.collectCheckedStyles(this.selectionStart, this.selectionEnd, false);
+      }
+    },
+
+    listenSetStyleSwitch () {
+      //console.log('listenSetStyleSwitch', this.selectionStart, this.selectionEnd);
+      if (this.selectionStart && this.selectionEnd) {
+        this.collectCheckedStyles(this.selectionStart, this.selectionEnd, true);
       }
     },
 
@@ -1404,6 +1485,8 @@ export default {
       return key.charAt(0).toUpperCase() + key.slice(1);
     },
     styleValue(type, key, val) {
+      key = key.split('.').shift(); // in case of "table of contents.level"
+      //console.log('styleValue:', type, key, val);
       if (BlockTypesAlias[type] && BlockTypesAlias[type][key] && BlockTypesAlias[type][key]['values'] && BlockTypesAlias[type][key]['values'][val]) {
         return BlockTypesAlias[type][key]['values'][val];
       } else {
@@ -1532,7 +1615,7 @@ export default {
   }
 }
 
-          
+
 Vue.component('resizable-textarea', {
   methods: {
     resizeTextarea (event) {
@@ -1844,6 +1927,28 @@ Vue.filter('prettyBytes', function (num) {
         .block-style-label {
           width: 50%;
           float: left;
+        }
+
+        ul, li {
+          padding: 0;
+          margin: 0;
+          list-style: none;
+        }
+        ul {
+          display: flex;
+          flex-wrap: wrap;
+          &:not(:first-of-type) {
+            border-top: 1px solid #b9b6b6;
+            margin-top: 5px;
+            padding-top: 10px;
+          }
+        }
+        li {
+          margin-inline-end: 20px;
+          .block-style-label {
+            float: none;
+            width: auto;
+          }
         }
       }
     }
