@@ -2524,6 +2524,10 @@ export const store = new Vuex.Store({
                 status: null,
                 archived: null
               }};
+
+            let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+            commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
+
             if (state.currentJobInfo.workflow.status !== 'archived' && state.currentJobInfo.text_cleanup === false && state.adminOrLibrarian) {
               if (!(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian) {
                 commit('SET_ALLOW_BOOK_PUBLISH', true);
