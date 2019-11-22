@@ -1478,6 +1478,8 @@ export const store = new Vuex.Store({
             let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian && state.currentJobInfo.workflow.status !== 'archived';
             commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
             commit('SET_CURRENTBOOK_META', response.data);
+            let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+            commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
 
             return Promise.resolve(response.data);
           } else {
