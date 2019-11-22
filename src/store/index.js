@@ -1231,6 +1231,8 @@ export const store = new Vuex.Store({
         state.jobInfoRequest = null;// force reload tasks
         commit('set_currentAudiobook', {});
         commit('SET_ALLOW_BOOK_PUBLISH', false);
+        commit('SET_BOOK_PUBLISH_BUTTON_STATUS', state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion));
+
       }
       //let oldBook = (state.currentBook && state.currentBook._id)
 
@@ -1383,7 +1385,7 @@ export const store = new Vuex.Store({
     },
 
     updateBookMeta({state, dispatch, commit}, update) {
-    
+
       update.bookid = state.currentBookMeta._id;
 
       let currMeta = state.currentBookMeta;

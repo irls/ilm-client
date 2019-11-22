@@ -13,10 +13,10 @@
     </div>
     <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'" style="margin-top: 10px;">
       <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
-      <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing && !publishButtonStatus">
+      <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing && publishButtonStatus">
         Publish
       </button>
-      <button class="disable btn btn-primary" v-else-if="!isPublishingQueue && !isPublishing && publishButtonStatus">
+      <button disabled="disabled" class="btn btn-primary" v-else-if="!isPublishingQueue && !isPublishing && !publishButtonStatus">
         Publish
       </button>
       <span v-if="isPublishing" class="align-preloader -small"></span>
