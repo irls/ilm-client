@@ -1260,7 +1260,7 @@ export const store = new Vuex.Store({
             return Promise.reject(answer);
           }
           commit('SET_CURRENTBOOK_META', answer);
-          let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof answer.version !== 'undefined' && answer.version === answer.currentBookMeta.publishedVersion);
+          let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof answer.version !== 'undefined' && answer.version === answer.publishedVersion);
           commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
 
           commit('TASK_LIST_LOADED')
