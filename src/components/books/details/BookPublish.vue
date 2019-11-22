@@ -13,10 +13,16 @@
     </div>
     <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'">
       <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
-      <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing">
+      <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing && !publishButtonStatus">
+        Publish
+      </button>
+      <button class="disable btn btn-primary" v-else-if="publishButtonStatus">
         Publish
       </button>
       <span v-if="isPublishing" class="align-preloader -small"></span>
+
+
+
 
     </div>
   </fieldset>
@@ -119,7 +125,7 @@
         },
         cache: false
       },
-      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'currentJobInfo'])
+      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo'])
     },
     mounted() {
       if (this.currentBookMeta && this.currentBookMeta.isInTheQueueOfPublication) {
@@ -146,7 +152,7 @@
           this.isPublishingQueue = !!val;
         }
       }
-    
+
     }
   }
 </script>

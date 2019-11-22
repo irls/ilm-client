@@ -58,6 +58,7 @@ export const store = new Vuex.Store({
     isProofer: false,
     allowCollectionsEdit: false,
     allowPublishCurrentBook: false,
+    publishButtonStatus: false,
     allRolls: [],
 
     metaDB: false,
@@ -189,6 +190,7 @@ export const store = new Vuex.Store({
     isEngineer: state => state.isEngineer,
     isReader: state => state.isReader,
     allowPublishCurrentBook: state => state.allowPublishCurrentBook,
+    publishButtonStatus: state => state.publishButtonStatus,
     allRolls: state => state.allRolls,
     allBooks: state => {
       if (!state.books_meta) {
@@ -635,6 +637,9 @@ export const store = new Vuex.Store({
     },
     SET_ALLOW_BOOK_PUBLISH(state, allow) {
       state.allowPublishCurrentBook = allow;
+    },
+    SET_BOOK_PUBLISH_BUTTON_STATUS(state, status) {
+      state.publishButtonStatus = status;
     },
     SET_ALLOW_COLLECTION_PUBLISH(state, allow) {
       state.allowPublishCurrentCollection = allow;
@@ -1272,8 +1277,10 @@ export const store = new Vuex.Store({
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
               }
               commit('SET_CURRENTBOOK_META', data.meta)
-              let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian;
-              commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
+              // let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian;
+              commit('SET_ALLOW_BOOK_PUBLISH', state.adminOrLibrarian);
+              commit('SET_BOOK_PUBLISH_BUTTON_STATUS', state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion));
+
               commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: data.meta.coverimgURL});
               dispatch('getCurrentJobInfo');
             }
