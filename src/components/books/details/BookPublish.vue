@@ -16,14 +16,10 @@
       <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing && !publishButtonStatus">
         Publish
       </button>
-      <button class="disable btn btn-primary" v-else-if="publishButtonStatus">
+      <button class="disable btn btn-primary" v-else-if="!isPublishingQueue && !isPublishing && publishButtonStatus">
         Publish
       </button>
       <span v-if="isPublishing" class="align-preloader -small"></span>
-
-
-
-
     </div>
   </fieldset>
 </template>
