@@ -54,8 +54,12 @@ export default {
     booksMeta () { // because our grid does not work with nested values
       let result = []
       for (let book of this.books) { 
-        if (book.importStatus == 'staging' && book.blocksCount < 2){
-          book.importStatus = 'staging_empty'
+        if (book.importStatus == 'staging' && book.blocksCount <= 2){
+          if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
+            book.importStatus = 'staging_empty'
+          } else if (!book.publishLog.updateTime){
+            book.importStatus = 'staging_empty'
+          }
         }
         result.push(book)
       }
