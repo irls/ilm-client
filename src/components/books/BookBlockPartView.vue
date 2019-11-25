@@ -2515,8 +2515,8 @@ export default {
             //this.blockAudio.map = this.$refs.blockContent.innerHTML;
             //this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
           }
+          this.isAudioChanged = true;
         }
-        this.isAudioChanged = true;
       },
       evFromAudioeditorSaveAndRealign (blockId, check_realign = true, realign = false) {
         if (blockId == this.check_id) {
@@ -2664,7 +2664,11 @@ export default {
             this.blockAudio.map = this.blockPart.content;
             this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
             this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
-            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, oldBoundaries.length > this.blockPart.manual_boundaries.length ? true : false);
+            let changed = oldBoundaries.length > this.blockPart.manual_boundaries.length ? true : false;
+            if (changed) {
+              this.isAudioChanged = true;
+            }
+            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
           }
         }
       },

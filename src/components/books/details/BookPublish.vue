@@ -1,23 +1,25 @@
 <template>
   <fieldset class="publish">
   <!-- Fieldset Legend -->
-    <legend>{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}</legend>
-    <div>
-      Version #{{ currentBookMeta.version ? currentBookMeta.version : '1.0' }}
-    </div>
-    <div v-if="publicationStatus" >
-      Status #{{ publicationStatus }}
-    </div>
+    <legend style="margin-bottom: 1px !important;">Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
     <div v-if="currentBookMeta.publishedVersion">
-      Published version {{currentBookMeta.publishedVersion}}
+      Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
     </div>
-    <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'">
+    <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
+      Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
+    </div>
+    <div v-if="currentBookMeta.publicationStatus && (currentBookMeta.publicationStatus.includes('Error') || currentBookMeta.publicationStatus.includes('failed'))" >
+      <span style="color: red">Publication failed</span>
+    </div>
+    <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'" style="margin-top: 10px;">
       <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
-      <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing">
+      <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing && publishButtonStatus">
+        Publish
+      </button>
+      <button disabled="disabled" class="btn btn-primary" v-else-if="!isPublishingQueue && !isPublishing && !publishButtonStatus">
         Publish
       </button>
       <span v-if="isPublishing" class="align-preloader -small"></span>
-
     </div>
   </fieldset>
 </template>
@@ -31,7 +33,8 @@
       return {
         publicationStatus: false,
         isPublishing: false,
-        isPublishingQueue: false
+        isPublishingQueue: false,
+        txt_months : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
       }
     },
     mixins: [api_config],
@@ -85,7 +88,39 @@
       }
     },
     computed: {
-      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'currentJobInfo'])
+      publishDate: {
+        get() {
+          if (this.currentBookMeta.hasOwnProperty('publishLog') && this.currentBookMeta.publishLog != null && this.currentBookMeta.publishLog != false && this.currentBookMeta.publishLog != undefined){
+            if (this.currentBookMeta.publishLog.publishTime != false && this.currentBookMeta.publishLog.publishTime != undefined){
+              var pDate = new Date(this.currentBookMeta.publishLog.publishTime);
+              var publishDate = ' ' + pDate.getDate() + ' ' + this.txt_months[pDate.getMonth()] + ' ' + pDate.getFullYear()  + ' ' + pDate.getHours() + ':' + pDate.getMinutes();
+            } else {
+              var publishDate = '';
+            }
+          } else {
+            var publishDate = '';
+          }
+          return publishDate;
+        },
+        cache: false
+      },
+      updateDate: {
+        get() {
+          if (this.currentBookMeta.hasOwnProperty('publishLog') && this.currentBookMeta.publishLog != null && this.currentBookMeta.publishLog != false && this.currentBookMeta.publishLog != undefined){
+            if (this.currentBookMeta.publishLog.updateTime != false && this.currentBookMeta.publishLog.updateTime != undefined){
+              var uDate = new Date(this.currentBookMeta.publishLog.updateTime);
+              var updateDate = ' ' + uDate.getDate() + ' ' + this.txt_months[uDate.getMonth()] + ' ' + uDate.getFullYear()  + ' ' + uDate.getHours() + ':' + uDate.getMinutes();
+            } else {
+              var updateDate = '';
+            }
+          } else {
+            var updateDate = '';
+          }
+          return updateDate;
+        },
+        cache: false
+      },
+      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo'])
     },
     mounted() {
       if (this.currentBookMeta && this.currentBookMeta.isInTheQueueOfPublication) {
@@ -112,7 +147,7 @@
           this.isPublishingQueue = !!val;
         }
       }
-    
+
     }
   }
 </script>

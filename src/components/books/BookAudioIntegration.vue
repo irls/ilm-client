@@ -1096,7 +1096,6 @@
         }
       },
       isAudiofileHighlighted(audiofile) {
-        console.log('duplicated id:', this.highlightDuplicateId);
         if (audiofile.id.replace(/\./g, '') == this.highlightDuplicateId) return true;
         if (this.alignCounter && this.alignCounter.blocks && audiofile.blockMap && !this.highlightDuplicateId) {
           let hasMap = this.alignCounter.blocks.find(b => {

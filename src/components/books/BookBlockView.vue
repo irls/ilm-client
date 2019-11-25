@@ -193,7 +193,7 @@
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
             <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + blockPartIdx" ref="blocks"
-              :block="block"
+              :block="storeListById(block.blockid)"
               :blockO="blockO"
               :blockId = "blockId"
               :putBlock ="putBlock"
@@ -975,7 +975,8 @@ export default {
           approveBlocksList: 'approveBlocksList',
           adminOrLibrarian: 'adminOrLibrarian',
           currentJobInfo: 'currentJobInfo',
-          blockLockType: 'blockLockType'
+          blockLockType: 'blockLockType',
+          storeListById: 'storeListById'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
@@ -3152,15 +3153,15 @@ export default {
         this.$modal.hide(name + this.block._id);
       },
       setChanged(val, type = null, event = null) {
-        //console.log('setChanged', val);
+        //console.log('setChanged', val, type, event, this.block.classes);
         this.isChanged = val;
         if (val && type) {
           this.pushChange(type);
-          if (this.block) {
-            this.block.classes = {};
+          //if (this.block) {
+            //this.block.classes = {};
             //this.block.secnum = false;
             //this.block.parnum = false;
-          }
+          //}
           this.$root.$emit('from-block-edit:set-style');
           if (type === 'type' && event && event.target) {
             if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {

@@ -614,6 +614,18 @@
           this.loadBookImage();
           if (this.selectedBook._id && this.selectedBook.status === 'published') {
             this.liveUpdate('status', 'unpublished');
+            // update unpublish time
+            if (this.selectedBook.hasOwnProperty('publishLog')){
+              var publishLogAction = this.selectedBook.publishLog;
+              publishLogAction.updateTime = Date();
+              this.liveUpdate('publishLog', publishLogAction);
+            } else {
+              var publishLogAction  = {
+                  updateTime: Date(),
+                  publishTime: false
+                }
+              this.liveUpdate('publishLog', publishLogAction);
+            }
           }
         },
         prepareSelectedLibraryBooks() {
@@ -832,6 +844,7 @@
           }
         },
         unpublish() {
+          //console.log('update unpublish');
           if (this.selectedBook._id && this.selectedBook.status === 'published') {
           var dbPath = superlogin.getDbUrl('ilm_libraries');
           var db = new PouchDB(dbPath);
