@@ -201,14 +201,14 @@ export const store = new Vuex.Store({
         if (b.hasOwnProperty('publishLog') && b.publishLog != null && b.publishLog != false && b.publishLog != undefined){
             if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
               var pDate = new Date(b.publishLog.publishTime);
-              var publishDate = '' + pDate.getFullYear() + '.' + (pDate.getMonth() + 1) + '.' + pDate.getDate() + ' ' + pDate.getHours() + ':' + pDate.getMinutes();
+              var publishDate = '' + pDate.getFullYear() + '.' + (pDate.getMonth() + 1) + '.' + pDate.getDate();
             } else {
               var publishDate = '';
             }
 
             if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
               var uDate = new Date(b.publishLog.updateTime);
-              var updateDate = '' + uDate.getFullYear() + '.' + (uDate.getMonth() + 1) + '.' + uDate.getDate() + ' ' + uDate.getHours() + ':' + uDate.getMinutes();
+              var updateDate = '' + uDate.getFullYear() + '.' + (uDate.getMonth() + 1) + '.' + uDate.getDate();
             } else {
               var updateDate = '';
             }
