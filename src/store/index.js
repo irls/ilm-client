@@ -58,6 +58,7 @@ export const store = new Vuex.Store({
     isProofer: false,
     allowCollectionsEdit: false,
     allowPublishCurrentBook: false,
+    publishButtonStatus: false,
     allRolls: [],
 
     metaDB: false,
@@ -189,6 +190,7 @@ export const store = new Vuex.Store({
     isEngineer: state => state.isEngineer,
     isReader: state => state.isReader,
     allowPublishCurrentBook: state => state.allowPublishCurrentBook,
+    publishButtonStatus: state => state.publishButtonStatus,
     allRolls: state => state.allRolls,
     allBooks: state => {
       if (!state.books_meta) {
@@ -634,6 +636,9 @@ export const store = new Vuex.Store({
     },
     SET_ALLOW_BOOK_PUBLISH(state, allow) {
       state.allowPublishCurrentBook = allow;
+    },
+    SET_BOOK_PUBLISH_BUTTON_STATUS(state, status) {
+      state.publishButtonStatus = status;
     },
     SET_ALLOW_COLLECTION_PUBLISH(state, allow) {
       state.allowPublishCurrentCollection = allow;
@@ -1226,6 +1231,7 @@ export const store = new Vuex.Store({
         state.jobInfoRequest = null;// force reload tasks
         commit('set_currentAudiobook', {});
         commit('SET_ALLOW_BOOK_PUBLISH', false);
+
       }
       //let oldBook = (state.currentBook && state.currentBook._id)
 
@@ -1253,7 +1259,10 @@ export const store = new Vuex.Store({
           if (answer.job_status_error) {
             return Promise.reject(answer);
           }
-          commit('SET_CURRENTBOOK_META', answer)
+          commit('SET_CURRENTBOOK_META', answer);
+          let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof answer.version !== 'undefined' && answer.version === answer.publishedVersion);
+          commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
+
           commit('TASK_LIST_LOADED')
           dispatch('setCurrentBookCounters');
           dispatch('startAlignWatch');
@@ -1271,8 +1280,11 @@ export const store = new Vuex.Store({
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
               }
               commit('SET_CURRENTBOOK_META', data.meta)
-              let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian;
+              let allowPublish = state.adminOrLibrarian;
               commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
+              let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+              commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
+
               commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: data.meta.coverimgURL});
               dispatch('getCurrentJobInfo');
             }
@@ -1376,7 +1388,7 @@ export const store = new Vuex.Store({
     },
 
     updateBookMeta({state, dispatch, commit}, update) {
-    
+
       update.bookid = state.currentBookMeta._id;
 
       let currMeta = state.currentBookMeta;
@@ -1463,9 +1475,11 @@ export const store = new Vuex.Store({
               dispatch('updateCollectionVersion', Object.assign({id: response.data.collection_id}, update));
             }
 
-            let allowPublish = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian && state.currentJobInfo.workflow.status !== 'archived';
+            let allowPublish = state.adminOrLibrarian && state.currentJobInfo.workflow.status !== 'archived';
             commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
             commit('SET_CURRENTBOOK_META', response.data);
+            let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+            commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
 
             return Promise.resolve(response.data);
           } else {
@@ -2510,10 +2524,12 @@ export const store = new Vuex.Store({
                 status: null,
                 archived: null
               }};
-            if (state.currentJobInfo.workflow.status !== 'archived' && state.currentJobInfo.text_cleanup === false && state.adminOrLibrarian) {
-              if (!(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion) && state.adminOrLibrarian) {
-                commit('SET_ALLOW_BOOK_PUBLISH', true);
-              }
+
+            let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+            commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
+
+            if (state.currentJobInfo.workflow.status !== 'archived' && state.adminOrLibrarian ) {
+              commit('SET_ALLOW_BOOK_PUBLISH', true);
             }
             Vue.prototype.globalJobInfo = state.currentJobInfo;
             return Promise.resolve();
