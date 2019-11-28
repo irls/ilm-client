@@ -8,7 +8,7 @@
       </div>
     </template>
     <div>
-      <button class="btn btn-primary" v-if="!currentBookMeta.complete_audio_time" v-on:click="generateCompleteAudio" :disabled="!hasAudioblocks || isGenerating">Build</button>
+      <button class="btn btn-primary" v-if="!currentBookMeta.complete_audio" v-on:click="generateCompleteAudio" :disabled="!hasAudioblocks || isGenerating">Build</button>
       <button class="btn btn-primary" v-else v-on:click="generateCompleteAudio" :disabled="!hasAudioblocks || isGenerating">Rebuild</button>
       &nbsp;&nbsp;{{currentBookCounters.voiced_in_range}} voiced block(s) 
       <span v-if="blockSelection.start && blockSelection.start._id">
