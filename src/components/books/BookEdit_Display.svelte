@@ -1,7 +1,7 @@
 <template>
 {#if intBlocks.length > 0}
 {#each intBlocks as block, idx (block.blockRid)}
-<!--{block.blockRid}->{block.blockId}->{block.loaded}<br/>-->
+<!--{idx}->{block.blockRid}->{block.blockId}->{block.loaded}<br/>-->
 
 <BookBlockDisplay
   blockRid="{block.blockRid}"

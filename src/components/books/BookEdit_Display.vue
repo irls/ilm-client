@@ -1,9 +1,8 @@
 <template>
-  <div ref="scrollWrap" @scroll.throttle="onScroll" v-hotkey="keymap" :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
-    <!--<BookDisplayHeader  @scroll="onScroll" v-hotkey="keymap"/>-->
+  <div ref="scrollWrap" @scroll="throttledOnScroll" v-hotkey="keymap" :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
+    <!--<BookDisplayHeader @scroll.throttle="onScroll" v-hotkey="keymap"/>-->
     <!--<BookTOC />-->
-<!--    <template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
-
+    <!--<template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
       <book-block-display
         ref="viewBlocks"
         :blockRid = "blockRid"
@@ -12,7 +11,6 @@
         :lang = "meta.language"
         :loaded = "parlistO.getBlockByRid(blockRid) && parlistO.getBlockByRid(blockRid).loaded"
       ></book-block-display>
-
     </template>-->
 
     <SvelteBookDisplayInVue
@@ -30,6 +28,7 @@
 
 <script>
 import Vue from 'vue'
+import _ from 'lodash'
 import BookDisplayHeader from './BookDisplayHeader'
 import BookBlockDisplay   from './BookBlockDisplay';
 //import BookTOC from './BookTOC'
@@ -38,6 +37,8 @@ import { BookBlock, setBlockParnum }    from '../../store/bookBlock'
 
 import SvelteBookDisplay from "./BookEdit_Display.svelte";
 import toVue from "svelte-adapter/vue";
+
+//import(/* webpackPrefetch: true */ "./css/fonts/Gentium/GentiumPlus-R.woff");
 
 export default {
   name: 'BookEditDisplay',
@@ -119,7 +120,7 @@ export default {
             }
           },
           'pgup': (ev)=>{
-            //console.log('page up');
+            console.log('page up');
             ev.preventDefault();
             let prevId = this.parlistO.getInId(this.startId);
             if (prevId && prevId !== this.startId) {
@@ -127,7 +128,7 @@ export default {
             }
           },
           'pgdn': (ev)=>{
-            //console.log('page down');
+            console.log('page down');
             ev.preventDefault();
             let nextId = this.parlistO.getOutId(this.startId);
             if (nextId && nextId !== this.startId) {
@@ -156,7 +157,11 @@ export default {
       }
     },
 
-    onScroll(ev) {
+    throttledOnScroll: _.throttle(function () {
+      this.onScroll();
+    }, 1000),
+
+    onScroll() {
       //console.log('onScroll', 'this.onScrollEv', this.onScrollEv);
       if (!this.onScrollEv) {
         //console.time('handleScroll');
@@ -164,15 +169,27 @@ export default {
         let firstVisibleId = false;
         let visible = false;
         let idsArray = [];
+        let point = this.$refs.scrollWrap.scrollHeight/this.parlistO.listObjs.length;
+        let pos = Math.floor(this.$refs.scrollWrap.scrollTop/point)-100;
+        let idx = 0;
+        //console.log('pos', pos);
+        //console.time('checkPos');
         for (let blockRef of this.$refs.viewBlocks.$el.childNodes) {
-          if (blockRef.nodeName == 'DIV' && blockRef.id.length) {
-            visible = this.checkVisible(blockRef);
-            if (visible) {
-              if (!firstVisibleId) firstVisibleId = blockRef.id;
-              break;
+          //console.log('blockRef', blockRef.dataset);
+          if (blockRef.nodeName == 'DIV' && blockRef.dataset && blockRef.dataset.id) {
+            if (idx >= pos) {
+              visible = this.checkVisible(blockRef);
+              if (visible) {
+                if (!firstVisibleId) firstVisibleId = blockRef.id;
+                break;
+              }
             }
+            ++idx;
           }
         }
+        //console.log('idx', idx);
+        //console.timeEnd('checkPos');
+        //console.log('firstVisibleId', firstVisibleId);
         if (firstVisibleId !== false && this.$route.params.block !== firstVisibleId) {
           this.onScrollEv = true;
           let params = {};
@@ -315,8 +332,10 @@ export default {
       }
     },
     checkScrollBottom() {
-      let scrolledBottom = this.$refs.scrollWrap.offsetHeight + this.$refs.scrollWrap.scrollTop >= this.$refs.scrollWrap.scrollHeight;
-      this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);
+      if (this.$refs.scrollWrap.offsetHeight) {
+        let scrolledBottom = this.$refs.scrollWrap.offsetHeight + this.$refs.scrollWrap.scrollTop >= this.$refs.scrollWrap.scrollHeight;
+        this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);
+      }
     }
   },
   mounted: function() {
