@@ -38,7 +38,7 @@
               :isPublishingQueue="isPublishingQueue"
               ></BookWorkflow>
           <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
-            <legend>Export </legend>
+            <legend>Export book </legend>
               <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
               <div v-if="getDemoStatus == 'rebuild'" style="margin-bottom: 5px;">Last build: {{this.convertTime(currentBook.demo_time)}}</div>
               <div>
@@ -61,6 +61,9 @@
           <BookPublish></BookPublish>
           <SplitPreview v-if="allowBookSplitPreview"
             :convertTime="convertTime"></SplitPreview>
+          <CompleteAudioExport 
+            :convertTime="convertTime"
+            :goToBlock="goToBlock"></CompleteAudioExport>
           </vue-tab>
           <vue-tab title="Meta" id="book-content">
             <fieldset>
@@ -461,6 +464,7 @@ import BookWorkflow from './details/BookWorkflow';
 import BookPublish from './details/BookPublish';
 import SplitPreview from './details/SplitPreview';
 import BlockStyleLabels from './details/BlockStyleLabels';
+import CompleteAudioExport from './details/CompleteAudioExport';
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -484,7 +488,8 @@ export default {
     BookWorkflow,
     BookPublish,
     SplitPreview,
-    BlockStyleLabels
+    BlockStyleLabels,
+    CompleteAudioExport
   },
 
   data () {
@@ -1493,7 +1498,7 @@ export default {
         return val;
       }
     },
-    convertTime(dt) {
+    convertTime(dt, time = false) {
       const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
       var date = new Date(dt);
@@ -1506,13 +1511,15 @@ export default {
       hour = locdate.getHours(),
       minute = locdate.getMinutes(),
       second = locdate.getSeconds(),
-      hourFormatted = hour % 12 || 12, // hour returned in 24 hour format
-      minuteFormatted = minute < 10 ? "0" + minute : minute,
-      morning = hour < 12 ? "am" : "pm";
+      hourFormatted = hour < 10 ? `0${hour}` : hour, // hour returned in 24 hour format
+      minuteFormatted = minute < 10 ? "0" + minute : minute
 
       //console.log(toutc, locdate);
-      return day + " " + monthNames[month - 1] + " " + year ;
-             //+ " " + hourFormatted + ":" + minuteFormatted + morning;
+      let result = day + " " + monthNames[month - 1] + " " + year ;
+      if (time) {
+        result += " " + hourFormatted + ":" + minuteFormatted;
+      }
+      return result;
 
     },
     finishPublished() {

@@ -104,7 +104,7 @@ export const store = new Vuex.Store({
     currentLibraryId: false,
 
     user: {},
-    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0'},
+    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0', voiced_in_range: '0'},
 
     ttsVoices : [],
 
@@ -377,6 +377,13 @@ export const store = new Vuex.Store({
     },
     storeListById: (state) => blockid => {
       return state.storeList.get(blockid)
+    },
+    bookCompleteAudioTime: state => {
+      if (state.currentBookMeta) {
+        return state.currentBookMeta.complete_audio_time;
+      } else {
+        return null;
+      }
     }
   },
 
@@ -2081,7 +2088,7 @@ export const store = new Vuex.Store({
         dispatch('_setNotProofedAudioBlocksCounter');
       }*/
       if (counters.length == 0) {
-        counters = ['narration_blocks', 'not_proofed_audio'];
+        counters = ['narration_blocks', 'not_proofed_audio', 'voiced_in_range'];
       }
       if (state.currentBookid) {
         counters.forEach(c => {
@@ -2271,6 +2278,7 @@ export const store = new Vuex.Store({
       let changed_in_range = 0;
       let changed_in_range_tts = 0;
       let changed_in_range_narration = 0;
+      let voiced_in_range = 0;
       if (!selection) {
         selection = state.blockSelection;
       }
@@ -2323,6 +2331,9 @@ export const store = new Vuex.Store({
                 ++changed_in_range_narration;
               }
             }
+            if (block.audiosrc) {
+              ++voiced_in_range;
+            }
             if (block._id == selection.end._id) {
               break;
             }
@@ -2332,6 +2343,10 @@ export const store = new Vuex.Store({
             }
           } else break;
         }
+      } else {
+        voiced_in_range = Array.from(state.storeList).filter(block => {
+          return block[1].audiosrc != '';
+        }).length;
       }
       let audio_mastering = state.tc_currentBookTasks.assignments && state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1;
       if (audio_mastering) {
@@ -2342,6 +2357,7 @@ export const store = new Vuex.Store({
       commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_tts_in_range', value: approved_tts});
       commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_audio', value: changed_in_range});
       commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_tts', value: changed_in_range_tts});
+      commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
     },
     clearLocks({state, commit}, data) {
       if (data.type) {
@@ -2831,6 +2847,30 @@ export const store = new Vuex.Store({
         .then((response) => {
           return Promise.resolve(response);
         })
+    },
+    generateCompleteAudio({state, commit}) {
+      if (state.currentBookMeta.bookid) {
+        state.currentBookMeta.complete_audio_time = -1;
+        let selection = {};
+        if (state.blockSelection.start._id) {
+          selection.start = state.blockSelection.start._id;
+        }
+        if (state.blockSelection.end._id) {
+          selection.end = state.blockSelection.end._id;
+        }
+        return axios.post(`${state.API_URL}books/complete_audio/${state.currentBookMeta.bookid}`, {
+          selection: selection,
+          format: 'm4a'
+        })
+          .then((response) => {
+            if (response.data.bookid === state.currentBookMeta.bookid) {
+              commit('SET_CURRENTBOOK_META', response.data);
+            }
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      }
     }
   }
 })
