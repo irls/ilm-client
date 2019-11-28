@@ -1192,6 +1192,7 @@ export const store = new Vuex.Store({
         state.jobInfoRequest = null;// force reload tasks
         commit('set_currentAudiobook', {});
         commit('SET_ALLOW_BOOK_PUBLISH', false);
+        commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: 0});
       }
       //let oldBook = (state.currentBook && state.currentBook._id)
 
