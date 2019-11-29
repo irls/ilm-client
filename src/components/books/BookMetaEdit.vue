@@ -58,12 +58,12 @@
                 <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
               </div>
           </fieldset>
-          <BookPublish></BookPublish>
-          <SplitPreview v-if="allowBookSplitPreview"
-            :convertTime="convertTime"></SplitPreview>
           <CompleteAudioExport 
             :convertTime="convertTime"
             :goToBlock="goToBlock"></CompleteAudioExport>
+          <BookPublish></BookPublish>
+          <SplitPreview v-if="allowBookSplitPreview"
+            :convertTime="convertTime"></SplitPreview>
           </vue-tab>
           <vue-tab title="Meta" id="book-content">
             <fieldset>

@@ -2344,10 +2344,14 @@ export const store = new Vuex.Store({
             }
           } else break;
         }
+        commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
       } else {
-        voiced_in_range = Array.from(state.storeList).filter(block => {
-          return block[1].audiosrc != '';
-        }).length;
+        if (state.storeList.size > 0) {
+          voiced_in_range = Array.from(state.storeList).filter(block => {
+            return block[1].audiosrc != '';
+          }).length;
+          commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
+        }
       }
       let audio_mastering = state.tc_currentBookTasks.assignments && state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1;
       if (audio_mastering) {
@@ -2358,7 +2362,6 @@ export const store = new Vuex.Store({
       commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_tts_in_range', value: approved_tts});
       commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_audio', value: changed_in_range});
       commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_tts', value: changed_in_range_tts});
-      commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
     },
     clearLocks({state, commit}, data) {
       if (data.type) {
