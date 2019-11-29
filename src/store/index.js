@@ -1222,7 +1222,7 @@ export const store = new Vuex.Store({
           }
           commit('SET_CURRENTBOOK_META', answer)
           commit('TASK_LIST_LOADED')
-          dispatch('setCurrentBookCounters');
+          dispatch('setCurrentBookCounters', ['narration_blocks', 'not_proofed_audio', 'voiced_in_range']);
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);
@@ -2089,7 +2089,7 @@ export const store = new Vuex.Store({
         dispatch('_setNotProofedAudioBlocksCounter');
       }*/
       if (counters.length == 0) {
-        counters = ['narration_blocks', 'not_proofed_audio', 'voiced_in_range'];
+        counters = ['narration_blocks', 'not_proofed_audio'];
       }
       if (state.currentBookid) {
         counters.forEach(c => {
