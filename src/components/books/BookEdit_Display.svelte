@@ -1,21 +1,35 @@
 <template>
-{#if intBlocks.length > 0}
-{#each intBlocks as block, idx (block.blockRid)}
-<!--{idx}->{block.blockRid}->{block.blockId}->{block.loaded}<br/>-->
 
+<!--{#each intBlocks as block, idx (block.blockRid)}-->
+<!--intBlocks.length: {intBlocks.length}-->
+<!--{idx}->{block.blockRid}->{block.blockId}->{block.loaded}<br/>-->
+<div class="bview-container">
+{#if intBlocks.length > 0}
+<VirtualList items={intBlocks} let:item bind:start={startBlockIdx} bind:scrollTo={vListScrollTo}>
+<div class='card'>
+{item.idx}->{item.blockRid}->{item.blockId}->{item.loaded}<br/>
 <BookBlockDisplay
+  blockRid="{item.blockRid}"
+  block="{item.blockView}"
+  blockListObj="{item}"
+  lang="{lang}"
+/>
+</div>
+<!--<BookBlockDisplay
   blockRid="{block.blockRid}"
   block="{block.blockView}"
   blockListObj="{block}"
   lang="{lang}"
-/>
-
-{/each}
+/>-->
+</VirtualList>
+<!--{/each}-->
 {/if}
+</div>
 </template>
 
 <script>
-  import { beforeUpdate } from 'svelte';//onMount,tick
+  import { beforeUpdate, tick } from 'svelte';//onMount,tick
+  import VirtualList from '../generic/VirtualList.svelte';
   import BookBlockDisplay from './BookBlockDisplay.svelte';
 
   export let lang = 'en';
@@ -25,45 +39,54 @@
   export let startId;
   export let reloadBook = false;
 
+  let startBlockIdx, vListScrollTo;
   let fntCounter = 0;
   let scrollCounter = 0;
   let loadedBookId = '';
   //let blockPromise = new Promise();
   let intBlocks = [];
   let blockIdx = 0;
+  let itemHeight = false;
 
-  beforeUpdate(() => {
+  beforeUpdate(/*async*/ () => {
     //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
     //loadedBookId = parlistO.meta.bookid;
 
-    fntCounter = 0;
     if (parlistO.meta.bookid && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== parlistO.meta.bookid)) {
+      fntCounter = 0;
       loadedBookId = parlistO.meta.bookid;
       console.log('beforeUpdate, loadedBookId', loadedBookId);
       for (let i = 0; i < blocks.length; i++) {
         blocks[i].blockView = blockView(blocks[i].blockRid);
         blocks[i].visible = blocks[i].loaded;
-        if (startId && blocks[i].blockId == startId) {
-          scrollCounter = 5;
-        }
-        if (scrollCounter > 0) {// set to visible blocks near startId
-          blocks[i].loaded = true;
-          blocks[i].visible = true;
-          scrollCounter--;
-        }
+        blocks[i].idx = i;
+        blocks[i].loaded = true;
+        blocks[i].visible = true;
+//         if (startId && blocks[i].blockId == startId) {
+//           scrollCounter = 5;
+//         }
+//         if (scrollCounter > 0) {// set to visible blocks near startId
+//           blocks[i].loaded = true;
+//           blocks[i].visible = true;
+//           scrollCounter--;
+//         }
       }
       intBlocks = blocks;
-      //console.log('beforeUpdate', intBlocks.length);
-      let found = blocks.find(function(el, idx) {
-        if (parlistO.getBlockByRid(el.blockRid).loaded === false) {
-          blockIdx = idx;
-          return true;
-        }
-        return false;
-      });
-      if (found) {
-        startShowTimer();
-      }
+      //await tick();
+
+      console.log('beforeUpdate', intBlocks.length);
+      vListScrollTo = 100;
+//       let found = blocks.find(function(el, idx) {
+//         //console.log('blocks.find', parlistO.getBlockByRid(el.blockRid).blockid, parlistO.getBlockByRid(el.blockRid).loaded);
+//         if (parlistO.getBlockByRid(el.blockRid).loaded === false) {
+//           blockIdx = idx;
+//           return true;
+//         }
+//         return false;
+//       });
+//       if (found) {
+//         startShowTimer();
+//       }
     }
     if (reloadBook) {
       blocks = [];
@@ -87,7 +110,7 @@
   function startShowTimer() {
     setTimeout(function() {
         if (startId && !wasScrolled) {
-          scrollToBlock(startId);
+          //scrollToBlock(startId);
           wasScrolled = !wasScrolled;
         }
         let i, execCount = 100;
@@ -99,12 +122,6 @@
             let blockElement = document.getElementById(blockDOMId);
             //parlistO.setVisible(intBlocks[i].blockRid);
             intBlocks[i].visible = true;
-//             if (blockElement) {
-//               blockElement.innerHTML = "";
-//               blockElement.insertAdjacentHTML('afterbegin', intBlocks[i].blockView.content);
-//               intBlocks[i].visible = true;
-//               //parlistO.setVisible(intBlocks[i].blockRid);
-//             }
             execCount--;
             checkCount++;
           }
@@ -119,6 +136,7 @@
         if (i < intBlocks.length) {
           startShowTimer();
         } else {
+
           console.log('done', i, checkCount, startId);
           //if (startId) scrollToBlock(startId);
         }
@@ -127,11 +145,12 @@
 
   const scrollToBlock = (blockId) => {
     console.log('scrollToBlockSvelte', blockId);
-    let vBlock = document.getElementById(blockId);
-    if (vBlock) {
-      //console.log('vBlock', vBlock);
-      vBlock.scrollIntoView();
-    }
+    vListScrollTo = 100;
+//     let vBlock = document.getElementById(blockId);
+//     if (vBlock) {
+//       //console.log('vBlock', vBlock);
+//       vBlock.scrollIntoView();
+//     }
   }
 
   const timestamp = (new Date()).toJSON();
@@ -229,3 +248,22 @@
   }
 
 </script>
+
+<style>
+  .bview-container {
+    min-height: 200px;
+    /*height: calc(100vh - 15em);*/
+    height: 100%;
+    width: 100%;
+  }
+
+  .card {
+    position: relative;
+    min-height: 5em;
+  }
+
+  .card::after {
+    clear: both;
+    display: block;
+  }
+</style>

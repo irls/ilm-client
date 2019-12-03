@@ -40,7 +40,7 @@
 {:else}
   <div class="ilm-block ilm-display content-process-run preloader-loading"></div>
 {/if}
-<div class="clearfix"></div>
+<!--<div class="clearfix"></div>-->
 </template>
 <script>
 

@@ -52,7 +52,7 @@ export default {
   },
   components: {
     BookDisplayHeader, BookBlockDisplay,/*InfiniteLoading,  BookTOC,*/
-    SvelteBookDisplayInVue: toVue(SvelteBookDisplay, {}, "div")
+    SvelteBookDisplayInVue: toVue(SvelteBookDisplay, {height: '100%'}, "div")
   },
   computed: {
       ...mapGetters({
@@ -373,8 +373,10 @@ export default {
 
 <style lang="less" scoped>
 .container-fluid {
-  padding-top: 15px;
-  overflow-y: auto;
+  /*padding-top: 15px;*/
+  /*overflow-y: auto;*/
+  padding: 0px;
+  margin: 0px;
 }
 </style>
 
