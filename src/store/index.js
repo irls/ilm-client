@@ -2720,6 +2720,14 @@ export const store = new Vuex.Store({
     removeBlock({state, commit, dispatch}, blockid) {
       return axios.delete(state.API_URL + 'book/block/' + blockid)
         .then(response => {
+          if (state.blockSelection.start && blockid === state.blockSelection.start._id) {
+            let outId = state.storeListO.getOutId(blockid);
+            if (outId) {
+              commit('set_block_selection', Object.assign(state.blockSelection, {
+                start: {_id: outId}
+              }));
+            }
+          }
           return dispatch('checkResponse', response);
         })
         .catch(err => {
