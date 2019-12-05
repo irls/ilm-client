@@ -19,6 +19,7 @@
       :parlist="parlist"
       :lang="meta.language"
       :startId="startId"
+      :hotkeyScrollTo="hotkeyScrollTo"
       @setStart="setStartIdIdx"
       :reloadBook="reloadBook"
       ref="viewBlocks"
@@ -48,7 +49,8 @@ export default {
     return {
       startId: false,
       reloadBook: false,
-      isBookMounted: false
+      isBookMounted: false,
+      hotkeyScrollTo: false
       /*onScrollEv: false,*/
     }
   },
@@ -79,23 +81,27 @@ export default {
         return {
           // 'esc+ctrl' is OK.
           'ctrl+home': (ev)=>{
-            //console.log('ctrl+home');
+            ev.preventDefault();
+            ev.stopPropagation();
             let firstRid = this.parlistO.getFirstRid();
             //console.log('firstRid', firstRid);
             if (firstRid) {
               let block = this.parlistO.getBlockByRid(firstRid);
+              console.log('ctrl+home', block);
               if (block) {
-                this.scrollToBlock(block.blockid, true);
+                this.scrollToBlock(block.index, block.blockid);
               }
             }
           },
           'ctrl+end': (ev)=>{
-            //console.log('ctrl+end')
+            ev.preventDefault();
+            ev.stopPropagation();
             let lastRid = this.parlistO.getLastRid();
             if (lastRid) {
               let block = this.parlistO.getBlockByRid(lastRid);
+              console.log('ctrl+end', block);
               if (block) {
-                this.scrollToBlock(block.blockid, true);
+                this.scrollToBlock(block.index, block.blockid);
               }
             }
           },
@@ -146,8 +152,11 @@ export default {
       'loopPreparedBlocksChain', 'putNumBlockOBatch', 'setCurrentBookCounters', 'loadBookToc'
     ]),
 
-    scrollToBlock(blockId, setStartId = false) {
-      //console.log('scrollToBlock', blockId, setStartId);
+    scrollToBlock(blockIdx, blockId) {
+      console.log('scrollToBlock', blockIdx, blockId);
+      this.hotkeyScrollTo = blockIdx;
+
+
 //       let vBlock = document.getElementById(blockId);
 //       if (vBlock) {
 //         if (setStartId) {
@@ -350,6 +359,11 @@ export default {
           Vue.nextTick(()=>{
             this.checkScrollBottom();
           })
+
+//           window.setTimeout(()=>{
+//             console.log('setTimeout');
+//             this.hotkeyScrollTo = 100;
+//           }, 1000)
         }
       }
     },

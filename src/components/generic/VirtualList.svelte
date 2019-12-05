@@ -71,21 +71,22 @@
 
     console.log('handle_scrollTo', scrollTo);
 
-    if (!scrollTo) return;
+    if (scrollTo === false) return;
 
     let expected_height = 0;
 
     for (let i = 0; i < scrollTo; i +=1) {
       expected_height += height_map[i] || average_height || 0;
     }
-    //console.log('handle_scrollTo expected_height', expected_height);
+    console.log('handle_scrollTo expected_height', expected_height);
     await tick();
     viewport.scrollTo(0, expected_height);
+    scrollTo = false;
   }
 
   async function handle_scroll() {
     const { scrollTop } = viewport;
-
+    console.log('handle_scroll scrollTop', scrollTop);
     const old_start = start;
 
     for (let v = 0; v < rows.length; v += 1) {
@@ -125,7 +126,7 @@
     bottom = remaining * average_height;
 
     // prevent jumping if we scrolled up into unknown territory
-    if (start < old_start) {
+    if (scrollTo === false && start < old_start) {
       await tick();
 
       let expected_height = 0;

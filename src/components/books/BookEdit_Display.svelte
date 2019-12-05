@@ -4,7 +4,7 @@
 <!--intBlocks.length: {intBlocks.length}-->
 <div class="bview-container">
 {#if intBlocks.length > 0}
-<VirtualList items={intBlocks} let:item bind:start={startBlockIdx} bind:startFrom={vListScrollTo}>
+<VirtualList items={intBlocks} let:item bind:start={startBlockIdx} bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}>
 <div class='card'>
 {item.idx}->{item.blockRid}->{item.blockId}<!--->{item.loaded}--><br/>
 <BookBlockDisplay
@@ -37,8 +37,10 @@
   export let parlist = {};
   export let startId;
   export let reloadBook = false;
+  export let hotkeyScrollTo = false;
 
   let startBlockIdx = 0;
+  let vListStartFrom = false;
   let vListScrollTo = false;
   let startIdIdx = 0;
   let fntCounter = 0;
@@ -53,8 +55,8 @@
   $: scrolledTo(startBlockIdx);
   function scrolledTo(startBlockIdx) {
     if (blocks[startBlockIdx]) {
-      if (vListScrollTo) {
-        vListScrollTo = false;
+      if (vListStartFrom) {
+        vListStartFrom = false;
         return;
       }
       dispatch('setStart', {
@@ -62,6 +64,15 @@
         blockId: blocks[startBlockIdx].blockId,
         blockRid: blocks[startBlockIdx].blockRid
       });
+    }
+  }
+
+  $: hotkeyScrolledTo(hotkeyScrollTo);
+  async function hotkeyScrolledTo(hotkeyScrollTo) {
+    console.log('hotkeyScrollTo', hotkeyScrollTo);
+    if (hotkeyScrollTo !== false) {
+      await tick();
+      vListScrollTo = hotkeyScrollTo;
     }
   }
 
@@ -95,7 +106,7 @@
       console.log('startId', startId, 'startIdIdx', startIdIdx);
       //console.log('beforeUpdate', intBlocks.length);
       if (startIdIdx > 0) {
-        vListScrollTo = startIdIdx;
+        vListStartFrom = startIdIdx;
       }
       /*let found = blocks.find(function(el, idx) {
         //console.log('blocks.find', parlistO.getBlockByRid(el.blockRid).blockid, parlistO.getBlockByRid(el.blockRid).loaded);
@@ -164,7 +175,7 @@
 
   const scrollToBlock = (blockId) => {
     console.log('scrollToBlockSvelte', blockId);
-    vListScrollTo = 100;
+    vListStartFrom = 100;
   }
 
   const timestamp = (new Date()).toJSON();

@@ -16,7 +16,7 @@ class LookupBlock {
     this.isNumber = block.isNumber || false;
     this.isManual = block.isManual || false;
     this.isHidden = block.isHidden  || false;
-    this.index = block.index || -1;
+    this.index = block.hasOwnProperty('index') ? block.index : -1;
     this.visible = false;
     this.loaded = false;
     this.checked = false;
