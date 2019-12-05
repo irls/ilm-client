@@ -2,12 +2,11 @@
 
 <!--{#each intBlocks as block, idx (block.blockRid)}-->
 <!--intBlocks.length: {intBlocks.length}-->
-<!--{idx}->{block.blockRid}->{block.blockId}->{block.loaded}<br/>-->
 <div class="bview-container">
 {#if intBlocks.length > 0}
-<VirtualList items={intBlocks} let:item bind:start={startBlockIdx} bind:scrollTo={vListScrollTo}>
+<VirtualList items={intBlocks} let:item bind:start={startBlockIdx} bind:scrollToProxy={vListScrollTo}>
 <div class='card'>
-{item.idx}->{item.blockRid}->{item.blockId}->{item.loaded}<br/>
+{item.idx}->{item.blockRid}->{item.blockId}<!--->{item.loaded}--><br/>
 <BookBlockDisplay
   blockRid="{item.blockRid}"
   block="{item.blockView}"
@@ -48,7 +47,7 @@
   let blockIdx = 0;
   let itemHeight = false;
 
-  beforeUpdate(/*async*/ () => {
+  beforeUpdate(/*async */() => {
     //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
     //loadedBookId = parlistO.meta.bookid;
 
@@ -62,9 +61,10 @@
         blocks[i].idx = i;
         blocks[i].loaded = true;
         blocks[i].visible = true;
-//         if (startId && blocks[i].blockId == startId) {
+        if (startId && blocks[i].blockId == startId) {
 //           scrollCounter = 5;
-//         }
+            scrollCounter = i;
+        }
 //         if (scrollCounter > 0) {// set to visible blocks near startId
 //           blocks[i].loaded = true;
 //           blocks[i].visible = true;
@@ -73,9 +73,10 @@
       }
       intBlocks = blocks;
       //await tick();
-
+      console.log('startId', startId);
+      console.log('scrollCounter', scrollCounter);
       console.log('beforeUpdate', intBlocks.length);
-      vListScrollTo = 100;
+      if (scrollCounter>0) vListScrollTo = scrollCounter;
 //       let found = blocks.find(function(el, idx) {
 //         //console.log('blocks.find', parlistO.getBlockByRid(el.blockRid).blockid, parlistO.getBlockByRid(el.blockRid).loaded);
 //         if (parlistO.getBlockByRid(el.blockRid).loaded === false) {
@@ -118,8 +119,8 @@
           if (execCount <= 0) break;
           if (intBlocks[i].visible === false) {
             //console.log('setTimeout'/*, intBlocks[i].blockView.type, intBlocks[i].blockRid, intBlocks[i].blockId*/);
-            let blockDOMId = `display-${intBlocks[i].blockId}`;
-            let blockElement = document.getElementById(blockDOMId);
+            //let blockDOMId = `display-${intBlocks[i].blockId}`;
+            //let blockElement = document.getElementById(blockDOMId);
             //parlistO.setVisible(intBlocks[i].blockRid);
             intBlocks[i].visible = true;
             execCount--;

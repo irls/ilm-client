@@ -10,6 +10,7 @@
   export let start = 0;
   export let end = 0;
   export let scrollTo = false;
+  export let scrollToProxy = false;
 
   // local state
   let height_map = [];
@@ -26,6 +27,7 @@
 
   $: visible = items.slice(start, end).map((data, i) => {
     //console.log('visible', start, end);
+    //console.log('visible', `height_map[${start}]`, height_map[start], `height_map[${end}]`, height_map[end]);
     return { index: i + start, data };
   });
 
@@ -33,13 +35,15 @@
   $: if (mounted) refresh(items, viewport_height, itemHeight);
 
   async function refresh(items, viewport_height, itemHeight) {
-    console.log('refresh', viewport_height, average_height);
+
     const { scrollTop } = viewport;
 
     await tick(); // wait until the DOM is up to date
 
     let content_height = top - scrollTop;
     let i = start;
+
+    //console.log('refresh start', start);
 
     while (content_height < viewport_height && i < items.length) {
       let row = rows[i - start];
@@ -63,48 +67,57 @@
     bottom = remaining * average_height;
     height_map.length = items.length;
 
-    //console.log('refresh', items.length, viewport_height, average_height);
+    //console.log('refresh items.length, viewport_height, average_height', items.length, viewport_height, average_height);
 
   }
 
+  $: handle_scrollTo(scrollTo);
 
-  $: if (mounted && average_height) handle_scrollTo(scrollTo);
-
-  async function handle_scrollTo() {
+  async function handle_scrollTo(scrollTo) {
 
     //console.log('handle_scrollTo', mounted, scrollTo, start, average_height)
     if (!scrollTo) return;
 
-    //start = scrollTo;
-
-
-
-    ;
-
-    //start = scrollTo;
-
-    //const { scrollTop } = viewport;
-
+    //await tick();
+    //await tick();
 
     let expected_height = 0;
     const old_start = scrollTo;
+
+    console.log('handle_scrollTo');
 
     for (let i = 0; i < scrollTo; i +=1) {
       expected_height += height_map[i] || average_height || 0;
       //console.log(`height_map ${i}:`, height_map[i], average_height);
     }
 
-    //;
-    console.log('expected_height', expected_height);
+    console.log('handle_scrollTo expected_height', expected_height);
     //console.log('scrollTop', scrollTop);
     await asyncScrollTo(expected_height, old_start);
-    await tick();
-    console.log('scrollTo == start', scrollTo, start);
-    if (scrollTo == start) scrollTo = false;
-    refresh(items, viewport_height, itemHeight);
+
+    //await refresh_s(old_start);
+
+    //await tick();
+    console.log('handle_scrollTo scrollTo, start', scrollTo, start);
+
+    /*if (scrollTo == start)*/
+    //if (!isNaN(average_height))
+    //await refresh(items, viewport_height, itemHeight);
+    //scrollTo = false;
+    //await tick();
+    //handle_scroll_s();
+//     refresh(items, viewport_height, itemHeight);
     //await tick();
 
-
+    //await handle_scroll();
+//     await refresh_s(old_start);
+//     console.log('tick12');
+//     for (let i = 0; i < scrollTo; i +=1) {
+//       expected_height += height_map[i] || average_height || 0;
+//       //console.log(`height_map ${i}:`, height_map[i], average_height);
+//     }
+//
+//     console.log('handle_scrollTo expected_height', expected_height);
   }
 
   async function asyncScrollTo(expected_height, old_start) {
@@ -126,6 +139,7 @@
     let y = 0;
 
     while (i < items.length) {
+      //if (height_map[i]) console.log('handle_scroll', `height_map[${i}]`, height_map[i]);
       const row_height = height_map[i] || average_height;
       if (y + row_height > scrollTop) {
         start = i;
@@ -163,11 +177,12 @@
 
       for (let i = start; i < old_start; i +=1) {
         if (rows[i - start]) {
-          expected_height += height_map[i];
+          expected_height += height_map[i] || average_height;
           actual_height += itemHeight || rows[i - start].offsetHeight;
         }
       }
 
+      //console.log('handle_scroll', 'actual_height', actual_height, 'expected_height', expected_height);
       const d = actual_height - expected_height;
       viewport.scrollTo(0, scrollTop + d);
     }
@@ -178,10 +193,21 @@
   }
 
   // trigger initial refresh
-  onMount(() => {
+  onMount(async () => {
     rows = contents.getElementsByTagName('svelte-virtual-list-row');
-    console.log('onMount');
-    mounted = true;
+    console.log('onMount scrollTo', scrollTo);
+    if (scrollToProxy) {
+      await refresh(items, viewport_height, itemHeight);
+      //viewport.scrollTo(0, 10);
+      await handle_scroll();
+      //viewport.scrollTo(0, 20);
+      //await tick();
+      scrollTo = scrollToProxy;
+      //setTimeout(() => {scrollTo = scrollToProxy}, 10);
+
+    } else {
+      mounted = true;
+    }
   });
 </script>
 

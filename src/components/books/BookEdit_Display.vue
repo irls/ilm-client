@@ -287,6 +287,7 @@ export default {
           this.loadBook(bookid)
           .then((meta)=>{
             let startBlock = this.$route.params.block || false;
+            console.log('startBlock', startBlock, this.$route.params);
             this.startId = startBlock;
             this.parlistO.setFirstVisibleId(startBlock);
             let taskType = this.$route.params.task_type || false;
