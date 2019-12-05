@@ -158,13 +158,13 @@ export const store = new Vuex.Store({
       {
         group: 'Reader',
         categories: [
-          'History', 'Ideas', 'Science', 'Stories', 'Verse'
+          'History', 'Ideas', 'Science', 'Novels', 'Verse'
         ]
       },
       {
         group: 'Ocean',
         categories: [
-          'Bahá’í', 'Buddhist', 'Christian', 'Confucian', 'Hindu', 'Islam', 'Judaism', 'Sikh', 'Tao', 'Zoroastrian'
+          'Bahá’í', 'Buddhist', 'Christian', 'Confucian', 'Hindu', 'Islam', 'Judaism', 'Jainism ', 'Sikh', 'Tao', 'Zoroastrian'
         ]
       }
     ],
