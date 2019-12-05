@@ -10,7 +10,7 @@
   export let start = 0;
   export let end = 0;
   export let scrollTo = false;
-  export let scrollToProxy = false;
+  export let startFrom = false;
 
   // local state
   let height_map = [];
@@ -26,8 +26,6 @@
   let average_height;
 
   $: visible = items.slice(start, end).map((data, i) => {
-    //console.log('visible', start, end);
-    //console.log('visible', `height_map[${start}]`, height_map[start], `height_map[${end}]`, height_map[end]);
     return { index: i + start, data };
   });
 
@@ -42,8 +40,6 @@
 
     let content_height = top - scrollTop;
     let i = start;
-
-    //console.log('refresh start', start);
 
     while (content_height < viewport_height && i < items.length) {
       let row = rows[i - start];
@@ -67,19 +63,13 @@
     bottom = remaining * average_height;
     height_map.length = items.length;
 
-    //console.log('refresh items.length, viewport_height, average_height', items.length, viewport_height, average_height);
-
   }
 
   $: handle_scrollTo(scrollTo);
 
   async function handle_scrollTo(scrollTo) {
 
-    //console.log('handle_scrollTo', mounted, scrollTo, start, average_height)
     if (!scrollTo) return;
-
-    //await tick();
-    //await tick();
 
     let expected_height = 0;
     const old_start = scrollTo;
@@ -88,47 +78,16 @@
 
     for (let i = 0; i < scrollTo; i +=1) {
       expected_height += height_map[i] || average_height || 0;
-      //console.log(`height_map ${i}:`, height_map[i], average_height);
     }
 
     console.log('handle_scrollTo expected_height', expected_height);
-    //console.log('scrollTop', scrollTop);
-    await asyncScrollTo(expected_height, old_start);
-
-    //await refresh_s(old_start);
-
-    //await tick();
-    console.log('handle_scrollTo scrollTo, start', scrollTo, start);
-
-    /*if (scrollTo == start)*/
-    //if (!isNaN(average_height))
-    //await refresh(items, viewport_height, itemHeight);
-    //scrollTo = false;
-    //await tick();
-    //handle_scroll_s();
-//     refresh(items, viewport_height, itemHeight);
-    //await tick();
-
-    //await handle_scroll();
-//     await refresh_s(old_start);
-//     console.log('tick12');
-//     for (let i = 0; i < scrollTo; i +=1) {
-//       expected_height += height_map[i] || average_height || 0;
-//       //console.log(`height_map ${i}:`, height_map[i], average_height);
-//     }
-//
-//     console.log('handle_scrollTo expected_height', expected_height);
-  }
-
-  async function asyncScrollTo(expected_height, old_start) {
     await tick();
     viewport.scrollTo(0, expected_height);
-    //start = old_start;
   }
 
   async function handle_scroll() {
     const { scrollTop } = viewport;
-    //console.log('handle_scroll', scrollTop);
+
     const old_start = start;
 
     for (let v = 0; v < rows.length; v += 1) {
@@ -139,7 +98,7 @@
     let y = 0;
 
     while (i < items.length) {
-      //if (height_map[i]) console.log('handle_scroll', `height_map[${i}]`, height_map[i]);
+
       const row_height = height_map[i] || average_height;
       if (y + row_height > scrollTop) {
         start = i;
@@ -168,7 +127,6 @@
     bottom = remaining * average_height;
 
     // prevent jumping if we scrolled up into unknown territory
-    //console.log('handle_scroll', old_start, start);
     if (start < old_start) {
       await tick();
 
@@ -182,7 +140,6 @@
         }
       }
 
-      //console.log('handle_scroll', 'actual_height', actual_height, 'expected_height', expected_height);
       const d = actual_height - expected_height;
       viewport.scrollTo(0, scrollTop + d);
     }
@@ -195,16 +152,11 @@
   // trigger initial refresh
   onMount(async () => {
     rows = contents.getElementsByTagName('svelte-virtual-list-row');
-    console.log('onMount scrollTo', scrollTo);
-    if (scrollToProxy) {
+    console.log('onMount startFrom', startFrom);
+    if (startFrom) {
       await refresh(items, viewport_height, itemHeight);
-      //viewport.scrollTo(0, 10);
       await handle_scroll();
-      //viewport.scrollTo(0, 20);
-      //await tick();
-      scrollTo = scrollToProxy;
-      //setTimeout(() => {scrollTo = scrollToProxy}, 10);
-
+      scrollTo = startFrom;
     } else {
       mounted = true;
     }

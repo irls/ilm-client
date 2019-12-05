@@ -4,7 +4,7 @@
 <!--intBlocks.length: {intBlocks.length}-->
 <div class="bview-container">
 {#if intBlocks.length > 0}
-<VirtualList items={intBlocks} let:item bind:start={startBlockIdx} bind:scrollToProxy={vListScrollTo}>
+<VirtualList items={intBlocks} let:item bind:start={startBlockIdx} bind:startFrom={vListScrollTo}>
 <div class='card'>
 {item.idx}->{item.blockRid}->{item.blockId}<!--->{item.loaded}--><br/>
 <BookBlockDisplay
