@@ -303,7 +303,7 @@
         }
       },
       set_taskBlockMapPositions(fromBlockId = null) {
-        console.time('set_taskBlockMapPositions');
+        //console.time('set_taskBlockMapPositions');
         if (!fromBlockId) {
           fromBlockId = this.storeListO.firstVisibleId;
         }
@@ -381,7 +381,7 @@
             }
           }
         }
-        console.timeEnd('set_taskBlockMapPositions');
+        //console.timeEnd('set_taskBlockMapPositions');
       },
       set_taskBlockMapPositionsFromRoute() {
         if (this.$route && ['BookEditDisplay', 'CollectionBookEditDisplay'].indexOf(this.$route.name) !== -1 && this.$route.params && this.$route.params.block) {
