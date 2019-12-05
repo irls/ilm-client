@@ -1,6 +1,6 @@
 <template>
-  <div ref="scrollWrap" @scroll="throttledOnScroll" v-hotkey="keymap" :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
-    <!--<BookDisplayHeader @scroll.throttle="onScroll" v-hotkey="keymap"/>-->
+  <div v-if="isBookMounted" ref="scrollWrap" v-hotkey="keymap" :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
+    <!--<BookDisplayHeader @scroll="throttledOnScroll" v-hotkey="keymap"/>-->
     <!--<BookTOC />-->
     <!--<template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
       <book-block-display
@@ -18,17 +18,19 @@
       :parlistO="parlistO"
       :parlist="parlist"
       :lang="meta.language"
-      :startId="displayStartId"
+      :startId="startId"
+      @setStart="setStartIdIdx"
       :reloadBook="reloadBook"
       ref="viewBlocks"
     />
+    <!--@watch:number="setStartIdIdx"-->
 
   </div>
 </template>
 
 <script>
 import Vue from 'vue'
-import _ from 'lodash'
+//import _ from 'lodash'
 import BookDisplayHeader from './BookDisplayHeader'
 import BookBlockDisplay   from './BookBlockDisplay';
 //import BookTOC from './BookTOC'
@@ -45,9 +47,9 @@ export default {
   data () {
     return {
       startId: false,
-      onScrollEv: false,
       reloadBook: false,
-      displayStartId: false
+      isBookMounted: false
+      /*onScrollEv: false,*/
     }
   },
   components: {
@@ -146,63 +148,76 @@ export default {
 
     scrollToBlock(blockId, setStartId = false) {
       //console.log('scrollToBlock', blockId, setStartId);
-      let vBlock = document.getElementById(blockId);
-      if (vBlock) {
-        if (setStartId) {
-          this.startId = blockId;
-        }
-        this.onScrollEv = true;
-        vBlock.scrollIntoView();
-        this.onScroll();
-      }
+//       let vBlock = document.getElementById(blockId);
+//       if (vBlock) {
+//         if (setStartId) {
+//           this.startId = blockId;
+//         }
+//         this.onScrollEv = true;
+//         vBlock.scrollIntoView();
+//         this.onScroll();
+//       }
     },
 
-    throttledOnScroll: _.throttle(function () {
-      this.onScroll();
-    }, 1000),
+    setStartIdIdx(ev) {
+      //console.log('setStartIdIdx', ev.detail);
+      let params = {};
+      for (let p in this.$route.params) {
+        params[p] = this.$route.params[p];
+      }
+      params.block = ev.detail.blockId;
+      this.$router.push({
+        name: this.$route.name,
+        params: params
+      });
+    },
+
+//     throttledOnScroll: _.throttle(function () {
+//       this.onScroll();
+//     }, 1000),
 
     onScroll() {
-      //console.log('onScroll', 'this.onScrollEv', this.onScrollEv);
-      if (!this.onScrollEv) {
-        //console.time('handleScroll');
-        this.checkScrollBottom();
-        let firstVisibleId = false;
-        let visible = false;
-        let idsArray = [];
-        let point = this.$refs.scrollWrap.scrollHeight/this.parlistO.listObjs.length;
-        let pos = Math.floor(this.$refs.scrollWrap.scrollTop/point)-100;
-        let idx = 0;
-        //console.log('pos', pos);
-        //console.time('checkPos');
-        for (let blockRef of this.$refs.viewBlocks.$el.childNodes) {
-          //console.log('blockRef', blockRef.dataset);
-          if (blockRef.nodeName == 'DIV' && blockRef.dataset && blockRef.dataset.id) {
-            if (idx >= pos) {
-              visible = this.checkVisible(blockRef);
-              if (visible) {
-                if (!firstVisibleId) firstVisibleId = blockRef.id;
-                break;
-              }
-            }
-            ++idx;
-          }
-        }
-        //console.log('idx', idx);
-        //console.timeEnd('checkPos');
-        //console.log('firstVisibleId', firstVisibleId);
-        if (firstVisibleId !== false && this.$route.params.block !== firstVisibleId) {
-          this.onScrollEv = true;
-          let params = {};
-          for (let p in this.$route.params) {
-            params[p] = this.$route.params[p];
-          }
-          params.block = firstVisibleId;
-          this.$router.push({
-            name: this.$route.name,
-            params: params
-          });
-        }
-      } else this.onScrollEv = false;
+      console.log('Vue onScroll', 'this.startIdIdx', this.startIdIdx);
+//       if (!this.onScrollEv) {
+//         //console.time('handleScroll');
+//         this.checkScrollBottom();
+//         let firstVisibleId = false;
+//         let visible = false;
+//         let idsArray = [];
+//         let point = this.$refs.scrollWrap.scrollHeight/this.parlistO.listObjs.length;
+//         let pos = Math.floor(this.$refs.scrollWrap.scrollTop/point)-100;
+//         let idx = 0;
+//         //console.log('pos', pos);
+//         //console.time('checkPos');
+//         for (let blockRef of this.$refs.viewBlocks.$el.childNodes) {
+//           //console.log('blockRef', blockRef.dataset);
+//           if (blockRef.nodeName == 'DIV' && blockRef.dataset && blockRef.dataset.id) {
+//             if (idx >= pos) {
+//               visible = this.checkVisible(blockRef);
+//               if (visible) {
+//                 if (!firstVisibleId) firstVisibleId = blockRef.id;
+//                 break;
+//               }
+//             }
+//             ++idx;
+//           }
+//         }
+//         //console.log('idx', idx);
+//         //console.timeEnd('checkPos');
+//         //console.log('firstVisibleId', firstVisibleId);
+//         if (firstVisibleId !== false && this.$route.params.block !== firstVisibleId) {
+//           this.onScrollEv = true;
+//           let params = {};
+//           for (let p in this.$route.params) {
+//             params[p] = this.$route.params[p];
+//           }
+//           params.block = firstVisibleId;
+//           this.$router.push({
+//             name: this.$route.name,
+//             params: params
+//           });
+//         }
+//       } else this.onScrollEv = false;
     },
 
     checkVisible(elm) {
@@ -268,7 +283,7 @@ export default {
       this.$store.commit('clear_storeListO');
       Vue.nextTick(()=>{
         this.reloadBook = true;
-        this.displayStartId = false;
+        this.startId = false;
       });
       this.$router.push({
         name: 'BookEditDisplay', params: {}
@@ -281,15 +296,16 @@ export default {
       if (this.$route.params.hasOwnProperty('bookid')) {
         let bookid = this.$route.params.bookid;
         if (!this.meta._id || bookid !== this.parlistO.meta.bookid) {
-          this.parlistO.setFirstVisibleId(null);
+          console.log('loadBookMounted', 'load');
+          //this.parlistO.setFirstVisibleId(null);
           this.$store.commit('clear_storeList');
           this.$store.commit('clear_storeListO');
           this.loadBook(bookid)
           .then((meta)=>{
             let startBlock = this.$route.params.block || false;
-            console.log('startBlock', startBlock, this.$route.params);
+            console.log('startBlock', startBlock, '$route.params.block', this.$route.params.block);
             this.startId = startBlock;
-            this.parlistO.setFirstVisibleId(startBlock);
+            //this.parlistO.setFirstVisibleId(startBlock);
             let taskType = this.$route.params.task_type || false;
             //console.log('startId', this.$route.params.block, this.startId);
             return this.loadPartOfBookBlocks({
@@ -301,34 +317,39 @@ export default {
                 if (this.startId == false) {
                   this.startId = answer.blocks[0].blockid;
                 }
-                this.displayStartId = this.startId;
                 this.getAllBlocks(answer.meta.bookid, this.startId)
                 .then((result)=>{
-                  this.onScrollEv = true;
-                  Vue.nextTick(()=>{
-                    this.onScrollEv = true;
+                  this.isBookMounted = true;
+                  //this.onScrollEv = true;
+                  /*Vue.nextTick(()=>{
+                    //this.onScrollEv = true;
                     //let scrollId = this.parlistO.getPrevIds(this.startId, 1);
                     this.scrollToBlock(this.startId);
-                  });
+                  });*/
                 });
             });
           })
         }
         else {
-          if (this.$route.params.block) {
-            if (this.$route.params.block!=='unresolved') {
-              this.onScrollEv = true;
-              //this.startId = this.$route.params.block || false;
-              this.scrollToBlock(this.$route.params.block);
+          console.log('loadBookMounted', 'pre');
+          if (this.$route.params.hasOwnProperty('block')) {
+            if (this.$route.params.block=='unresolved') {
+              //this.onScrollEv = true;
+              this.startId = this.$route.params.block || false;
+              //this.scrollToBlock(this.$route.params.block);
               //console.timeEnd('loadBookMounted');
             } else {
-              this.startId = this.parlistO.idsArray()[0] || false;
+              //this.startId = this.parlistO.idsArray()[0] || false;
+              this.startId = this.$route.params.block;
             }
           } else {
-            this.startId = this.parlistO.idsArray()[0] || false;
-            this.parlistO.setFirstVisibleId(this.startId);
+            //this.startId = this.parlistO.idsArray()[0] || false;
+            //this.parlistO.setFirstVisibleId(this.startId);
           }
-          this.checkScrollBottom();
+          this.isBookMounted = true;
+          Vue.nextTick(()=>{
+            this.checkScrollBottom();
+          })
         }
       }
     },
@@ -352,7 +373,7 @@ export default {
     this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
   },
   watch: {
-    '$route' (toRoute, fromRoute) {
+    /*'$route' (toRoute, fromRoute) {
       //console.log('$route', toRoute, fromRoute, this.onScrollEv);
       if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
         if (toRoute.params.block !== 'unresolved') {
@@ -367,7 +388,7 @@ export default {
         }
       }
       else this.onScrollEv = false;
-    }
+    }*/
   },
 }
 </script>

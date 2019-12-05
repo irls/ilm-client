@@ -69,18 +69,16 @@
 
   async function handle_scrollTo(scrollTo) {
 
+    console.log('handle_scrollTo', scrollTo);
+
     if (!scrollTo) return;
 
     let expected_height = 0;
-    const old_start = scrollTo;
-
-    console.log('handle_scrollTo');
 
     for (let i = 0; i < scrollTo; i +=1) {
       expected_height += height_map[i] || average_height || 0;
     }
-
-    console.log('handle_scrollTo expected_height', expected_height);
+    //console.log('handle_scrollTo expected_height', expected_height);
     await tick();
     viewport.scrollTo(0, expected_height);
   }

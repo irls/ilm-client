@@ -27,7 +27,7 @@
 </template>
 
 <script>
-  import { beforeUpdate, tick } from 'svelte';//onMount,tick
+  import { beforeUpdate, createEventDispatcher, tick } from 'svelte';//onMount,tick
   import VirtualList from '../generic/VirtualList.svelte';
   import BookBlockDisplay from './BookBlockDisplay.svelte';
 
@@ -38,14 +38,32 @@
   export let startId;
   export let reloadBook = false;
 
-  let startBlockIdx, vListScrollTo;
+  let startBlockIdx = 0;
+  let vListScrollTo = false;
+  let startIdIdx = 0;
   let fntCounter = 0;
-  let scrollCounter = 0;
+  //let scrollCounter = 0;
   let loadedBookId = '';
-  //let blockPromise = new Promise();
   let intBlocks = [];
-  let blockIdx = 0;
+  //let blockIdx = 0;
   let itemHeight = false;
+
+  const dispatch = createEventDispatcher();
+
+  $: scrolledTo(startBlockIdx);
+  function scrolledTo(startBlockIdx) {
+    if (blocks[startBlockIdx]) {
+      if (vListScrollTo) {
+        vListScrollTo = false;
+        return;
+      }
+      dispatch('setStart', {
+        blockIdx: startBlockIdx,
+        blockId: blocks[startBlockIdx].blockId,
+        blockRid: blocks[startBlockIdx].blockRid
+      });
+    }
+  }
 
   beforeUpdate(/*async */() => {
     //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
@@ -54,7 +72,8 @@
     if (parlistO.meta.bookid && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== parlistO.meta.bookid)) {
       fntCounter = 0;
       loadedBookId = parlistO.meta.bookid;
-      console.log('beforeUpdate, loadedBookId', loadedBookId);
+      //console.log('beforeUpdate, loadedBookId', loadedBookId);
+      //console.log('beforeUpdate, blocks.length', blocks.length);
       for (let i = 0; i < blocks.length; i++) {
         blocks[i].blockView = blockView(blocks[i].blockRid);
         blocks[i].visible = blocks[i].loaded;
@@ -62,32 +81,33 @@
         blocks[i].loaded = true;
         blocks[i].visible = true;
         if (startId && blocks[i].blockId == startId) {
-//           scrollCounter = 5;
-            scrollCounter = i;
+          /*scrollCounter = 5;*/
+          startIdIdx = i;
         }
-//         if (scrollCounter > 0) {// set to visible blocks near startId
-//           blocks[i].loaded = true;
-//           blocks[i].visible = true;
-//           scrollCounter--;
-//         }
+        /*if (scrollCounter > 0) {// set to visible blocks near startId
+          blocks[i].loaded = true;
+          blocks[i].visible = true;
+          scrollCounter--;
+        }*/
       }
       intBlocks = blocks;
       //await tick();
-      console.log('startId', startId);
-      console.log('scrollCounter', scrollCounter);
-      console.log('beforeUpdate', intBlocks.length);
-      if (scrollCounter>0) vListScrollTo = scrollCounter;
-//       let found = blocks.find(function(el, idx) {
-//         //console.log('blocks.find', parlistO.getBlockByRid(el.blockRid).blockid, parlistO.getBlockByRid(el.blockRid).loaded);
-//         if (parlistO.getBlockByRid(el.blockRid).loaded === false) {
-//           blockIdx = idx;
-//           return true;
-//         }
-//         return false;
-//       });
-//       if (found) {
-//         startShowTimer();
-//       }
+      console.log('startId', startId, 'startIdIdx', startIdIdx);
+      //console.log('beforeUpdate', intBlocks.length);
+      if (startIdIdx > 0) {
+        vListScrollTo = startIdIdx;
+      }
+      /*let found = blocks.find(function(el, idx) {
+        //console.log('blocks.find', parlistO.getBlockByRid(el.blockRid).blockid, parlistO.getBlockByRid(el.blockRid).loaded);
+        if (parlistO.getBlockByRid(el.blockRid).loaded === false) {
+          blockIdx = idx;
+          return true;
+        }
+        return false;
+      });
+      if (found) {
+        startShowTimer();
+      }*/
     }
     if (reloadBook) {
       blocks = [];
@@ -127,7 +147,6 @@
             checkCount++;
           }
         }
-
         // calculate the actual number of ms since last time
         var actual = Date.now() - start;
         // subtract any extra ms from the delay for the next cycle
@@ -137,7 +156,6 @@
         if (i < intBlocks.length) {
           startShowTimer();
         } else {
-
           console.log('done', i, checkCount, startId);
           //if (startId) scrollToBlock(startId);
         }
@@ -147,11 +165,6 @@
   const scrollToBlock = (blockId) => {
     console.log('scrollToBlockSvelte', blockId);
     vListScrollTo = 100;
-//     let vBlock = document.getElementById(blockId);
-//     if (vBlock) {
-//       //console.log('vBlock', vBlock);
-//       vBlock.scrollIntoView();
-//     }
   }
 
   const timestamp = (new Date()).toJSON();
