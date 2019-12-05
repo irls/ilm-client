@@ -1411,6 +1411,10 @@
                 })
               }
               rh.playlist.ee.on('dragged', (deltaTime, data, ev) => {
+                if ((data.direction === 'left' && data.index == 0) ||
+                        (data.direction === 'right' && data.index == this.annotations.length - 1)) {
+                  return;
+                }
                 var annotationIndex = data.index;
                 var annotations = this.audiosourceEditor.annotationList.annotations;
                 var note = annotations[annotationIndex];
