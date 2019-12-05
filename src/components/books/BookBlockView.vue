@@ -125,10 +125,10 @@
                   <div v-if="isNumbered"
                     :class="['parnum-row', {'-locked': blockO.isManual==true}]">
 
-                    <input :disabled="readOnly ? 'disabled' : ''" v-if="block.type=='header'"
+                    <input :disabled="readOnly ? 'disabled' : false" v-if="block.type=='header'"
                       @input="setNumVal" v-model="blockO.secnum"
                       class="num" type="text" maxlength="12" size="12"/>
-                    <input :disabled="readOnly ? 'disabled' : ''" v-if="block.type=='par'"
+                    <input :disabled="readOnly ? 'disabled' : false" v-if="block.type=='par'"
                       @input="setNumVal" v-model="blockO.parnum"
                       class="num" type="text" maxlength="12" size="12"/>
 
@@ -139,7 +139,7 @@
 
                   <!-- Block Type selector -->
                   <label>
-                    <select :disabled="readOnly ? 'disabled' : ''" v-model="block.type" @input="setChanged(true, 'type', $event)">
+                    <select :disabled="readOnly ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)">
                       <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                     </select>
                   </label>
@@ -150,7 +150,7 @@
                     <i class="fa fa-volume-off"></i>
                     <div class="par-ctrl-divider"></div>
                     <label>
-                      <select :disabled="readOnly ? 'disabled' : ''" v-model='voiceworkSel'>
+                      <select :disabled="readOnly ? 'disabled' : false" v-model='voiceworkSel'>
                         <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
                     </label>
@@ -356,12 +356,12 @@
                       <template v-if="allowVoiceworkChange">
                         <label>
                           <i class="fa fa-volume-off"></i>
-                          <select  :disabled="readOnly ? 'disabled' : ''" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
+                          <select  :disabled="readOnly ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                             <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                           </select>
                         </label>
                         <label><i class="fa fa-language" aria-hidden="true"></i>
-                        <select :disabled="readOnly ? 'disabled' : ''" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
+                        <select :disabled="readOnly ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
                           <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
                         </select>
                         </label>
