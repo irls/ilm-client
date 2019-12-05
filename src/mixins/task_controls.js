@@ -58,7 +58,7 @@ export default {
       return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 6
     },
     tc_isShowEdit(blockid) {
-      if (this.adminOrLibrarian) {
+      if (this.adminOrLibrarian || this.adminOrProofer) {
         return true;
       }
       if (this._is('editor', true)) {
@@ -267,12 +267,10 @@ export default {
       return false;
     },
     tc_displayStylesTab() {
-      if (this.bookMode !== 'edit' || [
-        'BookEdit', 'CollectionBookEdit'
-      ].indexOf(this.$route.name) === -1) {
+      if ( ['edit', 'proofread'].indexOf(this.bookMode) === -1 || ['BookEdit', 'CollectionBookEdit',"BookProofread"].indexOf(this.$route.name) === -1) {
         return false;
       }
-      if (this.adminOrLibrarian || this._is('editor', true)) {
+      if (this.adminOrLibrarian || this.adminOrProofer || this._is('editor', true)) {
         return true;
       }
       return false;
@@ -576,6 +574,6 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['currentBookMeta', 'adminOrLibrarian', 'currentJobInfo', 'bookMode'])
+    ...mapGetters(['currentBookMeta', 'adminOrLibrarian', 'adminOrProofer', 'currentJobInfo', 'bookMode'])
   }
 }

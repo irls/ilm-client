@@ -13,3 +13,4 @@ Dockerfile
 .directory
 *.kate-swp
 *.swp
+.idea

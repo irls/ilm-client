@@ -803,7 +803,7 @@ export default {
       },
       allowEditing: {
         get() {
-          return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
+          return this.block && this.tc_isShowEdit(this.block._id) && (this.mode === 'edit' || this.mode === 'proofread');
         }
       },
       blockTypeLabel: {
@@ -1938,7 +1938,7 @@ export default {
         this.pushChange('flags');
         //this.$emit('addFlagPart');
       },
-      
+
       _delFlagPart(ev, partIdx) {
         this.delFlagPart(ev, partIdx, this.blockPartIdx);
         this.isChanged = true;

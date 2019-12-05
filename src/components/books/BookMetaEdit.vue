@@ -207,7 +207,7 @@
         <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab()">
             <div class="styles-catalogue">
 
-              <vue-tabs ref="blockTypesTabs" class="block-style-tabs">
+              <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: readOnly }">
 
                 <vue-tab title="Book" :id="'global-styles-switcher'">
                   <fieldset class="block-style-fieldset">
@@ -575,8 +575,14 @@ export default {
       tasks_counter: 'tasks_counter',
       taskTypes: 'taskTypes',
       adminOrLibrarian: 'adminOrLibrarian',
-      allowBookSplitPreview: 'allowBookSplitPreview'
+      allowBookSplitPreview: 'allowBookSplitPreview',
+      mode: 'bookMode',
     }),
+    readOnly: {
+        get() {
+            return this.mode === 'proofread';
+        }
+    },
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -868,6 +874,8 @@ export default {
     }),
 
     liveUpdate (key, value) {
+        if(this.readOnly)
+            return ;
       //if (!this.updateAllowed) {
         //return Promise.resolve();
       //}
@@ -1233,6 +1241,9 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
+      if(this.readOnly)
+          return
+
       let styleKeyArr = styleKey.split('.');
       styleKey = styleKeyArr.shift();
       //console.log('selectStyle-', 'blockType:', blockType, 'styleKey:', styleKey, 'styleVal:', styleVal);
@@ -1388,6 +1399,8 @@ export default {
     },
 
     selSecNum (blockType, valKey, currVal) {
+        if(this.readOnly)
+            return;
       //console.log('selSecNum', blockType, valKey, currVal);
       let updatePromises = [];
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
@@ -1673,7 +1686,14 @@ Vue.filter('prettyBytes', function (num) {
 
 
 <style scoped src='./css/BookProperties.css'></style>
-
+<style>
+  .disabled .tab{
+    background-color: whitesmoke ;
+  }
+  .disabled .tab.active{
+    background-color: transparent ;
+  }
+</style>
 <style scoped lang="less">
 
   .btn_download {

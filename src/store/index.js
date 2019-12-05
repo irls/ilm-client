@@ -134,6 +134,7 @@ export const store = new Vuex.Store({
     replicatingDB: {},
     taskTypes: {tasks: [], categories: []},
     adminOrLibrarian: false,
+    adminOrProofer: false,
     currentJobInfo: {
       can_resolve_tasks: [],
       mastering: null,
@@ -346,6 +347,7 @@ export const store = new Vuex.Store({
     approveBlocksList: state => state.approveBlocksList,
     taskTypes: state => state.taskTypes,
     adminOrLibrarian: state => state.adminOrLibrarian,
+    adminOrProofer: state => state.adminOrProofer,
     currentJobInfo: state => state.currentJobInfo,
     taskTypes: state => state.taskTypes,
     liveDB: state => state.liveDB,
@@ -890,9 +892,9 @@ export const store = new Vuex.Store({
     set_book_mode(state, mode) {
       state.bookMode = mode || null;
     },
-    
+
     set_taskBlockMap(state) {
-      
+
       let taskMap = {};
       [...state.tc_currentBookTasks.tasks, ...state.currentJobInfo.can_resolve_tasks].forEach(t => {
         //console.log(`${t.blockid}, ${t.type}`)
@@ -904,7 +906,7 @@ export const store = new Vuex.Store({
       state.taskBlockMap.map = taskMap;
       state.taskBlockMap.refresh = Date.now();
     },
-    
+
     set_taskBlockMapAllowNext(state, allow) {
       state.taskBlockMap.allowNext = allow;
     }
@@ -934,6 +936,7 @@ export const store = new Vuex.Store({
         dispatch('startJobInfoTimer');
         state.liveDB.setSubscriberId(state.auth.getSession().token);
         state.adminOrLibrarian = superlogin.confirmRole('admin') || superlogin.confirmRole('librarian');
+        state.adminOrProofer =  superlogin.confirmRole('admin') || superlogin.confirmRole('proofer');
         commit('RESET_LOGIN_STATE');
 
         //commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });

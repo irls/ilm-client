@@ -41,7 +41,8 @@
                 <label ref="parnumRef" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
               </div>
               <div class="par-ctrl -hidden">
-                <div class="block-menu" v-if="mode !== 'narrate'">
+                <div class="block-menu" v-if="!readOnly && mode !== 'narrate'">
+
                   <i class="glyphicon glyphicon-menu-hamburger"
                   @click.prevent="$refs.blockMenu.open($event, block._id)">
                   </i><!-- {{changes}} -->
@@ -124,10 +125,10 @@
                   <div v-if="isNumbered"
                     :class="['parnum-row', {'-locked': blockO.isManual==true}]">
 
-                    <input v-if="block.type=='header'"
+                    <input :disabled="readOnly ? 'disabled' : ''" v-if="block.type=='header'"
                       @input="setNumVal" v-model="blockO.secnum"
                       class="num" type="text" maxlength="12" size="12"/>
-                    <input v-if="block.type=='par'"
+                    <input :disabled="readOnly ? 'disabled' : ''" v-if="block.type=='par'"
                       @input="setNumVal" v-model="blockO.parnum"
                       class="num" type="text" maxlength="12" size="12"/>
 
@@ -138,7 +139,7 @@
 
                   <!-- Block Type selector -->
                   <label>
-                    <select v-model="block.type" @input="setChanged(true, 'type', $event)"><!--v-model='block.type'--><!--:value="type"-->
+                    <select :disabled="readOnly ? 'disabled' : ''" v-model="block.type" @input="setChanged(true, 'type', $event)">
                       <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                     </select>
                   </label>
@@ -149,7 +150,7 @@
                     <i class="fa fa-volume-off"></i>
                     <div class="par-ctrl-divider"></div>
                     <label>
-                      <select v-model='voiceworkSel'>
+                      <select :disabled="readOnly ? 'disabled' : ''" v-model='voiceworkSel'>
                         <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
                     </label>
@@ -355,13 +356,12 @@
                       <template v-if="allowVoiceworkChange">
                         <label>
                           <i class="fa fa-volume-off"></i>
-
-                          <select v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
+                          <select  :disabled="readOnly ? 'disabled' : ''" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                             <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                           </select>
                         </label>
                         <label><i class="fa fa-language" aria-hidden="true"></i>
-                        <select v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
+                        <select :disabled="readOnly ? 'disabled' : ''" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
                           <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
                         </select>
                         </label>
@@ -393,25 +393,24 @@
 
                 <div class="table-row">
                   <div class="table-cell -num">{{ftnIdx+1}}.</div>
-                  <div class="content-wrap-footn table-cell -text"
+                  <div class="table-cell -text"
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language)]"
+                    :class="[{'content-wrap-footn':!readOnly},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language)]"
                     @input="commitFootnote(ftnIdx, $event)"
                     @inputSuggestion="commitFootnote(ftnIdx, $event, 'suggestion')"
                     v-html="footnote.content"
                     :ref="'footnoteContent_' + ftnIdx">
                   </div>
-                  <div class="table-cell -control" v-if="allowEditing">
+                  <div class="table-cell -control" v-if="allowEditing && !readOnly">
                     <span @click="delFootnote([ftnIdx])"><i class="fa fa-trash"></i></span>
                   </div>
                 </div>
               </div>
             </div>
-
-            <div class="table-row controls-bottom">
-              <div class="controls-bottom-wrapper">
+            <div class="table-row controls-bottom" v-if="!readOnly">
+              <div class="controls-bottom-wrapper">2
                 <div class="-hidden -left">
                   <span v-if="showBlockFlag">
                     <i :class="['glyphicon', 'glyphicon-flag']"
@@ -983,8 +982,13 @@ export default {
       },
       allowEditing: {
         get() {
-          return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
+          return this.block && this.tc_isShowEdit(this.block._id) && (this.mode === 'edit' || this.mode === 'proofread');
         }
+      },
+      readOnly: {
+          get() {
+              return this.allowEditing && this.mode === 'proofread';
+          }
       },
       blockTypeLabel: {
         get() {
@@ -2611,6 +2615,8 @@ export default {
         return pos;
       },
       commitFootnote: function(pos, ev, field = null) {
+          if (this.readOnly)
+              return;
         //this.block.footnotes[pos] = ev.target.innerText.trim();
         this.isChanged = true;
         this.pushChange(field === null ? 'footnotes' : 'footnotes_' + field);
