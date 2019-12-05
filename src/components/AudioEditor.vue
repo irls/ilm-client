@@ -1400,57 +1400,59 @@
           $('.playlist-tracks').scrollLeft(0);
           $('.playlist-tracks').scrollLeft(this.playlistScrollPosition || 0);
           Vue.nextTick(() => {
-
             this.audiosourceEditor.annotationList.resizeHandlers.forEach((rh, i) => {
-              this.audiosourceEditor.annotationList.resizeHandlers[i].ondragover = (e) => {
-                if ($('.annotation-resize-pos').length == 0) {
-                  $('.annotations').prepend('<div class="annotation-resize-pos"></div>')
-                }
-                if ((rh.data.direction === 'left' && rh.data.index == 0) ||
-                        (rh.data.direction === 'right' && rh.data.index == this.annotations.length - 1)) {
-                  return;
-                }
-                var deltaX = e.clientX - rh.prevX;
-                $('.annotation-resize-pos').show();
+              /*this.audiosourceEditor.annotationList.resizeHandlers[i].ondragover = (e) => {
+                
+              }*/
+              //console.log(rh.playlist.ee)
+              if (Array.isArray(rh.playlist.ee.__ee__.dragged)) {
+                rh.playlist.ee.__ee__.dragged.forEach((dr, drI) => {
+                  rh.playlist.ee.off('dragged', dr)
+                })
+              }
+              rh.playlist.ee.on('dragged', (deltaTime, data, ev) => {
+                var annotationIndex = data.index;
+                var annotations = this.audiosourceEditor.annotationList.annotations;
+                var note = annotations[annotationIndex];
+                /*$('.annotation-resize-pos').show();
                 $('.annotation-resize-pos').css('left', (e.clientX - 10) + 'px');// show resize marker
-                rh.prevX = e.clientX;
+                var deltaTime = deltaX * this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate;*/
 
-                // emit shift event if not 0
-                if (deltaX) {
-                  //let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
-                  var deltaTime = deltaX * this.audiosourceEditor.samplesPerPixel / this.audiosourceEditor.sampleRate;
-                  var annotationIndex = rh.data.index;
-                  var annotations = this.audiosourceEditor.annotationList.annotations;
-                  var note = annotations[annotationIndex];
+                // resizing to the left
+                if (data.direction === 'left') {
+                  var originalVal = note.start;
+                  note.start += deltaTime;
 
-                  // resizing to the left
-                  if (rh.data.direction === 'left') {
-                    var originalVal = note.start;
-                    note.start += deltaTime;
+                  if (note.start < 0) {
+                    note.start = 0;
+                  }
 
-                    if (note.start < 0) {
-                      note.start = 0;
-                    }
+                  if (annotationIndex && annotations[annotationIndex - 1].end > note.start) {
+                    annotations[annotationIndex - 1].end = note.start;
+                  }
 
-                    if (annotations[annotationIndex - 1]) {
-                      annotations[annotationIndex - 1].end = note.start;
-                    }
-                  } else {
-                    // resizing to the right
-                    var _originalVal = note.end;
-                    note.end += deltaTime;
+                  if (annotationIndex && annotations[annotationIndex - 1].end === originalVal) {
+                    annotations[annotationIndex - 1].end = note.start;
+                  }
+                } else {
+                  // resizing to the right
+                  var _originalVal = note.end;
+                  note.end += deltaTime;
 
-                    if (note.end > this.audiosourceEditor.duration) {
-                      note.end = this.audiosourceEditor.duration;
-                    }
+                  if (note.end > this.audiosourceEditor.duration) {
+                    note.end = this.audiosourceEditor.duration;
+                  }
 
-                    if (annotations[annotationIndex + 1]) {
-                      annotations[annotationIndex + 1].start = note.end;
-                    }
+                  if (annotationIndex < annotations.length - 1 && annotations[annotationIndex + 1].start < note.end) {
+                    annotations[annotationIndex + 1].start = note.end;
+                  }
+
+                  if (annotationIndex < annotations.length - 1 && annotations[annotationIndex + 1].start === _originalVal) {
+                    annotations[annotationIndex + 1].start = note.end;
                   }
                 }
-              };
-            })
+              });
+            });
           });
           //this.$forceUpdate();
         },
