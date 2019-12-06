@@ -185,7 +185,8 @@
           minWordSize: 0.05,
           wordSelectionMode: false,
           processRun: false,
-          processRunType: null
+          processRunType: null,
+          selectionBordersVisible: false
         }
       },
       mounted() {
@@ -721,6 +722,7 @@
               stop.then(() => {
             $('[id="resize-selection-right"]').hide().css('left', 0);
             $('[id="resize-selection-left"]').hide().css('left', 0);
+            this.selectionBordersVisible = false;
             $('#cursor-position').hide();
             if (typeof this.audiosourceEditor.samplesPerPixel !== 'undefined') {
               let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
@@ -943,6 +945,7 @@
               this.plEventEmitter.emit('select', undefined, undefined);
               $('[id="resize-selection-right"]').hide().css('left', 0);
               $('[id="resize-selection-left"]').hide().css('left', 0);
+              this.selectionBordersVisible = false;
               if (restart) {
                 this.play();
               }
@@ -1150,9 +1153,11 @@
               if (selection) {
                 $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
                 $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft < 0 ? 0 : selection.offsetLeft);
+                this.selectionBordersVisible = true;
               } else {
                 $('[id="resize-selection-right"]').hide().css('left', 0);
                 $('[id="resize-selection-left"]').hide().css('left', 0);
+                this.selectionBordersVisible = false;
               }
               if (scroll_to_selection) {
                 this._scrollToCursor();
@@ -2015,11 +2020,11 @@
               //return;
               //$('[id="resize-selection-right"]')
               if (typeof oldVal.end !== 'undefined' && oldVal.end === val.end && val.start <= 0) {// moving left, probably cursor is out of player
-                if (!$('[id="resize-selection-right"]').is(':visible')) {
+                if (!this.selectionBordersVisible) {
                   this._showSelectionBorders();
                 }
               } else if (val.end >= this._round(this.audiosourceEditor.duration)) {// moving right, probably cursor is out of player
-                if (!$('[id="resize-selection-right"]').is(':visible')) {
+                if (!this.selectionBordersVisible) {
                   this._showSelectionBorders();
                 }
               }
