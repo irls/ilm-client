@@ -59,6 +59,10 @@
         vListStartFrom = false;
         return;
       }
+      if (vListScrollTo) {
+        vListScrollTo = false;
+        return;
+      }
       dispatch('setStart', {
         blockIdx: startBlockIdx,
         blockId: blocks[startBlockIdx].blockId,
@@ -71,6 +75,8 @@
   async function hotkeyScrolledTo(hotkeyScrollTo) {
     console.log('hotkeyScrollTo', hotkeyScrollTo);
     if (hotkeyScrollTo !== false) {
+//       await tick();
+//       vListScrollTo = 0;
       await tick();
       vListScrollTo = hotkeyScrollTo;
     }

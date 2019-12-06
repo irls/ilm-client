@@ -31,7 +31,6 @@
 
 <script>
 import Vue from 'vue'
-//import _ from 'lodash'
 import BookDisplayHeader from './BookDisplayHeader'
 import BookBlockDisplay   from './BookBlockDisplay';
 //import BookTOC from './BookTOC'
@@ -50,8 +49,8 @@ export default {
       startId: false,
       reloadBook: false,
       isBookMounted: false,
-      hotkeyScrollTo: false
-      /*onScrollEv: false,*/
+      hotkeyScrollTo: false,
+      onScrollEv: false,
     }
   },
   components: {
@@ -106,45 +105,75 @@ export default {
             }
           },
           'ctrl+up': (ev)=>{
-            //console.log('ctrl+up arrow');
+            console.log('ctrl+up arrow', 'this.startId', this.startId);
             let idsArray = this.parlistO.idsArray();
             let jumpStep = Math.floor(idsArray.length * 0.1);
             let currIdx = idsArray.indexOf(this.startId);
             if (currIdx > -1) {
               let jumpIdx = currIdx - jumpStep;
               if (jumpIdx < 0) jumpIdx = 0;
-              this.scrollToBlock(idsArray[jumpIdx], true);
+              this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
             }
           },
           'ctrl+down': (ev)=>{
-            //console.log('ctrl+down arrow');
+            console.log('ctrl+down arrow', 'this.startId', this.startId);
             let idsArray = this.parlistO.idsArray();
             let jumpStep = Math.floor(idsArray.length * 0.1);
             let currIdx = idsArray.indexOf(this.startId);
             if (currIdx > -1) {
               let jumpIdx = currIdx + jumpStep;
-              if (jumpIdx > idsArray.length) jumpIdx = idsArray.length -1;
-              this.scrollToBlock(idsArray[jumpIdx], true);
+              if (jumpIdx > idsArray.length) jumpIdx = idsArray.length - 1;
+              this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
             }
           },
           'pgup': (ev)=>{
-            console.log('page up');
+            console.log('page up', 'this.startId', this.startId);
             ev.preventDefault();
+            ev.stopPropagation();
             let prevId = this.parlistO.getInId(this.startId);
             if (prevId && prevId !== this.startId) {
-              this.scrollToBlock(prevId, true);
+              let block = this.parlistO.get(prevId);
+              if (block) {
+                this.scrollToBlock(block.index, block.blockid);
+              }
             }
           },
           'pgdn': (ev)=>{
-            console.log('page down');
+            console.log('page down', 'this.startId', this.startId);
+            ev.stopPropagation();
             ev.preventDefault();
             let nextId = this.parlistO.getOutId(this.startId);
+            console.log('nextId', nextId);
             if (nextId && nextId !== this.startId) {
-              this.scrollToBlock(nextId, true);
+              let block = this.parlistO.get(nextId);
+              if (block) {
+                this.scrollToBlock(block.index, block.blockid);
+              }
             }
           },
         }
       }
+  },
+  watch: {
+    '$route' (toRoute, fromRoute) {
+      console.log('$route', fromRoute.params.block, '->', toRoute.params.block, 'onScrollEv:', this.onScrollEv);
+      if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
+        if (toRoute.params.block !== 'unresolved' && toRoute.params.block !== this.startId) {
+              let block = this.parlistO.get(toRoute.params.block);
+              if (block) {
+                this.scrollToBlock(block.index, block.blockid);
+              }
+//         } else {
+//           //TODO add method to find unresolved
+//           this.onScrollEv = true;
+//           this.$router.push({
+//             name: 'BookEditDisplay',
+//             params: { }
+//           });
+        }
+      }
+      this.onScrollEv = false;
+    }
   },
   methods: {
     ...mapActions([
@@ -153,80 +182,26 @@ export default {
     ]),
 
     scrollToBlock(blockIdx, blockId) {
-      console.log('scrollToBlock', blockIdx, blockId);
+      console.log('scrollToBlock', blockIdx, blockId, 'startId:', this.startId);
       this.hotkeyScrollTo = blockIdx;
-
-
-//       let vBlock = document.getElementById(blockId);
-//       if (vBlock) {
-//         if (setStartId) {
-//           this.startId = blockId;
-//         }
-//         this.onScrollEv = true;
-//         vBlock.scrollIntoView();
-//         this.onScroll();
-//       }
+      this.startId = blockId;
     },
 
     setStartIdIdx(ev) {
-      //console.log('setStartIdIdx', ev.detail);
-      let params = {};
-      for (let p in this.$route.params) {
-        params[p] = this.$route.params[p];
+      console.log('setStartIdIdx', 'this.startId:', this.startId, 'ev.detail.blockId:', ev.detail.blockId, 'update:', (this.startId !== ev.detail.blockId));
+      if (this.startId !== ev.detail.blockId) {
+        this.onScrollEv = true;
+        let params = {};
+        for (let p in this.$route.params) {
+          params[p] = this.$route.params[p];
+        }
+        params.block = ev.detail.blockId;
+        this.startId = ev.detail.blockId;
+        this.$router.push({
+          name: this.$route.name,
+          params: params
+        });
       }
-      params.block = ev.detail.blockId;
-      this.$router.push({
-        name: this.$route.name,
-        params: params
-      });
-    },
-
-//     throttledOnScroll: _.throttle(function () {
-//       this.onScroll();
-//     }, 1000),
-
-    onScroll() {
-      console.log('Vue onScroll', 'this.startIdIdx', this.startIdIdx);
-//       if (!this.onScrollEv) {
-//         //console.time('handleScroll');
-//         this.checkScrollBottom();
-//         let firstVisibleId = false;
-//         let visible = false;
-//         let idsArray = [];
-//         let point = this.$refs.scrollWrap.scrollHeight/this.parlistO.listObjs.length;
-//         let pos = Math.floor(this.$refs.scrollWrap.scrollTop/point)-100;
-//         let idx = 0;
-//         //console.log('pos', pos);
-//         //console.time('checkPos');
-//         for (let blockRef of this.$refs.viewBlocks.$el.childNodes) {
-//           //console.log('blockRef', blockRef.dataset);
-//           if (blockRef.nodeName == 'DIV' && blockRef.dataset && blockRef.dataset.id) {
-//             if (idx >= pos) {
-//               visible = this.checkVisible(blockRef);
-//               if (visible) {
-//                 if (!firstVisibleId) firstVisibleId = blockRef.id;
-//                 break;
-//               }
-//             }
-//             ++idx;
-//           }
-//         }
-//         //console.log('idx', idx);
-//         //console.timeEnd('checkPos');
-//         //console.log('firstVisibleId', firstVisibleId);
-//         if (firstVisibleId !== false && this.$route.params.block !== firstVisibleId) {
-//           this.onScrollEv = true;
-//           let params = {};
-//           for (let p in this.$route.params) {
-//             params[p] = this.$route.params[p];
-//           }
-//           params.block = firstVisibleId;
-//           this.$router.push({
-//             name: this.$route.name,
-//             params: params
-//           });
-//         }
-//       } else this.onScrollEv = false;
     },
 
     checkVisible(elm) {
@@ -359,11 +334,6 @@ export default {
           Vue.nextTick(()=>{
             this.checkScrollBottom();
           })
-
-//           window.setTimeout(()=>{
-//             console.log('setTimeout');
-//             this.hotkeyScrollTo = 100;
-//           }, 1000)
         }
       }
     },
@@ -385,24 +355,6 @@ export default {
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
     this.$root.$off('book-reimported', this.bookReimported);
     this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
-  },
-  watch: {
-    /*'$route' (toRoute, fromRoute) {
-      //console.log('$route', toRoute, fromRoute, this.onScrollEv);
-      if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
-        if (toRoute.params.block !== 'unresolved') {
-          this.scrollToBlock(toRoute.params.block);
-        } else {
-          //TODO add method to find unresolved
-          this.onScrollEv = true;
-          this.$router.push({
-            name: 'BookEditDisplay',
-            params: { }
-          });
-        }
-      }
-      else this.onScrollEv = false;
-    }*/
   },
 }
 </script>

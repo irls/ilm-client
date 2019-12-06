@@ -33,7 +33,7 @@
   $: if (mounted) refresh(items, viewport_height, itemHeight);
 
   async function refresh(items, viewport_height, itemHeight) {
-
+    console.log('refresh');
     const { scrollTop } = viewport;
 
     await tick(); // wait until the DOM is up to date
@@ -73,6 +73,11 @@
 
     if (scrollTo === false) return;
 
+//     if (scrollTo === 0) {
+//       viewport.scrollTo(0, 0);
+//       await handle_scroll();
+//     }
+
     let expected_height = 0;
 
     for (let i = 0; i < scrollTo; i +=1) {
@@ -85,6 +90,7 @@
   }
 
   async function handle_scroll() {
+    //console.log('handle_scroll');
     const { scrollTop } = viewport;
     console.log('handle_scroll scrollTop', scrollTop);
     const old_start = start;
@@ -126,7 +132,7 @@
     bottom = remaining * average_height;
 
     // prevent jumping if we scrolled up into unknown territory
-    if (scrollTo === false && start < old_start) {
+    if (start < old_start) {
       await tick();
 
       let expected_height = 0;
@@ -140,6 +146,7 @@
       }
 
       const d = actual_height - expected_height;
+      console.log('start < old_start');
       viewport.scrollTo(0, scrollTop + d);
     }
 
