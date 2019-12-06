@@ -186,7 +186,8 @@
           wordSelectionMode: false,
           processRun: false,
           processRunType: null,
-          selectionBordersVisible: false
+          selectionBordersVisible: false,
+          audioDuration: 0
         }
       },
       mounted() {
@@ -429,6 +430,7 @@
               return;
             }
             let self = this;;
+            this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
             if (this.blockId) {
               this.$root.$emit('from-audioeditor:block-loaded', this.blockId);
             } else if (bookAudiofile && bookAudiofile.id) {
@@ -512,8 +514,8 @@
                 }
                 if (r_start > 0 && start === 0 && end === self.selection.end) {
                   self.plEventEmitter.emit('select', 0, self.selection.end);
-                } else if(end > self._round(self.audiosourceEditor.duration)) {
-                  self.plEventEmitter.emit('select', start, self.audiosourceEditor.duration);
+                } else if(end > self.audioDuration) {
+                  self.plEventEmitter.emit('select', start, self.audioDuration);
                   //self._showSelectionBorders();
                 } else {
                   self.selection = {start: start < 0 ? 0 : start, end: end};
@@ -2023,7 +2025,7 @@
                 if (!this.selectionBordersVisible) {
                   this._showSelectionBorders();
                 }
-              } else if (val.end >= this._round(this.audiosourceEditor.duration)) {// moving right, probably cursor is out of player
+              } else if (val.end >= this.audioDuration) {// moving right, probably cursor is out of player
                 if (!this.selectionBordersVisible) {
                   this._showSelectionBorders();
                 }
