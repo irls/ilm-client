@@ -486,9 +486,9 @@
               self.isPlaying = false;
               self.isPaused = false;
             });
-            this.plEventEmitter.on('select', function(start, end) {
-              start = self._round(start, 2);
-              end = self._round(end, 2);
+            this.plEventEmitter.on('select', function(r_start, r_end) {
+              let start = self._round(r_start, 2);
+              let end = self._round(r_end, 2);
               let is_single_cursor = end - start == 0;
               if (is_single_cursor && self.contextPosition && self.mode === 'file' &&
                       typeof self.selection.start !== 'undefined' &&
@@ -509,7 +509,14 @@
                 if (start != self.selection.start) {
                   //self.cursorPosition = start;
                 }
-                self.selection = {start: start, end: end};
+                if (r_start > 0 && start === 0 && end === self.selection.end) {
+                  self.plEventEmitter.emit('select', 0, self.selection.end);
+                } else if(end > self._round(self.audiosourceEditor.duration)) {
+                  self.plEventEmitter.emit('select', start, self.audiosourceEditor.duration);
+                  //self._showSelectionBorders();
+                } else {
+                  self.selection = {start: start < 0 ? 0 : start, end: end};
+                }
               } //else {
                 //self.cursorPosition = start;
               //}
@@ -1142,7 +1149,7 @@
               let selection = $('.selection.segment')[0];
               if (selection) {
                 $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
-                $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft);
+                $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft < 0 ? 0 : selection.offsetLeft);
               } else {
                 $('[id="resize-selection-right"]').hide().css('left', 0);
                 $('[id="resize-selection-left"]').hide().css('left', 0);
@@ -2003,6 +2010,20 @@
         },
         'selection': {
           handler(val, oldVal) {
+            
+            Vue.nextTick(() => {
+              //return;
+              //$('[id="resize-selection-right"]')
+              if (typeof oldVal.end !== 'undefined' && oldVal.end === val.end && val.start <= 0) {// moving left, probably cursor is out of player
+                if (!$('[id="resize-selection-right"]').is(':visible')) {
+                  this._showSelectionBorders();
+                }
+              } else if (val.end >= this._round(this.audiosourceEditor.duration)) {// moving right, probably cursor is out of player
+                if (!$('[id="resize-selection-right"]').is(':visible')) {
+                  this._showSelectionBorders();
+                }
+              }
+            })
             this.smoothSelection(val, oldVal);
           },
           deep: true
