@@ -3633,7 +3633,7 @@ export default {
         if (ev === true || ev === false) checked = ev;
         else checked = ev.target && ev.target.checked;
 
-        let shiftKey = ev.shiftKey||ev.ctrlKey||false;
+        let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.readOnly;
         if (ev.shiftKey) {
           if (this.selectionStart && this.selectionStart != this.block._id) {
             document.getSelection().removeAllRanges();
