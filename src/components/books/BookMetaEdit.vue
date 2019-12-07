@@ -2050,4 +2050,7 @@ Vue.filter('prettyBytes', function (num) {
     outline: 0;
   }
 
+  .disabled * {
+    font-style: normal;
+  }
 </style>
