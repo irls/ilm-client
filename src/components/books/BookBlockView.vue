@@ -41,7 +41,7 @@
                 <label ref="parnumRef" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
               </div>
               <div class="par-ctrl -hidden">
-                <div class="block-menu" v-if="!readOnly && mode !== 'narrate'">
+                <div class="block-menu" v-if="mode !== 'narrate'">
 
                   <i class="glyphicon glyphicon-menu-hamburger"
                   @click.prevent="$refs.blockMenu.open($event, block._id)">
@@ -63,6 +63,7 @@
 
                     <li class="separator"></li>
                     <template v-if="allowEditing">
+                      <template v-if="!readOnly">
                       <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
                         <i class="fa fa-angle-up" aria-hidden="true"></i>
                         Insert block before</li>
@@ -95,14 +96,15 @@
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Join with next block</li>
                       <li class="separator"></li>
+                      </template>
                       <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
                           <i class="fa fa-language" aria-hidden="true"></i>
-                          Language: <select v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
+                          Language: <select :disabled="readOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
                           <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
                         </select>
                       </li>
                       <li class="separator"></li>
-                      <template v-if="block.type != 'illustration' && block.type != 'hr'">
+                      <template v-if="block.type != 'illustration' && block.type != 'hr' && !readOnly">
                       <li @click="showModal('block-html')">
                         <i class="fa fa-code" aria-hidden="true"></i>
                         Edit HTML</li>
