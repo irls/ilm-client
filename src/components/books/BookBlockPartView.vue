@@ -245,7 +245,7 @@
                     dir="bottom"
                     :update="update"
                 >
-                  <template v-if="isFootnoteAllowed()">
+                  <template v-if="isFootnoteAllowed() && !this.readOnly">
                     <li @click="addFootnote">Add footnote</li>
                     <li class="separator"></li>
                   </template>
@@ -819,7 +819,12 @@ export default {
           return true;
         }
         return false;
-      }
+      },
+      readOnly: {
+          get() {
+              return this.allowEditing && this.mode === 'proofread';
+          }
+      },
   },
   mounted: function() {
       //this.initEditor();
