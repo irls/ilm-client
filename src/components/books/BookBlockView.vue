@@ -5118,5 +5118,9 @@ export default {
       height: 100%;
   }
 
+  [disabled='disabled']{
+    background-color: #e0dede;
+    border: none;
+  }
 </style>
 
