@@ -409,7 +409,7 @@
                 </div>
               </div>
             </div>
-            <div class="table-row controls-bottom" v-if="!readOnly">
+            <div class="table-row controls-bottom" >
               <div class="controls-bottom-wrapper">
                 <div class="-hidden -left">
                   <span v-if="showBlockFlag">
