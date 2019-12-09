@@ -354,7 +354,7 @@ export default {
     flex-grow: 2;
     display:flex;
     flex-direction: column;
-    overflow: hidden;
+    /*overflow: hidden;*/
     width: 100%;
     .narrate& {
       min-width: 860px;

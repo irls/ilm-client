@@ -1,30 +1,19 @@
 <template>
-  <div v-if="isBookMounted" ref="scrollWrap" v-hotkey="keymap" :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
-    <!--<BookDisplayHeader @scroll="throttledOnScroll" v-hotkey="keymap"/>-->
-    <!--<BookTOC />-->
-    <!--<template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
-      <book-block-display
-        ref="viewBlocks"
-        :blockRid = "blockRid"
-        :blockO = "parlistO.getBlockByRid(blockRid)"
-        :fntCounter = "fntCounter"
-        :lang = "meta.language"
-        :loaded = "parlistO.getBlockByRid(blockRid) && parlistO.getBlockByRid(blockRid).loaded"
-      ></book-block-display>
-    </template>-->
+  <div ref="scrollWrap" v-hotkey="keymap" :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
 
     <SvelteBookDisplayInVue
-      :blocks="parlistO.listObjs"
+      v-if="isBookMounted"
       :parlistO="parlistO"
       :parlist="parlist"
       :lang="meta.language"
       :startId="startId"
       :hotkeyScrollTo="hotkeyScrollTo"
       @setStart="setStartIdIdx"
+      @setEdge="scrolledToEdge"
       :reloadBook="reloadBook"
       ref="viewBlocks"
     />
-    <!--@watch:number="setStartIdIdx"-->
+    <div v-else class="content-process-run preloader-loading"></div>
 
   </div>
 </template>
@@ -204,6 +193,10 @@ export default {
       }
     },
 
+    scrolledToEdge(ev) {
+      this.$store.commit('set_taskBlockMapAllowNext', !ev.detail.endReached);
+    },
+
     checkVisible(elm) {
       var rect = elm.getBoundingClientRect();
       var viewHeight = document.getElementsByClassName('scroll-wrapper')[0].scrollHeight;
@@ -331,13 +324,14 @@ export default {
             //this.parlistO.setFirstVisibleId(this.startId);
           }
           this.isBookMounted = true;
-          Vue.nextTick(()=>{
+          /*Vue.nextTick(()=>{
             this.checkScrollBottom();
-          })
+          })*/
         }
       }
     },
     checkScrollBottom() {
+    //console.log('checkScrollBottom', this.$refs.scrollWrap.offsetHeight, this.$refs.scrollWrap.scrollTop, this.$refs.scrollWrap.scrollHeight);
       if (this.$refs.scrollWrap.offsetHeight) {
         let scrolledBottom = this.$refs.scrollWrap.offsetHeight + this.$refs.scrollWrap.scrollTop >= this.$refs.scrollWrap.scrollHeight;
         this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);

@@ -890,9 +890,9 @@ export const store = new Vuex.Store({
     set_book_mode(state, mode) {
       state.bookMode = mode || null;
     },
-    
+
     set_taskBlockMap(state) {
-      
+
       let taskMap = {};
       [...state.tc_currentBookTasks.tasks, ...state.currentJobInfo.can_resolve_tasks].forEach(t => {
         //console.log(`${t.blockid}, ${t.type}`)
@@ -904,7 +904,7 @@ export const store = new Vuex.Store({
       state.taskBlockMap.map = taskMap;
       state.taskBlockMap.refresh = Date.now();
     },
-    
+
     set_taskBlockMapAllowNext(state, allow) {
       state.taskBlockMap.allowNext = allow;
     }

@@ -1,10 +1,12 @@
 <template>
 
 <!--{#each intBlocks as block, idx (block.blockRid)}-->
-<!--intBlocks.length: {intBlocks.length}-->
 <div class="bview-container">
 {#if intBlocks.length > 0}
-<VirtualList items={intBlocks} let:item bind:start={startBlockIdx} bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}>
+<VirtualList items={intBlocks} let:item
+bind:start={startBlockIdx} bind:end={endBlockIdx}
+bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
+bind:startReached={startReached} bind:endReached={endReached} >
 <div class='card'>
 <!--{item.idx}->{item.blockRid}->{item.blockId}<br/>-->
 <BookBlockDisplay
@@ -14,16 +16,12 @@
   lang="{lang}"
 />
 </div>
-<!--<BookBlockDisplay
-  blockRid="{block.blockRid}"
-  block="{block.blockView}"
-  blockListObj="{block}"
-  lang="{lang}"
-/>-->
 </VirtualList>
 <!--{/each}-->
+{:else}<div class="content-process-run preloader-loading"></div>
 {/if}
 </div>
+
 </template>
 
 <script>
@@ -32,22 +30,23 @@
   import BookBlockDisplay from './BookBlockDisplay.svelte';
 
   export let lang = 'en';
-  export let blocks = [];
   export let parlistO = {};
   export let parlist = {};
   export let startId;
   export let reloadBook = false;
   export let hotkeyScrollTo = false;
 
+  let blocks = parlistO.listObjs;
   let startBlockIdx = 0;
+  let endBlockIdx = 0;
   let vListStartFrom = false;
   let vListScrollTo = false;
+  let startReached = false;
+  let endReached = false;
   let startIdIdx = 0;
   let fntCounter = 0;
-  //let scrollCounter = 0;
   let loadedBookId = '';
   let intBlocks = [];
-  //let blockIdx = 0;
   let itemHeight = false;
 
   const dispatch = createEventDispatcher();
@@ -69,6 +68,14 @@
         blockRid: blocks[startBlockIdx].blockRid
       });
     }
+  }
+
+  $: scrolledToEdge(startReached, endReached);
+  function scrolledToEdge(startReached, endReached) {
+    dispatch('setEdge', {
+      startReached: startReached,
+      endReached: endReached,
+    });
   }
 
   $: hotkeyScrolledTo(hotkeyScrollTo);
@@ -127,7 +134,7 @@
       }*/
     }
     if (reloadBook) {
-      blocks = [];
+      intBlocks = [];
       reloadBook = false;
       if (loadedBookId !== '') loadedBookId = '';
     }

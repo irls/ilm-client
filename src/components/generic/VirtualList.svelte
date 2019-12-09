@@ -12,6 +12,9 @@
   export let scrollTo = false;
   export let startFrom = false;
 
+  export let startReached = false;
+  export let endReached = false;
+
   // local state
   let height_map = [];
   let rows;
@@ -129,6 +132,9 @@
 
     while (i < items.length) height_map[i++] = average_height;
     bottom = remaining * average_height;
+
+    endReached = (bottom == 0);
+    startReached = (top == 0);
 
     // prevent jumping if we scrolled up into unknown territory
     if (start < old_start) {
