@@ -5121,7 +5121,11 @@ export default {
   }
 
 
-  [disabled='disabled']{
+#p-block-type-title [disabled='disabled'],
+#p-block-type-header [disabled='disabled'],
+#p-block-type-par [disabled='disabled'],
+#p-block-type-illustration [disabled='disabled']
+  {
     background-color: #e0dede;
     border: none;
   }
