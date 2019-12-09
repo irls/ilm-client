@@ -1750,7 +1750,8 @@ export default {
               voicework: this.block.voicework,
               content: this.block.content,
               blockid: this.block.blockid,
-              type: this.block.type
+              type: this.block.type,
+              flags: this.block.flags || []
             });
           }
         } else {
@@ -3538,7 +3539,7 @@ export default {
         }
         let formData = new FormData();
         formData.append('illustration', this.$refs.blocks[0].$refs.illustrationInput.file, this.$refs.blocks[0].$refs.illustrationInput.file.name);
-        formData.append('block', JSON.stringify({'description': this.$refs.blocks[0].$refs.blockDescription.innerHTML}));
+        formData.append('block', JSON.stringify({'description': this.$refs.blocks[0].$refs.blockDescription.innerHTML, flags: this.block.flags || []}));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
