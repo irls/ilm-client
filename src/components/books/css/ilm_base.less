@@ -10,6 +10,7 @@
 @author1_color: #804040; //#805A5A; //maroon;
 @author2_color: #466446; //darkgreen;
 @author3_color: #294E66; //#294E66; //#5C7483;
+@author4_color: #006600;
 
 @color_title_ocean: #1a1a1a;
 
@@ -566,7 +567,12 @@
     color: @main_text_color;
     font-style: normal;
   }
-
+  .muhammad, [data-author="muhammad"] {
+    color: @author4_color;
+  }
+  .quran, [data-author="quran"] {
+    color: @author4_color;
+  }
   /***** Global custom styles *****/
   .dropcap.part-0:first-letter {
     float: left; padding-left:0;
