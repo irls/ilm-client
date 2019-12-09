@@ -161,7 +161,10 @@
                     <i class="fa fa-volume-off"></i>
                     <div class="par-ctrl-divider"></div>
                     <label>
-                      <span>{{blockVoiceworks[block.voicework]}}</span>
+                      <select disabled="disabled">
+                        <option>{{blockVoiceworks[block.voicework]}}</option>
+                      </select>
+                      <span></span>
                     </label>
                   </template>
                 </template>
@@ -5124,7 +5127,8 @@ export default {
 #p-block-type-title [disabled='disabled'],
 #p-block-type-header [disabled='disabled'],
 #p-block-type-par [disabled='disabled'],
-#p-block-type-illustration [disabled='disabled']
+#p-block-type-illustration [disabled='disabled'],
+.content-scroll-wrapper .row [disabled='disabled']
   {
     background-color: #e0dede;
     border: none;
