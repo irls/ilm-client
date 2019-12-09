@@ -6,7 +6,7 @@
 {#if intBlocks.length > 0}
 <VirtualList items={intBlocks} let:item bind:start={startBlockIdx} bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}>
 <div class='card'>
-{item.idx}->{item.blockRid}->{item.blockId}<!--->{item.loaded}--><br/>
+<!--{item.idx}->{item.blockRid}->{item.blockId}<br/>-->
 <BookBlockDisplay
   blockRid="{item.blockRid}"
   block="{item.blockView}"

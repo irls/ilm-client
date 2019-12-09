@@ -156,7 +156,7 @@ export default {
   },
   watch: {
     '$route' (toRoute, fromRoute) {
-      console.log('$route', fromRoute.params.block, '->', toRoute.params.block, 'onScrollEv:', this.onScrollEv);
+      //console.log('$route', fromRoute.params.block, '->', toRoute.params.block, 'onScrollEv:', this.onScrollEv);
       if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
         if (toRoute.params.block !== 'unresolved' && toRoute.params.block !== this.startId) {
               let block = this.parlistO.get(toRoute.params.block);
@@ -182,13 +182,13 @@ export default {
     ]),
 
     scrollToBlock(blockIdx, blockId) {
-      console.log('scrollToBlock', blockIdx, blockId, 'startId:', this.startId);
+      //console.log('scrollToBlock', blockIdx, blockId, 'startId:', this.startId);
       this.hotkeyScrollTo = blockIdx;
       this.startId = blockId;
     },
 
     setStartIdIdx(ev) {
-      console.log('setStartIdIdx', 'this.startId:', this.startId, 'ev.detail.blockId:', ev.detail.blockId, 'update:', (this.startId !== ev.detail.blockId));
+      //console.log('setStartIdIdx', 'this.startId:', this.startId, 'ev.detail.blockId:', ev.detail.blockId, 'update:', (this.startId !== ev.detail.blockId));
       if (this.startId !== ev.detail.blockId) {
         this.onScrollEv = true;
         let params = {};
@@ -287,7 +287,7 @@ export default {
           this.loadBook(bookid)
           .then((meta)=>{
             let startBlock = this.$route.params.block || false;
-            console.log('startBlock', startBlock, '$route.params.block', this.$route.params.block);
+            //console.log('startBlock', startBlock, '$route.params.block', this.$route.params.block);
             this.startId = startBlock;
             //this.parlistO.setFirstVisibleId(startBlock);
             let taskType = this.$route.params.task_type || false;
