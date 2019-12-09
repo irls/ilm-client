@@ -73,7 +73,7 @@
 
   $: hotkeyScrolledTo(hotkeyScrollTo);
   async function hotkeyScrolledTo(hotkeyScrollTo) {
-    console.log('hotkeyScrollTo', hotkeyScrollTo);
+    //console.log('hotkeyScrollTo', hotkeyScrollTo);
     if (hotkeyScrollTo !== false) {
 //       await tick();
 //       vListScrollTo = 0;
@@ -109,7 +109,7 @@
       }
       intBlocks = blocks;
       //await tick();
-      console.log('startId', startId, 'startIdIdx', startIdIdx);
+      //console.log('startId', startId, 'startIdIdx', startIdIdx);
       //console.log('beforeUpdate', intBlocks.length);
       if (startIdIdx > 0) {
         vListStartFrom = startIdIdx;

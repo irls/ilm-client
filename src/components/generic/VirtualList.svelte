@@ -33,7 +33,7 @@
   $: if (mounted) refresh(items, viewport_height, itemHeight);
 
   async function refresh(items, viewport_height, itemHeight) {
-    console.log('refresh');
+    //console.log('refresh');
     const { scrollTop } = viewport;
 
     await tick(); // wait until the DOM is up to date
@@ -69,21 +69,20 @@
 
   async function handle_scrollTo(scrollTo) {
 
-    console.log('handle_scrollTo', scrollTo);
+    //console.log('handle_scrollTo', scrollTo);
 
     if (scrollTo === false) return;
 
-//     if (scrollTo === 0) {
-//       viewport.scrollTo(0, 0);
-//       await handle_scroll();
-//     }
+    viewport.scrollTo(0, 0);
+    await refresh(items, viewport_height, itemHeight);
+    await handle_scroll();
 
     let expected_height = 0;
 
     for (let i = 0; i < scrollTo; i +=1) {
       expected_height += height_map[i] || average_height || 0;
     }
-    console.log('handle_scrollTo expected_height', expected_height);
+    //console.log('handle_scrollTo expected_height', expected_height);
     await tick();
     viewport.scrollTo(0, expected_height);
     scrollTo = false;
@@ -92,7 +91,7 @@
   async function handle_scroll() {
     //console.log('handle_scroll');
     const { scrollTop } = viewport;
-    console.log('handle_scroll scrollTop', scrollTop);
+    //console.log('handle_scroll scrollTop', scrollTop);
     const old_start = start;
 
     for (let v = 0; v < rows.length; v += 1) {
@@ -146,7 +145,7 @@
       }
 
       const d = actual_height - expected_height;
-      console.log('start < old_start');
+      //console.log('start < old_start');
       viewport.scrollTo(0, scrollTop + d);
     }
 
@@ -158,10 +157,10 @@
   // trigger initial refresh
   onMount(async () => {
     rows = contents.getElementsByTagName('svelte-virtual-list-row');
-    console.log('onMount startFrom', startFrom);
+    //console.log('onMount startFrom', startFrom);
     if (startFrom) {
-      await refresh(items, viewport_height, itemHeight);
-      await handle_scroll();
+      //await refresh(items, viewport_height, itemHeight);
+      //await handle_scroll();
       scrollTo = startFrom;
     } else {
       mounted = true;
