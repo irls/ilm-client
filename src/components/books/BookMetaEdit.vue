@@ -207,7 +207,7 @@
         <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab()">
             <div class="styles-catalogue">
 
-              <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: readOnly }">
+              <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }">
 
                 <vue-tab title="Book" :id="'global-styles-switcher'">
                   <fieldset class="block-style-fieldset">
@@ -578,7 +578,7 @@ export default {
       allowBookSplitPreview: 'allowBookSplitPreview',
       mode: 'bookMode',
     }),
-    readOnly: {
+      proofreadModeReadOnly: {
         get() {
             return this.mode === 'proofread';
         }
@@ -874,7 +874,7 @@ export default {
     }),
 
     liveUpdate (key, value) {
-        if(this.readOnly)
+        if(this.proofreadModeReadOnly)
             return ;
       //if (!this.updateAllowed) {
         //return Promise.resolve();
@@ -1241,7 +1241,7 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
-      if(this.readOnly)
+      if(this.proofreadModeReadOnly)
           return
 
       let styleKeyArr = styleKey.split('.');
@@ -1399,7 +1399,7 @@ export default {
     },
 
     selSecNum (blockType, valKey, currVal) {
-        if(this.readOnly)
+        if(this.proofreadModeReadOnly)
             return;
       //console.log('selSecNum', blockType, valKey, currVal);
       let updatePromises = [];

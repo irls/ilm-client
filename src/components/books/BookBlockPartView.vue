@@ -245,7 +245,7 @@
                     dir="bottom"
                     :update="update"
                 >
-                  <template v-if="isFootnoteAllowed() && !this.readOnly">
+                  <template v-if="isFootnoteAllowed() && !this.proofreadModeReadOnly">
                     <li @click="addFootnote">Add footnote</li>
                     <li class="separator"></li>
                   </template>
@@ -820,7 +820,7 @@ export default {
         }
         return false;
       },
-      readOnly: {
+      proofreadModeReadOnly: {
           get() {
               return this.allowEditing && this.mode === 'proofread';
           }
@@ -1147,16 +1147,16 @@ export default {
                 ]
               };
           }
-
-          this.editorFootn = new MediumEditor('.content-wrap-footn' , {
-              toolbar: toolbar,
-              buttonLabels: 'fontawesome',
-              quotesList: this.authors,
-              onQuoteSave: this.onQuoteSave,
-              suggestEl: this.suggestEl,
-              extensions: extensions,
-              disableEditing: !this.allowEditing
-          });
+          if(!this.proofreadModeReadOnly)
+            this.editorFootn = new MediumEditor('.content-wrap-footn' , {
+                toolbar: toolbar,
+                buttonLabels: 'fontawesome',
+                quotesList: this.authors,
+                onQuoteSave: this.onQuoteSave,
+                suggestEl: this.suggestEl,
+                extensions: extensions,
+                disableEditing: !this.allowEditing
+            });
         } else if (this.editorFootn) this.editorFootn.setup();
       },
       onQuoteSave: function() {

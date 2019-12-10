@@ -63,7 +63,7 @@
 
                     <li class="separator"></li>
                     <template v-if="allowEditing">
-                      <template v-if="!readOnly">
+                      <template v-if="!proofreadModeReadOnly">
                       <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
                         <i class="fa fa-angle-up" aria-hidden="true"></i>
                         Insert block before</li>
@@ -99,12 +99,12 @@
                       </template>
                       <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
                           <i class="fa fa-language" aria-hidden="true"></i>
-                          Language: <select :disabled="readOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
+                          Language: <select :disabled="proofreadModeReadOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
                           <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
                         </select>
                       </li>
                       <li class="separator"></li>
-                      <template v-if="block.type != 'illustration' && block.type != 'hr' && !readOnly">
+                      <template v-if="block.type != 'illustration' && block.type != 'hr' && !proofreadModeReadOnly">
                       <li @click="showModal('block-html')">
                         <i class="fa fa-code" aria-hidden="true"></i>
                         Edit HTML</li>
@@ -127,10 +127,10 @@
                   <div v-if="isNumbered"
                     :class="['parnum-row', {'-locked': blockO.isManual==true}]">
 
-                    <input :disabled="readOnly ? 'disabled' : false" v-if="block.type=='header'"
+                    <input :disabled="proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='header'"
                       @input="setNumVal" v-model="blockO.secnum"
                       class="num" type="text" maxlength="12" size="12"/>
-                    <input :disabled="readOnly ? 'disabled' : false" v-if="block.type=='par'"
+                    <input :disabled="proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='par'"
                       @input="setNumVal" v-model="blockO.parnum"
                       class="num" type="text" maxlength="12" size="12"/>
 
@@ -141,7 +141,7 @@
 
                   <!-- Block Type selector -->
                   <label>
-                    <select :disabled="readOnly ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)">
+                    <select :disabled="proofreadModeReadOnly ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)">
                       <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                     </select>
                   </label>
@@ -152,7 +152,7 @@
                     <i class="fa fa-volume-off"></i>
                     <div class="par-ctrl-divider"></div>
                     <label>
-                      <select :disabled="readOnly ? 'disabled' : false" v-model='voiceworkSel'>
+                      <select :disabled="proofreadModeReadOnly ? 'disabled' : false" v-model='voiceworkSel'>
                         <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
                     </label>
@@ -361,12 +361,12 @@
                       <template v-if="allowVoiceworkChange">
                         <label>
                           <i class="fa fa-volume-off"></i>
-                          <select  :disabled="readOnly ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
+                          <select  :disabled="proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                             <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                           </select>
                         </label>
                         <label><i class="fa fa-language" aria-hidden="true"></i>
-                        <select :disabled="readOnly ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
+                        <select :disabled="proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
                           <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
                         </select>
                         </label>
@@ -402,13 +402,14 @@
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="[{'content-wrap-footn':!readOnly},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language)]"
+                    :class="[{'content-wrap-footn':true},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language)]"
                     @input="commitFootnote(ftnIdx, $event)"
                     @inputSuggestion="commitFootnote(ftnIdx, $event, 'suggestion')"
                     v-html="footnote.content"
                     :ref="'footnoteContent_' + ftnIdx">
                   </div>
-                  <div class="table-cell -control" v-if="allowEditing && !readOnly">
+
+                  <div class="table-cell -control" v-if="allowEditing && !proofreadModeReadOnly">
                     <span @click="delFootnote([ftnIdx])"><i class="fa fa-trash"></i></span>
                   </div>
                 </div>
@@ -990,7 +991,7 @@ export default {
           return this.block && this.tc_isShowEdit(this.block._id) && (this.mode === 'edit' || this.mode === 'proofread');
         }
       },
-      readOnly: {
+      proofreadModeReadOnly: {
           get() {
               return this.allowEditing && this.mode === 'proofread';
           }
@@ -1446,16 +1447,16 @@ export default {
                 ]
               };
           }
-
-          this.editorFootn = new MediumEditor('.content-wrap-footn' , {
-              toolbar: toolbar,
-              buttonLabels: 'fontawesome',
-              quotesList: this.authors,
-              onQuoteSave: this.onQuoteSave,
-              suggestEl: this.suggestEl,
-              extensions: extensions,
-              disableEditing: !this.allowEditing
-          });
+          if(!this.proofreadModeReadOnly)
+            this.editorFootn = new MediumEditor('.content-wrap-footn' , {
+                toolbar: toolbar,
+                buttonLabels: 'fontawesome',
+                quotesList: this.authors,
+                onQuoteSave: this.onQuoteSave,
+                suggestEl: this.suggestEl,
+                extensions: extensions,
+                disableEditing: !this.allowEditing
+            });
         } else if (this.editorFootn) this.editorFootn.setup();
       },
       onQuoteSave: function() {
@@ -2620,7 +2621,7 @@ export default {
         return pos;
       },
       commitFootnote: function(pos, ev, field = null) {
-          if (this.readOnly)
+          if (this.proofreadModeReadOnly)
               return;
         //this.block.footnotes[pos] = ev.target.innerText.trim();
         this.isChanged = true;
@@ -3638,7 +3639,7 @@ export default {
         if (ev === true || ev === false) checked = ev;
         else checked = ev.target && ev.target.checked;
 
-        let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.readOnly;
+        let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
         if (ev.shiftKey) {
           if (this.selectionStart && this.selectionStart != this.block._id) {
             document.getSelection().removeAllRanges();
