@@ -2050,7 +2050,22 @@ Vue.filter('prettyBytes', function (num) {
     outline: 0;
   }
 
-  .disabled * {
+  .meta-edit-tabs.vue-tabs .disabled legend{
+    font-size: 12px;
+    font-style: normal;
+    color: gray;
+  }
+  .meta-edit-tabs.vue-tabs .disabled span{
+    font-size: 14px;
     font-style: normal;
   }
+  .meta-edit-tabs.vue-tabs .disabled label{
+    font-size: 14px;
+    font-style: normal;
+    min-height: 18px;
+  }
+  .meta-edit-tabs.vue-tabs .disabled i{
+    font-size: 14px;
+  }
+
 </style>
