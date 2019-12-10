@@ -4222,9 +4222,9 @@ export default {
             }
             if (ref) {// reset flag selection on save
 
-              ref.flagsSel = this.block.flags.find((flag)=>{
+              ref.flagsSel = this.block.flags.filter((flag)=>{
                 return flag._id === ref.flagsSel._id;
-              });
+              })[0];
             }
           }
         }
