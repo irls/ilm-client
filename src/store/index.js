@@ -105,7 +105,7 @@ export const store = new Vuex.Store({
     currentLibraryId: false,
 
     user: {},
-    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0'},
+    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0', voiced_in_range: '0'},
 
     ttsVoices : [],
 
@@ -204,14 +204,14 @@ export const store = new Vuex.Store({
         if (b.hasOwnProperty('publishLog') && b.publishLog != null && b.publishLog != false && b.publishLog != undefined){
             if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
               var pDate = new Date(b.publishLog.publishTime);
-              var publishDate = '' + pDate.getFullYear() + '.' + (pDate.getMonth() + 1) + '.' + pDate.getDate() + ' ' + pDate.getHours() + ':' + pDate.getMinutes();
+              var publishDate = '' + pDate.getFullYear() + '.' + (pDate.getMonth() + 1) + '.' + pDate.getDate();
             } else {
               var publishDate = '';
             }
 
             if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
               var uDate = new Date(b.publishLog.updateTime);
-              var updateDate = '' + uDate.getFullYear() + '.' + (uDate.getMonth() + 1) + '.' + uDate.getDate() + ' ' + uDate.getHours() + ':' + uDate.getMinutes();
+              var updateDate = '' + uDate.getFullYear() + '.' + (uDate.getMonth() + 1) + '.' + uDate.getDate();
             } else {
               var updateDate = '';
             }
@@ -379,6 +379,13 @@ export const store = new Vuex.Store({
     },
     storeListById: (state) => blockid => {
       return state.storeList.get(blockid)
+    },
+    bookCompleteAudioTime: state => {
+      if (state.currentBookMeta) {
+        return state.currentBookMeta.complete_audio_time;
+      } else {
+        return null;
+      }
     }
   },
 
@@ -1190,7 +1197,7 @@ export const store = new Vuex.Store({
         state.jobInfoRequest = null;// force reload tasks
         commit('set_currentAudiobook', {});
         commit('SET_ALLOW_BOOK_PUBLISH', false);
-
+        commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: 0});
       }
       //let oldBook = (state.currentBook && state.currentBook._id)
 
@@ -1223,7 +1230,7 @@ export const store = new Vuex.Store({
           commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
 
           commit('TASK_LIST_LOADED')
-          dispatch('setCurrentBookCounters');
+          dispatch('setCurrentBookCounters', ['narration_blocks', 'not_proofed_audio', 'voiced_in_range']);
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);
@@ -2285,6 +2292,7 @@ export const store = new Vuex.Store({
       let changed_in_range = 0;
       let changed_in_range_tts = 0;
       let changed_in_range_narration = 0;
+      let voiced_in_range = 0;
       if (!selection) {
         selection = state.blockSelection;
       }
@@ -2337,6 +2345,9 @@ export const store = new Vuex.Store({
                 ++changed_in_range_narration;
               }
             }
+            if (block.audiosrc) {
+              ++voiced_in_range;
+            }
             if (block._id == selection.end._id) {
               break;
             }
@@ -2345,6 +2356,14 @@ export const store = new Vuex.Store({
               break;
             }
           } else break;
+        }
+        commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
+      } else {
+        if (state.storeList.size > 0) {
+          voiced_in_range = Array.from(state.storeList).filter(block => {
+            return block[1].audiosrc != '';
+          }).length;
+          commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
         }
       }
       let audio_mastering = state.tc_currentBookTasks.assignments && state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1;
@@ -2701,6 +2720,18 @@ export const store = new Vuex.Store({
     removeBlock({state, commit, dispatch}, blockid) {
       return axios.delete(state.API_URL + 'book/block/' + blockid)
         .then(response => {
+          if (state.blockSelection.start && blockid === state.blockSelection.start._id) {
+            if (state.blockSelection.start._id === state.blockSelection.end._id) {
+              commit('set_block_selection', {start: {}, end: {}});
+            } else {
+              let outId = state.storeListO.getOutId(blockid);
+              if (outId) {
+                commit('set_block_selection', Object.assign(state.blockSelection, {
+                  start: {_id: outId}
+                }));
+              }
+            }
+          }
           return dispatch('checkResponse', response);
         })
         .catch(err => {
@@ -2847,6 +2878,30 @@ export const store = new Vuex.Store({
         .then((response) => {
           return Promise.resolve(response);
         })
+    },
+    generateCompleteAudio({state, commit}) {
+      if (state.currentBookMeta.bookid) {
+        state.currentBookMeta.complete_audio_time = -1;
+        let selection = {};
+        if (state.blockSelection.start._id) {
+          selection.start = state.blockSelection.start._id;
+        }
+        if (state.blockSelection.end._id) {
+          selection.end = state.blockSelection.end._id;
+        }
+        return axios.post(`${state.API_URL}books/complete_audio/${state.currentBookMeta.bookid}`, {
+          selection: selection,
+          format: 'm4a'
+        })
+          .then((response) => {
+            if (response.data.bookid === state.currentBookMeta.bookid) {
+              commit('SET_CURRENTBOOK_META', response.data);
+            }
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      }
     }
   }
 })
