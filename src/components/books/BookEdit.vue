@@ -2461,10 +2461,10 @@ export default {
   }
 }
 .medium-toolbar-arrow-over:before {
-  border-color: transparent transparent #c9c7c7 !important;;
+  border-color: transparent transparent #a6a6a6 !important;;
 }
 .medium-editor-toolbar-anchor-preview {
-  background: #c9c7c7 !important;
+  background: #a6a6a6 !important;
 }
 
 </style>
