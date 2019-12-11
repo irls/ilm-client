@@ -22,7 +22,7 @@
                 <img v-if="block.illustration" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
                   :height="illustrationHeight"
                   :class="[getClass]"/>
-                <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': isChanged && !isIllustrationChanged}]" v-if="allowEditing">
+                <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': isChanged && !isIllustrationChanged}]" v-if="allowEditing && !this.proofreadModeReadOnly">
                   <div class="preview-container"></div>
                 </div>
 

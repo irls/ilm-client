@@ -89,7 +89,7 @@
                   <img v-if="block.illustration" :src="block.getIllustration()"
                   :height="illustrationHeight"
                   :class="[block.getClass(mode)]"/>
-                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing">
+                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing && !this.proofreadModeReadOnly">
                     <vue-picture-input
                       @change="onIllustrationChange"
                       @remove="onIllustrationChange"
