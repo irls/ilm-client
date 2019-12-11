@@ -10,7 +10,6 @@
       :hotkeyScrollTo="hotkeyScrollTo"
       @setStart="setStartIdIdx"
       @setEdge="scrolledToEdge"
-      :reloadBook="reloadBook"
       ref="viewBlocks"
     />
     <div v-else class="content-process-run preloader-loading"></div>
@@ -36,7 +35,6 @@ export default {
   data () {
     return {
       startId: false,
-      reloadBook: false,
       isBookMounted: false,
       hotkeyScrollTo: false,
       onScrollEv: false,
@@ -258,10 +256,10 @@ export default {
     bookReimported() {
       this.$store.commit('clear_storeList');
       this.$store.commit('clear_storeListO');
-      Vue.nextTick(()=>{
-        this.reloadBook = true;
-        this.startId = false;
-      });
+
+      this.isBookMounted = false;
+      this.startId = false;
+
       this.$router.push({
         name: 'BookEditDisplay', params: {}
       });

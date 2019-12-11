@@ -16,8 +16,7 @@
       data-parnum="{block.viewParnum}"
       data-type="{block.type}"
       on:click={handleFootnote}>
-      {#if blockListObj.visible}{@html block.content}
-      {:else}<div class="content-process-run preloader-loading"></div>{/if}
+      {@html block.content}
     </div>
 
     {#if block.footnotes && block.footnotes.length > 0}

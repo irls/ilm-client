@@ -36,7 +36,7 @@
   $: if (mounted) refresh(items, viewport_height, itemHeight);
 
   async function refresh(items, viewport_height, itemHeight) {
-    //console.log('refresh');
+    //console.log('refresh', 'items.length', items.length);
     const { scrollTop } = viewport;
 
     await tick(); // wait until the DOM is up to date

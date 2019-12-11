@@ -33,7 +33,6 @@ bind:startReached={startReached} bind:endReached={endReached} >
   export let parlistO = {};
   export let parlist = {};
   export let startId;
-  export let reloadBook = false;
   export let hotkeyScrollTo = false;
 
   let blocks = parlistO.listObjs;
@@ -90,10 +89,10 @@ bind:startReached={startReached} bind:endReached={endReached} >
   }
 
   beforeUpdate(/*async */() => {
-    //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
+    //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId, 'reloadBook', reloadBook);
     //loadedBookId = parlistO.meta.bookid;
-
     if (parlistO.meta.bookid && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== parlistO.meta.bookid)) {
+
       fntCounter = 0;
       loadedBookId = parlistO.meta.bookid;
       //console.log('beforeUpdate, loadedBookId', loadedBookId);
@@ -102,8 +101,6 @@ bind:startReached={startReached} bind:endReached={endReached} >
         blocks[i].blockView = blockView(blocks[i].blockRid);
         blocks[i].visible = blocks[i].loaded;
         blocks[i].idx = i;
-        blocks[i].loaded = true;
-        blocks[i].visible = true;
         if (startId && blocks[i].blockId == startId) {
           /*scrollCounter = 5;*/
           startIdIdx = i;
@@ -132,11 +129,6 @@ bind:startReached={startReached} bind:endReached={endReached} >
       if (found) {
         startShowTimer();
       }*/
-    }
-    if (reloadBook) {
-      intBlocks = [];
-      reloadBook = false;
-      if (loadedBookId !== '') loadedBookId = '';
     }
   });
 
