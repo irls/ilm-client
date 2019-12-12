@@ -3,7 +3,13 @@
 {#if blockListObj && blockListObj.blockId}
   <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" class="ilm-block ilm-display -langblock-{block.language} {block.viewOutPaddings}">
   {#if block.type === 'illustration'}
-    <img alt="block.blockid" class="{block.getClass()}" src="{block.viewIllustration}"/>
+    {#if block.viewIllustration}
+      <img alt="block.blockid" class="{block.getClass()}" src="{block.viewIllustration}"/>
+    {:else}
+      <div class="bview-empty-image-wrapper">
+        <div class="bview-empty-image">No image</div>
+      </div>
+    {/if}
   {:else if block.type === 'hr'}
     <hr class="{block.getClass()}"/>
   {:else}
@@ -84,5 +90,18 @@
     left: 0px;
     /*font-family: 'Georgia', 'serif';
     font-size: 10px;*/
+  }
+  .bview-empty-image-wrapper {
+    width: 100px;
+    margin: 0px auto;
+  }
+  .bview-empty-image {
+    width: 100px;
+    height: 100px;
+    background: #E5E5E5;
+    border: 1px solid black;
+    text-align: center;
+    display: table-cell;
+    vertical-align: middle;
   }
 </style>
