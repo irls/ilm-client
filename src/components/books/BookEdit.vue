@@ -1116,7 +1116,7 @@ export default {
                 this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
                 this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
                 this.freeze('joinBlocks');
-                if ((elBlock && elBlock.getIsAudioEditing()) || 
+                if ((elBlock && elBlock.getIsAudioEditing()) ||
                         (elNext && elNext.getIsAudioEditing())) {
                   this.$root.$emit('for-audioeditor:force-close');
                 }
@@ -1217,7 +1217,7 @@ export default {
                 this.freeze('joinBlocks');
                 this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
                 this.addBlockLock({block: blockAfter, watch: ['realigned'], type: 'join'})
-                if ((elBlock && elBlock.getIsAudioEditing()) || 
+                if ((elBlock && elBlock.getIsAudioEditing()) ||
                         (elNext && elNext.getIsAudioEditing())) {
                   this.$root.$emit('for-audioeditor:force-close');
                 }
@@ -1297,7 +1297,7 @@ export default {
         class: ['align-modal']
       });
     },
-    
+
     unableToJoinChangedMessage() {
       this.$root.$emit('show-modal', {
         title: 'Unsaved Changes',
@@ -2459,6 +2459,12 @@ export default {
       filter: opacity(0.5);
     }
   }
+}
+.medium-toolbar-arrow-over:before {
+  border-color: transparent transparent #a6a6a6 !important;;
+}
+.medium-editor-toolbar-anchor-preview {
+  background: #a6a6a6 !important;
 }
 
 </style>
