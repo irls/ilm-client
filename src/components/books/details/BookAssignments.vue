@@ -469,7 +469,7 @@
             &.-editor {
               width: 80px;
             }
-            width: 210px;
+            width: 200px;
           }
           &.task-type {
             .go-to-block, span.go-to-block {
