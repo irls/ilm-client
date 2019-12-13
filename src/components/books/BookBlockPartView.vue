@@ -78,7 +78,7 @@
                   </div>
                 </div>
               </div>
-              <div class="table-cell -content-wrapper">
+              <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
