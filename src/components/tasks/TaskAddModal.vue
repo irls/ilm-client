@@ -332,7 +332,9 @@ export default {
         this.users_list[role].unshift({});
       }
       for (let role in this.roles) {
-        if (!this.users_list[role] || this.users_list[role].indexOf(this.roles[role]) === -1) {
+        if (!this.users_list[role] || !this.users_list[role].find(u => {
+          return u._id === this.roles[role];
+        })) {
           this.roles[role] = '';
         }
       }
