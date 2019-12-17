@@ -194,6 +194,9 @@ export default {
                 .then((res)=>{
                   this.isUploading = false;
                   this.$emit('closed', true);
+                  if (this.createdJob.executors.editor === this.auth.getSession().user_id) {
+                    this.$router.replace({ path: `/books/${this.createdJob.bookid}/edit` });
+                  }
                 }).catch(error => {
                   this.isUploading = false;
                   this.deleteTask();
@@ -203,6 +206,9 @@ export default {
                   this.createDummyBook({book_id: this.createdJob.bookid, jobId: this.createdJob['@rid']})
                   .then((res)=>{
                     this.$emit('closed', true)
+                    if (this.createdJob.executors.editor === this.auth.getSession().user_id) {
+                      this.$router.replace({ path: `/books/${this.createdJob.bookid}/edit` });
+                    }
                   }).catch(error => {
                     this.deleteTask()
                   });
