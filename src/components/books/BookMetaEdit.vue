@@ -26,7 +26,6 @@
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="Assignments" id="assignments">
             <BookAssignments
-              :users="users"
               @showModal_audio="showModal_audio = true"
               ></BookAssignments>
           <fieldset class='description brief'>
@@ -538,14 +537,7 @@ export default {
       TAB_META_INDEX: 1,
       TAB_TOC_INDEX: 2,
       TAB_AUDIO_INDEX: 3,
-      TAB_STYLE_INDEX: 4,
-      users: {
-        'editor': [],
-        'proofer': [],
-        'engineer': [],
-        'reader': [],
-        'narrator': []
-      }
+      TAB_STYLE_INDEX: 4
 
     }
   },
@@ -650,9 +642,6 @@ export default {
   mixins: [task_controls, api_config, access],
 
   mounted() {
-    let self = this;
-    self.getTaskUsers();
-
     //this.loadAudiobook(true)
     this.getAudioBook(this.currentBookid)
       .then(() => {
@@ -1594,24 +1583,6 @@ export default {
     updateJobDescription: _.debounce(function(event) {
       this.updateJob({id: this.currentJobInfo.id, description: event.target.value});
     }, 500),
-
-    getTaskUsers() {
-      var self = this
-      axios.get(this.API_URL + 'tasks/users').then(users => {
-        for (var role in self.users) {
-          self.users[role] = [{'_id':'unassigned', 'email':'', 'name':'Unassigned', isMatchBookLang: true}]
-          for (var i in users.data) {
-            if (users.data[i].roles.indexOf(role) != -1 && users.data[i].enable === true) {
-              if(users.data[i].languages.indexOf(this.currentBookMeta.language) != -1){
-                users.data[i].isMatchBookLang = true;
-              }
-              self.users[role].push(users.data[i])
-            }
-          }
-        }
-      })
-      .catch(error => {})
-    },
 
     goToBlock(blockId, ev) {
       this.$router.push({name: this.$route.name, params: {}});

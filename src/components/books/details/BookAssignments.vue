@@ -6,17 +6,17 @@
         <div class="counter-executor">
           <span v-if="counter.key == 'editor'">
             <div ><i>Editor:</i> {{counter.data.executor_id}}</div>
-            <div style="margin-bottom: 0.5em" v-if="adminOrLibrarian">Change performer: <select v-model="counter.data.executor_id" @change="updateAssignee('editor', counter.data.executor_id)" ><option v-for="user_editor in users['editor']" :value="user_editor._id" v-if="user_editor.isMatchBookLang">{{user_editor.name}} {{user_editor.email}}</option></select></div>
+            <div style="margin-bottom: 0.5em" v-if="adminOrLibrarian">Change performer: <select v-model="counter.data.executor_id" @change="updateAssignee('editor', counter.data.executor_id)" ><option v-for="user in usersList['editor']" :value="user._id">{{user.name || user._id}} {{user.email}}</option></select></div>
           </span>
 
           <span v-if="counter.key == 'proofer'">
             <div><i>Proofreader:</i> {{counter.data.executor_id}}</div>
-            <div style="margin-bottom: 0.5em" v-if="adminOrLibrarian">Change performer: <select v-model="counter.data.executor_id" @change="updateAssignee('proofer', counter.data.executor_id)"><option v-for="user_proofer in users['proofer']" :value="user_proofer._id"  v-if="user_proofer.isMatchBookLang">{{user_proofer.name}} {{user_proofer.email}}</option></select></div>
+            <div style="margin-bottom: 0.5em" v-if="adminOrLibrarian">Change performer: <select v-model="counter.data.executor_id" @change="updateAssignee('proofer', counter.data.executor_id)"><option v-for="user in usersList['proofer']" :value="user._id">{{user.name || user._id}} {{user.email}}</option></select></div>
           </span>
 
           <span v-if="counter.key == 'narrator'">
             <div><i>Narrator:</i> {{counter.data.executor_id}}</div>
-            <div style="margin-bottom: 0.5em" v-if="adminOrLibrarian">Change performer: <select v-model="counter.data.executor_id" @change="updateAssignee('narrator', counter.data.executor_id)"><option v-for="user_narrator in users['narrator']" :value="user_narrator._id"  v-if="user_narrator.isMatchBookLang">{{user_narrator.name}} {{user_narrator.email}}</option></select></div>
+            <div style="margin-bottom: 0.5em" v-if="adminOrLibrarian">Change performer: <select v-model="counter.data.executor_id" @change="updateAssignee('narrator', counter.data.executor_id)"><option v-for="user in usersList['narrator']" :value="user._id">{{user.name || user._id}} {{user.email}}</option></select></div>
           </span>
         </div>
         <table class="counters" v-if="counter.data.tasks.length > 0">
@@ -103,12 +103,13 @@
         textCleanupProcess: false,
         showSharePrivateBookModal: false,
         audioMasteringProcess: false,
-        showAudioMasteringModal: false
+        showAudioMasteringModal: false,
+        usersList: {}
       }
     },
     mixins: [access, task_controls],
     props: {
-      users: Object
+      
     },
     components: {
       modal
@@ -149,7 +150,8 @@
         storeListO: 'storeListO',
         taskBlockMap: 'taskBlockMap',
         bookMode: 'bookMode',
-        auth: 'auth'
+        auth: 'auth',
+        taskUsers: 'taskUsers'
       })
     },
     methods: {
@@ -394,10 +396,24 @@
         }
         return this.taskBlockMap.map[task] && this.taskBlockMap.map[task][direction];
       },
-      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook']),
+      filterUsers() {
+        for (let role in this.taskUsers) {
+          this.usersList[role] = this.taskUsers[role].filter(u => {
+            //console.log(u.languages, this.lang, u.languages.indexOf(this.lang))
+            return (Array.isArray(u.languages) && u.languages.indexOf(this.currentBookMeta.language) !== -1);
+          });
+          this.usersList[role].unshift({'_id':'unassigned', 'email':'Unassigned', 'name':'Unassigned'});
+        }
+        this.$forceUpdate();
+      },
+      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook', 'getTaskUsers']),
     },
     mounted() {
       this.set_taskBlockMapPositionsFromRoute();
+      this.getTaskUsers()
+        .then(() => {
+          this.filterUsers();
+        });
     },
     watch: {
       'startBlockId': {
@@ -413,6 +429,11 @@
       '$route': {
         handler(val) {
           this.set_taskBlockMapPositionsFromRoute();
+        }
+      },
+      'currentBookMeta.language': {
+        handler() {
+          this.filterUsers();
         }
       }
     }

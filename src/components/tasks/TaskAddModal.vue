@@ -17,84 +17,32 @@
         <span class="icon-info-circled alert-icon-float-left"></span>
         <p>{{bookUploadCommonError}}.</p>
       </alert>
-      <!--<alert dismissable
-        :value="bookUploadCheckError != false"
-        placement="top"
-        type="danger"
-        width="500px">
-        <i class="fa fa-exclamation-triangle alert-icon-float-left" aria-hidden="true"></i>
-        <div class="alert-text-float-right">
-          <p v-for='(errMsg) in bookUploadCheckError'>{{errMsg}}.</p>
-        </div>
-      </alert>-->
     </div>
 
     <div slot="modal-body" class="modal-body">
-      <div class="form-group" v-if="false">
-        <label>Type</label>
-        <select v-model="type" class="form-control">
-          <option v-for="task_type in task_types" :value="task_type.id">{{task_type.title}}</option>
-        </select>
-        <div v-if="errors.type" v-for="err in errors.type" class="error-message" v-text="err"></div>
-      </div>
-      <div class="form-group" v-if="false">
-        <label>Subtype</label>
-        <select class="form-control" v-model="subtype">
-          <option v-for="task_subtype in subtypes" :value="task_subtype.id">{{task_subtype.title}}</option>
-        </select>
-        <div v-if="errors.subtype" v-for="err in errors.subtype" class="error-message" v-text="err"></div>
-      </div>
       <div class="form-group" v-if="showField('name')">
         <label>Title</label>
         <div v-for="n in Object.keys(name)" class="form-group book-row">
-          <input type="text" class="form-control" v-model="name[n]" />
+          <input type="text" :class="['form-control', {'has-error': errors.name}]" v-model="name[n]" v-on:keypress="clearErrors('name')" />
           <i class="fa fa-minus-circle" v-if="name.length > 1" v-on:click="removeBook(n)"></i><br/>
           <input type="text" class="form-control" v-model="id[n]" disabled />
         </div>
         <!-- <i class="fa fa-plus-circle add-book" v-on:click="addBook()"></i> -->
         <div v-if="errors.name" v-for="err in errors.name" class="error-message" v-text="err"></div>
       </div>
-      <div class="form-group" v-if="showField('roles.editor')">
-        <label>Editor</label>
-        <select class="form-control" v-model="roles['editor']">
-          <option v-for="user_editor in users['editor']" :value="user_editor._id">{{user_editor.email}}</option>
-        </select>
-        <div v-if="errors['roles.editor']" v-for="err in errors['roles.editor']" class="error-message" v-text="err"></div>
-      </div>
-      <div class="form-group" v-if="showField('roles.reader')">
-        <label>Reader</label>
-        <select class="form-control" v-model="roles['reader']">
-          <option v-for="user_reader in users['reader']" :value="user_reader._id">{{user_reader.email}}</option>
-        </select>
-        <div v-if="errors['roles.reader']" v-for="err in errors['roles.reader']" class="error-message" v-text="err"></div>
-      </div>
-      <div class="form-group" v-if="showField('roles.proofer')">
-        <label>Proofer</label>
-        <select class="form-control" v-model="roles['proofer']">
-          <option v-for="user_proofer in users['proofer']" :value="user_proofer._id">{{user_proofer.email}}</option>
-        </select>
-        <div v-if="errors['roles.proofer']" v-for="err in errors['roles.proofer']" class="error-message" v-text="err"></div>
-      </div>
-      <div class="form-group" v-if="showField('roles.narrator')">
-        <label>Narrator</label>
-        <select class="form-control" v-model="roles['narrator']">
-          <option v-for="user_narrator in users['narrator']" :value="user_narrator._id">{{user_narrator.email}}</option>
-        </select>
-        <div v-if="errors['roles.narrator']" v-for="err in errors['roles.narrator']" class="error-message" v-text="err"></div>
-      </div>
-      <!-- <div class="form-group" v-if="showField('roles.engineer')">
-        <label>Engineer</label>
-        <select class="form-control" v-model="roles['engineer']">
-          <option v-for="user_engineer in users['engineer']" :value="user_engineer._id">{{user_engineer.email}}</option>
-        </select>
-        <div v-if="errors['roles.engineer']" v-for="err in errors['roles.engineer']" class="error-message" v-text="err"></div>
-      </div> -->
       <div class="form-group">
         <label>Language</label>
-        <select class="form-control" v-model="lang">
+        <select class="form-control" v-model="lang" v-on:change="filterUsers">
           <option v-for="(name, code) in langs" :value="code">{{name}}</option>
         </select>
         <div v-if="errors.lang" v-for="err in errors.lang" class="error-message" v-text="err"></div>
+      </div>
+      <div class="form-group" v-for="role in rolesList">
+        <label>{{role.name}}</label>
+        <select :class="['form-control', {'has-error': errors['roles.' + role.id]}]" v-model="roles[role.id]" v-on:change="clearErrors('roles.' + role.id)">
+          <option v-for="user in users_list[role.id]" :value="user._id">{{user.name || user._id}} {{user.email}}</option>
+        </select>
+        <div v-if="errors['roles.' + role.id]" v-for="err in errors['roles.' + role.id]" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group">
         <label>Description</label>
@@ -125,7 +73,7 @@
 </template>
 <script>
 import { modal, alert } from 'vue-strap'
-import { /*mapGetters, mapState, */mapActions } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import modalMixin from './../../mixins/modal'
 import axios from 'axios'
 import superlogin from 'superlogin-client'
@@ -133,6 +81,7 @@ import BookImport from '../books/BookImport'
 import { Languages } from "../../mixins/lang_config.js"
 var getSlug = require('speakingurl')
 const TASKS_URL = process.env.ILM_API + '/api/v1/task'
+import api_config from '../../mixins/api_config.js';
 export default {
   name: 'TaskAddModal',
   components: {
@@ -140,31 +89,16 @@ export default {
     alert,
     BookImport
   },
-  mixins: [modalMixin],
+  mixins: [modalMixin, api_config],
   props: {
-    show: Boolean,
-    users: Object
+    show: Boolean
   },
   data() {
     return {
       type: '',
-      subtype: '',
-      task_types: [
-        {
-          'id': 'with-audio',
-          'title': 'Import book with audio',
-          'subtypes': []
-        },
-        {
-          'id': 'without-audio',
-          'title': 'Import book without audio',
-          'subtypes': []
-        }
-      ],
-      subtypes: [],
       roles: {},
       name: [''],
-      lang: '',
+      lang: 'en',
       langs: Languages,
       fields_by_type: {
         'with-audio': {
@@ -196,16 +130,27 @@ export default {
       id: [''],
       createdJob: {},
       importingBooksList: [],
-      isUploading: false
+      isUploading: false,
+      users_list: {},
+      rolesList: [
+        {id: 'editor', name: 'Editor'},
+        {id: 'proofer', name: 'Proofer'},
+        {id: 'narrator', name: 'Narrator'}
+      ]
     }
+  },
+  mounted() {
+    this.getTaskUsers()
+      .then(() => {
+        this.filterUsers();
+      });
   },
   methods: {
     ...mapActions([
-      'createDummyBook'
+      'createDummyBook', 'getTaskUsers'
     ]),
     cancel() {
-      var self = this
-      self.$emit('closed', false)
+      this.$emit('closed', false)
     },
     save() {
       this.bookUploadCommonError = false;
@@ -214,55 +159,48 @@ export default {
       if (!this.validate()) {
         return false
       }
-      var self = this
-      //console.log(self.roles)
       var task = {
-        name: self.name,
-        type: self.type,
-        //subtype: self.subtype,
-        roles: self.roles,
-        description: self.description,
-        id: self.id,
+        name: this.name,
+        type: this.type,
+        roles: this.roles,
+        description: this.description,
+        id: this.id,
         hasBooks: this.importingBooksList.length > 0,
         language: this.lang
       }
       axios.post(TASKS_URL, task)
         .then(response => {
           this.isUploading = true;
-          self.errors = null
-          self.errors = {}// force re render errors
+          this.errors = null
+          this.errors = {}// force re render errors
           if (Object.keys(response.data.errors).length > 0) {
-            for (let _id in self.id) {
-              if (typeof response.data.errors[self.id[_id]] == 'undefined') {
+            for (let _id in this.id) {
+              if (typeof response.data.errors[this.id[_id]] == 'undefined') {
                 //console.log(_id, self.id[_id])
-                self.removeBook(_id)
+                this.removeBook(_id)
               } else {
-                if (!self.errors['name']) {
-                  self.errors['name'] = [];
+                if (!this.errors['name']) {
+                  this.errors['name'] = [];
                 }
-                self.errors['name'].push(self.id[_id] + ': ' + response.data.errors[self.id[_id]])
+                this.errors['name'].push(`${this.id[_id]}:${response.data.errors[this.id[_id]]}`)
               }
             }
             this.isUploading = false;
           } else {
-            self.createdJob = response.data.insert_jobs[0]
+            this.createdJob = response.data.insert_jobs[0]
             this.$nextTick(()=>{
               if (!this.$refs.bookImport.saveDisabled) {
                 this.$refs.bookImport.onFormSubmit()
                 .then((res)=>{
                   this.isUploading = false;
-                  self.$emit('closed', true);
-                  //from Tasks.vue :
-                  //this.$store.dispatch('tc_loadBookTask')
-                  //this.$router.replace({ path: '/books/' + this.import_book_id })
+                  this.$emit('closed', true);
                 }).catch(error => {
-                  //this.uploadError(error);
                   this.isUploading = false;
                   this.deleteTask();
                 })
               } else {
                 if (this.$refs.bookImport.isDummyBook == true) {
-                  this.createDummyBook({book_id: self.createdJob.bookid, jobId: self.createdJob['@rid']})
+                  this.createDummyBook({book_id: this.createdJob.bookid, jobId: this.createdJob['@rid']})
                   .then((res)=>{
                     this.$emit('closed', true)
                   }).catch(error => {
@@ -329,7 +267,7 @@ export default {
                 if (!this.errors[field + '.' + i]) {
                   this.errors[field + '.' + i] = []
                 }
-                this.errors[field + '.' + i].push('Required')
+                this.errors[field + '.' + i].push(`Please define ${i}`);
               }
             }
           }
@@ -381,26 +319,39 @@ export default {
     },
     bookListChanged(list) {
       this.importingBooksList = list
+    },
+    filterUsers() {
+      for (let role in this.taskUsers) {
+        this.users_list[role] = this.taskUsers[role].filter(u => {
+          //console.log(u.languages, this.lang, u.languages.indexOf(this.lang))
+          return !u._id || u._id === 'unassigned' || (Array.isArray(u.languages) && u.languages.indexOf(this.lang) !== -1);
+        });
+        if (role === 'narrator') {
+          this.users_list[role].unshift({'_id':'unassigned', 'email':'Unassigned', 'name':'Unassigned'});
+        }
+        this.users_list[role].unshift({});
+      }
+      for (let role in this.roles) {
+        if (!this.users_list[role] || this.users_list[role].indexOf(this.roles[role]) === -1) {
+          this.roles[role] = '';
+        }
+      }
+    },
+    clearErrors(field) {
+      delete this.errors[field];
+      this.$forceUpdate();
     }
   },
   computed: {
     saveDisabled: function() {
       //return false; // while we need to create job without book
       return this.bookUploadError && this.importingBooksList.length == 0;
-    }
+    },
+    ...mapGetters(['auth', 'taskUsers'])
   },
   watch: {
-    type(val) {
-      var selected = this.task_types.find(t => {
-        return t.id == val
-      })
-      if (selected) {
-        this.subtypes = selected.subtypes
-      }
-    },
     show() {
       this.type = 'with-audio'
-      this.subtype = ''
       this.roles = {}
       this.name = ['']
       this.errors = {}
@@ -408,18 +359,6 @@ export default {
       this.lang = 'en'
       this.createdJob = null
       this.createdJob = {}
-      if (process.env.NODE_ENV === 'development') {
-        if (this.users['editor'] && this.users['editor'][0]) {
-          this.roles['editor']   = this.users['editor'][0]._id;
-        }
-        if (this.users['proofer'] && this.users['proofer'][0]) {
-          this.roles['proofer']  = this.users['proofer'][0]._id;
-        }
-        if (this.users['narrator'] && this.users['narrator'][0]) {
-          this.roles['narrator'] = this.users['narrator'][0]._id;
-        }
-        //this.roles['engineer'] = this.users['engineer'][0]._id;
-      }
       this.bookUploadError = false;
       this.isUploading = false;
       this.$refs.bookImport.isDummyBook = true;
@@ -476,6 +415,10 @@ textarea.job-descr {
 
   .modal-footer .non-modal-form {
     width: 85%;
+  }
+  
+  .has-error {
+    border: 1px solid red;
   }
 
 </style>

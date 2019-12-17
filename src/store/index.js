@@ -176,7 +176,14 @@ export const store = new Vuex.Store({
     bookMode: null,
     processQueueWatch: null,
     allowBookSplitPreview: false,
-    taskBlockMap: {map: {}, refresh: null, allowNext: true}
+    taskBlockMap: {map: {}, refresh: null, allowNext: true},
+    taskUsers: {
+      'editor': [],
+      'proofer': [],
+      'engineer': [],
+      'reader': [],
+      'narrator': []
+    }
   },
 
   getters: {
@@ -386,6 +393,9 @@ export const store = new Vuex.Store({
       } else {
         return null;
       }
+    },
+    taskUsers: state => {
+      return state.taskUsers;
     }
   },
 
@@ -2902,6 +2912,44 @@ export const store = new Vuex.Store({
             return Promise.reject(err);
           });
       }
+    },
+    getTaskUsers({state, commit}) {
+      return axios.get(`${state.API_URL}tasks/users`).then(users => {
+        if (Array.isArray(users.data)) {
+          let user_id = state.auth.getSession().user_id;
+          users.data.sort((a, b) => {
+            /*if (a._id === 'unassigned') {
+              return -1;
+            }
+            if (b._id === 'unassigned') {
+              return 1;
+            }*/
+            if (a._id === user_id) {
+              return -1;
+            }
+            if (b._id === user_id) {
+              return 1;
+            }
+            let a_name = a.name ? a.name : a._id;
+            let b_name = b.name ? b.name : b._id;
+            return a_name > b_name ? 1 : -1;
+          });
+        }
+        //state.taskUsers = users.data;
+        for (let role in state.taskUsers) {
+          state.taskUsers[role] = [];
+          //let's add unassigned user to narrators:
+          for (let i in users.data) {
+            if (users.data[i].roles.indexOf(role) != -1 && users.data[i].enable === true) {
+              state.taskUsers[role].push(users.data[i])
+            }
+          }
+        }
+        return Promise.resolve();
+      })
+      .catch(error => {
+        return Promise.reject(error);
+      })
     }
   }
 })
