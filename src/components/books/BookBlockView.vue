@@ -99,7 +99,7 @@
                       </template>
                       <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
                           <i class="fa fa-language" aria-hidden="true"></i>
-                          Language: <select :disabled="proofreadModeReadOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
+                          Language: <select :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
                           <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
                         </select>
                       </li>
@@ -127,10 +127,10 @@
                   <div v-if="isNumbered"
                     :class="['parnum-row', {'-locked': blockO.isManual==true}]">
 
-                    <input :disabled="proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='header'"
+                    <input :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='header'"
                       @input="setNumVal" v-model="blockO.secnum"
                       class="num" type="text" maxlength="12" size="12"/>
-                    <input :disabled="proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='par'"
+                    <input :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='par'"
                       @input="setNumVal" v-model="blockO.parnum"
                       class="num" type="text" maxlength="12" size="12"/>
 
@@ -141,7 +141,7 @@
 
                   <!-- Block Type selector -->
                   <label>
-                    <select :disabled="proofreadModeReadOnly ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)">
+                    <select :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)">
                       <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                     </select>
                   </label>
@@ -152,7 +152,7 @@
                     <i class="fa fa-volume-off"></i>
                     <div class="par-ctrl-divider"></div>
                     <label>
-                      <select :disabled="proofreadModeReadOnly ? 'disabled' : false" v-model='voiceworkSel'>
+                      <select :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-model='voiceworkSel'>
                         <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
                     </label>
@@ -161,7 +161,7 @@
                     <i class="fa fa-volume-off"></i>
                     <div class="par-ctrl-divider"></div>
                     <label>
-                      <select disabled="disabled">
+                      <select :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" >
                         <option>{{blockVoiceworks[block.voicework]}}</option>
                       </select>
                       <span></span>
@@ -361,12 +361,12 @@
                       <template v-if="allowVoiceworkChange">
                         <label>
                           <i class="fa fa-volume-off"></i>
-                          <select  :disabled="proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
+                          <select  :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                             <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                           </select>
                         </label>
                         <label><i class="fa fa-language" aria-hidden="true"></i>
-                        <select :disabled="proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
+                        <select :disabled="!allowEditing ||  proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
                           <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
                         </select>
                         </label>
@@ -993,7 +993,7 @@ export default {
       },
       proofreadModeReadOnly: {
           get() {
-              return this.allowEditing || this.mode === 'proofread';
+              return this.mode === 'proofread';
           }
       },
       blockTypeLabel: {
