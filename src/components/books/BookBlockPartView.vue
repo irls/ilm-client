@@ -803,7 +803,7 @@ export default {
       },
       allowEditing: {
         get() {
-          return this.block && this.tc_isShowEdit(this.block._id) && (this.mode === 'edit' || this.mode === 'proofread');
+          return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
         }
       },
       blockTypeLabel: {
