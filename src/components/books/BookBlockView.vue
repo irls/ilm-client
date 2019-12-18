@@ -62,7 +62,7 @@
                       Hide archived flags</li>
 
                     <li class="separator"></li>
-                    <template v-if="allowEditing">
+                    <template v-if="allowEditing || proofreadModeReadOnly">
                       <template v-if="!proofreadModeReadOnly">
                       <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
                         <i class="fa fa-angle-up" aria-hidden="true"></i>
@@ -122,7 +122,7 @@
                 <!--<i class="fa fa-trash-o fa-lg"></i>-->
                 <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
 
-                <template v-if="allowEditing">
+                <template v-if="allowEditing || proofreadModeReadOnly">
                   <!--{{blockO.rid}} - {{isNumbered}}-->
                   <div v-if="isNumbered"
                     :class="['parnum-row', {'-locked': blockO.isManual==true}]">
@@ -357,7 +357,7 @@
                 <div class="table-row controls-top -hidden">
                   <div class="table-cell"></div>
                   <div class="table-cell">
-                    <template v-if="allowEditing">
+                    <template v-if="allowEditing || proofreadModeReadOnly">
                       <template v-if="allowVoiceworkChange">
                         <label>
                           <i class="fa fa-volume-off"></i>
@@ -993,7 +993,7 @@ export default {
       },
       proofreadModeReadOnly: {
           get() {
-              return this.allowEditing && this.mode === 'proofread';
+              return this.allowEditing || this.mode === 'proofread';
           }
       },
       blockTypeLabel: {
