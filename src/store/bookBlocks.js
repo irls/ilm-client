@@ -571,10 +571,10 @@ class BookBlocks {
   }
   
   compareIndex(fromRid, toRid) {
-    let from = this.lookupList[fromRid];
-    let to = this.lookupList[toRid];
-    if (from && to && typeof from.index !== 'undefined' && typeof to.index !== 'undefined') {
-      return from.index > to.index ? 1 : -1;
+    let from = this.listRIds.indexOf(fromRid);
+    let to = this.listRIds.indexOf(toRid);
+    if (typeof from !== 'undefined' && typeof to !== 'undefined') {
+      return from > to ? 1 : -1;
     } else {
       return 0;
     }
