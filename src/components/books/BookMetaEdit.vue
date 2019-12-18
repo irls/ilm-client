@@ -2068,4 +2068,8 @@ Vue.filter('prettyBytes', function (num) {
     font-size: 14px;
   }
 
+  .meta-edit-tabs.vue-tabs .disabled i.fa-check-circle-o{
+    color: #303030;
+  }
+
 </style>
