@@ -161,10 +161,7 @@
                     <i class="fa fa-volume-off"></i>
                     <div class="par-ctrl-divider"></div>
                     <label>
-                      <select :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" >
-                        <option>{{blockVoiceworks[block.voicework]}}</option>
-                      </select>
-                      <span></span>
+                      <span>{{blockVoiceworks[block.voicework]}}</span>
                     </label>
                   </template>
                 </template>
