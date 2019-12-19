@@ -402,7 +402,7 @@
             //console.log(u.languages, this.lang, u.languages.indexOf(this.lang))
             return (Array.isArray(u.languages) && u.languages.indexOf(this.currentBookMeta.language) !== -1);
           });
-          this.usersList[role].unshift({'_id':'unassigned', 'email':'Unassigned', 'name':'Unassigned'});
+          this.usersList[role].unshift({'_id':'unassigned', 'email':'', 'name':'Unassigned'});
         }
         this.$forceUpdate();
       },
