@@ -2070,6 +2070,10 @@ Vue.filter('prettyBytes', function (num) {
 
   .meta-edit-tabs.vue-tabs .disabled i.fa-check-circle-o{
     color: #303030;
+    font-size: 18px;
+  }
+  .meta-edit-tabs.vue-tabs .disabled i.fa-circle-o{
+    font-size: 18px;
   }
 
 </style>
