@@ -158,13 +158,13 @@ export const store = new Vuex.Store({
       {
         group: 'Reader',
         categories: [
-          'History', 'Ideas', 'Science', 'Stories', 'Verse'
+          'Children', 'History', 'Ideas', 'Science', 'Novels', 'Verse'
         ]
       },
       {
         group: 'Ocean',
         categories: [
-          'Bahá’í', 'Buddhist', 'Christian', 'Confucian', 'Hindu', 'Islam', 'Judaism', 'Sikh', 'Tao', 'Zoroastrian'
+          'Bahá’í', 'Buddhist', 'Christian', 'Confucian', 'Hindu', 'Islam', 'Judaism', 'Jainism ', 'Sikh', 'Tao', 'Zoroastrian'
         ]
       }
     ],
@@ -897,9 +897,9 @@ export const store = new Vuex.Store({
     set_book_mode(state, mode) {
       state.bookMode = mode || null;
     },
-    
+
     set_taskBlockMap(state) {
-      
+
       let taskMap = {};
       [...state.tc_currentBookTasks.tasks, ...state.currentJobInfo.can_resolve_tasks].forEach(t => {
         //console.log(`${t.blockid}, ${t.type}`)
@@ -911,7 +911,7 @@ export const store = new Vuex.Store({
       state.taskBlockMap.map = taskMap;
       state.taskBlockMap.refresh = Date.now();
     },
-    
+
     set_taskBlockMapAllowNext(state, allow) {
       state.taskBlockMap.allowNext = allow;
     }
