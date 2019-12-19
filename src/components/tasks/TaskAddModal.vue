@@ -351,13 +351,21 @@ export default {
       }
     },
     clearErrors(field, ev) {
-      delete this.errors[field];
-      this.checkUserValue(ev);
+      if (!ev || !ev.target || (ev.target.value && `${ev.target.value}` !== '-1')) {
+        delete this.errors[field];
+      }
+      this.checkUserValue(field, ev);
       this.$forceUpdate();
     },
-    checkUserValue(ev) {
-      if (ev.target && `${ev.target.value}` === "-1") {
-        this.roles[ev.target.dataset.role] = '';
+    checkUserValue(field, ev) {
+      switch (field) {
+        case 'name':
+          break;
+        default:
+          if (ev.target && `${ev.target.value}` === "-1") {
+            this.roles[ev.target.dataset.role] = '';
+          }
+          break;
       }
     }
   },
