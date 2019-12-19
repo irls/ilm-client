@@ -39,7 +39,7 @@
       </div>
       <div class="form-group" v-for="role in rolesList">
         <label>{{role.name}}</label>
-        <select :class="['form-control', {'has-error': errors['roles.' + role.id]}]" v-model="roles[role.id]" v-on:change="clearErrors('roles.' + role.id)">
+        <select :class="['form-control', {'has-error': errors['roles.' + role.id]}]" v-model="roles[role.id]" v-on:change="clearErrors('roles.' + role.id, $event)" :data-role="role.id">
           <option v-for="user in users_list[role.id]" :value="user._id">{{user.name || user._id}} {{user.email}}</option>
         </select>
         <div v-if="errors['roles.' + role.id]" v-for="err in errors['roles.' + role.id]" class="error-message" v-text="err"></div>
@@ -333,9 +333,14 @@ export default {
           return !u._id || u._id === 'unassigned' || (Array.isArray(u.languages) && u.languages.indexOf(this.lang) !== -1);
         });
         if (role === 'narrator') {
-          this.users_list[role].unshift({'_id':'unassigned', 'email':'Unassigned', 'name':'Unassigned'});
+          this.users_list[role].unshift({'_id':'unassigned', 'email':'', 'name':'Unassigned'});
         }
         this.users_list[role].unshift({});
+      }
+      for (let role in this.users_list) {
+        if (this.users_list[role].length === (role === 'narrator' ? 2 : 1)) {// only empty and unassigned
+          this.users_list[role].push({'_id': -1, name: `No ${role}s qualified`, email: ''});
+        }
       }
       for (let role in this.roles) {
         if (!this.users_list[role] || !this.users_list[role].find(u => {
@@ -345,9 +350,15 @@ export default {
         }
       }
     },
-    clearErrors(field) {
+    clearErrors(field, ev) {
       delete this.errors[field];
+      this.checkUserValue(ev);
       this.$forceUpdate();
+    },
+    checkUserValue(ev) {
+      if (ev.target && `${ev.target.value}` === "-1") {
+        this.roles[ev.target.dataset.role] = '';
+      }
     }
   },
   computed: {
