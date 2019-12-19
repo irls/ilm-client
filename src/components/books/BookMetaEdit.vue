@@ -8,7 +8,7 @@
         </template>
       </div>
 
-      <div class="row">
+      <div class="row" style="height: 0">
       <div class="download-area col-sm-6">
       </div>
       </div>
@@ -58,7 +58,7 @@
                 <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
               </div>
           </fieldset>
-          <CompleteAudioExport 
+          <CompleteAudioExport
             :convertTime="convertTime"
             :goToBlock="goToBlock"></CompleteAudioExport>
           <BookPublish></BookPublish>
@@ -1677,7 +1677,28 @@ Vue.filter('prettyBytes', function (num) {
   return (neg ? '-' : '') + num + ' ' + unit;
 });
 </script>
+<style>
+.meta-edit-tabs .nav-tabs-navigation {
+  /*border: 1px solid red;*/
+  position: sticky;
+  top: 44px;
+  background-color:white;
+  z-index: 19;
+  /*border-top: 10px solid white;*/
+}
 
+#p-styles-switcher.tab-container {
+  padding-top: 0px;
+}
+
+.meta-edit-tabs > .nav-tabs-navigation{
+  border: 1px solid white;
+  position: sticky;
+  top: 0px;
+  z-index: 20;
+}
+
+</style>
 
 <style scoped src='./css/BookProperties.css'></style>
 
