@@ -653,17 +653,7 @@ export default {
     let self = this;
     self.getTaskUsers();
 
-    //this.loadAudiobook(true)
-    this.getAudioBook(this.currentBookid)
-      .then(() => {
-        if (this.currentAudiobook) {
-
-        }
-      });
-
-    this.$root.$on('from-bookblockview:voicework-type-changed', function() {
-      self.getAudioBook();
-    });
+    this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
     this.setCurrentBookCounters();
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
     this.$root.$on('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
@@ -688,7 +678,7 @@ export default {
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
     this.$root.$off('audiobookUpdated');
-    this.$root.$off('from-bookblockview:voicework-type-changed');
+    this.$root.$off('from-bookblockview:voicework-type-changed', this.getAudioBook);
     this.$root.$off('book-reimported');
     this.$root.$off('from-block-edit:set-style', this.listenSetStyle);
     this.$root.$off('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
