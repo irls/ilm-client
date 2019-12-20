@@ -79,9 +79,11 @@ let QuoteButton = MediumEditor.Extension.extend({
   doQuoteSave: function () {
     this.base.restoreSelection();
 
-    let value = this.quoteFormInput.value.trim();
+    //let value = this.quoteFormInput.value.trim();
+    let value = this.quoteFormInput.dataset.author.trim();
     if (value.length) {
       let quote = document.createElement(this.wrapNode);
+      //console.log('quote', quote, value, this.quoteFormInput);
       quote.dataset.author = value;
       if (this.isActive()) this.doQuoteRemove();
 
@@ -233,7 +235,8 @@ let QuoteButton = MediumEditor.Extension.extend({
   createQuoteListItem: function (content) {
     var item = this.document.createElement('li');
     item.className = 'quotes-list-item';
-    item.innerHTML = `<div style="float: left;">${content.text}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
+    item.id = content.text;
+    item.innerHTML = `<div style="float: left;">${content.text_farsi}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
     return item;
   },
 
@@ -309,7 +312,9 @@ let QuoteButton = MediumEditor.Extension.extend({
   },
 
   onClick: function (ev) {
+    //console.log('onclick target', ev.target);
     this.quoteFormInput.value = ev.target.textContent;
+    this.quoteFormInput.dataset.author = ev.target.id;
   },
 
   destroy: function () {

@@ -31,6 +31,22 @@ const POUCH_CFG = {
     }
 };
 
+const authorsLangFarsi = 
+{
+ bab:      'باب',
+ baha:     'بهاءالّله',
+ abd:      'عبدالبهاء',
+ shoghi:   'شوقی',
+ sacred:   'sacred',
+ bible:    'انجيل',
+ muhammad: 'محمد',
+ quran:    'قرآن',
+ jesus:    'عیسی',
+ ali:      'علی',
+ tradition: 'حدیث',
+ husayn:   'حسین'
+};
+
 // const API_ALLBOOKS = '/static/books.json'
 
 function defer() {
@@ -266,7 +282,7 @@ export const store = new Vuex.Store({
       let result = [];
       if (state.currentBookMeta.authors) {
         state.currentBookMeta.authors.forEach((author)=>{
-          result.push({ text: author.name, color: author.color })
+          result.push({ text: author.name, text_farsi: authorsLangFarsi[author.name], color: author.color })
         })
       }
       return result;
