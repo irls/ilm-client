@@ -204,7 +204,7 @@
               ></BookAudioIntegration>
           </vue-tab>
 
-        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab()">
+        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
             <div class="styles-catalogue">
 
               <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }">
@@ -580,7 +580,7 @@ export default {
     }),
       proofreadModeReadOnly: {
         get() {
-            return this.mode === 'proofread';
+            return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
         }
     },
     collectionsList: {
