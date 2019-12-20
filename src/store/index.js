@@ -2932,7 +2932,7 @@ export const store = new Vuex.Store({
             }
             let a_name = a.name ? a.name : a._id;
             let b_name = b.name ? b.name : b._id;
-            return a_name > b_name ? 1 : -1;
+            return a_name.toLocaleLowerCase() > b_name.toLocaleLowerCase() ? 1 : -1;
           });
         }
         //state.taskUsers = users.data;
