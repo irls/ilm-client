@@ -1469,18 +1469,18 @@
           if (this.blockSelection && ((this.blockSelection.start && this.blockSelection.start._id) || (this.blockSelection.end && this.blockSelection.end._id)) && this.plEventEmitter) {
             let start = false;
             let end = false;
-            if (this.blockSelection.start && this.blockSelection.start._id && this.blockMap[this.blockSelection.start._id]) {
-              start = parseInt(this.blockMap[this.blockSelection.start._id][0])/1000;
-              if (!this.blockSelection.end || !this.blockSelection.end._id || !this.blockMap[this.blockSelection.end._id]) {
-                end = this.selection.end;//parseInt(this.blockMap[this.blockSelection.start._id][1])/1000;
+            this.storeListO.getBlocksInRange(this.blockSelection.start._id, this.blockSelection.end._id).forEach(blkId => {
+              if (this.blockMap[blkId]) {
+                let _start = parseInt(this.blockMap[blkId][0])/1000;
+                let _end = parseInt(this.blockMap[blkId][1])/1000;
+                if (start === false || _start < start) {
+                  start = _start;
+                }
+                if (end === false || _end > end) {
+                  end = _end;
+                }
               }
-            }
-            if (this.blockSelection.end && this.blockSelection.end._id && this.blockMap[this.blockSelection.end._id]) {
-              end = parseInt(this.blockMap[this.blockSelection.end._id][1])/1000;
-              if (!this.blockSelection.start || !this.blockSelection.start._id || !this.blockMap[this.blockSelection.start._id]) {
-                start = this.selection.start;//parseInt(this.blockMap[this.blockSelection.end._id][0])/1000;
-              }
-            }
+            });
 
             if (start !== false && end !== false && start < end) {
               this.selection.start = this._round(start, 2);
@@ -1940,7 +1940,8 @@
           blkSelection: 'blockSelection',
           alignCounter: 'alignCounter',
           hasLocks: 'hasLocks',
-          currentAudiobook: 'currentAudiobook'})
+          currentAudiobook: 'currentAudiobook', 
+          storeListO: 'storeListO'})
       },
       watch: {
         'cursorPosition': {
