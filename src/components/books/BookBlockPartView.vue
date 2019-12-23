@@ -1056,12 +1056,19 @@ export default {
                   'quoteButton', 'suggestButton'
                 ]
               };
+            let blockLang = '';
+            if (this.block.language === 'fa'){
+              blockLang = 'fa';    
+            } else {
+              blockLang = 'en';    
+            }
             this.editor = new MediumEditor('#content-' + this.block.blockid + '-part-' + this.blockPartIdx, {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
                 onQuoteSave: this.onQuoteSave,
                 suggestEl: this.suggestEl,
+                blockLang: blockLang,
                 extensions: extensions,
                 disableEditing: !this.allowEditing
             });

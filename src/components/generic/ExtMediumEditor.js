@@ -83,6 +83,7 @@ let QuoteButton = MediumEditor.Extension.extend({
     let value = this.quoteFormInput.dataset.author.trim();
     if (value.length) {
       let quote = document.createElement(this.wrapNode);
+      console.log('lang: ', this.getEditorOption('blockLang'));
       //console.log('quote', quote, value, this.quoteFormInput);
       quote.dataset.author = value;
       if (this.isActive()) this.doQuoteRemove();
@@ -236,7 +237,12 @@ let QuoteButton = MediumEditor.Extension.extend({
     var item = this.document.createElement('li');
     item.className = 'quotes-list-item';
     item.id = content.text;
-    item.innerHTML = `<div style="float: left;">${content.text_farsi}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
+    if (this.getEditorOption('blockLang') == 'fa'){
+      item.innerHTML = `<div style="float: left;">${content.text_farsi}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
+    } else {
+      item.innerHTML = `<div style="float: left;">${content.text}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
+    }
+    
     return item;
   },
 
