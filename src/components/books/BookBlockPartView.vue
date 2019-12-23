@@ -2525,7 +2525,11 @@ export default {
             //this.block.setAudiosrc(this.blockAudiosrc(null, false));
             this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
             this.block.setContent(this.blockAudio.map);
-            return this.assembleBlockAudioEdit(null, true);
+            return this.assembleBlockAudioEdit(null, true)
+              .then(() => {
+                this.isAudioChanged = false;
+                return Promise.resolve();
+              });
           } else {
             this.assembleBlockPartAudioEdit(true);
           }
@@ -2553,7 +2557,11 @@ export default {
             this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
             this.block.setContent(this.blockContent());
             //this.block.setContent(this.blockContent());
-            return this.assembleBlockAudioEdit(null, false);
+            return this.assembleBlockAudioEdit(null, false)
+              .then(() => {
+                this.isAudioChanged = false;
+                return Promise.resolve();
+              });
           } else {
             this.assembleBlockPartAudioEdit(false);
           }
