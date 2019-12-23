@@ -650,8 +650,8 @@ export default {
         }
       });
 
-    this.$root.$on('from-bookblockview:voicework-type-changed', function() {
-      self.getAudioBook();
+    this.$root.$on('from-bookblockview:voicework-type-changed', () => {
+      this.getAudioBook();
     });
     this.setCurrentBookCounters();
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
