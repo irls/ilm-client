@@ -569,6 +569,16 @@ class BookBlocks {
     }
     return true;
   }
+  
+  compareIndex(fromRid, toRid) {
+    let from = this.listRIds.indexOf(fromRid);
+    let to = this.listRIds.indexOf(toRid);
+    if (typeof from !== 'undefined' && typeof to !== 'undefined') {
+      return from > to ? 1 : -1;
+    } else {
+      return 0;
+    }
+  }
 
 }
 

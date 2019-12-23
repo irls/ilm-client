@@ -2012,6 +2012,8 @@
                     }
                   });
               }
+            } else if (val && this.blockMap && this.blockMap[val]) {
+              this._setBlocksSelection();
             }
           },
           deep: true
