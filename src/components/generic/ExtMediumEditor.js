@@ -429,8 +429,16 @@ let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
     }
 
     if (this.previewValueSelector) {
+      if (this.getEditorOption('blockLang') == 'fa'){
+
+        let list = this.getEditorOption('quotesList');
+        const author = list.find( author => author.text == anchorEl.dataset.author );
+        this.anchorPreview.querySelector(this.previewValueSelector).textContent = author.text_farsi;
+
+      } else {
         this.anchorPreview.querySelector(this.previewValueSelector).textContent = anchorEl.dataset.author;
-        this.anchorPreview.querySelector(this.previewValueSelector).href = anchorEl.dataset.author;
+      }
+      this.anchorPreview.querySelector(this.previewValueSelector).href = anchorEl.dataset.author;
     }
 
     this.anchorPreview.classList.add('medium-toolbar-arrow-over');
