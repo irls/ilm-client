@@ -136,8 +136,11 @@ export default {
       }
       return true;
     },
+    tc_allowVoiceworShow(block) {
+      return block.type != 'illustration' && block.type != 'hr';
+    },
     tc_allowVoiceworkChange(block) {
-      if (block.type == 'illustration' || block.type == 'hr' || (!this._is('editor', true) && !this.adminOrLibrarian)) {
+      if (!this._is('editor', true) && !this.adminOrLibrarian) {
         return false;
       }
       if (this.currentJobInfo.text_cleanup && (this._is('editor', true) || this.adminOrLibrarian)) {

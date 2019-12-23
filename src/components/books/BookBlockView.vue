@@ -148,22 +148,22 @@
 
                   <div class="par-ctrl-divider"></div>
 
-                  <template v-if="allowVoiceworkChange()">
+                  <template v-if="allowVoiceworkShow()">
                     <i class="fa fa-volume-off"></i>
                     <div class="par-ctrl-divider"></div>
                     <label>
-                      <select :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-model='voiceworkSel'>
+                      <select :disabled="!allowEditing || proofreadModeReadOnly || !allowVoiceworkChange()? 'disabled' : false" v-model='voiceworkSel'>
                         <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
                     </label>
                   </template>
-                  <template v-else>
-                    <i class="fa fa-volume-off"></i>
-                    <div class="par-ctrl-divider"></div>
-                    <label>
-                      <span>{{blockVoiceworks[block.voicework]}}</span>
-                    </label>
-                  </template>
+<!--                  <template v-else>-->
+<!--                    <i class="fa fa-volume-off"></i>-->
+<!--                    <div class="par-ctrl-divider"></div>-->
+<!--                    <label>-->
+<!--                      <span>{{blockVoiceworks[block.voicework]}}</span>-->
+<!--                    </label>-->
+<!--                  </template>-->
                 </template>
                 <template v-else >
 
@@ -3713,6 +3713,12 @@ export default {
       setSecnumHidden() {
         this.block.secHide = !this.block.secHide;
         this.putBlockPart({block: this.block, field: 'secHide'}).then(()=>{});
+      },
+      allowVoiceworkShow() {
+          if (this.hasLockedPart) {
+              return false;
+          }
+          return this.block && this.tc_allowVoiceworShow(this.block);
       },
 
       allowVoiceworkChange() {
