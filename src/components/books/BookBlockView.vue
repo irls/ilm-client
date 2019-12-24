@@ -10,7 +10,7 @@
                 <i class="glyphicon glyphicon-volume-off"></i>
             </div>
         </div> -->
-        <div class="table-row check-row" v-if="allowEditing">
+        <div class="table-row check-row" v-if="allowEditing || proofreadModeReadOnly">
 
           <div class="set-range">
             <i class="fa fa-square-o -hidden" aria-hidden="true"
@@ -42,6 +42,7 @@
               </div>
               <div class="par-ctrl -hidden">
                 <div class="block-menu" v-if="mode !== 'narrate'">
+
                   <i class="glyphicon glyphicon-menu-hamburger"
                   @click.prevent="$refs.blockMenu.open($event, block._id)">
                   </i><!-- {{changes}} -->
@@ -61,7 +62,8 @@
                       Hide archived flags</li>
 
                     <li class="separator"></li>
-                    <template v-if="allowEditing">
+                    <template v-if="allowEditing || proofreadModeReadOnly">
+                      <template v-if="!proofreadModeReadOnly">
                       <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
                         <i class="fa fa-angle-up" aria-hidden="true"></i>
                         Insert block before</li>
@@ -94,14 +96,15 @@
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Join with next block</li>
                       <li class="separator"></li>
+                      </template>
                       <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
                           <i class="fa fa-language" aria-hidden="true"></i>
-                          Language: <select v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
+                          Language: <select :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
                           <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
                         </select>
                       </li>
                       <li class="separator"></li>
-                      <template v-if="block.type != 'illustration' && block.type != 'hr'">
+                      <template v-if="block.type != 'illustration' && block.type != 'hr' && !proofreadModeReadOnly">
                       <li @click="showModal('block-html')">
                         <i class="fa fa-code" aria-hidden="true"></i>
                         Edit HTML</li>
@@ -119,15 +122,15 @@
                 <!--<i class="fa fa-trash-o fa-lg"></i>-->
                 <!--<i class="fa fa-pencil-square-o fa-lg"></i>-->
 
-                <template v-if="allowEditing">
+                <template v-if="allowEditing || proofreadModeReadOnly">
                   <!--{{blockO.rid}} - {{isNumbered}}-->
                   <div v-if="isNumbered"
                     :class="['parnum-row', {'-locked': blockO.isManual==true}]">
 
-                    <input v-if="block.type=='header'"
+                    <input :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='header'"
                       @input="setNumVal" v-model="blockO.secnum"
                       class="num" type="text" maxlength="12" size="12"/>
-                    <input v-if="block.type=='par'"
+                    <input :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='par'"
                       @input="setNumVal" v-model="blockO.parnum"
                       class="num" type="text" maxlength="12" size="12"/>
 
@@ -138,29 +141,29 @@
 
                   <!-- Block Type selector -->
                   <label>
-                    <select v-model="block.type" @input="setChanged(true, 'type', $event)"><!--v-model='block.type'--><!--:value="type"-->
+                    <select :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)">
                       <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                     </select>
                   </label>
 
                   <div class="par-ctrl-divider"></div>
 
-                  <template v-if="allowVoiceworkChange()">
+                  <template v-if="allowVoiceworkShow()">
                     <i class="fa fa-volume-off"></i>
                     <div class="par-ctrl-divider"></div>
                     <label>
-                      <select v-model='voiceworkSel'>
+                      <select :disabled="!allowEditing || proofreadModeReadOnly || !allowVoiceworkChange()? 'disabled' : false" v-model='voiceworkSel'>
                         <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
                     </label>
                   </template>
-                  <template v-else>
-                    <i class="fa fa-volume-off"></i>
-                    <div class="par-ctrl-divider"></div>
-                    <label>
-                      <span>{{blockVoiceworks[block.voicework]}}</span>
-                    </label>
-                  </template>
+<!--                  <template v-else>-->
+<!--                    <i class="fa fa-volume-off"></i>-->
+<!--                    <div class="par-ctrl-divider"></div>-->
+<!--                    <label>-->
+<!--                      <span>{{blockVoiceworks[block.voicework]}}</span>-->
+<!--                    </label>-->
+<!--                  </template>-->
                 </template>
                 <template v-else >
 
@@ -351,17 +354,16 @@
                 <div class="table-row controls-top -hidden">
                   <div class="table-cell"></div>
                   <div class="table-cell">
-                    <template v-if="allowEditing">
+                    <template v-if="allowEditing || proofreadModeReadOnly">
                       <template v-if="allowVoiceworkChange">
                         <label>
                           <i class="fa fa-volume-off"></i>
-
-                          <select v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
+                          <select  :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                             <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                           </select>
                         </label>
                         <label><i class="fa fa-language" aria-hidden="true"></i>
-                        <select v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
+                        <select :disabled="!allowEditing ||  proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
                           <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
                         </select>
                         </label>
@@ -393,24 +395,24 @@
 
                 <div class="table-row">
                   <div class="table-cell -num">{{ftnIdx+1}}.</div>
-                  <div class="content-wrap-footn table-cell -text"
+                  <div class="table-cell -text"
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language)]"
+                    :class="[{'content-wrap-footn':true},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language)]"
                     @input="commitFootnote(ftnIdx, $event)"
                     @inputSuggestion="commitFootnote(ftnIdx, $event, 'suggestion')"
                     v-html="footnote.content"
                     :ref="'footnoteContent_' + ftnIdx">
                   </div>
-                  <div class="table-cell -control" v-if="allowEditing">
+
+                  <div class="table-cell -control" v-if="allowEditing && !proofreadModeReadOnly">
                     <span @click="delFootnote([ftnIdx])"><i class="fa fa-trash"></i></span>
                   </div>
                 </div>
               </div>
             </div>
-
-            <div class="table-row controls-bottom">
+            <div class="table-row controls-bottom" >
               <div class="controls-bottom-wrapper">
                 <div class="-hidden -left">
                   <span v-if="showBlockFlag">
@@ -986,6 +988,11 @@ export default {
           return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
         }
       },
+      proofreadModeReadOnly: {
+          get() {
+              return this.mode === 'proofread';
+          }
+      },
       blockTypeLabel: {
         get() {
           return this.block.type === 'par' ? 'paragraph' : this.block.type;
@@ -999,6 +1006,7 @@ export default {
             return [
               {
                 content: this.block.content,
+                blockId: this.block._id,
                 audiosrc: this.block.audiosrc,
                 audiosrc_ver: this.block.audiosrc_ver,
                 manual_boundaries: this.block.manual_boundaries
@@ -1437,16 +1445,16 @@ export default {
                 ]
               };
           }
-
-          this.editorFootn = new MediumEditor('.content-wrap-footn' , {
-              toolbar: toolbar,
-              buttonLabels: 'fontawesome',
-              quotesList: this.authors,
-              onQuoteSave: this.onQuoteSave,
-              suggestEl: this.suggestEl,
-              extensions: extensions,
-              disableEditing: !this.allowEditing
-          });
+          if(!this.proofreadModeReadOnly)
+            this.editorFootn = new MediumEditor('.content-wrap-footn' , {
+                toolbar: toolbar,
+                buttonLabels: 'fontawesome',
+                quotesList: this.authors,
+                onQuoteSave: this.onQuoteSave,
+                suggestEl: this.suggestEl,
+                extensions: extensions,
+                disableEditing: !this.allowEditing
+            });
         } else if (this.editorFootn) this.editorFootn.setup();
       },
       onQuoteSave: function() {
@@ -2612,6 +2620,8 @@ export default {
         return pos;
       },
       commitFootnote: function(pos, ev, field = null) {
+          if (this.proofreadModeReadOnly)
+              return;
         //this.block.footnotes[pos] = ev.target.innerText.trim();
         this.isChanged = true;
         this.pushChange(field === null ? 'footnotes' : 'footnotes_' + field);
@@ -3628,7 +3638,7 @@ export default {
         if (ev === true || ev === false) checked = ev;
         else checked = ev.target && ev.target.checked;
 
-        let shiftKey = ev.shiftKey||ev.ctrlKey||false;
+        let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
         if (ev.shiftKey) {
           if (this.selectionStart && this.selectionStart != this.block._id) {
             document.getSelection().removeAllRanges();
@@ -3704,6 +3714,12 @@ export default {
       setSecnumHidden() {
         this.block.secHide = !this.block.secHide;
         this.putBlockPart({block: this.block, field: 'secHide'}).then(()=>{});
+      },
+      allowVoiceworkShow() {
+          if (this.hasLockedPart) {
+              return false;
+          }
+          return this.block && this.tc_allowVoiceworShow(this.block);
       },
 
       allowVoiceworkChange() {
@@ -5113,5 +5129,15 @@ export default {
       height: 100%;
   }
 
+
+#p-block-type-title [disabled='disabled'],
+#p-block-type-header [disabled='disabled'],
+#p-block-type-par [disabled='disabled'],
+#p-block-type-illustration [disabled='disabled'],
+.content-scroll-wrapper .row [disabled='disabled']
+  {
+    background-color: #e0dede;
+    border: none;
+  }
 </style>
 

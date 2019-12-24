@@ -134,6 +134,7 @@ export const store = new Vuex.Store({
     replicatingDB: {},
     taskTypes: {tasks: [], categories: []},
     adminOrLibrarian: false,
+    adminOrProofer: false,
     currentJobInfo: {
       can_resolve_tasks: [],
       mastering: null,
@@ -346,6 +347,7 @@ export const store = new Vuex.Store({
     approveBlocksList: state => state.approveBlocksList,
     taskTypes: state => state.taskTypes,
     adminOrLibrarian: state => state.adminOrLibrarian,
+    adminOrProofer: state => state.adminOrProofer,
     currentJobInfo: state => state.currentJobInfo,
     taskTypes: state => state.taskTypes,
     liveDB: state => state.liveDB,
@@ -941,6 +943,7 @@ export const store = new Vuex.Store({
         dispatch('startJobInfoTimer');
         state.liveDB.setSubscriberId(state.auth.getSession().token);
         state.adminOrLibrarian = superlogin.confirmRole('admin') || superlogin.confirmRole('librarian');
+        state.adminOrProofer =  superlogin.confirmRole('admin') || superlogin.confirmRole('proofer');
         commit('RESET_LOGIN_STATE');
 
         //commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });

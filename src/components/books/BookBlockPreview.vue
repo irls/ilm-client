@@ -152,6 +152,7 @@ import { mapGetters }     from 'vuex';
             return [
               {
                 content: this.block.content,
+                blockId: this.block._id,
                 audiosrc: this.block.audiosrc,
                 audiosrc_ver: this.block.audiosrc_ver,
                 manual_boundaries: this.block.manual_boundaries

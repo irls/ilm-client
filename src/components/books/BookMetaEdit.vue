@@ -207,10 +207,10 @@
               ></BookAudioIntegration>
           </vue-tab>
 
-        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab()">
+        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
             <div class="styles-catalogue">
 
-              <vue-tabs ref="blockTypesTabs" class="block-style-tabs">
+              <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }">
 
                 <vue-tab title="Book" :id="'global-styles-switcher'">
                   <fieldset class="block-style-fieldset">
@@ -580,8 +580,14 @@ export default {
       tasks_counter: 'tasks_counter',
       taskTypes: 'taskTypes',
       adminOrLibrarian: 'adminOrLibrarian',
-      allowBookSplitPreview: 'allowBookSplitPreview'
+      allowBookSplitPreview: 'allowBookSplitPreview',
+      mode: 'bookMode',
     }),
+      proofreadModeReadOnly: {
+        get() {
+            return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
+        }
+    },
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -863,6 +869,8 @@ export default {
     }),
 
     liveUpdate (key, value) {
+        if(this.proofreadModeReadOnly)
+            return ;
       //if (!this.updateAllowed) {
         //return Promise.resolve();
       //}
@@ -1228,6 +1236,9 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
+      if(this.proofreadModeReadOnly)
+          return
+
       let styleKeyArr = styleKey.split('.');
       styleKey = styleKeyArr.shift();
       //console.log('selectStyle-', 'blockType:', blockType, 'styleKey:', styleKey, 'styleVal:', styleVal);
@@ -1383,6 +1394,8 @@ export default {
     },
 
     selSecNum (blockType, valKey, currVal) {
+        if(this.proofreadModeReadOnly)
+            return;
       //console.log('selSecNum', blockType, valKey, currVal);
       let updatePromises = [];
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
@@ -1670,7 +1683,14 @@ Vue.filter('prettyBytes', function (num) {
 
 
 <style scoped src='./css/BookProperties.css'></style>
-
+<style>
+  .disabled .tab{
+    background-color: whitesmoke ;
+  }
+  .disabled .tab.active{
+    background-color: transparent ;
+  }
+</style>
 <style scoped lang="less">
 
   .btn_download {
@@ -2025,6 +2045,36 @@ Vue.filter('prettyBytes', function (num) {
 
   .outline-0 {
     outline: 0;
+  }
+
+  .meta-edit-tabs.vue-tabs .disabled legend{
+    font-size: 12px;
+    font-style: normal;
+    color: gray;
+  }
+  .meta-edit-tabs.vue-tabs .disabled span{
+    font-size: 14px;
+    font-style: normal;
+  }
+  .meta-edit-tabs.vue-tabs .disabled label{
+    font-size: 14px;
+    font-style: normal;
+    min-height: 18px;
+  }
+  .meta-edit-tabs.vue-tabs .disabled i{
+    font-size: 14px;
+  }
+
+  .meta-edit-tabs.vue-tabs i.fa-check-circle-o{
+    color: #303030;
+  }
+
+  .meta-edit-tabs.vue-tabs .disabled i.fa-check-circle-o{
+    /*color: #303030;*/
+    font-size: 18px;
+  }
+  .meta-edit-tabs.vue-tabs .disabled i.fa-circle-o{
+    font-size: 18px;
   }
 
 </style>

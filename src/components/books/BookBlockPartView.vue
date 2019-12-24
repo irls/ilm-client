@@ -78,7 +78,7 @@
                   </div>
                 </div>
               </div>
-              <div class="table-cell -content-wrapper">
+              <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
@@ -89,7 +89,7 @@
                   <img v-if="block.illustration" :src="block.getIllustration()"
                   :height="illustrationHeight"
                   :class="[block.getClass(mode)]"/>
-                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing">
+                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing && !this.proofreadModeReadOnly">
                     <vue-picture-input
                       @change="onIllustrationChange"
                       @remove="onIllustrationChange"
@@ -245,7 +245,7 @@
                     dir="bottom"
                     :update="update"
                 >
-                  <template v-if="isFootnoteAllowed()">
+                  <template v-if="isFootnoteAllowed() && !this.proofreadModeReadOnly">
                     <li @click="addFootnote">Add footnote</li>
                     <li class="separator"></li>
                   </template>
@@ -819,7 +819,12 @@ export default {
           return true;
         }
         return false;
-      }
+      },
+      proofreadModeReadOnly: {
+          get() {
+              return this.allowEditing && this.mode === 'proofread';
+          }
+      },
   },
   mounted: function() {
       //this.initEditor();
@@ -1142,16 +1147,16 @@ export default {
                 ]
               };
           }
-
-          this.editorFootn = new MediumEditor('.content-wrap-footn' , {
-              toolbar: toolbar,
-              buttonLabels: 'fontawesome',
-              quotesList: this.authors,
-              onQuoteSave: this.onQuoteSave,
-              suggestEl: this.suggestEl,
-              extensions: extensions,
-              disableEditing: !this.allowEditing
-          });
+          if(!this.proofreadModeReadOnly)
+            this.editorFootn = new MediumEditor('.content-wrap-footn' , {
+                toolbar: toolbar,
+                buttonLabels: 'fontawesome',
+                quotesList: this.authors,
+                onQuoteSave: this.onQuoteSave,
+                suggestEl: this.suggestEl,
+                extensions: extensions,
+                disableEditing: !this.allowEditing
+            });
         } else if (this.editorFootn) this.editorFootn.setup();
       },
       onQuoteSave: function() {
@@ -1938,7 +1943,7 @@ export default {
         this.pushChange('flags');
         //this.$emit('addFlagPart');
       },
-      
+
       _delFlagPart(ev, partIdx) {
         this.delFlagPart(ev, partIdx, this.blockPartIdx);
         this.isChanged = true;
