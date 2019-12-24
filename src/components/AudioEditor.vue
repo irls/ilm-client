@@ -1632,7 +1632,7 @@
           }
           this.$root.$emit('from-audioeditor:selection-change', this.blockId, val.start, val.end);
           if (this.selection.end >= this.audioDuration) {
-            //console.log(this.audioDuration)
+            
             Vue.nextTick(() => {
               $('.playlist-tracks').scrollLeft($('.playlist-tracks').scrollLeft() + 100);
             })
@@ -2329,7 +2329,7 @@
   }
   .playlist-tracks {
     height: 92px;
-    overflow-y: hidden;
+    overflow-y: hidden !important;
   }
   .playlist-tracks::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
