@@ -2378,6 +2378,7 @@ export default {
           formData.content = this.block.getPartContent(part_idx);
           formData.audio = this.block.getPartAudiosrc(part_idx, null, false);
           formData.manual_boundaries = this.block.getPartManualBoundaries(part_idx);
+          formData.part_idx = part_idx;
         } else if (footnoteIdx === null ) {
           formData.modified = this.isAudioChanged;
           formData.content = this.block.content;

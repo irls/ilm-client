@@ -2545,7 +2545,7 @@ export default {
             .then(() => {
               this.isUpdating = false;
               this.blockAudio.map = this.blockContent();
-              this.blockAudio.src = this.block.getAudiosrc('m4a');
+              this.blockAudio.src = this.blockAudiosrc('m4a');
             })
             .catch(err => {
               this.isUpdating = false;
@@ -2563,7 +2563,7 @@ export default {
             return this.assembleBlockAudioEdit(null, false)
               .then(() => {
                 this.blockAudio.map = this.blockContent();
-                this.blockAudio.src = this.block.getAudiosrc('m4a');
+                this.blockAudio.src = this.blockAudiosrc('m4a');
                 return Promise.resolve();
               });
           } else {
@@ -2579,6 +2579,8 @@ export default {
             .then(() => {
               this.isUpdating = false;
               this.isAudioChanged = true;
+              this.blockAudio.map = this.blockContent();
+              this.blockAudio.src = this.blockAudiosrc('m4a');
             });
         }
       },
