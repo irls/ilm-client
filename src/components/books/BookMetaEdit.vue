@@ -2079,5 +2079,11 @@ Vue.filter('prettyBytes', function (num) {
   .meta-edit-tabs.vue-tabs .disabled i.fa-circle-o{
     font-size: 18px;
   }
+  .meta-edit-tabs.vue-tabs .disabled i.fa-check-square-o{
+    font-size: 18px;
+  }
+  .meta-edit-tabs.vue-tabs .disabled i.fa-square-o{
+    font-size: 18px;
+  }
 
 </style>
