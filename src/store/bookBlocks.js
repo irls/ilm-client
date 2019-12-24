@@ -579,6 +579,23 @@ class BookBlocks {
       return 0;
     }
   }
+  getBlocksInRange(startId, endId) {
+    let crossId = startId;
+    let list = [];
+    do {
+      let block = this.lookupList[this.getRIdById(crossId)];
+      if (block) {
+        list.push(block.blockid);
+        crossId = this.getOutId(block.blockid);
+        if (block.blockid === endId) {
+          crossId = false;
+        }
+      } else {
+        crossId = false;
+      };
+    } while (crossId);
+    return list;
+  }
 
 }
 

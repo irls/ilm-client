@@ -14,7 +14,7 @@
 <script>
 
 import { select } from 'vue-strap'
-import LANGUAGES from '../../../static/languages.json'
+import { Languages } from "../../mixins/lang_config.js"
 
 export default {
 
@@ -26,9 +26,10 @@ export default {
 
   data () {
     return {
-      options: LANGUAGES,
+      //options: lang_list,
       selectedValue: [],
-      search: ''
+      search: '',
+      lang_list: Languages
     }
   },
 
@@ -36,6 +37,21 @@ export default {
     'selected',
     'isDisabled'
   ],
+  
+  computed: {
+    options: {
+      get() {
+        if (!this.lang_list) {
+          return [];
+        }
+        let langs = [];
+        for (let code in this.lang_list) {
+          langs.push({code: code, name: this.lang_list[code]});
+        }
+        return langs;
+      }
+    }
+  },
 
   watch: {
     selected (val) {
