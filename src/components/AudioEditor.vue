@@ -1637,7 +1637,7 @@
             this.blockSelectionEmit = false;
           }
           this.$root.$emit('from-audioeditor:selection-change', this.blockId, val.start, val.end);
-          if (this.selection.end >= this.audioDuration) {
+          if (this.selection.end >= this.audioDuration && this.mode === 'block') {
             
             setTimeout(() => {
               $('.playlist-tracks').scrollLeft($('.playlist-tracks').scrollLeft() + 100);
