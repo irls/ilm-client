@@ -540,6 +540,13 @@
 
                   limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
                   onDrag: function(element, x, y, event) {
+                    //console.log(event.buttons, event.which)
+                    if (!event.buttons) {
+                      self.dragRight.stop();
+                      event.preventDefault();
+                      self._showSelectionBorders();
+                      return false;
+                    }
                     self.wordSelectionMode = false;
                     if ($('[id="resize-selection-left"]').position().left >= x) {
                       let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
@@ -1630,6 +1637,12 @@
             this.blockSelectionEmit = false;
           }
           this.$root.$emit('from-audioeditor:selection-change', this.blockId, val.start, val.end);
+          if (this.selection.end >= this.audioDuration) {
+            
+            setTimeout(() => {
+              $('.playlist-tracks').scrollLeft($('.playlist-tracks').scrollLeft() + 100);
+            }, 500)
+          }
         }, 30),
 
         smoothDrag:_.debounce(function (ev) {
@@ -2325,6 +2338,7 @@
   }
   .playlist-tracks {
     height: 92px;
+    overflow-y: hidden !important;
   }
   .playlist-tracks::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
