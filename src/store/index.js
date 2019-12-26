@@ -2208,6 +2208,7 @@ export const store = new Vuex.Store({
         commit('set_block_selection', selection);
         dispatch('getAlignCount', selection);
         dispatch('recountApprovedInRange', selection);
+        dispatch('recountVoicedBlocks', selection);
       }
     },
 
@@ -2279,7 +2280,6 @@ export const store = new Vuex.Store({
       let changed_in_range = 0;
       let changed_in_range_tts = 0;
       let changed_in_range_narration = 0;
-      let voiced_in_range = 0;
       if (!selection) {
         selection = state.blockSelection;
       }
@@ -2332,9 +2332,6 @@ export const store = new Vuex.Store({
                 ++changed_in_range_narration;
               }
             }
-            if (block.audiosrc) {
-              ++voiced_in_range;
-            }
             if (block._id == selection.end._id) {
               break;
             }
@@ -2343,14 +2340,6 @@ export const store = new Vuex.Store({
               break;
             }
           } else break;
-        }
-        commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
-      } else {
-        if (state.storeList.size > 0) {
-          voiced_in_range = Array.from(state.storeList).filter(block => {
-            return block[1].audiosrc != '';
-          }).length;
-          commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
         }
       }
       let audio_mastering = state.tc_currentBookTasks.assignments && state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1;
@@ -2886,6 +2875,38 @@ export const store = new Vuex.Store({
           .catch(err => {
             return Promise.reject(err);
           });
+      }
+    },
+    recountVoicedBlocks({state, commit}, selection = null) {
+      let voiced_in_range = 0;
+      if (!selection) {
+        selection = state.blockSelection;
+      }
+      if (selection.start && selection.start._id && selection.end && selection.end._id) {
+        let crossId = selection.start._id;
+        for (var idx=0; idx < state.storeList.size; idx++) {
+          let block = state.storeList.get(crossId);
+          if (block) {
+            if (block.audiosrc) {
+              ++voiced_in_range;
+            }
+            if (block._id == selection.end._id) {
+              break;
+            }
+            crossId = state.storeListO.getOutId(block.blockid);
+            if (!crossId) {
+              break;
+            }
+          } else break;
+        }
+        commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
+      } else {
+        if (state.storeList.size > 0) {
+          voiced_in_range = Array.from(state.storeList).filter(block => {
+            return block[1].audiosrc != '';
+          }).length;
+          commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
+        }
       }
     }
   }

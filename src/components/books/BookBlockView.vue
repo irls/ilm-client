@@ -1202,7 +1202,8 @@ export default {
         'saveNarrated',
         'checkError',
         'getBookAlign',
-        'updateBlockPart'
+        'updateBlockPart',
+        'recountVoicedBlocks'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -4103,6 +4104,7 @@ export default {
                 this.$refs.blocks[partIdx].isChanged = false;
               });
             }
+            this.recountVoicedBlocks();
           }
           this.block.isChanged = val;
           this.recountApprovedInRange();
