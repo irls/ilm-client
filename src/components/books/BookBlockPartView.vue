@@ -2528,11 +2528,13 @@ export default {
           this.audStop();
           if (!this.isSplittedBlock) {
             //this.block.setAudiosrc(this.blockAudiosrc(null, false));
-            this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
-            this.block.setContent(this.blockAudio.map);
+            //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
+            //this.block.setContent(this.blockAudio.map);
             return this.assembleBlockAudioEdit(null, true)
               .then(() => {
                 this.isAudioChanged = false;
+                this.blockAudio.map = this.blockContent();
+                this.blockAudio.src = this.block.getAudiosrc('m4a');
                 return Promise.resolve();
               });
           } else {
@@ -2548,6 +2550,8 @@ export default {
           this.audDeletePart(start, end, null, this.blockPartIdx, this.check_id)
             .then(() => {
               this.isUpdating = false;
+              this.blockAudio.map = this.blockContent();
+              this.blockAudio.src = this.blockAudiosrc('m4a');
             })
             .catch(err => {
               this.isUpdating = false;
@@ -2559,12 +2563,14 @@ export default {
           this.audStop();
           if (!this.isSplittedBlock) {
             //this.block.setAudiosrc(this.blockAudiosrc(null, false));
-            this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
-            this.block.setContent(this.blockContent());
+            //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false), {'m4a': this.block.getPartAudiosrc(this.blockPartIdx, 'm4a', false)});
+            //this.block.setContent(this.blockContent());
             //this.block.setContent(this.blockContent());
             return this.assembleBlockAudioEdit(null, false)
               .then(() => {
                 this.isAudioChanged = false;
+                this.blockAudio.map = this.blockContent();
+                this.blockAudio.src = this.blockAudiosrc('m4a');
                 return Promise.resolve();
               });
           } else {
@@ -2580,6 +2586,8 @@ export default {
             .then(() => {
               this.isUpdating = false;
               this.isAudioChanged = true;
+              this.blockAudio.map = this.blockContent();
+              this.blockAudio.src = this.blockAudiosrc('m4a');
             });
         }
       },
@@ -3048,6 +3056,8 @@ export default {
                 this.blockAudiosrc('m4a'),
                 this.block.getPartContent(this.blockPartIdx), false);
               }
+              this.blockAudio.map = this.blockContent();
+              this.blockAudio.src = this.blockAudiosrc('m4a');
               this.isAudioChanged = false;
               this.isChanged = false;
               this.block.isAudioChanged = false;
