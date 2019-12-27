@@ -185,7 +185,9 @@
           minWordSize: 0.05,
           wordSelectionMode: false,
           processRun: false,
-          processRunType: null
+          processRunType: null,
+          selectionBordersVisible: false,
+          audioDuration: 0
         }
       },
       mounted() {
@@ -428,6 +430,7 @@
               return;
             }
             let self = this;;
+            this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
             if (this.blockId) {
               this.$root.$emit('from-audioeditor:block-loaded', this.blockId);
             } else if (bookAudiofile && bookAudiofile.id) {
@@ -486,9 +489,9 @@
               self.isPlaying = false;
               self.isPaused = false;
             });
-            this.plEventEmitter.on('select', function(start, end) {
-              start = self._round(start, 2);
-              end = self._round(end, 2);
+            this.plEventEmitter.on('select', function(r_start, r_end) {
+              let start = self._round(r_start, 2);
+              let end = self._round(r_end, 2);
               let is_single_cursor = end - start == 0;
               if (is_single_cursor && self.contextPosition && self.mode === 'file' &&
                       typeof self.selection.start !== 'undefined' &&
@@ -509,7 +512,14 @@
                 if (start != self.selection.start) {
                   //self.cursorPosition = start;
                 }
-                self.selection = {start: start, end: end};
+                if (r_start > 0 && start === 0 && end === self.selection.end) {
+                  self.plEventEmitter.emit('select', 0, self.selection.end);
+                } else if(end > self.audioDuration) {
+                  self.plEventEmitter.emit('select', start, self.audioDuration);
+                  //self._showSelectionBorders();
+                } else {
+                  self.selection = {start: start < 0 ? 0 : start, end: end};
+                }
               } //else {
                 //self.cursorPosition = start;
               //}
@@ -530,6 +540,13 @@
 
                   limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
                   onDrag: function(element, x, y, event) {
+                    //console.log(event.buttons, event.which)
+                    if (!event.buttons) {
+                      self.dragRight.stop();
+                      event.preventDefault();
+                      self._showSelectionBorders();
+                      return false;
+                    }
                     self.wordSelectionMode = false;
                     if ($('[id="resize-selection-left"]').position().left >= x) {
                       let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
@@ -714,6 +731,7 @@
               stop.then(() => {
             $('[id="resize-selection-right"]').hide().css('left', 0);
             $('[id="resize-selection-left"]').hide().css('left', 0);
+            this.selectionBordersVisible = false;
             $('#cursor-position').hide();
             if (typeof this.audiosourceEditor.samplesPerPixel !== 'undefined') {
               let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
@@ -936,6 +954,7 @@
               this.plEventEmitter.emit('select', undefined, undefined);
               $('[id="resize-selection-right"]').hide().css('left', 0);
               $('[id="resize-selection-left"]').hide().css('left', 0);
+              this.selectionBordersVisible = false;
               if (restart) {
                 this.play();
               }
@@ -1142,10 +1161,12 @@
               let selection = $('.selection.segment')[0];
               if (selection) {
                 $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
-                $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft);
+                $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft < 0 ? 0 : selection.offsetLeft);
+                this.selectionBordersVisible = true;
               } else {
                 $('[id="resize-selection-right"]').hide().css('left', 0);
                 $('[id="resize-selection-left"]').hide().css('left', 0);
+                this.selectionBordersVisible = false;
               }
               if (scroll_to_selection) {
                 this._scrollToCursor();
@@ -1469,18 +1490,18 @@
           if (this.blockSelection && ((this.blockSelection.start && this.blockSelection.start._id) || (this.blockSelection.end && this.blockSelection.end._id)) && this.plEventEmitter) {
             let start = false;
             let end = false;
-            if (this.blockSelection.start && this.blockSelection.start._id && this.blockMap[this.blockSelection.start._id]) {
-              start = parseInt(this.blockMap[this.blockSelection.start._id][0])/1000;
-              if (!this.blockSelection.end || !this.blockSelection.end._id || !this.blockMap[this.blockSelection.end._id]) {
-                end = this.selection.end;//parseInt(this.blockMap[this.blockSelection.start._id][1])/1000;
+            this.storeListO.getBlocksInRange(this.blockSelection.start._id, this.blockSelection.end._id).forEach(blkId => {
+              if (this.blockMap[blkId]) {
+                let _start = parseInt(this.blockMap[blkId][0])/1000;
+                let _end = parseInt(this.blockMap[blkId][1])/1000;
+                if (start === false || _start < start) {
+                  start = _start;
+                }
+                if (end === false || _end > end) {
+                  end = _end;
+                }
               }
-            }
-            if (this.blockSelection.end && this.blockSelection.end._id && this.blockMap[this.blockSelection.end._id]) {
-              end = parseInt(this.blockMap[this.blockSelection.end._id][1])/1000;
-              if (!this.blockSelection.start || !this.blockSelection.start._id || !this.blockMap[this.blockSelection.start._id]) {
-                start = this.selection.start;//parseInt(this.blockMap[this.blockSelection.end._id][0])/1000;
-              }
-            }
+            });
 
             if (start !== false && end !== false && start < end) {
               this.selection.start = this._round(start, 2);
@@ -1616,6 +1637,12 @@
             this.blockSelectionEmit = false;
           }
           this.$root.$emit('from-audioeditor:selection-change', this.blockId, val.start, val.end);
+          if (this.selection.end >= this.audioDuration && this.mode === 'block') {
+            
+            setTimeout(() => {
+              $('.playlist-tracks').scrollLeft($('.playlist-tracks').scrollLeft() + 100);
+            }, 500)
+          }
         }, 30),
 
         smoothDrag:_.debounce(function (ev) {
@@ -1940,7 +1967,8 @@
           blkSelection: 'blockSelection',
           alignCounter: 'alignCounter',
           hasLocks: 'hasLocks',
-          currentAudiobook: 'currentAudiobook'})
+          currentAudiobook: 'currentAudiobook', 
+          storeListO: 'storeListO'})
       },
       watch: {
         'cursorPosition': {
@@ -1998,6 +2026,8 @@
                     }
                   });
               }
+            } else if (val && this.blockMap && this.blockMap[val]) {
+              this._setBlocksSelection();
             }
           },
           deep: true
@@ -2009,6 +2039,20 @@
         },
         'selection': {
           handler(val, oldVal) {
+            
+            Vue.nextTick(() => {
+              //return;
+              //$('[id="resize-selection-right"]')
+              if (typeof oldVal.end !== 'undefined' && oldVal.end === val.end && val.start <= 0) {// moving left, probably cursor is out of player
+                if (!this.selectionBordersVisible) {
+                  this._showSelectionBorders();
+                }
+              } else if (val.end >= this.audioDuration) {// moving right, probably cursor is out of player
+                if (!this.selectionBordersVisible) {
+                  this._showSelectionBorders();
+                }
+              }
+            })
             this.smoothSelection(val, oldVal);
           },
           deep: true
@@ -2294,6 +2338,7 @@
   }
   .playlist-tracks {
     height: 92px;
+    overflow-y: hidden !important;
   }
   .playlist-tracks::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);

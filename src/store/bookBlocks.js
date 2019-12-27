@@ -569,6 +569,33 @@ class BookBlocks {
     }
     return true;
   }
+  
+  compareIndex(fromRid, toRid) {
+    let from = this.listRIds.indexOf(fromRid);
+    let to = this.listRIds.indexOf(toRid);
+    if (typeof from !== 'undefined' && typeof to !== 'undefined') {
+      return from > to ? 1 : -1;
+    } else {
+      return 0;
+    }
+  }
+  getBlocksInRange(startId, endId) {
+    let crossId = startId;
+    let list = [];
+    do {
+      let block = this.lookupList[this.getRIdById(crossId)];
+      if (block) {
+        list.push(block.blockid);
+        crossId = this.getOutId(block.blockid);
+        if (block.blockid === endId) {
+          crossId = false;
+        }
+      } else {
+        crossId = false;
+      };
+    } while (crossId);
+    return list;
+  }
 
 }
 

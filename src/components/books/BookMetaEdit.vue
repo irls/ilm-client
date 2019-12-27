@@ -8,7 +8,7 @@
         </template>
       </div>
 
-      <div class="row">
+      <div class="row" style="height: 0">
       <div class="download-area col-sm-6">
       </div>
       </div>
@@ -26,7 +26,6 @@
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="Assignments" id="assignments">
             <BookAssignments
-              :users="users"
               @showModal_audio="showModal_audio = true"
               ></BookAssignments>
           <fieldset class='description brief'>
@@ -58,7 +57,7 @@
                 <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
               </div>
           </fieldset>
-          <CompleteAudioExport 
+          <CompleteAudioExport
             :convertTime="convertTime"
             :goToBlock="goToBlock"></CompleteAudioExport>
           <BookPublish></BookPublish>
@@ -207,10 +206,10 @@
               ></BookAudioIntegration>
           </vue-tab>
 
-        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab()">
+        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
             <div class="styles-catalogue">
 
-              <vue-tabs ref="blockTypesTabs" class="block-style-tabs">
+              <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }">
 
                 <vue-tab title="Book" :id="'global-styles-switcher'">
                   <fieldset class="block-style-fieldset">
@@ -538,14 +537,7 @@ export default {
       TAB_META_INDEX: 1,
       TAB_TOC_INDEX: 2,
       TAB_AUDIO_INDEX: 3,
-      TAB_STYLE_INDEX: 4,
-      users: {
-        'editor': [],
-        'proofer': [],
-        'engineer': [],
-        'reader': [],
-        'narrator': []
-      }
+      TAB_STYLE_INDEX: 4
 
     }
   },
@@ -580,8 +572,14 @@ export default {
       tasks_counter: 'tasks_counter',
       taskTypes: 'taskTypes',
       adminOrLibrarian: 'adminOrLibrarian',
-      allowBookSplitPreview: 'allowBookSplitPreview'
+      allowBookSplitPreview: 'allowBookSplitPreview',
+      mode: 'bookMode',
     }),
+      proofreadModeReadOnly: {
+        get() {
+            return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
+        }
+    },
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -650,9 +648,7 @@ export default {
   mixins: [task_controls, api_config, access],
 
   mounted() {
-    let self = this;
-    self.getTaskUsers();
-
+    this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
     //this.loadAudiobook(true)
     this.getAudioBook(this.currentBookid)
       .then(() => {
@@ -660,10 +656,6 @@ export default {
 
         }
       });
-
-    this.$root.$on('from-bookblockview:voicework-type-changed', function() {
-      self.getAudioBook();
-    });
     this.setCurrentBookCounters();
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
     this.$root.$on('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
@@ -688,7 +680,7 @@ export default {
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
     this.$root.$off('audiobookUpdated');
-    this.$root.$off('from-bookblockview:voicework-type-changed');
+    this.$root.$off('from-bookblockview:voicework-type-changed', this.getAudioBook);
     this.$root.$off('book-reimported');
     this.$root.$off('from-block-edit:set-style', this.listenSetStyle);
     this.$root.$off('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
@@ -873,6 +865,8 @@ export default {
     }),
 
     liveUpdate (key, value) {
+        if(this.proofreadModeReadOnly)
+            return ;
       //if (!this.updateAllowed) {
         //return Promise.resolve();
       //}
@@ -1238,6 +1232,9 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
+      if(this.proofreadModeReadOnly)
+          return
+
       let styleKeyArr = styleKey.split('.');
       styleKey = styleKeyArr.shift();
       //console.log('selectStyle-', 'blockType:', blockType, 'styleKey:', styleKey, 'styleVal:', styleVal);
@@ -1393,6 +1390,8 @@ export default {
     },
 
     selSecNum (blockType, valKey, currVal) {
+        if(this.proofreadModeReadOnly)
+            return;
       //console.log('selSecNum', blockType, valKey, currVal);
       let updatePromises = [];
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
@@ -1595,24 +1594,6 @@ export default {
       this.updateJob({id: this.currentJobInfo.id, description: event.target.value});
     }, 500),
 
-    getTaskUsers() {
-      var self = this
-      axios.get(this.API_URL + 'tasks/users').then(users => {
-        for (var role in self.users) {
-          self.users[role] = [{'_id':'unassigned', 'email':'', 'name':'Unassigned', isMatchBookLang: true}]
-          for (var i in users.data) {
-            if (users.data[i].roles.indexOf(role) != -1 && users.data[i].enable === true) {
-              if(users.data[i].languages.indexOf(this.currentBookMeta.language) != -1){
-                users.data[i].isMatchBookLang = true;
-              }
-              self.users[role].push(users.data[i])
-            }
-          }
-        }
-      })
-      .catch(error => {})
-    },
-
     goToBlock(blockId, ev) {
       this.$router.push({name: this.$route.name, params: {}});
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
@@ -1677,10 +1658,38 @@ Vue.filter('prettyBytes', function (num) {
   return (neg ? '-' : '') + num + ' ' + unit;
 });
 </script>
+<style>
+.meta-edit-tabs .nav-tabs-navigation {
+  /*border: 1px solid red;*/
+  position: sticky;
+  top: 44px;
+  background-color:white;
+  z-index: 19;
+  /*border-top: 10px solid white;*/
+}
 
+#p-styles-switcher.tab-container {
+  padding-top: 0px;
+}
+
+.meta-edit-tabs > .nav-tabs-navigation{
+  border: 1px solid white;
+  position: sticky;
+  top: 0px;
+  z-index: 20;
+}
+
+</style>
 
 <style scoped src='./css/BookProperties.css'></style>
-
+<style>
+  .disabled .tab{
+    background-color: whitesmoke ;
+  }
+  .disabled .tab.active{
+    background-color: transparent ;
+  }
+</style>
 <style scoped lang="less">
 
   .btn_download {
@@ -2035,6 +2044,42 @@ Vue.filter('prettyBytes', function (num) {
 
   .outline-0 {
     outline: 0;
+  }
+
+  .meta-edit-tabs.vue-tabs .disabled legend{
+    font-size: 12px;
+    font-style: normal;
+    color: gray;
+  }
+  .meta-edit-tabs.vue-tabs .disabled span{
+    font-size: 14px;
+    font-style: normal;
+  }
+  .meta-edit-tabs.vue-tabs .disabled label{
+    font-size: 14px;
+    font-style: normal;
+    min-height: 18px;
+  }
+  .meta-edit-tabs.vue-tabs .disabled i{
+    font-size: 14px;
+  }
+
+  .meta-edit-tabs.vue-tabs i.fa-check-circle-o{
+    color: #303030;
+  }
+
+  .meta-edit-tabs.vue-tabs .disabled i.fa-check-circle-o{
+    /*color: #303030;*/
+    font-size: 18px;
+  }
+  .meta-edit-tabs.vue-tabs .disabled i.fa-circle-o{
+    font-size: 18px;
+  }
+  .meta-edit-tabs.vue-tabs .disabled i.fa-check-square-o{
+    font-size: 18px;
+  }
+  .meta-edit-tabs.vue-tabs .disabled i.fa-square-o{
+    font-size: 18px;
   }
 
 </style>

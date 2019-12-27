@@ -134,6 +134,7 @@ export const store = new Vuex.Store({
     replicatingDB: {},
     taskTypes: {tasks: [], categories: []},
     adminOrLibrarian: false,
+    adminOrProofer: false,
     currentJobInfo: {
       can_resolve_tasks: [],
       mastering: null,
@@ -158,13 +159,13 @@ export const store = new Vuex.Store({
       {
         group: 'Reader',
         categories: [
-          'History', 'Ideas', 'Science', 'Stories', 'Verse'
+          'Children', 'History', 'Ideas', 'Science', 'Novels', 'Verse'
         ]
       },
       {
         group: 'Ocean',
         categories: [
-          'Bahá’í', 'Buddhist', 'Christian', 'Confucian', 'Hindu', 'Islam', 'Judaism', 'Sikh', 'Tao', 'Zoroastrian'
+          'Bahá’í', 'Buddhist', 'Christian', 'Confucian', 'Hindu', 'Islam', 'Judaism', 'Jainism ', 'Sikh', 'Tao', 'Zoroastrian'
         ]
       }
     ],
@@ -176,7 +177,14 @@ export const store = new Vuex.Store({
     bookMode: null,
     processQueueWatch: null,
     allowBookSplitPreview: false,
-    taskBlockMap: {map: {}, refresh: null, allowNext: true}
+    taskBlockMap: {map: {}, refresh: null, allowNext: true},
+    taskUsers: {
+      'editor': [],
+      'proofer': [],
+      'engineer': [],
+      'reader': [],
+      'narrator': []
+    }
   },
 
   getters: {
@@ -346,6 +354,7 @@ export const store = new Vuex.Store({
     approveBlocksList: state => state.approveBlocksList,
     taskTypes: state => state.taskTypes,
     adminOrLibrarian: state => state.adminOrLibrarian,
+    adminOrProofer: state => state.adminOrProofer,
     currentJobInfo: state => state.currentJobInfo,
     taskTypes: state => state.taskTypes,
     liveDB: state => state.liveDB,
@@ -386,6 +395,9 @@ export const store = new Vuex.Store({
       } else {
         return null;
       }
+    },
+    taskUsers: state => {
+      return state.taskUsers;
     }
   },
 
@@ -897,9 +909,9 @@ export const store = new Vuex.Store({
     set_book_mode(state, mode) {
       state.bookMode = mode || null;
     },
-    
+
     set_taskBlockMap(state) {
-      
+
       let taskMap = {};
       [...state.tc_currentBookTasks.tasks, ...state.currentJobInfo.can_resolve_tasks].forEach(t => {
         //console.log(`${t.blockid}, ${t.type}`)
@@ -911,7 +923,7 @@ export const store = new Vuex.Store({
       state.taskBlockMap.map = taskMap;
       state.taskBlockMap.refresh = Date.now();
     },
-    
+
     set_taskBlockMapAllowNext(state, allow) {
       state.taskBlockMap.allowNext = allow;
     }
@@ -941,6 +953,7 @@ export const store = new Vuex.Store({
         dispatch('startJobInfoTimer');
         state.liveDB.setSubscriberId(state.auth.getSession().token);
         state.adminOrLibrarian = superlogin.confirmRole('admin') || superlogin.confirmRole('librarian');
+        state.adminOrProofer =  superlogin.confirmRole('admin') || superlogin.confirmRole('proofer');
         commit('RESET_LOGIN_STATE');
 
         //commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
@@ -2902,6 +2915,44 @@ export const store = new Vuex.Store({
             return Promise.reject(err);
           });
       }
+    },
+    getTaskUsers({state, commit}) {
+      return axios.get(`${state.API_URL}tasks/users`).then(users => {
+        if (Array.isArray(users.data)) {
+          let user_id = state.auth.getSession().user_id;
+          users.data.sort((a, b) => {
+            /*if (a._id === 'unassigned') {
+              return -1;
+            }
+            if (b._id === 'unassigned') {
+              return 1;
+            }*/
+            if (a._id === user_id) {
+              return -1;
+            }
+            if (b._id === user_id) {
+              return 1;
+            }
+            let a_name = a.name ? a.name : a._id;
+            let b_name = b.name ? b.name : b._id;
+            return a_name.toLocaleLowerCase() > b_name.toLocaleLowerCase() ? 1 : -1;
+          });
+        }
+        //state.taskUsers = users.data;
+        for (let role in state.taskUsers) {
+          state.taskUsers[role] = [];
+          //let's add unassigned user to narrators:
+          for (let i in users.data) {
+            if (users.data[i].roles.indexOf(role) != -1 && users.data[i].enable === true) {
+              state.taskUsers[role].push(users.data[i])
+            }
+          }
+        }
+        return Promise.resolve();
+      })
+      .catch(error => {
+        return Promise.reject(error);
+      })
     }
   }
 })

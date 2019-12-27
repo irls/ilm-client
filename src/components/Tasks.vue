@@ -17,7 +17,6 @@
       </div>
       <task-add-modal
         :show="taskAddModalActive"
-        :users="users"
         @closed="taskAddModalClose">
 
       </task-add-modal>
@@ -116,13 +115,6 @@ export default {
         list: [],
         total: 0
       },
-      users: {
-        'editor': [],
-        'proofer': [],
-        'engineer': [],
-        'reader': [],
-        'narrator': []
-      },
       show_import_book_modal: false,
       show_import_audio_modal: false,
       import_book_task_id: '',
@@ -164,7 +156,6 @@ export default {
   mounted() {
     var self = this
     self.parseTasks();
-    self.getTaskUsers()
   },
 
   methods: {
@@ -209,24 +200,6 @@ export default {
         this.$store.dispatch('tc_loadBookTask')
         //this.getTasks()
       }
-    },
-    
-    getTaskUsers() {
-      var self = this
-      axios.get(this.API_URL + 'tasks/users').then(users => {
-        for (var role in self.users) {
-          self.users[role] = []
-          //let's add unassigned user to narrators:
-          if (role == 'narrator')
-            self.users[role] = [{'_id':'unassigned', 'email':'Unassigned', 'name':'Unassigned'}]
-          for (var i in users.data) {
-            if (users.data[i].roles.indexOf(role) != -1 && users.data[i].enable === true) {
-              self.users[role].push(users.data[i])
-            }
-          }
-        }
-      })
-      .catch(error => {})
     },
     importBook(task) {
       this.import_book_task_id = task.id

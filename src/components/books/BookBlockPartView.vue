@@ -78,7 +78,7 @@
                   </div>
                 </div>
               </div>
-              <div class="table-cell -content-wrapper">
+              <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
@@ -89,7 +89,7 @@
                   <img v-if="block.illustration" :src="block.getIllustration()"
                   :height="illustrationHeight"
                   :class="[block.getClass(mode)]"/>
-                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing">
+                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing && !this.proofreadModeReadOnly">
                     <vue-picture-input
                       @change="onIllustrationChange"
                       @remove="onIllustrationChange"
@@ -245,7 +245,7 @@
                     dir="bottom"
                     :update="update"
                 >
-                  <template v-if="isFootnoteAllowed()">
+                  <template v-if="isFootnoteAllowed() && !this.proofreadModeReadOnly">
                     <li @click="addFootnote">Add footnote</li>
                     <li class="separator"></li>
                   </template>
@@ -819,7 +819,12 @@ export default {
           return true;
         }
         return false;
-      }
+      },
+      proofreadModeReadOnly: {
+          get() {
+              return this.allowEditing && this.mode === 'proofread';
+          }
+      },
   },
   mounted: function() {
       //this.initEditor();
@@ -1142,16 +1147,16 @@ export default {
                 ]
               };
           }
-
-          this.editorFootn = new MediumEditor('.content-wrap-footn' , {
-              toolbar: toolbar,
-              buttonLabels: 'fontawesome',
-              quotesList: this.authors,
-              onQuoteSave: this.onQuoteSave,
-              suggestEl: this.suggestEl,
-              extensions: extensions,
-              disableEditing: !this.allowEditing
-          });
+          if(!this.proofreadModeReadOnly)
+            this.editorFootn = new MediumEditor('.content-wrap-footn' , {
+                toolbar: toolbar,
+                buttonLabels: 'fontawesome',
+                quotesList: this.authors,
+                onQuoteSave: this.onQuoteSave,
+                suggestEl: this.suggestEl,
+                extensions: extensions,
+                disableEditing: !this.allowEditing
+            });
         } else if (this.editorFootn) this.editorFootn.setup();
       },
       onQuoteSave: function() {
@@ -1750,7 +1755,7 @@ export default {
             //}
           }
           if (!this.$refs.blockContent.innerHTML.match(/<w[^>]*>/)) {// no alignment
-            let lettersPattern = 'a-zA-Zа-яА-ЯÀ-ÿ\\u0600-\\u06FF\'’"\\?\\!:\\.,“‘«”’»\\(\\[\\{﴾\\)\\]\\}﴿؟؛…';
+            let lettersPattern = 'a-zA-Zа-яА-ЯÀ-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ\'’"\\?\\!:\\.,“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…';
             let checkWords = new RegExp(`([${lettersPattern}\\d]+?)([^${lettersPattern}\\d]+?)`, 'img');
             let match = false;
             let selection = {};
@@ -1938,7 +1943,7 @@ export default {
         this.pushChange('flags');
         //this.$emit('addFlagPart');
       },
-      
+
       _delFlagPart(ev, partIdx) {
         this.delFlagPart(ev, partIdx, this.blockPartIdx);
         this.isChanged = true;
@@ -2523,9 +2528,15 @@ export default {
           this.audStop();
           if (!this.isSplittedBlock) {
             //this.block.setAudiosrc(this.blockAudiosrc(null, false));
-            this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
-            this.block.setContent(this.blockAudio.map);
-            return this.assembleBlockAudioEdit(null, true);
+            //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
+            //this.block.setContent(this.blockAudio.map);
+            return this.assembleBlockAudioEdit(null, true)
+              .then(() => {
+                this.isAudioChanged = false;
+                this.blockAudio.map = this.blockContent();
+                this.blockAudio.src = this.block.getAudiosrc('m4a');
+                return Promise.resolve();
+              });
           } else {
             this.assembleBlockPartAudioEdit(true);
           }
@@ -2539,6 +2550,8 @@ export default {
           this.audDeletePart(start, end, null, this.blockPartIdx, this.check_id)
             .then(() => {
               this.isUpdating = false;
+              this.blockAudio.map = this.blockContent();
+              this.blockAudio.src = this.blockAudiosrc('m4a');
             })
             .catch(err => {
               this.isUpdating = false;
@@ -2550,10 +2563,16 @@ export default {
           this.audStop();
           if (!this.isSplittedBlock) {
             //this.block.setAudiosrc(this.blockAudiosrc(null, false));
-            this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
-            this.block.setContent(this.blockContent());
+            //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false), {'m4a': this.block.getPartAudiosrc(this.blockPartIdx, 'm4a', false)});
             //this.block.setContent(this.blockContent());
-            return this.assembleBlockAudioEdit(null, false);
+            //this.block.setContent(this.blockContent());
+            return this.assembleBlockAudioEdit(null, false)
+              .then(() => {
+                this.isAudioChanged = false;
+                this.blockAudio.map = this.blockContent();
+                this.blockAudio.src = this.blockAudiosrc('m4a');
+                return Promise.resolve();
+              });
           } else {
             this.assembleBlockPartAudioEdit(false);
           }
@@ -2567,6 +2586,8 @@ export default {
             .then(() => {
               this.isUpdating = false;
               this.isAudioChanged = true;
+              this.blockAudio.map = this.blockContent();
+              this.blockAudio.src = this.blockAudiosrc('m4a');
             });
         }
       },
@@ -3035,6 +3056,8 @@ export default {
                 this.blockAudiosrc('m4a'),
                 this.block.getPartContent(this.blockPartIdx), false);
               }
+              this.blockAudio.map = this.blockContent();
+              this.blockAudio.src = this.blockAudiosrc('m4a');
               this.isAudioChanged = false;
               this.isChanged = false;
               this.block.isAudioChanged = false;
