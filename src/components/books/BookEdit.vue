@@ -823,12 +823,18 @@ export default {
     initRecorder() {
       return new Promise((resolve, reject) => {
         if (this._is('narrator', true)) {
-          navigator.getUserMedia({
-            audio: true
-          }, (stream) => {
+          navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false
+            }
+          })
+          .then((stream) => {
             this.onMediaSuccess_msr(stream);
             resolve();
-          }, (e) => {
+          })
+          .catch((e) => {
             //console.log('media error', e);
             reject(e);
           });
