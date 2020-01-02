@@ -4228,6 +4228,12 @@ export default {
             }
           }
         }
+      },
+      'block.language' : {
+        handler(val) {
+          this.destroyEditor();
+          this.initEditor(true);
+        }
       }
   }
 }

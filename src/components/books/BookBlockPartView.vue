@@ -3271,6 +3271,12 @@ export default {
             this.$emit('isAudioEditing', val)
           }
         }
+      },
+      'block.language' : {
+        handler(val) {
+          this.destroyEditor();
+          this.initEditor(true);
+        }
       }
   }
 }
