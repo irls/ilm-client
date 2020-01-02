@@ -77,6 +77,8 @@ export const store = new Vuex.Store({
     publishButtonStatus: false,
     allRolls: [],
 
+    authorsLangFarsi: authorsLangFarsi,
+
     metaDB: false,
     metaDBcomplete: false,
     tasksDB: false,
