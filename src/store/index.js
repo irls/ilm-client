@@ -2705,6 +2705,17 @@ export const store = new Vuex.Store({
                 }));
               }
             }
+          } else if (state.blockSelection.end && blockid === state.blockSelection.end._id) {
+            if (state.blockSelection.start._id === state.blockSelection.end._id) {
+              commit('set_block_selection', {start: {}, end: {}});
+            } else {
+              let inId = state.storeListO.getInId(blockid);
+              if (inId) {
+                commit('set_block_selection', Object.assign(state.blockSelection, {
+                  end: {_id: inId}
+                }));
+              }
+            }
           }
           return dispatch('checkResponse', response);
         })
