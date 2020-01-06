@@ -60,7 +60,7 @@
           <CompleteAudioExport
             :convertTime="convertTime"
             :goToBlock="goToBlock"></CompleteAudioExport>
-          <BookPublish></BookPublish>
+          <BookPublish @checkPublish="checkPublish" ></BookPublish>
           <SplitPreview v-if="allowBookSplitPreview"
             :convertTime="convertTime"></SplitPreview>
           </vue-tab>
@@ -109,7 +109,7 @@
 
 
                 <tr class='category'>
-                  <td class="red">Category</td>
+                  <td v-bind:class="{ red: requiredFields && requiredFields.category }">Category<span v-if="requiredFields && requiredFields.category">*</span></td>
                   <td>
                     <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
                       <template v-for="(data, index) in subjectCategories">
@@ -493,6 +493,7 @@ export default {
 
   data () {
     return {
+      requiredFields:[],
       pubTypes: [
         'Public', 'Hidden', 'Encumbered', 'Research', 'Private'
       ],
@@ -818,6 +819,15 @@ export default {
 
         });*/
     },
+    checkPublish(){
+        this.requiredFields = [];
+
+        if(!this.currentBook.category || this.currentBook.category =='story'){
+            this.requiredFields.category = true;
+        }
+
+    },
+
     updateCollection(event) {
       let collectionId = event && event.target.value ? event.target.value : null;
       if (event && !collectionId) {
@@ -867,6 +877,9 @@ export default {
     liveUpdate (key, value) {
         if(this.proofreadModeReadOnly)
             return ;
+        if( typeof this.requiredFields[key] ) {
+            delete this.requiredFields[key];
+        }
       //if (!this.updateAllowed) {
         //return Promise.resolve();
       //}

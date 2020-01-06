@@ -40,12 +40,14 @@
     mixins: [api_config],
     methods: {
       checkPublish() {
+        this.$emit('checkPublish');
+
         let title = '';
         let text = '';
         let buttons = [];
         let popUpReady = false;
 
-        if(1 || !currentBookMeta.category){
+        if(!this.currentBookMeta.category || this.currentBookMeta.category =='story'){
           title = 'Publication failed';
           text = 'The Book has no Category.Please define it in Book Meta and try again';
 
