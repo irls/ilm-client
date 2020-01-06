@@ -40,43 +40,72 @@
     mixins: [api_config],
     methods: {
       checkPublish() {
-        let count = 0;
-        if (this.currentJobInfo.tasks_counter && Array.isArray(this.currentJobInfo.tasks_counter)) {
-          this.currentJobInfo.tasks_counter.forEach(tc => {
-            if (tc && tc.data && tc.data.tasks && Array.isArray(tc.data.tasks)) {
-              tc.data.tasks.forEach(t => {
-                count+= t.count ? parseInt(t.count) : 0;
+        let title = '';
+        let text = '';
+        let buttons = [];
+        let popUpReady = false;
+
+        if(1 || !currentBookMeta.category){
+          title = 'Publication failed';
+          text = 'The Book has no Category.Please define it in Book Meta and try again';
+
+          buttons = [
+              {
+                  title: 'Ok',
+                  handler: () => {
+                      this.$root.$emit('hide-modal');
+                  },
+              },
+          ];
+          popUpReady = true;
+
+        }
+
+        if(!popUpReady) {
+          let count = 0;
+          if (this.currentJobInfo.tasks_counter && Array.isArray(this.currentJobInfo.tasks_counter)) {
+              this.currentJobInfo.tasks_counter.forEach(tc => {
+                  if (tc && tc.data && tc.data.tasks && Array.isArray(tc.data.tasks)) {
+                      tc.data.tasks.forEach(t => {
+                          count+= t.count ? parseInt(t.count) : 0;
+                      });
+                  }
               });
-            }
-          });
-        }
-        let message = '';
-        if (count === 0) {
-          message = 'Publish the Book?';
-        } else {
-          message = 'The Book has incomplete Tasks. Publish anyway?';
-        }
-        this.$root.$emit('show-modal', {
-          title: message,
-          text: '',
-          buttons: [
-            {
-              title: 'Cancel',
-              handler: () => {
-                this.$root.$emit('hide-modal');
+          }
+          if (count === 0) {
+              title = 'Publish the Book?';
+          } else {
+              title = 'The Book has incomplete Tasks. Publish anyway?';
+          }
+          buttons = [
+              {
+                  title: 'Cancel',
+                  handler: () => {
+                      this.$root.$emit('hide-modal');
+                  },
               },
-            },
-            {
-              title: 'Publish',
-              handler: () => {
-                this.$root.$emit('hide-modal');
-                this.publish();
-              },
-              'class': 'btn btn-primary'
-            }
-          ],
-          class: ['align-modal']
-        });
+              {
+                  title: 'Publish',
+                  handler: () => {
+                      this.$root.$emit('hide-modal');
+                      this.publish();
+                  },
+                  'class': 'btn btn-primary'
+              }
+          ];
+          popUpReady = true;
+
+        }
+
+        if(popUpReady){
+            this.$root.$emit('show-modal', {
+                title: title,
+                text: text,
+                buttons: buttons,
+                class: ['align-modal']
+            });
+
+        }
       },
       publish() {
         return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish')
