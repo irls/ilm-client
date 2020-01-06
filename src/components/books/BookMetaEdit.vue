@@ -109,7 +109,7 @@
 
 
                 <tr class='category'>
-                  <td class="red">Category<span title="asdadasd">*</span></td>
+                  <td class="red">Category</td>
                   <td>
                     <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
                       <template v-for="(data, index) in subjectCategories">
