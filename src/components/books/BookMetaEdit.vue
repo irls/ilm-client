@@ -1519,7 +1519,7 @@ export default {
       if (BlockTypesAlias[type] && BlockTypesAlias[type][key] && BlockTypesAlias[type][key]['values'] && BlockTypesAlias[type][key]['values'][val]) {
         return BlockTypesAlias[type][key]['values'][val];
       } else {
-        if (this.authorsLangFarsi.hasOwnProperty(val) && lang != 'en'){
+        if (this.authorsLangFarsi.hasOwnProperty(val) && lang == 'fa'){
           return this.authorsLangFarsi[val];
         } else {
           return val;
