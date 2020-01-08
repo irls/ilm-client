@@ -3290,6 +3290,12 @@ export default {
           this.destroyEditor();
           this.initEditor(true);
         }
+      },
+      'block.footnotes' : {
+        handler(val) {
+          this.destroyEditor();
+          this.initEditor(true);
+        }
       }
   }
 }
