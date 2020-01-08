@@ -1150,11 +1150,24 @@ export default {
               };
           }
 
-          this.editorFootn = new MediumEditor('.content-wrap-footn' , {
+/*          this.editorFootn = new MediumEditor('.-langftn-fa.content-wrap-footn' , {
+              toolbar: toolbar,
+              buttonLabels: 'fontawesome',
+              quotesList: this.authors,
+              blockLang: 'fa',
+              onQuoteSave: this.onQuoteSave,
+              suggestEl: this.suggestEl,
+              extensions: extensions,
+              disableEditing: !this.allowEditing
+          });*/
+
+          
+          this.editorFootn = new MediumEditor(':not(.-langftn-fa).content-wrap-footn' , {
               toolbar: toolbar,
               buttonLabels: 'fontawesome',
               quotesList: this.authors,
               onQuoteSave: this.onQuoteSave,
+              blockLang: 'en',
               suggestEl: this.suggestEl,
               extensions: extensions,
               disableEditing: !this.allowEditing
