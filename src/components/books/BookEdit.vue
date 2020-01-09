@@ -642,7 +642,7 @@ export default {
       if (this.$refs.blocks) this.$refs.blocks.forEach(($ref)=>{
         $ref.addContentListeners();
       })
-      this.initRecorder();
+      //this.initRecorder();
       this.recountApprovedInRange();
     },
 
@@ -823,7 +823,22 @@ export default {
     initRecorder() {
       return new Promise((resolve, reject) => {
         if (this._is('narrator', true)) {
-          navigator.getUserMedia({
+          navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false
+            }
+          })
+          .then((stream) => {
+            this.onMediaSuccess_msr(stream);
+            resolve();
+          })
+          .catch((e) => {
+            //console.log('media error', e);
+            reject(e);
+          });
+          /*navigator.getUserMedia({
             audio: true
           }, (stream) => {
             this.onMediaSuccess_msr(stream);
@@ -831,7 +846,7 @@ export default {
           }, (e) => {
             //console.log('media error', e);
             reject(e);
-          });
+          });*/
         } else {
           resolve();
         }
@@ -1919,7 +1934,7 @@ export default {
 
       window.addEventListener('keydown', this.eventKeyDown);
 
-      this.initRecorder();
+      //this.initRecorder();
       window.onscroll = function() {
         $('#narrateStartCountdown').css('top', document.scrollingElement.scrollTop + 'px');
         $('#narrateStartCountdown').css('height', '100%')
