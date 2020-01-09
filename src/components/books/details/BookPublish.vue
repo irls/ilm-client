@@ -46,8 +46,9 @@
         let text = '';
         let buttons = [];
         let popUpReady = false;
+        let defaultCategory = ['story', 'Stories']; // means there is no category assigned
 
-        if(!this.currentBookMeta.category || this.currentBookMeta.category =='story'){
+        if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
           title = 'Publication failed';
           text = 'The Book has no Category. Please define it in Book Meta and try again';
 

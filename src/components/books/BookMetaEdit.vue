@@ -825,7 +825,9 @@ export default {
     checkPublish(){
         this.requiredFields = [];
 
-        if(!this.currentBook.category || this.currentBook.category =='story'){
+        let defaultCategory = ['story', 'Stories']; // means there is no category assigned
+
+        if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
             this.requiredFields.category = true;
         }
 
