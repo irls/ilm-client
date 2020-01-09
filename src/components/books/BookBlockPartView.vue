@@ -1056,12 +1056,14 @@ export default {
                   'quoteButton', 'suggestButton'
                 ]
               };
-            let blockLang = '';
-            if (this.block.language === 'fa'){
+            
+            let blockLang = this.getBlockLang;
+            /*if (this.block.language === 'fa'){
               blockLang = 'fa';    
             } else {
               blockLang = 'en';    
-            }
+            }*/
+
             this.editor = new MediumEditor('#content-' + this.block.blockid + '-part-' + this.blockPartIdx, {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
