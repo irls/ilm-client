@@ -109,7 +109,7 @@
 
 
                 <tr class='category'>
-                  <td v-bind:class="{ red: requiredFields && requiredFields.category }">Category<span v-if="requiredFields && requiredFields.category">*</span></td>
+                  <td v-bind:class="{ 'text-danger': requiredFields && requiredFields.category }">Category<span v-if="requiredFields && requiredFields.category">*</span></td>
                   <td>
                     <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
                       <template v-for="(data, index) in subjectCategories">
@@ -119,6 +119,9 @@
                       </template>
                     </select>
                   </td>
+                </tr>
+                <tr class="red" v-if="requiredFields && requiredFields.category" >
+                  <td colspan="2" class="text-danger"><small>Please define a Category</small></td>
                 </tr>
 
                 <tr class='language'>
