@@ -49,7 +49,7 @@
 
         if(!this.currentBookMeta.category || this.currentBookMeta.category =='story'){
           title = 'Publication failed';
-          text = 'The Book has no Category.Please define it in Book Meta and try again';
+          text = 'The Book has no Category. Please define it in Book Meta and try again';
 
           buttons = [
               {
