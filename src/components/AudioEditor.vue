@@ -747,12 +747,6 @@
               });
                 //console.log("$('body').on('mousedown', '.playlist-overlay'");
               });
-              $('.playlist-overlay').on('mouseout', (e) => {
-                if (this.selection.end > 0 && $('[id="resize-selection-left"]').css('display') === 'none') {
-                  this.cursorPosition = this.selection.start;
-                  this._showSelectionBorders();
-                }
-              });
             }
           }, 50);
 
@@ -2063,6 +2057,10 @@
                 if (!this.selectionBordersVisible) {
                   this._showSelectionBorders();
                 }
+              }
+              if ($('[id="resize-selection-left"]').css('display') === 'none' && $('.playlist-overlay:hover').length === 0) {
+                this.cursorPosition = this.selection.start;
+                this._showSelectionBorders();
               }
             })
             this.smoothSelection(val, oldVal);
