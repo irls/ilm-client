@@ -86,8 +86,9 @@
     await tick();
     viewport.scrollTo(0, expected_height);
     scrollTo = false;
-    await tick();
-    handle_scroll();
+    //await tick();
+    await handle_scroll();
+    await refresh(items, viewport_height, itemHeight);
   }
 
   async function handle_scroll() {
