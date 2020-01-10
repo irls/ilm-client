@@ -79,10 +79,7 @@ bind:startReached={startReached} bind:endReached={endReached} >
 
   $: hotkeyScrolledTo(hotkeyScrollTo);
   async function hotkeyScrolledTo(hotkeyScrollTo) {
-    //console.log('hotkeyScrollTo', hotkeyScrollTo);
     if (hotkeyScrollTo !== false) {
-//       await tick();
-//       vListScrollTo = 0;
       await tick();
       vListScrollTo = hotkeyScrollTo;
     }

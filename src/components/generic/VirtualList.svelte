@@ -72,8 +72,6 @@
 
   async function handle_scrollTo(scrollTo) {
 
-    //console.log('handle_scrollTo', scrollTo);
-
     if (scrollTo === false) return;
 
     viewport.scrollTo(0, 0);
@@ -85,10 +83,11 @@
     for (let i = 0; i < scrollTo; i +=1) {
       expected_height += height_map[i] || average_height || 0;
     }
-    //console.log('handle_scrollTo expected_height', expected_height);
     await tick();
     viewport.scrollTo(0, expected_height);
     scrollTo = false;
+    await tick();
+    handle_scroll();
   }
 
   async function handle_scroll() {
