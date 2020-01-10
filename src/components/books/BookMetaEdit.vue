@@ -60,7 +60,7 @@
           <CompleteAudioExport
             :convertTime="convertTime"
             :goToBlock="goToBlock"></CompleteAudioExport>
-          <BookPublish></BookPublish>
+          <BookPublish @checkPublish="checkPublish" ></BookPublish>
           <SplitPreview v-if="allowBookSplitPreview"
             :convertTime="convertTime"></SplitPreview>
           </vue-tab>
@@ -111,13 +111,14 @@
                 <tr class='category'>
                   <td>Category</td>
                   <td>
-                    <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields && requiredFields.category }" class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
                       <template v-for="(data, index) in subjectCategories">
                         <optgroup :label="data.group">
                           <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
                         </optgroup>
                       </template>
                     </select>
+                    <span v-if="requiredFields && requiredFields.category" class="validation-error">Please define a Category</span>
                   </td>
                 </tr>
 
@@ -493,6 +494,7 @@ export default {
 
   data () {
     return {
+      requiredFields:[],
       pubTypes: [
         'Public', 'Hidden', 'Encumbered', 'Research', 'Private'
       ],
@@ -818,6 +820,17 @@ export default {
 
         });*/
     },
+    checkPublish(){
+        this.requiredFields = [];
+
+        let defaultCategory = ['story', 'Stories']; // means there is no category assigned
+
+        if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
+            this.requiredFields.category = true;
+        }
+
+    },
+
     updateCollection(event) {
       let collectionId = event && event.target.value ? event.target.value : null;
       if (event && !collectionId) {
@@ -867,6 +880,9 @@ export default {
     liveUpdate (key, value) {
         if(this.proofreadModeReadOnly)
             return ;
+        if( typeof this.requiredFields[key] ) {
+            delete this.requiredFields[key];
+        }
       //if (!this.updateAllowed) {
         //return Promise.resolve();
       //}
@@ -1659,6 +1675,10 @@ Vue.filter('prettyBytes', function (num) {
 });
 </script>
 <style>
+  select.text-danger#categorySelection{
+    border: 1px solid red!important;
+    border-radius: 0px;
+  }
 .meta-edit-tabs .nav-tabs-navigation {
   /*border: 1px solid red;*/
   position: sticky;
