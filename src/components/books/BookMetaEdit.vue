@@ -109,8 +109,8 @@
 
 
                 <tr class='category'>
-                  <td v-bind:class="{ 'text-danger': requiredFields && requiredFields.category }">Category<span style="width: unset" v-if="requiredFields && requiredFields.category">*</span></td>
-                  <td>
+                  <td>Category<span style="width: unset" v-if="requiredFields && requiredFields.category">*</span></td>
+                  <td v-bind:class="{ 'text-danger': requiredFields && requiredFields.category }">
                     <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
                       <template v-for="(data, index) in subjectCategories">
                         <optgroup :label="data.group">
@@ -120,8 +120,8 @@
                     </select>
                   </td>
                 </tr>
-                <tr class="red" v-if="requiredFields && requiredFields.category" >
-                  <td colspan="2" class="text-danger"><small>Please define a Category</small></td>
+                <tr v-if="requiredFields && requiredFields.category" >
+                  <td colspan="2" ><small>Please define a Category</small></td>
                 </tr>
 
                 <tr class='language'>
@@ -1677,6 +1677,9 @@ Vue.filter('prettyBytes', function (num) {
 });
 </script>
 <style>
+  td.text-danger{
+    border: 1px solid red;
+  }
 .meta-edit-tabs .nav-tabs-navigation {
   /*border: 1px solid red;*/
   position: sticky;
