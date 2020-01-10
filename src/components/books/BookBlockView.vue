@@ -3737,6 +3737,7 @@ export default {
       },
       flushChanges() {
         this.changes = [];
+        this.$root.$emit('closeFlagPopup', null);
       },
       hasChange(change) {
         return this.changes && this.changes.indexOf(change) !== -1;
