@@ -110,18 +110,16 @@
 
                 <tr class='category'>
                   <td>Category<span style="width: unset" v-if="requiredFields && requiredFields.category">*</span></td>
-                  <td v-bind:class="{ 'text-danger': requiredFields && requiredFields.category }">
-                    <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                  <td>
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields && requiredFields.category }" class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
                       <template v-for="(data, index) in subjectCategories">
                         <optgroup :label="data.group">
                           <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
                         </optgroup>
                       </template>
                     </select>
+                    <span v-if="requiredFields && requiredFields.category" class="validation-error">Please define a Category</span>
                   </td>
-                </tr>
-                <tr v-if="requiredFields && requiredFields.category" >
-                  <td colspan="2" ><small>Please define a Category</small></td>
                 </tr>
 
                 <tr class='language'>
@@ -1677,8 +1675,9 @@ Vue.filter('prettyBytes', function (num) {
 });
 </script>
 <style>
-  td.text-danger{
-    border: 1px solid red;
+  select.text-danger#categorySelection{
+    border: 1px solid red!important;
+    border-radius: 0px;
   }
 .meta-edit-tabs .nav-tabs-navigation {
   /*border: 1px solid red;*/
