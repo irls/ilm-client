@@ -952,7 +952,8 @@ export default {
         'updateBlockToc',
         'saveNarrated',
         'checkError',
-        'getBookAlign'
+        'getBookAlign',
+        'recountVoicedBlocks'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -3189,6 +3190,7 @@ export default {
         handler(val) {
           if (val === false) {
             this.flushChanges();
+            this.recountVoicedBlocks();
           }
           if (!this.isSplittedBlock) {
             this.block.isChanged = val;
