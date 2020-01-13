@@ -79,8 +79,9 @@ let QuoteButton = MediumEditor.Extension.extend({
   doQuoteSave: function () {
     this.base.restoreSelection();
 
-    //let value = this.quoteFormInput.value.trim();
-    let value = this.quoteFormInput.dataset.author.trim();
+    let value = this.quoteFormInput.value.trim();
+    //let value = this.quoteFormInput.dataset.author.trim();
+
     if (value.length) {
       let quote = document.createElement(this.wrapNode);
       //console.log('lang: ', this.getEditorOption('blockLang'));
