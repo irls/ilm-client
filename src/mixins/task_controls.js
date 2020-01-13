@@ -452,7 +452,7 @@ export default {
           }
           break;
         case 'proofread':
-          if (this.proofer_tasks.indexOf(task.type) === -1) {
+          if (this.proofer_tasks.indexOf(task.type) === -1 || (!block.audiosrc && block.voicework !== 'no_audio')) {
             return true;
           }
           break;
