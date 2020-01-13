@@ -267,12 +267,11 @@ export default {
       this.loadBookToc({bookId: this.meta._id, isWait: true});
     },
     loadBookMounted() {
-      //console.log('loadBookMounted');
+      //console.log('loadBookMounted', this.parlistO.listObjs.length, this.parlist.size);
       if (this.$route.params.hasOwnProperty('bookid')) {
         let bookid = this.$route.params.bookid;
-        if (!this.meta._id || bookid !== this.parlistO.meta.bookid) {
+        if (!this.meta._id || bookid !== this.parlistO.meta.bookid || !this.parlist.values().next().value) {
           console.log('loadBookMounted', 'load');
-          //this.parlistO.setFirstVisibleId(null);
           this.$store.commit('clear_storeList');
           this.$store.commit('clear_storeListO');
           this.loadBook(bookid)
@@ -280,9 +279,7 @@ export default {
             let startBlock = this.$route.params.block || false;
             //console.log('startBlock', startBlock, '$route.params.block', this.$route.params.block);
             this.startId = startBlock;
-            //this.parlistO.setFirstVisibleId(startBlock);
             let taskType = this.$route.params.task_type || false;
-            //console.log('startId', this.$route.params.block, this.startId);
             return this.loadPartOfBookBlocks({
               bookId: this.$route.params.bookid,
               block: startBlock,
@@ -295,12 +292,6 @@ export default {
                 this.getAllBlocks(answer.meta.bookid, this.startId)
                 .then((result)=>{
                   this.isBookMounted = true;
-                  //this.onScrollEv = true;
-                  /*Vue.nextTick(()=>{
-                    //this.onScrollEv = true;
-                    //let scrollId = this.parlistO.getPrevIds(this.startId, 1);
-                    this.scrollToBlock(this.startId);
-                  });*/
                 });
             });
           })
@@ -309,22 +300,12 @@ export default {
           console.log('loadBookMounted', 'pre');
           if (this.$route.params.hasOwnProperty('block')) {
             if (this.$route.params.block=='unresolved') {
-              //this.onScrollEv = true;
               this.startId = this.$route.params.block || false;
-              //this.scrollToBlock(this.$route.params.block);
-              //console.timeEnd('loadBookMounted');
             } else {
-              //this.startId = this.parlistO.idsArray()[0] || false;
               this.startId = this.$route.params.block;
             }
-          } else {
-            //this.startId = this.parlistO.idsArray()[0] || false;
-            //this.parlistO.setFirstVisibleId(this.startId);
           }
           this.isBookMounted = true;
-          /*Vue.nextTick(()=>{
-            this.checkScrollBottom();
-          })*/
         }
       }
     },

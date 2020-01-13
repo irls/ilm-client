@@ -144,7 +144,6 @@ bind:startReached={startReached} bind:endReached={endReached} >
   function startShowTimer() {
     setTimeout(function() {
         if (startId && !wasScrolled) {
-          //scrollToBlock(startId);
           wasScrolled = !wasScrolled;
         }
         let i, execCount = 100;
@@ -170,14 +169,8 @@ bind:startReached={startReached} bind:endReached={endReached} >
           startShowTimer();
         } else {
           console.log('done', i, checkCount, startId);
-          //if (startId) scrollToBlock(startId);
         }
     }, thisDelay);
-  }
-
-  const scrollToBlock = (blockId) => {
-    console.log('scrollToBlockSvelte', blockId);
-    vListStartFrom = 100;
   }
 
   const timestamp = (new Date()).toJSON();
