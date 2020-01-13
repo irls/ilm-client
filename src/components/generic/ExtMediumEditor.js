@@ -83,9 +83,10 @@ let QuoteButton = MediumEditor.Extension.extend({
     let value = this.quoteFormInput.dataset.author.trim();
     if (value.length) {
       let quote = document.createElement(this.wrapNode);
-      console.log('lang: ', this.getEditorOption('blockLang'));
+      //console.log('lang: ', this.getEditorOption('blockLang'));
       //console.log('quote', quote, value, this.quoteFormInput);
       quote.dataset.author = value;
+      //console.log('quote.dataset', quote.dataset);
       if (this.isActive()) this.doQuoteRemove();
 
       if (window.getSelection) {
@@ -286,7 +287,19 @@ let QuoteButton = MediumEditor.Extension.extend({
     if (remove) this.on(remove, 'click', this.handleRemoveClick.bind(this), true);
 
     if (this.value.length) {
-
+      var self = this;
+      //let's change to farsi if farsi
+      //this.getEditorOption('blockLang')
+      //this.getEditorOption('quotesList')
+      if (this.getEditorOption('blockLang') == 'fa')
+      {
+        this.getEditorOption('quotesList').forEach(
+          function(element){
+            if (self.value == element.text)
+              self.value = element.text_farsi;
+          }
+        );                 
+      }
     }
   },
 
@@ -294,6 +307,7 @@ let QuoteButton = MediumEditor.Extension.extend({
     if (this.quoteFormList) this.destroyList();
     this.quoteFormList = this.createQuoteList();
     let list = this.getEditorOption('quotesList');
+
     if (value.length) {
       const re = new RegExp(value, 'i');
       list = list.filter(o => o.text.match(re))
@@ -318,7 +332,6 @@ let QuoteButton = MediumEditor.Extension.extend({
   },
 
   onClick: function (ev) {
-    //console.log('onclick target', ev.target);
     this.quoteFormInput.value = ev.target.textContent;
     this.quoteFormInput.dataset.author = ev.target.id;
   },
