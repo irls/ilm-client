@@ -310,7 +310,11 @@ let QuoteButton = MediumEditor.Extension.extend({
 
     if (value.length) {
       const re = new RegExp(value, 'i');
-      list = list.filter(o => o.text.match(re))
+      if (this.getEditorOption('blockLang') == 'fa'){
+        list = list.filter(o => o.text_farsi.match(re))
+      } else {
+        list = list.filter(o => o.text.match(re))
+      }
     }
     if (list.length) {
       list.forEach((item)=>{
