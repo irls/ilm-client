@@ -240,7 +240,10 @@ let QuoteButton = MediumEditor.Extension.extend({
     item.className = 'quotes-list-item';
     item.id = content.text;
     if (this.getEditorOption('blockLang') == 'fa'){
-      item.innerHTML = `<div style="float: left;">${content.text_farsi}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
+      if (content.text_farsi !== undefined)
+        item.innerHTML = `<div style="float: left;">${content.text_farsi}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
+      else
+        item.innerHTML = `<div style="float: left;">${content.text}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
     } else {
       item.innerHTML = `<div style="float: left;">${content.text}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
     }
