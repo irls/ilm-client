@@ -316,14 +316,6 @@ let QuoteButton = MediumEditor.Extension.extend({
       const re = new RegExp(value, 'i');
       if (this.getEditorOption('blockLang') == 'fa'){
         list = list.filter(o => (o.text_farsi !== undefined && o.text_farsi.match(re)))
-
-        //console.log('inside cond', list);
-        //list = list.filter(o => function (o) {
-        //    if (o.text_farsi !== undefined && o.text_farsi.match(re)) return false;
-        //    else return false;
-        //});
-
-        //o.text_farsi.match(re)
       } else {
         list = list.filter(o => o.text.match(re))
       }
@@ -457,12 +449,18 @@ let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
         return true;
     }
 
+    // text in bubble
     if (this.previewValueSelector) {
       if (this.getEditorOption('blockLang') == 'fa'){
 
         let list = this.getEditorOption('quotesList');
         const author = list.find( author => author.text == anchorEl.dataset.author );
-        this.anchorPreview.querySelector(this.previewValueSelector).textContent = author.text_farsi;
+
+        //console.log('author', author);
+        if (author !== undefined)
+            this.anchorPreview.querySelector(this.previewValueSelector).textContent = author.text_farsi;
+        else
+            this.anchorPreview.querySelector(this.previewValueSelector).textContent = anchorEl.dataset.author;
 
       } else {
         this.anchorPreview.querySelector(this.previewValueSelector).textContent = anchorEl.dataset.author;
