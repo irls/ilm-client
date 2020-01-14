@@ -299,14 +299,15 @@ let QuoteButton = MediumEditor.Extension.extend({
 
     if (this.value.length) {
       var self = this;
-      //let's change to farsi if farsi
+      //let's change to farsi if farsi  input field 
       //this.getEditorOption('blockLang')
       //this.getEditorOption('quotesList')
       if (this.getEditorOption('blockLang') == 'fa')
       {
         this.getEditorOption('quotesList').forEach(
           function(element){
-            if (self.value == element.text)
+            console.log('element', element);
+            if (self.value == element.text && element.text_farsi !== undefined)
               self.value = element.text_farsi;
           }
         );                 
