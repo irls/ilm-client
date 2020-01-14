@@ -312,7 +312,15 @@ let QuoteButton = MediumEditor.Extension.extend({
     if (value.length) {
       const re = new RegExp(value, 'i');
       if (this.getEditorOption('blockLang') == 'fa'){
-        list = list.filter(o => o.text_farsi.match(re))
+        list = list.filter(o => (o.text_farsi !== undefined && o.text_farsi.match(re)))
+
+        //console.log('inside cond', list);
+        //list = list.filter(o => function (o) {
+        //    if (o.text_farsi !== undefined && o.text_farsi.match(re)) return false;
+        //    else return false;
+        //});
+
+        //o.text_farsi.match(re)
       } else {
         list = list.filter(o => o.text.match(re))
       }
