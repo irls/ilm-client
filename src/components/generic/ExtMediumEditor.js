@@ -306,7 +306,6 @@ let QuoteButton = MediumEditor.Extension.extend({
       {
         this.getEditorOption('quotesList').forEach(
           function(element){
-            console.log('element', element);
             if (self.value == element.text && element.text_farsi !== undefined)
               self.value = element.text_farsi;
           }
@@ -464,15 +463,18 @@ let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
         const author = list.find( author => author.text == anchorEl.dataset.author );
         if (author !== undefined && author.hasOwnProperty('text_farsi') && author.text_farsi !== undefined){
             this.anchorPreview.querySelector(this.previewValueSelector).textContent = author.text_farsi;
+            this.anchorPreview.querySelector(this.previewValueSelector).href = author.text_farsi;
         } else {
             if (author !== undefined && author.hasOwnProperty('text'))
                 this.anchorPreview.querySelector(this.previewValueSelector).textContent = author.text;
+                this.anchorPreview.querySelector(this.previewValueSelector).href = author.text;
         }
 
       } else {
         this.anchorPreview.querySelector(this.previewValueSelector).textContent = anchorEl.dataset.author;
+        this.anchorPreview.querySelector(this.previewValueSelector).href = anchorEl.dataset.author;
       }
-      this.anchorPreview.querySelector(this.previewValueSelector).href = anchorEl.dataset.author;
+      //this.anchorPreview.querySelector(this.previewValueSelector).href = anchorEl.dataset.author;
     }
 
     this.anchorPreview.classList.add('medium-toolbar-arrow-over');
