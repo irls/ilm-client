@@ -72,6 +72,19 @@ let QuoteButton = MediumEditor.Extension.extend({
     this.insertForm();
     this.getForm().classList.add('medium-editor-toolbar-form-active');
     this.hideToolbarDefaultActions();
+
+    //text_farsi
+
+    if (this.getEditorOption('blockLang') == 'fa')
+      {
+        this.getEditorOption('quotesList').forEach(
+          function(element){
+            if (opts.value == element.text && element.text_farsi !== undefined)
+              opts.value = element.text_farsi;
+          }
+        );                 
+      }
+
     if (opts.value) this.quoteFormInput.value = opts.value;
     else this.quoteFormInput.value = this.value;
   },
@@ -80,9 +93,21 @@ let QuoteButton = MediumEditor.Extension.extend({
     this.base.restoreSelection();
 
     let value = this.quoteFormInput.value.trim();
+    //let value = this.quoteFormInput.dataset.author.trim();
     if (value.length) {
       let quote = document.createElement(this.wrapNode);
+      //console.log('lang: ', this.getEditorOption('blockLang'));
+      //console.log('value', value);
+      //console.log('list autors', this.getEditorOption('quotesList'));
+      // let's convert author form farsi to english
+      if (this.getEditorOption('blockLang') == 'fa'){
+        var found = this.getEditorOption('quotesList').find(element => element.text_farsi == value);
+        if (found) value = found.text
+
+      }
+
       quote.dataset.author = value;
+      //console.log('quote.dataset', quote.dataset);
       if (this.isActive()) this.doQuoteRemove();
 
       if (window.getSelection) {
@@ -233,7 +258,16 @@ let QuoteButton = MediumEditor.Extension.extend({
   createQuoteListItem: function (content) {
     var item = this.document.createElement('li');
     item.className = 'quotes-list-item';
-    item.innerHTML = `<div style="float: left;">${content.text}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
+    item.id = content.text;
+    if (this.getEditorOption('blockLang') == 'fa'){
+      if (content.text_farsi !== undefined)
+        item.innerHTML = `<div style="float: left;">${content.text_farsi}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
+      else
+        item.innerHTML = `<div style="float: left;">${content.text}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
+    } else {
+      item.innerHTML = `<div style="float: left;">${content.text}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
+    }
+    
     return item;
   },
 
@@ -277,7 +311,19 @@ let QuoteButton = MediumEditor.Extension.extend({
     if (remove) this.on(remove, 'click', this.handleRemoveClick.bind(this), true);
 
     if (this.value.length) {
-
+      var self = this;
+      //let's change to farsi if farsi  input field 
+      //this.getEditorOption('blockLang')
+      //this.getEditorOption('quotesList')
+      if (this.getEditorOption('blockLang') == 'fa')
+      {
+        this.getEditorOption('quotesList').forEach(
+          function(element){
+            if (self.value == element.text && element.text_farsi !== undefined)
+              self.value = element.text_farsi;
+          }
+        );                 
+      }
     }
   },
 
@@ -285,9 +331,14 @@ let QuoteButton = MediumEditor.Extension.extend({
     if (this.quoteFormList) this.destroyList();
     this.quoteFormList = this.createQuoteList();
     let list = this.getEditorOption('quotesList');
+
     if (value.length) {
       const re = new RegExp(value, 'i');
-      list = list.filter(o => o.text.match(re))
+      if (this.getEditorOption('blockLang') == 'fa'){
+        list = list.filter(o => (o.text.match(re) || (o.text_farsi !== undefined && o.text_farsi.match(re) )))
+      } else {
+        list = list.filter(o => o.text.match(re))
+      }
     }
     if (list.length) {
       list.forEach((item)=>{
@@ -310,6 +361,7 @@ let QuoteButton = MediumEditor.Extension.extend({
 
   onClick: function (ev) {
     this.quoteFormInput.value = ev.target.textContent;
+    this.quoteFormInput.dataset.author = ev.target.id;
   },
 
   destroy: function () {
@@ -417,9 +469,25 @@ let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
         return true;
     }
 
+    // text in bubble
     if (this.previewValueSelector) {
+      if (this.getEditorOption('blockLang') == 'fa'){
+        let list = this.getEditorOption('quotesList');
+        const author = list.find( author => author.text == anchorEl.dataset.author );
+        if (author !== undefined && author.hasOwnProperty('text_farsi') && author.text_farsi !== undefined){
+            this.anchorPreview.querySelector(this.previewValueSelector).textContent = author.text_farsi;
+            this.anchorPreview.querySelector(this.previewValueSelector).href = author.text_farsi;
+        } else {
+            if (author !== undefined && author.hasOwnProperty('text'))
+                this.anchorPreview.querySelector(this.previewValueSelector).textContent = author.text;
+                this.anchorPreview.querySelector(this.previewValueSelector).href = author.text;
+        }
+
+      } else {
         this.anchorPreview.querySelector(this.previewValueSelector).textContent = anchorEl.dataset.author;
         this.anchorPreview.querySelector(this.previewValueSelector).href = anchorEl.dataset.author;
+      }
+      //this.anchorPreview.querySelector(this.previewValueSelector).href = anchorEl.dataset.author;
     }
 
     this.anchorPreview.classList.add('medium-toolbar-arrow-over');

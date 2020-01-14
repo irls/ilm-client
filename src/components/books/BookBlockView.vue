@@ -1447,15 +1447,29 @@ export default {
               };
           }
           if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor('.content-wrap-footn' , {
+            this.editorFootn = new MediumEditor('.-langftn-fa.content-wrap-footn' , {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
+                blockLang: 'fa',
                 onQuoteSave: this.onQuoteSave,
                 suggestEl: this.suggestEl,
                 extensions: extensions,
                 disableEditing: !this.allowEditing
             });
+
+          if(!this.proofreadModeReadOnly)
+            this.editorFootn = new MediumEditor(':not(.-langftn-fa).content-wrap-footn' , {
+                toolbar: toolbar,
+                buttonLabels: 'fontawesome',
+                quotesList: this.authors,
+                blockLang: 'en',
+                onQuoteSave: this.onQuoteSave,
+                suggestEl: this.suggestEl,
+                extensions: extensions,
+                disableEditing: !this.allowEditing
+            });
+
         } else if (this.editorFootn) this.editorFootn.setup();
       },
       onQuoteSave: function() {
@@ -4249,7 +4263,20 @@ export default {
             }
           }
         }
+      },
+      'block.language' : {
+        handler(val) {
+          this.destroyEditor();
+          this.initEditor(true);
+        }
+      },
+      'block.footnotes' : {
+        handler(val) {
+          this.destroyEditor();
+          this.initEditor(true);
+        }
       }
+
   }
 }
 </script>

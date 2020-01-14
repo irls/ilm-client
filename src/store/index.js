@@ -31,6 +31,22 @@ const POUCH_CFG = {
     }
 };
 
+const authorsLangFarsi = 
+{
+ bab:      'باب',
+ baha:     'بهاءالّله',
+ abd:      'عبدالبهاء',
+ shoghi:   'شوقی',
+ sacred:   'sacred',
+ bible:    'انجيل',
+ muhammad: 'محمد',
+ quran:    'قرآن',
+ jesus:    'عیسی',
+ ali:      'علی',
+ tradition: 'حدیث',
+ husayn:   'حسین'
+};
+
 // const API_ALLBOOKS = '/static/books.json'
 
 function defer() {
@@ -60,6 +76,8 @@ export const store = new Vuex.Store({
     allowPublishCurrentBook: false,
     publishButtonStatus: false,
     allRolls: [],
+
+    authorsLangFarsi: authorsLangFarsi,
 
     metaDB: false,
     metaDBcomplete: false,
@@ -212,14 +230,14 @@ export const store = new Vuex.Store({
         if (b.hasOwnProperty('publishLog') && b.publishLog != null && b.publishLog != false && b.publishLog != undefined){
             if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
               var pDate = new Date(b.publishLog.publishTime);
-              var publishDate = '' + pDate.getFullYear() + '.' + (pDate.getMonth() + 1) + '.' + pDate.getDate();
-            } else {
+              var publishDate = '' + pDate.getFullYear() + '.' + ('0' + (pDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (pDate.getDate() )).slice(-2);
+            } else {                                              
               var publishDate = '';
             }
 
             if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
               var uDate = new Date(b.publishLog.updateTime);
-              var updateDate = '' + uDate.getFullYear() + '.' + (uDate.getMonth() + 1) + '.' + uDate.getDate();
+              var updateDate = '' + uDate.getFullYear() + '.' + ('0' + (uDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (uDate.getDate() )).slice(-2);
             } else {
               var updateDate = '';
             }
@@ -274,7 +292,7 @@ export const store = new Vuex.Store({
       let result = [];
       if (state.currentBookMeta.authors) {
         state.currentBookMeta.authors.forEach((author)=>{
-          result.push({ text: author.name, color: author.color })
+          result.push({ text: author.name, text_farsi: authorsLangFarsi[author.name], color: author.color })
         })
       }
       return result;

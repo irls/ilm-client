@@ -539,7 +539,30 @@ export default {
       TAB_META_INDEX: 1,
       TAB_TOC_INDEX: 2,
       TAB_AUDIO_INDEX: 3,
-      TAB_STYLE_INDEX: 4
+      TAB_STYLE_INDEX: 4,
+      users: {
+        'editor': [],
+        'proofer': [],
+        'engineer': [],
+        'reader': [],
+        'narrator': []
+      },                   
+      authorsLangFarsi:    // move to config
+      {
+       'bab':      'باب',
+       'baha':     'بهاءالّله',
+       'abd':      'عبدالبهاء',
+       'shoghi':   'شوقی',
+       'sacred':   'sacred',
+       'bible':    'انجيل',
+       'muhammad': 'محمد',
+       'quran':    'قرآن',
+       'jesus':    'عیسی',
+       'ali':      'علی',
+       'tradition': 'حدیث',
+       'husayn':   'حسین'
+      }
+
 
     }
   },
@@ -1140,6 +1163,7 @@ export default {
     collectCheckedStyles(startId, endId, isSwitch = true) {
       let result = new Map();
       let nums = new Map();
+      let lang = 'en'; // for transfer to block styles panel;
 
       //console.log('collectCheckedStyles', startId, endId);
 
@@ -1154,6 +1178,13 @@ export default {
             let pBlock = this.storeList.get(oBlock.blockid);
             if (pBlock) {
               if (!result.has(oBlock.type)) result.set(oBlock.type, new Map());
+
+              if (pBlock.language && pBlock.language.length) {
+                //return this.block.language;
+                if (pBlock.language != 'en') lang = pBlock.language;
+              } else {
+                if (this.currentBookMeta.language != 'en') lang = this.currentBookMeta.language;
+              }
 
               for (let styleKey in this.blockTypes[oBlock.type]) {
                 if (!result.get(oBlock.type).has(styleKey)) result.get(oBlock.type).set(styleKey, new Map());
@@ -1228,6 +1259,10 @@ export default {
         });
       }
 
+      if (lang != 'en'){
+        result.lang = lang;
+      }
+      
       this.styleTabs = result;
       this.numProps = nums;
 
@@ -1264,7 +1299,7 @@ export default {
             let oBlock = this.storeListO.get(blockRid);
             if (oBlock) {
               let pBlock = this.storeList.get(oBlock.blockid);
-
+              
               if (styleKey !== 'paragraph type') updateNum = oBlock.isNumber;
 
               if (pBlock && blockType == 'title') { // ILM-2533
@@ -1504,13 +1539,19 @@ export default {
       }
       return key.charAt(0).toUpperCase() + key.slice(1);
     },
-    styleValue(type, key, val) {
+    styleValue(type, key, val, lang='en') {
       key = key.split('.').shift(); // in case of "table of contents.level"
       //console.log('styleValue:', type, key, val);
+
       if (BlockTypesAlias[type] && BlockTypesAlias[type][key] && BlockTypesAlias[type][key]['values'] && BlockTypesAlias[type][key]['values'][val]) {
         return BlockTypesAlias[type][key]['values'][val];
       } else {
-        return val;
+        if (this.authorsLangFarsi.hasOwnProperty(val) && lang == 'fa'){
+          return this.authorsLangFarsi[val];
+        } else {
+          return val;
+        }
+        
       }
     },
     convertTime(dt, time = false) {
