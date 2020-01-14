@@ -84,12 +84,13 @@ let QuoteButton = MediumEditor.Extension.extend({
     if (value.length) {
       let quote = document.createElement(this.wrapNode);
       //console.log('lang: ', this.getEditorOption('blockLang'));
-      //console.log('quote', quote, value, this.quoteFormInput);
+      //console.log('value', value);
       //console.log('list autors', this.getEditorOption('quotesList'));
       // let's convert author form farsi to english
       if (this.getEditorOption('blockLang') == 'fa'){
         var found = this.getEditorOption('quotesList').find(element => element.text_farsi == value);
-        if (found) value = found.text;
+        if (found) value = found.text
+
       }
 
       quote.dataset.author = value;
@@ -458,15 +459,13 @@ let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
     // text in bubble
     if (this.previewValueSelector) {
       if (this.getEditorOption('blockLang') == 'fa'){
-
         let list = this.getEditorOption('quotesList');
         const author = list.find( author => author.text == anchorEl.dataset.author );
-
-        //console.log('author', author);
-        if (author !== undefined)
+        if (author !== undefined && author.hasOwnProperty('text_farsi') && author.text_farsi !== undefined){
             this.anchorPreview.querySelector(this.previewValueSelector).textContent = author.text_farsi;
-        else
-            this.anchorPreview.querySelector(this.previewValueSelector).textContent = anchorEl.dataset.author;
+        } else {
+            this.anchorPreview.querySelector(this.previewValueSelector).textContent = author.text;
+        }
 
       } else {
         this.anchorPreview.querySelector(this.previewValueSelector).textContent = anchorEl.dataset.author;
