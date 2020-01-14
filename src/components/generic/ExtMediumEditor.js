@@ -81,11 +81,17 @@ let QuoteButton = MediumEditor.Extension.extend({
 
     let value = this.quoteFormInput.value.trim();
     //let value = this.quoteFormInput.dataset.author.trim();
-
     if (value.length) {
       let quote = document.createElement(this.wrapNode);
       //console.log('lang: ', this.getEditorOption('blockLang'));
       //console.log('quote', quote, value, this.quoteFormInput);
+      //console.log('list autors', this.getEditorOption('quotesList'));
+      // let's convert author form farsi to english
+      if (this.getEditorOption('blockLang') == 'fa'){
+        var found = this.getEditorOption('quotesList').find(element => element.text_farsi == value);
+        if (found) value = found.text;
+      }
+
       quote.dataset.author = value;
       //console.log('quote.dataset', quote.dataset);
       if (this.isActive()) this.doQuoteRemove();
