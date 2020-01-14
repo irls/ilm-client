@@ -465,7 +465,8 @@ let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
         if (author !== undefined && author.hasOwnProperty('text_farsi') && author.text_farsi !== undefined){
             this.anchorPreview.querySelector(this.previewValueSelector).textContent = author.text_farsi;
         } else {
-            this.anchorPreview.querySelector(this.previewValueSelector).textContent = author.text;
+            if (author !== undefined && author.hasOwnProperty('text'))
+                this.anchorPreview.querySelector(this.previewValueSelector).textContent = author.text;
         }
 
       } else {
