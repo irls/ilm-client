@@ -72,6 +72,19 @@ let QuoteButton = MediumEditor.Extension.extend({
     this.insertForm();
     this.getForm().classList.add('medium-editor-toolbar-form-active');
     this.hideToolbarDefaultActions();
+
+    //text_farsi
+
+    if (this.getEditorOption('blockLang') == 'fa')
+      {
+        this.getEditorOption('quotesList').forEach(
+          function(element){
+            if (opts.value == element.text && element.text_farsi !== undefined)
+              opts.value = element.text_farsi;
+          }
+        );                 
+      }
+
     if (opts.value) this.quoteFormInput.value = opts.value;
     else this.quoteFormInput.value = this.value;
   },
