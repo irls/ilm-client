@@ -952,7 +952,8 @@ export default {
         'updateBlockToc',
         'saveNarrated',
         'checkError',
-        'getBookAlign'
+        'getBookAlign',
+        'recountVoicedBlocks'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1061,12 +1062,21 @@ export default {
                   'quoteButton', 'suggestButton'
                 ]
               };
+            
+            let blockLang = this.getBlockLang;
+            /*if (this.block.language === 'fa'){
+              blockLang = 'fa';    
+            } else {
+              blockLang = 'en';    
+            }*/
+
             this.editor = new MediumEditor('#content-' + this.block.blockid + '-part-' + this.blockPartIdx, {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
                 onQuoteSave: this.onQuoteSave,
                 suggestEl: this.suggestEl,
+                blockLang: blockLang,
                 extensions: extensions,
                 disableEditing: !this.allowEditing
             });
@@ -1147,16 +1157,32 @@ export default {
                 ]
               };
           }
+/*
           if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor('.content-wrap-footn' , {
+            this.editorFootn = new MediumEditor('.-langftn-fa.content-wrap-footn' , {
+              toolbar: toolbar,
+              buttonLabels: 'fontawesome',
+              quotesList: this.authors,
+              blockLang: 'fa',
+              onQuoteSave: this.onQuoteSave,
+              suggestEl: this.suggestEl,
+              extensions: extensions,
+              disableEditing: !this.allowEditing
+          });*/
+
+          
+          if(!this.proofreadModeReadOnly)
+            this.editorFootn = new MediumEditor(':not(.-langftn-fa).content-wrap-footn' , {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
                 onQuoteSave: this.onQuoteSave,
+                blockLang: 'en',
                 suggestEl: this.suggestEl,
                 extensions: extensions,
                 disableEditing: !this.allowEditing
             });
+
         } else if (this.editorFootn) this.editorFootn.setup();
       },
       onQuoteSave: function() {
@@ -3189,6 +3215,7 @@ export default {
         handler(val) {
           if (val === false) {
             this.flushChanges();
+            this.recountVoicedBlocks();
           }
           if (!this.isSplittedBlock) {
             this.block.isChanged = val;
@@ -3286,6 +3313,18 @@ export default {
           if (!this.isSplittedBlock) {
             this.$emit('isAudioEditing', val)
           }
+        }
+      },
+      'block.language' : {
+        handler(val) {
+          this.destroyEditor();
+          this.initEditor(true);
+        }
+      },
+      'block.footnotes' : {
+        handler(val) {
+          this.destroyEditor();
+          this.initEditor(true);
         }
       }
   }

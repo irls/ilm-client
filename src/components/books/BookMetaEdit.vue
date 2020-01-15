@@ -60,7 +60,7 @@
           <CompleteAudioExport
             :convertTime="convertTime"
             :goToBlock="goToBlock"></CompleteAudioExport>
-          <BookPublish></BookPublish>
+          <BookPublish @checkPublish="checkPublish" ></BookPublish>
           <SplitPreview v-if="allowBookSplitPreview"
             :convertTime="convertTime"></SplitPreview>
           </vue-tab>
@@ -111,13 +111,14 @@
                 <tr class='category'>
                   <td>Category</td>
                   <td>
-                    <select class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields && requiredFields.category }" class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
                       <template v-for="(data, index) in subjectCategories">
                         <optgroup :label="data.group">
                           <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
                         </optgroup>
                       </template>
                     </select>
+                    <span v-if="requiredFields && requiredFields.category" class="validation-error">Please define a Category</span>
                   </td>
                 </tr>
 
@@ -493,6 +494,7 @@ export default {
 
   data () {
     return {
+      requiredFields:[],
       pubTypes: [
         'Public', 'Hidden', 'Encumbered', 'Research', 'Private'
       ],
@@ -537,7 +539,30 @@ export default {
       TAB_META_INDEX: 1,
       TAB_TOC_INDEX: 2,
       TAB_AUDIO_INDEX: 3,
-      TAB_STYLE_INDEX: 4
+      TAB_STYLE_INDEX: 4,
+      users: {
+        'editor': [],
+        'proofer': [],
+        'engineer': [],
+        'reader': [],
+        'narrator': []
+      },                   
+      authorsLangFarsi:    // move to config
+      {
+       'bab':      'باب',
+       'baha':     'بهاءالّله',
+       'abd':      'عبدالبهاء',
+       'shoghi':   'شوقی',
+       'sacred':   'sacred',
+       'bible':    'انجيل',
+       'muhammad': 'محمد',
+       'quran':    'قرآن',
+       'jesus':    'عیسی',
+       'ali':      'علی',
+       'tradition': 'حدیث',
+       'husayn':   'حسین'
+      }
+
 
     }
   },
@@ -818,6 +843,17 @@ export default {
 
         });*/
     },
+    checkPublish(){
+        this.requiredFields = [];
+
+        let defaultCategory = ['story', 'Stories']; // means there is no category assigned
+
+        if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
+            this.requiredFields.category = true;
+        }
+
+    },
+
     updateCollection(event) {
       let collectionId = event && event.target.value ? event.target.value : null;
       if (event && !collectionId) {
@@ -867,6 +903,9 @@ export default {
     liveUpdate (key, value) {
         if(this.proofreadModeReadOnly)
             return ;
+        if( typeof this.requiredFields[key] ) {
+            delete this.requiredFields[key];
+        }
       //if (!this.updateAllowed) {
         //return Promise.resolve();
       //}
@@ -1124,6 +1163,7 @@ export default {
     collectCheckedStyles(startId, endId, isSwitch = true) {
       let result = new Map();
       let nums = new Map();
+      let lang = 'en'; // for transfer to block styles panel;
 
       //console.log('collectCheckedStyles', startId, endId);
 
@@ -1138,6 +1178,13 @@ export default {
             let pBlock = this.storeList.get(oBlock.blockid);
             if (pBlock) {
               if (!result.has(oBlock.type)) result.set(oBlock.type, new Map());
+
+              if (pBlock.language && pBlock.language.length) {
+                //return this.block.language;
+                if (pBlock.language != 'en') lang = pBlock.language;
+              } else {
+                if (this.currentBookMeta.language != 'en') lang = this.currentBookMeta.language;
+              }
 
               for (let styleKey in this.blockTypes[oBlock.type]) {
                 if (!result.get(oBlock.type).has(styleKey)) result.get(oBlock.type).set(styleKey, new Map());
@@ -1212,6 +1259,10 @@ export default {
         });
       }
 
+      if (lang != 'en'){
+        result.lang = lang;
+      }
+      
       this.styleTabs = result;
       this.numProps = nums;
 
@@ -1248,7 +1299,7 @@ export default {
             let oBlock = this.storeListO.get(blockRid);
             if (oBlock) {
               let pBlock = this.storeList.get(oBlock.blockid);
-
+              
               if (styleKey !== 'paragraph type') updateNum = oBlock.isNumber;
 
               if (pBlock && blockType == 'title') { // ILM-2533
@@ -1488,13 +1539,19 @@ export default {
       }
       return key.charAt(0).toUpperCase() + key.slice(1);
     },
-    styleValue(type, key, val) {
+    styleValue(type, key, val, lang='en') {
       key = key.split('.').shift(); // in case of "table of contents.level"
       //console.log('styleValue:', type, key, val);
+
       if (BlockTypesAlias[type] && BlockTypesAlias[type][key] && BlockTypesAlias[type][key]['values'] && BlockTypesAlias[type][key]['values'][val]) {
         return BlockTypesAlias[type][key]['values'][val];
       } else {
-        return val;
+        if (this.authorsLangFarsi.hasOwnProperty(val) && lang == 'fa'){
+          return this.authorsLangFarsi[val];
+        } else {
+          return val;
+        }
+        
       }
     },
     convertTime(dt, time = false) {
@@ -1659,6 +1716,10 @@ Vue.filter('prettyBytes', function (num) {
 });
 </script>
 <style>
+  select.text-danger#categorySelection{
+    border: 1px solid red!important;
+    border-radius: 0px;
+  }
 .meta-edit-tabs .nav-tabs-navigation {
   /*border: 1px solid red;*/
   position: sticky;

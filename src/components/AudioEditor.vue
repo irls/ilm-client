@@ -654,95 +654,101 @@
             this.smoothDrag(ev);
           });
 
-          $('body').on('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
+          let waitPlaylist = setInterval(() => {
+            if ($('.playlist-overlay').length > 0) {
+              clearInterval(waitPlaylist);
+              
+              $('.playlist-overlay.state-select').on('mouseup', this._showSelectionBordersOnClick);
 
-          $('body').on('click', '.playlist-overlay', (e) => {
-            if (typeof this.audiosourceEditor !== 'undefined') {
-              let restart = this.isPlaying;
-              let stop = new Promise((resolve, reject) => {
-                if (this.isPlaying) {
-                  return this.stop()
-                    .then(() => {
+              $('.playlist-overlay').on('click', (e) => {
+                if (typeof this.audiosourceEditor !== 'undefined') {
+                  let restart = this.isPlaying;
+                  let stop = new Promise((resolve, reject) => {
+                    if (this.isPlaying) {
+                      return this.stop()
+                        .then(() => {
+                          return resolve();
+                        });
+                    } else {
                       return resolve();
-                    });
-                } else {
-                  return resolve();
+                    }
+                  });
+                  stop.then(() => {
+                  let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+                  let pos_r = this._round(pos, 1);
+                  //console.log('click', this.mouseSelection.start, Math.abs(pos_r - this.mouseSelection.start));
+                  if (this.mouseSelection.start !== null && Math.abs(pos_r - this.mouseSelection.start) < 0.1) {
+                    //console.log('2', this.cursorPosition, pos_r);
+                    if (this.mode === 'block' && e.shiftKey && this.cursorPosition >= 0) {
+                      if (this.cursorPosition > pos_r) {
+                        let end_pos = this.cursorPosition;
+                        this.setSelectionStart(pos);
+                        this.setSelectionEnd(end_pos);
+                      } else {
+                        this.setSelectionStart(this.cursorPosition);
+                        this.setSelectionEnd(pos);
+                      }
+                    } else {
+                      if (typeof this.selection.start !== 'undefined') {
+                        this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                      }
+                      this.cursorPosition = pos;
+                      if (this.isPlaying) {
+                        this.stop().then(() => this.play(pos));
+                      }
+                    }
+                  } else {
+                    this.wordSelectionMode = false;
+                    if (this.isPlaying) {
+                      this.cursorPosition = pos;
+                    } else {
+                      this.cursorPosition = this.selection.start;
+                    }
+                    //console.log(this.mouseSelection.start, pos)
+                  }
+                  //$('#cursor-position').show();
+
+                  this._showSelectionBorders();
+                  if (restart) {
+                    this.play();
+                  }
+                  })
                 }
               });
-              stop.then(() => {
-              let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
-              let pos_r = this._round(pos, 1);
-              //console.log('click', this.mouseSelection.start, Math.abs(pos_r - this.mouseSelection.start));
-              if (this.mouseSelection.start !== null && Math.abs(pos_r - this.mouseSelection.start) < 0.1) {
-                //console.log('2', this.cursorPosition, pos_r);
-                if (this.mode === 'block' && e.shiftKey && this.cursorPosition >= 0) {
-                  if (this.cursorPosition > pos_r) {
-                    let end_pos = this.cursorPosition;
-                    this.setSelectionStart(pos);
-                    this.setSelectionEnd(end_pos);
-                  } else {
-                    this.setSelectionStart(this.cursorPosition);
-                    this.setSelectionEnd(pos);
-                  }
-                } else {
+
+              $('.playlist-overlay').on('mousedown', (e) => {
+                //console.log('this.mouseSelection', e.which, this.mouseSelection.start, this.mouseSelection.end);
+                if (e.which !== 1) {
+                  return;
+                }
+
+                let stop = new Promise((resolve, reject) => {
+                    if (this.isPlaying) {
+                      return this.stop()
+                        .then(() => {
+                          return resolve();
+                        });
+                    } else {
+                      return resolve();
+                    }
+                  });
+                  stop.then(() => {
+                $('[id="resize-selection-right"]').hide().css('left', 0);
+                $('[id="resize-selection-left"]').hide().css('left', 0);
+                this.selectionBordersVisible = false;
+                $('#cursor-position').hide();
+                if (typeof this.audiosourceEditor.samplesPerPixel !== 'undefined') {
+                  let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
                   if (typeof this.selection.start !== 'undefined') {
                     this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
                   }
-                  this.cursorPosition = pos;
-                  if (this.isPlaying) {
-                    this.stop().then(() => this.play(pos));
-                  }
-                }
-              } else {
-                this.wordSelectionMode = false;
-                if (this.isPlaying) {
-                  this.cursorPosition = pos;
-                } else {
-                  this.cursorPosition = this.selection.start;
-                }
-                //console.log(this.mouseSelection.start, pos)
-              }
-              //$('#cursor-position').show();
-
-              this._showSelectionBorders();
-              if (restart) {
-                this.play();
-              }
-              })
-            }
-          });
-
-          $('body').on('mousedown', '.playlist-overlay', (e) => {
-            //console.log('this.mouseSelection', e.which, this.mouseSelection.start, this.mouseSelection.end);
-            if (e.which !== 1) {
-              return;
-            }
-
-            let stop = new Promise((resolve, reject) => {
-                if (this.isPlaying) {
-                  return this.stop()
-                    .then(() => {
-                      return resolve();
-                    });
-                } else {
-                  return resolve();
+                  this.mouseSelection = {start: this._round(pos, 1), end: null};
                 }
               });
-              stop.then(() => {
-            $('[id="resize-selection-right"]').hide().css('left', 0);
-            $('[id="resize-selection-left"]').hide().css('left', 0);
-            this.selectionBordersVisible = false;
-            $('#cursor-position').hide();
-            if (typeof this.audiosourceEditor.samplesPerPixel !== 'undefined') {
-              let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
-              if (typeof this.selection.start !== 'undefined') {
-                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-              }
-              this.mouseSelection = {start: this._round(pos, 1), end: null};
+                //console.log("$('body').on('mousedown', '.playlist-overlay'");
+              });
             }
-          });
-            //console.log("$('body').on('mousedown', '.playlist-overlay'");
-          });
+          }, 50);
 
           $('.player-controls').keydown('input[type="number"]', function(e) {
             e.preventDefault();
@@ -2051,6 +2057,10 @@
                 if (!this.selectionBordersVisible) {
                   this._showSelectionBorders();
                 }
+              }
+              if ($('[id="resize-selection-left"]').css('display') === 'none' && $('.playlist-overlay:hover').length === 0) {
+                this.cursorPosition = this.selection.start;
+                this._showSelectionBorders();
               }
             })
             this.smoothSelection(val, oldVal);

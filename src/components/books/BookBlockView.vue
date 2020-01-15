@@ -1210,7 +1210,8 @@ export default {
         'saveNarrated',
         'checkError',
         'getBookAlign',
-        'updateBlockPart'
+        'updateBlockPart',
+        'recountVoicedBlocks'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1446,15 +1447,29 @@ export default {
               };
           }
           if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor('.content-wrap-footn' , {
+            this.editorFootn = new MediumEditor('.-langftn-fa.content-wrap-footn' , {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
+                blockLang: 'fa',
                 onQuoteSave: this.onQuoteSave,
                 suggestEl: this.suggestEl,
                 extensions: extensions,
                 disableEditing: !this.allowEditing
             });
+
+          if(!this.proofreadModeReadOnly)
+            this.editorFootn = new MediumEditor(':not(.-langftn-fa).content-wrap-footn' , {
+                toolbar: toolbar,
+                buttonLabels: 'fontawesome',
+                quotesList: this.authors,
+                blockLang: 'en',
+                onQuoteSave: this.onQuoteSave,
+                suggestEl: this.suggestEl,
+                extensions: extensions,
+                disableEditing: !this.allowEditing
+            });
+
         } else if (this.editorFootn) this.editorFootn.setup();
       },
       onQuoteSave: function() {
@@ -3737,6 +3752,7 @@ export default {
       },
       flushChanges() {
         this.changes = [];
+        this.$root.$emit('closeFlagPopup', null);
       },
       hasChange(change) {
         return this.changes && this.changes.indexOf(change) !== -1;
@@ -4121,6 +4137,7 @@ export default {
                 this.$refs.blocks[partIdx].isChanged = false;
               });
             }
+            this.recountVoicedBlocks();
           }
           this.block.isChanged = val;
           this.recountApprovedInRange();
@@ -4246,7 +4263,20 @@ export default {
             }
           }
         }
+      },
+      'block.language' : {
+        handler(val) {
+          this.destroyEditor();
+          this.initEditor(true);
+        }
+      },
+      'block.footnotes' : {
+        handler(val) {
+          this.destroyEditor();
+          this.initEditor(true);
+        }
       }
+
   }
 }
 </script>

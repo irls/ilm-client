@@ -31,6 +31,22 @@ const POUCH_CFG = {
     }
 };
 
+const authorsLangFarsi = 
+{
+ bab:      'باب',
+ baha:     'بهاءالّله',
+ abd:      'عبدالبهاء',
+ shoghi:   'شوقی',
+ sacred:   'sacred',
+ bible:    'انجيل',
+ muhammad: 'محمد',
+ quran:    'قرآن',
+ jesus:    'عیسی',
+ ali:      'علی',
+ tradition: 'حدیث',
+ husayn:   'حسین'
+};
+
 // const API_ALLBOOKS = '/static/books.json'
 
 function defer() {
@@ -60,6 +76,8 @@ export const store = new Vuex.Store({
     allowPublishCurrentBook: false,
     publishButtonStatus: false,
     allRolls: [],
+
+    authorsLangFarsi: authorsLangFarsi,
 
     metaDB: false,
     metaDBcomplete: false,
@@ -212,14 +230,14 @@ export const store = new Vuex.Store({
         if (b.hasOwnProperty('publishLog') && b.publishLog != null && b.publishLog != false && b.publishLog != undefined){
             if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
               var pDate = new Date(b.publishLog.publishTime);
-              var publishDate = '' + pDate.getFullYear() + '.' + (pDate.getMonth() + 1) + '.' + pDate.getDate();
-            } else {
+              var publishDate = '' + pDate.getFullYear() + '.' + ('0' + (pDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (pDate.getDate() )).slice(-2);
+            } else {                                              
               var publishDate = '';
             }
 
             if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
               var uDate = new Date(b.publishLog.updateTime);
-              var updateDate = '' + uDate.getFullYear() + '.' + (uDate.getMonth() + 1) + '.' + uDate.getDate();
+              var updateDate = '' + uDate.getFullYear() + '.' + ('0' + (uDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (uDate.getDate() )).slice(-2);
             } else {
               var updateDate = '';
             }
@@ -274,7 +292,7 @@ export const store = new Vuex.Store({
       let result = [];
       if (state.currentBookMeta.authors) {
         state.currentBookMeta.authors.forEach((author)=>{
-          result.push({ text: author.name, color: author.color })
+          result.push({ text: author.name, text_farsi: authorsLangFarsi[author.name], color: author.color })
         })
       }
       return result;
@@ -2234,6 +2252,7 @@ export const store = new Vuex.Store({
         commit('set_block_selection', selection);
         dispatch('getAlignCount', selection);
         dispatch('recountApprovedInRange', selection);
+        dispatch('recountVoicedBlocks', selection);
       }
     },
 
@@ -2305,7 +2324,6 @@ export const store = new Vuex.Store({
       let changed_in_range = 0;
       let changed_in_range_tts = 0;
       let changed_in_range_narration = 0;
-      let voiced_in_range = 0;
       if (!selection) {
         selection = state.blockSelection;
       }
@@ -2358,9 +2376,6 @@ export const store = new Vuex.Store({
                 ++changed_in_range_narration;
               }
             }
-            if (block.audiosrc) {
-              ++voiced_in_range;
-            }
             if (block._id == selection.end._id) {
               break;
             }
@@ -2369,14 +2384,6 @@ export const store = new Vuex.Store({
               break;
             }
           } else break;
-        }
-        commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
-      } else {
-        if (state.storeList.size > 0) {
-          voiced_in_range = Array.from(state.storeList).filter(block => {
-            return block[1].audiosrc != '';
-          }).length;
-          commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
         }
       }
       let audio_mastering = state.tc_currentBookTasks.assignments && state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1;
@@ -2744,6 +2751,17 @@ export const store = new Vuex.Store({
                 }));
               }
             }
+          } else if (state.blockSelection.end && blockid === state.blockSelection.end._id) {
+            if (state.blockSelection.start._id === state.blockSelection.end._id) {
+              commit('set_block_selection', {start: {}, end: {}});
+            } else {
+              let inId = state.storeListO.getInId(blockid);
+              if (inId) {
+                commit('set_block_selection', Object.assign(state.blockSelection, {
+                  end: {_id: inId}
+                }));
+              }
+            }
           }
           return dispatch('checkResponse', response);
         })
@@ -2953,6 +2971,38 @@ export const store = new Vuex.Store({
       .catch(error => {
         return Promise.reject(error);
       })
+    },
+    recountVoicedBlocks({state, commit}, selection = null) {
+      let voiced_in_range = 0;
+      if (!selection) {
+        selection = state.blockSelection;
+      }
+      if (selection.start && selection.start._id && selection.end && selection.end._id) {
+        let crossId = selection.start._id;
+        for (var idx=0; idx < state.storeList.size; idx++) {
+          let block = state.storeList.get(crossId);
+          if (block) {
+            if (block.audiosrc) {
+              ++voiced_in_range;
+            }
+            if (block._id == selection.end._id) {
+              break;
+            }
+            crossId = state.storeListO.getOutId(block.blockid);
+            if (!crossId) {
+              break;
+            }
+          } else break;
+        }
+        commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
+      } else {
+        if (state.storeList.size > 0) {
+          voiced_in_range = Array.from(state.storeList).filter(block => {
+            return block[1].audiosrc != '';
+          }).length;
+          commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
+        }
+      }
     }
   }
 })

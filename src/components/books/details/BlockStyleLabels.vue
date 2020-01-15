@@ -19,8 +19,10 @@
     <i v-else class="fa fa-circle-o"></i>
   </template>
 
-  <template v-if="sVal.length">{{styleValue(blockType, styleKey, sVal)}}</template>
-  <template v-else>{{styleValue(blockType, styleKey, 'none')}}</template>
+  <template v-if="!sVal.length">{{styleValue(blockType, styleKey, 'none')}}</template>
+  <template v-else-if="styleTabs['lang']">{{styleValue(blockType, styleKey, sVal, styleTabs['lang'])}}</template>
+  <template v-else-if="sVal.length">{{styleValue(blockType, styleKey, sVal, 'en')}}</template>
+  
 </label>
 </section>
 </template>
@@ -40,6 +42,8 @@
         this.$emit('selectStyleEv', blockType, styleKey, sVal);
       },
       parseStyle(parentMap, styleKey) {
+        //console.log('this.styleTabs', this.styleTabs['lang']);
+        //console.log('styleKey', styleKey);
         let tmpArr = styleKey.split('.');
         let result = parentMap.get(tmpArr.shift());
         while (tmpArr.length > 0) {
@@ -47,6 +51,7 @@
         }
         result = result || [];
         return (result instanceof Map) ? result : new Map(result);
+
       }
     }
   }
