@@ -7,7 +7,7 @@ export default {
   data() {
     return {
         tc_test: 'Test property',
-        editor_tasks: ['fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block', 'text-cleanup', 'master-audio'],
+        editor_tasks: ['fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block', 'text-cleanup', 'master-audio', 'approve-trimming'],
         narrator_tasks: ['narrate-block', 'fix-block-narration'],
         proofer_tasks: ['approve-block', 'approve-revoked-block'],
         editor_resolve_tasks: ['fix-block-narration']
