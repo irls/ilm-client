@@ -21,7 +21,7 @@
               <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
-                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating && mode === 'edit'"></i>
+                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block, blockPart) && !isUpdating && mode === 'edit'"></i>
                       <i class="fa fa-play-circle-o"
                         @click="audPlay($event)"></i>
                       <i class="fa fa-stop-circle-o disabled"></i>
@@ -49,10 +49,10 @@
               <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
                 <div class="table-body">
                   <div class="table-row">
-                    <div class="table-cell -hidden-subblock" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged">
+                    <div class="table-cell -hidden-subblock" v-if="tc_showBlockAudioEdit(block, blockPart) && !isAudioChanged">
                       <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
                     </div>
-                    <template v-if="tc_showBlockNarrate(block.blockid) && !isAudStarted">
+                    <template v-if="tc_showBlockNarrate(block) && !isAudStarted">
                       <div class="table-cell -hidden-subblock">
                         <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording($event)"></i>
                       </div>

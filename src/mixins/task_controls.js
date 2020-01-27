@@ -8,7 +8,7 @@ export default {
     return {
         tc_test: 'Test property',
         editor_tasks: ['fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block', 'text-cleanup', 'master-audio'],
-        narrator_tasks: ['narrate-block', 'fix-block-narration'],
+        narrator_tasks: ['narrate-block', 'fix-block-narration', 'approve-re-narration'],
         proofer_tasks: ['approve-block', 'approve-revoked-block'],
         editor_resolve_tasks: ['fix-block-narration']
     }
@@ -230,7 +230,17 @@ export default {
       }
       return false;
     },
-    tc_showBlockNarrate(block_id) {
+    tc_showBlockNarrate(block) {
+      if (this.bookMode === 'narrate' && block.voicework === 'narration' && this._is('narrator', true)) {
+        if (this.currentJobInfo.mastering) {
+          return false;
+        }
+        if (block.audiosrc) {
+          return true;
+        }
+        return this.$store.state.tc_tasksByBlock[block.blockid] ? true : false;
+      }
+      return false;
       if (!this.$store.state.tc_tasksByBlock[block_id]) {
         return false;
       }
@@ -312,7 +322,19 @@ export default {
       //if (tasks && tasks.isArray) return tasks[0];
       return task;
     },
-    tc_showBlockAudioEdit(blockid) {
+    tc_showBlockAudioEdit(block, blockPart) {
+      if (!blockPart.audiosrc) {
+        return false;
+      }
+      if (this.bookMode === 'narrate') {
+        if (block.voicework !== 'narration') {
+          return false;
+        }
+        if (blockPart.audiosrc) {
+          return !this.currentJobInfo.mastering ? true : false;
+        }
+        return false;
+      }
       if (this._is('editor', true) && this.currentJobInfo.workflow.status === 'active') {
         return true;
       }
@@ -322,7 +344,7 @@ export default {
       //if (!this.$store.state.tc_tasksByBlock[blockid]) {
       //return false;
       //}
-      let taskByType = this.$store.state.tc_tasksByBlock[blockid] ? this.$store.state.tc_tasksByBlock[blockid].find(t => {
+      let taskByType = this.$store.state.tc_tasksByBlock[block.blockid] ? this.$store.state.tc_tasksByBlock[block.blockid].find(t => {
         return ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-published-block', 'approve-new-published-block'].indexOf(t.type) !== -1;
       }) : false;
       if (taskByType) {
@@ -330,7 +352,7 @@ export default {
       }
       if (this.adminOrLibrarian) {
         let canResolveTask = this.currentJobInfo.can_resolve_tasks.find(t => {
-          return t.blockid == blockid;
+          return t.blockid == block.blockid;
         });
         if (canResolveTask) {
           return true;

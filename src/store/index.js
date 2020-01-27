@@ -867,6 +867,9 @@ export const store = new Vuex.Store({
         state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx});
       });
     },
+    add_aligning_block(state, block) {
+      state.aligningBlocks.push({_id: block.blockid ? block.blockid : block._id, partIdx: block.partIdx});
+    },
     set_storeList (state, blockObj) {
       //console.log('set_storeList', Date.now());
       if (state.storeList) {
@@ -2773,10 +2776,10 @@ export const store = new Vuex.Store({
       return axios.post(state.API_URL + 'book/block/' + data.blockid + '/audio', data, {})
         .then(response => {
           //console.log(response);
-          return dispatch('getBookAlign')
-            .then(() => {
+          //return dispatch('getBookAlign')
+            //.then(() => {
               return Promise.resolve(response);
-            });
+            //});
         })
         .catch(err => {
           return dispatch('checkError', err);
