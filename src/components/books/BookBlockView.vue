@@ -5158,10 +5158,10 @@ export default {
     .attention-msg {
       color: transparent;
       &.visible {
-        color: inherit;
+        color: rgb(255, 86, 48);
       }
       &.red {
-        color: inherit;
+        color: rgb(255, 86, 48);
         /*color: red;*/
         /*font-weight: bold;*/
       }
