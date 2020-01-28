@@ -1546,7 +1546,7 @@ export default {
       if (BlockTypesAlias[type] && BlockTypesAlias[type][key] && BlockTypesAlias[type][key]['values'] && BlockTypesAlias[type][key]['values'][val]) {
         return BlockTypesAlias[type][key]['values'][val];
       } else {
-        if (this.authorsLangFarsi.hasOwnProperty(val) && lang == 'fa'){
+        if (this.authorsLangFarsi.hasOwnProperty(val) && (lang == 'fa' || lang == 'ar')){
           return this.authorsLangFarsi[val];
         } else {
           return val;
