@@ -31,7 +31,7 @@ const POUCH_CFG = {
     }
 };
 
-const authorsLangFarsi = 
+const authorsLangFarsi =
 {
  bab:      'باب',
  baha:     'بهاءالّله',
@@ -123,7 +123,7 @@ export const store = new Vuex.Store({
     currentLibraryId: false,
 
     user: {},
-    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0', voiced_in_range: '0'},
+    currentBookCounters: {not_marked_blocks: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0', voiced_in_range: '0', voiceworks_for_remove: '0'},
 
     ttsVoices : [],
 
@@ -231,7 +231,7 @@ export const store = new Vuex.Store({
             if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
               var pDate = new Date(b.publishLog.publishTime);
               var publishDate = '' + pDate.getFullYear() + '.' + ('0' + (pDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (pDate.getDate() )).slice(-2);
-            } else {                                              
+            } else {
               var publishDate = '';
             }
 
@@ -2142,9 +2142,17 @@ export const store = new Vuex.Store({
         let bookid = state.currentBookid;
         let params = '';
         counters.forEach(c => {
-          params+='counters[]=' + c + '&';
+          if (typeof c == 'object') {
+            let filterKey = Object.keys(c)[0];
+            params+='counters[]=' + filterKey + '&';
+            Object.entries(c[filterKey]).map(([key, value]) => {
+              let filterObj = {};
+              filterObj[key] = value;
+              params+='filters[]=' + JSON.stringify(filterObj) + '&';
+            });
+          } else params+='counters[]=' + c + '&';
         });
-        return axios.get(state.API_URL + 'books/' + bookid + '/counter/?' + params)
+        return axios.get(state.API_URL + 'books/' + bookid + '/counter/?' + params.replace(/\&$/,''))
           .then(response => {
             if (response.data && response.data.count && Object.keys(response.data.count).length > 0) {
               Object.keys(response.data.count).forEach(k => {

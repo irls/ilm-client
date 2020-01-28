@@ -474,24 +474,34 @@
         </template>
       </div>
     </modal>
-    <modal :name="'voicework-change' + block._id" :resizeable="false" :height="250">
+    <modal :name="'voicework-change' + block._id" :resizeable="false" height="auto" width="425px" class="vue-js-modal">
       <!-- custom header -->
       <div class="modal-header">
-        <h4 class="modal-title">
+        <h4 class="modal-title text-center">
           Voicework update
         </h4>
       </div>
-      <div class="modal-body">
-        <div>Apply "{{blockVoiceworks[voiceworkChange]}}" voicework type to</div>
-        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label></div>
-        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label></div>
-        <div>This will also delete current audio from the {{blockTypeLabel}}(s)</div>
+      <div class="modal-body" style="padding-left: 35px; padding-bottom: 10px;">
+        <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
+        <div class="modal-content-flex">
+          <div class="modal-content-flex-block">
+          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
+          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
+          <!--v-if="!block.status.marked"-->
+          </div>
+          <div class="modal-content-flex-block">
+          <label class="modal-content-empty">&nbsp;</label>
+          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
+          </div>
+        </div>
+        <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', 'visible']">This will also delete current audio from the {{blockTypeLabel}}</div>
+        <div v-else :class="['attention-msg', {'visible': voiceworkUpdateType == 'unapproved'},{'red': voiceworkUpdateType == 'all'}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
       </div>
       <!-- custom buttons -->
-      <div class="modal-footer">
+      <div class="modal-footer vue-dialog-buttons">
         <template v-if="!voiceworkUpdating">
-          <button type="button" class="btn btn-default" @click="voiceworkChange = false">Cancel</button>
-          <button type="button" class="btn btn-confirm" @click="updateVoicework()">Apply</button>
+          <button type="button" class="btn btn-cancel" @click="voiceworkChange = false; voiceworkUpdateType = 'single'">Cancel</button>
+          <button type="button" class="btn btn-primary" @click="updateVoicework()">Update voicework</button>
         </template>
         <template v-else>
           <div class="voicework-preloader"></div>
@@ -747,10 +757,11 @@ export default {
         set(val) {
           if (val && val !== this.block.voicework) {
             this.voiceworkChange = val;
-            if (!this.block.status.marked && this.currentJobInfo.text_cleanup) {
+            if (/*!this.block.status.marked && */this.currentJobInfo.text_cleanup) {
               this.showModal('voicework-change');
             } else {
               this.voiceworkUpdateType = 'single';
+              this.currentBookCounters.voiceworks_for_remove = 0;
               this.updateVoicework();
             }
           }
@@ -978,7 +989,8 @@ export default {
           adminOrLibrarian: 'adminOrLibrarian',
           currentJobInfo: 'currentJobInfo',
           blockLockType: 'blockLockType',
-          storeListById: 'storeListById'
+          storeListById: 'storeListById',
+          currentBookCounters: 'currentBookCounters'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
@@ -3982,6 +3994,15 @@ export default {
           return editing;
         }
         return false;
+      },
+      countVoiceworksForRemove(blockType, isApproved = null) {
+        let filters = {
+          'voiceworks_for_remove': {
+            type: blockType
+          }
+        };
+        if (isApproved !== null) filters['voiceworks_for_remove']['status.marked'] = isApproved;
+        return this.setCurrentBookCounters([filters]);
       }
   },
   watch: {
@@ -4274,6 +4295,17 @@ export default {
         handler(val) {
           this.destroyEditor();
           this.initEditor(true);
+        }
+      },
+      'voiceworkUpdateType' : {
+        handler(val) {
+          if (val !== 'single') {
+            //this.voiceworkUpdating = true;
+            this.countVoiceworksForRemove(this.block.type, (val === 'unapproved' ? false: null))
+            .then((res)=>{
+              //this.voiceworkUpdating = false;
+            })
+          }
         }
       }
 
@@ -5070,6 +5102,69 @@ export default {
     .modal-header {
       padding-left: 15px;
       padding-right: 15px;
+    }
+  }
+
+  .vue-js-modal {
+    .modal-header {
+      padding-left: 15px;
+      padding-right: 15px;
+      padding-top: 5px;
+    }
+    .modal-footer {
+      padding: 0;
+      &.vue-dialog-buttons {
+        display: flex;
+        flex: 0 1 auto;
+        width: 100%;
+        height: 40px;
+        border-top: 1px solid #eee;
+        .btn {
+          flex: 1 1 50%;
+          cursor: pointer;
+          box-sizing: border-box;
+          height: 40px;
+        }
+        .btn-cancel {
+          font-size: 12px;
+          background: transparent;
+        }
+      }
+    }
+    .modal-body {
+      .modal-text {
+        margin-bottom: 10px;
+      }
+      .modal-content-flex {
+        display: flex;
+        flex-direction: row;
+        .modal-content-flex-block {
+          margin-right: 30px;
+        }
+        label {
+          display: block;
+        }
+        .modal-content-empty {
+          white-space: pre-wrap;
+          margin-top: 2px;
+        }
+      }
+      input[type="radio"] {
+        margin-right: 5px;
+        position: relative;
+        top: 2px;
+      }
+    }
+    .attention-msg {
+      color: transparent;
+      &.visible {
+        color: inherit;
+      }
+      &.red {
+        color: inherit;
+        /*color: red;*/
+        /*font-weight: bold;*/
+      }
     }
   }
 
