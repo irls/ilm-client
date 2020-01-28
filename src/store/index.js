@@ -2763,6 +2763,7 @@ export const store = new Vuex.Store({
               }
             }
           }
+          dispatch('recountVoicedBlocks');
           return dispatch('checkResponse', response);
         })
         .catch(err => {
