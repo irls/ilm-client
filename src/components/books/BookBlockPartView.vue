@@ -3216,6 +3216,11 @@ export default {
           if (val === false) {
             this.flushChanges();
             this.recountVoicedBlocks();
+            if (this.$refs.blockContent) {
+              this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+                flag.addEventListener('click', this.handleFlagClick);
+              });
+            }
           }
           if (!this.isSplittedBlock) {
             this.block.isChanged = val;
