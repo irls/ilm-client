@@ -31,7 +31,7 @@ const POUCH_CFG = {
     }
 };
 
-const authorsLangFarsi = 
+const authorsLangFarsi =
 {
  bab:      'باب',
  baha:     'بهاءالّله',
@@ -231,7 +231,7 @@ export const store = new Vuex.Store({
             if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
               var pDate = new Date(b.publishLog.publishTime);
               var publishDate = '' + pDate.getFullYear() + '.' + ('0' + (pDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (pDate.getDate() )).slice(-2);
-            } else {                                              
+            } else {
               var publishDate = '';
             }
 
@@ -2633,6 +2633,42 @@ export const store = new Vuex.Store({
 
           }
           return Promise.resolve(doc);
+        })
+        .catch((err) => {
+          return Promise.reject(err);
+        })
+    },
+    completeBatchApproveEditAndAlign({state, dispatch}) {
+      if (!state.currentBookMeta.bookid) {
+        return Promise.reject({error: 'Book is not selected'});
+      }
+      return dispatch('updateBookMeta', {private: false})
+        .then((doc) => {
+          return axios.put(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/batch_approve_edit_align')
+            .then((doc) => {
+              if (!doc.data.error) {
+                state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
+                dispatch('getProcessQueue');
+                return Promise.all([dispatch('tc_loadBookTask', state.currentBookMeta.bookid),
+                  dispatch('getCurrentJobInfo'),
+                  dispatch('setCurrentBookCounters')])
+                  .then(() => {
+                    state.currentBookMeta.private = false;
+                    return Promise.resolve(doc);
+                  })
+                  .catch(err => {
+                    state.currentBookMeta.private = false;
+                    return Promise.resolve(doc);
+                  })
+              } else {
+                dispatch('updateBookMeta', {private: true})
+              }
+              return Promise.resolve(doc);
+            })
+            .catch((err) => {
+              dispatch('updateBookMeta', {private: true});
+              return Promise.reject(err);
+            })
         })
         .catch((err) => {
           return Promise.reject(err);

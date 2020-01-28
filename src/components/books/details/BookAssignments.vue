@@ -57,7 +57,8 @@
                 <template v-for="action in task.actions">
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
-                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Complete</button>
+                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="showBatchApproveModal = true">Complete</button>
+                      <button v-else-if="!task.complete && !isAllowEditingComplete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" disabled>Complete</button>
                     </template>
                     <template v-else>
                       <div class="preloader-task"></div>
@@ -86,6 +87,12 @@
     <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Complete" cancel-text="Close" title="" @ok="finishTextCleanup()">
       <div v-html="sharePrivateBookMessage"></div>
     </modal>
+
+    <modal v-model="showBatchApproveModal" effect="fade" ok-text="Approve" cancel-text="Close" title="" @ok="batchApproveEditAndAlign()">
+      Approve {{currentBookCounters.not_proofed_audio}} block(s) and complete editing?
+    </modal>
+
+
     <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="finishAudioMastering()">
       <p>Complete mastering?</p>
     </modal>
@@ -102,6 +109,7 @@
       return {
         textCleanupProcess: false,
         showSharePrivateBookModal: false,
+        showBatchApproveModal: false,
         audioMasteringProcess: false,
         showAudioMasteringModal: false,
         usersList: {}
@@ -209,6 +217,22 @@
             this.$router.push(params);
           }
         }
+      },
+      batchApproveEditAndAlign() {
+        this.showBatchApproveModal = false;
+        this.completeBatchApproveEditAndAlign()
+          .then((doc) => {
+            this.showBatchApproveModal = false;
+            if (!doc.data.error) {
+              //this.currentBook.private = false;
+              this.$root.$emit('set-alert', 'Approve modifications task finished');
+            } else {
+              this.$root.$emit('set-error-alert', doc.data.error);
+            }
+          })
+          .catch((err) => {
+            this.textCleanupProcess = false;
+          });
       },
       finishTextCleanup() {
         this.textCleanupProcess = true;
@@ -406,7 +430,7 @@
         }
         this.$forceUpdate();
       },
-      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook', 'getTaskUsers']),
+      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering', 'completeBatchApproveEditAndAlign', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook', 'getTaskUsers']),
     },
     mounted() {
       this.set_taskBlockMapPositionsFromRoute();
