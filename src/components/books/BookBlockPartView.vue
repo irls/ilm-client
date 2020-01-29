@@ -914,11 +914,7 @@ export default {
         }
     }
 
-    if (this.$refs.blockContent) {
-      this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-        flag.removeEventListener('click', this.handleFlagClick);
-      });
-    }
+    $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', '[data-flag]', this.handleFlagClick);
     if (this.isRecording) {
       this.cancelRecording();
     }
@@ -1343,15 +1339,6 @@ export default {
           return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
             .then(() => {
               this.isChanged = false;
-              if (this.$parent.$refs.blocks) {
-                this.$parent.$refs.blocks.forEach((blk, blkIdx) => {
-                  if (blk.$refs.blockContent) {
-                    blk.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-                      flag.addEventListener('click', blk.handleFlagClick);
-                    });
-                  }
-                });
-              }
               return Promise.resolve();
             })
         }
@@ -1960,7 +1947,6 @@ export default {
               }
             });
             windowSelRange.insertNode(flag);
-            flag.addEventListener('click', this.handleFlagClick);
             this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
           } else {
             this.block.addFlag(existsFlag.dataset.flag, windowSelRange, type, this.mode);
@@ -2988,9 +2974,8 @@ export default {
             //console.log('Selection changed.');
             handler(this.block._id, this.$refs.blockContent);
           });
-          this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-            flag.addEventListener('click', this.handleFlagClick);
-          });
+          $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', '[data-flag]', this.handleFlagClick);
+          $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', '[data-flag]', this.handleFlagClick);
         }
         if (this.mode !== 'narrate') {
           if (this.block && this.block.footnotes) {
@@ -3231,11 +3216,6 @@ export default {
           if (val === false) {
             this.flushChanges();
             this.recountVoicedBlocks();
-            if (this.$refs.blockContent) {
-              this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-                flag.addEventListener('click', this.handleFlagClick);
-              });
-            }
           }
           if (!this.isSplittedBlock) {
             this.block.isChanged = val;

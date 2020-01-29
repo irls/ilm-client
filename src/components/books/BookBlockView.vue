@@ -1171,12 +1171,6 @@ export default {
           });
         }
     }
-
-    if (this.$refs.blockContent) {
-      this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-        flag.removeEventListener('click', this.handleFlagClick);
-      });
-    }
   },
   destroyed: function () {
     this.$root.$off('playBlockFootnote');
@@ -1565,9 +1559,6 @@ export default {
               if (this.$refs.blocks[partIdx].$refs.blockContent) {
                 this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = part.content;
                 this.block.setPartContent(partIdx, part.content);
-                Vue.nextTick(() => {
-                  this.$refs.blocks[partIdx].addContentListeners();
-                });
               }
               this.$refs.blocks[partIdx].isIllustrationChanged = false;
               if (this.$refs.blocks[partIdx].$refs.blockFlagPopup) {
@@ -3818,9 +3809,6 @@ export default {
             //console.log('Selection changed.');
             handler(this.block._id, this.$refs.blockContent);
           });
-          this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-            flag.addEventListener('click', this.handleFlagClick);
-          });
         }
         if (this.mode !== 'narrate') {
           if (this.block && this.block.footnotes) {
@@ -4139,11 +4127,6 @@ export default {
             if (this.$refs.blocks) {
               this.blockParts.forEach((part, partIdx) => {
                 this.$refs.blocks[partIdx].isChanged = false;
-                if (this.$refs.blocks[partIdx].$refs.blockContent) {
-                  this.$refs.blocks[partIdx].$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-                    flag.addEventListener('click', this.$refs.blocks[partIdx].handleFlagClick);
-                  });
-                }
               });
             }
             this.recountVoicedBlocks();
@@ -4196,13 +4179,6 @@ export default {
       'block.flags': {
         handler(val) {
           if (this.isCompleted) {
-            Vue.nextTick(() => {
-              if (this.$refs.blockContent) {
-                this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-                  flag.addEventListener('click', this.handleFlagClick);
-                });
-              }
-            });
             this.updateFlagStatus(this.block._id);
           }
         }
