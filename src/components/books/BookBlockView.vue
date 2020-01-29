@@ -230,6 +230,7 @@
               :discardAudioEdit="discardAudioEdit"
               :stopRecording="stopRecording"
               :delFlagPart="delFlagPart"
+              :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -1034,6 +1035,9 @@ export default {
           if (task) {
             return true;
           }
+          if (this.tc_isNarrateUnassigned(this.block)) {
+            return true;
+          }
           let blockFlag = Array.isArray(this.block.flags) ? this.block.flags.find(blk => {
             let parts = Array.isArray(blk.parts) ? blk.parts.filter(part => {
               return part.status !== 'hidden';
@@ -1219,6 +1223,9 @@ export default {
           return false;
         }
         if (this.isProofreadUnassigned()) {
+          return true;
+        }
+        if (this.tc_isNarrateUnassigned(this.block) && flagType === 'editor') {
           return true;
         }
         //if (this.tc_allowAdminFlagging(this.block, flagType)) {
@@ -2717,6 +2724,9 @@ export default {
         });
 
         if (foundBlockFlag.length == 0) {
+          if (!this.checkAllowNarrateUnassigned()) {
+            return false;
+          }
           if (this.allowBlockFlag) {
             if (this.block && this.block.voicework === 'narration') {
               if (type === 'editor' && this.mode === 'edit') {
@@ -3985,6 +3995,27 @@ export default {
           return editing;
         }
         return false;
+      },
+      
+      checkAllowNarrateUnassigned() {
+        if (!this.tc_allowNarrateUnassigned(this.block)) {
+          this.$root.$emit('show-modal', {
+            title: 'Unable to re-narrate',
+            text: `The block can't be re-narrated because it is currently being edited.`,
+            buttons: [
+              {
+                title: 'OK',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return false;
+        }
+        return true;
       }
   },
   watch: {

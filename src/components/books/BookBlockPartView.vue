@@ -54,7 +54,7 @@
                     </div>
                     <template v-if="tc_showBlockNarrate(block) && !isAudStarted">
                       <div class="table-cell -hidden-subblock">
-                        <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording($event)"></i>
+                        <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording(true)"></i>
                       </div>
                     </template>
                     <template v-if="player && blockAudio.src && !isRecording">
@@ -403,7 +403,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'checkAllowNarrateUnassigned'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -961,6 +961,9 @@ export default {
           return false;
         }
         if (this.isProofreadUnassigned()) {
+          return true;
+        }
+        if (this.tc_isNarrateUnassigned(this.block) && flagType === 'editor') {
           return true;
         }
         //if (this.tc_allowAdminFlagging(this.block, flagType)) {
@@ -1740,6 +1743,9 @@ export default {
       },
 
       addFlag: function(ev, type = 'editor') {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         if (window.getSelection) {
           let startPos = this.$refs.blockContent.compareDocumentPosition(this.range.startContainer);
           let endPos = this.$refs.blockContent.compareDocumentPosition(this.range.endContainer);
@@ -2134,8 +2140,11 @@ export default {
         this.$refs.blockFlagPopup.reset();
       },
 
-      _startRecording() {
+      _startRecording(check_allow = false) {
         this.$root.$emit('closeFlagPopup', null);
+        if (check_allow && !this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         return this.initRecorder()
           .then(() => {
 
@@ -2411,6 +2420,9 @@ export default {
         .catch(()=>{})
       },
       showAudioEditor(footnoteIdx = null, footnote = null) {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         //$('.table-body.-content').removeClass('editing');
         //$('#' + this.block._id + ' .table-body.-content').addClass('editing');
         if (!footnoteIdx) {

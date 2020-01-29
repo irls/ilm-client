@@ -596,6 +596,31 @@ export default {
         return false;
       }
       return true;
+    },
+    tc_isNarrateUnassigned(block) {
+      if (this._is('narrator', true) && block.voicework === 'narration' && this.bookMode === 'narrate') {
+        if (!this.currentJobInfo.mastering && !this.currentJobInfo.text_cleanup) {
+          return true;
+        }
+      }
+      return false;
+    },
+    tc_allowNarrateUnassigned(block) {
+      if (this.bookMode !== 'narrate') {
+        return true;
+      }
+      if (this.tc_getBlockTask(block.blockid, 'narrate')) {
+        return true;
+      }
+      let flags = Array.isArray(block.flags) ? block.flags.filter(flag => {
+        return Array.isArray(flag.parts) ? flag.parts.find(p => {
+          return p.status === 'open';
+        }) : false;
+      }) : [];
+      if (flags.length > 0) {
+        return false;
+      }
+      return true;
     }
   },
   computed: {
