@@ -2011,11 +2011,13 @@ export default {
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
               this.$refs.blocks[blockPartIdx].isSaving = false;
             }
+            return Promise.resolve();
           })
           .catch(err => {
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
               this.$refs.blocks[blockPartIdx].isSaving = false;
             }
+            return Promise.reject(err);
           })
       },
       assembleBlockProofread() {
@@ -4252,7 +4254,7 @@ export default {
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
         }
-      },
+      }/*,
       'isSaving': {
         handler(val) {
           if (!val && this.$refs.blocks) {
@@ -4270,7 +4272,7 @@ export default {
             }
           }
         }
-      },
+      }*/,
       'block.language' : {
         handler(val) {
           this.destroyEditor();
