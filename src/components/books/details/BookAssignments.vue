@@ -89,7 +89,7 @@
     </modal>
 
     <modal v-model="showBatchApproveModal" effect="fade" ok-text="Approve" cancel-text="Close" title="" @ok="batchApproveEditAndAlign()">
-      Approve {{currentBookCounters.not_proofed_audio}} block(s) and complete editing?
+       Approve {{counterTextCleanup}} block(s) and complete editing?
     </modal>
 
 
@@ -135,6 +135,24 @@
       isAllowEditingComplete: {
         get() {
           return this.tc_notMarkedBlocksCount() === 0;
+        }
+      },
+      counterTextCleanup:{
+        get() {
+          try {
+            let result = null;
+            let editor_tasks = this.tasks_counter.find(element => element.key == 'editor');
+            editor_tasks = editor_tasks.data.tasks;
+            if (editor_tasks !== undefined ){
+              result = editor_tasks.find(element => element.type == 'text-cleanup').count;
+            } else {
+              result = null;
+            }
+            return result;
+          } catch (e) {
+            return null;
+          }
+          
         }
       },
       startBlockId: {
