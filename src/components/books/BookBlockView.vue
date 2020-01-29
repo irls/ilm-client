@@ -1847,7 +1847,7 @@ export default {
             }
             return updateTask
               .then(() => {
-
+                return Promise.resolve();
               });
           }
         }
@@ -1945,6 +1945,7 @@ export default {
             if (this.isAudioEditing) {
               this.$root.$emit('for-audioeditor:set-process-run', false);
             }
+            return Promise.resolve();
           });
       },
       saveBlockPart(blockPart, blockPartIdx, realign) {

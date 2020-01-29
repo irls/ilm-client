@@ -1364,12 +1364,15 @@ export default {
           realign = true;
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
-        this.isChanged = false;
         this.isSaving = true;
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
-        return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign);
+        return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign)
+          .then(() => {
+            this.isChanged = false;
+            return Promise.resolve();
+          });
       },
 
       assembleBlock: function(partUpdate = null, realign = false) {
