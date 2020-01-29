@@ -1340,8 +1340,10 @@ export default {
       assembleBlockProxy: function (check_realign = true, realign = false) {
         let flagUpdate = this.hasChange('flags') ? this.block.flags : null;
         if (flagUpdate) {
-          this.isChanged = false;
           return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
+            .then(() => {
+              this.isChanged = false;
+            })
         }
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
