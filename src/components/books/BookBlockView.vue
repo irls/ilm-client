@@ -2045,6 +2045,7 @@ export default {
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
+            return Promise.resolve();
           })
           .catch(err => {
             return Promise.reject(err);
@@ -4135,6 +4136,11 @@ export default {
             if (this.$refs.blocks) {
               this.blockParts.forEach((part, partIdx) => {
                 this.$refs.blocks[partIdx].isChanged = false;
+                if (this.$refs.blocks[partIdx].$refs.blockContent) {
+                  this.$refs.blocks[partIdx].$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+                    flag.addEventListener('click', this.$refs.blocks[partIdx].handleFlagClick);
+                  });
+                }
               });
             }
             this.recountVoicedBlocks();

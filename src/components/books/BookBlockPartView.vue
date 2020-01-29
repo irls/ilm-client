@@ -1343,6 +1343,16 @@ export default {
           return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
             .then(() => {
               this.isChanged = false;
+              if (this.$parent.$refs.blocks) {
+                this.$parent.$refs.blocks.forEach((blk, blkIdx) => {
+                  if (blk.$refs.blockContent) {
+                    blk.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
+                      flag.addEventListener('click', blk.handleFlagClick);
+                    });
+                  }
+                });
+              }
+              return Promise.resolve();
             })
         }
         if (this.mode === 'proofread') {
@@ -2104,9 +2114,9 @@ export default {
         this.flagsSel.parts[partIdx].status = 'open';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
-        //this.isChanged = true;
-        //this.pushChange('flags');
-        this.$emit('reopenFlagPart');
+        this.isChanged = true;
+        this.pushChange('flags');
+        //this.$emit('reopenFlagPart');
       },
 
       hideFlagPart: function(ev, partIdx) {
