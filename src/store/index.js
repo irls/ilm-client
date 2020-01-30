@@ -169,7 +169,9 @@ export const store = new Vuex.Store({
       workflow: {
         status: null,
         archived: null
-      }
+      },
+      locked_blocks: {proofer: [], narrator: [], editor: []},
+      is_narrate_unassiged: false
     },
     taskTypes: {tasks: [], categories: []},
     liveDB: new liveDB(),
@@ -2515,7 +2517,9 @@ export const store = new Vuex.Store({
               workflow: {
                 status: null,
                 archived: null
-              }};
+              },
+              locked_blocks: {proofer: [], narrator: [], editor: []},
+              is_narrate_unassiged: false};
 
             let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
             commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);

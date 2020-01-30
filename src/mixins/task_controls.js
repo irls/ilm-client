@@ -241,12 +241,6 @@ export default {
         return this.$store.state.tc_tasksByBlock[block.blockid] ? true : false;
       }
       return false;
-      if (!this.$store.state.tc_tasksByBlock[block_id]) {
-        return false;
-      }
-      return this.$store.state.tc_tasksByBlock[block_id].find(t => {
-        return ['narrate-block', 'fix-block-narration'].indexOf(t.type) !== -1;
-      });
     },
     tc_hasBlockTask(block_id, type) {
       if (this.adminOrLibrarian) {
@@ -360,8 +354,11 @@ export default {
       }
       return false;
     },
-    tc_isProofreadUnassigned() {
-      return this.currentJobInfo.is_proofread_unassigned;
+    tc_isProofreadUnassigned(block) {
+      if (!this.currentJobInfo.is_proofread_unassigned) {
+        return false;
+      }
+      return this.currentJobInfo.locked_blocks.proofer.indexOf(block.blockid) === -1;
     },
     tc_blocksToApproveCount() {
       if (this.tc_allowEditingComplete() || this.tc_allowFinishMastering()) {
@@ -598,16 +595,17 @@ export default {
       return true;
     },
     tc_isNarrateUnassigned(block) {
-      if (this._is('narrator', true) && block.voicework === 'narration' && this.bookMode === 'narrate') {
-        if (!this.currentJobInfo.mastering && !this.currentJobInfo.text_cleanup) {
-          return true;
-        }
+      if (block.voicework === 'narration' && this.bookMode === 'narrate') {
+        return this.currentJobInfo.is_narrate_unassiged;
       }
       return false;
     },
     tc_allowNarrateUnassigned(block) {
       if (this.bookMode !== 'narrate') {
         return true;
+      }
+      if (!this.currentJobInfo.is_narrate_unassiged) {
+        return false;
       }
       if (this.tc_getBlockTask(block.blockid, 'narrate')) {
         return true;

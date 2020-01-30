@@ -999,10 +999,10 @@ export default {
       },
       isProofreadUnassigned: function() {
         if (this._is('proofer', true) && this.mode === 'proofread') {
-          if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned()) {
+          if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned(this.block)) {
             return true;
           }
-          if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned()) {
+          if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned(this.block)) {
             let result = this.block.flags.find(f => {
 
               if ((f.creator === this.auth.getSession().user_id) || (f.creator_role && this._is(f.creator_role, true))) {
