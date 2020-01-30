@@ -75,7 +75,7 @@ let QuoteButton = MediumEditor.Extension.extend({
 
     //text_farsi
 
-    if (this.getEditorOption('blockLang') == 'fa')
+    if (this.getEditorOption('blockLang') == 'fa' || this.getEditorOption('blockLang') == 'ar')
       {
         this.getEditorOption('quotesList').forEach(
           function(element){
@@ -100,7 +100,7 @@ let QuoteButton = MediumEditor.Extension.extend({
       //console.log('value', value);
       //console.log('list autors', this.getEditorOption('quotesList'));
       // let's convert author form farsi to english
-      if (this.getEditorOption('blockLang') == 'fa'){
+      if (this.getEditorOption('blockLang') == 'fa' || this.getEditorOption('blockLang') == 'ar'){
         var found = this.getEditorOption('quotesList').find(element => element.text_farsi == value);
         if (found) value = found.text
 
@@ -259,7 +259,7 @@ let QuoteButton = MediumEditor.Extension.extend({
     var item = this.document.createElement('li');
     item.className = 'quotes-list-item';
     item.id = content.text;
-    if (this.getEditorOption('blockLang') == 'fa'){
+    if (this.getEditorOption('blockLang') == 'fa' || this.getEditorOption('blockLang') == 'ar'){
       if (content.text_farsi !== undefined)
         item.innerHTML = `<div style="float: left;">${content.text_farsi}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
       else
@@ -315,7 +315,7 @@ let QuoteButton = MediumEditor.Extension.extend({
       //let's change to farsi if farsi  input field 
       //this.getEditorOption('blockLang')
       //this.getEditorOption('quotesList')
-      if (this.getEditorOption('blockLang') == 'fa')
+      if (this.getEditorOption('blockLang') == 'fa' || this.getEditorOption('blockLang') == 'ar')
       {
         this.getEditorOption('quotesList').forEach(
           function(element){
@@ -334,7 +334,7 @@ let QuoteButton = MediumEditor.Extension.extend({
 
     if (value.length) {
       const re = new RegExp(value, 'i');
-      if (this.getEditorOption('blockLang') == 'fa'){
+      if (this.getEditorOption('blockLang') == 'fa' || this.getEditorOption('blockLang') == 'ar'){
         list = list.filter(o => (o.text.match(re) || (o.text_farsi !== undefined && o.text_farsi.match(re) )))
       } else {
         list = list.filter(o => o.text.match(re))
@@ -471,7 +471,7 @@ let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
 
     // text in bubble
     if (this.previewValueSelector) {
-      if (this.getEditorOption('blockLang') == 'fa'){
+      if (this.getEditorOption('blockLang') == 'fa' || this.getEditorOption('blockLang') == 'ar'){
         let list = this.getEditorOption('quotesList');
         const author = list.find( author => author.text == anchorEl.dataset.author );
         if (author !== undefined && author.hasOwnProperty('text_farsi') && author.text_farsi !== undefined){

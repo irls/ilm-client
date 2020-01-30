@@ -5,17 +5,17 @@
       <div class="counters-container">
         <div class="counter-executor">
           <span v-if="counter.key == 'editor'">
-            <div ><i>Editor:</i> {{counter.data.executor_id}}</div>
+            <div ><i>Editor:</i> {{counter.data.executor || counter.data.executor_id}}</div>
             <div style="margin-bottom: 0.5em" v-if="adminOrLibrarian">Change performer: <select v-model="counter.data.executor_id" @change="updateAssignee('editor', counter.data.executor_id)" ><option v-for="user in usersList['editor']" :value="user._id">{{user.name || user._id}} {{user.email}}</option></select></div>
           </span>
 
           <span v-if="counter.key == 'proofer'">
-            <div><i>Proofreader:</i> {{counter.data.executor_id}}</div>
+            <div><i>Proofreader:</i> {{counter.data.executor || counter.data.executor_id}}</div>
             <div style="margin-bottom: 0.5em" v-if="adminOrLibrarian">Change performer: <select v-model="counter.data.executor_id" @change="updateAssignee('proofer', counter.data.executor_id)"><option v-for="user in usersList['proofer']" :value="user._id">{{user.name || user._id}} {{user.email}}</option></select></div>
           </span>
 
           <span v-if="counter.key == 'narrator'">
-            <div><i>Narrator:</i> {{counter.data.executor_id}}</div>
+            <div><i>Narrator:</i> {{counter.data.executor || counter.data.executor_id}}</div>
             <div style="margin-bottom: 0.5em" v-if="adminOrLibrarian">Change performer: <select v-model="counter.data.executor_id" @change="updateAssignee('narrator', counter.data.executor_id)"><option v-for="user in usersList['narrator']" :value="user._id">{{user.name || user._id}} {{user.email}}</option></select></div>
           </span>
         </div>
