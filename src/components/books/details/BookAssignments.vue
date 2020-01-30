@@ -89,17 +89,17 @@
     </modal>
 
     <modal v-if="currentBookCounters.not_marked_blocks_missed_audio > 0 && currentBookCounters.not_marked_blocks_missed_audio < counterTextCleanup" v-model="showBatchApproveModal" effect="fade" ok-text="Approve" cancel-text="Close" title="Unable to complete the Task" @ok="batchApproveEditAndAlign()">
-        [both qualified] {{currentBookCounters.not_marked_blocks_missed_audio}} block(s) can't be approved because audio alignment is missing. </br>
+        {{currentBookCounters.not_marked_blocks_missed_audio}} block(s) can't be approved because audio alignment is missing. </br>
         In the meantime, you can approve {{counterTextCleanup-currentBookCounters.not_marked_blocks_missed_audio}} blocks and continue editing. </br>
         Approve qualified blocks?
     </modal>
 
     <modal v-if=" currentBookCounters.not_marked_blocks_missed_audio > 0 && currentBookCounters.not_marked_blocks_missed_audio == counterTextCleanup" v-model="showBatchApproveModal" effect="fade" ok-text="Ok" ok-only title="Unable to complete the Task" @ok="showBatchApproveModal = false" >
-       [Only not qualified] {{currentBookCounters.not_marked_blocks_missed_audio}} block(s) can't be approved because audio alignment is missing.
+       {{currentBookCounters.not_marked_blocks_missed_audio}} block(s) can't be approved because audio alignment is missing.
     </modal>
 
     <modal v-if=" currentBookCounters.not_marked_blocks_missed_audio == 0 " v-model="showBatchApproveModal" effect="fade" ok-text="Approve" cancel-text="Close" title="Complete the Task" @ok="batchApproveEditAndAlign()">
-       [Only qualified] Approve {{counterTextCleanup}} block(s) and complete editing? 
+       Approve {{counterTextCleanup}} block(s) and complete editing? 
     </modal>
 
 
