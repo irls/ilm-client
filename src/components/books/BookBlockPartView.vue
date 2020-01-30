@@ -1172,7 +1172,7 @@ export default {
 
           
           if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor(':not(.-langftn-fa).content-wrap-footn' , {
+            this.editorFootn = new MediumEditor(':not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn' , {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
