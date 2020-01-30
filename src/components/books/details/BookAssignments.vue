@@ -102,7 +102,6 @@
        Approve {{counterTextCleanup}} block(s) and complete editing? 
     </modal>
 
-
     <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="finishAudioMastering()">
       <p>Complete mastering?</p>
     </modal>
@@ -260,7 +259,13 @@
           })
           .catch((err) => {
             this.textCleanupProcess = false;
-          });
+          })
+          .then((doc) => {
+            if (this.counterTextCleanup == 0){
+              this.finishTextCleanup();
+            }
+
+          })
       },
       finishTextCleanup() {
         this.textCleanupProcess = true;
