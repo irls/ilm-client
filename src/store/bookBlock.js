@@ -318,6 +318,7 @@ class BookBlock {
   clean() {
     if (this.flags.length)
       this.flags.forEach((flag, flagIdx) => {
+        delete flag.isNew;
         if (flag.parts.length)
           flag.parts.forEach(part => {
             let user_Id = superlogin.getSession().user_id;
@@ -436,7 +437,8 @@ class BookBlock {
       creator: userId,
       created_at: _at,
       creator_role: creator_role,
-      parts: [flagPart]
+      parts: [flagPart],
+      isNew: true
     });
 
     //console.log('addFlag', JSON.stringify(this.flags));

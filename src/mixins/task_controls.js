@@ -614,7 +614,7 @@ export default {
         return true;
       }
       let flags = Array.isArray(block.flags) ? block.flags.filter(flag => {
-        return Array.isArray(flag.parts) ? flag.parts.find(p => {
+        return Array.isArray(flag.parts) && !flag.isNew ? flag.parts.find(p => {
           return p.status === 'open';
         }) : false;
       }) : [];
