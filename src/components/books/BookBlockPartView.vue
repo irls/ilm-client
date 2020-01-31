@@ -203,7 +203,7 @@
                       placeholder="Enter description here ..."
                       @input="onInputFlag"
                       @focusout="onFocusoutFlag(partIdx, $event)"
-                      :disabled="!canCommentFlagPart(part)">
+                      :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_isNarrateUnassigned(block))">
                     </textarea>
 
                     </template>
@@ -3188,6 +3188,20 @@ export default {
             }
           }
 
+        }
+      },
+      'isLocked': {
+        handler(val) {
+          //console.log('IS LOCKED', val, this.block)
+          if (this.block.audiosrc) {
+            this.blockAudio.src = this.block.getAudiosrc('m4a');
+          }
+          if (val === false) {
+            if (this.isCompleted) {
+              this.tc_loadBookTask(this.block.bookid);
+              this.getCurrentJobInfo();
+            }
+          }
         }
       },
       'classSel' (newVal, oldVal) {

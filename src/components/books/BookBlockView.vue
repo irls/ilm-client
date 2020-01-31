@@ -311,7 +311,7 @@
                   placeholder="Enter description here ..."
                   @input="onInputFlag"
                   @focusout="onFocusoutFlag(partIdx, $event)"
-                  :disabled="!canCommentFlagPart(part)">
+                  :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_isNarrateUnassigned(block))">
                 </textarea>
 
                 </template>
@@ -1231,7 +1231,7 @@ export default {
         //if (this.tc_allowAdminFlagging(this.block, flagType)) {
           //return true;
         //}
-        if (!this.tc_getBlockTask(this.block._id) && !this.tc_getBlockTaskOtherRole(this.block._id)) {
+        if (!this.tc_getBlockTask(this.block._id, this.mode) && !this.tc_getBlockTaskOtherRole(this.block._id)) {
           return false;
         }
         let canFlag = true;
@@ -4029,7 +4029,7 @@ export default {
             this.$parent.refreshTmpl();
             if (this.isCompleted) {
               this.tc_loadBookTask();
-              this.getCurrentJobInfo();
+              this.getCurrentJobInfo(this.block.bookid);
             }
           }
         }
