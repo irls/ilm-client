@@ -230,12 +230,12 @@ export default {
       }
       return false;
     },
-    tc_showBlockNarrate(block) {
+    tc_showBlockNarrate(block, blockPart = null) {
       if (this.bookMode === 'narrate' && block.voicework === 'narration' && this._is('narrator', true)) {
         if (this.currentJobInfo.mastering) {
           return false;
         }
-        if (block.audiosrc) {
+        if (blockPart ? blockPart.audiosrc : block.audiosrc) {
           return true;
         }
         return this.$store.state.tc_tasksByBlock[block.blockid] ? true : false;

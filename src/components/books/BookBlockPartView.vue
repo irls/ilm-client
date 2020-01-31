@@ -52,7 +52,7 @@
                     <div class="table-cell -hidden-subblock" v-if="tc_showBlockAudioEdit(block, blockPart) && !isAudioChanged">
                       <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
                     </div>
-                    <template v-if="tc_showBlockNarrate(block) && !isAudStarted">
+                    <template v-if="tc_showBlockNarrate(block, blockPart) && !isAudStarted">
                       <div class="table-cell -hidden-subblock">
                         <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording(true)"></i>
                       </div>
@@ -203,7 +203,7 @@
                       placeholder="Enter description here ..."
                       @input="onInputFlag"
                       @focusout="onFocusoutFlag(partIdx, $event)"
-                      :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_isNarrateUnassigned(block))">
+                      :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_allowNarrateUnassigned(block))">
                     </textarea>
 
                     </template>
@@ -1083,7 +1083,7 @@ export default {
                 extensions: extensions,
                 disableEditing: !this.allowEditing
             });
-          } else if (this.tc_showBlockNarrate(this.block._id) && this.mode === 'narrate') {
+          } else if (this.tc_isNarrationEnabled(this.block._id) && this.mode === 'narrate') {
             extensions = {
                 'suggestButton': new SuggestButton(),
                 'suggestPreview': new SuggestPreview()

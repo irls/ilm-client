@@ -311,7 +311,7 @@
                   placeholder="Enter description here ..."
                   @input="onInputFlag"
                   @focusout="onFocusoutFlag(partIdx, $event)"
-                  :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_isNarrateUnassigned(block))">
+                  :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_allowNarrateUnassigned(block))">
                 </textarea>
 
                 </template>
@@ -2963,7 +2963,7 @@ export default {
                     //self.blockAudio.map = response.data.content;
                     self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
                     self.$store.commit('add_aligning_block', {
-                      _id: this.block.blockid, partIdx: partIdx
+                      _id: self.block.blockid, partIdx: partIdx
                     });
                     //self.block.setContent(response.data.content);
                     //self.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
