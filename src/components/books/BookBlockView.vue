@@ -2962,7 +2962,7 @@ export default {
                   if (response.status == 200) {
                     //self.blockAudio.map = response.data.content;
                     self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
-                    this.$store.commit('add_aligning_block', {
+                    self.$store.commit('add_aligning_block', {
                       _id: this.block.blockid, partIdx: partIdx
                     });
                     //self.block.setContent(response.data.content);
