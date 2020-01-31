@@ -242,6 +242,9 @@ export default {
       }
       return false;
     },
+    tc_isNarrationEnabled(blockid) {
+      return this.tc_getBlockTask(blockid, 'narrate');
+    },
     tc_hasBlockTask(block_id, type) {
       if (this.adminOrLibrarian) {
         if (this.currentJobInfo.workflow.status !== 'active') {
