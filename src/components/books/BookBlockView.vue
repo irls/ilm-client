@@ -757,7 +757,8 @@ export default {
         set(val) {
           if (val && val !== this.block.voicework) {
             this.voiceworkChange = val;
-            if (/*!this.block.status.marked && */this.currentJobInfo.text_cleanup) {
+            if (true/*!this.block.status.marked && this.currentJobInfo.text_cleanup*/) {
+              this.voiceworkUpdateType = 'single';
               this.showModal('voicework-change');
             } else {
               this.voiceworkUpdateType = 'single';
