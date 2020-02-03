@@ -474,24 +474,26 @@
         </template>
       </div>
     </modal>
-    <modal :name="'voicework-change' + block._id" :resizeable="false" height="auto" width="425px" class="vue-js-modal">
+    <modal :name="'voicework-change' + block._id" :resizeable="false" height="auto" width="400px" class="vue-js-modal">
       <!-- custom header -->
       <div class="modal-header">
-        <h4 class="modal-title text-center">
+        <h4 class="modal-title"><!--text-center-->
           Voicework update
         </h4>
       </div>
-      <div class="modal-body" style="padding-left: 35px; padding-bottom: 10px;">
+      <div class="modal-body" style="padding-top: 10px; padding-bottom: 10px;">
         <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
         <div class="modal-content-flex">
           <div class="modal-content-flex-block">
           <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
           <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
+          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
           <!--v-if="!block.status.marked"-->
           </div>
           <div class="modal-content-flex-block">
           <label class="modal-content-empty">&nbsp;</label>
-          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
+          <label class="modal-content-empty">&nbsp;</label>
+          <label class="modal-content-empty">&nbsp;</label>
           </div>
         </div>
         <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', 'visible']">This will also delete current audio from the {{blockTypeLabel}}</div>
@@ -5110,7 +5112,13 @@ export default {
     .modal-header {
       padding-left: 15px;
       padding-right: 15px;
-      padding-top: 5px;
+      padding-top: 15px;
+      border-bottom: none;
+
+      .modal-title {
+        font-size: 14px;
+        font-weight: 600;
+      }
     }
     .modal-footer {
       padding: 0;
@@ -5144,6 +5152,7 @@ export default {
         }
         label {
           display: block;
+          font-weight: normal;
         }
         .modal-content-empty {
           white-space: pre-wrap;
@@ -5158,6 +5167,7 @@ export default {
     }
     .attention-msg {
       color: transparent;
+      padding: 7px 0;
       &.visible {
         color: rgb(255, 86, 48);
       }
