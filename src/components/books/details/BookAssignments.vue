@@ -58,7 +58,8 @@
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
                       <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="showBatchApproveModal = true">Complete</button>
-                      <button v-else-if="!task.complete && !isAllowEditingComplete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" disabled>Complete</button>
+                      <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Complete</button>
+
                     </template>
                     <template v-else>
                       <div class="preloader-task"></div>
