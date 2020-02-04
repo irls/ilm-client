@@ -496,8 +496,8 @@
           <label class="modal-content-empty">&nbsp;</label>
           </div>
         </div>
-        <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', 'visible']">This will also delete current audio from the {{blockTypeLabel}}</div>
-        <div v-else :class="['attention-msg', {'visible': voiceworkUpdateType == 'unapproved'},{'red': voiceworkUpdateType == 'all'}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
+        <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': block.audiosrc}]">This will also delete current audio from the {{blockTypeLabel}}</div>
+        <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
       </div>
       <!-- custom buttons -->
       <div class="modal-footer vue-dialog-buttons">
@@ -5167,7 +5167,7 @@ export default {
     }
     .attention-msg {
       color: transparent;
-      padding: 7px 0;
+      /*padding: 7px 0;*/
       &.visible {
         color: rgb(255, 86, 48);
       }
