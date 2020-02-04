@@ -57,7 +57,7 @@
                 <template v-for="action in task.actions">
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
-                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()">Complete 1</button>
+                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()">Complete</button>
                       <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Complete</button>
 
                     </template>
@@ -289,26 +289,9 @@
           });
       },
 
-
-
-/***
-    <modal v-if="currentBookCounters.not_marked_blocks_missed_audio > 0 && currentBookCounters.not_marked_blocks_missed_audio < counterTextCleanup" v-model="showBatchApproveModal" effect="fade" ok-text="Approve" cancel-text="Close" title="Unable to complete the Task" @ok="batchApproveEditAndAlign()">
-        {{currentBookCounters.not_marked_blocks_missed_audio}} block(s) can't be approved because audio alignment is missing. </br>
-        In the meantime, you can approve {{counterTextCleanup-currentBookCounters.not_marked_blocks_missed_audio}} blocks and continue editing. </br>
-        Approve qualified blocks?
-    </modal>
-
-    <modal v-if=" currentBookCounters.not_marked_blocks_missed_audio > 0 && currentBookCounters.not_marked_blocks_missed_audio == counterTextCleanup" v-model="showBatchApproveModal" effect="fade" ok-text="Ok" ok-only title="Unable to complete the Task" @ok="showBatchApproveModal = false" >
-       {{currentBookCounters.not_marked_blocks_missed_audio}} block(s) can't be approved because audio alignment is missing.
-    </modal>
-
-    <modal v-if=" currentBookCounters.not_marked_blocks_missed_audio == 0 " v-model="showBatchApproveModal" effect="fade" ok-text="Approve" cancel-text="Close" title="Complete the Task" @ok="batchApproveEditAndAlign()">
-       Approve {{counterTextCleanup}} block(s) and complete editing? 
-    </modal>
-
-***/
       toggleBatchApprove() {
-        let text = 'Approve qualified blocks?';
+        // console.log('toggle counters:', this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup);
+        let text = '';
         let buttons = [
           {
             title: 'CANCEL',
@@ -344,6 +327,28 @@
             },
           },
         ];
+
+        if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks_missed_audio < this.counterTextCleanup){
+          text = '<div class="bottom"><h5>Unable to complete the Task</h5></div>' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.' + 
+            'In the meantime, you can approve ' + (this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' + 
+            '<div class="bottom">Approve qualified blocks?</div>';          
+        };
+        if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks_missed_audio == this.counterTextCleanup){
+          text = '<div class="bottom"><h5>Unable to complete the Task</h5></div>' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";          
+          buttons = [
+            {
+              title: 'OK',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+              },
+            },
+          ]
+
+        };
+        if (this.currentBookCounters.not_marked_blocks_missed_audio == 0){
+          text = '<div class="bottom"><h5>Complete the task:</h5></div>Approve ' + this.counterTextCleanup + ' block(s) and complete editing?'; 
+        };
+
       
         this.$root.$emit('show-modal', {
           title: ``,
