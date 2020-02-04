@@ -1975,7 +1975,7 @@ export const store = new Vuex.Store({
       return dispatch('updateBookMeta', upd);
     },
 
-    getAudioBook ({state, commit}, bookid) {
+    getAudioBook ({state, commit, dispatch}, bookid) {
       if (!bookid) {
         bookid = state.currentBookid;
       }
@@ -1983,6 +1983,9 @@ export const store = new Vuex.Store({
         return;
       }
       let set = bookid === state.currentBookid;
+      //console.log('here');
+      dispatch('setCurrentBookCounters', ['narration_blocks', 'not_marked_blocks_missed_audio']);
+
       return axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
         .then(audio => {
           if (audio.data) {

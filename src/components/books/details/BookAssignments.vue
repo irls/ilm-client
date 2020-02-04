@@ -325,6 +325,7 @@
               })             
 
             },
+            'class': 'btn btn-primary'
           },
         ];
 
