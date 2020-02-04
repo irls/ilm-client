@@ -57,7 +57,7 @@
                 <template v-for="action in task.actions">
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
-                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="showBatchApproveModal = true">Complete</button>
+                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()">Complete 1</button>
                       <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Complete</button>
 
                     </template>
@@ -87,20 +87,6 @@
     </div>
     <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Complete" cancel-text="Close" title="" @ok="finishTextCleanup()">
       <div v-html="sharePrivateBookMessage"></div>
-    </modal>
-
-    <modal v-if="currentBookCounters.not_marked_blocks_missed_audio > 0 && currentBookCounters.not_marked_blocks_missed_audio < counterTextCleanup" v-model="showBatchApproveModal" effect="fade" ok-text="Approve" cancel-text="Close" title="Unable to complete the Task" @ok="batchApproveEditAndAlign()">
-        {{currentBookCounters.not_marked_blocks_missed_audio}} block(s) can't be approved because audio alignment is missing. </br>
-        In the meantime, you can approve {{counterTextCleanup-currentBookCounters.not_marked_blocks_missed_audio}} blocks and continue editing. </br>
-        Approve qualified blocks?
-    </modal>
-
-    <modal v-if=" currentBookCounters.not_marked_blocks_missed_audio > 0 && currentBookCounters.not_marked_blocks_missed_audio == counterTextCleanup" v-model="showBatchApproveModal" effect="fade" ok-text="Ok" ok-only title="Unable to complete the Task" @ok="showBatchApproveModal = false" >
-       {{currentBookCounters.not_marked_blocks_missed_audio}} block(s) can't be approved because audio alignment is missing.
-    </modal>
-
-    <modal v-if=" currentBookCounters.not_marked_blocks_missed_audio == 0 " v-model="showBatchApproveModal" effect="fade" ok-text="Approve" cancel-text="Close" title="Complete the Task" @ok="batchApproveEditAndAlign()">
-       Approve {{counterTextCleanup}} block(s) and complete editing? 
     </modal>
 
     <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="finishAudioMastering()">
@@ -301,6 +287,70 @@
             this.$root.$emit('set-error-alert', err && err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Error in finish mastering');
             this.audioMasteringProcess = false;
           });
+      },
+
+
+
+/***
+    <modal v-if="currentBookCounters.not_marked_blocks_missed_audio > 0 && currentBookCounters.not_marked_blocks_missed_audio < counterTextCleanup" v-model="showBatchApproveModal" effect="fade" ok-text="Approve" cancel-text="Close" title="Unable to complete the Task" @ok="batchApproveEditAndAlign()">
+        {{currentBookCounters.not_marked_blocks_missed_audio}} block(s) can't be approved because audio alignment is missing. </br>
+        In the meantime, you can approve {{counterTextCleanup-currentBookCounters.not_marked_blocks_missed_audio}} blocks and continue editing. </br>
+        Approve qualified blocks?
+    </modal>
+
+    <modal v-if=" currentBookCounters.not_marked_blocks_missed_audio > 0 && currentBookCounters.not_marked_blocks_missed_audio == counterTextCleanup" v-model="showBatchApproveModal" effect="fade" ok-text="Ok" ok-only title="Unable to complete the Task" @ok="showBatchApproveModal = false" >
+       {{currentBookCounters.not_marked_blocks_missed_audio}} block(s) can't be approved because audio alignment is missing.
+    </modal>
+
+    <modal v-if=" currentBookCounters.not_marked_blocks_missed_audio == 0 " v-model="showBatchApproveModal" effect="fade" ok-text="Approve" cancel-text="Close" title="Complete the Task" @ok="batchApproveEditAndAlign()">
+       Approve {{counterTextCleanup}} block(s) and complete editing? 
+    </modal>
+
+***/
+      toggleBatchApprove() {
+        let text = 'Approve qualified blocks?';
+        let buttons = [
+          {
+            title: 'CANCEL',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+            },
+          },
+          {
+            title: 'OK',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+              return new Promise((resolve, reject) => {
+                this.completeBatchApproveEditAndAlign()
+                .then((doc) => {
+                  this.showBatchApproveModal = false;
+                  if (!doc.data.error) {
+                    //this.currentBook.private = false;
+                    this.$root.$emit('set-alert', 'Approve modifications task finished');
+                  } else {
+                    this.$root.$emit('set-error-alert', doc.data.error);
+                  }
+                });
+              })
+              .catch((err) => {
+                this.textCleanupProcess = false;
+              })
+              .then((doc) => {
+                if (this.counterTextCleanup == 0){
+                  this.finishTextCleanup();
+                }
+              })             
+
+            },
+          },
+        ];
+      
+        this.$root.$emit('show-modal', {
+          title: ``,
+          text: text,
+          buttons: buttons,
+          class: ['align-modal', 'master-switcher-warning']
+        });
       },
 
       toggleMastering() {
