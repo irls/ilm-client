@@ -3701,10 +3701,9 @@ export default {
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
               this.getAlignCount();
-              if (response && response.data) {
+              if (response && response.data && response.data.blocks) {
                 //response.data.updField = 'voicework';
                 this.$root.$emit('bookBlocksUpdates', response.data);
-                this.block.voicework = this.voiceworkChange;
                 //this.setCurrentBookBlocksLeft(this.block.bookid);
               }
             }
