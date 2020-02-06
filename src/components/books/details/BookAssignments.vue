@@ -318,8 +318,6 @@
                     return this.reloadBook()
                       .then(() => {
                         this.$root.$emit('book-reimported');
-                        this.setCurrentBookCounters(['not_marked_blocks']);
-                        console.log('counters', this.currentBookCounters.not_marked_blocks);
                         if (this.currentBookCounters.not_marked_blocks === 0){
                           this.finishTextCleanup();
                           this.textCleanupProcess = false;
@@ -338,7 +336,6 @@
           },
         ];
 
-        console.log('counters', this.currentBookCounters);
         if (this.currentBookCounters.not_marked_blocks_missed_audio === 0){
           title = 'Complete the task';
           text = 'Approve ' + this.counterTextCleanup + ' block(s) and complete editing?'; 
@@ -363,7 +360,7 @@
             },
           ]
         };
-        if (this.currentBookCounters.not_marked_blocks === 0){
+        if (this.counterTextCleanup === 0){
           title = 'Complete the task';
           text = 'Complete editing?'; 
           buttons[1].title = 'Complete';

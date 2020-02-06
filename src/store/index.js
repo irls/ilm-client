@@ -2136,7 +2136,7 @@ export const store = new Vuex.Store({
         dispatch('_setNotProofedAudioBlocksCounter');
       }*/
       if (counters.length == 0) {
-        counters = ['narration_blocks', 'not_proofed_audio'];
+        counters = ['narration_blocks', 'not_proofed_audio', 'not_marked_blocks'];
       }
       if (state.currentBookid) {
         counters.forEach(c => {
