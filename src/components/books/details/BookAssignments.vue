@@ -337,7 +337,7 @@
         ];
 
         if (this.currentBookCounters.not_marked_blocks_missed_audio === 0){
-          title = 'Complete the task';
+          title = 'Complete the Task';
           text = 'Approve ' + this.counterTextCleanup + ' block(s) and complete editing?'; 
           buttons[1].title = 'Complete';
         };
@@ -361,7 +361,7 @@
           ]
         };
         if (this.counterTextCleanup === 0){
-          title = 'Complete the task';
+          title = 'Complete the Task';
           text = 'Complete editing?'; 
           buttons[1].title = 'Complete';
         };
