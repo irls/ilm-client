@@ -313,28 +313,26 @@
               return new Promise((resolve, reject) => {
                 this.completeBatchApproveEditAndAlign()
                 .then((doc) => {
-                  this.showBatchApproveModal = false;
                   if (!doc.data.error) {
-                    //this.$root.$emit('set-alert', 'Approve modifications task finished');
-                    if (response && response.data) {
-                      //response.data.updField = 'voicework';
-                      this.$root.$emit('bookBlocksUpdates', response.data);
-                      this.block.voicework = this.voiceworkChange;
-                      //this.setCurrentBookBlocksLeft(this.block.bookid);
-                    }
+                    return this.reloadBook()
+                      .then(() => {
+                        this.$root.$emit('book-reimported');
+                        console.log('EMIT REIMPORTED')
+
+                        console.log('isAllowEditingComplete', this.isAllowEditingComplete);
+                        console.log(this.currentBookCounters);
+
+                        if (this.counterTextCleanup == 0){
+                          this.finishTextCleanup();
+                        }
+                      })
                   } else {
                     this.$root.$emit('set-error-alert', doc.data.error);
                   }
                 });
               })
               .catch((err) => {
-                this.textCleanupProcess = false;
               })
-              .then((doc) => {
-                if (this.counterTextCleanup == 0){
-                  this.finishTextCleanup();
-                }
-              })             
 
             },
             'class': 'btn btn-primary'
