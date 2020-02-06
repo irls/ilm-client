@@ -57,8 +57,8 @@
                 <template v-for="action in task.actions">
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
-                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()">Complete Admin</button>
-                      <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Complete Editor</button>
+                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()">Complete</button>
+                      <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Complete</button>
 
                     </template>
                     <template v-else>
@@ -232,7 +232,7 @@
           }
         }
       },
-      batchApproveEditAndAlign() {
+      /*batchApproveEditAndAlign() {
         this.showBatchApproveModal = false;
         this.completeBatchApproveEditAndAlign()
           .then((doc) => {
@@ -259,7 +259,7 @@
             }
 
           })
-      },
+      },*/
       finishTextCleanup() {
         this.textCleanupProcess = true;
         this.showSharePrivateBookModal = false;
@@ -307,6 +307,7 @@
             },
           },
           {
+          
             title: 'Ok',
             handler: () => {
               this.$root.$emit('hide-modal');
@@ -317,12 +318,10 @@
                     return this.reloadBook()
                       .then(() => {
                         this.$root.$emit('book-reimported');
-                        console.log('EMIT REIMPORTED')
-
-                        console.log('isAllowEditingComplete', this.isAllowEditingComplete);
-                        console.log(this.currentBookCounters);
-
-                        if (this.counterTextCleanup == 0){
+                        this.setCurrentBookCounters(['not_marked_blocks']);
+                        console.log('counters', this.currentBookCounters.not_marked_blocks);
+                        if (this.currentBookCounters.not_marked_blocks === 0){
+                          console.log('HERE');
                           this.finishTextCleanup();
                         }
                       })
@@ -536,7 +535,7 @@
         }
         this.$forceUpdate();
       },
-      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering', 'completeBatchApproveEditAndAlign', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook', 'getTaskUsers']),
+      ...mapActions(['updateBookMeta', 'setCurrentBookCounters', 'completeTextCleanup', 'completeAudioMastering', 'completeBatchApproveEditAndAlign', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook', 'getTaskUsers']),
     },
     mounted() {
       this.set_taskBlockMapPositionsFromRoute();

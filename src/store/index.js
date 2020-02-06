@@ -1261,7 +1261,7 @@ export const store = new Vuex.Store({
           commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
 
           commit('TASK_LIST_LOADED')
-          dispatch('setCurrentBookCounters', ['narration_blocks', 'not_proofed_audio', 'voiced_in_range', 'not_marked_blocks_missed_audio']);
+          dispatch('setCurrentBookCounters', ['narration_blocks', 'not_proofed_audio', 'voiced_in_range', 'not_marked_blocks_missed_audio', 'not_marked_blocks']);
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);
