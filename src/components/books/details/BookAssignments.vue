@@ -267,7 +267,7 @@
           .then((doc) => {
             this.textCleanupProcess = false;
             if (!doc.data.error) {
-              //this.currentBook.private = false;
+              this.currentBook.private = false;
               this.$root.$emit('set-alert', 'Text cleanup task finished');
             } else {
               this.$root.$emit('set-error-alert', doc.data.error);
@@ -321,8 +321,8 @@
                         this.setCurrentBookCounters(['not_marked_blocks']);
                         console.log('counters', this.currentBookCounters.not_marked_blocks);
                         if (this.currentBookCounters.not_marked_blocks === 0){
-                          console.log('HERE');
                           this.finishTextCleanup();
+                          this.textCleanupProcess = false;
                         }
                       })
                   } else {
@@ -338,7 +338,8 @@
           },
         ];
 
-        if (this.currentBookCounters.not_marked_blocks === 0){
+        console.log('counters', this.currentBookCounters);
+        if (this.currentBookCounters.not_marked_blocks_missed_audio === 0){
           title = 'Complete the task';
           text = 'Approve ' + this.counterTextCleanup + ' block(s) and complete editing?'; 
           buttons[1].title = 'Complete';
@@ -362,7 +363,7 @@
             },
           ]
         };
-        if (this.currentBookCounters.not_marked_blocks_missed_audio == 0){
+        if (this.currentBookCounters.not_marked_blocks === 0){
           title = 'Complete the task';
           text = 'Complete editing?'; 
           buttons[1].title = 'Complete';
