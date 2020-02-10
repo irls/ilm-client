@@ -2048,10 +2048,14 @@ export default {
         }
         this.block.content = this.clearBlockContent();
         this.isSaving = true;
+        let refreshTasks = this.isCompleted;
         return this.putBlockNarrate([this.block.clean(), realign])
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
+            if (refreshTasks) {
+              this.getCurrentJobInfo();
+            }
           })
           .catch(err => {
             return Promise.reject(err);

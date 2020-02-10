@@ -1493,6 +1493,7 @@ export default {
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isSaving = true;
+        let refreshTasks = this.isCompleted;
         return this.putBlockNarrate([Object.assign(this.blockPart, {
             blockid: this.block.blockid,
             bookid: this.block.bookid,
@@ -1500,6 +1501,9 @@ export default {
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
+            if (refreshTasks) {
+              this.getCurrentJobInfo();
+            }
             return Promise.resolve();
           })
           .catch(err => {
