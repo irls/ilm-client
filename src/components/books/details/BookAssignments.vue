@@ -315,7 +315,6 @@
                 this.completeBatchApproveEditAndAlign()
                 .then((doc) => {
                   if (!doc.data.error) {
-                    console.log('here');
                     return this.reloadBook()
                       .then(() => {
                         this.$root.$emit('book-reimported');
