@@ -58,7 +58,7 @@
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
                       <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()">Complete</button>
-                      <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Complete</button>
+                      <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="!isAllowEditingComplete">Complete</button>
 
                     </template>
                     <template v-else>
@@ -315,6 +315,7 @@
                 this.completeBatchApproveEditAndAlign()
                 .then((doc) => {
                   if (!doc.data.error) {
+                    console.log('here');
                     return this.reloadBook()
                       .then(() => {
                         this.$root.$emit('book-reimported');

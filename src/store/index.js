@@ -2653,6 +2653,10 @@ export const store = new Vuex.Store({
       if (!state.currentBookMeta.bookid) {
         return Promise.reject({error: 'Book is not selected'});
       }
+      if (!(state.isAdmin || state.isLibrarian)){
+            return Promise.resolve({data: {}});
+      }
+
       return dispatch('updateBookMeta', {private: false})
         .then((doc) => {
           return axios.put(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/batch_approve_edit_align')
