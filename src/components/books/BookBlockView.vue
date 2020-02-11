@@ -3683,7 +3683,7 @@ export default {
           return false;
         }
         this.voiceworkUpdating = true;
-        let api_url = this.API_URL + 'book/block/' + this.block._uRid + '/set_voicework';
+        let api_url = `${this.API_URL}book/block/${this.meta.bookid}/${this.block._uRid}/set_voicework`;
         let api = this.$store.state.auth.getHttp();
         return api.post(api_url, {
           voicework: this.voiceworkChange,
