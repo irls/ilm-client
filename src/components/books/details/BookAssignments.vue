@@ -57,7 +57,7 @@
                 <template v-for="action in task.actions">
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
-                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()">Complete</button>
+                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="isBatchProgress">Complete</button>
                       <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="!isAllowEditingComplete">Complete</button>
 
                     </template>
@@ -108,6 +108,7 @@
         showBatchApproveModal: false,
         audioMasteringProcess: false,
         showAudioMasteringModal: false,
+        isBatchProgress: false,
         usersList: {}
       }
     },
@@ -310,6 +311,7 @@
           
             title: 'Ok',
             handler: () => {
+              this.isBatchProgress = true;
               this.$root.$emit('hide-modal');
               return new Promise((resolve, reject) => {
                 this.completeBatchApproveEditAndAlign()
@@ -322,6 +324,7 @@
                           this.finishTextCleanup();
                           this.textCleanupProcess = false;
                         }
+                        this.isBatchProgress = false;
                       })
                   } else {
                     this.$root.$emit('set-error-alert', doc.data.error);
@@ -329,6 +332,7 @@
                 });
               })
               .catch((err) => {
+                this.isBatchProgress = false;
               })
 
             },
@@ -356,6 +360,7 @@
               title: 'Ok',
               handler: () => {
                 this.$root.$emit('hide-modal');
+                this.isBatchProgress = false;
               },
             },
           ]
