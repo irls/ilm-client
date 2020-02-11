@@ -323,8 +323,9 @@
                         if (this.currentBookCounters.not_marked_blocks === 0){
                           this.finishTextCleanup();
                           this.textCleanupProcess = false;
+                        } else {
+                          this.isBatchProgress = false;
                         }
-                        this.isBatchProgress = false;
                       })
                   } else {
                     this.$root.$emit('set-error-alert', doc.data.error);
