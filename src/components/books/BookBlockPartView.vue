@@ -3078,9 +3078,10 @@ export default {
               this.block.setPartManualBoundaries(this.blockPartIdx, part.manual_boundaries || []);
               //return this.putBlock(this.block);
               if (!realign) {
+                part._id = this.check_id;
                 this.$root.$emit('for-audioeditor:load',
                 this.blockAudiosrc('m4a'),
-                this.block.getPartContent(this.blockPartIdx), false);
+                this.block.getPartContent(this.blockPartIdx), false, part);
               }
               this.blockAudio.map = this.blockContent();
               this.blockAudio.src = this.blockAudiosrc('m4a');
