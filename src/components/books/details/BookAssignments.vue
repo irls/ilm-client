@@ -79,7 +79,7 @@
                   </div>
                   <div v-if="action=='approve_modified_block'">
                     <div v-if="1==1" class="editing-wrapper">
-                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Approve</button>
+                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApproveModifications()" :disabled="isBatchApproveModificationsProgress">Approve</button>
                     </div>
                     <div v-else class="preloader-task"></div>
                   </div>
@@ -114,6 +114,7 @@
         audioMasteringProcess: false,
         showAudioMasteringModal: false,
         isBatchProgress: false,
+        isBatchApproveModificationsProgress: false,
         usersList: {}
       }
     },
@@ -344,6 +345,92 @@
           ]
         };
         if (this.counterTextCleanup === 0){
+          title = 'Complete the Task';
+          text = 'Complete editing?'; 
+          buttons[1].title = 'Complete';
+        };
+
+      
+        this.$root.$emit('show-modal', {
+          title: title,
+          text: text,
+          buttons: buttons,
+          class: ['align-modal', 'master-switcher-warning']
+        });
+      },
+
+      /* ************* */
+
+      toggleBatchApproveModifications() {
+        console.log('toggle counters:', this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup);
+        let title = '';
+        let text = '';
+        let buttons = [
+          {
+            title: 'Cancel',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+            },
+          },
+          {
+            title: 'Ok',
+            handler: () => {
+              this.isBatchProgress = true;
+              this.$root.$emit('hide-modal');
+              return new Promise((resolve, reject) => {
+                this.completeBatchApproveModifictions()
+                .then((doc) => {
+                  if (!doc.data.error) {
+                    return this.reloadBook()
+                      .then(() => {
+                        this.$root.$emit('book-reimported');
+                        /*if (this.currentBookCounters.not_marked_blocks === 0){
+                          this.finishTextCleanup();
+                          this.textCleanupProcess = false;
+                        } else {
+                          this.isBatchProgress = false;
+                        }*/
+                      })
+                  } else {
+                    this.$root.$emit('set-error-alert', doc.data.error);
+                  }
+                });
+              })
+              .catch((err) => {
+                this.isBatchProgress = false;
+              })
+
+            },
+            'class': 'btn btn-primary'
+          },
+        ];
+
+        if (this.currentBookCounters.not_marked_blocks_missed_audio === 0){
+          title = 'Complete the Task';
+          text = 'Approve ' + this.counterTextCleanup + ' block(s) and complete editing?'; 
+          buttons[1].title = 'Complete';
+        }
+        else if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks){
+          title = 'Unable to complete the Task';
+          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.</br>' + 
+            'In the meantime, you can approve ' + (this.currentBookCounters.not_marked_blocks - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' + 
+            'Approve qualified blocks?';          
+          buttons[1].title = 'Approve';
+        }
+        else if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks_missed_audio == this.counterTextCleanup){
+          title = 'Unable to complete the Task';
+          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";          
+          buttons = [
+            {
+              title: 'Ok',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+                this.isBatchProgress = false;
+              },
+            },
+          ]
+        }
+        else if (this.counterTextCleanup === 0){
           title = 'Complete the Task';
           text = 'Complete editing?'; 
           buttons[1].title = 'Complete';

@@ -2689,6 +2689,47 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         })
     },
+    completeBatchApproveModifications({state, dispatch}) {
+      if (!state.currentBookMeta.bookid) {
+        return Promise.reject({error: 'Book is not selected'});
+      }
+      if (!(state.isAdmin || state.isLibrarian)){
+            return Promise.resolve({data: {}});
+      }
+
+      return dispatch('updateBookMeta', {private: false})
+        .then((doc) => {
+          return axios.put(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/batch_approve_modifications')
+            .then((doc) => {
+              if (!doc.data.error) {
+                state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
+                dispatch('getProcessQueue');
+                return Promise.all([dispatch('tc_loadBookTask', state.currentBookMeta.bookid),
+                  dispatch('getCurrentJobInfo'),
+                  dispatch('setCurrentBookCounters')])
+                  .then(() => {
+                    state.currentBookMeta.private = false;
+                    return Promise.resolve(doc);
+                  })
+                  .catch(err => {
+                    state.currentBookMeta.private = false;
+                    return Promise.resolve(doc);
+                  })
+              } else {
+                dispatch('updateBookMeta', {private: true})
+              }
+              return Promise.resolve(doc);
+            })
+            .catch((err) => {
+              dispatch('updateBookMeta', {private: true});
+              return Promise.reject(err);
+            })
+        })
+        .catch((err) => {
+          return Promise.reject(err);
+        })
+    },
+
     updateBookCollection({state}, collectionId = null) {
       if (!state.currentBookMeta.bookid) {
         return Promise.reject({error: 'book not selected'});
