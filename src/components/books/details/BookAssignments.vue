@@ -59,7 +59,6 @@
                     <template v-if="!textCleanupProcess">
                       <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="isBatchProgress">Complete</button>
                       <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="!isAllowEditingComplete">Complete</button>
-
                     </template>
                     <template v-else>
                       <div class="preloader-task"></div>
@@ -75,6 +74,12 @@
                   <div v-if="action=='complete_mastering'">
                     <div v-if="!audioMasteringProcess" class="editing-wrapper">
                       <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Complete</button>
+                    </div>
+                    <div v-else class="preloader-task"></div>
+                  </div>
+                  <div v-if="action=='approve_modified_block'">
+                    <div v-if="1==1" class="editing-wrapper">
+                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Approve</button>
                     </div>
                     <div v-else class="preloader-task"></div>
                   </div>
@@ -233,34 +238,6 @@
           }
         }
       },
-      /*batchApproveEditAndAlign() {
-        this.showBatchApproveModal = false;
-        this.completeBatchApproveEditAndAlign()
-          .then((doc) => {
-            this.showBatchApproveModal = false;
-            if (!doc.data.error) {
-              //this.currentBook.private = false;
-              //this.$root.$emit('set-alert', 'Approve modifications task finished');
-              if (response && response.data) {
-                //response.data.updField = 'voicework';
-                this.$root.$emit('bookBlocksUpdates', response.data);
-                this.block.voicework = this.voiceworkChange;
-                //this.setCurrentBookBlocksLeft(this.block.bookid);
-              }
-            } else {
-              this.$root.$emit('set-error-alert', doc.data.error);
-            }
-          })
-          .catch((err) => {
-            this.textCleanupProcess = false;
-          })
-          .then((doc) => {
-            if (this.counterTextCleanup == 0){
-              this.finishTextCleanup();
-            }
-
-          })
-      },*/
       finishTextCleanup() {
         this.textCleanupProcess = true;
         this.showSharePrivateBookModal = false;
