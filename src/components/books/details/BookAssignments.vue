@@ -251,6 +251,8 @@
             } else {
               this.$root.$emit('set-error-alert', doc.data.error);
             }
+            this.isBatchProgress = false;
+            console.log('HERE');
           })
           .catch((err) => {
             this.textCleanupProcess = false;
@@ -275,7 +277,7 @@
       },
 
       toggleBatchApprove() {
-        // console.log('toggle counters:', this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup);
+        //console.log('toggle counters:', this.currentBookCounters, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup);
         let title = '';
         let text = '';
         let buttons = [
@@ -301,6 +303,7 @@
                         if (this.currentBookCounters.not_marked_blocks === 0){
                           this.finishTextCleanup();
                           this.textCleanupProcess = false;
+                          
                         } else {
                           this.isBatchProgress = false;
                         }
@@ -319,15 +322,17 @@
           },
         ];
 
+        //console.log('counter text cleanup 2', this.counterTextCleanup);
+
         if (this.currentBookCounters.not_marked_blocks_missed_audio === 0){
           title = 'Complete the Task';
           text = 'Approve ' + this.counterTextCleanup + ' block(s) and complete editing?'; 
           buttons[1].title = 'Complete';
         };
-        if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks){
+        if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.counterTextCleanup){
           title = 'Unable to complete the Task';
           text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.</br>' + 
-            'In the meantime, you can approve ' + (this.currentBookCounters.not_marked_blocks - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' + 
+            'In the meantime, you can approve ' + (this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' + 
             'Approve qualified blocks?';          
           buttons[1].title = 'Approve';
         };
