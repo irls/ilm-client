@@ -143,7 +143,10 @@
       isBatchProgress: {
         get() {
           return this.isBatchProgressItems.includes(this.currentBookMeta._id);
-        }
+        },
+        set(value){
+          return value
+        } 
       },
       counterTextCleanup:{
         get() {
