@@ -57,7 +57,7 @@
                 <template v-for="action in task.actions">
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
-                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="isBatchProgress()">Complete</button>
+                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="isBatchProgress">Complete</button>
                       <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="!isAllowEditingComplete">Complete</button>
                     </template>
                     <template v-else>
@@ -113,7 +113,7 @@
         showBatchApproveModal: false,
         audioMasteringProcess: false,
         showAudioMasteringModal: false,
-        isBatchProgressItems: false,
+        isBatchProgressItems: [],
         isBatchApproveModificationsProgress: false,
         usersList: {}
       }
