@@ -57,7 +57,7 @@
                 <template v-for="action in task.actions">
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
-                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="isBatchProgress">Complete</button>
+                      <button v-if="!task.complete && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="isBatchProgress()">Complete</button>
                       <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="!isAllowEditingComplete">Complete</button>
                     </template>
                     <template v-else>
@@ -113,7 +113,7 @@
         showBatchApproveModal: false,
         audioMasteringProcess: false,
         showAudioMasteringModal: false,
-        isBatchProgress: false,
+        isBatchProgressItems: false,
         isBatchApproveModificationsProgress: false,
         usersList: {}
       }
@@ -138,6 +138,11 @@
       isAllowEditingComplete: {
         get() {
           return this.tc_notMarkedBlocksCount() === 0;
+        }
+      },
+      isBatchProgress: {
+        get() {
+          return this.isBatchProgressItems.includes(this.currentBookMeta._id);
         }
       },
       counterTextCleanup:{
@@ -251,8 +256,8 @@
             } else {
               this.$root.$emit('set-error-alert', doc.data.error);
             }
-            this.isBatchProgress = false;
-            console.log('HERE');
+            //this.isBatchProgress = false;
+            //console.log('HERE');
           })
           .catch((err) => {
             this.textCleanupProcess = false;
@@ -291,7 +296,8 @@
           
             title: 'Ok',
             handler: () => {
-              this.isBatchProgress = true;
+              //this.isBatchProgress = true;
+              this.isBatchProgressItems.push(this.currentBookMeta._id);
               this.$root.$emit('hide-modal');
               return new Promise((resolve, reject) => {
                 this.completeBatchApproveEditAndAlign()
@@ -306,6 +312,7 @@
                           
                         } else {
                           this.isBatchProgress = false;
+                          this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id);
                         }
                       })
                   } else {
@@ -314,7 +321,8 @@
                 });
               })
               .catch((err) => {
-                this.isBatchProgress = false;
+                //this.isBatchProgress = false;
+                this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id)
               })
 
             },
@@ -344,7 +352,8 @@
               title: 'Ok',
               handler: () => {
                 this.$root.$emit('hide-modal');
-                this.isBatchProgress = false;
+                //this.isBatchProgress = false;
+                this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id)
               },
             },
           ]
