@@ -1171,12 +1171,6 @@ export default {
           });
         }
     }
-
-    if (this.$refs.blockContent) {
-      this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-        flag.removeEventListener('click', this.handleFlagClick);
-      });
-    }
   },
   destroyed: function () {
     this.$root.$off('playBlockFootnote');
@@ -1565,9 +1559,6 @@ export default {
               if (this.$refs.blocks[partIdx].$refs.blockContent) {
                 this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = part.content;
                 this.block.setPartContent(partIdx, part.content);
-                Vue.nextTick(() => {
-                  this.$refs.blocks[partIdx].addContentListeners();
-                });
               }
               this.$refs.blocks[partIdx].isIllustrationChanged = false;
               if (this.$refs.blocks[partIdx].$refs.blockFlagPopup) {
@@ -1847,7 +1838,7 @@ export default {
             }
             return updateTask
               .then(() => {
-
+                return Promise.resolve();
               });
           }
         }
@@ -1945,6 +1936,7 @@ export default {
             if (this.isAudioEditing) {
               this.$root.$emit('for-audioeditor:set-process-run', false);
             }
+            return Promise.resolve();
           });
       },
       saveBlockPart(blockPart, blockPartIdx, realign) {
@@ -2010,11 +2002,13 @@ export default {
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
               this.$refs.blocks[blockPartIdx].isSaving = false;
             }
+            return Promise.resolve();
           })
           .catch(err => {
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
               this.$refs.blocks[blockPartIdx].isSaving = false;
             }
+            return Promise.reject(err);
           })
       },
       assembleBlockProofread() {
@@ -2045,6 +2039,7 @@ export default {
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
+            return Promise.resolve();
           })
           .catch(err => {
             return Promise.reject(err);
@@ -3814,9 +3809,6 @@ export default {
             //console.log('Selection changed.');
             handler(this.block._id, this.$refs.blockContent);
           });
-          this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-            flag.addEventListener('click', this.handleFlagClick);
-          });
         }
         if (this.mode !== 'narrate') {
           if (this.block && this.block.footnotes) {
@@ -4187,13 +4179,6 @@ export default {
       'block.flags': {
         handler(val) {
           if (this.isCompleted) {
-            Vue.nextTick(() => {
-              if (this.$refs.blockContent) {
-                this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-                  flag.addEventListener('click', this.handleFlagClick);
-                });
-              }
-            });
             this.updateFlagStatus(this.block._id);
           }
         }
@@ -4245,7 +4230,7 @@ export default {
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
         }
-      },
+      }/*,
       'isSaving': {
         handler(val) {
           if (!val && this.$refs.blocks) {
@@ -4263,7 +4248,7 @@ export default {
             }
           }
         }
-      },
+      }*/,
       'block.language' : {
         handler(val) {
           this.destroyEditor();

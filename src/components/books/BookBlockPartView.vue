@@ -914,11 +914,7 @@ export default {
         }
     }
 
-    if (this.$refs.blockContent) {
-      this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-        flag.removeEventListener('click', this.handleFlagClick);
-      });
-    }
+    $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', '[data-flag]', this.handleFlagClick);
     if (this.isRecording) {
       this.cancelRecording();
     }
@@ -1340,8 +1336,11 @@ export default {
       assembleBlockProxy: function (check_realign = true, realign = false) {
         let flagUpdate = this.hasChange('flags') ? this.block.flags : null;
         if (flagUpdate) {
-          this.isChanged = false;
           return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
+            .then(() => {
+              this.isChanged = false;
+              return Promise.resolve();
+            })
         }
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
@@ -1352,12 +1351,15 @@ export default {
           realign = true;
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
-        this.isChanged = false;
         this.isSaving = true;
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
-        return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign);
+        return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign)
+          .then(() => {
+            this.isChanged = false;
+            return Promise.resolve();
+          });
       },
 
       assembleBlock: function(partUpdate = null, realign = false) {
@@ -1945,7 +1947,6 @@ export default {
               }
             });
             windowSelRange.insertNode(flag);
-            flag.addEventListener('click', this.handleFlagClick);
             this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
           } else {
             this.block.addFlag(existsFlag.dataset.flag, windowSelRange, type, this.mode);
@@ -2102,9 +2103,9 @@ export default {
         this.flagsSel.parts[partIdx].status = 'open';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
-        //this.isChanged = true;
-        //this.pushChange('flags');
-        this.$emit('reopenFlagPart');
+        this.isChanged = true;
+        this.pushChange('flags');
+        //this.$emit('reopenFlagPart');
       },
 
       hideFlagPart: function(ev, partIdx) {
@@ -2973,9 +2974,8 @@ export default {
             //console.log('Selection changed.');
             handler(this.block._id, this.$refs.blockContent);
           });
-          this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-            flag.addEventListener('click', this.handleFlagClick);
-          });
+          $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', '[data-flag]', this.handleFlagClick);
+          $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', '[data-flag]', this.handleFlagClick);
         }
         if (this.mode !== 'narrate') {
           if (this.block && this.block.footnotes) {
