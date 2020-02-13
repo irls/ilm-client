@@ -1354,6 +1354,7 @@
           let match;
           let tokens = [];
           let currentLength = 0;
+          text = text.replace(/[\r\n]/img, '');// remove line breaks for clear regular expressions
           while((match = textRg.exec(text))) {
             let word = match[2];
             if (currentLength < match.index) {
