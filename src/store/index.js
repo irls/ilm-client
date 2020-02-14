@@ -1984,7 +1984,7 @@ export const store = new Vuex.Store({
       }
       let set = bookid === state.currentBookid;
       //console.log('here');
-      dispatch('setCurrentBookCounters', ['narration_blocks', 'not_marked_blocks_missed_audio']);
+      dispatch('setCurrentBookCounters', ['narration_blocks', 'not_marked_blocks_missed_audio', 'not_marked_blocks']);
 
       return axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
         .then(audio => {
