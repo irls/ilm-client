@@ -57,7 +57,8 @@
                 <template v-for="action in task.actions">
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
-                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showSharePrivateBookModal = true" :disabled="!isAllowEditingComplete">Complete</button>
+                      <button v-if="!task.complete && adminOrLibrarian"  class="btn btn-primary btn-edit-complete"  v-on:click="toggleBatchApprove()" :disabled="isBatchProgress">Complete</button>
+                      <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="!isAllowEditingComplete">Complete</button>
                     </template>
                     <template v-else>
                       <div class="preloader-task"></div>
@@ -76,6 +77,12 @@
                     </div>
                     <div v-else class="preloader-task"></div>
                   </div>
+                  <div v-if="action=='approve_modified_block'">
+                    <div v-if="1==1" class="editing-wrapper">
+                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApproveModifications()" :disabled="isBatchApproveModificationsProgress">Approve</button>
+                    </div>
+                    <div v-else class="preloader-task"></div>
+                  </div>
                 </template>
               </td>
             </tr>
@@ -86,6 +93,7 @@
     <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Complete" cancel-text="Close" title="" @ok="finishTextCleanup()">
       <div v-html="sharePrivateBookMessage"></div>
     </modal>
+
     <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="finishAudioMastering()">
       <p>Complete mastering?</p>
     </modal>
@@ -102,8 +110,11 @@
       return {
         textCleanupProcess: false,
         showSharePrivateBookModal: false,
+        showBatchApproveModal: false,
         audioMasteringProcess: false,
         showAudioMasteringModal: false,
+        isBatchProgressItems: [],
+        isBatchApproveModificationsProgress: false,
         usersList: {}
       }
     },
@@ -118,7 +129,7 @@
       sharePrivateBookMessage: {
         get() {
           if (this.currentBookCounters.narration_blocks > 0) {
-            return 'Complete editing and request narration for ' + this.currentBookCounters.narration_blocks + ' blocks?'
+            return 'Complete editing and request narration for ' + this.currentBookCounters.narration_blocks + ' blocks? ';
           } else {
             return 'Complete editing?';
           }
@@ -127,6 +138,32 @@
       isAllowEditingComplete: {
         get() {
           return this.tc_notMarkedBlocksCount() === 0;
+        }
+      },
+      isBatchProgress: {
+        get() {
+          return this.isBatchProgressItems.includes(this.currentBookMeta._id);
+        },
+        set(value){
+          return value
+        } 
+      },
+      counterTextCleanup:{
+        get() {
+          try {
+            let result = null;
+            let editor_tasks = this.tasks_counter.find(element => element.key == 'editor');
+            editor_tasks = editor_tasks.data.tasks;
+            if (editor_tasks !== undefined ){
+              result = editor_tasks.find(element => element.type == 'text-cleanup').count;
+            } else {
+              result = null;
+            }
+            return result;
+          } catch (e) {
+            return null;
+          }
+          
         }
       },
       startBlockId: {
@@ -217,11 +254,13 @@
           .then((doc) => {
             this.textCleanupProcess = false;
             if (!doc.data.error) {
-              //this.currentBook.private = false;
+              this.currentBook.private = false;
               this.$root.$emit('set-alert', 'Text cleanup task finished');
             } else {
               this.$root.$emit('set-error-alert', doc.data.error);
             }
+            //this.isBatchProgress = false;
+            //console.log('HERE');
           })
           .catch((err) => {
             this.textCleanupProcess = false;
@@ -244,6 +283,185 @@
             this.audioMasteringProcess = false;
           });
       },
+
+      toggleBatchApprove() {
+        //console.log('toggle counters:', this.currentBookCounters, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup);
+        let title = '';
+        let text = '';
+        let buttons = [
+          {
+            title: 'Cancel',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+            },
+          },
+          {
+          
+            title: 'Ok',
+            handler: () => {
+              //this.isBatchProgress = true;
+              this.isBatchProgressItems.push(this.currentBookMeta._id);
+              this.$root.$emit('hide-modal');
+              return new Promise((resolve, reject) => {
+                this.completeBatchApproveEditAndAlign()
+                .then((doc) => {
+                  if (!doc.data.error) {
+                    return this.reloadBook()
+                      .then(() => {
+                        this.$root.$emit('book-reimported');
+                        if (this.currentBookCounters.not_marked_blocks === 0){
+                          this.finishTextCleanup();
+                          this.textCleanupProcess = false;
+                          
+                        } else {
+                          this.isBatchProgress = false;
+                          this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id);
+                        }
+                      })
+                  } else {
+                    this.$root.$emit('set-error-alert', doc.data.error);
+                  }
+                });
+              })
+              .catch((err) => {
+                //this.isBatchProgress = false;
+                this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id)
+              })
+
+            },
+            'class': 'btn btn-primary'
+          },
+        ];
+
+        //console.log('counter text cleanup 2', this.counterTextCleanup);
+
+        if (this.currentBookCounters.not_marked_blocks_missed_audio === 0){
+          title = 'Complete the Task';
+          text = 'Approve ' + this.counterTextCleanup + ' block(s) and complete editing?'; 
+          buttons[1].title = 'Complete';
+        };
+        if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.counterTextCleanup){
+          title = 'Unable to complete the Task';
+          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.</br>' + 
+            'In the meantime, you can approve ' + (this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' + 
+            'Approve qualified blocks?';          
+          buttons[1].title = 'Approve';
+        };
+        if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks_missed_audio == this.counterTextCleanup){
+          title = 'Unable to complete the Task';
+          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";          
+          buttons = [
+            {
+              title: 'Ok',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+                //this.isBatchProgress = false;
+                this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id)
+              },
+            },
+          ]
+        };
+        if (this.counterTextCleanup === 0){
+          title = 'Complete the Task';
+          text = 'Complete editing?'; 
+          buttons[1].title = 'Complete';
+        };
+
+      
+        this.$root.$emit('show-modal', {
+          title: title,
+          text: text,
+          buttons: buttons,
+          class: ['align-modal', 'master-switcher-warning']
+        });
+      },
+
+      /* ************* */
+
+      toggleBatchApproveModifications() {
+        console.log('toggle counters:', this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup);
+        let title = '';
+        let text = '';
+        let buttons = [
+          {
+            title: 'Cancel',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+            },
+          },
+          {
+            title: 'Ok',
+            handler: () => {
+              this.isBatchProgress = true;
+              this.$root.$emit('hide-modal');
+              return new Promise((resolve, reject) => {
+                this.completeBatchApproveModifictions()
+                .then((doc) => {
+                  if (!doc.data.error) {
+                    return this.reloadBook()
+                      .then(() => {
+                        this.$root.$emit('book-reimported');
+                        /*if (this.currentBookCounters.not_marked_blocks === 0){
+                          this.finishTextCleanup();
+                          this.textCleanupProcess = false;
+                        } else {
+                          this.isBatchProgress = false;
+                        }*/
+                      })
+                  } else {
+                    this.$root.$emit('set-error-alert', doc.data.error);
+                  }
+                });
+              })
+              .catch((err) => {
+                this.isBatchProgress = false;
+              })
+
+            },
+            'class': 'btn btn-primary'
+          },
+        ];
+
+        if (this.currentBookCounters.not_marked_blocks_missed_audio === 0){
+          title = 'Complete the Task';
+          text = 'Approve ' + this.counterTextCleanup + ' block(s) and complete editing?'; 
+          buttons[1].title = 'Complete';
+        }
+        else if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks){
+          title = 'Unable to complete the Task';
+          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.</br>' + 
+            'In the meantime, you can approve ' + (this.currentBookCounters.not_marked_blocks - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' + 
+            'Approve qualified blocks?';          
+          buttons[1].title = 'Approve';
+        }
+        else if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks_missed_audio == this.counterTextCleanup){
+          title = 'Unable to complete the Task';
+          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";          
+          buttons = [
+            {
+              title: 'Ok',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+                this.isBatchProgress = false;
+              },
+            },
+          ]
+        }
+        else if (this.counterTextCleanup === 0){
+          title = 'Complete the Task';
+          text = 'Complete editing?'; 
+          buttons[1].title = 'Complete';
+        };
+
+      
+        this.$root.$emit('show-modal', {
+          title: title,
+          text: text,
+          buttons: buttons,
+          class: ['align-modal', 'master-switcher-warning']
+        });
+      },
+
       toggleMastering() {
         if (this.tc_allowToggleMetaMastering() && !this.currentJobInfo.mastering && this.currentJobInfo.workflow.status == 'active' && !this.currentBookMeta.isMastered) {
           if (!this.currentBookMeta.masteringRequired) {
@@ -406,7 +624,7 @@
         }
         this.$forceUpdate();
       },
-      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook', 'getTaskUsers']),
+      ...mapActions(['updateBookMeta', 'setCurrentBookCounters', 'completeTextCleanup', 'completeAudioMastering', 'completeBatchApproveEditAndAlign', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook', 'getTaskUsers']),
     },
     mounted() {
       this.set_taskBlockMapPositionsFromRoute();
