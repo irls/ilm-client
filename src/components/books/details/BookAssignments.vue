@@ -77,12 +77,6 @@
                     </div>
                     <div v-else class="preloader-task"></div>
                   </div>
-                  <div v-if="action=='approve_modified_block'">
-                    <div v-if="1==1" class="editing-wrapper">
-                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApproveModifications()" :disabled="isBatchApproveModificationsProgress">Approve</button>
-                    </div>
-                    <div v-else class="preloader-task"></div>
-                  </div>
                 </template>
               </td>
             </tr>
