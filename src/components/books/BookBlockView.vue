@@ -978,7 +978,8 @@ export default {
           adminOrLibrarian: 'adminOrLibrarian',
           currentJobInfo: 'currentJobInfo',
           blockLockType: 'blockLockType',
-          storeListById: 'storeListById'
+          storeListById: 'storeListById',
+          currentBookCounters: 'currentBookCounters'
       }),
       illustrationChaged() {
         return this.$refs.illustrationInput.image
@@ -1170,12 +1171,6 @@ export default {
             }
           });
         }
-    }
-
-    if (this.$refs.blockContent) {
-      this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-        flag.removeEventListener('click', this.handleFlagClick);
-      });
     }
   },
   destroyed: function () {
@@ -1565,9 +1560,6 @@ export default {
               if (this.$refs.blocks[partIdx].$refs.blockContent) {
                 this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = part.content;
                 this.block.setPartContent(partIdx, part.content);
-                Vue.nextTick(() => {
-                  this.$refs.blocks[partIdx].addContentListeners();
-                });
               }
               this.$refs.blocks[partIdx].isIllustrationChanged = false;
               if (this.$refs.blocks[partIdx].$refs.blockFlagPopup) {
@@ -1847,7 +1839,7 @@ export default {
             }
             return updateTask
               .then(() => {
-
+                return Promise.resolve();
               });
           }
         }
@@ -1945,6 +1937,7 @@ export default {
             if (this.isAudioEditing) {
               this.$root.$emit('for-audioeditor:set-process-run', false);
             }
+            return Promise.resolve();
           });
       },
       saveBlockPart(blockPart, blockPartIdx, realign) {
@@ -2010,11 +2003,13 @@ export default {
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
               this.$refs.blocks[blockPartIdx].isSaving = false;
             }
+            return Promise.resolve();
           })
           .catch(err => {
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
               this.$refs.blocks[blockPartIdx].isSaving = false;
             }
+            return Promise.reject(err);
           })
       },
       assembleBlockProofread() {
@@ -2045,6 +2040,7 @@ export default {
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
+            return Promise.resolve();
           })
           .catch(err => {
             return Promise.reject(err);
@@ -3814,9 +3810,6 @@ export default {
             //console.log('Selection changed.');
             handler(this.block._id, this.$refs.blockContent);
           });
-          this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-            flag.addEventListener('click', this.handleFlagClick);
-          });
         }
         if (this.mode !== 'narrate') {
           if (this.block && this.block.footnotes) {
@@ -3982,6 +3975,15 @@ export default {
           return editing;
         }
         return false;
+      },
+      countVoiceworksForRemove(blockType, isApproved = null) {
+        let filters = {
+          'voiceworks_for_remove': {
+            type: blockType
+          }
+        };
+        if (isApproved !== null) filters['voiceworks_for_remove']['status.marked'] = isApproved;
+        return this.setCurrentBookCounters([filters]);
       }
   },
   watch: {
@@ -4187,13 +4189,6 @@ export default {
       'block.flags': {
         handler(val) {
           if (this.isCompleted) {
-            Vue.nextTick(() => {
-              if (this.$refs.blockContent) {
-                this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-                  flag.addEventListener('click', this.handleFlagClick);
-                });
-              }
-            });
             this.updateFlagStatus(this.block._id);
           }
         }
@@ -4245,7 +4240,7 @@ export default {
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
         }
-      },
+      }/*,
       'isSaving': {
         handler(val) {
           if (!val && this.$refs.blocks) {
@@ -4263,7 +4258,7 @@ export default {
             }
           }
         }
-      },
+      }*/,
       'block.language' : {
         handler(val) {
           this.destroyEditor();
@@ -4274,6 +4269,17 @@ export default {
         handler(val) {
           this.destroyEditor();
           this.initEditor(true);
+        }
+      },
+      'voiceworkUpdateType' : {
+        handler(val) {
+          if (val !== 'single') {
+            //this.voiceworkUpdating = true;
+            this.countVoiceworksForRemove(this.block.type, (val === 'unapproved' ? false: null))
+            .then((res)=>{
+              //this.voiceworkUpdating = false;
+            })
+          }
         }
       }
 
@@ -5070,6 +5076,69 @@ export default {
     .modal-header {
       padding-left: 15px;
       padding-right: 15px;
+    }
+  }
+
+  .vue-js-modal {
+    .modal-header {
+      padding-left: 15px;
+      padding-right: 15px;
+      padding-top: 5px;
+    }
+    .modal-footer {
+      padding: 0;
+      &.vue-dialog-buttons {
+        display: flex;
+        flex: 0 1 auto;
+        width: 100%;
+        height: 40px;
+        border-top: 1px solid #eee;
+        .btn {
+          flex: 1 1 50%;
+          cursor: pointer;
+          box-sizing: border-box;
+          height: 40px;
+        }
+        .btn-cancel {
+          font-size: 12px;
+          background: transparent;
+        }
+      }
+    }
+    .modal-body {
+      .modal-text {
+        margin-bottom: 10px;
+      }
+      .modal-content-flex {
+        display: flex;
+        flex-direction: row;
+        .modal-content-flex-block {
+          margin-right: 30px;
+        }
+        label {
+          display: block;
+        }
+        .modal-content-empty {
+          white-space: pre-wrap;
+          margin-top: 2px;
+        }
+      }
+      input[type="radio"] {
+        margin-right: 5px;
+        position: relative;
+        top: 2px;
+      }
+    }
+    .attention-msg {
+      color: transparent;
+      &.visible {
+        color: rgb(255, 86, 48);
+      }
+      &.red {
+        color: rgb(255, 86, 48);
+        /*color: red;*/
+        /*font-weight: bold;*/
+      }
     }
   }
 

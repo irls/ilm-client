@@ -704,9 +704,13 @@ export default {
           content = content.replace(rg, '$1$2<br><br>');*/
           let parts = [];
           let lettersPattern = 'a-zA-Zа-яА-Я\\u0600-\\u06FF';
-          let regEx = new RegExp(`[\.\!\?\…\؟]+[^${lettersPattern}]*?( |[\r\n]|<br[^>]*>)(?![\\W]*[a-z])`, 'mg')
+          let regEx = new RegExp(`[\.\!\?\…\؟]+[^${lettersPattern}]*?( |[\r\n]|<br[^>]*>|<\/[^>]+>)(?![\\W]*[a-z])`, 'mg')
           let regExAbbr = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
           let regExColon = new RegExp(`[\:\;\؛]\\W* `, 'mg');
+          if (this.getBlockLang !== 'en') {
+            regEx = new RegExp(`[\.\!\?\…\.\!\…\؟] `, 'mg');
+            regExColon = new RegExp(`[\:\;\؛] `, 'mg');
+          }
           let regExLetters = new RegExp(`[${lettersPattern}]`);
           let regExNewline = new RegExp(`[^\.\!\?\…\؟]<br[^>]*>[^${lettersPattern}]*$`);
           //var regExLower = new RegExp('$([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])')
@@ -914,11 +918,7 @@ export default {
         }
     }
 
-    if (this.$refs.blockContent) {
-      this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-        flag.removeEventListener('click', this.handleFlagClick);
-      });
-    }
+    $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', '[data-flag]', this.handleFlagClick);
     if (this.isRecording) {
       this.cancelRecording();
     }
@@ -1172,7 +1172,7 @@ export default {
 
           
           if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor(':not(.-langftn-fa).content-wrap-footn' , {
+            this.editorFootn = new MediumEditor(':not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn' , {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
@@ -1340,8 +1340,11 @@ export default {
       assembleBlockProxy: function (check_realign = true, realign = false) {
         let flagUpdate = this.hasChange('flags') ? this.block.flags : null;
         if (flagUpdate) {
-          this.isChanged = false;
           return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
+            .then(() => {
+              this.isChanged = false;
+              return Promise.resolve();
+            })
         }
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
@@ -1352,12 +1355,15 @@ export default {
           realign = true;
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
-        this.isChanged = false;
         this.isSaving = true;
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
-        return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign);
+        return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign)
+          .then(() => {
+            this.isChanged = false;
+            return Promise.resolve();
+          });
       },
 
       assembleBlock: function(partUpdate = null, realign = false) {
@@ -1945,7 +1951,6 @@ export default {
               }
             });
             windowSelRange.insertNode(flag);
-            flag.addEventListener('click', this.handleFlagClick);
             this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
           } else {
             this.block.addFlag(existsFlag.dataset.flag, windowSelRange, type, this.mode);
@@ -2102,9 +2107,9 @@ export default {
         this.flagsSel.parts[partIdx].status = 'open';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
-        //this.isChanged = true;
-        //this.pushChange('flags');
-        this.$emit('reopenFlagPart');
+        this.isChanged = true;
+        this.pushChange('flags');
+        //this.$emit('reopenFlagPart');
       },
 
       hideFlagPart: function(ev, partIdx) {
@@ -2973,9 +2978,8 @@ export default {
             //console.log('Selection changed.');
             handler(this.block._id, this.$refs.blockContent);
           });
-          this.$refs.blockContent.querySelectorAll('[data-flag]').forEach((flag)=>{
-            flag.addEventListener('click', this.handleFlagClick);
-          });
+          $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', '[data-flag]', this.handleFlagClick);
+          $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', '[data-flag]', this.handleFlagClick);
         }
         if (this.mode !== 'narrate') {
           if (this.block && this.block.footnotes) {
@@ -3078,9 +3082,10 @@ export default {
               this.block.setPartManualBoundaries(this.blockPartIdx, part.manual_boundaries || []);
               //return this.putBlock(this.block);
               if (!realign) {
+                part._id = this.check_id;
                 this.$root.$emit('for-audioeditor:load',
                 this.blockAudiosrc('m4a'),
-                this.block.getPartContent(this.blockPartIdx), false);
+                this.block.getPartContent(this.blockPartIdx), false, part);
               }
               this.blockAudio.map = this.blockContent();
               this.blockAudio.src = this.blockAudiosrc('m4a');

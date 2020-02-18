@@ -128,6 +128,7 @@
   import v_modal from 'vue-js-modal';
   import {mapActions, mapGetters} from 'vuex'
   import _ from 'lodash';
+  import unescape from 'lodash/unescape';
   //import Peaks from 'peaks.js';
   var WaveformPlaylist = require('waveform-playlist');
   var Draggable = require ('draggable')
@@ -1354,12 +1355,13 @@
           let match;
           let tokens = [];
           let currentLength = 0;
+          text = text.replace(/[\r\n]/img, '');// remove line breaks for clear regular expressions
           while((match = textRg.exec(text))) {
             let word = match[2];
             if (currentLength < match.index) {
               word = text.substr(currentLength, match.index - currentLength) + word;
             }
-            word = word.replace(/<[^>]+?>/img, '');
+            word = unescape(word.replace(/<[^>]+?>/img, ''));
             currentLength = match.index + match[0].length;
             let map = match[1] && match[1].indexOf(',') !== -1 ? match[1].split(',') : [0, 0]
             map[0] = parseInt(map[0]) / 1000
