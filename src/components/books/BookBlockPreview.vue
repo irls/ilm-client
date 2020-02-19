@@ -23,6 +23,7 @@
               :blockPartIdx="blockPartIdx"
               :id="'v-' + blockId + '-' + blockPartIdx"
               :isSplittedBlock="isSplittedBlock"
+              :isCompleted="isCompleted"
               ></BookBlockPartPreview>
           </template>
           <!--<div :class="['table-row ilm-block']">-->
@@ -32,7 +33,7 @@
             <div class="table-body footnote"
               v-for="(footnote, ftnIdx) in block.footnotes">
 
-              <div v-if="allowEditing" :class="['table-row controls-top', {'completed': isCompleted}]">
+              <div :class="['table-row controls-top', {'completed': isCompleted}]">
               </div>
 
               <div class="table-row">
@@ -136,11 +137,6 @@ import { mapGetters }     from 'vuex';
           return this.block.getIllustration();
         }
       },
-      allowEditing: { cache: false,
-        get() {
-          return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
-        }
-      },
       blockParts: {
         get() {
           if (!this.block) {
@@ -195,12 +191,7 @@ import { mapGetters }     from 'vuex';
             return this.meta.language;
           }
         }
-      },
-      allowEditing: {
-        get() {
-          return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
-        }
-      },
+      }
     },
     methods: {
       getFtnLang: function(ftnLang) {

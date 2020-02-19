@@ -966,7 +966,7 @@ export default {
           book: 'currentBook',
           meta: 'currentBookMeta',
           watchBlk: 'contentDBWatch',
-          tc_currentBookTasks: 'tc_currentBookTasks',
+          //tc_currentBookTasks: 'tc_currentBookTasks',
           authors: 'authors',
           isEditor: 'isEditor',
           isBlocked: 'isBlocked',
@@ -2026,10 +2026,10 @@ export default {
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
-            if (this.isCompleted) {
-              this.tc_loadBookTask(this.block.bookid);
-              this.getCurrentJobInfo();
-            }
+            //if (this.isCompleted) {
+              //this.tc_loadBookTask(this.block.bookid);
+              //this.getCurrentJobInfo();
+            //}
           })
           .catch(err => {
             return Promise.reject(err);
@@ -3994,7 +3994,7 @@ export default {
           if (val === false) {
             this.$parent.refreshTmpl();
             if (this.isCompleted) {
-              this.tc_loadBookTask();
+              //this.tc_loadBookTask();
               this.getCurrentJobInfo();
             }
           }

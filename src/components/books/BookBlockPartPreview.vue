@@ -80,7 +80,7 @@ import {mapGetters} from 'vuex'
   export default {
     name: 'book-block-preview',
     props: [
-      'blockRid', 'blockO', 'block', 'blockPart', 'blockPartIdx', 'isSplittedBlock'
+      'blockRid', 'blockO', 'block', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'isCompleted'
     ],// loaded property is necessary for updating first part of loaded blocks, VueJS is not updating automatically
     data() {
       return {
@@ -144,11 +144,6 @@ import {mapGetters} from 'vuex'
           }
         },
         cache: false
-      },
-      isCompleted: { cache: false,
-        get() {
-          return this.block ? this.tc_isCompleted(this.block) : true;
-        }
       },
       isIllustrationChanged: { cache: true,
         get() {

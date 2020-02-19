@@ -587,7 +587,7 @@ export default {
       currentBookAudioExportAllowed: 'currentBookAudioExportAllowed',
       currentBookCounters: 'currentBookCounters',
       tc_currentBookTasks: 'tc_currentBookTasks',
-      tc_tasksByBlock: 'tc_tasksByBlock',
+      //tc_tasksByBlock: 'tc_tasksByBlock',
       storeList: 'storeList',
       storeListO: 'storeListO',
       blockSelection: 'blockSelection',
