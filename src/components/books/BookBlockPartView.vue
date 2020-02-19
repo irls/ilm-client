@@ -287,7 +287,6 @@
     <div class="table-row controls-bottom" v-if="isSplittedBlock">
       <div class="controls-bottom-wrapper">
         <div class="par-ctrl -hidden -right">
-          <!--<span>isCompleted: {{isCompleted}}</span>-->
           <div class="save-block -right" @click="discardBlock"
                v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
             Discard
@@ -403,7 +402,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -612,11 +611,6 @@ export default {
         get() {
 
           return this.mode != 'edit' || !this.block || this.tc_isSpotCheckDisabled(this.block);
-        }
-      },
-      isCompleted: { cache: false,
-        get() {
-          return this.block ? this.tc_isCompleted(this.block) : true;
         }
       },
       displaySelectionStart() {

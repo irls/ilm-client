@@ -230,6 +230,7 @@
               :discardAudioEdit="discardAudioEdit"
               :stopRecording="stopRecording"
               :delFlagPart="delFlagPart"
+              :isCompleted="isCompleted"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"

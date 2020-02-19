@@ -49,9 +49,6 @@ export default {
       }
       return task;
     },
-    tc_isShowRejectBlockAction(blockid) {
-      return this.tc_hasTask('content_approve') && this.tc_currentBookTasks.rejected_blocks.content.indexOf(blockid) === -1;
-    },
     tc_isShowEdit(blockid) {
       if (this.adminOrLibrarian || this.adminOrProofer) {
         return true;
