@@ -4852,6 +4852,19 @@ export default {
             transparent
         );
       }
+      w.pinned-word {
+        position: relative;
+        &:after {
+          content: " ";
+          position: absolute;
+          color: #000;
+          top: 30%;
+          left: 0;
+          width: 100%;
+          height: 70%;
+          background-color: rgba(0, 255, 0, 0.2);
+        }
+      }
 
       [data-idx], [data-pg] {
         w:not([data-map]) {

@@ -879,6 +879,52 @@ export default {
 //       Vue.nextTick(() => {
 //
 //       });
+      //if (this.block.blockid === '1-fa_fa-bl2s') {
+        //console.log(this.$refs.blockContent.querySelectorAll(`w[data-map]`))
+      //}
+      this.block.manual_boundaries.forEach(mb => {
+        /*this.$refs.blockContent.querySelectorAll(`w[data-map]`).some((el, i) => {
+          console.log(el.getAttribute('data-map'), i);
+          return true;
+        });*/
+        let list = this.$refs.blockContent.querySelectorAll(`w[data-map]`).values();
+          let el = list.next();
+          let found = false;
+          while (el && !el.done && !found) {
+            let map = el.value.getAttribute('data-map');
+            if (map) {
+              let boundaries = map.split(',');
+              if (boundaries.length === 2 && parseInt(boundaries[0]) + parseInt(boundaries[1]) === parseInt(mb)) {
+                console.log(el.value, map,);
+                el.value.classList.add('pinned-word');
+                found = true;
+              }
+            }
+            el = list.next();
+          }
+        /*this.$refs.blockContent.querySelectorAll(`w[data-map*="${mb},"`).forEach((el, i) => {
+            //console.log($(el).prev('w[data-map]'));
+            //this.$refs.blockContent
+            console.log(el);
+            let prev = $(el).prev('w[data-map]');
+            while (prev && prev.length > 0) {
+              console.log(prev[0]);
+              prev = $(prev).prev('w[data-map]');
+            }
+            console.log('==================================');
+        });*/
+        /*this.$refs.blockContent.querySelectorAll(`w[data-map*="${mb},"`).forEach((el, i) => {
+          console.log(el, this.$refs.blockContent.querySelectorAll(`w[data-map*=""`).findIndex(el));
+          //let prev = el.previousElementSibling;
+          //let prev = el.previousSibling;
+          //while (prev ) {
+            //console.log(prev, prev.nodeType, prev.parentElement, prev.parentElement.nodeType);
+            //prev = prev.previousElementSibling;
+            //prev = prev.previousSibling;
+          //}
+          //console.log('=====================');
+        });*/
+      });
   },
   beforeDestroy: function () {
 //     console.log('beforeDestroy', this.block._id);
