@@ -2058,6 +2058,7 @@ export default {
         //console.log(content)
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
         content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+        content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
@@ -4854,11 +4855,12 @@ export default {
       }
       w.pinned-word {
         position: relative;
+        background: none;
         &:after {
           content: " ";
           position: absolute;
           color: #000;
-          top: 30%;
+          top: 25%;
           left: 0;
           width: 100%;
           height: 70%;

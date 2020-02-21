@@ -879,52 +879,7 @@ export default {
 //       Vue.nextTick(() => {
 //
 //       });
-      //if (this.block.blockid === '1-fa_fa-bl2s') {
-        //console.log(this.$refs.blockContent.querySelectorAll(`w[data-map]`))
-      //}
-      this.block.manual_boundaries.forEach(mb => {
-        /*this.$refs.blockContent.querySelectorAll(`w[data-map]`).some((el, i) => {
-          console.log(el.getAttribute('data-map'), i);
-          return true;
-        });*/
-        let list = this.$refs.blockContent.querySelectorAll(`w[data-map]`).values();
-          let el = list.next();
-          let found = false;
-          while (el && !el.done && !found) {
-            let map = el.value.getAttribute('data-map');
-            if (map) {
-              let boundaries = map.split(',');
-              if (boundaries.length === 2 && parseInt(boundaries[0]) + parseInt(boundaries[1]) === parseInt(mb)) {
-                console.log(el.value, map,);
-                el.value.classList.add('pinned-word');
-                found = true;
-              }
-            }
-            el = list.next();
-          }
-        /*this.$refs.blockContent.querySelectorAll(`w[data-map*="${mb},"`).forEach((el, i) => {
-            //console.log($(el).prev('w[data-map]'));
-            //this.$refs.blockContent
-            console.log(el);
-            let prev = $(el).prev('w[data-map]');
-            while (prev && prev.length > 0) {
-              console.log(prev[0]);
-              prev = $(prev).prev('w[data-map]');
-            }
-            console.log('==================================');
-        });*/
-        /*this.$refs.blockContent.querySelectorAll(`w[data-map*="${mb},"`).forEach((el, i) => {
-          console.log(el, this.$refs.blockContent.querySelectorAll(`w[data-map*=""`).findIndex(el));
-          //let prev = el.previousElementSibling;
-          //let prev = el.previousSibling;
-          //while (prev ) {
-            //console.log(prev, prev.nodeType, prev.parentElement, prev.parentElement.nodeType);
-            //prev = prev.previousElementSibling;
-            //prev = prev.previousSibling;
-          //}
-          //console.log('=====================');
-        });*/
-      });
+      //this.showPinnedInText();
   },
   beforeDestroy: function () {
 //     console.log('beforeDestroy', this.block._id);
@@ -1565,6 +1520,7 @@ export default {
         }
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
         content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+        content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
@@ -2587,6 +2543,7 @@ export default {
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            this.showPinnedInText();
             //this.pushChange('content');
 
 
@@ -2648,6 +2605,7 @@ export default {
                 this.isAudioChanged = false;
                 this.blockAudio.map = this.blockContent();
                 this.blockAudio.src = this.blockAudiosrc('m4a');
+                //this.showPinnedInText();
                 return Promise.resolve();
               });
           } else {
@@ -2707,6 +2665,7 @@ export default {
                 this.unsetChange('content');
                 this.unsetChange('manual_boundaries');
                 this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
+                //this.showPinnedInText();
             });
         }
       },
@@ -2766,6 +2725,7 @@ export default {
             if (changed) {
               this.isAudioChanged = true;
             }
+            this.showPinnedInText();
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
           }
         }
@@ -3201,6 +3161,40 @@ export default {
           textRange.select();
           return textRange;
         }
+      },
+      
+      showPinnedInText() {
+        if (this.$refs.blockContent && Array.isArray(this.blockPart.manual_boundaries)) {
+          Vue.nextTick(() => {
+            //if (this.block.blockid === '1306_s_0005_en-bl37') {
+              //console.time('showPinnedInText');
+            //}
+            this.$refs.blockContent.querySelectorAll('.pinned-word').forEach(el => {
+              el.classList.remove('pinned-word');
+            });
+            let list = this.$refs.blockContent.querySelectorAll(`w[data-map]`).values();
+            let el = list.next();
+            this.blockPart.manual_boundaries.sort((a, b) => {return a - b;}).forEach(mb => {
+              let found = false;
+              while (el && !el.done && !found) {
+                let map = el.value.getAttribute('data-map');
+                if (map) {
+                  let boundaries = map.split(',');
+                  if (boundaries.length === 2 && parseInt(boundaries[0]) + parseInt(boundaries[1]) === parseInt(mb)) {
+                    el.value.classList.add('pinned-word');
+                    found = true;
+                  }
+                }
+                el = list.next();
+              }
+            });
+            //if (this.block.blockid === '1306_s_0005_en-bl37') {
+              //console.timeEnd('showPinnedInText');
+              //var err = new Error();
+              //console.log(err.stack);
+            //}
+          });
+        }
       }
 
   },
@@ -3260,6 +3254,7 @@ export default {
               this.infoMessage = 'Audio updated';
             }*/
           }
+          this.showPinnedInText();
         }
       },
       'isChanged' : {
