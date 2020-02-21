@@ -963,7 +963,7 @@ export default {
         if (this.isProofreadUnassigned()) {
           return true;
         }
-        if (this.tc_isNarrateUnassigned(this.block) && flagType === 'editor') {
+        if (this.tc_isNarrateUnassigned(this.block) && this.tc_allowNarrateUnassigned(this.block) && flagType === 'editor') {
           return true;
         }
         //if (this.tc_allowAdminFlagging(this.block, flagType)) {
