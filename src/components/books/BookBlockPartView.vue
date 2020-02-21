@@ -963,7 +963,7 @@ export default {
         if (this.isProofreadUnassigned()) {
           return true;
         }
-        if (this.tc_isNarrateUnassigned(this.block) && this.tc_allowNarrateUnassigned(this.block) && flagType === 'editor') {
+        if (this.tc_isNarrateUnassigned(this.block) && flagType === 'editor') {
           return true;
         }
         //if (this.tc_allowAdminFlagging(this.block, flagType)) {
@@ -1969,6 +1969,9 @@ export default {
       },
 
       addFlagPart: function(content, type = 'editor') {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         this.block.addPart(this.flagsSel._id, content, type, this.mode);
 
         this.updateFlagStatus(this.flagsSel._id);

@@ -4003,6 +4003,7 @@ export default {
       
       checkAllowNarrateUnassigned() {
         if (!this.tc_allowNarrateUnassigned(this.block)) {
+          this.$root.$emit('closeFlagPopup', null);
           this.$root.$emit('show-modal', {
             title: 'Unable to re-narrate',
             text: `The block can't be re-narrated because it is currently being edited.`,
