@@ -479,9 +479,9 @@ export default {
     },
     tc_isNeedWorkDisabled(block, mode) {
       let task = this.tc_getBlockTask(block.blockid);
-      if (!task) {
-        task = this.tc_getBlockTaskOtherRole(block.blockid);
-      }
+      //if (!task) {
+        //task = this.tc_getBlockTaskOtherRole(block.blockid);
+      //}
       if (!task) {
         return true;
       }

@@ -2074,6 +2074,11 @@ export const store = new Vuex.Store({
                 return t.blockid !== task.blockid;
               });
             }
+            if (Array.isArray(state.currentJobInfo.can_resolve_tasks)) {
+              state.currentJobInfo.can_resolve_tasks = state.currentJobInfo.can_resolve_tasks.filter((t, i) => {
+                return t.blockid !== task.blockid;
+              });
+            }
             if (state.tc_tasksByBlock[task.blockid]) {
               delete state.tc_tasksByBlock[task.blockid];
             }
