@@ -2112,7 +2112,11 @@ export default {
       },
 
       reopenFlagPart: function(ev, partIdx) {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         this.flagsSel.parts[partIdx].status = 'open';
+        this.flagsSel.parts[partIdx].isReopen = true;
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
         //this.isChanged = true;

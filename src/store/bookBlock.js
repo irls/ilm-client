@@ -329,6 +329,7 @@ class BookBlock {
                 comment: part.newComment
               });
             part.newComment = '';
+            delete part.isReopen;
           });
         else this.flags.splice(flagIdx, 1);
       });

@@ -615,7 +615,7 @@ export default {
       }
       let flags = Array.isArray(block.flags) ? block.flags.filter(flag => {
         return Array.isArray(flag.parts) && !flag.isNew ? flag.parts.find(p => {
-          return p.status === 'open';
+          return p.status === 'open' && !p.isReopen;
         }) : false;
       }) : [];
       if (flags.length > 0) {

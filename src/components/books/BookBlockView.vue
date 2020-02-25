@@ -1271,7 +1271,7 @@ export default {
                   }
                   break;
                 case 'proofer':
-                  if (this.mode !== 'proofread') {
+                  if (this.mode === 'edit') {
                     return false;
                   }
                   break;
@@ -1282,14 +1282,14 @@ export default {
                   break;
               }
             } else {
-              if (this.mode !== 'proofread' && part.type === 'editor') {
+              if (this.mode === 'edit' && part.type === 'editor') {
                 return false;
               }
               if (this.mode === 'narrate' && part.type === 'narrator') {
                 return false;
               }
             }
-            return part.status == 'resolved' && !part.collapsed && (!this.isCompleted || this.isProofreadUnassigned());
+            return part.status == 'resolved' && !part.collapsed && (!this.isCompleted || this.isProofreadUnassigned() || this.tc_isNarrateUnassigned(this.block));
           }
         }
         return false;
@@ -2857,7 +2857,11 @@ export default {
       },
 
       reopenFlagPart: function(ev, partIdx) {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         this.flagsSel.parts[partIdx].status = 'open';
+        this.flagsSel.parts[partIdx].isReopen = true;
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
         this.isChanged = true;
