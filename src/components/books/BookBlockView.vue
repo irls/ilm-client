@@ -1571,6 +1571,7 @@ export default {
               if (this.$refs.blocks[partIdx].$refs.blockContent) {
                 this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = part.content;
                 this.block.setPartContent(partIdx, part.content);
+                this.$refs.blocks[partIdx].showPinnedInText();
               }
               this.$refs.blocks[partIdx].isIllustrationChanged = false;
               if (this.$refs.blocks[partIdx].$refs.blockFlagPopup) {
@@ -4865,18 +4866,7 @@ export default {
         );
       }
       w.pinned-word {
-        position: relative;
-        background: none;
-        &:after {
-          content: " ";
-          position: absolute;
-          color: #000;
-          top: 25%;
-          left: 0;
-          width: 100%;
-          height: 70%;
-          background-color: rgba(0, 255, 0, 0.2);
-        }
+        background: linear-gradient(to bottom, transparent 0%, rgba(0, 255, 0, 0.3) 30%, rgba(0, 255, 0, 0.3) 90%, transparent 100%);
       }
 
       [data-idx], [data-pg] {
