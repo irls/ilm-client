@@ -107,7 +107,7 @@
                       <template v-if="block.type != 'illustration' && block.type != 'hr' && !proofreadModeReadOnly">
                       <li @click="showModal('block-html')">
                         <i class="fa fa-code" aria-hidden="true"></i>
-                        Edit HTML</li>
+                        Display block HTML</li>
                       <li class="separator"></li>
                       </template>
                     </template>
@@ -512,12 +512,12 @@
     <div v-on:wheel.stop="">
       <div class="modal-header">
         <h4 class="modal-title">
-          Block: {{((block._id).split('-bl').length > 1) ? 'bl'+(block._id).split('-bl')[1] : block._id}}
+          Block: {{block.blockid}}
         </h4>
         <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
       </div>
       <div class="modal-body">
-        <textarea :ref="'block-html' + block._id" class="block-html"></textarea>
+        <textarea :ref="'block-html' + block._id" disabled class="block-html" v-model="block.content"></textarea>
       </div>
       <div class="modal-footer">
           <button class="btn btn-default" v-on:click="hideModal('block-html')">Cancel</button>
