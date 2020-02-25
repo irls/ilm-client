@@ -511,17 +511,21 @@
     <modal :name="'block-html' + block._id" height="auto" width="90%" class="block-html-modal" :clickToClose="false" @opened="setHtml">
     <div v-on:wheel.stop="">
       <div class="modal-header">
-        <h4 class="modal-title">
-          Block: {{block.blockid}}
-        </h4>
+        <div>
+          <h4 class="modal-title">Block: {{block.blockid}}</h4>
+        </div>
+        <div>
+          <h4 class="modal-title">
+            <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Block audio URL</a>
+          </h4>
+        </div>
         <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
       </div>
       <div class="modal-body">
-        <textarea :ref="'block-html' + block._id" disabled class="block-html" v-model="block.content"></textarea>
+        <textarea :ref="'block-html' + block.blockid" disabled class="block-html"></textarea>
       </div>
       <div class="modal-footer">
-          <button class="btn btn-default" v-on:click="hideModal('block-html')">Cancel</button>
-          <button class="btn btn-primary" v-on:click="setContent()">Apply</button>
+          <button class="btn btn-default" v-on:click="hideModal('block-html')">Close</button>
       </div>
     </div>
     </modal>
@@ -970,6 +974,17 @@ export default {
           } else {
             return this.meta.language;
           }
+        }
+      },
+      compressedAudioUrl: {
+        cache: false,
+        get() {
+          let audio = this.block.getAudiosrc('m4a', false);
+          if (!audio) {
+            return false;
+          }
+          let format = this.block.audiosrc_ver && this.block.audiosrc_ver['m4a'] ? 'm4a' : 'flac';
+          return `${this.API_URL}books/${this.block.bookid}/blocks/${this.block.blockid}/audio_download/${format}`;
         }
       },
       ...mapGetters({
@@ -3774,9 +3789,13 @@ export default {
         }
       },
       setHtml() {
-        if (this.$refs.blockContent) {
-          this.$refs['block-html' + this.block._id].value = this.$refs.blockContent.innerHTML;
+        let content = '';
+        if (Array.isArray(this.$refs.blocks)) {
+          this.$refs.blocks.forEach(blk => {
+            content += blk.blockHTMLPreview;
+          });
         }
+        this.$refs['block-html' + this.block.blockid].value = content;
       },
       setContent() {
         //console.log('value', this.$refs['block-html' + this.block._id].value)
@@ -5163,7 +5182,13 @@ export default {
       }
       .modal-close-button {
         float: right;
-        margin-right: 15px;
+        width: 5%;
+      }
+      div {
+        display: inline-block;
+        width: auto;
+        white-space: nowrap;
+        margin: 0px 10px;
       }
     }
     .modal-body {

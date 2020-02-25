@@ -265,23 +265,6 @@
         <!--<div :class="['table-body', '-content',-->
     </div>
     <!--<div :class="['table-cell'-->
-    <modal :name="'block-html' + block._id" height="auto" width="90%" class="block-html-modal" :clickToClose="false" @opened="setHtml">
-    <div v-on:wheel.stop="">
-      <div class="modal-header">
-        <h4 class="modal-title">
-          Block: {{((block._id).split('-bl').length > 1) ? 'bl'+(block._id).split('-bl')[1] : block._id}}
-        </h4>
-        <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
-      </div>
-      <div class="modal-body">
-        <textarea :ref="'block-html' + block._id" class="block-html"></textarea>
-      </div>
-      <div class="modal-footer">
-          <button class="btn btn-default" v-on:click="hideModal('block-html')">Cancel</button>
-          <button class="btn btn-primary" v-on:click="setContent()">Apply</button>
-      </div>
-    </div>
-    </modal>
   </div>
   <div class="table-body">
     <div class="table-row controls-bottom" v-if="isSplittedBlock">
@@ -772,6 +755,12 @@ export default {
           return content;
         },
         cache: false
+      },
+      blockHTMLPreview: {
+        cache: false,
+        get() {
+          return this.$refs && this.$refs.blockContent ? this.$refs.blockContent.innerHTML.replace(/<f[^>]+?>(.*?)<\/f>/img, '$1') : '';
+        }
       },
       ...mapGetters({
           auth: 'auth',
@@ -2928,11 +2917,6 @@ export default {
         if (index !== -1) {
           this.changes.splice(index, 1);
           this.$emit('hasChanges', change, false);
-        }
-      },
-      setHtml() {
-        if (this.$refs.blockContent) {
-          this.$refs['block-html' + this.block._id].value = this.$refs.blockContent.innerHTML;
         }
       },
       setContent() {
