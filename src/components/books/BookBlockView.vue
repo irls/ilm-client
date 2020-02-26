@@ -3790,12 +3790,14 @@ export default {
       },
       setHtml() {
         let content = '';
-        if (Array.isArray(this.$refs.blocks)) {
-          this.$refs.blocks.forEach(blk => {
-            content += blk.blockHTMLPreview;
-          });
+        if (this.isSplittedBlock) {
+          content = this.block.content;
+        } else {
+          if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
+            content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
+          }
         }
-        this.$refs['block-html' + this.block.blockid].value = content;
+        this.$refs['block-html' + this.block.blockid].value = content.replace(/<f[^>]+?>(.*?)<\/f>/img, '$1');
       },
       setContent() {
         //console.log('value', this.$refs['block-html' + this.block._id].value)

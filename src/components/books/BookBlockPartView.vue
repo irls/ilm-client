@@ -756,12 +756,6 @@ export default {
         },
         cache: false
       },
-      blockHTMLPreview: {
-        cache: false,
-        get() {
-          return this.$refs && this.$refs.blockContent ? this.$refs.blockContent.innerHTML.replace(/<f[^>]+?>(.*?)<\/f>/img, '$1') : '';
-        }
-      },
       ...mapGetters({
           auth: 'auth',
           book: 'currentBook',
