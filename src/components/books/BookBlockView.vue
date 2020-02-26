@@ -509,7 +509,7 @@
       </div>
     </modal>
     <modal :name="'block-html' + block._id" height="auto" width="90%" class="block-html-modal" :clickToClose="false" @opened="setHtml">
-    <div v-on:wheel.stop="">
+    <div v-on:wheel.stop="" :class="['-langblock-' + getBlockLang]">
       <div class="modal-header">
         <div>
           <h4 class="modal-title">Block: {{block.blockid}}</h4>
