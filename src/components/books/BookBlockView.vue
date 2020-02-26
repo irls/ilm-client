@@ -512,7 +512,7 @@
     <div v-on:wheel.stop="" :class="['-langblock-' + getBlockLang]">
       <div class="modal-header">
         <div>
-          <h4 class="modal-title">Block: {{block.blockid}}</h4>
+          <h4 class="modal-title">Block: {{((block._id).split('-bl').length > 1) ? 'bl'+(block._id).split('-bl')[1] : block._id}}</h4>
         </div>
         <div>
           <h4 class="modal-title">
