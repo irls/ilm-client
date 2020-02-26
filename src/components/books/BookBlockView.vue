@@ -512,7 +512,7 @@
     <div v-on:wheel.stop="" :class="['-langblock-' + getBlockLang]">
       <div class="modal-header">
         <div>
-          <h4 class="modal-title">Block: {{((block._id).split('-bl').length > 1) ? 'bl'+(block._id).split('-bl')[1] : block._id}}</h4>
+          <h4 class="modal-title">Block: {{shortBlockid}}</h4>
         </div>
         <div>
           <h4 class="modal-title">
@@ -985,6 +985,12 @@ export default {
           }
           let format = this.block.audiosrc_ver && this.block.audiosrc_ver['m4a'] ? 'm4a' : 'flac';
           return `${this.API_URL}books/${this.block.bookid}/blocks/${this.block.blockid}/audio_download/${format}`;
+        }
+      },
+      shortBlockid: {
+        cache: false,
+        get() {
+          return ((this.block.blockid).split('-bl').length > 1) ? 'bl'+(this.block.blockid).split('-bl')[1] : this.block.blockid;
         }
       },
       ...mapGetters({
@@ -3797,7 +3803,14 @@ export default {
             content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
           }
         }
-        this.$refs['block-html' + this.block.blockid].value = content.replace(/<f[^>]+?>(.*?)<\/f>/img, '$1');
+        content = content.replace(/<f[^>]+?>(.*?)<\/f>/img, '$1');
+        let audiosrc = this.block.getAudiosrc('m4a', true) || '';
+        if (audiosrc) {
+          audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
+        }
+        this.$refs['block-html' + this.block.blockid].value = `<div id="${this.shortBlockid}" data-audiosrc="${audiosrc}">
+  ${content}
+</div>`;
       },
       setContent() {
         //console.log('value', this.$refs['block-html' + this.block._id].value)
