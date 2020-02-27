@@ -990,7 +990,8 @@ export default {
       shortBlockid: {
         cache: false,
         get() {
-          return ((this.block.blockid).split('-bl').length > 1) ? 'bl'+(this.block.blockid).split('-bl')[1] : this.block.blockid;
+          let split = (this.block.blockid).split(/-|_/);
+          return (split.length > 1) ? split.pop() : this.block.blockid;
         }
       },
       ...mapGetters({
