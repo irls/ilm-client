@@ -18,18 +18,16 @@ export default {
   mixins: [api_config, access],
   methods: {
     tc_hasTask(type) {
-      return this.$store.state.tc_currentBookTasks.assignments && this.$store.state.tc_currentBookTasks.assignments.indexOf(type) !== -1;
+      return this.tc_currentBookTasks.assignments && this.tc_currentBookTasks.assignments.indexOf(type) !== -1;
     },
     tc_getTask(type) {
-      let task = this.$store.state.tc_currentBookTasks.tasks.find((t) => {
+      let task = this.tc_currentBookTasks.tasks.find((t) => {
         return t.type == type
       })
       return task ? task : {}
     },
     tc_getBlockTask(blockid, mode = null) {
-      let task = this.$store.state.tc_currentBookTasks.tasks.find((t) => {
-        return t.blockid == blockid;
-      });
+      let task = this.tc_tasksByBlock[blockid];
       if (task && mode) {
         switch(mode) {
           case 'edit':
@@ -51,12 +49,6 @@ export default {
       }
       return task;
     },
-    tc_isShowRejectBlockAction(blockid) {
-      return this.tc_hasTask('content_approve') && this.$store.state.tc_currentBookTasks.rejected_blocks.content.indexOf(blockid) === -1;
-    },
-    tc_isShowCorrectBlockAction(blockid) {
-      return this.$store.state.tc_tasksByBlock[blockid] && this.$store.state.tc_tasksByBlock[blockid].type == 6
-    },
     tc_isShowEdit(blockid) {
       if (this.adminOrLibrarian || this.adminOrProofer) {
         return true;
@@ -68,9 +60,9 @@ export default {
     },
     tc_isCompleted(block) {
       let block_task = this.tc_getBlockTask(block.blockid);
-      if (!block_task) {
-        block_task = this.tc_getBlockTaskOtherRole(block.blockid);
-      }
+      //if (!block_task) {
+        //block_task = this.tc_getBlockTaskOtherRole(block.blockid);
+      //}
       if (block_task) {
         switch (this.bookMode) {
           case 'proofread':
@@ -97,7 +89,7 @@ export default {
         if (this.currentJobInfo.mastering && block.status) {
           return block.status.stage !== 'audio_mastering' || this.bookMode !== 'edit';
         }
-        return !this.tc_getBlockTask(block._id) && !this.tc_getBlockTaskOtherRole(block._id);
+        return !block_task;
       }
       return true;
     },
@@ -231,12 +223,10 @@ export default {
       return false;
     },
     tc_showBlockNarrate(block_id) {
-      if (!this.$store.state.tc_tasksByBlock[block_id]) {
+      if (!this.tc_tasksByBlock[block_id]) {
         return false;
       }
-      return this.$store.state.tc_tasksByBlock[block_id].find(t => {
-        return ['narrate-block', 'fix-block-narration'].indexOf(t.type) !== -1;
-      });
+      return ['narrate-block', 'fix-block-narration'].indexOf(this.tc_tasksByBlock[block_id].type) !== -1;
     },
     tc_hasBlockTask(block_id, type) {
       if (this.adminOrLibrarian) {
@@ -251,12 +241,10 @@ export default {
           }
         }
       }
-      if (!this.$store.state.tc_tasksByBlock[block_id]) {
+      if (!this.tc_tasksByBlock[block_id]) {
         return false;
       }
-      return this.$store.state.tc_tasksByBlock[block_id].find(t => {
-        return t.type === type;
-      });
+      return this.tc_tasksByBlock[block_id].type === type;
     },
     tc_displayAudiointegrationTab() {
       if (this.bookMode !== 'edit' || [
@@ -280,8 +268,8 @@ export default {
     },
     tc_getBlockTaskOtherRole(blockid, mode = null) {
       let task = false;
-      if (this.$store.state.tc_currentBookTasks.can_resolve_tasks) {
-        task = this.$store.state.tc_currentBookTasks.can_resolve_tasks.find((t) => {
+      if (this.tc_currentBookTasks.can_resolve_tasks) {
+        task = this.tc_currentBookTasks.can_resolve_tasks.find((t) => {
           return t.blockid == blockid;
         })
       }
@@ -322,9 +310,7 @@ export default {
       //if (!this.$store.state.tc_tasksByBlock[blockid]) {
       //return false;
       //}
-      let taskByType = this.$store.state.tc_tasksByBlock[blockid] ? this.$store.state.tc_tasksByBlock[blockid].find(t => {
-        return ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-published-block', 'approve-new-published-block'].indexOf(t.type) !== -1;
-      }) : false;
+      let taskByType = this.tc_tasksByBlock[blockid] ? ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-published-block', 'approve-new-published-block'].indexOf(this.tc_tasksByBlock[blockid].type) !== -1 : false;
       if (taskByType) {
         return true;
       }
@@ -493,9 +479,9 @@ export default {
     },
     tc_isNeedWorkDisabled(block, mode) {
       let task = this.tc_getBlockTask(block.blockid);
-      if (!task) {
-        task = this.tc_getBlockTaskOtherRole(block.blockid);
-      }
+      //if (!task) {
+        //task = this.tc_getBlockTaskOtherRole(block.blockid);
+      //}
       if (!task) {
         return true;
       }
@@ -577,6 +563,6 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['currentBookMeta', 'adminOrLibrarian', 'adminOrProofer', 'currentJobInfo', 'bookMode'])
+    ...mapGetters(['currentBookMeta', 'adminOrLibrarian', 'adminOrProofer', 'currentJobInfo', 'bookMode', 'tc_currentBookTasks', 'tc_tasksByBlock'])
   }
 }
