@@ -3804,7 +3804,7 @@ export default {
             content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
           }
         }
-        content = content.replace(/<f[^>]+?>(.*?)<\/f>/img, '$1');
+        content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
         let audiosrc = this.block.getAudiosrc('m4a', true) || '';
         if (audiosrc) {
           audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
