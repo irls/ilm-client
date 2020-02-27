@@ -3176,11 +3176,12 @@ export default {
             let el = list.next();
             this.blockPart.manual_boundaries.sort((a, b) => {return a - b;}).forEach(mb => {
               let found = false;
+              let targetMb = parseInt(mb);
               while (el && !el.done && !found) {
                 let map = el.value.getAttribute('data-map');
                 if (map) {
                   let boundaries = map.split(',');
-                  if (boundaries.length === 2 && parseInt(boundaries[0]) + parseInt(boundaries[1]) === parseInt(mb)) {
+                  if (boundaries.length === 2 && Math.abs(parseInt(boundaries[0]) + parseInt(boundaries[1]) - targetMb) <= 10) {
                     el.value.classList.add('pinned-word');
                     found = true;
                   }
