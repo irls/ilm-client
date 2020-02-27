@@ -474,7 +474,7 @@
         </template>
       </div>
     </modal>
-    <modal :name="'voicework-change' + block._id" :resizeable="false" height="auto" width="400px" class="vue-js-modal">
+    <modal :name="'voicework-change' + block._id" :resizeable="false" height="auto" width="400px" class="vue-js-modal" @before-close="voicework_change_close($event)">
       <!-- custom header -->
       <div class="modal-header">
         <h4 class="modal-title"><!--text-center-->
@@ -4005,6 +4005,33 @@ export default {
         };
         if (isApproved !== null) filters['voiceworks_for_remove']['status.marked'] = isApproved;
         return this.setCurrentBookCounters([filters]);
+      },
+
+      checkAllowNarrateUnassigned() {
+        if (!this.tc_allowNarrateUnassigned(this.block)) {
+          this.$root.$emit('closeFlagPopup', null);
+          this.$root.$emit('show-modal', {
+            title: 'Unable to re-narrate',
+            text: `The block can't be re-narrated because it is currently being edited.`,
+            buttons: [
+              {
+                title: 'OK',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return false;
+        }
+        return true;
+      },
+
+      voicework_change_close($ev) {
+        //console.log('voicework_change_close', $ev);
+        if (this.voiceworkUpdating) $ev.stop();
       }
   },
   watch: {
