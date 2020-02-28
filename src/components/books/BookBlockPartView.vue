@@ -873,6 +873,7 @@ export default {
 //       Vue.nextTick(() => {
 //
 //       });
+      //this.showPinnedInText();
   },
   beforeDestroy: function () {
 //     console.log('beforeDestroy', this.block._id);
@@ -1513,6 +1514,7 @@ export default {
         }
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
         content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+        content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
@@ -2535,6 +2537,7 @@ export default {
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            this.showPinnedInText();
             //this.pushChange('content');
 
 
@@ -2596,6 +2599,7 @@ export default {
                 this.isAudioChanged = false;
                 this.blockAudio.map = this.blockContent();
                 this.blockAudio.src = this.blockAudiosrc('m4a');
+                //this.showPinnedInText();
                 return Promise.resolve();
               });
           } else {
@@ -2655,6 +2659,7 @@ export default {
                 this.unsetChange('content');
                 this.unsetChange('manual_boundaries');
                 this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
+                //this.showPinnedInText();
             });
         }
       },
@@ -2714,6 +2719,7 @@ export default {
             if (changed) {
               this.isAudioChanged = true;
             }
+            this.showPinnedInText();
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
           }
         }
@@ -3149,6 +3155,41 @@ export default {
           textRange.select();
           return textRange;
         }
+      },
+      
+      showPinnedInText() {
+        if (this.$refs.blockContent && Array.isArray(this.blockPart.manual_boundaries)) {
+          Vue.nextTick(() => {
+            //if (this.block.blockid === '1306_s_0005_en-bl37') {
+              //console.time('showPinnedInText');
+            //}
+            this.$refs.blockContent.querySelectorAll('.pinned-word').forEach(el => {
+              el.classList.remove('pinned-word');
+            });
+            let list = this.$refs.blockContent.querySelectorAll(`w[data-map]`).values();
+            let el = list.next();
+            this.blockPart.manual_boundaries.sort((a, b) => {return a - b;}).forEach(mb => {
+              let found = false;
+              let targetMb = parseInt(mb);
+              while (el && !el.done && !found) {
+                let map = el.value.getAttribute('data-map');
+                if (map) {
+                  let boundaries = map.split(',');
+                  if (boundaries.length === 2 && Math.abs(parseInt(boundaries[0]) + parseInt(boundaries[1]) - targetMb) <= 10) {
+                    el.value.classList.add('pinned-word');
+                    found = true;
+                  }
+                }
+                el = list.next();
+              }
+            });
+            //if (this.block.blockid === '1306_s_0005_en-bl37') {
+              //console.timeEnd('showPinnedInText');
+              //var err = new Error();
+              //console.log(err.stack);
+            //}
+          });
+        }
       }
 
   },
@@ -3208,6 +3249,7 @@ export default {
               this.infoMessage = 'Audio updated';
             }*/
           }
+          this.showPinnedInText();
         }
       },
       'isChanged' : {
