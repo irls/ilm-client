@@ -107,7 +107,7 @@
                       <template v-if="block.type != 'illustration' && block.type != 'hr' && !proofreadModeReadOnly">
                       <li @click="showModal('block-html')">
                         <i class="fa fa-code" aria-hidden="true"></i>
-                        Edit HTML</li>
+                        Display block HTML</li>
                       <li class="separator"></li>
                       </template>
                     </template>
@@ -510,19 +510,23 @@
       </div>
     </modal>
     <modal :name="'block-html' + block._id" height="auto" width="90%" class="block-html-modal" :clickToClose="false" @opened="setHtml">
-    <div v-on:wheel.stop="">
+    <div v-on:wheel.stop="" :class="['-langblock-' + getBlockLang]">
       <div class="modal-header">
-        <h4 class="modal-title">
-          Block: {{((block._id).split('-bl').length > 1) ? 'bl'+(block._id).split('-bl')[1] : block._id}}
-        </h4>
+        <div>
+          <h4 class="modal-title">Block: {{shortBlockid}}</h4>
+        </div>
+        <div>
+          <h4 class="modal-title">
+            <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Block audio URL</a>
+          </h4>
+        </div>
         <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
       </div>
       <div class="modal-body">
-        <textarea :ref="'block-html' + block._id" class="block-html"></textarea>
+        <textarea :ref="'block-html' + block.blockid" disabled class="block-html"></textarea>
       </div>
       <div class="modal-footer">
-          <button class="btn btn-default" v-on:click="hideModal('block-html')">Cancel</button>
-          <button class="btn btn-primary" v-on:click="setContent()">Apply</button>
+          <button class="btn btn-default" v-on:click="hideModal('block-html')">Close</button>
       </div>
     </div>
     </modal>
@@ -971,6 +975,24 @@ export default {
           } else {
             return this.meta.language;
           }
+        }
+      },
+      compressedAudioUrl: {
+        cache: false,
+        get() {
+          let audio = this.block.getAudiosrc('m4a', false);
+          if (!audio) {
+            return false;
+          }
+          let format = this.block.audiosrc_ver && this.block.audiosrc_ver['m4a'] ? 'm4a' : 'flac';
+          return `${this.API_URL}books/${this.block.bookid}/blocks/${this.block.blockid}/audio_download/${format}`;
+        }
+      },
+      shortBlockid: {
+        cache: false,
+        get() {
+          let split = (this.block.blockid).split(/-|_/);
+          return (split.length > 1) ? split.pop() : this.block.blockid;
         }
       },
       ...mapGetters({
@@ -1715,7 +1737,7 @@ export default {
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
-          return this.assembleBlockNarrate();
+          return this.assembleBlockNarrate(true, false, update_fields);
         }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
@@ -2043,13 +2065,23 @@ export default {
             return Promise.reject(err);
           });
       },
-      assembleBlockNarrate(check_realign = true, realign = false) {
+      assembleBlockNarrate(check_realign = true, realign = false, update_fields = []) {
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
         this.block.content = this.clearBlockContent();
+        let upd_block = Object.assign({}, this.block.clean());
+        if (update_fields.length > 0) {
+          Object.keys(upd_block).forEach(f => {
+            if (update_fields.indexOf(f) === -1) {
+              delete upd_block[f];
+            }
+          });
+          upd_block.blockid = this.block.blockid;
+          upd_block.bookid = this.block.bookid;
+        }
         this.isSaving = true;
-        return this.putBlockNarrate([this.block.clean(), realign])
+        return this.putBlockNarrate([upd_block, realign])
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
@@ -3777,9 +3809,22 @@ export default {
         }
       },
       setHtml() {
-        if (this.$refs.blockContent) {
-          this.$refs['block-html' + this.block._id].value = this.$refs.blockContent.innerHTML;
+        let content = '';
+        if (this.isSplittedBlock) {
+          content = this.block.content;
+        } else {
+          if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
+            content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
+          }
         }
+        content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
+        let audiosrc = this.block.getAudiosrc('m4a', true) || '';
+        if (audiosrc) {
+          audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
+        }
+        this.$refs['block-html' + this.block.blockid].value = `<div id="${this.shortBlockid}" data-audiosrc="${audiosrc}">
+  ${content}
+</div>`;
       },
       setContent() {
         //console.log('value', this.$refs['block-html' + this.block._id].value)
@@ -5169,7 +5214,13 @@ export default {
       }
       .modal-close-button {
         float: right;
-        margin-right: 15px;
+        width: 5%;
+      }
+      div {
+        display: inline-block;
+        width: auto;
+        white-space: nowrap;
+        margin: 0px 10px;
       }
     }
     .modal-body {
