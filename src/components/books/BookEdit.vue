@@ -881,7 +881,7 @@ export default {
           if (task) {
             switch (task) {
               case 'narrate':
-                if (this.tc_showBlockNarrate(curr)) {
+                if (this.tc_isNarrationEnabled(curr)) {
                   next = curr;
                 }
                 break;

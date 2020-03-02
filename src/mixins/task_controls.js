@@ -8,7 +8,7 @@ export default {
     return {
         tc_test: 'Test property',
         editor_tasks: ['fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block', 'text-cleanup', 'master-audio', 'approve-trimming'],
-        narrator_tasks: ['narrate-block', 'fix-block-narration'],
+        narrator_tasks: ['narrate-block', 'fix-block-narration', 'approve-re-narration'],
         proofer_tasks: ['approve-block', 'approve-revoked-block'],
         editor_resolve_tasks: ['fix-block-narration']
     }
@@ -222,11 +222,20 @@ export default {
       }
       return false;
     },
-    tc_showBlockNarrate(block_id) {
-      if (!this.tc_tasksByBlock[block_id]) {
-        return false;
+    tc_showBlockNarrate(block, blockPart = null) {
+      if (this.bookMode === 'narrate' && block.voicework === 'narration' && this._is('narrator', true)) {
+        if (this.currentJobInfo.mastering) {
+          return false;
+        }
+        if (blockPart ? blockPart.audiosrc : block.audiosrc) {
+          return true;
+        }
+        return this.tc_tasksByBlock[block.blockid] ? true : false;
       }
-      return ['narrate-block', 'fix-block-narration'].indexOf(this.tc_tasksByBlock[block_id].type) !== -1;
+      return false;
+    },
+    tc_isNarrationEnabled(blockid) {
+      return this.tc_getBlockTask(blockid, 'narrate');
     },
     tc_hasBlockTask(block_id, type) {
       if (this.adminOrLibrarian) {
@@ -300,7 +309,19 @@ export default {
       //if (tasks && tasks.isArray) return tasks[0];
       return task;
     },
-    tc_showBlockAudioEdit(blockid) {
+    tc_showBlockAudioEdit(block, blockPart) {
+      if (!blockPart.audiosrc) {
+        return false;
+      }
+      if (this.bookMode === 'narrate') {
+        if (block.voicework !== 'narration') {
+          return false;
+        }
+        if (blockPart.audiosrc) {
+          return !this.currentJobInfo.mastering ? true : false;
+        }
+        return false;
+      }
       if (this._is('editor', true) && this.currentJobInfo.workflow.status === 'active') {
         return true;
       }
@@ -310,13 +331,15 @@ export default {
       //if (!this.$store.state.tc_tasksByBlock[blockid]) {
       //return false;
       //}
-      let taskByType = this.tc_tasksByBlock[blockid] ? ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-published-block', 'approve-new-published-block'].indexOf(this.tc_tasksByBlock[blockid].type) !== -1 : false;
+      let taskByType = this.tc_tasksByBlock[block.blockid] ? this.tc_tasksByBlock[block.blockid].find(t => {
+        return ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-published-block', 'approve-new-published-block'].indexOf(t.type) !== -1;
+      }) : false;
       if (taskByType) {
         return true;
       }
       if (this.adminOrLibrarian) {
         let canResolveTask = this.currentJobInfo.can_resolve_tasks.find(t => {
-          return t.blockid == blockid;
+          return t.blockid == block.blockid;
         });
         if (canResolveTask) {
           return true;
@@ -324,8 +347,11 @@ export default {
       }
       return false;
     },
-    tc_isProofreadUnassigned() {
-      return this.currentJobInfo.is_proofread_unassigned;
+    tc_isProofreadUnassigned(block) {
+      if (!this.currentJobInfo.is_proofread_unassigned) {
+        return false;
+      }
+      return this.currentJobInfo.locked_blocks.proofer.indexOf(block.blockid) === -1;
     },
     tc_blocksToApproveCount() {
       if (this.tc_allowEditingComplete() || this.tc_allowFinishMastering()) {
@@ -557,6 +583,32 @@ export default {
         'BooksGrid',
         'CollectionBook'
       ].indexOf(this.$route.name) !== -1) {
+        return false;
+      }
+      return true;
+    },
+    tc_isNarrateUnassigned(block) {
+      if (block.voicework === 'narration' && this.bookMode === 'narrate') {
+        return this.currentJobInfo.is_narrate_unassiged;
+      }
+      return false;
+    },
+    tc_allowNarrateUnassigned(block) {
+      if (this.bookMode !== 'narrate') {
+        return true;
+      }
+      if (!this.currentJobInfo.is_narrate_unassiged) {
+        return false;
+      }
+      if (this.tc_getBlockTask(block.blockid, 'narrate')) {
+        return true;
+      }
+      let flags = Array.isArray(block.flags) ? block.flags.filter(flag => {
+        return Array.isArray(flag.parts) && !flag.isNew ? flag.parts.find(p => {
+          return p.status === 'open' && !p.isReopen;
+        }) : false;
+      }) : [];
+      if (flags.length > 0) {
         return false;
       }
       return true;

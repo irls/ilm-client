@@ -21,7 +21,7 @@
               <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
-                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating && mode === 'edit'"></i>
+                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block, blockPart) && !isUpdating && mode === 'edit'"></i>
                       <i class="fa fa-play-circle-o"
                         @click="audPlay($event)"></i>
                       <i class="fa fa-stop-circle-o disabled"></i>
@@ -49,12 +49,12 @@
               <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
                 <div class="table-body">
                   <div class="table-row">
-                    <div class="table-cell -hidden-subblock" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged">
+                    <div class="table-cell -hidden-subblock" v-if="tc_showBlockAudioEdit(block, blockPart) && !isAudioChanged">
                       <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
                     </div>
-                    <template v-if="tc_showBlockNarrate(block.blockid) && !isAudStarted">
+                    <template v-if="tc_showBlockNarrate(block, blockPart) && !isAudStarted">
                       <div class="table-cell -hidden-subblock">
-                        <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording($event)"></i>
+                        <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording(true)"></i>
                       </div>
                     </template>
                     <template v-if="player && blockAudio.src && !isRecording">
@@ -203,7 +203,7 @@
                       placeholder="Enter description here ..."
                       @input="onInputFlag"
                       @focusout="onFocusoutFlag(partIdx, $event)"
-                      :disabled="!canCommentFlagPart(part)">
+                      :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_allowNarrateUnassigned(block))">
                     </textarea>
 
                     </template>
@@ -265,23 +265,6 @@
         <!--<div :class="['table-body', '-content',-->
     </div>
     <!--<div :class="['table-cell'-->
-    <modal :name="'block-html' + block._id" height="auto" width="90%" class="block-html-modal" :clickToClose="false" @opened="setHtml">
-    <div v-on:wheel.stop="">
-      <div class="modal-header">
-        <h4 class="modal-title">
-          Block: {{((block._id).split('-bl').length > 1) ? 'bl'+(block._id).split('-bl')[1] : block._id}}
-        </h4>
-        <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
-      </div>
-      <div class="modal-body">
-        <textarea :ref="'block-html' + block._id" class="block-html"></textarea>
-      </div>
-      <div class="modal-footer">
-          <button class="btn btn-default" v-on:click="hideModal('block-html')">Cancel</button>
-          <button class="btn btn-primary" v-on:click="setContent()">Apply</button>
-      </div>
-    </div>
-    </modal>
   </div>
   <div class="table-body">
     <div class="table-row controls-bottom" v-if="isSplittedBlock">
@@ -402,7 +385,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -873,6 +856,7 @@ export default {
 //       Vue.nextTick(() => {
 //
 //       });
+      //this.showPinnedInText();
   },
   beforeDestroy: function () {
 //     console.log('beforeDestroy', this.block._id);
@@ -957,6 +941,9 @@ export default {
         if (this.isProofreadUnassigned()) {
           return true;
         }
+        if (this.tc_isNarrateUnassigned(this.block) && flagType === 'editor') {
+          return true;
+        }
         //if (this.tc_allowAdminFlagging(this.block, flagType)) {
           //return true;
         //}
@@ -990,10 +977,10 @@ export default {
       },
       isProofreadUnassigned: function() {
         if (this._is('proofer', true) && this.mode === 'proofread') {
-          if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned()) {
+          if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned(this.block)) {
             return true;
           }
-          if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned()) {
+          if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned(this.block)) {
             let result = this.block.flags.find(f => {
 
               if ((f.creator === this.auth.getSession().user_id) || (f.creator_role && this._is(f.creator_role, true))) {
@@ -1074,7 +1061,7 @@ export default {
                 extensions: extensions,
                 disableEditing: !this.allowEditing
             });
-          } else if (this.tc_showBlockNarrate(this.block._id) && this.mode === 'narrate') {
+          } else if (this.tc_isNarrationEnabled(this.block._id) && this.mode === 'narrate') {
             extensions = {
                 'suggestButton': new SuggestButton(),
                 'suggestPreview': new SuggestPreview()
@@ -1490,6 +1477,7 @@ export default {
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isSaving = true;
+        let refreshTasks = this.isCompleted;
         return this.putBlockNarrate([Object.assign(this.blockPart, {
             blockid: this.block.blockid,
             bookid: this.block.bookid,
@@ -1497,6 +1485,9 @@ export default {
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
+            if (refreshTasks) {
+              this.getCurrentJobInfo();
+            }
             return Promise.resolve();
           })
           .catch(err => {
@@ -1513,6 +1504,7 @@ export default {
         }
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
         content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+        content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
@@ -1740,6 +1732,9 @@ export default {
       },
 
       addFlag: function(ev, type = 'editor') {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         if (window.getSelection) {
           let startPos = this.$refs.blockContent.compareDocumentPosition(this.range.startContainer);
           let endPos = this.$refs.blockContent.compareDocumentPosition(this.range.endContainer);
@@ -1958,6 +1953,9 @@ export default {
       },
 
       addFlagPart: function(content, type = 'editor') {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         this.block.addPart(this.flagsSel._id, content, type, this.mode);
 
         this.updateFlagStatus(this.flagsSel._id);
@@ -2098,7 +2096,11 @@ export default {
       },
 
       reopenFlagPart: function(ev, partIdx) {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         this.flagsSel.parts[partIdx].status = 'open';
+        this.flagsSel.parts[partIdx].isReopen = true;
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
         this.isChanged = true;
@@ -2133,8 +2135,11 @@ export default {
         this.$refs.blockFlagPopup.reset();
       },
 
-      _startRecording() {
+      _startRecording(check_allow = false) {
         this.$root.$emit('closeFlagPopup', null);
+        if (check_allow && !this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         return this.initRecorder()
           .then(() => {
 
@@ -2410,6 +2415,9 @@ export default {
         .catch(()=>{})
       },
       showAudioEditor(footnoteIdx = null, footnote = null) {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         //$('.table-body.-content').removeClass('editing');
         //$('#' + this.block._id + ' .table-body.-content').addClass('editing');
         if (!footnoteIdx) {
@@ -2535,6 +2543,7 @@ export default {
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            this.showPinnedInText();
             //this.pushChange('content');
 
 
@@ -2596,6 +2605,7 @@ export default {
                 this.isAudioChanged = false;
                 this.blockAudio.map = this.blockContent();
                 this.blockAudio.src = this.blockAudiosrc('m4a');
+                //this.showPinnedInText();
                 return Promise.resolve();
               });
           } else {
@@ -2655,6 +2665,7 @@ export default {
                 this.unsetChange('content');
                 this.unsetChange('manual_boundaries');
                 this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
+                //this.showPinnedInText();
             });
         }
       },
@@ -2714,6 +2725,7 @@ export default {
             if (changed) {
               this.isAudioChanged = true;
             }
+            this.showPinnedInText();
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
           }
         }
@@ -2922,11 +2934,6 @@ export default {
         if (index !== -1) {
           this.changes.splice(index, 1);
           this.$emit('hasChanges', change, false);
-        }
-      },
-      setHtml() {
-        if (this.$refs.blockContent) {
-          this.$refs['block-html' + this.block._id].value = this.$refs.blockContent.innerHTML;
         }
       },
       setContent() {
@@ -3149,6 +3156,41 @@ export default {
           textRange.select();
           return textRange;
         }
+      },
+      
+      showPinnedInText() {
+        if (this.$refs.blockContent && Array.isArray(this.blockPart.manual_boundaries)) {
+          Vue.nextTick(() => {
+            //if (this.block.blockid === '1306_s_0005_en-bl37') {
+              //console.time('showPinnedInText');
+            //}
+            this.$refs.blockContent.querySelectorAll('.pinned-word').forEach(el => {
+              el.classList.remove('pinned-word');
+            });
+            let list = this.$refs.blockContent.querySelectorAll(`w[data-map]`).values();
+            let el = list.next();
+            this.blockPart.manual_boundaries.sort((a, b) => {return a - b;}).forEach(mb => {
+              let found = false;
+              let targetMb = parseInt(mb);
+              while (el && !el.done && !found) {
+                let map = el.value.getAttribute('data-map');
+                if (map) {
+                  let boundaries = map.split(',');
+                  if (boundaries.length === 2 && Math.abs(parseInt(boundaries[0]) + parseInt(boundaries[1]) - targetMb) <= 10) {
+                    el.value.classList.add('pinned-word');
+                    found = true;
+                  }
+                }
+                el = list.next();
+              }
+            });
+            //if (this.block.blockid === '1306_s_0005_en-bl37') {
+              //console.timeEnd('showPinnedInText');
+              //var err = new Error();
+              //console.log(err.stack);
+            //}
+          });
+        }
       }
 
   },
@@ -3175,6 +3217,20 @@ export default {
             }
           }
 
+        }
+      },
+      'isLocked': {
+        handler(val) {
+          //console.log('IS LOCKED', val, this.block)
+          if (this.block.audiosrc) {
+            this.blockAudio.src = this.block.getAudiosrc('m4a');
+          }
+          if (val === false) {
+            if (this.isCompleted) {
+              this.tc_loadBookTask(this.block.bookid);
+              this.getCurrentJobInfo();
+            }
+          }
         }
       },
       'classSel' (newVal, oldVal) {
@@ -3208,6 +3264,7 @@ export default {
               this.infoMessage = 'Audio updated';
             }*/
           }
+          this.showPinnedInText();
         }
       },
       'isChanged' : {

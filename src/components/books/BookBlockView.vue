@@ -107,7 +107,7 @@
                       <template v-if="block.type != 'illustration' && block.type != 'hr' && !proofreadModeReadOnly">
                       <li @click="showModal('block-html')">
                         <i class="fa fa-code" aria-hidden="true"></i>
-                        Edit HTML</li>
+                        Display block HTML</li>
                       <li class="separator"></li>
                       </template>
                     </template>
@@ -231,6 +231,7 @@
               :stopRecording="stopRecording"
               :delFlagPart="delFlagPart"
               :isCompleted="isCompleted"
+              :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -311,7 +312,7 @@
                   placeholder="Enter description here ..."
                   @input="onInputFlag"
                   @focusout="onFocusoutFlag(partIdx, $event)"
-                  :disabled="!canCommentFlagPart(part)">
+                  :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_allowNarrateUnassigned(block))">
                 </textarea>
 
                 </template>
@@ -510,19 +511,23 @@
       </div>
     </modal>
     <modal :name="'block-html' + block._id" height="auto" width="90%" class="block-html-modal" :clickToClose="false" @opened="setHtml">
-    <div v-on:wheel.stop="">
+    <div v-on:wheel.stop="" :class="['-langblock-' + getBlockLang]">
       <div class="modal-header">
-        <h4 class="modal-title">
-          Block: {{((block._id).split('-bl').length > 1) ? 'bl'+(block._id).split('-bl')[1] : block._id}}
-        </h4>
+        <div>
+          <h4 class="modal-title">Block: {{shortBlockid}}</h4>
+        </div>
+        <div>
+          <h4 class="modal-title">
+            <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Block audio URL</a>
+          </h4>
+        </div>
         <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
       </div>
       <div class="modal-body">
-        <textarea :ref="'block-html' + block._id" class="block-html"></textarea>
+        <textarea :ref="'block-html' + block.blockid" disabled class="block-html"></textarea>
       </div>
       <div class="modal-footer">
-          <button class="btn btn-default" v-on:click="hideModal('block-html')">Cancel</button>
-          <button class="btn btn-primary" v-on:click="setContent()">Apply</button>
+          <button class="btn btn-default" v-on:click="hideModal('block-html')">Close</button>
       </div>
     </div>
     </modal>
@@ -973,6 +978,24 @@ export default {
           }
         }
       },
+      compressedAudioUrl: {
+        cache: false,
+        get() {
+          let audio = this.block.getAudiosrc('m4a', false);
+          if (!audio) {
+            return false;
+          }
+          let format = this.block.audiosrc_ver && this.block.audiosrc_ver['m4a'] ? 'm4a' : 'flac';
+          return `${this.API_URL}books/${this.block.bookid}/blocks/${this.block.blockid}/audio_download/${format}`;
+        }
+      },
+      shortBlockid: {
+        cache: false,
+        get() {
+          let split = (this.block.blockid).split(/-|_/);
+          return (split.length > 1) ? split.pop() : this.block.blockid;
+        }
+      },
       ...mapGetters({
           auth: 'auth',
           book: 'currentBook',
@@ -1045,6 +1068,9 @@ export default {
           }
           let task = this.tc_getBlockTask(this.block.blockid);
           if (task) {
+            return true;
+          }
+          if (this.tc_isNarrateUnassigned(this.block)) {
             return true;
           }
           let blockFlag = Array.isArray(this.block.flags) ? this.block.flags.find(blk => {
@@ -1228,10 +1254,13 @@ export default {
         if (this.isProofreadUnassigned()) {
           return true;
         }
+        if (this.tc_isNarrateUnassigned(this.block) && flagType === 'editor') {
+          return true;
+        }
         //if (this.tc_allowAdminFlagging(this.block, flagType)) {
           //return true;
         //}
-        if (!this.tc_getBlockTask(this.block._id) && !this.tc_getBlockTaskOtherRole(this.block._id)) {
+        if (!this.tc_getBlockTask(this.block._id, this.mode) && !this.tc_getBlockTaskOtherRole(this.block._id)) {
           return false;
         }
         let canFlag = true;
@@ -1271,7 +1300,7 @@ export default {
                   }
                   break;
                 case 'proofer':
-                  if (this.mode !== 'proofread') {
+                  if (this.mode === 'edit') {
                     return false;
                   }
                   break;
@@ -1282,24 +1311,24 @@ export default {
                   break;
               }
             } else {
-              if (this.mode !== 'proofread' && part.type === 'editor') {
+              if (this.mode === 'edit' && part.type === 'editor') {
                 return false;
               }
               if (this.mode === 'narrate' && part.type === 'narrator') {
                 return false;
               }
             }
-            return part.status == 'resolved' && !part.collapsed && (!this.isCompleted || this.isProofreadUnassigned());
+            return part.status == 'resolved' && !part.collapsed && (!this.isCompleted || this.isProofreadUnassigned() || this.tc_isNarrateUnassigned(this.block));
           }
         }
         return false;
       },
       isProofreadUnassigned: function() {
         if (this._is('proofer', true) && this.mode === 'proofread') {
-          if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned()) {
+          if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned(this.block)) {
             return true;
           }
-          if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned()) {
+          if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned(this.block)) {
             let result = this.block.flags.find(f => {
 
               if ((f.creator === this.auth.getSession().user_id) || (f.creator_role && this._is(f.creator_role, true))) {
@@ -1572,6 +1601,7 @@ export default {
               if (this.$refs.blocks[partIdx].$refs.blockContent) {
                 this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = part.content;
                 this.block.setPartContent(partIdx, part.content);
+                this.$refs.blocks[partIdx].showPinnedInText();
               }
               this.$refs.blocks[partIdx].isIllustrationChanged = false;
               if (this.$refs.blocks[partIdx].$refs.blockFlagPopup) {
@@ -1714,7 +1744,7 @@ export default {
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
-          return this.assembleBlockNarrate();
+          return this.assembleBlockNarrate(true, false, update_fields);
         }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
@@ -2042,17 +2072,30 @@ export default {
             return Promise.reject(err);
           });
       },
-      assembleBlockNarrate(check_realign = true, realign = false) {
+      assembleBlockNarrate(check_realign = true, realign = false, update_fields = []) {
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
         this.block.content = this.clearBlockContent();
+        let upd_block = Object.assign({}, this.block.clean());
+        if (update_fields.length > 0) {
+          Object.keys(upd_block).forEach(f => {
+            if (update_fields.indexOf(f) === -1) {
+              delete upd_block[f];
+            }
+          });
+          upd_block.blockid = this.block.blockid;
+          upd_block.bookid = this.block.bookid;
+        }
         this.isSaving = true;
-        return this.putBlockNarrate([this.block.clean(), realign])
+        let refreshTasks = this.isCompleted;
+        return this.putBlockNarrate([upd_block, realign])
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
-            return Promise.resolve();
+            if (refreshTasks) {
+              this.getCurrentJobInfo();
+            }
           })
           .catch(err => {
             return Promise.reject(err);
@@ -2070,6 +2113,7 @@ export default {
         //console.log(content)
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
         content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
+        content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
@@ -2725,6 +2769,9 @@ export default {
         });
 
         if (foundBlockFlag.length == 0) {
+          if (!this.checkAllowNarrateUnassigned()) {
+            return false;
+          }
           if (this.allowBlockFlag) {
             if (this.block && this.block.voicework === 'narration') {
               if (type === 'editor' && this.mode === 'edit') {
@@ -2851,7 +2898,11 @@ export default {
       },
 
       reopenFlagPart: function(ev, partIdx) {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         this.flagsSel.parts[partIdx].status = 'open';
+        this.flagsSel.parts[partIdx].isReopen = true;
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
         this.isChanged = true;
@@ -2960,6 +3011,9 @@ export default {
                   if (response.status == 200) {
                     //self.blockAudio.map = response.data.content;
                     self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
+                    self.$store.commit('add_aligning_block', {
+                      _id: self.block.blockid, partIdx: partIdx
+                    });
                     //self.block.setContent(response.data.content);
                     //self.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                     //self.blockAudio.src = self.block.getAudiosrc('m4a');
@@ -3775,9 +3829,22 @@ export default {
         }
       },
       setHtml() {
-        if (this.$refs.blockContent) {
-          this.$refs['block-html' + this.block._id].value = this.$refs.blockContent.innerHTML;
+        let content = '';
+        if (this.isSplittedBlock) {
+          content = this.block.content;
+        } else {
+          if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
+            content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
+          }
         }
+        content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
+        let audiosrc = this.block.getAudiosrc('m4a', true) || '';
+        if (audiosrc) {
+          audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
+        }
+        this.$refs['block-html' + this.block.blockid].value = `<div id="${this.shortBlockid}" data-audiosrc="${audiosrc}">
+  ${content}
+</div>`;
       },
       setContent() {
         //console.log('value', this.$refs['block-html' + this.block._id].value)
@@ -3996,6 +4063,28 @@ export default {
         };
         if (isApproved !== null) filters['voiceworks_for_remove']['status.marked'] = isApproved;
         return this.setCurrentBookCounters([filters]);
+      },
+      
+      checkAllowNarrateUnassigned() {
+        if (!this.tc_allowNarrateUnassigned(this.block)) {
+          this.$root.$emit('closeFlagPopup', null);
+          this.$root.$emit('show-modal', {
+            title: 'Unable to re-narrate',
+            text: `The block can't be re-narrated because it is currently being edited.`,
+            buttons: [
+              {
+                title: 'OK',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return false;
+        }
+        return true;
       }
   },
   watch: {
@@ -4864,6 +4953,9 @@ export default {
             transparent
         );
       }
+      w.pinned-word {
+        background: linear-gradient(to bottom, transparent 0%, rgba(0, 255, 0, 0.3) 30%, rgba(0, 255, 0, 0.3) 90%, transparent 100%);
+      }
 
       [data-idx], [data-pg] {
         w:not([data-map]) {
@@ -5164,7 +5256,13 @@ export default {
       }
       .modal-close-button {
         float: right;
-        margin-right: 15px;
+        width: 5%;
+      }
+      div {
+        display: inline-block;
+        width: auto;
+        white-space: nowrap;
+        margin: 0px 10px;
       }
     }
     .modal-body {

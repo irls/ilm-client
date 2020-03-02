@@ -169,7 +169,9 @@ export const store = new Vuex.Store({
       workflow: {
         status: null,
         archived: null
-      }
+      },
+      locked_blocks: {proofer: [], narrator: [], editor: []},
+      is_narrate_unassiged: false
     },
     taskTypes: {tasks: [], categories: []},
     liveDB: new liveDB(),
@@ -863,6 +865,9 @@ export const store = new Vuex.Store({
       if (blocks.length) blocks.forEach(b => {
         state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx});
       });
+    },
+    add_aligning_block(state, block) {
+      state.aligningBlocks.push({_id: block.blockid ? block.blockid : block._id, partIdx: block.partIdx});
     },
     set_storeList (state, blockObj) {
       //console.log('set_storeList', Date.now());
@@ -2530,7 +2535,9 @@ export const store = new Vuex.Store({
               workflow: {
                 status: null,
                 archived: null
-              }};
+              },
+              locked_blocks: {proofer: [], narrator: [], editor: []},
+              is_narrate_unassiged: false};
 
             let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
             commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
@@ -2873,10 +2880,10 @@ export const store = new Vuex.Store({
       return axios.post(state.API_URL + 'book/block/' + data.blockid + '/audio', data, {})
         .then(response => {
           //console.log(response);
-          return dispatch('getBookAlign')
-            .then(() => {
+          //return dispatch('getBookAlign')
+            //.then(() => {
               return Promise.resolve(response);
-            });
+            //});
         })
         .catch(err => {
           return dispatch('checkError', err);
