@@ -331,9 +331,9 @@ export default {
       //if (!this.$store.state.tc_tasksByBlock[blockid]) {
       //return false;
       //}
-      let taskByType = this.tc_tasksByBlock[block.blockid] ? this.tc_tasksByBlock[block.blockid].find(t => {
-        return ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-published-block', 'approve-new-published-block'].indexOf(t.type) !== -1;
-      }) : false;
+
+      let taskByType = this.tc_tasksByBlock[block.blockid] ? ['narrate-block', 'fix-block-narration', 'fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-published-block', 'approve-new-published-block'].indexOf(this.tc_tasksByBlock[block.blockid].type) !== -1 : false;
+
       if (taskByType) {
         return true;
       }
