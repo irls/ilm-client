@@ -419,14 +419,14 @@ export default {
           if (['tts', 'audio_file'].indexOf(block.voicework) !== -1 && !block.hasCompleteAudio()) {//check complete audio on all subblocks
             return true;
           }
-          if (block.footnotes && Array.isArray(block.footnotes)) {
+          /*if (block.footnotes && Array.isArray(block.footnotes)) {
             let notAlignedFootnote = block.footnotes.find(f => {
               return !f.audiosrc && f.voicework === 'tts';
             });
             if (notAlignedFootnote) {
               return true;
             }
-          }
+          }*/
           break;
         case 'narrate':
           if (this.narrator_tasks.indexOf(task.type) === -1) {
