@@ -316,7 +316,7 @@ export default {
     onUploadProgress() {
       //console.log(arguments)
       let total = 0;
-      console.log('get uploading files', this.$refs.uploadDropzone.getUploadingFiles());
+      //console.log('get uploading files', this.$refs.uploadDropzone.getUploadingFiles());
       this.$refs.uploadDropzone.getUploadingFiles().forEach(f => {
         let processed = 0;
         f.upload.chunks.forEach(c => {
@@ -326,7 +326,7 @@ export default {
         });
         processed = Math.round(processed * 100 / f.upload.totalChunkCount);
         //console.log(f.name + ' ' + f.upload.progress, f.status, processed, f);
-        console.log('before debug: ', this.audioFiles, f.upload.uuid);
+        //console.log('before debug: ', this.audioFiles, f.upload.uuid);
         
         //let af = this.audioFiles.find(_af => _af.name === f.name);
         let af = this.audioFiles.find(af => af.uuid === f.upload.uuid);
