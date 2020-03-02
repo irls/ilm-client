@@ -231,6 +231,7 @@
               :stopRecording="stopRecording"
               :delFlagPart="delFlagPart"
               :isCompleted="isCompleted"
+              :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -311,7 +312,7 @@
                   placeholder="Enter description here ..."
                   @input="onInputFlag"
                   @focusout="onFocusoutFlag(partIdx, $event)"
-                  :disabled="!canCommentFlagPart(part)">
+                  :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_allowNarrateUnassigned(block))">
                 </textarea>
 
                 </template>
@@ -1069,6 +1070,9 @@ export default {
           if (task) {
             return true;
           }
+          if (this.tc_isNarrateUnassigned(this.block)) {
+            return true;
+          }
           let blockFlag = Array.isArray(this.block.flags) ? this.block.flags.find(blk => {
             let parts = Array.isArray(blk.parts) ? blk.parts.filter(part => {
               return part.status !== 'hidden';
@@ -1250,10 +1254,13 @@ export default {
         if (this.isProofreadUnassigned()) {
           return true;
         }
+        if (this.tc_isNarrateUnassigned(this.block) && flagType === 'editor') {
+          return true;
+        }
         //if (this.tc_allowAdminFlagging(this.block, flagType)) {
           //return true;
         //}
-        if (!this.tc_getBlockTask(this.block._id) && !this.tc_getBlockTaskOtherRole(this.block._id)) {
+        if (!this.tc_getBlockTask(this.block._id, this.mode) && !this.tc_getBlockTaskOtherRole(this.block._id)) {
           return false;
         }
         let canFlag = true;
@@ -1293,7 +1300,7 @@ export default {
                   }
                   break;
                 case 'proofer':
-                  if (this.mode !== 'proofread') {
+                  if (this.mode === 'edit') {
                     return false;
                   }
                   break;
@@ -1304,24 +1311,24 @@ export default {
                   break;
               }
             } else {
-              if (this.mode !== 'proofread' && part.type === 'editor') {
+              if (this.mode === 'edit' && part.type === 'editor') {
                 return false;
               }
               if (this.mode === 'narrate' && part.type === 'narrator') {
                 return false;
               }
             }
-            return part.status == 'resolved' && !part.collapsed && (!this.isCompleted || this.isProofreadUnassigned());
+            return part.status == 'resolved' && !part.collapsed && (!this.isCompleted || this.isProofreadUnassigned() || this.tc_isNarrateUnassigned(this.block));
           }
         }
         return false;
       },
       isProofreadUnassigned: function() {
         if (this._is('proofer', true) && this.mode === 'proofread') {
-          if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned()) {
+          if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned(this.block)) {
             return true;
           }
-          if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned()) {
+          if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned(this.block)) {
             let result = this.block.flags.find(f => {
 
               if ((f.creator === this.auth.getSession().user_id) || (f.creator_role && this._is(f.creator_role, true))) {
@@ -2081,11 +2088,14 @@ export default {
           upd_block.bookid = this.block.bookid;
         }
         this.isSaving = true;
+        let refreshTasks = this.isCompleted;
         return this.putBlockNarrate([upd_block, realign])
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
-            return Promise.resolve();
+            if (refreshTasks) {
+              this.getCurrentJobInfo();
+            }
           })
           .catch(err => {
             return Promise.reject(err);
@@ -2759,6 +2769,9 @@ export default {
         });
 
         if (foundBlockFlag.length == 0) {
+          if (!this.checkAllowNarrateUnassigned()) {
+            return false;
+          }
           if (this.allowBlockFlag) {
             if (this.block && this.block.voicework === 'narration') {
               if (type === 'editor' && this.mode === 'edit') {
@@ -2885,7 +2898,11 @@ export default {
       },
 
       reopenFlagPart: function(ev, partIdx) {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         this.flagsSel.parts[partIdx].status = 'open';
+        this.flagsSel.parts[partIdx].isReopen = true;
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
         this.isChanged = true;
@@ -2994,6 +3011,9 @@ export default {
                   if (response.status == 200) {
                     //self.blockAudio.map = response.data.content;
                     self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
+                    self.$store.commit('add_aligning_block', {
+                      _id: self.block.blockid, partIdx: partIdx
+                    });
                     //self.block.setContent(response.data.content);
                     //self.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                     //self.blockAudio.src = self.block.getAudiosrc('m4a');
@@ -4043,6 +4063,28 @@ export default {
         };
         if (isApproved !== null) filters['voiceworks_for_remove']['status.marked'] = isApproved;
         return this.setCurrentBookCounters([filters]);
+      },
+      
+      checkAllowNarrateUnassigned() {
+        if (!this.tc_allowNarrateUnassigned(this.block)) {
+          this.$root.$emit('closeFlagPopup', null);
+          this.$root.$emit('show-modal', {
+            title: 'Unable to re-narrate',
+            text: `The block can't be re-narrated because it is currently being edited.`,
+            buttons: [
+              {
+                title: 'OK',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return false;
+        }
+        return true;
       }
   },
   watch: {

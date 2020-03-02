@@ -21,7 +21,7 @@
               <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
-                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating && mode === 'edit'"></i>
+                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block, blockPart) && !isUpdating && mode === 'edit'"></i>
                       <i class="fa fa-play-circle-o"
                         @click="audPlay($event)"></i>
                       <i class="fa fa-stop-circle-o disabled"></i>
@@ -49,12 +49,12 @@
               <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
                 <div class="table-body">
                   <div class="table-row">
-                    <div class="table-cell -hidden-subblock" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged">
+                    <div class="table-cell -hidden-subblock" v-if="tc_showBlockAudioEdit(block, blockPart) && !isAudioChanged">
                       <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
                     </div>
-                    <template v-if="tc_showBlockNarrate(block.blockid) && !isAudStarted">
+                    <template v-if="tc_showBlockNarrate(block, blockPart) && !isAudStarted">
                       <div class="table-cell -hidden-subblock">
-                        <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording($event)"></i>
+                        <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording(true)"></i>
                       </div>
                     </template>
                     <template v-if="player && blockAudio.src && !isRecording">
@@ -203,7 +203,7 @@
                       placeholder="Enter description here ..."
                       @input="onInputFlag"
                       @focusout="onFocusoutFlag(partIdx, $event)"
-                      :disabled="!canCommentFlagPart(part)">
+                      :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_allowNarrateUnassigned(block))">
                     </textarea>
 
                     </template>
@@ -385,7 +385,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -941,6 +941,9 @@ export default {
         if (this.isProofreadUnassigned()) {
           return true;
         }
+        if (this.tc_isNarrateUnassigned(this.block) && flagType === 'editor') {
+          return true;
+        }
         //if (this.tc_allowAdminFlagging(this.block, flagType)) {
           //return true;
         //}
@@ -974,10 +977,10 @@ export default {
       },
       isProofreadUnassigned: function() {
         if (this._is('proofer', true) && this.mode === 'proofread') {
-          if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned()) {
+          if (this.block.status && this.block.status.proofed === true && this.tc_isProofreadUnassigned(this.block)) {
             return true;
           }
-          if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned()) {
+          if (this.block.flags && this.block.flags.length && this.tc_isProofreadUnassigned(this.block)) {
             let result = this.block.flags.find(f => {
 
               if ((f.creator === this.auth.getSession().user_id) || (f.creator_role && this._is(f.creator_role, true))) {
@@ -1058,7 +1061,7 @@ export default {
                 extensions: extensions,
                 disableEditing: !this.allowEditing
             });
-          } else if (this.tc_showBlockNarrate(this.block._id) && this.mode === 'narrate') {
+          } else if (this.tc_isNarrationEnabled(this.block._id) && this.mode === 'narrate') {
             extensions = {
                 'suggestButton': new SuggestButton(),
                 'suggestPreview': new SuggestPreview()
@@ -1474,6 +1477,7 @@ export default {
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isSaving = true;
+        let refreshTasks = this.isCompleted;
         return this.putBlockNarrate([Object.assign(this.blockPart, {
             blockid: this.block.blockid,
             bookid: this.block.bookid,
@@ -1481,6 +1485,9 @@ export default {
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
+            if (refreshTasks) {
+              this.getCurrentJobInfo();
+            }
             return Promise.resolve();
           })
           .catch(err => {
@@ -1725,6 +1732,9 @@ export default {
       },
 
       addFlag: function(ev, type = 'editor') {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         if (window.getSelection) {
           let startPos = this.$refs.blockContent.compareDocumentPosition(this.range.startContainer);
           let endPos = this.$refs.blockContent.compareDocumentPosition(this.range.endContainer);
@@ -1943,6 +1953,9 @@ export default {
       },
 
       addFlagPart: function(content, type = 'editor') {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         this.block.addPart(this.flagsSel._id, content, type, this.mode);
 
         this.updateFlagStatus(this.flagsSel._id);
@@ -2083,7 +2096,11 @@ export default {
       },
 
       reopenFlagPart: function(ev, partIdx) {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         this.flagsSel.parts[partIdx].status = 'open';
+        this.flagsSel.parts[partIdx].isReopen = true;
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
         this.isChanged = true;
@@ -2118,8 +2135,11 @@ export default {
         this.$refs.blockFlagPopup.reset();
       },
 
-      _startRecording() {
+      _startRecording(check_allow = false) {
         this.$root.$emit('closeFlagPopup', null);
+        if (check_allow && !this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         return this.initRecorder()
           .then(() => {
 
@@ -2395,6 +2415,9 @@ export default {
         .catch(()=>{})
       },
       showAudioEditor(footnoteIdx = null, footnote = null) {
+        if (!this.checkAllowNarrateUnassigned()) {
+          return false;
+        }
         //$('.table-body.-content').removeClass('editing');
         //$('#' + this.block._id + ' .table-body.-content').addClass('editing');
         if (!footnoteIdx) {
@@ -3194,6 +3217,20 @@ export default {
             }
           }
 
+        }
+      },
+      'isLocked': {
+        handler(val) {
+          //console.log('IS LOCKED', val, this.block)
+          if (this.block.audiosrc) {
+            this.blockAudio.src = this.block.getAudiosrc('m4a');
+          }
+          if (val === false) {
+            if (this.isCompleted) {
+              this.tc_loadBookTask(this.block.bookid);
+              this.getCurrentJobInfo();
+            }
+          }
         }
       },
       'classSel' (newVal, oldVal) {
