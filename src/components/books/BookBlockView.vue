@@ -1735,7 +1735,7 @@ export default {
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
-          return this.assembleBlockNarrate();
+          return this.assembleBlockNarrate(true, false, update_fields);
         }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
@@ -2063,13 +2063,23 @@ export default {
             return Promise.reject(err);
           });
       },
-      assembleBlockNarrate(check_realign = true, realign = false) {
+      assembleBlockNarrate(check_realign = true, realign = false, update_fields = []) {
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
         this.block.content = this.clearBlockContent();
+        let upd_block = Object.assign({}, this.block.clean());
+        if (update_fields.length > 0) {
+          Object.keys(upd_block).forEach(f => {
+            if (update_fields.indexOf(f) === -1) {
+              delete upd_block[f];
+            }
+          });
+          upd_block.blockid = this.block.blockid;
+          upd_block.bookid = this.block.bookid;
+        }
         this.isSaving = true;
-        return this.putBlockNarrate([this.block.clean(), realign])
+        return this.putBlockNarrate([upd_block, realign])
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
