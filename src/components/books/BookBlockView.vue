@@ -3703,10 +3703,16 @@ export default {
               this.getAlignCount();
               if (response && response.data && response.data.blocks) {
                 //response.data.updField = 'voicework';
-                this.$root.$emit('bookBlocksUpdates', response.data);
+                if (response.data.blocks.length > 1000) {
+                  this.$root.$emit('book-reimported');
+                } else {
+                  this.$root.$emit('bookBlocksUpdates', response.data);
+                }
                 //this.setCurrentBookBlocksLeft(this.block.bookid);
+                console.log('BookBlockView.vue->Counters:', response.data.counters);
               }
             }
+            this.currentBookCounters.voiceworks_for_remove = 0;
             this.voiceworkChange = false;
           })
           .catch(err => {
