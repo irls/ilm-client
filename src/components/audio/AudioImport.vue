@@ -258,7 +258,7 @@ export default {
         });*/
     },
     addFileToUpload(file) {
-      this.audioFiles.push({name: file.name, size: file.size});
+      this.audioFiles.push({name: file.name, size: file.size, uuid:file.upload.uuid});
       this.formData.append('audio_import', file, file.name);
       this.uploadFiles++
     },
@@ -316,6 +316,7 @@ export default {
     onUploadProgress() {
       //console.log(arguments)
       let total = 0;
+      console.log('get uploading files', this.$refs.uploadDropzone.getUploadingFiles());
       this.$refs.uploadDropzone.getUploadingFiles().forEach(f => {
         let processed = 0;
         f.upload.chunks.forEach(c => {
@@ -325,7 +326,11 @@ export default {
         });
         processed = Math.round(processed * 100 / f.upload.totalChunkCount);
         //console.log(f.name + ' ' + f.upload.progress, f.status, processed, f);
-        let af = this.audioFiles.find(_af => _af.name === f.name);
+        console.log('before debug: ', this.audioFiles, f.upload.uuid);
+        
+        //let af = this.audioFiles.find(_af => _af.name === f.name);
+        let af = this.audioFiles.find(af => af.uuid === f.upload.uuid);
+
         if (af) {
           af.progress = processed;
           af.uuid = f.upload.uuid;
@@ -350,6 +355,7 @@ export default {
       };
       this.audioFiles.forEach(af => {
         if (af.ready === true) {
+          //console.log('af ready!!!', af);
           toUpload.files.push(af);
         }
       });
@@ -442,8 +448,9 @@ export default {
     onUploadSuccess() {
     },
     onUploadComplete(file) {
-      let f = this.audioFiles.find(af => af.name === file.name);
+      let f = this.audioFiles.find(af => af.uuid === file.upload.uuid);
       if (f) {
+        //console.log('inside:', f.uuid, file.upload.uuid);
         f.ready = file.status === 'success';
         f.progress = 100;
       }
