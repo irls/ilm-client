@@ -246,7 +246,7 @@ export default {
     ...mapActions([
     'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
-    'putNumBlockOBatch',
+    'putNumBlockOBatch', 'reloadBook',
 
     'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue']),
 
@@ -1800,6 +1800,13 @@ export default {
       this.approveWaiting = val;
     },
 
+    bookReloaded() {
+      return this.reloadBook()
+      .then(()=>{
+        return this.bookReimported();
+      })
+    },
+
     bookReimported() {
       this.setBlockSelection({start: {}, end: {}});
       this.scrollToBlock(this.parlistO.idsArray()[0]);
@@ -1941,6 +1948,7 @@ export default {
       }
 
       this.$root.$on('book-reimported', this.bookReimported);
+      this.$root.$on('book-reloaded', this.bookReloaded);
       this.$root.$on('for-bookedit:scroll-to-block', this.scrollToBlock);
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
@@ -1966,6 +1974,7 @@ export default {
     this.$root.$off('bookBlocksUpdates', this.bookBlocksUpdates);
     this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
     this.$root.$off('book-reimported', this.bookReimported);
+    this.$root.$off('book-reloaded', this.bookReloaded);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
     this.$root.$off('from-toolbar:toggle-meta', this.correctEditWrapper);
   },

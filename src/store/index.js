@@ -2556,6 +2556,17 @@ export const store = new Vuex.Store({
         }
       }, interval);
     },
+    reloadBook({state, commit, dispatch}, data) {
+      commit('clear_storeList');
+      commit('clear_storeListO');
+      let bookid = state.currentBookid;
+      state.currentBookid = null;
+      return Promise.resolve({});
+      //return dispatch('loadBook', bookid)
+        //.then(() => {
+        //  return Promise.resolve(response);
+        //});
+    },
     reimportBook({state, commit, dispatch}, data) {
       if (!state.currentBookid) {
         return Promise.reject({err: {response: {data: {message: 'Book is not selected'}}}});

@@ -3702,14 +3702,14 @@ export default {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
               this.getAlignCount();
               if (response && response.data && response.data.blocks) {
+                console.log('BookBlockView.vue->Counters:', response.data.counters);
                 //response.data.updField = 'voicework';
-                if (response.data.blocks.length > 1000) {
-                  this.$root.$emit('book-reimported');
+                if (response.data.blocks.length > 999) {
+                  this.$root.$emit('book-reloaded');
                 } else {
                   this.$root.$emit('bookBlocksUpdates', response.data);
                 }
                 //this.setCurrentBookBlocksLeft(this.block.bookid);
-                console.log('BookBlockView.vue->Counters:', response.data.counters);
               }
             }
             this.currentBookCounters.voiceworks_for_remove = 0;
