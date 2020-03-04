@@ -169,7 +169,9 @@ export const store = new Vuex.Store({
       workflow: {
         status: null,
         archived: null
-      }
+      },
+      locked_blocks: {proofer: [], narrator: [], editor: []},
+      is_narrate_unassiged: false
     },
     taskTypes: {tasks: [], categories: []},
     liveDB: new liveDB(),
@@ -634,10 +636,7 @@ export const store = new Vuex.Store({
 
             }
             if (t.blockid) {
-              if (typeof state.tc_tasksByBlock[t.blockid] === 'undefined') {
-                state.tc_tasksByBlock[t.blockid] = [];
-              }
-              state.tc_tasksByBlock[t.blockid].push(t)
+              state.tc_tasksByBlock[t.blockid] = t;
             }
           })
           state.tc_currentBookTasks = {job: job, tasks: job.tasks, assignments: assignments, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : [], is_proofread_unassigned: job.is_proofread_unassigned ? job.is_proofread_unassigned : false}
@@ -867,6 +866,9 @@ export const store = new Vuex.Store({
         state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx});
       });
     },
+    add_aligning_block(state, block) {
+      state.aligningBlocks.push({_id: block.blockid ? block.blockid : block._id, partIdx: block.partIdx});
+    },
     set_storeList (state, blockObj) {
       //console.log('set_storeList', Date.now());
       if (state.storeList) {
@@ -931,12 +933,14 @@ export const store = new Vuex.Store({
     set_taskBlockMap(state) {
 
       let taskMap = {};
+      state.tc_tasksByBlock = {};
       [...state.tc_currentBookTasks.tasks, ...state.currentJobInfo.can_resolve_tasks].forEach(t => {
         //console.log(`${t.blockid}, ${t.type}`)
         if (typeof taskMap[t.type] === 'undefined') {
           taskMap[t.type] = {next: null, prev: null, blocks: []};
         }
         taskMap[t.type].blocks.push({blockId: t.blockid, blockRid: t.block});
+        state.tc_tasksByBlock[t.blockid] = t;
       });
       state.taskBlockMap.map = taskMap;
       state.taskBlockMap.refresh = Date.now();
@@ -2074,24 +2078,32 @@ export const store = new Vuex.Store({
             //state.tc_userTasks = {list: list.data.rows, total: 0}
             //commit('TASK_LIST_LOADED')
             if(Array.isArray(state.tc_currentBookTasks.tasks)) {// temporary remove current block task to disable it
-              state.tc_currentBookTasks.tasks.forEach((t, i) => {
-                if (t.blockid == task.blockid) {
-                  state.tc_currentBookTasks.tasks.splice(i, 1);
-                }
+              state.tc_currentBookTasks.tasks = state.tc_currentBookTasks.tasks.filter((t, i) => {
+                return t.blockid !== task.blockid;
               });
+            }
+            if (Array.isArray(state.currentJobInfo.can_resolve_tasks)) {
+              state.currentJobInfo.can_resolve_tasks = state.currentJobInfo.can_resolve_tasks.filter((t, i) => {
+                return t.blockid !== task.blockid;
+              });
+            }
+            if (state.tc_tasksByBlock[task.blockid]) {
+              delete state.tc_tasksByBlock[task.blockid];
             }
             if (!state.tc_currentBookTasks.tasks || state.tc_currentBookTasks.tasks.length === 0) {
               state.tc_currentBookTasks.is_proofread_unassigned = false;
             }
             //state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": []};
-            if (state.replicatingDB.ilm_tasks !== true) {
+            //if (state.replicatingDB.ilm_tasks !== true) {
               dispatch('tc_loadBookTask', task.bookid);
-            }
-            dispatch('getCurrentJobInfo');
+            //}
+            //dispatch('getCurrentJobInfo');
             return Promise.resolve(list);
           })
       })
-      .catch(err => err)
+      .catch(err => {
+        return Promise.reject(err);
+      });
     },
 
     setMetaData ({state, commit, dispatch}, data)
@@ -2523,7 +2535,9 @@ export const store = new Vuex.Store({
               workflow: {
                 status: null,
                 archived: null
-              }};
+              },
+              locked_blocks: {proofer: [], narrator: [], editor: []},
+              is_narrate_unassiged: false};
 
             let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
             commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
@@ -2866,10 +2880,10 @@ export const store = new Vuex.Store({
       return axios.post(state.API_URL + 'book/block/' + data.blockid + '/audio', data, {})
         .then(response => {
           //console.log(response);
-          return dispatch('getBookAlign')
-            .then(() => {
+          //return dispatch('getBookAlign')
+            //.then(() => {
               return Promise.resolve(response);
-            });
+            //});
         })
         .catch(err => {
           return dispatch('checkError', err);
