@@ -3691,22 +3691,24 @@ export default {
         }, {})
           .then(response => {
             this.voiceworkUpdating = false;
-            if (this.isCompleted) {
-              this.tc_loadBookTask();
-            }
-            //if (this.currentJobInfo && this.currentJobInfo.published) {
-              //this.updateBookVersion({major: true});
-            //}
-            this.getCurrentJobInfo();
+
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
-              this.getAlignCount();
               if (response && response.data && response.data.blocks) {
                 console.log('BookBlockView.vue->Counters:', response.data.counters);
                 //response.data.updField = 'voicework';
                 if (response.data.blocks.length > 999) {
                   this.$root.$emit('book-reloaded');
                 } else {
+
+                  if (this.isCompleted) {
+                    this.tc_loadBookTask();
+                  }
+                  //if (this.currentJobInfo && this.currentJobInfo.published) {
+                    //this.updateBookVersion({major: true});
+                  //}
+                  this.getCurrentJobInfo();
+                  this.getAlignCount();
                   this.$root.$emit('bookBlocksUpdates', response.data);
                 }
                 //this.setCurrentBookBlocksLeft(this.block.bookid);
