@@ -476,24 +476,34 @@
         </template>
       </div>
     </modal>
-    <modal :name="'voicework-change' + block._id" :resizeable="false" :height="250">
+    <modal :name="'voicework-change' + block._id" :resizeable="false" height="auto" width="425px" class="vue-js-modal">
       <!-- custom header -->
       <div class="modal-header">
-        <h4 class="modal-title">
+        <h4 class="modal-title text-center">
           Voicework update
         </h4>
       </div>
-      <div class="modal-body">
-        <div>Apply "{{blockVoiceworks[voiceworkChange]}}" voicework type to</div>
-        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label></div>
-        <div><label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label></div>
-        <div>This will also delete current audio from the {{blockTypeLabel}}(s)</div>
+      <div class="modal-body" style="padding-left: 35px; padding-bottom: 10px;">
+        <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
+        <div class="modal-content-flex">
+          <div class="modal-content-flex-block">
+          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
+          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
+          <!--v-if="!block.status.marked"-->
+          </div>
+          <div class="modal-content-flex-block">
+          <label class="modal-content-empty">&nbsp;</label>
+          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
+          </div>
+        </div>
+        <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', 'visible']">This will also delete current audio from the {{blockTypeLabel}}</div>
+        <div v-else :class="['attention-msg', {'visible': voiceworkUpdateType == 'unapproved'},{'red': voiceworkUpdateType == 'all'}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
       </div>
       <!-- custom buttons -->
-      <div class="modal-footer">
+      <div class="modal-footer vue-dialog-buttons">
         <template v-if="!voiceworkUpdating">
-          <button type="button" class="btn btn-default" @click="voiceworkChange = false">Cancel</button>
-          <button type="button" class="btn btn-confirm" @click="updateVoicework()">Apply</button>
+          <button type="button" class="btn btn-cancel" @click="voiceworkChange = false; voiceworkUpdateType = 'single'">Cancel</button>
+          <button type="button" class="btn btn-primary" @click="updateVoicework()">Update voicework</button>
         </template>
         <template v-else>
           <div class="voicework-preloader"></div>
@@ -753,10 +763,11 @@ export default {
         set(val) {
           if (val && val !== this.block.voicework) {
             this.voiceworkChange = val;
-            if (!this.block.status.marked && this.currentJobInfo.text_cleanup) {
+            if (/*!this.block.status.marked && */this.currentJobInfo.text_cleanup) {
               this.showModal('voicework-change');
             } else {
               this.voiceworkUpdateType = 'single';
+              this.currentBookCounters.voiceworks_for_remove = 0;
               this.updateVoicework();
             }
           }
