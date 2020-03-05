@@ -476,28 +476,30 @@
         </template>
       </div>
     </modal>
-    <modal :name="'voicework-change' + block._id" :resizeable="false" height="auto" width="425px" class="vue-js-modal">
+    <modal :name="'voicework-change' + block._id" :resizeable="false" height="auto" width="400px" class="vue-js-modal" @before-close="voicework_change_close($event)">
       <!-- custom header -->
       <div class="modal-header">
-        <h4 class="modal-title text-center">
+        <h4 class="modal-title"><!--text-center-->
           Voicework update
         </h4>
       </div>
-      <div class="modal-body" style="padding-left: 35px; padding-bottom: 10px;">
+      <div class="modal-body" style="padding-top: 10px; padding-bottom: 10px;">
         <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
         <div class="modal-content-flex">
           <div class="modal-content-flex-block">
           <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
           <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
+          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
           <!--v-if="!block.status.marked"-->
           </div>
           <div class="modal-content-flex-block">
           <label class="modal-content-empty">&nbsp;</label>
-          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
+          <label class="modal-content-empty">&nbsp;</label>
+          <label class="modal-content-empty">&nbsp;</label>
           </div>
         </div>
-        <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', 'visible']">This will also delete current audio from the {{blockTypeLabel}}</div>
-        <div v-else :class="['attention-msg', {'visible': voiceworkUpdateType == 'unapproved'},{'red': voiceworkUpdateType == 'all'}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
+        <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': block.audiosrc}]">This will also delete current audio from the {{blockTypeLabel}}</div>
+        <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
       </div>
       <!-- custom buttons -->
       <div class="modal-footer vue-dialog-buttons">
@@ -763,7 +765,8 @@ export default {
         set(val) {
           if (val && val !== this.block.voicework) {
             this.voiceworkChange = val;
-            if (/*!this.block.status.marked && */this.currentJobInfo.text_cleanup) {
+            if (true/*!this.block.status.marked && this.currentJobInfo.text_cleanup*/) {
+              this.voiceworkUpdateType = 'single';
               this.showModal('voicework-change');
             } else {
               this.voiceworkUpdateType = 'single';
@@ -3730,7 +3733,7 @@ export default {
           return false;
         }
         this.voiceworkUpdating = true;
-        let api_url = this.API_URL + 'book/block/' + this.block._uRid + '/set_voicework';
+        let api_url = `${this.API_URL}book/block/${this.meta.bookid}/${this.block._uRid}/set_voicework`;
         let api = this.$store.state.auth.getHttp();
         return api.post(api_url, {
           voicework: this.voiceworkChange,
@@ -3738,23 +3741,30 @@ export default {
         }, {})
           .then(response => {
             this.voiceworkUpdating = false;
-            if (this.isCompleted) {
-              this.tc_loadBookTask();
-            }
-            //if (this.currentJobInfo && this.currentJobInfo.published) {
-              //this.updateBookVersion({major: true});
-            //}
-            this.getCurrentJobInfo();
+
             if (response.status == 200) {
               this.$root.$emit('from-bookblockview:voicework-type-changed');
-              this.getAlignCount();
-              if (response && response.data) {
+              if (response && response.data && response.data.blocks) {
+                console.log('BookBlockView.vue->Counters:', response.data.counters);
                 //response.data.updField = 'voicework';
-                this.$root.$emit('bookBlocksUpdates', response.data);
-                this.block.voicework = this.voiceworkChange;
+                if (response.data.blocks.length > 999) {
+                  this.$root.$emit('book-reloaded');
+                } else {
+
+                  if (this.isCompleted) {
+                    this.tc_loadBookTask();
+                  }
+                  //if (this.currentJobInfo && this.currentJobInfo.published) {
+                    //this.updateBookVersion({major: true});
+                  //}
+                  this.getCurrentJobInfo();
+                  this.getAlignCount();
+                  this.$root.$emit('bookBlocksUpdates', response.data);
+                }
                 //this.setCurrentBookBlocksLeft(this.block.bookid);
               }
             }
+            this.currentBookCounters.voiceworks_for_remove = 0;
             this.voiceworkChange = false;
           })
           .catch(err => {
@@ -4064,7 +4074,7 @@ export default {
         if (isApproved !== null) filters['voiceworks_for_remove']['status.marked'] = isApproved;
         return this.setCurrentBookCounters([filters]);
       },
-      
+
       checkAllowNarrateUnassigned() {
         if (!this.tc_allowNarrateUnassigned(this.block)) {
           this.$root.$emit('closeFlagPopup', null);
@@ -4085,6 +4095,11 @@ export default {
           return false;
         }
         return true;
+      },
+
+      voicework_change_close($ev) {
+        //console.log('voicework_change_close', $ev);
+        if (this.voiceworkUpdating) $ev.stop();
       }
   },
   watch: {
@@ -5187,7 +5202,13 @@ export default {
     .modal-header {
       padding-left: 15px;
       padding-right: 15px;
-      padding-top: 5px;
+      padding-top: 15px;
+      border-bottom: none;
+
+      .modal-title {
+        font-size: 14px;
+        font-weight: 600;
+      }
     }
     .modal-footer {
       padding: 0;
@@ -5221,6 +5242,7 @@ export default {
         }
         label {
           display: block;
+          font-weight: normal;
         }
         .modal-content-empty {
           white-space: pre-wrap;
@@ -5235,6 +5257,7 @@ export default {
     }
     .attention-msg {
       color: transparent;
+      /*padding: 7px 0;*/
       &.visible {
         color: rgb(255, 86, 48);
       }
