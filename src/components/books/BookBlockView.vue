@@ -4101,6 +4101,10 @@ export default {
       voicework_change_close($ev) {
         //console.log('voicework_change_close', $ev);
         if (this.voiceworkUpdating) $ev.stop();
+        else {
+          this.voiceworkChange = false;
+          this.voiceworkUpdateType = 'single';
+        }
       }
   },
   watch: {
