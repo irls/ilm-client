@@ -765,12 +765,12 @@ export default {
         set(val) {
           if (val && val !== this.block.voicework) {
             this.voiceworkChange = val;
+            this.currentBookCounters.voiceworks_for_remove = 0;
             if (true/*!this.block.status.marked && this.currentJobInfo.text_cleanup*/) {
               this.voiceworkUpdateType = 'single';
               this.showModal('voicework-change');
             } else {
               this.voiceworkUpdateType = 'single';
-              this.currentBookCounters.voiceworks_for_remove = 0;
               this.updateVoicework();
             }
           }
@@ -4065,10 +4065,11 @@ export default {
         }
         return false;
       },
-      countVoiceworksForRemove(blockType, isApproved = null) {
+      countVoiceworksForRemove(blockType, voicework, isApproved = null) {
         let filters = {
           'voiceworks_for_remove': {
-            type: blockType
+            type: blockType,
+            voicework: voicework
           }
         };
         if (isApproved !== null) filters['voiceworks_for_remove']['status.marked'] = isApproved;
@@ -4391,7 +4392,7 @@ export default {
         handler(val) {
           if (val !== 'single') {
             //this.voiceworkUpdating = true;
-            this.countVoiceworksForRemove(this.block.type, (val === 'unapproved' ? false: null))
+            this.countVoiceworksForRemove(this.block.type, this.voiceworkChange, (val === 'unapproved' ? false: null))
             .then((res)=>{
               //this.voiceworkUpdating = false;
             })
