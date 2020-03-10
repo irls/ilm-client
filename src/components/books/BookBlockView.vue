@@ -3745,7 +3745,7 @@ export default {
             if (response.status == 200) {
               if (response && response.data && response.data.blocks) {
                 console.log('BookBlockView.vue->Counters:', response.data.counters);
-                this.$store.state.liveDB.stopWatch('blockV');
+                this.$store.state.liveDB.onBookReimport();
                 this.$store.state.liveDB.stopWatch('metaV');
                 this.$store.state.liveDB.stopWatch('job');
                 //response.data.updField = 'voicework';
