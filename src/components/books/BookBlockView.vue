@@ -3693,13 +3693,17 @@ export default {
             this.voiceworkUpdating = false;
 
             if (response.status == 200) {
-              this.$root.$emit('from-bookblockview:voicework-type-changed');
               if (response && response.data && response.data.blocks) {
                 console.log('BookBlockView.vue->Counters:', response.data.counters);
+                this.$store.state.liveDB.stopWatch('blockV');
+                this.$store.state.liveDB.stopWatch('metaV');
+                this.$store.state.liveDB.stopWatch('job');
                 //response.data.updField = 'voicework';
                 if (response.data.blocks.length > 300) {
                   this.$root.$emit('book-reloaded');
                 } else {
+
+                  this.$root.$emit('from-bookblockview:voicework-type-changed');
 
                   if (this.isCompleted) {
                     this.tc_loadBookTask();
