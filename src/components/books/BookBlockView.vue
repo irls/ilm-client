@@ -3747,7 +3747,7 @@ export default {
               if (response && response.data && response.data.blocks) {
                 console.log('BookBlockView.vue->Counters:', response.data.counters);
                 //response.data.updField = 'voicework';
-                if (response.data.blocks.length > 999) {
+                if (response.data.blocks.length > 300) {
                   this.$root.$emit('book-reloaded');
                 } else {
 
