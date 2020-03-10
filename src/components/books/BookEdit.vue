@@ -1801,6 +1801,7 @@ export default {
     },
 
     bookReloaded() {
+      console.log('BookEdit.vue->bookReloaded');
       return this.reloadBook()
       .then(()=>{
         return this.bookReimported();
