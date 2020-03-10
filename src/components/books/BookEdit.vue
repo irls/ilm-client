@@ -246,7 +246,7 @@ export default {
     ...mapActions([
     'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
-    'putNumBlockOBatch', 'reloadBook',
+    'putNumBlockOBatch',
 
     'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue']),
 
@@ -1802,9 +1802,10 @@ export default {
 
     bookReloaded() {
       console.log('BookEdit.vue->bookReloaded');
-      return this.reloadBook()
-      .then(()=>{
-        return this.bookReimported();
+      this.$store.commit('clear_storeList');
+      this.$store.commit('clear_storeListO');
+      Vue.nextTick(()=>{
+        this.bookReimported();
       })
     },
 
