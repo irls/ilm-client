@@ -792,15 +792,6 @@ export default {
           return this.block.type === 'par' ? 'paragraph' : this.block.type;
         }
       },
-      allowAudioRevert() {
-        if (this.tc_hasBlockTask('fix-block-text') && this.block && this.block.audiosrc === 'audio_file') {
-          return true;
-        }
-        if (this.tc_hasBlockTask(this.block._id, 'fix-block-narration')) {
-          return true;
-        }
-        return false;
-      },
       proofreadModeReadOnly: {
           get() {
               return this.allowEditing && this.mode === 'proofread';
@@ -931,7 +922,8 @@ export default {
         'saveNarrated',
         'checkError',
         'getBookAlign',
-        'recountVoicedBlocks'
+        'recountVoicedBlocks',
+        'revertAudio'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1282,27 +1274,6 @@ export default {
           }
 
         });
-      },
-      discardAudio: function() {
-        //this.blockAudio.src = this.block.getAudiosrc('m4a');
-        //this.blockAudio.map = this.block.content;
-        //let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
-        //let api = this.$store.state.auth.getHttp();
-        //api.delete(api_url, {}, {})
-          //.then(response => {
-          //
-          //})
-          //.catch(err => {
-          //
-          //});
-        if (this.tc_hasBlockTask(this.block._id, 'fix-block-narration')) {
-          let api = this.$store.state.auth.getHttp();
-          api.post(this.API_URL + 'book/block/' + this.block._id + '/audio/revert')
-            .then(response => {
-              this.$root.$emit('bookBlocksUpdates', {blocks: [response.data.block]});
-            })
-            .catch(err => console.log(err));
-        }
       },
 
       discardFtnAudio: function() {
@@ -2422,9 +2393,9 @@ export default {
         //$('#' + this.block._id + ' .table-body.-content').addClass('editing');
         if (!footnoteIdx) {
           this.isAudioEditing = true;
-          if (this.isAudioChanged) {
-            this.discardAudio();
-          }
+          //if (this.isAudioChanged) {
+            //this.discardAudio();
+          //}
         }
         this.footnoteIdx = footnoteIdx;
         this.check_id = this.generateAudioCheckId();
@@ -2730,6 +2701,26 @@ export default {
           }
         }
       },
+      evFromAudioEditorRevert(blockId) {
+        if (blockId == this.check_id) {
+          if (this.blockPart.audiosrc_original) {
+            this.isSaving = true;
+            return this.revertAudio([this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null])
+              .then(() => {
+                this.isSaving = false;
+                let audiosrc = this.blockAudio.src;
+                let text = this.blockAudio.map;
+                let loadBlock = this.blockPart;
+                loadBlock._id = this.check_id;
+                //this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
+                this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+                return Promise.resolve();
+              });
+          } else {
+            return this.discardAudioEdit(null, true, this.blockPartIdx, this.check_id);
+          }
+        }
+      },
       audioEditorEventsOn() {
         this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
         this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
@@ -2743,6 +2734,7 @@ export default {
 
         this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
         this.$root.$on('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
+        this.$root.$on('from-audioeditor:revert', this.evFromAudioEditorRevert);
       },
       audioEditorEventsOff() {
         this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
@@ -2756,6 +2748,7 @@ export default {
         this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
         this.$root.$off('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
+        this.$root.$off('from-audioeditor:revert', this.evFromAudioEditorRevert);
       },
       //-- } -- end -- Events --//
 
@@ -3081,6 +3074,7 @@ export default {
               this.block.setPartContent(this.blockPartIdx, part.content);
               this.block.setPartAudiosrc(this.blockPartIdx, part.audiosrc, part.audiosrc_ver);
               this.block.setPartManualBoundaries(this.blockPartIdx, part.manual_boundaries || []);
+              this.block.setPartAudiosrcOriginal(this.blockPartIdx, part.audiosrc_original || null);
               //return this.putBlock(this.block);
               if (!realign) {
                 part._id = this.check_id;
