@@ -1136,9 +1136,9 @@ export default {
                   this.$root.$emit('for-audioeditor:force-close');
                 }
                 elBlock.isAudioChanged = false;
-                elBlock.evFromAudioeditorClosed(block.blockid);
+                //elBlock.evFromAudioeditorClosed(block.blockid);
                 elNext.isAudioChanged = false;
-                elNext.evFromAudioeditorClosed(blockBefore.blockid);
+                //elNext.evFromAudioeditorClosed(blockBefore.blockid);
                 return this.blocksJoin({
                   resultBlock_id: blockBefore.blockid,
                   donorBlock_id: block.blockid
@@ -1237,9 +1237,9 @@ export default {
                   this.$root.$emit('for-audioeditor:force-close');
                 }
                 elBlock.isAudioChanged = false;
-                elBlock.evFromAudioeditorClosed(block.blockid);
+                //elBlock.evFromAudioeditorClosed(block.blockid);
                 elNext.isAudioChanged = false;
-                elNext.evFromAudioeditorClosed(blockAfter.blockid);
+                //elNext.evFromAudioeditorClosed(blockAfter.blockid);
                 return this.blocksJoin({
                   resultBlock_id: block.blockid,
                   donorBlock_id: blockAfter.blockid
