@@ -2444,6 +2444,11 @@ export default {
       evFromAudioeditorBlockLoaded(blockId) {
         if (blockId == this.check_id) {
           $('nav.fixed-bottom').removeClass('hidden');
+          if (this.isLocked) {
+            this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+          } else if (this.$parent.isLocked) {
+            this.$root.$emit('for-audioeditor:set-process-run', true, this.$parent.lockedType);
+          }
         }
       },
       evFromAudioeditorWordRealign(map, blockId, shiftedInfo) {
@@ -2706,14 +2711,18 @@ export default {
           if (this.blockPart.audiosrc_original) {
             this.isSaving = true;
             return this.revertAudio([this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null])
-              .then(() => {
+              .then((res) => {
                 this.isSaving = false;
-                let audiosrc = this.blockAudio.src;
+                //console.log(res.data);
+                this.block.setPartAudiosrc(this.blockPartIdx, res.data.audiosrc, res.data.audiosrc_ver);
+                this.block.setPartManualBoundaries(this.blockPartIdx, res.data.manual_boundaries);
                 let text = this.blockAudio.map;
                 let loadBlock = this.blockPart;
+                loadBlock.manual_boundaries = this.block.getPartManualBoundaries(this.blockPartIdx);
                 loadBlock._id = this.check_id;
-                //this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
-                this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+                this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), text, false, loadBlock);
+                //this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+                this.showPinnedInText();
                 return Promise.resolve();
               });
           } else {

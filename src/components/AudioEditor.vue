@@ -1827,6 +1827,9 @@
           this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
         },
         revert(warn = false) {
+          if (this.isRevertDisabled) {
+            return false;
+          }
           if (warn) {
             this.$root.$emit('show-modal', {
               title: '<b>Revert block audio</b>',

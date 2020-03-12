@@ -3113,10 +3113,10 @@ export const store = new Vuex.Store({
     },
     revertAudio({state, dispatch}, [blockid, partIdx]) {
       return axios.post(`${state.API_URL}book/block/${blockid}${partIdx !== null ? '/' + partIdx : ''}/audio/revert`)
-        .then(() => {
+        .then((res) => {
           return dispatch('getBookAlign')
             .then(() => {
-              return Promise.resolve();
+              return Promise.resolve(res);
             });
           
         })
