@@ -33,7 +33,8 @@ let defBlock = [
   'audiosrc_ver',
   'blockid',
   'manual_boundaries',
-  'parts'
+  'parts',
+  'audiosrc_original'
 ];
 
 let BlockTypes = {
@@ -303,6 +304,7 @@ class BookBlock {
     this.illustration_height = init.illustration_height || false;
     this.blockid = init.blockid || false;
     this.manual_boundaries = init.manual_boundaries || [];
+    this.audiosrc_original = init.audiosrc_original || null;
     let parts = init.parts || [];
     if (
       Vue.prototype.globalJobInfo.id &&
@@ -725,6 +727,20 @@ class BookBlock {
     } else if (partIdx === 0) {
       this.setManualBoundaries(boundaries);
     }
+  }
+  
+  setPartAudiosrcOriginal(partIdx, src) {
+    let partCheck =
+      Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+    if (partCheck) {
+      this.set(`parts.${partIdx}.audiosrc_original`, src);
+    } else if (partIdx === 0) {
+      this.setAudiosrcOriginal(src);
+    }
+  }
+  
+  setAudiosrcOriginal(src) {
+    this.set('audiosrc_original', src);
   }
 
   undoContent() {

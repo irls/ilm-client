@@ -111,9 +111,6 @@
                       <li class="separator"></li>
                       </template>
                     </template>
-                    <li @click="discardAudio" v-if="allowAudioRevert">
-                      <i class="fa fa-cloud-download" aria-hidden="true"></i>
-                      Revert to original audio</li>
                   </block-menu>
                 </div>
                 <!--<div class="block-menu">-->
@@ -1048,21 +1045,13 @@ export default {
                 blockId: this.block._id,
                 audiosrc: this.block.audiosrc,
                 audiosrc_ver: this.block.audiosrc_ver,
-                manual_boundaries: this.block.manual_boundaries
+                manual_boundaries: this.block.manual_boundaries,
+                audiosrc_original: this.block.audiosrc_original || null
               }
             ];
           }
         },
         cache: false
-      },
-      allowAudioRevert() {
-        if (this.tc_hasBlockTask('fix-block-text') && this.block && this.block.audiosrc === 'audio_file') {
-          return true;
-        }
-        if (this.tc_hasBlockTask(this.block._id, 'fix-block-narration')) {
-          return true;
-        }
-        return false;
       },
       showBlockFlag: {
         get() {
@@ -1132,8 +1121,6 @@ export default {
       }
       if (this.block.isAudioEditing) {
         this.isAudioEditing = this.block.isAudioEditing;
-        this.audioEditorEventsOff();
-        this.audioEditorEventsOn();
         delete this.block.isAudioEditing;
       }
       //console.log('mounted isChecked', this.blockO);
@@ -1172,8 +1159,6 @@ export default {
   beforeDestroy: function () {
 //     console.log('beforeDestroy', this.block._id);
 //     console.log('this.isChanged', this.isChanged);
-    this.audioEditorEventsOff();
-
     if (this.$refs.illustrationInput) {
       // a trick to avoid console warning about incorrect resizeCanvas
       // because somehow VuePictureInput does not destroyed in normal way
@@ -1222,7 +1207,6 @@ export default {
 
       this.$root.$off('saved-block:' + this.block._id);
 
-      this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
       this.$root.$off(`save-block:${this.block.blockid}`);
 
     }
@@ -1247,7 +1231,8 @@ export default {
         'checkError',
         'getBookAlign',
         'updateBlockPart',
-        'recountVoicedBlocks'
+        'recountVoicedBlocks',
+        'revertAudio'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1647,28 +1632,7 @@ export default {
 
         });
       },
-      discardAudio: function() {
-        //this.blockAudio.src = this.block.getAudiosrc('m4a');
-        //this.blockAudio.map = this.block.content;
-        //let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
-        //let api = this.$store.state.auth.getHttp();
-        //api.delete(api_url, {}, {})
-          //.then(response => {
-          //
-          //})
-          //.catch(err => {
-          //
-          //});
-        if (this.tc_hasBlockTask(this.block._id, 'fix-block-narration')) {
-          let api = this.$store.state.auth.getHttp();
-          api.post(this.API_URL + 'book/block/' + this.block._id + '/audio/revert')
-            .then(response => {
-              this.$root.$emit('bookBlocksUpdates', {blocks: [response.data.block]});
-            })
-            .catch(err => console.log(err));
-        }
-      },
-
+      
       discardFtnAudio: function() {
 //         this.blockAudio.src = this.block.audiosrc;
 //         this.blockAudio.map = this.block.content;
@@ -2241,6 +2205,7 @@ export default {
                   this.blockAudio.map = response.data.content;
                   this.blockAudio.src = this.block.getAudiosrc('m4a');
                   this.block.manual_boundaries = response.data.manual_boundaries || [];
+                  this.block.audiosrc_original = response.data.audiosrc_original;
                   Vue.nextTick(() => {
                     if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
                       this.block.flags.forEach(f => {
@@ -3319,248 +3284,15 @@ export default {
         }
         this.footnoteIdx = footnoteIdx;
         this.check_id = footnoteIdx !== null ? this.block._id + '_' + footnoteIdx : this.block._id;
-        this.audioEditorEventsOff();
-
-
         Vue.nextTick(() => {
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
           let text = footnote ? footnote.content : this.blockAudio.map;
           let loadBlock = footnoteIdx !== null ? {_id: this.check_id, voicework: footnote ? footnote.voicework : 'tts', manual_boundaries: footnote ? footnote.manual_boundaries || [] : []} : this.block;
           this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
-
-          let self = this;
-          this.audioEditorEventsOn();
         });
       },
 
-      //-- Events -- { --//
-      evFromAudioeditorClosed(blockId) {
-
-        if (blockId === this.block._id || blockId === this.block._id + '_' + this.footnoteIdx) {
-          this.isAudioEditing = false;
-          if (this.isAudioChanged || this.audioEditFootnote.isAudioChanged) {
-            this.discardAudioEdit(this.footnoteIdx, false);
-          }
-          //$('nav.fixed-bottom').addClass('hidden');
-
-          this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
-          //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
-          //this.check_id = null;
-          this.audioEditorEventsOff();
-        }
-
-        console.log('stop events', this.block._id);
-
-      },
-      evFromAudioeditorBlockLoaded(blockId) {
-        if (blockId == this.check_id) {
-          $('nav.fixed-bottom').removeClass('hidden');
-        }
-      },
-      evFromAudioeditorWordRealign(map, blockId) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          //console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
-          if (this.footnoteIdx !== null) {
-            let ref = this.$refs['footnoteContent_' + this.footnoteIdx];
-            if (ref) {
-              ref = ref[0];
-            }
-            if (ref && ref.querySelectorAll) {
-              let manual_boundaries = this.audioEditFootnote.footnote.manual_boundaries || [];
-              ref.querySelectorAll('[data-map]').forEach(_w => {
-                if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
-                  let _m = map.shift();
-                  if (_m) {
-                    let w_map = _m.join();
-                    let currentMap = $(_w).attr('data-map').split(',');
-                    currentMap[0] = parseInt(currentMap[0]);
-                    currentMap[1] = parseInt(currentMap[1]);
-                    if (currentMap[0] != _m[0] && manual_boundaries.indexOf(_m[0]) == -1) {
-                      if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
-                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
-                      }
-                      manual_boundaries.push(_m[0]);
-                    }
-                    if (currentMap[0] + currentMap[1] != _m[0] + _m[1] && manual_boundaries.indexOf(_m[0] + _m[1]) == -1) {
-                      if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
-                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
-                      }
-                      manual_boundaries.push(_m[0] + _m[1]);
-                    }
-                    $(_w).attr('data-map', w_map)
-                  }
-                }
-              });
-              this.audioEditFootnote.footnote.content = ref.innerHTML;
-              this.audioEditFootnote.footnote.manual_boundaries = manual_boundaries;
-              this.$root.$emit('for-audioeditor:reload-text', this.audioEditFootnote.footnote.content, this.audioEditFootnote.footnote);
-              this.pushChange('footnotes');
-              this.pushChange('content_footnote');
-            }
-          } else {
-            if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
-              let manual_boundaries = this.block.manual_boundaries || [];
-              this.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
-                if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
-                  let _m = map.shift();
-                  if (_m) {
-                    let w_map = _m.join()
-                    let currentMap = $(_w).attr('data-map').split(',');
-                    currentMap[0] = parseInt(currentMap[0]);
-                    currentMap[1] = parseInt(currentMap[1]);
-                    if (currentMap[0] != _m[0] && manual_boundaries.indexOf(_m[0]) == -1) {
-                      if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
-                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
-                      }
-                      manual_boundaries.push(_m[0]);
-                    }
-                    if (currentMap[0] + currentMap[1] != _m[0] + _m[1] && manual_boundaries.indexOf(_m[0] + _m[1]) == -1) {
-                      if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
-                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
-                      }
-                      manual_boundaries.push(_m[0] + _m[1]);
-                    }
-                    $(_w).attr('data-map', w_map)
-                  }
-                }
-              });
-              this.block.manual_boundaries = manual_boundaries;
-              this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.block);
-              this.block.content = this.$refs.blockContent.innerHTML;
-              this.blockAudio.map = this.block.content;
-              //this.pushChange('content');
-            }
-          }
-        }
-        this.isAudioChanged = true;
-      },
-      evFromAudioeditorSaveAndRealign (blockId, check_realign = true, realign = false) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          //this.doReAlign(this.footnoteIdx)
-            //.then(() => {
-              this.assembleBlockAudioEdit(this.footnoteIdx, true, false);
-              //this.flushChanges();
-              //this.isChanged = false;
-              this.isAudioChanged = false;
-            //});
-        }
-      },
-      evFromAudioeditorCut (blockId, start, end) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          this._audDeletePart(start, end, this.footnoteIdx);
-        }
-      },
-      evFromAudioeditorSave (blockId) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          this.assembleBlockAudioEdit(this.footnoteIdx, false, false);
-          //this.flushChanges();
-          //this.isChanged = false;
-          this.isAudioChanged = false;
-        }
-      },
-      evFromAudioeditorInsertSilence (blockId, position, length) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          this.insertSilence(position, length, this.footnoteIdx);
-        }
-      },
-      evFromAudioeditorUndo (blockId, audio, text, isModified) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          if (this.footnoteIdx === null) {
-            this.block.undoContent();
-            this.block.undoAudiosrc();
-            this.blockAudio.map = this.block.content;
-            this.blockAudio.src = this.block.getAudiosrc('m4a');
-            this.block.undoManualBoundaries();
-            this.isAudioChanged = isModified;
-          } else {
-            //this.audioEditFootnote.footnote.content = text;
-            //this.block.setAudiosrcFootnote(footnoteIdx, audio);
-            //this.audioEditFootnote.isAudioChanged = isModified;
-            this.block.undoContentFootnote(this.footnoteIdx);
-            this.block.undoAudiosrcFootnote(this.footnoteIdx);
-            this.block.undoManualBoundariesFootnote(this.footnoteIdx);
-            this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(this.footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
-          }
-        }
-      },
-      evFromAudioeditorDiscard (blockId) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          this.discardAudioEdit(this.footnoteIdx);
-        }
-      },
-      evFromAudioeditorSelect (blockId, start, end) {
-        if (blockId == this.check_id) {
-          if (start !== this.audioSelectPos.start || end !== this.audioSelectPos.end) {
-            let ref;
-            if (this.footnoteIdx !== null) {
-              ref = this.$refs['footnoteContent_' + this.footnoteIdx];
-              if (ref) {
-                ref = ref[0];
-              }
-            } else {
-              if (this.$refs.blockContent) {
-                ref = this.$refs.blockContent;
-              }
-            }
-            if (ref && ref.querySelectorAll) {
-              let startInt = parseInt(start * 1000);
-              let endInt = parseInt(end * 1000);
-              //console.log('evFromAudioeditorSelect', startInt, endInt);
-              ref.querySelectorAll('w').forEach(e => {
-                let map = $(e).attr('data-map');
-                if(map) {
-                  map = map.split(',');
-                  if (map.length == 2) {
-                    map[0] = parseInt(map[0]);
-                    map[1] = map[0] + parseInt(map[1]);
-                    if ((map[0] >= startInt && map[0] < endInt) ||
-                            (map[0] < startInt && map[1] > startInt)) {
-                       $(e).addClass('selected');
-                    } else {
-                      $(e).removeClass('selected');
-                    }
-                  }
-                }
-              });
-            }
-            this.audioSelectPos.start = start;
-            this.audioSelectPos.end = end;
-          }
-        }
-      },
-      audioEditorEventsOn() {
-        this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
-        //this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-        this.$root.$on('from-audioeditor:save', this.evFromAudioeditorSave);
-        this.$root.$on('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
-        this.$root.$on('from-audioeditor:cut', this.evFromAudioeditorCut);
-        this.$root.$on('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-        this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
-        this.$root.$on('from-audioeditor:discard', this.evFromAudioeditorDiscard);
-        this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
-
-        this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
-      },
-      audioEditorEventsOff() {
-        this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
-        this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-        this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
-        this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
-        this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
-        this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-        this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
-        this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
-        this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
-        this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
-      },
-      //-- } -- end -- Events --//
+      
 
       _getParent(node, tag) {
         if (node.localName == tag) {

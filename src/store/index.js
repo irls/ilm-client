@@ -3110,6 +3110,19 @@ export const store = new Vuex.Store({
           commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
         }
       }
+    },
+    revertAudio({state, dispatch}, [blockid, partIdx]) {
+      return axios.post(`${state.API_URL}book/block/${blockid}${partIdx !== null ? '/' + partIdx : ''}/audio/revert`)
+        .then((res) => {
+          return dispatch('getBookAlign')
+            .then(() => {
+              return Promise.resolve(res);
+            });
+          
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })
