@@ -3225,8 +3225,8 @@ export default {
       'isLocked': {
         handler(val) {
           //console.log('IS LOCKED', val, this.block)
-          if (this.block.audiosrc) {
-            this.blockAudio.src = this.block.getAudiosrc('m4a');
+          if (this.blockPart.audiosrc) {
+            this.blockAudio.src = this.blockAudiosrc('m4a');
           }
           if (val === false) {
             if (this.isCompleted) {
