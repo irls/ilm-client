@@ -4346,6 +4346,7 @@ export default {
       },
       'voiceworkUpdateType' : {
         handler(val) {
+          this.currentBookCounters.voiceworks_for_remove = 0;
           if (val !== 'single') {
             //this.voiceworkUpdating = true;
             this.countVoiceworksForRemove(this.block.type, this.voiceworkChange, (val === 'unapproved' ? false: null))
