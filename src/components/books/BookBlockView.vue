@@ -3741,35 +3741,36 @@ export default {
         }, {})
           .then(response => {
             this.voiceworkUpdating = false;
+            Vue.nextTick(()=>{
+              if (response.status == 200) {
+                if (response && response.data && response.data.blocks) {
+                  console.log('BookBlockView.vue->Counters:', response.data.counters);
+                  this.$store.state.liveDB.onBookReimport();
+                  this.$store.state.liveDB.stopWatch('metaV');
+                  this.$store.state.liveDB.stopWatch('job');
+                  //response.data.updField = 'voicework';
+                  if (response.data.blocks.length > 300) {
+                    this.$root.$emit('book-reloaded');
+                  } else {
 
-            if (response.status == 200) {
-              if (response && response.data && response.data.blocks) {
-                console.log('BookBlockView.vue->Counters:', response.data.counters);
-                this.$store.state.liveDB.onBookReimport();
-                this.$store.state.liveDB.stopWatch('metaV');
-                this.$store.state.liveDB.stopWatch('job');
-                //response.data.updField = 'voicework';
-                if (response.data.blocks.length > 300) {
-                  this.$root.$emit('book-reloaded');
-                } else {
+                    this.$root.$emit('from-bookblockview:voicework-type-changed');
 
-                  this.$root.$emit('from-bookblockview:voicework-type-changed');
-
-                  if (this.isCompleted) {
-                    this.tc_loadBookTask();
+                    if (this.isCompleted) {
+                      this.tc_loadBookTask();
+                    }
+                    //if (this.currentJobInfo && this.currentJobInfo.published) {
+                      //this.updateBookVersion({major: true});
+                    //}
+                    this.getCurrentJobInfo();
+                    this.getAlignCount();
+                    this.$root.$emit('bookBlocksUpdates', response.data);
                   }
-                  //if (this.currentJobInfo && this.currentJobInfo.published) {
-                    //this.updateBookVersion({major: true});
-                  //}
-                  this.getCurrentJobInfo();
-                  this.getAlignCount();
-                  this.$root.$emit('bookBlocksUpdates', response.data);
+                  //this.setCurrentBookBlocksLeft(this.block.bookid);
                 }
-                //this.setCurrentBookBlocksLeft(this.block.bookid);
               }
-            }
-            this.currentBookCounters.voiceworks_for_remove = 0;
-            this.voiceworkChange = false;
+              this.currentBookCounters.voiceworks_for_remove = 0;
+              this.voiceworkChange = false;
+            })
           })
           .catch(err => {
             this.voiceworkUpdating = false;
@@ -4398,6 +4399,7 @@ export default {
       },
       'voiceworkUpdateType' : {
         handler(val) {
+          this.currentBookCounters.voiceworks_for_remove = 0;
           if (val !== 'single') {
             //this.voiceworkUpdating = true;
             this.countVoiceworksForRemove(this.block.type, this.voiceworkChange, (val === 'unapproved' ? false: null))
