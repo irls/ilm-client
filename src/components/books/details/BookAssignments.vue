@@ -77,6 +77,12 @@
                     </div>
                     <div v-else class="preloader-task"></div>
                   </div>
+                  <div v-if="action=='approve_modified_block'">
+                    <div v-if="1==1" class="editing-wrapper">
+                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApproveModifications()" :disabled="isBatchApproveModificationsProgress">Approve</button>
+                    </div>
+                    <div v-else class="preloader-task"></div>
+                  </div>
                 </template>
               </td>
             </tr>
@@ -373,7 +379,7 @@
       /* ************* */
 
       toggleBatchApproveModifications() {
-        console.log('toggle counters:', this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup);
+        console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup);
         let title = '';
         let text = '';
         let buttons = [
@@ -389,18 +395,14 @@
               this.isBatchProgress = true;
               this.$root.$emit('hide-modal');
               return new Promise((resolve, reject) => {
-                this.completeBatchApproveModifictions()
+                console.log('inside 1');
+                this.completeBatchApproveModifications()
                 .then((doc) => {
                   if (!doc.data.error) {
                     return this.reloadBook()
                       .then(() => {
                         this.$root.$emit('book-reimported');
-                        /*if (this.currentBookCounters.not_marked_blocks === 0){
-                          this.finishTextCleanup();
-                          this.textCleanupProcess = false;
-                        } else {
                           this.isBatchProgress = false;
-                        }*/
                       })
                   } else {
                     this.$root.$emit('set-error-alert', doc.data.error);
@@ -440,11 +442,6 @@
               },
             },
           ]
-        }
-        else if (this.counterTextCleanup === 0){
-          title = 'Complete the Task';
-          text = 'Complete editing?'; 
-          buttons[1].title = 'Complete';
         };
 
       
@@ -620,7 +617,7 @@
         }
         this.$forceUpdate();
       },
-      ...mapActions(['updateBookMeta', 'setCurrentBookCounters', 'completeTextCleanup', 'completeAudioMastering', 'completeBatchApproveEditAndAlign', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook', 'getTaskUsers']),
+      ...mapActions(['updateBookMeta', 'setCurrentBookCounters', 'completeTextCleanup', 'completeAudioMastering', 'completeBatchApproveEditAndAlign', 'completeBatchApproveModifications', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook', 'getTaskUsers']),
     },
     mounted() {
       this.set_taskBlockMapPositionsFromRoute();
