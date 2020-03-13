@@ -385,7 +385,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'eraseAudio'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -2730,6 +2730,12 @@ export default {
           }
         }
       },
+      evFromAudioeditorEraseAudio(blockId, start, end) {
+        if (blockId === this.check_id) {
+          this.audStop();
+          return this.eraseAudio(start, end, null, this.blockPartIdx);
+        }
+      },
       audioEditorEventsOn() {
         this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
         this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
@@ -2743,6 +2749,7 @@ export default {
 
         this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
         this.$root.$on('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
+        this.$root.$on('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
       },
       audioEditorEventsOff() {
         this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
@@ -2756,6 +2763,7 @@ export default {
         this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
         this.$root.$off('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
+        this.$root.$off('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
       },
       //-- } -- end -- Events --//
 

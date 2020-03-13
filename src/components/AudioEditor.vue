@@ -59,6 +59,7 @@
             <div>
               <button class="btn btn-default" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection">Clear</button>
               <button class="btn btn-primary" v-on:click="cut()"  :disabled="!hasSelection || isSinglePointSelection">Cut</button>
+              <button class="btn btn-primary" v-on:click="erase()"  :disabled="!hasSelection || isSinglePointSelection">Erase</button>
             </div>
           </template>
         </div>
@@ -1055,6 +1056,19 @@
           this.cursorPosition = this.selection.start;
           this.$root.$emit('from-audioeditor:cut', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
           this.isModified = true;
+        },
+        erase() {
+          let pause;
+            if (this.isPlaying) {
+              pause = this.pause();
+            } else {
+              pause = new Promise((res, rej) => {res()});
+            }
+            return pause
+              .then(() => {
+                this.$root.$emit('from-audioeditor:erase-audio', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
+                this.isModified = true;
+              });
         },
         undo() {
           if (this.mode === 'block') {
