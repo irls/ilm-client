@@ -4095,7 +4095,7 @@ export default {
         }
         return true;
       },
-      eraseAudio(start, end, footnoteIdx = null, partIdx = null) {
+      eraseAudio(start, end, footnoteIdx = null, partIdx = null, check_id = null) {
         if (!this.isSplittedBlock) {
           partIdx = null;
         }

@@ -2732,8 +2732,15 @@ export default {
       },
       evFromAudioeditorEraseAudio(blockId, start, end) {
         if (blockId === this.check_id) {
+          this.isAudioChanged = true;
+          this.isUpdating = true;
           this.audStop();
-          return this.eraseAudio(start, end, null, this.blockPartIdx);
+          return this.eraseAudio(start, end, null, this.blockPartIdx, this.check_id)
+            .then(() => {
+              this.isUpdating = false;
+              this.blockAudio.map = this.blockContent();
+              this.blockAudio.src = this.blockAudiosrc('m4a');
+            });
         }
       },
       audioEditorEventsOn() {
