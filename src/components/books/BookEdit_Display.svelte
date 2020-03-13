@@ -99,33 +99,13 @@ bind:startReached={startReached} bind:endReached={endReached} >
         blocks[i].visible = blocks[i].loaded;
         blocks[i].idx = i;
         if (startId && blocks[i].blockId == startId) {
-          /*scrollCounter = 5;*/
           startIdIdx = i;
         }
-        /*if (scrollCounter > 0) {// set to visible blocks near startId
-          blocks[i].loaded = true;
-          blocks[i].visible = true;
-          scrollCounter--;
-        }*/
       }
       intBlocks = blocks;
-      //await tick();
-      //console.log('startId', startId, 'startIdIdx', startIdIdx);
-      //console.log('beforeUpdate', intBlocks.length);
       if (startIdIdx > 0) {
         vListStartFrom = startIdIdx;
       }
-      /*let found = blocks.find(function(el, idx) {
-        //console.log('blocks.find', parlistO.getBlockByRid(el.blockRid).blockid, parlistO.getBlockByRid(el.blockRid).loaded);
-        if (parlistO.getBlockByRid(el.blockRid).loaded === false) {
-          blockIdx = idx;
-          return true;
-        }
-        return false;
-      });
-      if (found) {
-        startShowTimer();
-      }*/
     }
   });
 
@@ -134,44 +114,6 @@ bind:startReached={startReached} bind:endReached={endReached} >
     await tick();
     console.log('onMount2', 'blocks.length:', blocks.length);
   });*/
-
-  let myDelay = 1000;
-  let thisDelay = 1000;
-  let start = Date.now();
-  let checkCount = 0;
-  let wasScrolled = false;
-
-  function startShowTimer() {
-    setTimeout(function() {
-        if (startId && !wasScrolled) {
-          wasScrolled = !wasScrolled;
-        }
-        let i, execCount = 100;
-        for (i = 0; i < intBlocks.length; i++) {
-          if (execCount <= 0) break;
-          if (intBlocks[i].visible === false) {
-            //console.log('setTimeout'/*, intBlocks[i].blockView.type, intBlocks[i].blockRid, intBlocks[i].blockId*/);
-            //let blockDOMId = `display-${intBlocks[i].blockId}`;
-            //let blockElement = document.getElementById(blockDOMId);
-            //parlistO.setVisible(intBlocks[i].blockRid);
-            intBlocks[i].visible = true;
-            execCount--;
-            checkCount++;
-          }
-        }
-        // calculate the actual number of ms since last time
-        var actual = Date.now() - start;
-        // subtract any extra ms from the delay for the next cycle
-        thisDelay = myDelay - (actual - myDelay);
-        start = Date.now();
-        // start the timer again
-        if (i < intBlocks.length) {
-          startShowTimer();
-        } else {
-          console.log('done', i, checkCount, startId);
-        }
-    }, thisDelay);
-  }
 
   const timestamp = (new Date()).toJSON();
 

@@ -70,10 +70,9 @@ export default {
             ev.preventDefault();
             ev.stopPropagation();
             let firstRid = this.parlistO.getFirstRid();
-            //console.log('firstRid', firstRid);
             if (firstRid) {
               let block = this.parlistO.getBlockByRid(firstRid);
-              console.log('ctrl+home', block);
+              console.log('ctrl+home', block.index, block.blockid);
               if (block) {
                 this.scrollToBlock(block.index, block.blockid);
               }
@@ -85,7 +84,7 @@ export default {
             let lastRid = this.parlistO.getLastRid();
             if (lastRid) {
               let block = this.parlistO.getBlockByRid(lastRid);
-              console.log('ctrl+end', block);
+              console.log('ctrl+end', block.index, block.blockid);
               if (block) {
                 this.scrollToBlock(block.index, block.blockid);
               }
@@ -138,6 +137,14 @@ export default {
               }
             }
           },
+          'end': (ev)=>{
+            ev.preventDefault();
+            ev.stopPropagation();
+          },
+          'home': (ev)=>{
+            ev.preventDefault();
+            ev.stopPropagation();
+          }
         }
       }
   },
@@ -172,6 +179,16 @@ export default {
       //console.log('scrollToBlock', blockIdx, blockId, 'startId:', this.startId);
       this.hotkeyScrollTo = blockIdx;
       this.startId = blockId;
+      this.onScrollEv = true;
+      let params = {};
+      for (let p in this.$route.params) {
+        params[p] = this.$route.params[p];
+      }
+      params.block = blockId;
+      this.$router.push({
+        name: this.$route.name,
+        params: params
+      });
     },
 
     setStartIdIdx(ev) {
