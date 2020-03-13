@@ -66,7 +66,10 @@
           <input type="number" step="0.1" v-model="silenceLength" />
           <button class="btn btn-primary" v-on:click="addSilence()" :disabled="cursorPosition === false">Add Silence</button>
         </div>
-        <button v-if="mode == 'block'" :class="['btn btn-default', {disabled: isRevertDisabled}]" v-on:click="revert(true)">Revert</button>
+        <template v-if="mode == 'block' && !isFootnote">
+          <label v-if="isRevertDisabled" class="btn btn-default disabled">Revert</label>
+          <button v-else class="btn btn-default" v-on:click="revert(true)">Revert</button>
+        </template>
         <div class="audio-controls" v-if="isModifiedComputed && mode == 'block'">
           <button class="btn btn-default" v-if="history.length" v-on:click="undo()">Undo</button>
           <button class="btn btn-primary" v-on:click="save()">Save</button>
@@ -188,7 +191,8 @@
           processRun: false,
           processRunType: null,
           selectionBordersVisible: false,
-          audioDuration: 0
+          audioDuration: 0,
+          isFootnote: false
         }
       },
       mounted() {
@@ -255,6 +259,7 @@
           }
 
           let blockId = block ? block._id : null;
+          this.isFootnote = block ? block.is_footnote : false;
 
           this.$root.$off('for-audioeditor:select', this.select);
           this.$root.$off('for-audioeditor:reload-text', this._setText);
