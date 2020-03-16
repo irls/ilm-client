@@ -1,3 +1,21 @@
+<svelte-virtual-list-viewport
+  bind:this={viewport}
+  bind:offsetHeight={viewport_height}
+  on:scroll={handle_scroll}
+  style="height: {height};"
+>
+  <svelte-virtual-list-contents
+    bind:this={contents}
+    style="padding-top: {top}px; padding-bottom: {bottom}px;"
+  >
+    {#each visible as row (row.index)}
+      <svelte-virtual-list-row>
+        <slot item={row.data}>Missing template</slot>
+      </svelte-virtual-list-row>
+    {/each}
+  </svelte-virtual-list-contents>
+</svelte-virtual-list-viewport>
+
 <script>
   import { onMount, tick } from 'svelte';
 
@@ -23,6 +41,7 @@
   let viewport_height = 0;
   let visible;
   let mounted;
+  let _scrollInterval;
 
   let top = 0;
   let bottom = 0;
@@ -71,8 +90,8 @@
   $: handle_scrollTo(scrollTo);
 
   async function handle_scrollTo(scrollTo) {
-
     if (scrollTo === false) return;
+    //console.log('handle_scrollTo(scrollTo)', scrollTo);
 
     viewport.scrollTo(0, 0);
     await refresh(items, viewport_height, itemHeight);
@@ -83,16 +102,34 @@
     for (let i = 0; i < scrollTo; i +=1) {
       expected_height += height_map[i] || average_height || 0;
     }
+
     await tick();
     viewport.scrollTo(0, expected_height);
+
+    const isScrollToEnd = scrollTo && (scrollTo >= items.length - 1);
     scrollTo = false;
-    //await tick();
-    await handle_scroll();
-    await refresh(items, viewport_height, itemHeight);
+
+    if (isScrollToEnd) {
+      //console.log('IS SCROLL TO END', isScrollToEnd);
+      let scrollTop = viewport.scrollTop;
+      let checkTop = 0;
+      _scrollInterval = setInterval(function(){
+        scrollTop += 80;
+        viewport.scrollTop = scrollTop;
+        //console.log('interval', count, viewport.scrollTop, checkTop, scrollTop, start, end);
+        if (checkTop == viewport.scrollTop) clearInterval(_scrollInterval);
+        checkTop = viewport.scrollTop;
+      }, 20);
+    }
+    else {
+      await tick();
+      await handle_scroll();
+      await refresh(items, viewport_height, itemHeight);
+    }
+
   }
 
   async function handle_scroll() {
-    //console.log('handle_scroll');
     const { scrollTop } = viewport;
     //console.log('handle_scroll scrollTop', scrollTop);
     const old_start = start;
@@ -151,9 +188,10 @@
       }
 
       const d = actual_height - expected_height;
-      //console.log('start < old_start');
       viewport.scrollTo(0, scrollTop + d);
     }
+
+    return true;
 
     // TODO if we overestimated the space these
     // rows would occupy we may need to add some
@@ -190,21 +228,3 @@
     overflow-y: hidden;
   }
 </style>
-
-<svelte-virtual-list-viewport
-  bind:this={viewport}
-  bind:offsetHeight={viewport_height}
-  on:scroll={handle_scroll}
-  style="height: {height};"
->
-  <svelte-virtual-list-contents
-    bind:this={contents}
-    style="padding-top: {top}px; padding-bottom: {bottom}px;"
-  >
-    {#each visible as row (row.index)}
-      <svelte-virtual-list-row>
-        <slot item={row.data}>Missing template</slot>
-      </svelte-virtual-list-row>
-    {/each}
-  </svelte-virtual-list-contents>
-</svelte-virtual-list-viewport>
