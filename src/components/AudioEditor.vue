@@ -1021,7 +1021,6 @@
           this.history = [];
           if (this.mode == 'block') {
             if (this.isModified) {
-              this.setProcessRun(true, 'save');
               this.$root.$emit('from-audioeditor:save', this.blockId);
               this.isModified = false;
             }

@@ -2173,6 +2173,35 @@ export default {
       },
 
       assembleBlockAudioEdit: function(footnoteIdx = null, realign = false) {// to save changes from audio editor
+        if (this.isChanged) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block text has been modified and not saved.<br>
+Save text changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  return this.assembleBlockProxy(false, false)
+                    .then(() => {
+                      return this.assembleBlockAudioEdit(footnoteIdx, realign);
+                    });
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return false;
+        }
         let manual_boundaries = [];
         if (this.footnoteIdx) {
           if (this.audioEditFootnote && this.audioEditFootnote.footnote) {
@@ -2207,6 +2236,7 @@ export default {
           if (realign) {
             api_url+= '?realign=true';
           }
+          this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
           return api.post(api_url, data, {})
             .then(response => {
               if (!realign) {
