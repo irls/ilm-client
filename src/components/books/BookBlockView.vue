@@ -987,7 +987,7 @@ export default {
             return false;
           }
           let format = this.block.audiosrc_ver && this.block.audiosrc_ver['m4a'] ? 'm4a' : 'flac';
-          return `${this.API_URL}books/${this.block.bookid}/blocks/${this.block.blockid}/audio_download/${format}`;
+          return `${this.API_URL}audio_download/${this.block.bookid}/${this.block.blockid}/${format}`;
         }
       },
       shortBlockid: {
