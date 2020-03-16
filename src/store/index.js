@@ -3112,7 +3112,7 @@ export const store = new Vuex.Store({
       }
     },
     revertAudio({state, dispatch}, [blockid, partIdx]) {
-      return axios.post(`${state.API_URL}book/block/${blockid}${partIdx !== null ? '/' + partIdx : ''}/audio/revert`)
+      return axios.post(`${state.API_URL}book/block/${blockid}${partIdx !== null ? '/' + partIdx : ''}/audio/revert/${state.bookMode}`)
         .then((res) => {
           return dispatch('getBookAlign')
             .then(() => {
