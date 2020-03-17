@@ -2006,12 +2006,15 @@ export default {
       handleFlagClick: function(ev) {
         ev.cancelBubble = true;
         let flagId = ev.target.dataset.flag;
-        this.flagsSel = this.block.flags.filter((flag)=>{
-          return flag._id === flagId;
-        })[0];
-        this.isHideArchParts = true;
-        this.$refs.blockFlagPopup.open(ev, flagId);
-        this.updateFlagStatus(flagId);
+        let curFlagId = ev.currentTarget && ev.currentTarget.dataset ? ev.currentTarget.dataset.flag : false;
+        if (!curFlagId || curFlagId === flagId) {
+          this.flagsSel = this.block.flags.filter((flag)=>{
+            return flag._id === flagId;
+          })[0];
+          this.isHideArchParts = true;
+          this.$refs.blockFlagPopup.open(ev, flagId);
+          this.updateFlagStatus(flagId);
+        }
       },
 
       handleBlockFlagClick: function(ev, type = 'editor') {
