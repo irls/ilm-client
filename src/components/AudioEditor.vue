@@ -8,7 +8,7 @@
       <li v-on:click="unpinRight($event)" v-if="mode == 'block'">Unpin Rightward</li>
     </cntx-menu>
     <div class="waveform-playlist">
-      <div class="close-player-container pull-right">
+      <div v-if="!this.$parent.preloader" class="close-player-container pull-right">
         <span class="close-player" v-on:click="close()">&times;</span>
       </div>
       <div class="waveform-wrapper" @contextmenu.prevent="onContext">
