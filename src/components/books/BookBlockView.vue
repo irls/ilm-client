@@ -1735,7 +1735,36 @@ export default {
           });
       },
 
-      assembleBlockProxy: function (check_realign = true, realign = false, update_fields = []) {
+      assembleBlockProxy: function (check_realign = true, realign = true, update_fields = [], check_audio_changes = true) {
+        if (this.isAudioChanged && check_audio_changes) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block audio has been modified and not saved.<br>
+Save audio changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  return this.assembleBlockProxy(false, false, update_fields, false)
+                    .then(() => {
+                      return this.assembleBlockAudioEdit(this.footnoteIdx, realign, false);
+                    });
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return false;
+        }
         if (this.isSplittedBlock && this.$refs.blocks) {
           this.$refs.blocks.forEach((blk, blkIdx) => {
             this.block.setPartContent(blkIdx, blk.clearBlockContent());
@@ -2172,8 +2201,8 @@ export default {
         this.isAudioChanged = false;
       },
 
-      assembleBlockAudioEdit: function(footnoteIdx = null, realign = false) {// to save changes from audio editor
-        if (this.isChanged) {
+      assembleBlockAudioEdit: function(footnoteIdx = null, realign = false, check_block_changes = true) {// to save changes from audio editor
+        if (this.isChanged && check_block_changes) {
           this.$root.$emit('show-modal', {
             title: 'Unsaved Changes',
             text: `Block text has been modified and not saved.<br>
@@ -2190,9 +2219,9 @@ Save text changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  return this.assembleBlockProxy(false, false)
+                  return this.assembleBlockAudioEdit(footnoteIdx, false, false)
                     .then(() => {
-                      return this.assembleBlockAudioEdit(footnoteIdx, realign);
+                      return this.assembleBlockProxy(false, realign, [], false);
                     });
                 },
                 class: ['btn btn-primary']
@@ -2259,9 +2288,9 @@ Save text changes and realign the Block?`,
                 }
                 //this.$emit('blockUpdated', this.block._id);
                 this.isAudioChanged = false;
-                this.isChanged = false;
+                //this.isChanged = false;
                 this.block.isAudioChanged = false;
-                this.block.isChanged = false;
+                //this.block.isChanged = false;
                 if (footnoteIdx === null) {
                   this.block.content = response.data.content;
                   this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
