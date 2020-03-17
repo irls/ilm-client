@@ -177,7 +177,7 @@ export default {
 
     scrollToBlock(blockIdx, blockId) {
       //console.log('scrollToBlock', blockIdx, blockId, 'startId:', this.startId);
-      this.hotkeyScrollTo = blockIdx;
+      this.hotkeyScrollTo = blockIdx + ':' + Date.now();
       this.startId = blockId;
       this.onScrollEv = true;
       let params = {};

@@ -81,7 +81,7 @@ bind:startReached={startReached} bind:endReached={endReached} >
   async function hotkeyScrolledTo(hotkeyScrollTo) {
     if (hotkeyScrollTo !== false) {
       await tick();
-      vListScrollTo = hotkeyScrollTo;
+      vListScrollTo = hotkeyScrollTo.split(':')[0];
     }
   }
 
