@@ -47,6 +47,8 @@
   let bottom = 0;
   let average_height;
 
+  let _onScrollEv = false;
+
   $: visible = items.slice(start, end).map((data, i) => {
     return { index: i + start, data };
   });
@@ -72,7 +74,19 @@
         row = rows[i - start];
       }
 
-      const row_height = height_map[i] = itemHeight || row.offsetHeight;
+      let offsetHeight = row.offsetHeight;
+      let imgHeight = 0;
+
+//       let img = row.getElementsByTagName('img');
+//       if (img.length) {
+//         img = img.item(0);
+//         imgHeight = img.dataset.height;
+//         console.log('img', img.getAttribute('alt'), imgHeight);
+//       }
+
+      offsetHeight = imgHeight > offsetHeight ? imgHeight : offsetHeight;
+
+      const row_height = height_map[i] = itemHeight || offsetHeight;
       content_height += row_height;
       i += 1;
     }
@@ -90,10 +104,19 @@
   $: handle_scrollTo(scrollTo);
 
   async function handle_scrollTo(scrollTo) {
+    //console.log('VirtualList.svelte->handle_scrollTo(scrollTo)', scrollTo);
     if (scrollTo === false) return;
-    //console.log('handle_scrollTo(scrollTo)', scrollTo);
+    else if (typeof scrollTo === 'string') {
+      scrollTo = 1*scrollTo.split(':')[0]
+    }
 
-    viewport.scrollTo(0, 0);
+    //console.log('VirtualList.svelte->handle_scrollTo(scrollTo) int', scrollTo);
+
+    if (scrollTo > 0) {
+      viewport.scrollTo(0, 0);
+    }
+
+    //await tick();
     await refresh(items, viewport_height, itemHeight);
     await handle_scroll();
 
@@ -103,14 +126,16 @@
       expected_height += height_map[i] || average_height || 0;
     }
 
+    _onScrollEv = true;
+    viewport.scrollTo(0, expected_height + 2);
+
     await tick();
-    viewport.scrollTo(0, expected_height);
+    await handle_scroll();
 
     const isScrollToEnd = scrollTo && (scrollTo >= items.length - 1);
-    scrollTo = false;
 
     if (isScrollToEnd) {
-      //console.log('IS SCROLL TO END', isScrollToEnd);
+      console.log('IS SCROLL TO END', isScrollToEnd);
       let scrollTop = viewport.scrollTop;
       let checkTop = 0;
       _scrollInterval = setInterval(function(){
@@ -120,18 +145,28 @@
         if (checkTop == viewport.scrollTop) clearInterval(_scrollInterval);
         checkTop = viewport.scrollTop;
       }, 20);
+    } else {
+      setTimeout(function(){
+        //console.log('viewport_height', viewport_height);
+        //console.log('contents.offsetHeight', contents.offsetHeight-top-bottom);
+        if (contents.offsetHeight-top-bottom < viewport_height) {
+          handle_scroll().then(function(){
+            //viewport.scrollTo(0, viewport.scrollTop + 1);
+            handle_scroll();
+          })
+        }
+      }, 1);
     }
-    else {
-      await tick();
-      await handle_scroll();
-      await refresh(items, viewport_height, itemHeight);
-    }
-
   }
 
-  async function handle_scroll() {
+  async function handle_scroll(params) {
+    //console.log('handle_scroll', params);
+    if (_onScrollEv) {
+      _onScrollEv = false;
+      return;
+    }
     const { scrollTop } = viewport;
-    //console.log('handle_scroll scrollTop', scrollTop);
+    //console.log('handle_scroll viewport.scrollTop', scrollTop);
     const old_start = start;
 
     for (let v = 0; v < rows.length; v += 1) {

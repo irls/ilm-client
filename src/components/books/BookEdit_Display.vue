@@ -67,72 +67,77 @@ export default {
         return {
           // 'esc+ctrl' is OK.
           'ctrl+home': (ev)=>{
+            //console.log('ctrl+home', 'this.startId', this.startId);
             ev.preventDefault();
             ev.stopPropagation();
             let firstRid = this.parlistO.getFirstRid();
             if (firstRid) {
               let block = this.parlistO.getBlockByRid(firstRid);
-              console.log('ctrl+home', block.index, block.blockid);
+              console.log('ctrl+home', 'blockid:', block.blockid);
               if (block) {
                 this.scrollToBlock(block.index, block.blockid);
               }
             }
           },
           'ctrl+end': (ev)=>{
+            //console.log('ctrl+end', 'this.startId', this.startId);
             ev.preventDefault();
             ev.stopPropagation();
             let lastRid = this.parlistO.getLastRid();
             if (lastRid) {
               let block = this.parlistO.getBlockByRid(lastRid);
-              console.log('ctrl+end', block.index, block.blockid);
+              console.log('ctrl+end', 'blockid:', block.blockid);
               if (block) {
                 this.scrollToBlock(block.index, block.blockid);
               }
             }
           },
           'ctrl+up': (ev)=>{
-            console.log('ctrl+up arrow', 'this.startId', this.startId);
+            //console.log('ctrl+up arrow', 'this.startId', this.startId);
             let idsArray = this.parlistO.idsArray();
             let jumpStep = Math.floor(idsArray.length * 0.1);
             let currIdx = idsArray.indexOf(this.startId);
             if (currIdx > -1) {
               let jumpIdx = currIdx - jumpStep;
               if (jumpIdx < 0) jumpIdx = 0;
+              console.log('ctrl+up arrow', 'blockid:', idsArray[jumpIdx]);
               this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
             }
           },
           'ctrl+down': (ev)=>{
-            console.log('ctrl+down arrow', 'this.startId', this.startId);
+            //console.log('ctrl+down arrow', 'this.startId', this.startId);
             let idsArray = this.parlistO.idsArray();
             let jumpStep = Math.floor(idsArray.length * 0.1);
             let currIdx = idsArray.indexOf(this.startId);
             if (currIdx > -1) {
               let jumpIdx = currIdx + jumpStep;
               if (jumpIdx > idsArray.length) jumpIdx = idsArray.length - 1;
+              console.log('ctrl+down arrow', 'blockid:', idsArray[jumpIdx]);
               this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
             }
           },
           'pgup': (ev)=>{
-            console.log('page up', 'this.startId', this.startId);
+            //console.log('page up', 'this.startId', this.startId);
             ev.preventDefault();
             ev.stopPropagation();
             let prevId = this.parlistO.getInId(this.startId);
             if (prevId && prevId !== this.startId) {
               let block = this.parlistO.get(prevId);
               if (block) {
+                console.log('page up', 'blockid:', block.blockid);
                 this.scrollToBlock(block.index, block.blockid);
               }
             }
           },
           'pgdn': (ev)=>{
-            console.log('page down', 'this.startId', this.startId);
+            //console.log('page down', 'this.startId', this.startId);
             ev.stopPropagation();
             ev.preventDefault();
             let nextId = this.parlistO.getOutId(this.startId);
-            console.log('nextId', nextId);
             if (nextId && nextId !== this.startId) {
               let block = this.parlistO.get(nextId);
               if (block) {
+                console.log('page down', 'blockid:', block.blockid);
                 this.scrollToBlock(block.index, block.blockid);
               }
             }
@@ -153,10 +158,10 @@ export default {
       //console.log('$route', fromRoute.params.block, '->', toRoute.params.block, 'onScrollEv:', this.onScrollEv);
       if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
         if (toRoute.params.block !== 'unresolved' && toRoute.params.block !== this.startId) {
-              let block = this.parlistO.get(toRoute.params.block);
-              if (block) {
-                this.scrollToBlock(block.index, block.blockid);
-              }
+          let block = this.parlistO.get(toRoute.params.block);
+          if (block) {
+            this.scrollToBlock(block.index, block.blockid);
+          }
 //         } else {
 //           //TODO add method to find unresolved
 //           this.onScrollEv = true;
@@ -176,10 +181,13 @@ export default {
     ]),
 
     scrollToBlock(blockIdx, blockId) {
-      //console.log('scrollToBlock', blockIdx, blockId, 'startId:', this.startId);
-      this.hotkeyScrollTo = blockIdx + ':' + Date.now();
-      this.startId = blockId;
+      //console.log('scrollToBlock', blockIdx, blockId, 'startId:', this.startId, 'hotkeyScrollTo:', this.hotkeyScrollTo);
       this.onScrollEv = true;
+
+      this.hotkeyScrollTo = blockIdx + ':' + Date.now();
+
+      this.startId = blockId;
+
       let params = {};
       for (let p in this.$route.params) {
         params[p] = this.$route.params[p];
@@ -189,6 +197,8 @@ export default {
         name: this.$route.name,
         params: params
       });
+
+      this.onScrollEv = true;
     },
 
     setStartIdIdx(ev) {
