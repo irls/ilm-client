@@ -1,10 +1,13 @@
 <template>
 <!--{blockRid}->{blockListObj.blockId}->{blockListObj.loaded}->{blockListObj.visible}-->
 {#if blockListObj && blockListObj.blockId}
-  <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" class="ilm-block ilm-display -langblock-{block.language} {block.viewOutPaddings}">
+  <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" class="ilm-block ilm-display -langblock-{block.language} {block.viewOutPaddings}" style="/*min-height:{block.illustration_height}px*/">
   {#if block.type === 'illustration'}
     {#if block.viewIllustration}
-      <img alt="block.blockid" class="{block.getClass()}" src="{block.viewIllustration}"/>
+      <img alt="{block.blockid}" class="{block.getClass()}"
+      src="{block.viewIllustration}"
+      data-width="{block.illustration_width}"
+      data-height="{block.illustration_height}"/>
     {:else}
       <div class="bview-empty-image-wrapper">
         <div class="bview-empty-image">No image</div>

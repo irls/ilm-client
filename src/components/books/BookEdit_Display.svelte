@@ -81,7 +81,8 @@ bind:startReached={startReached} bind:endReached={endReached} >
   async function hotkeyScrolledTo(hotkeyScrollTo) {
     if (hotkeyScrollTo !== false) {
       await tick();
-      vListScrollTo = hotkeyScrollTo.split(':')[0];
+      vListScrollTo = hotkeyScrollTo;
+      //console.log('BookEdit_Display.svelte->hotkeyScrolledTo', vListScrollTo);
     }
   }
 
@@ -92,7 +93,7 @@ bind:startReached={startReached} bind:endReached={endReached} >
 
       fntCounter = 0;
       loadedBookId = parlistO.meta.bookid;
-      //console.log('beforeUpdate, loadedBookId', loadedBookId);
+      console.log('beforeUpdate, loadedBookId', loadedBookId);
       //console.log('beforeUpdate, blocks.length', blocks.length);
       for (let i = 0; i < blocks.length; i++) {
         blocks[i].blockView = blockView(blocks[i].blockRid);
@@ -165,6 +166,9 @@ bind:startReached={startReached} bind:endReached={endReached} >
       viewObj.isHidden = blockO.isHidden;
       viewObj.secnum = blockO.secnum;
       viewObj.parnum = blockO.parnum;
+
+      viewObj.illustration_height = block.illustration_height;
+      viewObj.illustration_width = block.illustration_width;
 
       //viewObj.content = block.content
 
