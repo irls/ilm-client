@@ -223,6 +223,7 @@
               :initRecorder="initRecorder"
               :saveBlockPart="saveBlockPart"
               :isCanReopen="isCanReopen"
+              :eraseAudio="eraseAudio"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
@@ -3532,6 +3533,12 @@ export default {
           }
         }
       },
+      evFromAudioeditorEraseAudio(blockId, start, end) {
+        if (blockId == this.check_id) {
+          this.audStop();
+          this.eraseAudio(start, end, this.footnoteIdx);
+        }
+      },
       audioEditorEventsOn() {
         this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
         //this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
@@ -3544,6 +3551,7 @@ export default {
         this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
 
         this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
+        this.$root.$on('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
       },
       audioEditorEventsOff() {
         this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
@@ -3556,6 +3564,7 @@ export default {
         this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
         this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+        this.$root.$off('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
       },
       //-- } -- end -- Events --//
 
@@ -4085,6 +4094,80 @@ export default {
           return false;
         }
         return true;
+      },
+      eraseAudio(start, end, footnoteIdx = null, partIdx = null, check_id = null) {
+        if (!this.isSplittedBlock) {
+          partIdx = null;
+        }
+        let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/audio_erase';
+        let api = this.$store.state.auth.getHttp();
+        this.isUpdating = partIdx === null;
+        this.$root.$emit('for-audioeditor:set-process-run', true, 'editing-audio');
+        let formData = {};
+        let position = [start, end];
+        formData.position = position;
+        if (partIdx !== null) {
+          formData.modified = this.isPartAudioChanged(partIdx);
+          formData.content = this.block.getPartContent(partIdx);
+          formData.audio = this.block.getPartAudiosrc(partIdx, null, false);
+          formData.manual_boundaries = this.block.getPartManualBoundaries(partIdx);
+          formData.part_idx = partIdx;
+        } else if (footnoteIdx === null) {
+          formData.modified = this.isAudioChanged;
+          formData.content = this.block.content;
+          formData.audio = this.block.getAudiosrc(null, false);
+          formData.manual_boundaries = this.block.manual_boundaries || [];
+        } else {
+          formData.content = this.audioEditFootnote.footnote.content;
+          formData.audio = this.block.getAudiosrcFootnote(footnoteIdx, null, false);
+          formData.modified = this.audioEditFootnote.isAudioChanged;
+          formData.footnote_idx = footnoteIdx;
+          formData.manual_boundaries = this.audioEditFootnote.footnote.manual_boundaries || [];
+        }
+        return api.post(api_url, formData, {})
+          .then(response => {
+            if (this._isDestroyed) {
+              this.discardBlock();
+              return Promise.resolve();
+            }
+            this.isUpdating = false;
+            if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
+
+              if (partIdx !== null) {
+                let part = response.data;
+                this.block.setPartContent(partIdx, part.content);
+                this.block.setPartAudiosrc(partIdx, part.audiosrc, part.audiosrc_ver);
+                this.block.setPartManualBoundaries(partIdx, part.manual_boundaries || []);
+                this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(partIdx, 'm4a'), this.block.getPartContent(partIdx), true, Object.assign({_id: check_id}, part));
+              } else if (footnoteIdx === null) {
+                this.blockAudio.map = response.data.content;
+                this.block.setContent(response.data.content);
+                this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+                this.blockAudio.src = this.block.getAudiosrc('m4a');
+                this.block.setManualBoundaries(response.data.manual_boundaries || []);
+                this.isAudioChanged = true;
+                this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, true, this.block);
+              } else {
+                this.block.setContentFootnote(footnoteIdx, response.data.content);
+                this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
+                this.block.setManualBoundariesFootnote(footnoteIdx, response.data.manual_boundaries || []);
+                this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
+                this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, true, Object.assign({_id: this.check_id, is_footnote: true}, this.audioEditFootnote.footnote));
+                this.audioEditFootnote.isAudioChanged = true;
+              }
+            } else {
+              this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+              this.$root.$emit('for-audioeditor:set-process-run', false);
+            }
+            return Promise.resolve();
+          })
+          .catch(err => {
+            this.checkError(err);
+            this.isUpdating = false;
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+            return Promise.reject(err);
+          });
       }
   },
   watch: {
