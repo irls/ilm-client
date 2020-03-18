@@ -2473,6 +2473,11 @@ export default {
       evFromAudioeditorBlockLoaded(blockId) {
         if (blockId == this.check_id) {
           $('nav.fixed-bottom').removeClass('hidden');
+          if (this.isLocked) {
+            this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+          } else if (this.$parent.isLocked) {
+            this.$root.$emit('for-audioeditor:set-process-run', true, this.$parent.lockedType);
+          }
         }
       },
       evFromAudioeditorWordRealign(map, blockId, shiftedInfo) {
@@ -2566,7 +2571,7 @@ export default {
             //this.block.setContent(this.blockAudio.map);
             return this.assembleBlockAudioEdit(null, true)
               .then(() => {
-                this.isAudioChanged = false;
+                //this.isAudioChanged = false;
                 this.blockAudio.map = this.blockContent();
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
                 return Promise.resolve();
@@ -2581,6 +2586,11 @@ export default {
           this.audStop();
           this.isAudioChanged = true;
           this.isUpdating = true;
+          if (this.isSplittedBlock) {
+            this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+          } else {
+            this.block.setContent(this.clearBlockContent());
+          }
           this.audDeletePart(start, end, null, this.blockPartIdx, this.check_id)
             .then(() => {
               this.isUpdating = false;
@@ -2602,7 +2612,7 @@ export default {
             //this.block.setContent(this.blockContent());
             return this.assembleBlockAudioEdit(null, false)
               .then(() => {
-                this.isAudioChanged = false;
+                //this.isAudioChanged = false;
                 this.blockAudio.map = this.blockContent();
                 this.blockAudio.src = this.blockAudiosrc('m4a');
                 //this.showPinnedInText();
@@ -2617,6 +2627,11 @@ export default {
         if (blockId == this.check_id) {
           this.audStop();
           this.isUpdating = true;
+          if (this.isSplittedBlock) {
+            this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+          } else {
+            this.block.setContent(this.clearBlockContent());
+          }
           this.insertSilence(position, length, null, this.blockPartIdx, this.check_id)
             .then(() => {
               this.isUpdating = false;

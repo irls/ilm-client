@@ -1018,13 +1018,13 @@
           }
         },
         save() {
-          this.history = [];
           if (this.mode == 'block') {
             if (this.isModified) {
               this.$root.$emit('from-audioeditor:save', this.blockId);
-              this.isModified = false;
+              //this.isModified = false;
             }
           } else if(this.mode == 'file') {
+            this.history = [];
             this.$root.$emit('from-audioeditor:save-positions', this.audiofileId, this.selection);
             this.origFilePositions = this.selection;
           }
@@ -1043,10 +1043,9 @@
         },
         saveAndRealign() {
           if (this.isModified) {
-            this.history = [];
-            this.setProcessRun(true, 'align');
+            //this.history = [];
             this.$root.$emit('from-audioeditor:save-and-realign', this.blockId);
-            this.isModified = false;
+            //this.isModified = false;
           }
         },
         cut() {

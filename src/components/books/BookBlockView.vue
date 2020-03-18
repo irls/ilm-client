@@ -1753,9 +1753,13 @@ Save audio changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
+                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false)};
                   return this.assembleBlockProxy(false, false, update_fields, false)
                     .then(() => {
-                      return this.assembleBlockAudioEdit(this.footnoteIdx, realign, false);
+                      return this.assembleBlockAudioEdit(this.footnoteIdx, realign, preparedData)
+                      .then(() => {
+                        return Promise.resolve();
+                      });
                     });
                 },
                 class: ['btn btn-primary']
@@ -1763,7 +1767,7 @@ Save audio changes and realign the Block?`,
             ],
             class: ['align-modal']
           });
-          return false;
+          return Promise.resolve();
         }
         if (this.isSplittedBlock && this.$refs.blocks) {
           this.$refs.blocks.forEach((blk, blkIdx) => {
@@ -1937,6 +1941,9 @@ Save audio changes and realign the Block?`,
             this.getBookAlign()
               .then(() => {
                 this.isSaving = false;
+                if (this.isLocked) {
+                  this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+                }
               });
           } else {
             this.isSaving = false;
@@ -2201,8 +2208,8 @@ Save audio changes and realign the Block?`,
         this.isAudioChanged = false;
       },
 
-      assembleBlockAudioEdit: function(footnoteIdx = null, realign = false, check_block_changes = true) {// to save changes from audio editor
-        if (this.isChanged && check_block_changes) {
+      assembleBlockAudioEdit: function(footnoteIdx = null, realign = false, preparedData = false) {// to save changes from audio editor
+        if (this.isChanged && preparedData === false) {
           this.$root.$emit('show-modal', {
             title: 'Unsaved Changes',
             text: `Block text has been modified and not saved.<br>
@@ -2219,9 +2226,9 @@ Save text changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  return this.assembleBlockAudioEdit(footnoteIdx, false, false)
+                  return this.assembleBlockAudioEdit(footnoteIdx, false, {})
                     .then(() => {
-                      return this.assembleBlockProxy(false, realign, [], false);
+                      return this.assembleBlockProxy(false, true, [], false);
                     });
                 },
                 class: ['btn btn-primary']
@@ -2229,7 +2236,7 @@ Save text changes and realign the Block?`,
             ],
             class: ['align-modal']
           });
-          return false;
+          return Promise.resolve();
         }
         let manual_boundaries = [];
         if (this.footnoteIdx) {
@@ -2248,7 +2255,7 @@ Save text changes and realign the Block?`,
               //audiosrc: this.block.getAudiosrc(null, false),
               //content: this.blockAudio.map,
               //manual_boundaries: this.block.manual_boundaries
-              audiosrc: this.block.getPartAudiosrc(0, null, false),
+              audiosrc: preparedData.audiosrc || this.block.getPartAudiosrc(0, null, false),
               content: this.block.getPartContent(0),
               manual_boundaries: this.block.getPartManualBoundaries(0),
               mode: this.mode
@@ -2268,6 +2275,7 @@ Save text changes and realign the Block?`,
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
           return api.post(api_url, data, {})
             .then(response => {
+              this.$root.$emit('for-audioeditor:flush');
               if (!realign) {
                 this.isSaving = false;
               } else {
@@ -3411,6 +3419,11 @@ Save text changes and realign the Block?`,
       evFromAudioeditorBlockLoaded(blockId) {
         if (blockId == this.check_id) {
           $('nav.fixed-bottom').removeClass('hidden');
+          if (this.isLocked) {
+            this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+          } else if (this.$parent.isLocked) {
+            this.$root.$emit('for-audioeditor:set-process-run', true, this.$parent.lockedType);
+          }
         }
       },
       evFromAudioeditorWordRealign(map, blockId) {
@@ -3499,7 +3512,7 @@ Save text changes and realign the Block?`,
               this.assembleBlockAudioEdit(this.footnoteIdx, true, false);
               //this.flushChanges();
               //this.isChanged = false;
-              this.isAudioChanged = false;
+              //this.isAudioChanged = false;
             //});
         }
       },
@@ -3515,7 +3528,7 @@ Save text changes and realign the Block?`,
           this.assembleBlockAudioEdit(this.footnoteIdx, false, false);
           //this.flushChanges();
           //this.isChanged = false;
-          this.isAudioChanged = false;
+          //this.isAudioChanged = false;
         }
       },
       evFromAudioeditorInsertSilence (blockId, position, length) {
