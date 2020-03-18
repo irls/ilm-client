@@ -3695,6 +3695,11 @@ export default {
           return false;
         }
         this.voiceworkUpdating = true;
+
+        this.$store.state.liveDB.onBookReimport();
+        this.$store.state.liveDB.stopWatch('metaV');
+        this.$store.state.liveDB.stopWatch('job');
+
         let api_url = `${this.API_URL}book/block/${this.meta.bookid}/${this.block._uRid}/set_voicework`;
         let api = this.$store.state.auth.getHttp();
         return api.post(api_url, {
@@ -3703,10 +3708,16 @@ export default {
         }, {})
           .then(response => {
             this.voiceworkUpdating = false;
-            Vue.nextTick(()=>{
+            //Vue.nextTick(()=>{
               if (response.status == 200) {
                 if (response && response.data && response.data.blocks) {
                   console.log('BookBlockView.vue->Counters:', response.data.counters);
+
+                  if (true) {
+                    document.location.reload();
+                    return;
+                  }
+
                   this.$store.state.liveDB.onBookReimport();
                   this.$store.state.liveDB.stopWatch('metaV');
                   this.$store.state.liveDB.stopWatch('job');
@@ -3732,7 +3743,7 @@ export default {
               }
               this.currentBookCounters.voiceworks_for_remove = 0;
               this.voiceworkChange = false;
-            })
+            //})
           })
           .catch(err => {
             this.voiceworkUpdating = false;
