@@ -498,6 +498,8 @@
         </div>
         <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': block.audiosrc}]">This will also delete current audio from the {{blockTypeLabel}}</div>
         <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
+        <div v-if="voiceworkUpdateType == 'single'">&nbsp;</div>
+        <div v-else :class="['attention-msg', 'visible']">The book will reload automatically</div>
       </div>
       <!-- custom buttons -->
       <div class="modal-footer vue-dialog-buttons">
@@ -3682,11 +3684,14 @@ export default {
         if (!this.voiceworkChange) {
           return false;
         }
+
         this.voiceworkUpdating = true;
 
-        this.$store.state.liveDB.onBookReimport();
-        this.$store.state.liveDB.stopWatch('metaV');
-        this.$store.state.liveDB.stopWatch('job');
+        if (true && this.voiceworkUpdateType !== 'single') {
+          this.$store.state.liveDB.onBookReimport();
+          this.$store.state.liveDB.stopWatch('metaV');
+          this.$store.state.liveDB.stopWatch('job');
+        }
 
         let api_url = `${this.API_URL}book/block/${this.meta.bookid}/${this.block._uRid}/set_voicework`;
         let api = this.$store.state.auth.getHttp();
@@ -3696,42 +3701,39 @@ export default {
         }, {})
           .then(response => {
             this.voiceworkUpdating = false;
-            //Vue.nextTick(()=>{
-              if (response.status == 200) {
-                if (response && response.data && response.data.blocks) {
-                  console.log('BookBlockView.vue->Counters:', response.data.counters);
+            if (response.status == 200) {
+              if (response && response.data && response.data.blocks) {
+                console.log('BookBlockView.vue->Counters:', response.data.counters);
 
-                  if (true) {
-                    document.location.reload();
-                    return;
-                  }
-
+                if (true && this.voiceworkUpdateType !== 'single') {
+                  document.location.href = document.location.href + '/' + this.block.blockid;
+                  return;
+                }
+                //response.data.updField = 'voicework';
+                if (response.data.blocks.length > 900) {
                   this.$store.state.liveDB.onBookReimport();
                   this.$store.state.liveDB.stopWatch('metaV');
                   this.$store.state.liveDB.stopWatch('job');
-                  //response.data.updField = 'voicework';
-                  if (response.data.blocks.length > 300) {
-                    this.$root.$emit('book-reloaded');
-                  } else {
-
-                    this.$root.$emit('from-bookblockview:voicework-type-changed');
-
-                    if (this.isCompleted) {
-                      this.tc_loadBookTask();
-                    }
-                    //if (this.currentJobInfo && this.currentJobInfo.published) {
-                      //this.updateBookVersion({major: true});
-                    //}
-                    this.getCurrentJobInfo();
-                    this.getAlignCount();
-                    this.$root.$emit('bookBlocksUpdates', response.data);
-                  }
-                  //this.setCurrentBookBlocksLeft(this.block.bookid);
+                  this.$root.$emit('book-reloaded');
                 }
+                else {
+                  this.$root.$emit('from-bookblockview:voicework-type-changed');
+
+                  if (this.isCompleted) {
+                    this.tc_loadBookTask();
+                  }
+                  //if (this.currentJobInfo && this.currentJobInfo.published) {
+                    //this.updateBookVersion({major: true});
+                  //}
+                  this.getCurrentJobInfo();
+                  this.getAlignCount();
+                  this.$root.$emit('bookBlocksUpdates', response.data);
+                }
+                //this.setCurrentBookBlocksLeft(this.block.bookid);
               }
-              this.currentBookCounters.voiceworks_for_remove = 0;
-              this.voiceworkChange = false;
-            //})
+            }
+            this.currentBookCounters.voiceworks_for_remove = 0;
+            this.voiceworkChange = false;
           })
           .catch(err => {
             this.voiceworkUpdating = false;
