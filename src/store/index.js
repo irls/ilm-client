@@ -143,7 +143,6 @@ export const store = new Vuex.Store({
       countTTS: 0,
       blocks: []
     },
-    alignWatch: null,
     audiobookWatch: null,
     selectionXHR: null,
     partOfBookBlocksXHR: null,
@@ -2431,17 +2430,13 @@ export const store = new Vuex.Store({
     },
     startAlignWatch({state, commit, dispatch}) {
       if (state.currentBookid) {
-        if (state.alignWatch) {
-          clearInterval(state.alignWatch);
-        }
-        dispatch('getBookAlign');
-        state.alignWatch = setInterval(() => {
-          dispatch('getBookAlign');
-        }, 15000);
+        //console.log('startAlignWatch', state.currentBookid);
+        dispatch('getBookAlign', {watchId: state.currentBookid, repeat: 15000});
       }
     },
-    getBookAlign({state, commit, dispatch}) {
-      if (state.currentBookid) {
+    getBookAlign({state, commit, dispatch}, {watchId = false, repeat = false} = {}) {
+      //console.log('getBookAlign', 'state.currentBookid', state.currentBookid, 'watchId', watchId, 'repeat', repeat);
+      if (state.currentBookid && (!watchId || watchId === state.currentBookid)) {
         let api_url = state.API_URL + 'align_queue/' + state.currentBookid;
         return axios.get(api_url, {})
           .then(response => {
@@ -2481,6 +2476,18 @@ export const store = new Vuex.Store({
                     dispatch('_setNotMarkedAsDoneBlocksCounter');
                     dispatch('recountApprovedInRange');
                     state.storeListO.refresh();
+                  }
+                  return Promise.resolve();
+                })
+                .then(() => {
+                  if (repeat) {
+                    //console.log('getBookAlign 1', 'currentBookid', state.currentBookid, 'watchId', watchId, 'repeat', repeat);
+                    if (watchId === state.currentBookid) {
+                      //console.log('getBookAlign 2', 'currentBookid', state.currentBookid, 'watchId', watchId, 'repeat', repeat);
+                      setTimeout(function() {
+                        dispatch('getBookAlign', {watchId: watchId, repeat: repeat})
+                      }, repeat)
+                    }
                   }
                   return Promise.resolve();
                 })
@@ -3118,7 +3125,7 @@ export const store = new Vuex.Store({
             .then(() => {
               return Promise.resolve(res);
             });
-          
+
         })
         .catch(err => {
           return Promise.reject(err);
