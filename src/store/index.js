@@ -143,7 +143,6 @@ export const store = new Vuex.Store({
       countTTS: 0,
       blocks: []
     },
-    audiobookWatch: null,
     selectionXHR: null,
     partOfBookBlocksXHR: null,
     tasksXHR: 0,
@@ -2133,6 +2132,7 @@ export const store = new Vuex.Store({
             });
           } else params+='counters[]=' + c + '&';
         });
+        console.log(state.API_URL + 'books/' + bookid + '/counter/?' + params.replace(/\&$/,''));
         return axios.get(state.API_URL + 'books/' + bookid + '/counter/?' + params.replace(/\&$/,''))
           .then(response => {
             if (response.data && response.data.count && Object.keys(response.data.count).length > 0) {
@@ -2404,6 +2404,7 @@ export const store = new Vuex.Store({
     getBookAlign({state, commit, dispatch}, {watchId = false, repeat = false} = {}) {
       //console.log('getBookAlign', 'state.currentBookid', state.currentBookid, 'watchId', watchId, 'repeat', repeat);
       if (state.currentBookid && (!watchId || watchId === state.currentBookid)) {
+        console.log(state.API_URL + 'align_queue/' + state.currentBookid);
         let api_url = state.API_URL + 'align_queue/' + state.currentBookid;
         return axios.get(api_url, {})
           .then(response => {
@@ -2466,45 +2467,54 @@ export const store = new Vuex.Store({
     },
 
     startAudiobookWatch({state, dispatch}) {
-      if (state.audiobookWatch) {
-        clearInterval(state.audiobookWatch);
+      if (state.currentBookid) {
+        dispatch('getAudioBook', {watchId: state.currentBookid, repeat: 15000});
       }
-      state.audiobookWatch = setInterval(() => {
-        dispatch('getAudioBook')
-      }, 15000);
     },
 
-    getAudioBook ({state, commit, dispatch}, bookid) {
+    getAudioBook ({state, commit, dispatch}, {bookid = false, watchId = false, repeat = false}={}) {
+      //console.log('getAudioBook', bookid, state.currentBookid, watchId);
       if (!bookid) {
         bookid = state.currentBookid;
       }
-      if (!bookid) {
-        return;
-      }
-      let set = bookid === state.currentBookid;
-      //console.log('here');
-      dispatch('setCurrentBookCounters', ['narration_blocks', 'not_marked_blocks_missed_audio', 'not_marked_blocks']);
+      if (bookid && (!watchId || watchId === state.currentBookid)) {
+        let set = bookid === state.currentBookid;
+        let counters = dispatch('setCurrentBookCounters', ['narration_blocks', 'not_marked_blocks_missed_audio', 'not_marked_blocks']);
 
-      return axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
-        .then(audio => {
-          if (audio.data) {
-            if (set) {
-              commit('set_currentAudiobook', audio.data);
+        console.log(state.API_URL + 'books/' + bookid + '/audiobooks');
+        let request = axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
+          .then(audio => {
+            if (audio.data) {
+              if (set) {
+                commit('set_currentAudiobook', audio.data);
+              }
+              return audio.data;
+            } else {
+              if (set) {
+                commit('set_currentAudiobook', {});
+              }
+              return {};
             }
-            return audio.data;
-          } else {
+          })
+          .catch(error => {
             if (set) {
               commit('set_currentAudiobook', {});
             }
             return {};
+          });
+        return Promise.all([request, counters])
+        .then((answer)=>{
+          //console.log('answer', answer);
+          if (repeat) {
+            if (watchId === state.currentBookid) {
+              setTimeout(function() {
+                dispatch('getAudioBook', {bookid: bookid, watchId: watchId, repeat: repeat})
+              }, repeat)
+            }
           }
+          return answer[0]
         })
-        .catch(error => {
-          if (set) {
-            commit('set_currentAudiobook', {});
-          }
-          return {};
-        });
+      } return {};
     },
 
     startJobInfoTimer({state, dispatch}) {
