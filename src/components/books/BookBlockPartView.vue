@@ -1354,9 +1354,15 @@ Save audio changes and realign the Block?`,
         }
         let flagUpdate = this.hasChange('flags') ? this.block.flags : null;
         if (flagUpdate) {
+          if (this.isAudioEditing) {
+            this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
+          }
           return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
             .then(() => {
               this.isChanged = false;
+              if (this.isLocked && this.isAudioEditing) {
+                this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+              }
               return Promise.resolve();
             })
         }
@@ -1523,6 +1529,9 @@ Save audio changes and realign the Block?`,
             this.isChanged = false;
             if (refreshTasks) {
               this.getCurrentJobInfo();
+            }
+            if (this.isAudioEditing && realign) {
+              this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
             }
             return Promise.resolve();
           })
@@ -3138,6 +3147,7 @@ Save text changes and realign the Block?`,
         if (realign) {
           api_url+= '?realign=true';
         }
+        this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         return api.post(api_url, data, {})
           .then(response => {
             this.$root.$emit('for-audioeditor:flush');
@@ -3173,9 +3183,9 @@ Save text changes and realign the Block?`,
               this.blockAudio.map = this.blockContent();
               this.blockAudio.src = this.blockAudiosrc('m4a');
               this.isAudioChanged = false;
-              this.isChanged = false;
+              //this.isChanged = false;
               this.block.isAudioChanged = false;
-              this.block.isChanged = false;
+              //this.block.isChanged = false;
               return BPromise.resolve();
             }
           })

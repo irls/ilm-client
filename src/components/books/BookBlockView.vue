@@ -2132,6 +2132,7 @@ Save audio changes and realign the Block?`,
             if (refreshTasks) {
               this.getCurrentJobInfo();
             }
+            return Promise.resolve();
           })
           .catch(err => {
             return Promise.reject(err);
