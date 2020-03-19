@@ -1978,39 +1978,6 @@ export const store = new Vuex.Store({
       return dispatch('updateBookMeta', upd);
     },
 
-    getAudioBook ({state, commit, dispatch}, bookid) {
-      if (!bookid) {
-        bookid = state.currentBookid;
-      }
-      if (!bookid) {
-        return;
-      }
-      let set = bookid === state.currentBookid;
-      //console.log('here');
-      dispatch('setCurrentBookCounters', ['narration_blocks', 'not_marked_blocks_missed_audio', 'not_marked_blocks']);
-
-      return axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
-        .then(audio => {
-          if (audio.data) {
-            if (set) {
-              commit('set_currentAudiobook', audio.data);
-            }
-            return audio.data;
-          } else {
-            if (set) {
-              commit('set_currentAudiobook', {});
-            }
-            return {};
-          }
-        })
-        .catch(error => {
-          if (set) {
-            commit('set_currentAudiobook', {});
-          }
-          return {};
-        });
-    },
-
     tc_loadBookTask({state, commit, dispatch}, bookid) {
       //console.log('a1');
       if (state.loadBookTaskWait) {
@@ -2497,6 +2464,7 @@ export const store = new Vuex.Store({
           .catch(err => Promise.reject(err));
       }
     },
+
     startAudiobookWatch({state, dispatch}) {
       if (state.audiobookWatch) {
         clearInterval(state.audiobookWatch);
@@ -2505,6 +2473,49 @@ export const store = new Vuex.Store({
         dispatch('getAudioBook')
       }, 15000);
     },
+
+    getAudioBook ({state, commit, dispatch}, bookid) {
+      if (!bookid) {
+        bookid = state.currentBookid;
+      }
+      if (!bookid) {
+        return;
+      }
+      let set = bookid === state.currentBookid;
+      //console.log('here');
+      dispatch('setCurrentBookCounters', ['narration_blocks', 'not_marked_blocks_missed_audio', 'not_marked_blocks']);
+
+      return axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
+        .then(audio => {
+          if (audio.data) {
+            if (set) {
+              commit('set_currentAudiobook', audio.data);
+            }
+            return audio.data;
+          } else {
+            if (set) {
+              commit('set_currentAudiobook', {});
+            }
+            return {};
+          }
+        })
+        .catch(error => {
+          if (set) {
+            commit('set_currentAudiobook', {});
+          }
+          return {};
+        });
+    },
+
+    startJobInfoTimer({state, dispatch}) {
+      let interval = 60000;
+      setInterval(() => {
+        if (!state.jobInfoTimer || Date.now() - state.jobInfoTimer >= interval) {
+          dispatch('getCurrentJobInfo');
+        }
+      }, interval);
+    },
+
     getCurrentJobInfo({state, commit}, clear) {
       /*state.currentJobInfo = {
         can_resolve_tasks: [],
@@ -2571,14 +2582,6 @@ export const store = new Vuex.Store({
       .catch(error => {
         return Promise.reject({})
       })
-    },
-    startJobInfoTimer({state, dispatch}) {
-      let interval = 60000;
-      setInterval(() => {
-        if (!state.jobInfoTimer || Date.now() - state.jobInfoTimer >= interval) {
-          dispatch('getCurrentJobInfo');
-        }
-      }, interval);
     },
     reimportBook({state, commit, dispatch}, data) {
       if (!state.currentBookid) {
