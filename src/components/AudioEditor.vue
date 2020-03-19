@@ -67,9 +67,12 @@
           <input type="number" step="0.1" v-model="silenceLength" />
           <button class="btn btn-primary" v-on:click="addSilence()" :disabled="cursorPosition === false">Add Silence</button>
         </div>
+        <template v-if="mode == 'block' && !isFootnote">
+          <label v-if="isRevertDisabled" class="btn btn-default disabled">Revert</label>
+          <button v-else class="btn btn-default" v-on:click="revert(true)">Revert</button>
+        </template>
         <div class="audio-controls" v-if="isModifiedComputed && mode == 'block'">
           <button class="btn btn-default" v-if="history.length" v-on:click="undo()">Undo</button>
-          <button class="btn btn-default" v-on:click="showModal('onDiscardMessage')">Discard</button>
           <button class="btn btn-primary" v-on:click="save()">Save</button>
           <button class="btn btn-primary" v-on:click="saveAndRealign()">Save & Re-align</button>
         </div>
@@ -189,7 +192,8 @@
           processRun: false,
           processRunType: null,
           selectionBordersVisible: false,
-          audioDuration: 0
+          audioDuration: 0,
+          isFootnote: false
         }
       },
       mounted() {
@@ -256,6 +260,7 @@
           }
 
           let blockId = block ? block._id : null;
+          this.isFootnote = block ? block.is_footnote : false;
 
           this.$root.$off('for-audioeditor:select', this.select);
           this.$root.$off('for-audioeditor:reload-text', this._setText);
@@ -1839,6 +1844,58 @@
         unpinRight(event) {
           let position = (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
           this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
+        },
+        revert(warn = false) {
+          if (this.isRevertDisabled) {
+            return false;
+          }
+          if (warn) {
+            this.$root.$emit('show-modal', {
+              title: '<b>Revert block audio</b>',
+              text: `Changes to the audio will be lost, including saved changes.<br>
+Revert to original block audio?`,
+              buttons: [
+                {
+                  title: 'Cancel',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                  },
+                },
+                {
+                  title: 'Revert',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                    this.revert(false);
+                  },
+                  'class': 'btn btn-primary'
+                }
+              ],
+              class: ['align-modal']
+            });
+          } else {
+            let pause;
+            if (this.isPlaying) {
+              pause = this.pause();
+            } else {
+              pause = new Promise((res, rej) => {res()});
+            }
+            return pause
+              .then(() => {
+                this.$root.$emit('from-audioeditor:revert', this.blockId);
+                //this._setDefaults();
+                /*this.words = [];
+                this.currentWord = null;
+                this.origFilePositions = {};
+                this.isPlaying = false;
+                this.isPaused = false;*/
+                this.selection = {};
+                this.wordSelectionMode = false;
+                this.isModified = false;
+                this.isAudioModified = false;
+                this.history = [];
+                this.cursorPosition = 0;
+              });
+          }
         }
 
       },
@@ -1983,6 +2040,12 @@
           get() {
             return this.mode === 'file' ? this.blkSelection : {};
           }
+        },
+        isRevertDisabled: {
+          get() {
+            return this.block ? !this.block.audiosrc_original && !this.isModified : true;
+          },
+          cache: false
         },
         ...mapGetters({
           currentBookMeta: 'currentBookMeta',

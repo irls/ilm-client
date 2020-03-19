@@ -111,9 +111,6 @@
                       <li class="separator"></li>
                       </template>
                     </template>
-                    <li @click="discardAudio" v-if="allowAudioRevert">
-                      <i class="fa fa-cloud-download" aria-hidden="true"></i>
-                      Revert to original audio</li>
                   </block-menu>
                 </div>
                 <!--<div class="block-menu">-->
@@ -1046,21 +1043,13 @@ export default {
                 blockId: this.block._id,
                 audiosrc: this.block.audiosrc,
                 audiosrc_ver: this.block.audiosrc_ver,
-                manual_boundaries: this.block.manual_boundaries
+                manual_boundaries: this.block.manual_boundaries,
+                audiosrc_original: this.block.audiosrc_original || null
               }
             ];
           }
         },
         cache: false
-      },
-      allowAudioRevert() {
-        if (this.tc_hasBlockTask('fix-block-text') && this.block && this.block.audiosrc === 'audio_file') {
-          return true;
-        }
-        if (this.tc_hasBlockTask(this.block._id, 'fix-block-narration')) {
-          return true;
-        }
-        return false;
       },
       showBlockFlag: {
         get() {
@@ -1645,41 +1634,6 @@ export default {
 
         });
       },
-      discardAudio: function() {
-        //this.blockAudio.src = this.block.getAudiosrc('m4a');
-        //this.blockAudio.map = this.block.content;
-        //let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
-        //let api = this.$store.state.auth.getHttp();
-        //api.delete(api_url, {}, {})
-          //.then(response => {
-          //
-          //})
-          //.catch(err => {
-          //
-          //});
-        if (this.tc_hasBlockTask(this.block._id, 'fix-block-narration')) {
-          let api = this.$store.state.auth.getHttp();
-          api.post(this.API_URL + 'book/block/' + this.block._id + '/audio/revert')
-            .then(response => {
-              this.$root.$emit('bookBlocksUpdates', {blocks: [response.data.block]});
-            })
-            .catch(err => console.log(err));
-        }
-      },
-
-      discardFtnAudio: function() {
-//         this.blockAudio.src = this.block.audiosrc;
-//         this.blockAudio.map = this.block.content;
-//         let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_tmp';
-//         let api = this.$store.state.auth.getHttp();
-//         api.delete(api_url, {}, {})
-//           .then(response => {
-//
-//           })
-//           .catch(err => {
-//
-//           });
-      },
 
       discardAudioEdit: function(footnoteIdx = null, reload = true, partIdx = null, check_id = null) {
         if (!this.isSplittedBlock) {
@@ -2239,6 +2193,7 @@ export default {
                   this.blockAudio.map = response.data.content;
                   this.blockAudio.src = this.block.getAudiosrc('m4a');
                   this.block.manual_boundaries = response.data.manual_boundaries || [];
+                  this.block.audiosrc_original = response.data.audiosrc_original;
                   Vue.nextTick(() => {
                     if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
                       this.block.flags.forEach(f => {
@@ -2259,7 +2214,7 @@ export default {
                   this.block.setAudiosrcFootnote(footnoteIdx, resp_f.audiosrc, resp_f.audiosrc_ver);
                   this.audioEditFootnote.footnote.manual_boundaries = resp_f.manual_boundaries || [];
                   if (!realign) {
-                    this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
+                    this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id, is_footnote: true}, this.audioEditFootnote.footnote));
                   }
                   this.audioEditFootnote.isAudioChanged = false;
                   return BPromise.resolve();
@@ -2496,7 +2451,7 @@ export default {
                 this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
                 this.block.setManualBoundariesFootnote(footnoteIdx, response.data.manual_boundaries || []);
                 this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
-                this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, true, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
+                this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, true, Object.assign({_id: this.check_id, is_footnote: true}, this.audioEditFootnote.footnote));
                 this.audioEditFootnote.isAudioChanged = true;
               }
             } else {
@@ -2571,7 +2526,7 @@ export default {
                 this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
                 //this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
                 this.block.setManualBoundariesFootnote(footnoteIdx, response.data.manual_boundaries || []);
-                this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, true, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
+                this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, true, Object.assign({_id: this.check_id, is_footnote: true}, this.audioEditFootnote.footnote));
                 this.audioEditFootnote.isAudioChanged = true;
               }
             } else {
@@ -3323,10 +3278,8 @@ export default {
         Vue.nextTick(() => {
           let audiosrc = footnoteIdx !== null ? this.block.getAudiosrcFootnote(footnoteIdx, 'm4a', true) : this.blockAudio.src;
           let text = footnote ? footnote.content : this.blockAudio.map;
-          let loadBlock = footnoteIdx !== null ? {_id: this.check_id, voicework: footnote ? footnote.voicework : 'tts', manual_boundaries: footnote ? footnote.manual_boundaries || [] : []} : this.block;
+          let loadBlock = footnoteIdx !== null ? {_id: this.check_id, voicework: footnote ? footnote.voicework : 'tts', manual_boundaries: footnote ? footnote.manual_boundaries || [] : [], is_footnote: true} : this.block;
           this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
-
-          let self = this;
           this.audioEditorEventsOn();
         });
       },
@@ -3483,7 +3436,7 @@ export default {
             this.block.undoContentFootnote(this.footnoteIdx);
             this.block.undoAudiosrcFootnote(this.footnoteIdx);
             this.block.undoManualBoundariesFootnote(this.footnoteIdx);
-            this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(this.footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id}, this.audioEditFootnote.footnote));
+            this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(this.footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id, is_footnote: true}, this.audioEditFootnote.footnote));
           }
         }
       },
@@ -5433,4 +5386,3 @@ export default {
     border: none;
   }
 </style>
-
