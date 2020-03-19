@@ -3123,9 +3123,9 @@ Save text changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  return this.assembleBlockPartAudioEdit(false, {})
+                  return this.assembleBlockProxy(false, false, false)
                     .then(() => {
-                      return this.assembleBlockProxy(false, true);
+                      return this.assembleBlockPartAudioEdit(true, {});
                     });
                 },
                 class: ['btn btn-primary']
