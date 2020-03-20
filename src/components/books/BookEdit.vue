@@ -2125,7 +2125,7 @@ export default {
     min-height: 205px;
     height: auto;
     margin-bottom: 0px;
-    z-index: 9999;
+    z-index: 990;
     &.-mode-file {
         min-height: 183px;
     }
