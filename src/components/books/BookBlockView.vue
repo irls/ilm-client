@@ -1910,7 +1910,7 @@ Save audio changes and realign the Block?`,
             if (fullUpdate) {
               updateTask = this.assembleBlock(partUpdate, realign);
             } else {
-              updateTask = this.assembleBlockPart(partUpdate);
+              updateTask = this.assembleBlockPart(partUpdate, realign);
             }
             return updateTask
               .then(() => {
@@ -1941,7 +1941,7 @@ Save audio changes and realign the Block?`,
             this.getBookAlign()
               .then(() => {
                 this.isSaving = false;
-                if (this.isLocked) {
+                if (this.isLocked && this.isAudioEditing) {
                   this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                 }
               });
@@ -2001,19 +2001,28 @@ Save audio changes and realign the Block?`,
           //});
         });
       },
-      assembleBlockPart: function(update) {
+      assembleBlockPart: function(update, realign = false) {
         update.blockid = this.block.blockid;
         update.bookid = this.block.bookid;
         this.isSaving = true;
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         }
-        return this.putBlockPart(update)
+        return this.putBlockPart(update, realign)
           .then(() => {
-            this.isSaving = false;
-            this.isChanged = false;
-            if (this.isAudioEditing) {
-              this.$root.$emit('for-audioeditor:set-process-run', false);
+            if (realign) {
+              this.getBookAlign()
+                .then(() => {
+                  this.isSaving = false;
+                  if (this.isLocked && this.isAudioEditing) {
+                    this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+                  }
+                });
+            } else {
+              this.isSaving = false;
+              if (this.isAudioEditing) {
+                this.$root.$emit('for-audioeditor:set-process-run', false);
+              }
             }
             return Promise.resolve();
           });
@@ -2210,6 +2219,7 @@ Save audio changes and realign the Block?`,
       },
 
       assembleBlockAudioEdit: function(footnoteIdx = null, realign = false, preparedData = false) {// to save changes from audio editor
+        this.$root.$emit('closeFlagPopup', true);
         if (this.isChanged && preparedData === false) {
           this.$root.$emit('show-modal', {
             title: 'Unsaved Changes',

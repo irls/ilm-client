@@ -1319,6 +1319,7 @@ export default {
 //           });
       },
       assembleBlockProxy: function (check_realign = true, realign = false, check_audio_changes = true) {
+        this.$root.$emit('closeFlagPopup', true);
         if (this.isAudioChanged && check_audio_changes) {
           this.$root.$emit('show-modal', {
             title: 'Unsaved Changes',
@@ -1336,7 +1337,7 @@ Save audio changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  let preparedData = {audiosrc: this.block.getPartAudiosrc(this.blockPartIdx, null, false)};
+                  let preparedData = {audiosrc: this.block.getPartAudiosrc(this.blockPartIdx, null, false), content: this.clearBlockContent()};
                   return this.assembleBlockProxy(false, false, false)
                     .then(() => {
                       return this.assembleBlockPartAudioEdit(true, preparedData)
@@ -1360,8 +1361,12 @@ Save audio changes and realign the Block?`,
           return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
             .then(() => {
               this.isChanged = false;
-              if (this.isLocked && this.isAudioEditing) {
-                this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+              if (this.isAudioEditing) {
+                if (this.isLocked) {
+                  this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+                } else {
+                  this.$root.$emit('for-audioeditor:set-process-run', false);
+                }
               }
               return Promise.resolve();
             })
@@ -2587,7 +2592,7 @@ Save audio changes and realign the Block?`,
             this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
             this.blockPart.manual_boundaries = manual_boundaries.slice();
             manual_boundaries = null;
-            this.pushChange('manual_boundaries');
+            //this.pushChange('manual_boundaries');
             this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
             this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
             this.blockPart.content = this.$refs.blockContent.innerHTML;
@@ -3106,6 +3111,7 @@ Save audio changes and realign the Block?`,
       },
       assembleBlockPartAudioEdit(realign, preparedData = false) {
         
+        this.$root.$emit('closeFlagPopup', true);
         if (this.isChanged && preparedData === false) {
           this.$root.$emit('show-modal', {
             title: 'Unsaved Changes',
@@ -3123,9 +3129,10 @@ Save text changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
+                  let preparedData = {content: this.clearBlockContent()}
                   return this.assembleBlockProxy(false, false, false)
                     .then(() => {
-                      return this.assembleBlockPartAudioEdit(true, {});
+                      return this.assembleBlockPartAudioEdit(true, preparedData);
                     });
                 },
                 class: ['btn btn-primary']
@@ -3139,7 +3146,7 @@ Save text changes and realign the Block?`,
         let api = this.$store.state.auth.getHttp();
         let data = {
           audiosrc: preparedData.audiosrc || this.blockAudiosrc(null, false),
-          content: this.blockAudio.map,//content: this.blockContent(),
+          content: preparedData.content || this.blockAudio.map,//content: this.blockContent(),
           manual_boundaries: this.blockPart.manual_boundaries || [],
           mode: this.mode
         };
