@@ -2237,7 +2237,7 @@ Save text changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  return this.assembleBlockAudioEdit(footnoteIdx, false, {})
+                  return this.assembleBlockAudioEdit(footnoteIdx, false, {content: this.clearBlockContent()})
                     .then(() => {
                       return this.assembleBlockProxy(false, true, [], false);
                     });
