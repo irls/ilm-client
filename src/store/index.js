@@ -2132,7 +2132,7 @@ export const store = new Vuex.Store({
             });
           } else params+='counters[]=' + c + '&';
         });
-        console.log(state.API_URL + 'books/' + bookid + '/counter/?' + params.replace(/\&$/,''));
+        //console.log(state.API_URL + 'books/' + bookid + '/counter/?' + params.replace(/\&$/,''));
         return axios.get(state.API_URL + 'books/' + bookid + '/counter/?' + params.replace(/\&$/,''))
           .then(response => {
             if (response.data && response.data.count && Object.keys(response.data.count).length > 0) {
@@ -2404,7 +2404,7 @@ export const store = new Vuex.Store({
     getBookAlign({state, commit, dispatch}, {watchId = false, repeat = false} = {}) {
       //console.log('getBookAlign', 'state.currentBookid', state.currentBookid, 'watchId', watchId, 'repeat', repeat);
       if (state.currentBookid && (!watchId || watchId === state.currentBookid)) {
-        console.log(state.API_URL + 'align_queue/' + state.currentBookid);
+        //console.log(state.API_URL + 'align_queue/' + state.currentBookid);
         let api_url = state.API_URL + 'align_queue/' + state.currentBookid;
         return axios.get(api_url, {})
           .then(response => {
@@ -2468,7 +2468,7 @@ export const store = new Vuex.Store({
 
     startAudiobookWatch({state, dispatch}) {
       if (state.currentBookid) {
-        dispatch('getAudioBook', {watchId: state.currentBookid, repeat: 15000});
+        dispatch('getAudioBook', {watchId: state.currentBookid, repeat: 17500});
       }
     },
 
@@ -2481,7 +2481,7 @@ export const store = new Vuex.Store({
         let set = bookid === state.currentBookid;
         let counters = dispatch('setCurrentBookCounters', ['narration_blocks', 'not_marked_blocks_missed_audio', 'not_marked_blocks']);
 
-        console.log(state.API_URL + 'books/' + bookid + '/audiobooks');
+        //console.log(state.API_URL + 'books/' + bookid + '/audiobooks');
         let request = axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
           .then(audio => {
             if (audio.data) {
