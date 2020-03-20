@@ -82,7 +82,7 @@
                         <input id="rename-input" type="text" v-model="audiofile.title" 
                              class="audiofile-name-edit"
                              @focusout="saveAudiobook()"
-                             v-else-if="!audiofile.hasOwnProperty('duplicate')" />
+                             v-else-if="!audiofile.hasOwnProperty('duplicate') || audiofile.duplicate == false" />
                       </div>
                       <div class="audiofile-player-controls">
                         <i v-if="audiofile.preview && audiofile.preview.end" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'end')"></i>
