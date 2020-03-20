@@ -5432,4 +5432,20 @@ export default {
     background-color: #e0dede;
     border: none;
   }
+
+div.__unsave > div.content-wrap {
+  border-color: #ded056 !important;
+  box-shadow: 0 0 10px #ded056 !important;
+}
+
+/*
+div.content-wrap-footn.__unsave {
+  border: 2px solid #ded056 !important;
+  box-shadow: 0 0 10px #ded056 !important;
+}
+
+div.content-wrap-footn.__unsave:focus {
+  outline: none;
+} */
+
 </style>
