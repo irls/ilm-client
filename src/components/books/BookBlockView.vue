@@ -3715,7 +3715,7 @@ export default {
             this.voiceworkUpdating = false;
             if (response.status == 200) {
               if (response && response.data && response.data.blocks) {
-                console.log('BookBlockView.vue->Counters:', response.data.counters);
+                //console.log('BookBlockView.vue->Counters:', response.data.counters);
 
                 if (true && this.voiceworkUpdateType !== 'single') {
                   document.location.href = document.location.href + '/' + this.block.blockid;
