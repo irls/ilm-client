@@ -1978,7 +1978,7 @@ export const store = new Vuex.Store({
     },
 
     tc_loadBookTask({state, commit, dispatch}, bookid) {
-      //console.log('a1');
+      //console.log('tc_loadBookTask');
       if (state.loadBookTaskWait) {
         return state.loadBookTaskWait;
       }

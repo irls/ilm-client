@@ -395,7 +395,7 @@
 
                 <div class="table-row">
                   <div class="table-cell -num">{{ftnIdx+1}}.</div>
-                  <div 
+                  <div
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
@@ -3717,12 +3717,12 @@ export default {
               if (response && response.data && response.data.blocks) {
                 console.log('BookBlockView.vue->Counters:', response.data.counters);
 
-                if (true && this.voiceworkUpdateType !== 'single') {
-                  document.location.href = document.location.href + '/' + this.block.blockid;
-                  return;
-                }
+//                 if (true && this.voiceworkUpdateType !== 'single') {
+//                   document.location.href = document.location.href + '/' + this.block.blockid;
+//                   return;
+//                 }
                 //response.data.updField = 'voicework';
-                if (response.data.blocks.length > 900) {
+                if (response.data.blocks.length > 100) {
                   this.$store.state.liveDB.onBookReimport();
                   this.$store.state.liveDB.stopWatch('metaV');
                   this.$store.state.liveDB.stopWatch('job');
@@ -4086,6 +4086,7 @@ export default {
           this.voiceworkUpdateType = 'single';
         }
       },
+
       eraseAudio(start, end, footnoteIdx = null, partIdx = null, check_id = null) {
         if (!this.isSplittedBlock) {
           partIdx = null;
