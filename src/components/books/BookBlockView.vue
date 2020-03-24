@@ -1187,7 +1187,9 @@ export default {
         this.block.changes = this.changes;
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
-            this.block.description = this.$refs.blockDescription.innerHTML;
+            if (this.$refs.blocks[0]) {
+              this.block.description = this.$refs.blocks[0].$refs.blockDescription.innerHTML;
+            }
             this.block.voicework = 'no_audio';
           case 'hr':
             this.block.content = '';
@@ -3208,6 +3210,9 @@ export default {
             //this.block.parnum = false;
           //}
           this.$root.$emit('from-block-edit:set-style');
+          if (['type'].indexOf(type) !== -1) {
+            this.$forceUpdate();
+          }
           if (type === 'type' && event && event.target) {
             if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {
               this.block.voicework = 'no_audio';
@@ -3219,14 +3224,13 @@ export default {
               this.pushChange('audiosrc');
               this.pushChange('audiosrc_ver');
             }
-            if (event.target.value === 'illustration') {
-              let i = setInterval(() => {
-                if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs && this.$refs.blocks[0].$refs.blockDescription) {
-                  this.$refs.blocks[0].initEditor();
-                  clearInterval(i);
-                }
-              }, 500);
-            }
+            Vue.nextTick(() => {
+              if (event.target.value !== 'hr') {
+                this.$refs.blocks[0].initEditor();
+              } else {
+                this.$refs.blocks[0].destroyEditor();
+              }
+            });
           }
         }
       },
