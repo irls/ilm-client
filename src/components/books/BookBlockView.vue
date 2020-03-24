@@ -3307,7 +3307,7 @@ Save text changes and realign the Block?`,
             }
             Vue.nextTick(() => {
               if (event.target.value !== 'hr') {
-                this.$refs.blocks[0].initEditor();
+                this.$refs.blocks[0].initEditor(true);
               } else {
                 this.$refs.blocks[0].destroyEditor();
               }
