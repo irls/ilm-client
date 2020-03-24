@@ -1855,6 +1855,9 @@ export default {
         if (update.status && update.status.marked === true) {
           update.status.marked = false;
         }
+        if (this.hasChange('classes') && !update.classes) {
+          update.classes = this.block.classes;
+        }
 
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
