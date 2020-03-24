@@ -4790,6 +4790,7 @@ export default {
         line-height: 24pt;
         width: 100%;
         display: table;
+        margin-top: -30px;
         .content-wrap-desc {
           p {
             margin: 0;
@@ -4812,6 +4813,7 @@ export default {
     }
 
     .illustration-block {
+      padding-bottom: 30px;
       img {
         border: solid grey 2px;
         /*max-height: 85vh;*/

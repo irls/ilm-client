@@ -129,7 +129,7 @@
                   @inputSuggestion="onInputSuggestion">
                 </div>
 
-                <div :class="['table-row content-description', block.getClass(mode), {'hidden': block.type !== 'illustration'}]">
+                <div :class="['table-row content-description', block.getClass(mode), {'hidden': block.type !== 'illustration'}]" @click="onClick($event)">
                   <div class="content-wrap-desc description"
                     ref="blockDescription"
                     @input="commitDescription($event)"
