@@ -73,7 +73,7 @@
                   </div>
                   <div v-if="action=='complete_mastering'">
                     <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Complete</button>
+                      <button v-if="!task.complete  && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Complete</button>
                     </div>
                     <div v-else class="preloader-task"></div>
                   </div>
