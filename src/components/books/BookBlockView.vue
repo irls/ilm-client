@@ -1424,7 +1424,7 @@ export default {
           this.editor.setup();
         }
 
-        if ((!this.editorDescr || force === true) && this.block.type == 'illustration' && this.mode === 'edit') {
+        /*if ((!this.editorDescr || force === true) && this.block.type == 'illustration' && this.mode === 'edit') {
           let extensions = {};
           let toolbar = {buttons: []};
           if (this.allowEditing) {
@@ -1451,7 +1451,7 @@ export default {
           });
         } else if (this.editorDescr) {
           this.editorDescr.setup();
-        }
+        }*/
 
         this.initFtnEditor(force)
 
@@ -2657,11 +2657,6 @@ export default {
         if (field === 'voicework') {
           this.block.setAudiosrcFootnote(pos, '');
         }
-      },
-      commitDescription: function(ev) {
-        //this.block.description = ev.target.innerText.trim();
-        this.isChanged = true;
-        this.pushChange('description');
       },
 
       addFlag: function() {
@@ -4786,6 +4781,8 @@ export default {
 
     &.content-description {
         line-height: 24pt;
+        width: 100%;
+        display: table;
         .content-wrap-desc {
           p {
             margin: 0;

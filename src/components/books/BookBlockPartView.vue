@@ -104,15 +104,6 @@
                     </div> -->
                   </div>
 
-                  <div :class="['table-row content-description', block.getClass(mode)]">
-                    <div class="content-wrap-desc description"
-                      ref="blockDescription"
-                      @input="commitDescription($event)"
-                      v-html="block.description"
-                      @contextmenu.prevent="onContext">
-                    </div>
-                  </div>
-
                 </div>
                 <!--<img v-if="block.illustration"-->
 
@@ -136,6 +127,15 @@
                   @contextmenu.prevent="onContext"
                   @focusout="onFocusout"
                   @inputSuggestion="onInputSuggestion">
+                </div>
+
+                <div :class="['table-row content-description', block.getClass(mode), {'hidden': block.type !== 'illustration'}]">
+                  <div class="content-wrap-desc description"
+                    ref="blockDescription"
+                    @input="commitDescription($event)"
+                    v-html="block.description"
+                    @contextmenu.prevent="onContext">
+                  </div>
                 </div>
                 <!-- <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div> -->
                 <!--<div class="content-wrap">-->
@@ -2359,14 +2359,6 @@ export default {
               this.pushChange('content');
               this.pushChange('audiosrc');
               this.pushChange('audiosrc_ver');
-            }
-            if (event.target.value === 'illustration') {
-              let i = setInterval(() => {
-                if (this.$refs.blockDescription) {
-                  this.initEditor();
-                  clearInterval(i);
-                }
-              }, 500);
             }
           }
         }
