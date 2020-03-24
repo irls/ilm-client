@@ -3699,7 +3699,7 @@ export default {
 
         this.voiceworkUpdating = true;
 
-        if (true && this.voiceworkUpdateType !== 'single') {
+        if (false && this.voiceworkUpdateType !== 'single') {
           this.$store.state.liveDB.onBookReimport();
           this.$store.state.liveDB.stopWatch('metaV');
           this.$store.state.liveDB.stopWatch('job');
@@ -3716,13 +3716,14 @@ export default {
             if (response.status == 200) {
               if (response && response.data && response.data.blocks) {
                 console.log('BookBlockView.vue->Counters:', response.data.counters);
+                //console.log('response.data.blocks.length:', response.data.blocks.length);
 
 //                 if (true && this.voiceworkUpdateType !== 'single') {
 //                   document.location.href = document.location.href + '/' + this.block.blockid;
 //                   return;
 //                 }
                 //response.data.updField = 'voicework';
-                if (response.data.blocks.length > 100) {
+                if (response.data.blocks.length > 300) {
                   this.$store.state.liveDB.onBookReimport();
                   this.$store.state.liveDB.stopWatch('metaV');
                   this.$store.state.liveDB.stopWatch('job');

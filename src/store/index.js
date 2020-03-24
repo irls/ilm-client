@@ -1146,13 +1146,13 @@ export const store = new Vuex.Store({
     },
 
     startBookWatch({state, dispatch}, bookid) {
+      //console.log('state.liveDB.startWatch', bookid);
       if (!bookid) {
         bookid = state.currentBookid
       }
       if (bookid) {
         state.liveDB.startWatch(bookid, 'blockV', {bookid: bookid}, (data) => {
           if (data) {
-
             //state.storeListO.delBlock(data.block);
             if (data.action === 'insert' && data.block) {
               if (!state.storeListO.get(data.block.id)) {
@@ -1978,7 +1978,7 @@ export const store = new Vuex.Store({
     },
 
     tc_loadBookTask({state, commit, dispatch}, bookid) {
-      //console.log('tc_loadBookTask');
+      //console.log('tc_loadBookTask, bookid', bookid);
       if (state.loadBookTaskWait) {
         return state.loadBookTaskWait;
       }
@@ -2519,9 +2519,15 @@ export const store = new Vuex.Store({
 
     startJobInfoTimer({state, dispatch}) {
       let interval = 60000;
-      setInterval(() => {
+      //console.log('startJobInfoTimer', state.jobInfoTimer);
+      setTimeout(() => {
         if (!state.jobInfoTimer || Date.now() - state.jobInfoTimer >= interval) {
-          dispatch('getCurrentJobInfo');
+          dispatch('getCurrentJobInfo')
+          .then(()=>{
+            dispatch('startJobInfoTimer');
+          });
+        } else {
+          dispatch('startJobInfoTimer');
         }
       }, interval);
     },
