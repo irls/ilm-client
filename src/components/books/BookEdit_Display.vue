@@ -38,6 +38,8 @@ export default {
       isBookMounted: false,
       hotkeyScrollTo: false,
       onScrollEv: false,
+      startReached: false,
+      endReached: false
     }
   },
   components: {
@@ -73,8 +75,8 @@ export default {
             let firstRid = this.parlistO.getFirstRid();
             if (firstRid) {
               let block = this.parlistO.getBlockByRid(firstRid);
-              console.log('ctrl+home', 'blockid:', block.blockid);
-              if (block) {
+              console.log('ctrl+home', 'blockid:', block.blockid, this.startReached);
+              if (block && !this.startReached) {
                 this.scrollToBlock(block.index, block.blockid);
               }
             }
@@ -86,8 +88,8 @@ export default {
             let lastRid = this.parlistO.getLastRid();
             if (lastRid) {
               let block = this.parlistO.getBlockByRid(lastRid);
-              console.log('ctrl+end', 'blockid:', block.blockid);
-              if (block) {
+              console.log('ctrl+end', 'blockid:', block.blockid, this.endReached);
+              if (block && !this.endReached) {
                 this.scrollToBlock(block.index, block.blockid);
               }
             }
@@ -220,6 +222,8 @@ export default {
 
     scrolledToEdge(ev) {
       this.$store.commit('set_taskBlockMapAllowNext', !ev.detail.endReached);
+      this.startReached = ev.detail.startReached;
+      this.endReached = ev.detail.endReached;
     },
 
     checkVisible(elm) {
