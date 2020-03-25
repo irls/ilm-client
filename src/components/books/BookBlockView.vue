@@ -1698,6 +1698,9 @@ export default {
       },
 
       assembleBlockProxy: function (check_realign = true, realign = true, update_fields = [], check_audio_changes = true) {
+        if (!this.block.audiosrc) {
+          realign = false;
+        }
         if (this.isAudioChanged && check_audio_changes) {
           this.$root.$emit('show-modal', {
             title: 'Unsaved Changes',
