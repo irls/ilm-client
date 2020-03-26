@@ -169,6 +169,7 @@ bind:startReached={startReached} bind:endReached={endReached} >
 
       viewObj.illustration_height = block.illustration_height;
       viewObj.illustration_width = block.illustration_width;
+      viewObj.description = block.description;
 
       //viewObj.content = block.content
 

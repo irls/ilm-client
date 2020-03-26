@@ -13,6 +13,11 @@
         <div class="bview-empty-image">No image</div>
       </div>
     {/if}
+    {#if block.description}
+      <div class="bview-image-descr-wrapper">
+        {@html block.description}
+      </div>
+    {/if}
   {:else if block.type === 'hr'}
     <hr class="{block.getClass()}"/>
   {:else}
@@ -116,5 +121,8 @@
     text-align: center;
     display: table-cell;
     vertical-align: middle;
+  }
+  .bview-image-descr-wrapper {
+    text-align: center;
   }
 </style>
