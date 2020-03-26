@@ -3121,6 +3121,8 @@ export default {
           .catch(err => {
             this.isSaving = false;
             this.checkError(err);
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Failed to apply your correction. Please try again.');
             BPromise.reject(err)
           });
       },
