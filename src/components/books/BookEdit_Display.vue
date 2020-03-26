@@ -102,8 +102,8 @@ export default {
             if (currIdx > -1) {
               let jumpIdx = currIdx - jumpStep;
               if (jumpIdx < 0) jumpIdx = 0;
-              console.log('ctrl+up arrow', 'blockid:', idsArray[jumpIdx]);
-              this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
+              console.log('ctrl+up arrow', 'blockid:', idsArray[jumpIdx], this.startReached);
+              if (!this.startReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
             }
           },
           'ctrl+down': (ev)=>{
@@ -114,8 +114,8 @@ export default {
             if (currIdx > -1) {
               let jumpIdx = currIdx + jumpStep;
               if (jumpIdx > idsArray.length) jumpIdx = idsArray.length - 1;
-              console.log('ctrl+down arrow', 'blockid:', idsArray[jumpIdx]);
-              this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
+              console.log('ctrl+down arrow', 'blockid:', idsArray[jumpIdx], this.endReached);
+              if (!this.endReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
             }
           },
           'pgup': (ev)=>{
@@ -123,11 +123,11 @@ export default {
             ev.preventDefault();
             ev.stopPropagation();
             let prevId = this.parlistO.getInId(this.startId);
-            if (prevId && prevId !== this.startId) {
+            if (prevId) {
               let block = this.parlistO.get(prevId);
               if (block) {
-                console.log('page up', 'blockid:', block.blockid);
-                this.scrollToBlock(block.index, block.blockid);
+                console.log('page up', 'blockid:', block.blockid, this.startReached);
+                if (prevId !== this.startId && !this.startReached) this.scrollToBlock(block.index, block.blockid);
               }
             }
           },
@@ -136,11 +136,11 @@ export default {
             ev.stopPropagation();
             ev.preventDefault();
             let nextId = this.parlistO.getOutId(this.startId);
-            if (nextId && nextId !== this.startId) {
+            if (nextId) {
               let block = this.parlistO.get(nextId);
               if (block) {
-                console.log('page down', 'blockid:', block.blockid);
-                this.scrollToBlock(block.index, block.blockid);
+                console.log('page down', 'blockid:', block.blockid, this.endReached);
+                if (nextId !== this.startId && !this.endReached) this.scrollToBlock(block.index, block.blockid);
               }
             }
           },
