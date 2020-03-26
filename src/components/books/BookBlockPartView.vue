@@ -2462,11 +2462,11 @@ export default {
             let current_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
             let manual_boundaries = [];
             this.$refs.blockContent.querySelectorAll('[data-map]').forEach((_w, i) => {
-              if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
+              if (_w.dataset && _w.dataset.map && _w.dataset.map.length) {
                 let _m = map.shift();
                 if (_m) {
                   let w_map = _m.join()
-                  let currentMap = $(_w).attr('data-map').split(',');
+                  let currentMap = _w.dataset.map.split(',');
                   currentMap[0] = parseInt(currentMap[0]);
                   currentMap[1] = parseInt(currentMap[1]);
                   if (shiftedInfo.index == i) {
@@ -2498,7 +2498,10 @@ export default {
                     manual_boundaries.push(_m[0]);
                     //console.log(`PUSH ${_m[0]}`);
                   }
-                  $(_w).attr('data-map', w_map)
+                  if (_m[1] && _m[1] > 50) {
+                    _w.classList.remove('alignment-changed');
+                  }
+                  _w.dataset.map = w_map;
                 }
               }
             });
