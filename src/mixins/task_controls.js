@@ -603,9 +603,11 @@ export default {
       if (this.tc_getBlockTask(block.blockid, 'narrate')) {
         return true;
       }
+      let user_id = this.auth.getSession().user_id;
       let flags = Array.isArray(block.flags) ? block.flags.filter(flag => {
         return Array.isArray(flag.parts) && !flag.isNew ? flag.parts.find(p => {
-          return p.status === 'open' && !p.isReopen;
+          let isCreator = p.creator_role ? p.creator_role === 'narrator' : p.creator === user_id;
+          return !isCreator && p.status === 'open' && !p.isReopen;
         }) : false;
       }) : [];
       if (flags.length > 0) {
