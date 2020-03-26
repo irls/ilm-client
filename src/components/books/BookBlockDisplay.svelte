@@ -31,7 +31,7 @@
     {#if block.footnotes && block.footnotes.length > 0}
     <div class="footnotes">
       {#each block.footnotes as footnote, footnoteIdx (footnote)}
-      <div class="-hidden" bind:this={footNotes[footnote.ftnIdx]}>
+      <div class="{footnote.isShow ? '' : '-hidden'}">
         <div class="-langftn-{footnote.language}">
           <div class="-num">[fn{footnote.ftnIdx+1}]</div>
           <div  class="-text">
@@ -68,11 +68,21 @@
   //let rand = getRandomInt(0, 200);
 
   const handleFootnote = (ev) => {
-    if (ev.target.dataset.idx && footNotes[ev.target.dataset.idx]) {
-      let className = footNotes[ev.target.dataset.idx].className;
+    if (ev.target.dataset && ev.target.dataset.idx) {
+      block.footnotes.forEach((footnote)=>{
+        if (footnote.ftnIdx == ev.target.dataset.idx) {
+          if (!footnote.isShow) {
+            footnote.isShow = true;
+          } else {
+            footnote.isShow = false;
+          }
+        }
+      });
+      block.footnotes = block.footnotes;
+      /*let className = footNotes[ev.target.dataset.idx].className;
       if (className == '-hidden') {
         footNotes[ev.target.dataset.idx].className = '';
-      } else footNotes[ev.target.dataset.idx].className = '-hidden';
+      } else footNotes[ev.target.dataset.idx].className = '-hidden';*/
     }
   }
 
