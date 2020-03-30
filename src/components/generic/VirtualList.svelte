@@ -132,7 +132,7 @@
     await tick();
     await handle_scroll();
 
-    const isScrollToEnd = scrollTo && (scrollTo >= items.length - 1);
+    const isScrollToEnd = scrollTo && (scrollTo == items.length - 1);
 
     if (isScrollToEnd) {
       console.log('IS SCROLL TO END', isScrollToEnd);
@@ -142,7 +142,9 @@
         scrollTop += 80;
         viewport.scrollTop = scrollTop;
         //console.log('interval', count, viewport.scrollTop, checkTop, scrollTop, start, end);
-        if (checkTop == viewport.scrollTop) clearInterval(_scrollInterval);
+        if (checkTop == viewport.scrollTop || scrollTo < items.length - 1) {
+          clearInterval(_scrollInterval);
+        }
         checkTop = viewport.scrollTop;
       }, 20);
     } else {

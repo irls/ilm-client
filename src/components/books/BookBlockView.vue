@@ -1145,7 +1145,7 @@ export default {
         this.block.changes = this.changes;
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
-            this.block.description = this.$refs.blockDescription.innerHTML;
+            this.block.description = this.$refs.blockDescription ? this.$refs.blockDescription.innerHTML : '';
             this.block.voicework = 'no_audio';
           case 'hr':
             this.block.content = '';
