@@ -1800,6 +1800,15 @@ export default {
       this.approveWaiting = val;
     },
 
+    bookReloaded() {
+      console.log('BookEdit.vue->bookReloaded');
+      this.$store.commit('clear_storeList');
+      this.$store.commit('clear_storeListO');
+      Vue.nextTick(()=>{
+        this.bookReimported();
+      })
+    },
+
     bookReimported() {
       this.setBlockSelection({start: {}, end: {}});
       this.scrollToBlock(this.parlistO.idsArray()[0]);
@@ -1941,6 +1950,7 @@ export default {
       }
 
       this.$root.$on('book-reimported', this.bookReimported);
+      this.$root.$on('book-reloaded', this.bookReloaded);
       this.$root.$on('for-bookedit:scroll-to-block', this.scrollToBlock);
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
@@ -1966,6 +1976,7 @@ export default {
     this.$root.$off('bookBlocksUpdates', this.bookBlocksUpdates);
     this.$root.$off('for-bookedit:scroll-to-block', this.scrollToBlock);
     this.$root.$off('book-reimported', this.bookReimported);
+    this.$root.$off('book-reloaded', this.bookReloaded);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
     this.$root.$off('from-toolbar:toggle-meta', this.correctEditWrapper);
   },
@@ -2110,7 +2121,7 @@ export default {
     min-height: 205px;
     height: auto;
     margin-bottom: 0px;
-    z-index: 9999;
+    z-index: 990;
     &.-mode-file {
         min-height: 183px;
     }
