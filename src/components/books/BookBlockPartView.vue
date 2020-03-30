@@ -79,7 +79,7 @@
                   </div>
                 </div>
               </div>
-              <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId" :class="[{'__unsave': !(!this.$parent.isChanged && (!this.$parent.isAudioChanged || this.$parent.isAudioEditing) && !this.$parent.isIllustrationChanged)}]">
+              <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId" :class="[{'__unsave': !((!this.$parent.isChanged && !isChanged) && (!this.$parent.isAudioChanged || this.$parent.isAudioEditing) && !this.$parent.isIllustrationChanged)}]">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
