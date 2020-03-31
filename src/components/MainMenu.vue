@@ -31,6 +31,10 @@
 
         <router-link to="/audio_editor" class='presentation' tag='li'
         v-show='isAdmin || isLibrarian'><a>AudioEditor</a></router-link>
+        
+        <router-link to="/audio_editor_test" class="presentation" tag="li" v-show="true">
+          <a>Audio Editor Test</a>
+        </router-link>
 
      </ul>
     </td>
