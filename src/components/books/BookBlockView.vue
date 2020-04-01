@@ -192,7 +192,7 @@
             <!-- <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
-            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + blockPartIdx + (isSplittedBlock ? '-split' : '')" ref="blocks"
+            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + block.type + '-' + blockPartIdx + (isSplittedBlock ? '-split' : '')" ref="blocks"
               :block="storeListById(block.blockid)"
               :blockO="blockO"
               :blockId = "blockId"
@@ -3300,6 +3300,7 @@ Save text changes and realign the Block?`,
             this.$forceUpdate();
           }
           if (type === 'type' && event && event.target) {
+            this.block.type = event.target.value;
             if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {
               this.block.voicework = 'no_audio';
               this.block.setAudiosrc('');
