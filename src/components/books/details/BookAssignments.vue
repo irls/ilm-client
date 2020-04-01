@@ -295,7 +295,6 @@
             },
           },
           {
-          
             title: 'Ok',
             handler: () => {
               //this.isBatchProgress = true;
@@ -417,20 +416,14 @@
           },
         ];
 
+        // 3.3 
         if (this.currentBookCounters.not_marked_blocks_missed_audio === 0){
-          title = 'Complete the Task';
-          text = 'Approve ' + this.counterTextCleanup + ' block(s) and complete editing?'; 
+          title = 'Approve all Blocks';
+          text = 'Approve ' + this.currentBookCounters.not_marked_blocks + ' block(s)?'; 
           buttons[1].title = 'Complete';
         }
-        else if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks){
-          title = 'Unable to complete the Task';
-          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.</br>' + 
-            'In the meantime, you can approve ' + (this.currentBookCounters.not_marked_blocks - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' + 
-            'Approve qualified blocks?';          
-          buttons[1].title = 'Approve';
-        }
-        else if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks_missed_audio == this.counterTextCleanup){
-          title = 'Unable to complete the Task';
+        else if (this.currentBookCounters.not_marked_blocks == this.currentBookCounters.not_marked_blocks_missed_audio){
+          title = 'Unable to Approve the Task';
           text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";          
           buttons = [
             {
@@ -441,7 +434,16 @@
               },
             },
           ]
-        };
+        }
+
+        // 3.2.1
+        else if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks){
+          title = 'Unable to Approve the Task';
+          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing. In the meantime, you can approve " + 
+            ' ' + (this.currentBookCounters.not_marked_blocks - this.currentBookCounters.not_marked_blocks_missed_audio) + '  blocks and continue editing. Approve qualified blocks? ' + 
+            'Approve qualified blocks?';          
+          buttons[1].title = 'Approve';
+        }
 
       
         this.$root.$emit('show-modal', {
