@@ -80,11 +80,11 @@
                 </div>
               </div>
               <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId" :class="[{'__unsave': !((!this.$parent.isChanged && !isChanged) && (!this.$parent.isAudioChanged || this.$parent.isAudioEditing) && !this.$parent.isIllustrationChanged)}]">
-                <hr v-if="block.type=='hr'"
+                <hr v-if="blockType=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
 
-                <div v-else-if="block.type == 'illustration'"
+                <div v-else-if="blockType == 'illustration'"
                 :class="['table-body illustration-block', {'checked': blockO.checked}]"
                 @click="onClick($event)" :key="blockIllustration">
                   <img v-if="hasIllustration" :src="blockIllustration"
@@ -768,7 +768,8 @@ export default {
           adminOrLibrarian: 'adminOrLibrarian',
           currentJobInfo: 'currentJobInfo',
           mode: 'bookMode',
-          blockLockType: 'blockLockType'
+          blockLockType: 'blockLockType',
+          storeListById: 'storeListById'
       }),
       getBlockLang: {
         cache: false,
@@ -807,6 +808,12 @@ export default {
       blockIllustration: {
         get() {
           return this.block.getIllustration();
+        },
+        cache: false
+      },
+      blockType: {
+        get() {
+          return this.block.blockid ? this.storeListById(this.block.blockid).type : '';
         },
         cache: false
       }
