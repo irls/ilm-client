@@ -684,7 +684,7 @@ export default {
     this.$root.$off('uploadAudio');
     this.$root.$off('audiobookUpdated');
     this.$root.$off('from-bookblockview:voicework-type-changed');
-    this.$root.$off('book-reimported');
+    //this.$root.$off('book-reimported');
     this.$root.$off('from-block-edit:set-style', this.listenSetStyle);
     this.$root.$off('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
   },
