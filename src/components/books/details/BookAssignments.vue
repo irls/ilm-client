@@ -377,7 +377,7 @@
       /* ************* */
 
       toggleBatchApproveModifications() {
-        console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup);
+        console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup, this.currentBookCounters.unresolved_flags_blocks);
         let title = '';
         let text = '';
         let buttons = [
