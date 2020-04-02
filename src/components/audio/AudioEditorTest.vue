@@ -2,9 +2,9 @@
   <div>
     <div>
       <input v-model="audioUrl"/>
+      <button @click="load()">Load</button>
     </div>
     <div>
-      <button @click="load()">Load</button>
       <button @click="cut()">Cut</button>
       <input v-model="silenceLength" type="number" step="0.1"/>
       <button @click="insertSilence()">Insert silence</button>
