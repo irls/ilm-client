@@ -2055,6 +2055,7 @@ export default {
             this.isChanged = false;
             if (refreshTasks) {
               this.getCurrentJobInfo();
+              this.tc_loadBookTask(this.block.bookid);
             }
           })
           .catch(err => {
