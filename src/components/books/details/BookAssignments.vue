@@ -377,7 +377,15 @@
       /* ************* */
 
       toggleBatchApproveModifications() {
-        //console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup, this.currentBookCounters.unresolved_flags_blocks);
+        //console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.unresolved_flags_blocks);
+
+        let _am = this.currentBookCounters.not_marked_blocks_missed_audio;
+        let _uf = this.currentBookCounters.unresolved_flags_blocks;
+        let _nqa = _am + _uf;
+        let _qa = this.currentBookCounters.not_marked_blocks - _am - _uf;
+
+        //console.log('_qa, _nqa, _am, _uf', _qa, _nqa, _am, _uf);
+
         let title = '';
         let text = '';
         let buttons = [
@@ -388,7 +396,7 @@
             },
           },
           {
-            title: 'Ok',
+            title: 'Approve',
             handler: () => {
               this.isBatchProgress = true;
               this.$root.$emit('hide-modal');
@@ -416,64 +424,48 @@
           },
         ];
 
-        // 3.3 
-        if (this.currentBookCounters.not_marked_blocks_missed_audio == 0 && this.currentBookCounters.unresolved_flags_blocks == 0){
+
+        // 3.3
+        if ( _nqa <= 0 ){
           title = 'Approve all Blocks';
-          text = 'Approve ' + this.currentBookCounters.not_marked_blocks + ' block(s)?'; 
-          buttons[1].title = 'Complete';
-        }
+          text = 'Approve ' + _qa + ' block(s)?'; 
+        } 
         // 3.1.1
-        else if (this.currentBookCounters.not_marked_blocks == this.currentBookCounters.not_marked_blocks_missed_audio && this.currentBookCounters.unresolved_flags_blocks == 0){
-          title = 'Unable to Approve the Task';
-          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";          
-          buttons = [
-            {
-              title: 'Ok',
-              handler: () => {
-                this.$root.$emit('hide-modal');
-                this.isBatchProgress = false;
-              },
-            },
-          ]
+        else if ( _qa > 0 && _am > 0 && _uf == 0 ) {
+          title = 'Unable to Approve all Blocks';
+          text = "" + _am + " block(s) can't be approved because audio alignment is missing. In the meantime, you can approve " + _qa + " blocks and continue editing. Approve qualified blocks? ";
         }
         // 3.1.2
-        else if (this.currentBookCounters.not_marked_blocks_missed_audio == 0 && this.currentBookCounters.unresolved_flags_blocks == 0){
-          title = 'Unable to Approve the Task';
-          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";          
-          buttons = [
-            {
-              title: 'Ok',
-              handler: () => {
-                this.$root.$emit('hide-modal');
-                this.isBatchProgress = false;
-              },
-            },
-          ]
+        else if ( _qa > 0 && _am == 0 && _uf > 0 ) {
+          title = 'Unable to Approve all Blocks';
+          text = "" + _uf + " block(s) can't be approved because of unresolved flags. In the meantime, you can approve " + _qa + " blocks and continue editing. Approve qualified blocks? ";
         }
         // 3.1.3
-        else if (this.currentBookCounters.not_marked_blocks == this.currentBookCounters.not_marked_blocks_missed_audio && this.currentBookCounters.unresolved_flags_blocks != 0){
-          title = 'Unable to Approve the Task';
-          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";          
-          buttons = [
-            {
-              title: 'Ok',
-              handler: () => {
-                this.$root.$emit('hide-modal');
-                this.isBatchProgress = false;
-              },
-            },
-          ]
+        else if ( _qa > 0 && _am > 0 && _uf > 0 ) {
+          title = 'Unable to Approve all Blocks';
+          text = "" + _am + " block(s) can't be approved because audio alignment is missing. " + _uf + " block(s) can't be approved because of unresolved flags. In the meantime, you can approve " + _qa + " blocks and continue editing. Approve qualified blocks? ";
         }
-
         // 3.2.1
-        else if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks){
-          title = 'Unable to Approve the Task';
-          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing. In the meantime, you can approve " + 
-            ' ' + (this.currentBookCounters.not_marked_blocks - this.currentBookCounters.not_marked_blocks_missed_audio) + '  blocks and continue editing. Approve qualified blocks? ' + 
-            'Approve qualified blocks?';          
-          buttons[1].title = 'Approve';
+        else if ( _qa <= 0 && _am > 0 && _uf == 0 ) {
+          title = 'Unable to Approve all Blocks';
+          text = "" + _am + " block(s) can't be approved because audio alignment is missing. ";
+          buttons[1].title = 'Ok';
+          buttons.shift();
         }
-
+        // 3.2.2
+        else if ( _qa <= 0 && _am == 0 && _uf > 0 ) {
+          title = 'Unable to Approve all Blocks';
+          text = "" + _uf + " block(s) can't be approved because of unresolved flags. ";
+          buttons[1].title = 'Ok';
+          buttons.shift();
+        }
+        // 3.2.3
+        else if ( _qa <= 0 && _am > 0 && _uf > 0 ) {
+          text = "" + _am + " block(s) can't be approved because audio alignment is missing. "
+          +  _uf + " block(s) can't be approved because of unresolved flags. ";
+          buttons[1].title = 'Ok';
+          buttons.shift();
+        }
       
         this.$root.$emit('show-modal', {
           title: title,
