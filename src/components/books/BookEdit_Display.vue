@@ -294,6 +294,7 @@ export default {
       this.$router.push({
         name: 'BookEditDisplay', params: {}
       });
+      this.hotkeyScrollTo = '0:' + Date.now();
       this.loadBookMounted();
       this.loadBookToc({bookId: this.meta._id, isWait: true});
     },
