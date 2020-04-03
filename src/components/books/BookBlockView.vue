@@ -192,7 +192,7 @@
             <!-- <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
-            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + blockPartIdx" ref="blocks"
+            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + block.type + '-' + blockPartIdx" ref="blocks"
               :block="storeListById(block.blockid)"
               :blockO="blockO"
               :blockId = "blockId"
@@ -1187,7 +1187,9 @@ export default {
         this.block.changes = this.changes;
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
-            this.block.description = this.$refs.blockDescription.innerHTML;
+            if (this.$refs.blocks[0]) {
+              this.block.description = this.$refs.blocks[0].$refs.blockDescription.innerHTML;
+            }
             this.block.voicework = 'no_audio';
           case 'hr':
             this.block.content = '';
@@ -1424,7 +1426,7 @@ export default {
           this.editor.setup();
         }
 
-        if ((!this.editorDescr || force === true) && this.block.type == 'illustration' && this.mode === 'edit') {
+        /*if ((!this.editorDescr || force === true) && this.block.type == 'illustration' && this.mode === 'edit') {
           let extensions = {};
           let toolbar = {buttons: []};
           if (this.allowEditing) {
@@ -1451,7 +1453,7 @@ export default {
           });
         } else if (this.editorDescr) {
           this.editorDescr.setup();
-        }
+        }*/
 
         this.initFtnEditor(force)
 
@@ -1852,6 +1854,9 @@ export default {
         let update = partUpdate ? partUpdate : this.block;
         if (update.status && update.status.marked === true) {
           update.status.marked = false;
+        }
+        if (this.hasChange('classes') && !update.classes) {
+          update.classes = this.block.classes;
         }
 
         this.checkBlockContentFlags();
@@ -2658,11 +2663,6 @@ export default {
           this.block.setAudiosrcFootnote(pos, '');
         }
       },
-      commitDescription: function(ev) {
-        //this.block.description = ev.target.innerText.trim();
-        this.isChanged = true;
-        this.pushChange('description');
-      },
 
       addFlag: function() {
         this.isChanged = true;
@@ -3213,7 +3213,11 @@ export default {
             //this.block.parnum = false;
           //}
           this.$root.$emit('from-block-edit:set-style');
+          if (['type'].indexOf(type) !== -1) {
+            this.$forceUpdate();
+          }
           if (type === 'type' && event && event.target) {
+            this.block.type = event.target.value;
             if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {
               this.block.voicework = 'no_audio';
               this.block.setAudiosrc('');
@@ -3224,14 +3228,13 @@ export default {
               this.pushChange('audiosrc');
               this.pushChange('audiosrc_ver');
             }
-            if (event.target.value === 'illustration') {
-              let i = setInterval(() => {
-                if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs && this.$refs.blocks[0].$refs.blockDescription) {
-                  this.$refs.blocks[0].initEditor();
-                  clearInterval(i);
-                }
-              }, 500);
-            }
+            Vue.nextTick(() => {
+              if (event.target.value !== 'hr') {
+                this.$refs.blocks[0].initEditor(true);
+              } else {
+                this.$refs.blocks[0].destroyEditor();
+              }
+            });
           }
         }
       },
@@ -4787,6 +4790,9 @@ export default {
 
     &.content-description {
         line-height: 24pt;
+        width: 100%;
+        display: table;
+        margin-top: -30px;
         .content-wrap-desc {
           p {
             margin: 0;
@@ -4809,6 +4815,7 @@ export default {
     }
 
     .illustration-block {
+      padding-bottom: 30px;
       img {
         border: solid grey 2px;
         /*max-height: 85vh;*/

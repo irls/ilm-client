@@ -79,16 +79,16 @@
                 </div>
               </div>
               <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId">
-                <hr v-if="block.type=='hr'"
+                <hr v-if="blockType=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
 
-                <div v-else-if="block.type == 'illustration'"
+                <div v-else-if="blockType == 'illustration'"
                 :class="['table-body illustration-block', {'checked': blockO.checked}]"
-                @click="onClick($event)">
-                  <img v-if="block.illustration" :src="block.getIllustration()"
-                  :height="illustrationHeight"
-                  :class="[block.getClass(mode)]"/>
+                @click="onClick($event)" :key="blockIllustration">
+                  <img v-if="hasIllustration" :src="blockIllustration"
+                    :height="illustrationHeight"
+                    :class="[block.getClass(mode)]"/>
                   <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing && !this.proofreadModeReadOnly">
                     <vue-picture-input
                       @change="onIllustrationChange"
@@ -102,15 +102,6 @@
                     <!-- <div class="save-illustration" v-if="isIllustrationChanged">
                       <button class="btn btn-default" @click="uploadIllustration">Save picture</button>
                     </div> -->
-                  </div>
-
-                  <div :class="['table-row content-description', block.getClass(mode)]">
-                    <div class="content-wrap-desc description"
-                      ref="blockDescription"
-                      @input="commitDescription($event)"
-                      v-html="block.description"
-                      @contextmenu.prevent="onContext">
-                    </div>
                   </div>
 
                 </div>
@@ -136,6 +127,15 @@
                   @contextmenu.prevent="onContext"
                   @focusout="onFocusout"
                   @inputSuggestion="onInputSuggestion">
+                </div>
+
+                <div :class="['table-row content-description', block.getClass(mode), {'hidden': block.type !== 'illustration'}]" @click="onClick($event)">
+                  <div class="content-wrap-desc description"
+                    ref="blockDescription"
+                    @input="commitDescription($event)"
+                    v-html="block.description"
+                    @contextmenu.prevent="onContext">
+                  </div>
                 </div>
                 <!-- <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div> -->
                 <!--<div class="content-wrap">-->
@@ -767,7 +767,8 @@ export default {
           adminOrLibrarian: 'adminOrLibrarian',
           currentJobInfo: 'currentJobInfo',
           mode: 'bookMode',
-          blockLockType: 'blockLockType'
+          blockLockType: 'blockLockType',
+          storeListById: 'storeListById'
       }),
       getBlockLang: {
         cache: false,
@@ -797,6 +798,24 @@ export default {
               return this.allowEditing && this.mode === 'proofread';
           }
       },
+      hasIllustration: {
+        get() {
+          return this.block.illustration && this.block.illustration.length > 0 ? true : false;
+        },
+        cache: false
+      },
+      blockIllustration: {
+        get() {
+          return this.block.getIllustration();
+        },
+        cache: false
+      },
+      blockType: {
+        get() {
+          return this.block.blockid ? this.storeListById(this.block.blockid).type : '';
+        },
+        cache: false
+      }
   },
   mounted: function() {
       //this.initEditor();
@@ -2360,14 +2379,6 @@ export default {
               this.pushChange('audiosrc');
               this.pushChange('audiosrc_ver');
             }
-            if (event.target.value === 'illustration') {
-              let i = setInterval(() => {
-                if (this.$refs.blockDescription) {
-                  this.initEditor();
-                  clearInterval(i);
-                }
-              }, 500);
-            }
           }
         }
       },
@@ -2840,70 +2851,6 @@ export default {
             }
           } while (next && next !== endElement);
         }
-      },
-      uploadIllustration(event) {
-        let formData = new FormData();
-        formData.append('illustration', this.$refs.illustrationInput.file, this.$refs.illustrationInput.file.name);
-        formData.append('block', JSON.stringify({'description': this.$refs.blockDescription.innerHTML}));
-        let api = this.$store.state.auth.getHttp()
-        let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
-
-        api.post(api_url, formData, {}).then((response) => {
-          if (response.status===200) {
-            if (this.isCompleted) {
-              this.tc_loadBookTask();
-              this.getCurrentJobInfo();
-            }
-            // hide modal after one second
-            this.$refs.illustrationInput.removeImage();
-            this.$emit('blockUpdated', this.block._id);
-            //let offset = document.getElementById(self.block._id).getBoundingClientRect()
-            //window.scrollTo(0, window.pageYOffset + offset.top);
-            this.isIllustrationChanged = false;
-            this.isChanged = false;
-            this.block.isIllustrationChanged = false;
-            this.block.isChanged = false;
-            this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
-            //if (self.editor) {
-              //self.editor.destroy();
-            //}
-            $('[id="' + this.block._id + '"] .illustration-block')
-              .removeAttr('contenteditable')
-              .removeAttr('data-placeholder');
-          } else {
-
-          }
-
-          //if (this.blockO.type !== this.block.type) {
-            this.blockO.status = Object.assign(this.blockO.status, {
-              marked: this.block.markedAsDone,
-              assignee: this.block.status.assignee,
-              proofed: this.block.status.proofed,
-              stage: this.block.status.stage
-            })
-            let upd = {
-              rid: this.blockO.rid,
-              type: this.block.type,
-              status: this.blockO.status
-            }
-            this.putBlockO(upd).then(()=>{
-              this.putNumBlockO({
-                bookId: this.block.bookid,
-                rid: this.blockO.rid,
-                type: this.block.type,
-                secnum: '',
-                parnum: ''
-              }).then((blocks)=>{
-                //console.log('assembleBlock putNumBlockO', blocks[0]);
-                //this.storeListO.updBlockByRid(this.blockO.rid, {
-                //  type: this.block.type
-                //})
-              });
-            });
-          //}
-        }).catch((err) => {
-          console.log(err)
-        });
       },
       onIllustrationChange() {
         //console.log(arguments, this.$refs.illustrationInput.image);
