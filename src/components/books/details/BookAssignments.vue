@@ -377,14 +377,14 @@
       /* ************* */
 
       toggleBatchApproveModifications() {
-        //console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.unresolved_flags_blocks);
+        console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.unresolved_flags_blocks);
 
         let _am = this.currentBookCounters.not_marked_blocks_missed_audio;
         let _uf = this.currentBookCounters.unresolved_flags_blocks;
         let _nqa = _am + _uf;
         let _qa = this.currentBookCounters.not_marked_blocks - _am - _uf;
 
-        //console.log('_qa, _nqa, _am, _uf', _qa, _nqa, _am, _uf);
+        console.log('_qa, _nqa, _am, _uf', _qa, _nqa, _am, _uf);
 
         let title = '';
         let text = '';
@@ -449,22 +449,22 @@
         else if ( _qa <= 0 && _am > 0 && _uf == 0 ) {
           title = 'Unable to Approve all Blocks';
           text = "" + _am + " block(s) can't be approved because audio alignment is missing. ";
-          buttons[1].title = 'Ok';
-          buttons.shift();
+          buttons[0].title = 'Ok';
+          buttons.pop();
         }
         // 3.2.2
         else if ( _qa <= 0 && _am == 0 && _uf > 0 ) {
           title = 'Unable to Approve all Blocks';
           text = "" + _uf + " block(s) can't be approved because of unresolved flags. ";
-          buttons[1].title = 'Ok';
-          buttons.shift();
+          buttons[0].title = 'Ok';
+          buttons.pop();
         }
         // 3.2.3
         else if ( _qa <= 0 && _am > 0 && _uf > 0 ) {
           text = "" + _am + " block(s) can't be approved because audio alignment is missing. "
           +  _uf + " block(s) can't be approved because of unresolved flags. ";
-          buttons[1].title = 'Ok';
-          buttons.shift();
+          buttons[0].title = 'Ok';
+          buttons.pop();
         }
       
         this.$root.$emit('show-modal', {
