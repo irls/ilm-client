@@ -227,10 +227,7 @@ export default {
         if (this.currentJobInfo.mastering) {
           return false;
         }
-        if (blockPart ? blockPart.audiosrc : block.audiosrc) {
-          return true;
-        }
-        return this.tc_tasksByBlock[block.blockid] ? true : false;
+        return true;
       }
       return false;
     },
