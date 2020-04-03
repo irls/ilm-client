@@ -2005,6 +2005,9 @@ Save audio changes and realign the Block?`,
         });
       },
       assembleBlockPart: function(update, realign = false) {
+        if (!this.needsRealignment) {
+          realign = false;
+        }
         update.blockid = this.block.blockid;
         update.bookid = this.block.bookid;
         this.isSaving = true;
@@ -2027,6 +2030,7 @@ Save audio changes and realign the Block?`,
                 this.$root.$emit('for-audioeditor:set-process-run', false);
               }
             }
+            this.isChanged = false;
             return Promise.resolve();
           });
       },
