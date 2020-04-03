@@ -1065,6 +1065,27 @@
         },
         cutLocal() {
           console.log(this.audiosourceEditor);
+          var original_buffer = this.audiosourceEditor.activeTrack.buffer;
+
+          var first_list_index        = (this.selection.start * original_buffer.sampleRate);
+          var second_list_index       = (this.selection.end * original_buffer.sampleRate);
+          var second_list_mem_alloc   = (original_buffer.length - (this.selection.end * original_buffer.sampleRate));
+          
+          var new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, parseInt( first_list_index ) + parseInt( second_list_mem_alloc ), original_buffer.sampleRate);
+
+          var new_list        = new Float32Array( parseInt( first_list_index ));
+          var second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
+          var combined        = new Float32Array( parseInt( first_list_index ) + parseInt( second_list_mem_alloc ) );
+
+          original_buffer.copyFromChannel(new_list, 0);
+          original_buffer.copyFromChannel(second_list, 0, second_list_index)
+
+          combined.set(new_list)
+          combined.set(second_list, first_list_index)
+
+          new_buffer.copyToChannel(combined, 0);
+          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+          this.audiosourceEditor.drawRequest();
         },
         erase() {
           let pause;
