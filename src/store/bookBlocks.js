@@ -557,7 +557,7 @@ class BookBlocks {
     this.listObjs = [];
     this.listObjs = tmp;
   }
-  
+
   setFirstVisibleId(blockid) {
     if (!blockid) return false;
     if (this.firstVisibleId && this.firstVisibleId == blockid) return false;
@@ -569,7 +569,7 @@ class BookBlocks {
     }
     return true;
   }
-  
+
   compareIndex(fromRid, toRid) {
     let from = this.listRIds.indexOf(fromRid);
     let to = this.listRIds.indexOf(toRid);

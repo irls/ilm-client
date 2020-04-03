@@ -379,12 +379,18 @@
       toggleBatchApproveModifications() {
         console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.unresolved_flags_blocks);
 
+        let _nmb = 0;
+        let editor_tasks = this.tasks_counter.find(element => element.key == 'editor');
+        editor_tasks = editor_tasks.data.tasks;
+        if (editor_tasks !== undefined ) {
+          _nmb = editor_tasks.find(element => element.type == 'approve-modified-block').count;
+        } 
+
         let _am = this.currentBookCounters.not_marked_blocks_missed_audio;
         let _uf = this.currentBookCounters.unresolved_flags_blocks;
         let _nqa = _am + _uf;
-        let _qa = this.currentBookCounters.not_marked_blocks - _am - _uf;
-
-        console.log('_qa, _nqa, _am, _uf', _qa, _nqa, _am, _uf);
+        let _qa = _nmb - _nqa;
+        
 
         let title = '';
         let text = '';
