@@ -1187,8 +1187,8 @@ export default {
         this.block.changes = this.changes;
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
-            if (this.$refs.blocks[0]) {
-              this.block.description = this.$refs.blocks[0].$refs.blockDescription.innerHTML;
+            if (this.$refs.blocks[0] && this.$refs.blocks[0].$refs) {
+              this.block.description = this.$refs.blocks[0].$refs.blockDescription ? this.$refs.blocks[0].$refs.blockDescription.innerHTML : '';
             }
             this.block.voicework = 'no_audio';
           case 'hr':

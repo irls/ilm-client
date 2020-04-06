@@ -517,6 +517,7 @@
         }
       },
       set_taskBlockMapPositions(fromBlockId = null) {
+        //console.time('set_taskBlockMapPositions');
         if (!fromBlockId) {
           fromBlockId = this.storeListO.firstVisibleId;
         }
@@ -594,6 +595,7 @@
             }
           }
         }
+        //console.timeEnd('set_taskBlockMapPositions');
       },
       set_taskBlockMapPositionsFromRoute() {
         if (this.$route && ['BookEditDisplay', 'CollectionBookEditDisplay'].indexOf(this.$route.name) !== -1 && this.$route.params && this.$route.params.block) {
@@ -640,7 +642,8 @@
       },
       '$route': {
         handler(val) {
-          this.set_taskBlockMapPositionsFromRoute();
+          window.setTimeout(this.set_taskBlockMapPositionsFromRoute(), 1);
+
         }
       },
       'currentBookMeta.language': {

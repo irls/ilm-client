@@ -1641,14 +1641,14 @@ export default {
     },
 
     updatePositions() {
-      //setTimeout(()=>{
+      if (this.$refs.contentScrollWrapRef) {
         let currScroll = this.$refs.contentScrollWrapRef.scrollTop;
         var editors = document.getElementsByClassName('medium-editor-toolbar-active');
         if (editors && editors.length) { //move editor toolbar
           editors[0].style.top = editors[0].getBoundingClientRect().top - (currScroll - this.scrollPrev) +'px';
         }
         this.scrollPrev = currScroll;
-      //}, 1);
+      }
     },
 
     smoothHandleScroll: _.debounce(function (ev) {
@@ -1868,6 +1868,10 @@ export default {
             break;
         }
         if (!allowed) {
+          // to prevent half book load before detect mode
+          this.$store.commit('clear_storeList');
+          this.$store.commit('clear_storeListO');
+
           let params = this.$route.params ? this.$route.params : {};
           this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
         }
