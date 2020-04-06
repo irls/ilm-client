@@ -95,29 +95,21 @@ export default {
             }
           },
           'ctrl+up': (ev)=>{
-            //console.log('ctrl+up arrow', 'this.startId', this.startId);
-            let idsArray = this.parlistO.idsArray();
-            let jumpStep = Math.floor(idsArray.length * 0.1);
-            let currIdx = idsArray.indexOf(this.startId);
-            if (currIdx > -1) {
-              let jumpIdx = currIdx - jumpStep;
-              if (jumpIdx < 0) jumpIdx = 0;
-              console.log('ctrl+up arrow', 'blockid:', idsArray[jumpIdx], this.startReached);
-              if (!this.startReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
-            }
+            this.ctrlUp(ev)
           },
           'ctrl+down': (ev)=>{
-            //console.log('ctrl+down arrow', 'this.startId', this.startId);
-            let idsArray = this.parlistO.idsArray();
-            let jumpStep = Math.floor(idsArray.length * 0.1);
-            let currIdx = idsArray.indexOf(this.startId);
-            if (currIdx > -1) {
-              let jumpIdx = currIdx + jumpStep;
-              if (jumpIdx > idsArray.length) jumpIdx = idsArray.length - 1;
-              console.log('ctrl+down arrow', 'blockid:', idsArray[jumpIdx], this.endReached);
-              if (!this.endReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
-            }
+            this.ctrlDown(ev)
           },
+          /*'ctrl+pgup': (ev)=>{
+            //ev.preventDefault();
+            //ev.stopPropagation();
+            this.ctrlUp(ev)
+          },
+          'ctrl+pgdn': (ev)=>{
+            //ev.preventDefault();
+            //ev.stopPropagation();
+            this.ctrlDown(ev)
+          },*/
           'pgup': (ev)=>{
             //console.log('page up', 'this.startId', this.startId);
             ev.preventDefault();
@@ -181,6 +173,32 @@ export default {
       'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
       'loopPreparedBlocksChain', 'putNumBlockOBatch', 'setCurrentBookCounters', 'loadBookToc'
     ]),
+
+    ctrlUp(ev) {
+      //console.log('ctrl+up arrow', 'this.startId', this.startId);
+      let idsArray = this.parlistO.idsArray();
+      let jumpStep = Math.floor(idsArray.length * 0.1);
+      let currIdx = idsArray.indexOf(this.startId);
+      if (currIdx > -1) {
+        let jumpIdx = currIdx - jumpStep;
+        if (jumpIdx < 0) jumpIdx = 0;
+        console.log('ctrl+up arrow', 'blockid:', idsArray[jumpIdx], this.startReached);
+        if (!this.startReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
+      }
+    },
+
+    ctrlDown(ev) {
+      //console.log('ctrl+down arrow', 'this.startId', this.startId);
+      let idsArray = this.parlistO.idsArray();
+      let jumpStep = Math.floor(idsArray.length * 0.1);
+      let currIdx = idsArray.indexOf(this.startId);
+      if (currIdx > -1) {
+        let jumpIdx = currIdx + jumpStep;
+        if (jumpIdx > idsArray.length) jumpIdx = idsArray.length - 1;
+        console.log('ctrl+down arrow', 'blockid:', idsArray[jumpIdx], this.endReached);
+        if (!this.endReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
+      }
+    },
 
     scrollToBlock(blockIdx, blockId) {
       //console.log('scrollToBlock', blockIdx, blockId, 'startId:', this.startId, 'hotkeyScrollTo:', this.hotkeyScrollTo);
