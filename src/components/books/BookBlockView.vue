@@ -496,7 +496,7 @@
           <label class="modal-content-empty">&nbsp;</label>
           </div>
         </div>
-        <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': block.audiosrc}]">This will also delete current audio from the {{blockTypeLabel}}</div>
+        <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': isSingleBlockRemoveAudio}]">This will also delete current audio from the {{blockTypeLabel}}</div>
         <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
         <div v-if="voiceworkUpdateType == 'single'">&nbsp;</div>
         <div v-else :class="['attention-msg', 'visible']">The book will reload automatically</div>
@@ -1077,6 +1077,10 @@ export default {
           return blockFlag;
         },
         cache: false
+      },
+      isSingleBlockRemoveAudio() {
+        return this.block.audiosrc && this.block.audiosrc.length
+          && !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration')
       }
   },
   mounted: function() {
