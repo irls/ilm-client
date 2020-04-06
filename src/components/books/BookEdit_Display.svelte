@@ -91,11 +91,12 @@ bind:startReached={startReached} bind:endReached={endReached} >
     //loadedBookId = parlistO.meta.bookid;
     if (parlistO.meta.bookid && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== parlistO.meta.bookid)) {
 
-      fntCounter = 0;
+      //fntCounter = 0; uncomment for through numeration
       loadedBookId = parlistO.meta.bookid;
-      console.log('beforeUpdate, loadedBookId', loadedBookId);
+      //console.log('beforeUpdate, loadedBookId', loadedBookId);
       //console.log('beforeUpdate, blocks.length', blocks.length);
       for (let i = 0; i < blocks.length; i++) {
+        fntCounter = 0;
         blocks[i].blockView = blockView(blocks[i].blockRid);
         blocks[i].visible = blocks[i].loaded;
         blocks[i].idx = i;
