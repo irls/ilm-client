@@ -386,7 +386,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'eraseAudio', 'audDeletePartSilent'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'eraseAudio', 'audDeletePartSilent', 'insertSilenceSilent'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -2757,10 +2757,19 @@ export default {
               case 'cut':
                 task = this.audDeletePartSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
                 break;
+              case 'insert_silence':
+                task = this.insertSilenceSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
+                break;
+              default:
+                task = Promise.resolve();
+                break;
             }
             return task
-              .then(() => {
+              .then((response) => {
                 this.audioQueueRunning = false;
+                if (Array.isArray(response)) {
+                  this.$root.$emit('for-audioeditor:load-silent', ...response);
+                }
               })
               .catch(err => {
                 this.audioQueueRunning = false;

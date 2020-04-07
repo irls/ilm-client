@@ -67,6 +67,7 @@
         <div class="selection-controls" v-if="mode == 'block'">
           <input type="number" step="0.1" v-model="silenceLength" />
           <button class="btn btn-primary" v-on:click="addSilence()" :disabled="cursorPosition === false">Add Silence</button>
+          <button class="btn btn-primary" v-on:click="addSilenceSilent()" :disabled="cursorPosition === false">Add Silence Local</button>
         </div>
         <template v-if="mode == 'block' && !isFootnote">
           <label v-if="isRevertDisabled" class="btn btn-default disabled">Revert</label>
@@ -817,22 +818,26 @@
             this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
           }
           //this.load(audio, text, block ? block : this.block);
-          let api = this.$store.state.auth.getHttp();
-          api.get(audio, {
-            responseType: 'arraybuffer'
-          })
-            .then((response) => {
-              //console.log(response);
-              this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
-                this.audiosourceEditor.activeTrack.setBuffer(buffer);
-                this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
-                this.audiosourceEditor.drawRequest();
-              });
+          if (this.tasksQueue.length === 1) {
+            let api = this.$store.state.auth.getHttp();
+            api.get(audio, {
+              responseType: 'arraybuffer'
             })
-            .catch(err => {
-              console.log('ERROR');
-              console.log(err);
-            });
+              .then((response) => {
+                //console.log(response);
+                this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
+                  this.audiosourceEditor.activeTrack.setBuffer(buffer);
+                  this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+                  this._setText(text, block);
+                  this.audiosourceEditor.drawRequest();
+                });
+              })
+              .catch(err => {
+                console.log('ERROR');
+                console.log(err);
+              });
+          }
+          this.popTaskQueue();
         },
         play(cursorPosition) {
           if (typeof cursorPosition === 'undefined') {
@@ -1055,6 +1060,56 @@
             this.isModified = true;
           }
         },
+        addSilenceSilent() {
+          let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+          console.log(original_buffer.numberOfChannels)
+          let time = this.cursorPosition;
+          this.silenceLength = parseFloat(this.silenceLength);
+
+          let first_list_index        = parseInt(time * original_buffer.sampleRate);
+          let second_list_index       = parseInt((time + this.silenceLength) * original_buffer.sampleRate);
+          let second_list_mem_alloc   = (original_buffer.length - first_list_index);
+
+          let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, original_buffer.length + parseInt((this.silenceLength) * original_buffer.sampleRate), original_buffer.sampleRate);
+            
+          let new_list        = new Float32Array( parseInt( first_list_index ));
+          let silence         = new Float32Array( this.silenceLength * original_buffer.sampleRate );
+          let second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
+          let combined        = new Float32Array( original_buffer.length + parseInt((time) * original_buffer.sampleRate) );
+          
+          for (let i = 0; i < original_buffer.numberOfChannels; ++i ) {
+
+            original_buffer.copyFromChannel(new_list, i);
+            original_buffer.copyFromChannel(second_list, i, first_list_index)
+
+            combined.set(new_list)
+            combined.set(silence, first_list_index);
+            combined.set(second_list, second_list_index)
+
+            new_buffer.copyToChannel(combined, i);
+          }
+          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+          this.audiosourceEditor.activeTrack.duration+= this.silenceLength;
+          this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
+          //this.audiosourceEditor.draw(this.audiosourceEditor.render());
+          //this.audiosourceEditor.drawRequest();
+          //this.audiosourceEditor.renderTrackSection();
+          this.audiosourceEditor.annotationList.annotations.forEach(al => {
+            if (al.start > time) {
+              al.start+= this.silenceLength;
+            }
+            if (al.end > time) {
+              al.end+= this.silenceLength;
+            }
+          });
+          this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
+          this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+          this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+          this.audiosourceEditor.drawRequest();
+          this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
+          this.clearSelection();
+          this.isModified = true;
+        },
         save() {
           this.history = [];
           if (this.mode == 'block') {
@@ -1134,8 +1189,9 @@
               al.start = this.selection.start;
             }
           });
-          this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
+          this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
           this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+          this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
           this.audiosourceEditor.drawRequest();
           this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000)]);
           this.clearSelection();
@@ -1153,6 +1209,10 @@
             options: options,
             time: Date.now()
           });
+          this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.tasksQueue);
+        },
+        popTaskQueue() {
+          this.tasksQueue.shift();
           this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.tasksQueue);
         },
         erase() {
