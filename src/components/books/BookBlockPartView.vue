@@ -224,7 +224,7 @@
                       @click.prevent="reopenFlagPart($event, partIdx)">
                       Re-open flag</a>
 
-                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned())"
+                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned() || tc_allowNarrateUnassigned(block))"
                       href="#" class="flag-control -left"
                       @click.prevent="resolveFlagPart($event, partIdx)">
                       Resolve flag</a>
@@ -2054,6 +2054,9 @@ export default {
       },
 
       canDeleteFlagPart: function (flagPart) {
+          if (this.tc_allowNarrateUnassigned(this.block) && flagPart.creator === this.auth.getSession().user_id) {
+            return true;
+          }
           let result = false;
           let isProofreadUnassigned = this.isProofreadUnassigned();
           if ((!this.isCompleted || isProofreadUnassigned) && flagPart.creator === this.auth.getSession().user_id) {
@@ -3064,6 +3067,8 @@ export default {
           .catch(err => {
             this.isSaving = false;
             this.checkError(err);
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Failed to apply your correction. Please try again.');
             BPromise.reject(err)
           });
       },
