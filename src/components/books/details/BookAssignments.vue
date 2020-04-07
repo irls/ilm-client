@@ -439,17 +439,17 @@
         // 3.1.1
         else if ( _qa > 0 && _am > 0 && _uf == 0 ) {
           title = 'Unable to Approve all Blocks';
-          text = "" + _am + " block(s) can't be approved because audio alignment is missing. In the meantime, you can approve " + _qa + " blocks and continue editing. Approve qualified blocks? ";
+          text = "" + _am + " block(s) can't be approved because audio alignment is missing.<br> In the meantime, you can approve " + _qa + " block(s) and continue editing.<br> Approve qualified block(s)? ";
         }
         // 3.1.2
         else if ( _qa > 0 && _am == 0 && _uf > 0 ) {
           title = 'Unable to Approve all Blocks';
-          text = "" + _uf + " block(s) can't be approved because of unresolved flags. In the meantime, you can approve " + _qa + " blocks and continue editing. Approve qualified blocks? ";
+          text = "" + _uf + " block(s) can't be approved because of unresolved flags.<br> In the meantime, you can approve " + _qa + " block(s) and continue editing.<br> Approve qualified block(s)? ";
         }
         // 3.1.3
         else if ( _qa > 0 && _am > 0 && _uf > 0 ) {
           title = 'Unable to Approve all Blocks';
-          text = "" + _am + " block(s) can't be approved because audio alignment is missing. " + _uf + " block(s) can't be approved because of unresolved flags. In the meantime, you can approve " + _qa + " blocks and continue editing. Approve qualified blocks? ";
+          text = "" + _am + " block(s) can't be approved because audio alignment is missing.<br> " + _uf + " block(s) can't be approved because of unresolved flags.<br> In the meantime, you can approve " + _qa + " block(s) and continue editing. Approve qualified block(s)? ";
         }
         // 3.2.1
         else if ( _qa <= 0 && _am > 0 && _uf == 0 ) {
@@ -467,7 +467,8 @@
         }
         // 3.2.3
         else if ( _qa <= 0 && _am > 0 && _uf > 0 ) {
-          text = "" + _am + " block(s) can't be approved because audio alignment is missing. "
+          title = 'Unable to Approve all Blocks';
+          text = "" + _am + " block(s) can't be approved because audio alignment is missing.<br> "
           +  _uf + " block(s) can't be approved because of unresolved flags. ";
           buttons[0].title = 'Ok';
           buttons.pop();
