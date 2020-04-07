@@ -375,7 +375,8 @@ export default {
         start: Number,
         end: Number
       },
-      isSaving: false
+      isSaving: false,
+      audioQueueRunning: false
     }
   },
   components: {
@@ -385,7 +386,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'eraseAudio'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'eraseAudio', 'audDeletePartSilent'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -2746,6 +2747,27 @@ export default {
           }
         }
       },
+      evFromAudioEditorTasksQueuePush(blockId, queue) {
+        if (blockId === this.check_id) {
+          if (!this.audioQueueRunning && queue.length > 0) {
+            this.audioQueueRunning = true;
+            let task = null;
+            let record = queue[0];
+            switch (record.type) {
+              case 'cut':
+                task = this.audDeletePartSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
+                break;
+            }
+            return task
+              .then(() => {
+                this.audioQueueRunning = false;
+              })
+              .catch(err => {
+                this.audioQueueRunning = false;
+              });
+          }
+        }
+      },
       audioEditorEventsOn() {
         this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
         this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
@@ -2761,6 +2783,7 @@ export default {
         this.$root.$on('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
         this.$root.$on('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
         this.$root.$on('from-audioeditor:revert', this.evFromAudioEditorRevert);
+        this.$root.$on('from-audioeditor:tasks-queue-push', this.evFromAudioEditorTasksQueuePush);
       },
       audioEditorEventsOff() {
         this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
@@ -2776,6 +2799,7 @@ export default {
         this.$root.$off('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
         this.$root.$off('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
         this.$root.$off('from-audioeditor:revert', this.evFromAudioEditorRevert);
+        this.$root.$off('from-audioeditor:tasks-queue-push', this.evFromAudioEditorTasksQueuePush);
       },
       //-- } -- end -- Events --//
 

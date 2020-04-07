@@ -216,6 +216,7 @@
               :assembleBlockAudioEdit="assembleBlockAudioEdit"
               :insertSilence="insertSilence"
               :audDeletePart="_audDeletePart"
+              :audDeletePartSilent="audDeletePartSilent"
               :startRecording="startRecording"
               :initRecorder="initRecorder"
               :saveBlockPart="saveBlockPart"
@@ -2387,19 +2388,6 @@ export default {
           this.audCleanClasses(block_id, ev);
         }
       },
-      audDeleteSelection() {
-        let startElement = this._getParent(this.range.startContainer, 'w');
-        let endElement = this._getParent(this.range.endContainer, 'w');
-        let startRange = this._getClosestAligned(startElement, 1);
-        if (!startRange) {
-          startRange = [0, 0];
-        }
-        let endRange = this._getClosestAligned(endElement, 0);
-        if (!endRange) {
-          endRange = this._getClosestAligned(endElement, 1)
-        }
-        this._audDeletePart(startRange[0], endRange[0] + endRange[1]);
-      },
       _audDeletePart(start, end, footnoteIdx = null, part_idx = null, check_id = null) {
         if (!this.isSplittedBlock) {
           part_idx = null;
@@ -2457,6 +2445,77 @@ export default {
                 this.block.setManualBoundariesFootnote(footnoteIdx, response.data.manual_boundaries || []);
                 this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
                 this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, true, Object.assign({_id: this.check_id, is_footnote: true}, this.audioEditFootnote.footnote));
+                this.audioEditFootnote.isAudioChanged = true;
+              }
+            } else {
+              this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+              this.$root.$emit('for-audioeditor:set-process-run', false);
+            }
+            return Promise.resolve();
+          })
+          .catch(err => {
+            this.checkError(err);
+            this.isUpdating = false;
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+            return Promise.reject(err);
+          });
+      },
+      audDeletePartSilent(start, end, footnoteIdx = null, part_idx = null, check_id = null) {
+        if (!this.isSplittedBlock) {
+          part_idx = null;
+        }
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_remove';
+        let api = this.$store.state.auth.getHttp();
+        let formData = {};
+        let position = [start, end];
+        formData.position = position;
+        if (part_idx !== null) {
+          formData.modified = this.isPartAudioChanged(part_idx);
+          formData.content = this.block.getPartContent(part_idx);
+          formData.audio = this.block.getPartAudiosrc(part_idx, null, false);
+          formData.manual_boundaries = this.block.getPartManualBoundaries(part_idx);
+          formData.part_idx = part_idx;
+        } else if (footnoteIdx === null ) {
+          formData.modified = this.isAudioChanged;
+          formData.content = this.block.content;
+          formData.audio = this.block.getAudiosrc(null, false);
+          formData.manual_boundaries = this.block.manual_boundaries || [];
+        } else {
+          formData.content = this.audioEditFootnote.footnote.content;
+          formData.audio = this.block.getAudiosrcFootnote(footnoteIdx, null, false);
+          formData.modified = this.audioEditFootnote.isAudioChanged;
+          formData.footnote_idx = footnoteIdx;
+          formData.manual_boundaries = this.audioEditFootnote.footnote.manual_boundaries || [];
+        }
+        return api.post(api_url, formData, {})
+          .then(response => {
+            if (this._isDestroyed) {
+              this.discardBlock();
+              return Promise.resolve();
+            }
+            if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
+
+              if (part_idx !== null) {
+                let part = response.data;
+                this.block.setPartContent(part_idx, part.content);
+                this.block.setPartAudiosrc(part_idx, part.audiosrc, part.audiosrc_ver);
+                this.block.setPartManualBoundaries(part_idx, part.manual_boundaries || []);
+                this.$root.$emit('for-audioeditor:load-silent', this.block.getPartAudiosrc(part_idx, 'm4a'), this.block.getPartContent(part_idx), true, Object.assign({_id: check_id}, part));
+              } else if (footnoteIdx === null) {
+                this.blockAudio.map = response.data.content;
+                this.block.setContent(response.data.content);
+                this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+                this.blockAudio.src = this.block.getAudiosrc('m4a');
+                this.block.setManualBoundaries(response.data.manual_boundaries || []);
+                this.isAudioChanged = true;
+                this.$root.$emit('for-audioeditor:load-silent', this.blockAudio.src, this.blockAudio.map, true, this.block);
+              } else {
+                this.block.setContentFootnote(footnoteIdx, response.data.content);
+                this.block.setAudiosrcFootnote(footnoteIdx, response.data.audiosrc, response.data.audiosrc_ver);
+                this.block.setManualBoundariesFootnote(footnoteIdx, response.data.manual_boundaries || []);
+                this.audioEditFootnote.footnote.manual_boundaries = response.data.manual_boundaries || [];
+                this.$root.$emit('for-audioeditor:load-silent', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, true, Object.assign({_id: this.check_id, is_footnote: true}, this.audioEditFootnote.footnote));
                 this.audioEditFootnote.isAudioChanged = true;
               }
             } else {
