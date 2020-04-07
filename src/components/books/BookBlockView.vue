@@ -5434,7 +5434,7 @@ export default {
     border: none;
   }
 
-div.__unsave > div.content-wrap {
+div.__unsave > div.content-wrap, div.__unsave > hr, div.__unsave > .illustration-block {
   border-color: #ded056 !important;
   box-shadow: 0 0 10px #ded056 !important;
 }
