@@ -1030,7 +1030,6 @@
             this._setDefaults();
             this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
             this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
-            console.log('AudioEditor close this.blockId', this.blockId);
             $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
             $(`#content-${this.blockId}`).off('click', 'w', this.showSelection);
             this.$root.$off('for-audioeditor:select', this.select);
@@ -1062,7 +1061,6 @@
         },
         addSilenceSilent() {
           let original_buffer = this.audiosourceEditor.activeTrack.buffer;
-          console.log(original_buffer.numberOfChannels)
           let time = this.cursorPosition;
           this.silenceLength = parseFloat(this.silenceLength);
 
@@ -1150,7 +1148,6 @@
           this.isModified = true;
         },
         cutLocal() {
-          console.log(this.audiosourceEditor);
           var original_buffer = this.audiosourceEditor.activeTrack.buffer;
 
           var first_list_index        = (this.selection.start * original_buffer.sampleRate);
@@ -1163,13 +1160,15 @@
           var second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
           var combined        = new Float32Array( parseInt( first_list_index ) + parseInt( second_list_mem_alloc ) );
 
-          original_buffer.copyFromChannel(new_list, 0);
-          original_buffer.copyFromChannel(second_list, 0, second_list_index)
+          for (let i = 0; i < original_buffer.numberOfChannels; ++i) {
+            original_buffer.copyFromChannel(new_list, i);
+            original_buffer.copyFromChannel(second_list, i, second_list_index)
 
-          combined.set(new_list)
-          combined.set(second_list, first_list_index)
+            combined.set(new_list)
+            combined.set(second_list, first_list_index)
 
-          new_buffer.copyToChannel(combined, 0);
+            new_buffer.copyToChannel(combined, i);
+          }
           this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
           let diff = this.selection.end - this.selection.start;
           this.audiosourceEditor.activeTrack.duration-= diff;

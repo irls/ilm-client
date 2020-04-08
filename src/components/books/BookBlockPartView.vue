@@ -2764,12 +2764,16 @@ export default {
                 task = Promise.resolve();
                 break;
             }
+            this.audStop();
+            this.isAudioChanged = true;
             return task
               .then((response) => {
                 this.audioQueueRunning = false;
                 if (Array.isArray(response)) {
                   this.$root.$emit('for-audioeditor:load-silent', ...response);
                 }
+                this.blockAudio.map = this.blockContent();
+                this.blockAudio.src = this.blockAudiosrc('m4a');
               })
               .catch(err => {
                 this.audioQueueRunning = false;
