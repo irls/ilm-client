@@ -58,7 +58,7 @@
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
                       <button v-if="!task.complete && adminOrLibrarian"  class="btn btn-primary btn-edit-complete"  v-on:click="toggleBatchApprove()" :disabled="isBatchProgress">Complete</button>
-                      <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="!isAllowEditingComplete">Complete</button>
+                      <!-- <button v-else-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="!isAllowEditingComplete">Complete</button> -->
                     </template>
                     <template v-else>
                       <div class="preloader-task"></div>
@@ -73,9 +73,14 @@
                   </div>
                   <div v-if="action=='complete_mastering'">
                     <div v-if="!audioMasteringProcess" class="editing-wrapper">
-                      <button v-if="!task.complete" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Complete</button>
+                      <button v-if="!task.complete  && adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="showAudioMasteringModal = true" :disabled="!isAllowEditingComplete">Complete</button>
                     </div>
                     <div v-else class="preloader-task"></div>
+                  </div>
+                  <div v-if="action=='approve_modified_block' && adminOrLibrarian && !task.complete">
+                    <div class="editing-wrapper">
+                      <button class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApproveModifications()" :disabled="isBatchApproveModificationsProgress">Approve</button>
+                    </div>
                   </div>
                 </template>
               </td>
@@ -290,7 +295,6 @@
             },
           },
           {
-          
             title: 'Ok',
             handler: () => {
               //this.isBatchProgress = true;
@@ -373,7 +377,21 @@
       /* ************* */
 
       toggleBatchApproveModifications() {
-        console.log('toggle counters:', this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup);
+        console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.unresolved_flags_blocks);
+
+        let _nmb = 0;
+        let editor_tasks = this.tasks_counter.find(element => element.key == 'editor');
+        editor_tasks = editor_tasks.data.tasks;
+        if (editor_tasks !== undefined ) {
+          _nmb = editor_tasks.find(element => element.type == 'approve-modified-block').count;
+        } 
+
+        let _am = this.currentBookCounters.not_marked_blocks_missed_audio;
+        let _uf = this.currentBookCounters.unresolved_flags_blocks;
+        let _nqa = _am + _uf;
+        let _qa = _nmb - _nqa;
+        
+
         let title = '';
         let text = '';
         let buttons = [
@@ -384,23 +402,19 @@
             },
           },
           {
-            title: 'Ok',
+            title: 'Approve',
             handler: () => {
               this.isBatchProgress = true;
               this.$root.$emit('hide-modal');
               return new Promise((resolve, reject) => {
-                this.completeBatchApproveModifictions()
+                console.log('inside 1');
+                this.completeBatchApproveModifications()
                 .then((doc) => {
                   if (!doc.data.error) {
                     return this.reloadBook()
                       .then(() => {
                         this.$root.$emit('book-reimported');
-                        /*if (this.currentBookCounters.not_marked_blocks === 0){
-                          this.finishTextCleanup();
-                          this.textCleanupProcess = false;
-                        } else {
                           this.isBatchProgress = false;
-                        }*/
                       })
                   } else {
                     this.$root.$emit('set-error-alert', doc.data.error);
@@ -416,37 +430,49 @@
           },
         ];
 
-        if (this.currentBookCounters.not_marked_blocks_missed_audio === 0){
-          title = 'Complete the Task';
-          text = 'Approve ' + this.counterTextCleanup + ' block(s) and complete editing?'; 
-          buttons[1].title = 'Complete';
-        }
-        else if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks){
-          title = 'Unable to complete the Task';
-          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.</br>' + 
-            'In the meantime, you can approve ' + (this.currentBookCounters.not_marked_blocks - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' + 
-            'Approve qualified blocks?';          
-          buttons[1].title = 'Approve';
-        }
-        else if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks_missed_audio == this.counterTextCleanup){
-          title = 'Unable to complete the Task';
-          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";          
-          buttons = [
-            {
-              title: 'Ok',
-              handler: () => {
-                this.$root.$emit('hide-modal');
-                this.isBatchProgress = false;
-              },
-            },
-          ]
-        }
-        else if (this.counterTextCleanup === 0){
-          title = 'Complete the Task';
-          text = 'Complete editing?'; 
-          buttons[1].title = 'Complete';
-        };
 
+        // 3.3
+        if ( _nqa <= 0 ){
+          title = 'Approve all Blocks';
+          text = 'Approve ' + _qa + ' block(s)?'; 
+        } 
+        // 3.1.1
+        else if ( _qa > 0 && _am > 0 && _uf == 0 ) {
+          title = 'Unable to Approve all Blocks';
+          text = "" + _am + " block(s) can't be approved because audio alignment is missing.<br> In the meantime, you can approve " + _qa + " block(s) and continue editing. <br>Approve qualified block(s)? ";
+        }
+        // 3.1.2
+        else if ( _qa > 0 && _am == 0 && _uf > 0 ) {
+          title = 'Unable to Approve all Blocks';
+          text = "" + _uf + " block(s) can't be approved because of unresolved flag(s).<br> In the meantime, you can approve " + _qa + " block(s) and continue editing. <br>Approve qualified block(s)? ";
+        }
+        // 3.1.3
+        else if ( _qa > 0 && _am > 0 && _uf > 0 ) {
+          title = 'Unable to Approve all Blocks';
+          text = "" + _am + " block(s) can't be approved because audio alignment is missing.<br> " + _uf + " block(s) can't be approved because of unresolved flag(s).<br> In the meantime, you can approve " + _qa + " block(s) and continue editing. <br>Approve qualified block(s)? ";
+        }
+        // 3.2.1
+        else if ( _qa <= 0 && _am > 0 && _uf == 0 ) {
+          title = 'Unable to Approve all Blocks';
+          text = "" + _am + " block(s) can't be approved because audio alignment is missing. ";
+          buttons[0].title = 'Ok';
+          buttons.pop();
+        }
+        // 3.2.2
+        else if ( _qa <= 0 && _am == 0 && _uf > 0 ) {
+          title = 'Unable to Approve all Blocks';
+          text = "" + _uf + " block(s) can't be approved because of unresolved flag(s). ";
+          buttons[0].title = 'Ok';
+          buttons.pop();
+        }
+        // 3.2.3
+        else if ( _qa <= 0 && _am > 0 && _uf > 0 ) {
+          title = 'Unable to Approve all Blocks';
+          text = "" + _am + " block(s) can't be approved because audio alignment is missing.<br> "
+          +  _uf + " block(s) can't be approved because of unresolved flag(s). ";
+          buttons[0].title = 'Ok';
+          buttons.pop();
+        }
       
         this.$root.$emit('show-modal', {
           title: title,
@@ -620,7 +646,7 @@
         }
         this.$forceUpdate();
       },
-      ...mapActions(['updateBookMeta', 'setCurrentBookCounters', 'completeTextCleanup', 'completeAudioMastering', 'completeBatchApproveEditAndAlign', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook', 'getTaskUsers']),
+      ...mapActions(['updateBookMeta', 'setCurrentBookCounters', 'completeTextCleanup', 'completeAudioMastering', 'completeBatchApproveEditAndAlign', 'completeBatchApproveModifications', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook', 'getTaskUsers']),
     },
     mounted() {
       this.set_taskBlockMapPositionsFromRoute();

@@ -588,7 +588,7 @@ class BookBlocks {
     }
     return true;
   }
-  
+
   compareIndex(fromRid, toRid) {
     let from = this.listRIds.indexOf(fromRid);
     let to = this.listRIds.indexOf(toRid);
