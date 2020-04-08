@@ -395,11 +395,11 @@
 
                 <div class="table-row">
                   <div class="table-cell -num">{{ftnIdx+1}}.</div>
-                  <div class="table-cell -text"
+                  <div 
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="[{'content-wrap-footn':true},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language)]"
+                    :class="['table-cell', '-text', {'content-wrap-footn':true},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language), {'__unsave': !(!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)}]"
                     @input="commitFootnote(ftnIdx, $event)"
                     @inputSuggestion="commitFootnote(ftnIdx, $event, 'suggestion')"
                     v-html="footnote.content"
@@ -5445,4 +5445,27 @@ export default {
     background-color: #e0dede;
     border: none;
   }
+
+div.__unsave > div.content-wrap, div.__unsave > hr, div.__unsave > .illustration-block {
+  border-color: #ded056 !important;
+  box-shadow: 0 0 10px #ded056 !important;
+}
+
+div.-content.editing  div.content-wrap {
+  border-color: #ded056 !important;
+  box-shadow: 0 0 10px #ded056 !important;
+  background: #ffffe1 !important;
+}
+
+
+/*
+div.content-wrap-footn.__unsave {
+  border: 2px solid #ded056 !important;
+  box-shadow: 0 0 10px #ded056 !important;
+}
+
+div.content-wrap-footn.__unsave:focus {
+  outline: none;
+} */
+
 </style>

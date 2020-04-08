@@ -1,5 +1,6 @@
 <template>
 <div>
+  
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block -subblock block-preview', blockOutPaddings]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
@@ -78,7 +79,7 @@
                   </div>
                 </div>
               </div>
-              <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId">
+              <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId" :class="[{'__unsave': !((!this.$parent.isChanged && !isChanged) && (!this.$parent.isAudioChanged || this.$parent.isAudioEditing) && !this.$parent.isIllustrationChanged)}]">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
@@ -3371,5 +3372,5 @@ export default {
          }
       }
    }
-
+   
 </style>
