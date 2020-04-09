@@ -527,7 +527,8 @@ export const store = new Vuex.Store({
 
     SET_CURRENTBOOK_FILES (state, fileObj) {
       if (fileObj && fileObj.fileURL) {
-        state.currentBookFiles[fileObj.fileName] = process.env.ILM_API + fileObj.fileURL + '?time='  + Date.now();
+        //state.currentBookFiles[fileObj.fileName] = process.env.ILM_API + fileObj.fileURL + '?time='  + Date.now();
+        state.currentBookFiles[fileObj.fileName] = process.env.ILM_API + fileObj.fileURL + '?v=' + (state.currentBookMeta['@version'] || Date.now());
       } else state.currentBookFiles[fileObj.fileName] = false;
     },
 
@@ -1273,7 +1274,7 @@ export const store = new Vuex.Store({
           state.liveDB.stopWatch('job');
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
-              console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
+              //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
               if (bookMetaIdx > -1) {
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
@@ -1283,8 +1284,9 @@ export const store = new Vuex.Store({
               commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
               let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
               commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
-
-              commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: data.meta.coverimgURL});
+              if (data.meta.hasOwnProperty('coverimgURL')) {
+                commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: data.meta.coverimgURL});
+              }
               dispatch('getCurrentJobInfo');
             }
           });
@@ -1313,9 +1315,11 @@ export const store = new Vuex.Store({
       if (state.currentBookMeta.bookid) {
         return axios.post(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/coverimg', data.formData, data.config)
         .then(doc => {
-          commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: doc.data.coverimgURL});
-          dispatch('updateBookVersion', {minor: true});
-          return Promise.resolve();
+          dispatch('updateBookVersion', {minor: true})
+          .then(()=>{
+            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: doc.data.coverimgURL});
+            return Promise.resolve();
+          })
         }).catch(err => {
           return Promise.reject(err);
         })
@@ -1361,7 +1365,7 @@ export const store = new Vuex.Store({
       if (currMeta.hasOwnProperty('publishLog')){
           update.publishLog = currMeta.publishLog || {publishTime: false, updateTime: false};
           update.publishLog.updateTime = Date();
-          console.log('update', update.publishLog);
+          //console.log('update', update.publishLog);
       } else {
           update.publishLog = {publishTime: false, updateTime: Date()}
       }
@@ -1462,7 +1466,7 @@ export const store = new Vuex.Store({
       return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id, update)
         .then(response => {
           if (response.data["@class"] && response.status == 200) {
-            console.log('updateBookMeta @version', response.data['@version'], update);
+            //console.log('updateBookMeta @version', response.data['@version'], update);
             state.currentBookMeta['@version'] = response.data['@version'];
             let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==update.bookid);
             if (bookMetaIdx > -1) {
