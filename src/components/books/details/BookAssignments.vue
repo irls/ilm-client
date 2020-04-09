@@ -377,7 +377,7 @@
       /* ************* */
 
       toggleBatchApproveModifications() {
-        console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.unresolved_flags_blocks);
+        //console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.unresolved_flags_blocks);
 
         let _nmb = 0;
         let editor_tasks = this.tasks_counter.find(element => element.key == 'editor');
@@ -389,8 +389,9 @@
         let _am = this.currentBookCounters.not_marked_blocks_missed_audio;
         let _uf = this.currentBookCounters.unresolved_flags_blocks;
         let _nqa = _am + _uf;
-        let _qa = _nmb - _nqa;
+        let _qa = _nmb + _uf - _nqa;
         
+        //console.log('_nmb, _qa, _nqa, _am, _uf', _nmb, _qa, _nqa, _am, _uf);
 
         let title = '';
         let text = '';
