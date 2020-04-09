@@ -386,7 +386,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'eraseAudio', 'audDeletePartSilent', 'insertSilenceSilent'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'eraseAudio', 'audDeletePartSilent', 'insertSilenceSilent', 'eraseAudioSilent'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -768,7 +768,8 @@ export default {
           adminOrLibrarian: 'adminOrLibrarian',
           currentJobInfo: 'currentJobInfo',
           mode: 'bookMode',
-          blockLockType: 'blockLockType'
+          blockLockType: 'blockLockType',
+          audioTasksQueue: 'audioTasksQueue'
       }),
       getBlockLang: {
         cache: false,
@@ -2411,6 +2412,7 @@ export default {
           let text = this.blockAudio.map;
           let loadBlock = this.blockPart;
           loadBlock._id = this.check_id;
+          this.audioTasksQueue.blockId = this.check_id;
           this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
 
           this.audioEditorEventsOn();
@@ -2749,16 +2751,39 @@ export default {
       },
       evFromAudioEditorTasksQueuePush(blockId, queue) {
         if (blockId === this.check_id) {
-          if (!this.audioQueueRunning && queue.length > 0) {
+          if (!this.audioQueueRunning && this.audioTasksQueue.queue.length > 0) {
             this.audioQueueRunning = true;
             let task = null;
-            let record = queue[0];
+            let record = this.audioTasksQueue.queue[0];
+            this.audioTasksQueue.running = record;
             switch (record.type) {
               case 'cut':
                 task = this.audDeletePartSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
                 break;
               case 'insert_silence':
                 task = this.insertSilenceSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
+                break;
+              case 'erase':
+                task = this.eraseAudioSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
+                break;
+              case 'save':
+                this.audStop();
+                if (!this.isSplittedBlock) {
+                  //this.block.setAudiosrc(this.blockAudiosrc(null, false));
+                  //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false), {'m4a': this.block.getPartAudiosrc(this.blockPartIdx, 'm4a', false)});
+                  //this.block.setContent(this.blockContent());
+                  //this.block.setContent(this.blockContent());
+                  return this.assembleBlockAudioEdit(null, false)
+                    .then(() => {
+                      this.isAudioChanged = false;
+                      this.blockAudio.map = this.blockContent();
+                      this.blockAudio.src = this.blockAudiosrc('m4a');
+                      //this.showPinnedInText();
+                      return Promise.resolve();
+                    });
+                } else {
+                  this.assembleBlockPartAudioEdit(false);
+                }
                 break;
               default:
                 task = Promise.resolve();
@@ -2769,14 +2794,22 @@ export default {
             return task
               .then((response) => {
                 this.audioQueueRunning = false;
+                this.audioTasksQueue.running = null;
                 if (Array.isArray(response)) {
-                  this.$root.$emit('for-audioeditor:load-silent', ...response);
+                  this.$root.$emit('for-audioeditor:load-silent', record, ...response);
                 }
                 this.blockAudio.map = this.blockContent();
                 this.blockAudio.src = this.blockAudiosrc('m4a');
+                this.audioTasksQueue.queue.shift();
+                if (this.audioTasksQueue.queue.length > 0) {
+                  this.audioTasksQueue.time = this.audioTasksQueue.queue[this.audioTasksQueue.queue.length - 1].time;
+                } else {
+                  this.audioTasksQueue.time = null;
+                }
               })
               .catch(err => {
                 this.audioQueueRunning = false;
+                this.audioTasksQueue.running = null;
               });
           }
         }
@@ -3439,6 +3472,26 @@ export default {
         handler(val) {
           this.destroyEditor();
           this.initEditor(true);
+        }
+      },
+      'audioTasksQueue.time': {
+        handler(val, oldVal) {
+          //console.log(`audioTasksQueue.time: ${val}`, Object.assign({}, this.audioTasksQueue));
+          if (oldVal === null && val !== null && this.audioTasksQueue.blockId === this.check_id) {
+            //console.log('START ', this.check_id);
+            this.evFromAudioEditorTasksQueuePush(this.check_id);
+          }
+        }
+      },
+      'audioTasksQueue.running': {
+        handler(val) {
+          //console.log(`audioTasksQueue.running: ${val}`, val);
+          if (val === null && this.audioTasksQueue.blockId === this.check_id) {
+            //console.log('CONTINUE', this.check_id);
+            if (this.audioTasksQueue.queue.length > 0) {
+              this.evFromAudioEditorTasksQueuePush(this.check_id);
+            }
+          }
         }
       }
   }

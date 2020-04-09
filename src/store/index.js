@@ -204,6 +204,13 @@ export const store = new Vuex.Store({
       'engineer': [],
       'reader': [],
       'narrator': []
+    },
+    audioTasksQueue: {
+      time: null,
+      queue: [],
+      running: null,
+      log: [],
+      blockId: null
     }
   },
 
@@ -418,6 +425,9 @@ export const store = new Vuex.Store({
     },
     taskUsers: state => {
       return state.taskUsers;
+    },
+    audioTasksQueue: state => {
+      return state.audioTasksQueue;
     }
   },
 
