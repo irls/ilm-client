@@ -192,7 +192,7 @@
             <!-- <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
-            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + blockPartIdx" ref="blocks"
+            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + block.type + '-' + blockPartIdx + (isSplittedBlock ? '-split' : '')" ref="blocks"
               :block="storeListById(block.blockid)"
               :blockO="blockO"
               :blockId = "blockId"
@@ -331,7 +331,7 @@
                   @click.prevent="reopenFlagPart($event, partIdx)">
                   Re-open flag</a>
 
-                <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned())"
+                <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned() || tc_allowNarrateUnassigned(block))"
                   href="#" class="flag-control -left"
                   @click.prevent="resolveFlagPart($event, partIdx)">
                   Resolve flag</a>
@@ -395,11 +395,11 @@
 
                 <div class="table-row">
                   <div class="table-cell -num">{{ftnIdx+1}}.</div>
-                  <div class="table-cell -text"
+                  <div 
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="[{'content-wrap-footn':true},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language)]"
+                    :class="['table-cell', '-text', {'content-wrap-footn':true},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language), {'__unsave': !(!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)}]"
                     @input="commitFootnote(ftnIdx, $event)"
                     @inputSuggestion="commitFootnote(ftnIdx, $event, 'suggestion')"
                     v-html="footnote.content"
@@ -1187,7 +1187,9 @@ export default {
         this.block.changes = this.changes;
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
-            this.block.description = this.$refs.blockDescription.innerHTML;
+            if (this.$refs.blocks[0] && this.$refs.blocks[0].$refs) {
+              this.block.description = this.$refs.blocks[0].$refs.blockDescription ? this.$refs.blocks[0].$refs.blockDescription.innerHTML : '';
+            }
             this.block.voicework = 'no_audio';
           case 'hr':
             this.block.content = '';
@@ -1424,7 +1426,7 @@ export default {
           this.editor.setup();
         }
 
-        if ((!this.editorDescr || force === true) && this.block.type == 'illustration' && this.mode === 'edit') {
+        /*if ((!this.editorDescr || force === true) && this.block.type == 'illustration' && this.mode === 'edit') {
           let extensions = {};
           let toolbar = {buttons: []};
           if (this.allowEditing) {
@@ -1451,7 +1453,7 @@ export default {
           });
         } else if (this.editorDescr) {
           this.editorDescr.setup();
-        }
+        }*/
 
         this.initFtnEditor(force)
 
@@ -1853,6 +1855,9 @@ export default {
         if (update.status && update.status.marked === true) {
           update.status.marked = false;
         }
+        if (this.hasChange('classes') && !update.classes) {
+          update.classes = this.block.classes;
+        }
 
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
@@ -2055,6 +2060,7 @@ export default {
             this.isChanged = false;
             if (refreshTasks) {
               this.getCurrentJobInfo();
+              this.tc_loadBookTask(this.block.bookid);
             }
           })
           .catch(err => {
@@ -2658,11 +2664,6 @@ export default {
           this.block.setAudiosrcFootnote(pos, '');
         }
       },
-      commitDescription: function(ev) {
-        //this.block.description = ev.target.innerText.trim();
-        this.isChanged = true;
-        this.pushChange('description');
-      },
 
       addFlag: function() {
         this.isChanged = true;
@@ -2787,6 +2788,9 @@ export default {
       },
 
       canDeleteFlagPart: function (flagPart) {
+          if (this.tc_allowNarrateUnassigned(this.block) && flagPart.creator === this.auth.getSession().user_id) {
+            return true;
+          }
           let result = false;
           let isProofreadUnassigned = this.isProofreadUnassigned();
           if ((!this.isCompleted || isProofreadUnassigned) && flagPart.creator === this.auth.getSession().user_id) {
@@ -3213,7 +3217,11 @@ export default {
             //this.block.parnum = false;
           //}
           this.$root.$emit('from-block-edit:set-style');
+          if (['type'].indexOf(type) !== -1) {
+            this.$forceUpdate();
+          }
           if (type === 'type' && event && event.target) {
+            this.block.type = event.target.value;
             if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {
               this.block.voicework = 'no_audio';
               this.block.setAudiosrc('');
@@ -3224,14 +3232,13 @@ export default {
               this.pushChange('audiosrc');
               this.pushChange('audiosrc_ver');
             }
-            if (event.target.value === 'illustration') {
-              let i = setInterval(() => {
-                if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs && this.$refs.blocks[0].$refs.blockDescription) {
-                  this.$refs.blocks[0].initEditor();
-                  clearInterval(i);
-                }
-              }, 500);
-            }
+            Vue.nextTick(() => {
+              if (event.target.value !== 'hr') {
+                this.$refs.blocks[0].initEditor(true);
+              } else {
+                this.$refs.blocks[0].destroyEditor();
+              }
+            });
           }
         }
       },
@@ -3699,7 +3706,7 @@ export default {
 
         this.voiceworkUpdating = true;
 
-        if (true && this.voiceworkUpdateType !== 'single') {
+        if (false && this.voiceworkUpdateType !== 'single') {
           this.$store.state.liveDB.onBookReimport();
           this.$store.state.liveDB.stopWatch('metaV');
           this.$store.state.liveDB.stopWatch('job');
@@ -3716,13 +3723,14 @@ export default {
             if (response.status == 200) {
               if (response && response.data && response.data.blocks) {
                 //console.log('BookBlockView.vue->Counters:', response.data.counters);
+                //console.log('response.data.blocks.length:', response.data.blocks.length);
 
-                if (true && this.voiceworkUpdateType !== 'single') {
-                  document.location.href = document.location.href + '/' + this.block.blockid;
-                  return;
-                }
+//                 if (true && this.voiceworkUpdateType !== 'single') {
+//                   document.location.href = document.location.href + '/' + this.block.blockid;
+//                   return;
+//                 }
                 //response.data.updField = 'voicework';
-                if (response.data.blocks.length > 900) {
+                if (response.data.blocks.length > 300) {
                   this.$store.state.liveDB.onBookReimport();
                   this.$store.state.liveDB.stopWatch('metaV');
                   this.$store.state.liveDB.stopWatch('job');
@@ -4786,6 +4794,9 @@ export default {
 
     &.content-description {
         line-height: 24pt;
+        width: 100%;
+        display: table;
+        margin-top: -30px;
         .content-wrap-desc {
           p {
             margin: 0;
@@ -4808,6 +4819,7 @@ export default {
     }
 
     .illustration-block {
+      padding-bottom: 30px;
       img {
         border: solid grey 2px;
         /*max-height: 85vh;*/
@@ -5433,4 +5445,27 @@ export default {
     background-color: #e0dede;
     border: none;
   }
+
+div.__unsave > div.content-wrap, div.__unsave > hr, div.__unsave > .illustration-block {
+  border-color: #ded056 !important;
+  box-shadow: 0 0 10px #ded056 !important;
+}
+
+div.-content.editing  div.content-wrap {
+  border-color: #ded056 !important;
+  box-shadow: 0 0 10px #ded056 !important;
+  background: #ffffe1 !important;
+}
+
+
+/*
+div.content-wrap-footn.__unsave {
+  border: 2px solid #ded056 !important;
+  box-shadow: 0 0 10px #ded056 !important;
+}
+
+div.content-wrap-footn.__unsave:focus {
+  outline: none;
+} */
+
 </style>
