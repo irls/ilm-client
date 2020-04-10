@@ -75,7 +75,7 @@
           <button v-else class="btn btn-default" v-on:click="revert(true)">Revert</button>
         </template>
         <div class="audio-controls" v-if="isModifiedComputed && mode == 'block'">
-          <button class="btn btn-default" v-if="history.length" v-on:click="undo()">Undo</button>
+          <button class="btn btn-default" v-if="actionsLog.length" v-on:click="undo()">Undo {{lastActionName}}</button>
           <button class="btn btn-primary" v-on:click="save()">Save</button>
           <button class="btn btn-primary" v-on:click="saveAndRealign()">Save & Re-align</button>
         </div>
@@ -1055,35 +1055,17 @@
           let original_buffer = this.audiosourceEditor.activeTrack.buffer;
           let time = this.cursorPosition;
           this.silenceLength = parseFloat(this.silenceLength);
-
-          let first_list_index        = parseInt(time * original_buffer.sampleRate);
-          let second_list_index       = parseInt((time + this.silenceLength) * original_buffer.sampleRate);
-          let second_list_mem_alloc   = (original_buffer.length - first_list_index);
-
-          let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, original_buffer.length + parseInt((this.silenceLength) * original_buffer.sampleRate), original_buffer.sampleRate);
-            
-          let new_list        = new Float32Array( parseInt( first_list_index ));
-          let silence         = new Float32Array( this.silenceLength * original_buffer.sampleRate );
-          let second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
-          let combined        = new Float32Array( original_buffer.length + parseInt((time) * original_buffer.sampleRate) );
           
-          for (let i = 0; i < original_buffer.numberOfChannels; ++i ) {
-
-            original_buffer.copyFromChannel(new_list, i);
-            original_buffer.copyFromChannel(second_list, i, first_list_index)
-
-            combined.set(new_list)
-            combined.set(silence, first_list_index);
-            combined.set(second_list, second_list_index)
-
-            new_buffer.copyToChannel(combined, i);
-          }
-          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
-          this.audiosourceEditor.activeTrack.duration+= this.silenceLength;
-          this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
+          let silence = new Float32Array(this.silenceLength * original_buffer.sampleRate);
+          
+          this.insertRangeAction(time, silence, this.silenceLength);
           //this.audiosourceEditor.draw(this.audiosourceEditor.render());
           //this.audiosourceEditor.drawRequest();
           //this.audiosourceEditor.renderTrackSection();
+          
+          this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
+          
+          this._addHistoryLocal('insert_silence', null, this.cursorPosition, this.cursorPosition + this.silenceLength);
           this.audiosourceEditor.annotationList.annotations.forEach(al => {
             if (al.start > time) {
               al.start+= this.silenceLength;
@@ -1093,12 +1075,41 @@
             }
           });
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
+          //this.clearSelection();
+          this.isModified = true;
+        },
+        insertRangeAction(position, range, length) {
+          let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+          let first_list_index        = parseInt(position * original_buffer.sampleRate);
+          let second_list_index       = parseInt(first_list_index + range.length);
+          let second_list_mem_alloc   = (original_buffer.length - first_list_index);
+
+          let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, original_buffer.length + parseInt((length) * original_buffer.sampleRate), original_buffer.sampleRate);
+            
+          let new_list        = new Float32Array( parseInt( first_list_index ));
+          let second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
+          let combined        = new Float32Array( new_list.length + range.length + second_list.length );
+          console.log(new_list.length + second_list.length + range.length, first_list_index, second_list_index, combined.length);
+          console.log(new_list.length, range.length, second_list.length);
+          
+          for (let i = 0; i < original_buffer.numberOfChannels; ++i ) {
+
+            original_buffer.copyFromChannel(new_list, i);
+            original_buffer.copyFromChannel(second_list, i, first_list_index)
+
+            combined.set(new_list)
+            combined.set(range, first_list_index);
+            combined.set(second_list, second_list_index)
+
+            new_buffer.copyToChannel(combined, i);
+          }
+          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+          this.audiosourceEditor.activeTrack.duration+= length;
+          this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
+          this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
           this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
           this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
           this.audiosourceEditor.drawRequest();
-          this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
-          //this.clearSelection();
-          this.isModified = true;
         },
         save() {
           this.history = [];
@@ -1141,39 +1152,9 @@
           this.isModified = true;
         },
         cutLocal() {
-          let original_buffer = this.audiosourceEditor.activeTrack.buffer;
-
-          let first_list_index        = (this.selection.start * original_buffer.sampleRate);
-          let second_list_index       = (this.selection.end * original_buffer.sampleRate);
-          let second_list_mem_alloc   = (original_buffer.length - (this.selection.end * original_buffer.sampleRate));
-          
-          let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, parseInt( first_list_index ) + parseInt( second_list_mem_alloc ), original_buffer.sampleRate);
-
-          let new_list        = new Float32Array( parseInt( first_list_index ));
-          let second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
-          let combined        = new Float32Array( parseInt( first_list_index ) + parseInt( second_list_mem_alloc ) );
-          
-          this.actionsLog.push({
-            type: 'cut',
-            buffer: original_buffer
-          });
-
-          for (let i = 0; i < original_buffer.numberOfChannels; ++i) {
-            original_buffer.copyFromChannel(new_list, i);
-            original_buffer.copyFromChannel(second_list, i, second_list_index)
-
-            combined.set(new_list)
-            combined.set(second_list, first_list_index)
-
-            new_buffer.copyToChannel(combined, i);
-          }
-          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+          let cut_range = this.cutRangeAction(this.selection.start, this.selection.end);
+          this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
           let diff = this.selection.end - this.selection.start;
-          this.audiosourceEditor.activeTrack.duration-= diff;
-          this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
-          //this.audiosourceEditor.draw(this.audiosourceEditor.render());
-          //this.audiosourceEditor.drawRequest();
-          //this.audiosourceEditor.renderTrackSection();
           this.audiosourceEditor.annotationList.annotations.forEach(al => {
             if (al.start <= this.selection.start && al.end >= this.selection.end) {// cut middle of the word
               al.end-= diff;
@@ -1186,10 +1167,7 @@
               al.start = this.selection.start;
             }
           });
-          this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
-          this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
-          this.audiosourceEditor.drawRequest();
           this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000)]);
           this.clearSelection();
           this.isModified = true;
@@ -1199,6 +1177,47 @@
           //trim + clear selection
           //scroll
           //playbackReset call
+        },
+        cutRangeAction(start, end) {
+          let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+
+          let first_list_index        = (start * original_buffer.sampleRate);
+          let second_list_index       = (end * original_buffer.sampleRate);
+          let second_list_mem_alloc   = (original_buffer.length - (end * original_buffer.sampleRate));
+          
+          let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, parseInt( first_list_index ) + parseInt( second_list_mem_alloc ), original_buffer.sampleRate);
+
+          let new_list        = new Float32Array( parseInt( first_list_index ));
+          let second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
+          let combined        = new Float32Array( parseInt( first_list_index ) + parseInt( second_list_mem_alloc ) );
+          let cut_range = new Float32Array((end - start) * original_buffer.sampleRate);
+          
+          //this.actionsLog.push({
+            //type: 'cut',
+            //buffer: original_buffer
+          //});
+
+          for (let i = 0; i < original_buffer.numberOfChannels; ++i) {
+            original_buffer.copyFromChannel(new_list, i);
+            original_buffer.copyFromChannel(second_list, i, second_list_index)
+
+            combined.set(new_list)
+            combined.set(second_list, first_list_index)
+
+            new_buffer.copyToChannel(combined, i);
+            original_buffer.copyFromChannel(cut_range, i, first_list_index);
+          }
+          //console.log(cut_range);
+          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+          //this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
+          this.audiosourceEditor.activeTrack.duration-= end - start;
+          this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
+          this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
+          
+          this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+          this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+          this.audiosourceEditor.drawRequest();
+          return cut_range;
         },
         addTaskQueue(type, options) {
           let time = Date.now();
@@ -1254,38 +1273,20 @@
               
               let original_buffer = this.audiosourceEditor.activeTrack.buffer;
 
-              let first_list_index        = (this.selection.start * original_buffer.sampleRate);
-              let second_list_index       = (this.selection.end * original_buffer.sampleRate);
-              let second_list_mem_alloc   = (original_buffer.length - (this.selection.end * original_buffer.sampleRate));
+              let silence = new Float32Array((this.selection.end - this.selection.start) * original_buffer.sampleRate);
+              let range = this.cutRangeAction(this.selection.start, this.selection.end);
+              this.insertRangeAction(this.selection.start, silence, this.selection.end - this.selection.start);
 
-              let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, original_buffer.length, original_buffer.sampleRate);
-
-              let new_list        = new Float32Array( parseInt( first_list_index ));
-              let second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
-              let combined        = new Float32Array( original_buffer.length );
-              let silence         = new Float32Array( (this.selection.end - this.selection.start) * original_buffer.sampleRate );
-
-              for (let i = 0; i < original_buffer.numberOfChannels; ++i) {
-                original_buffer.copyFromChannel(new_list, i);
-                original_buffer.copyFromChannel(second_list, i, second_list_index)
-
-                combined.set(new_list);
-                combined.set(silence, first_list_index);
-                combined.set(second_list, second_list_index);
-
-                new_buffer.copyToChannel(combined, i);
-              }
-              this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
-              this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
-              this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
-              this.audiosourceEditor.drawRequest();
               this.addTaskQueue('erase', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000)]);
+              this._addHistoryLocal('erase', range, this.selection.start, this.selection.end);
               //this.$root.$emit('from-audioeditor:erase-audio', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
               this.clearSelection();
               this.isModified = true;
             });
         },
         undo() {
+          this.undoLocal();
+          return;
           if (this.mode === 'block') {
             this.popTaskQueue();
             this.audioTasksQueue.log.pop();
@@ -1310,6 +1311,11 @@
               this.setSelectionEnd(this.origFilePositions.end);
             }
           }
+        },
+        undoLocal() {
+          this.audioTasksQueue.log.pop();
+          this.popTaskQueue();
+          this._popHistoryLocal();
         },
         discard() {
           this.setProcessRun(true, '');
@@ -1563,8 +1569,44 @@
             this.isHistoryFull = false;
           }
         },
+        _addHistoryLocal(type, range, start, end) {
+          let record = {
+            type: type,
+            range: range,
+            selection: {
+              start: start,
+              end: end
+            },
+            annotations: []
+          };
+          this.audiosourceEditor.annotationList.annotations.forEach(an => {
+            record.annotations.push(Object.assign({}, an));
+          });
+          this.actionsLog.push(record);
+          if (this.actionsLog.length >= 6) {
+            this.actionsLog.shift();
+          }
+        },
         _popHistory() {
           return this.history.pop();
+        },
+        _popHistoryLocal() {
+          let record = this.actionsLog.pop();
+          if (record) {
+            this.audiosourceEditor.annotationList.annotations = [...record.annotations];
+            switch (record.type) {
+              case 'cut':
+                this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
+                break;
+              case 'insert_silence':
+                this.cutRangeAction(record.selection.start, record.selection.end);
+                break;
+              case 'erase':
+                this.cutRangeAction(record.selection.start, record.selection.end);
+                this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
+                break;
+            }
+          }
         },
         _setSelectionOnWaveform() {
           if (this.selection && typeof this.selection.start != 'undefined' && typeof this.selection.end != 'undefined' && this.plEventEmitter) {
@@ -2256,6 +2298,24 @@ Revert to original block audio?`,
         isRevertDisabled: {
           get() {
             return this.block ? !this.block.audiosrc_original && !this.isModified : true;
+          },
+          cache: false
+        },
+        lastActionName: {
+          get() {
+            if (this.actionsLog.length > 0) {
+              switch (this.actionsLog[this.actionsLog.length - 1].type) {
+                case 'cut':
+                  return 'Cut';
+                  break;
+                case 'erase':
+                  return 'Erase';
+                  break;
+                case 'insert_silence':
+                  return 'Silence';
+                  break;
+              }
+            }
           },
           cache: false
         },
