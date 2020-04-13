@@ -2098,7 +2098,7 @@ Save audio changes and realign the Block?`,
       },
 
       canResolveFlagPart: function (flagPart) {
-          return this.tc_canResolveFlagPart(flagPart);
+          return this.tc_canResolveFlagPart(flagPart, this.block);
       },
       canCommentFlagPart: function(flagPart) {
         return this.canResolveFlagPart(flagPart) && flagPart.status == 'open' && !flagPart.collapsed/* && (!this.isCompleted || this.isProofreadUnassigned())*/;
