@@ -431,7 +431,7 @@
                     </div>
                     <div class="save-block -right"
                     v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-                    @click="assembleBlockProxy(true)">
+                    @click="assembleBlockProxy(true, needsRealignment)">
                       {{saveBlockLabel}}
                     </div>
                     <template v-if="!isCompleted">
@@ -2008,9 +2008,9 @@ Save audio changes and realign the Block?`,
         });
       },
       assembleBlockPart: function(update, realign = false) {
-        if (!this.needsRealignment) {
-          realign = false;
-        }
+        //if (!this.needsRealignment) {
+          //realign = false;
+        //}
         update.blockid = this.block.blockid;
         update.bookid = this.block.bookid;
         this.isSaving = true;

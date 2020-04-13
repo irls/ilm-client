@@ -276,7 +276,7 @@
           </div>
           <div class="save-block -right"
           v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-          @click="assembleBlockProxy(true)">
+          @click="assembleBlockProxy(true, needsRealignment)">
             {{saveBlockLabel}}
           </div>
         </div>
