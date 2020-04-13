@@ -429,7 +429,7 @@
                     </div>
                     <div class="save-block -right"
                     v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-                    @click="assembleBlockProxy(true)">
+                    @click="assembleBlockProxy(true, needsRealignment)">
                       {{saveBlockLabel}}
                     </div>
                     <template v-if="!isCompleted">
@@ -1724,10 +1724,10 @@ Save audio changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false)};
+                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0)};
                   return this.assembleBlockProxy(false, false, update_fields, false)
                     .then(() => {
-                      return this.assembleBlockAudioEdit(this.footnoteIdx, realign, preparedData)
+                      return this.assembleBlockAudioEdit(this.footnoteIdx, true, preparedData)
                       .then(() => {
                         return Promise.resolve();
                       });
@@ -1878,6 +1878,9 @@ Save audio changes and realign the Block?`,
               partUpdate.status.marked = false;
             }
             let updateTask = null;
+            if (this.isSplittedBlock) {
+              realign = false;
+            }
             if (fullUpdate) {
               updateTask = this.assembleBlock(partUpdate, realign);
             } else {
@@ -1976,9 +1979,9 @@ Save audio changes and realign the Block?`,
         });
       },
       assembleBlockPart: function(update, realign = false) {
-        if (!this.needsRealignment) {
-          realign = false;
-        }
+        //if (!this.needsRealignment) {
+          //realign = false;
+        //}
         update.blockid = this.block.blockid;
         update.bookid = this.block.bookid;
         this.isSaving = true;
@@ -2247,7 +2250,7 @@ Save text changes and realign the Block?`,
               //manual_boundaries: this.block.manual_boundaries
               audiosrc: preparedData.audiosrc || this.block.getPartAudiosrc(0, null, false),
               content: this.block.getPartContent(0),
-              manual_boundaries: this.block.getPartManualBoundaries(0),
+              manual_boundaries: preparedData.manual_boundaries || this.block.getPartManualBoundaries(0),
               mode: this.mode
             };
           } else {
