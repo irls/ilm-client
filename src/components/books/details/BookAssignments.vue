@@ -58,7 +58,7 @@
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
                       <button v-if="!task.complete && adminOrLibrarian"  class="btn btn-primary btn-edit-complete"  v-on:click="toggleBatchApprove()" :disabled="isBatchProgress">Complete</button>
-                      <button v-else-if="!task.complete && !adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="!isAllowEditingComplete">Complete</button>
+                      <button v-else-if="!task.complete && !adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleCleanupComplete()" :disabled="!isAllowEditingComplete">Complete</button>
                     </template>
                     <template v-else>
                       <div class="preloader-task"></div>
@@ -282,6 +282,43 @@
             this.audioMasteringProcess = false;
           });
       },
+
+      toggleCleanupComplete() {
+        let title = 'Complete the Task';
+        let text = 'Complete editing?';
+        let buttons = [
+          {
+            title: 'Cancel',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+            },
+          },
+          {
+            title: 'Complete',
+            handler: () => {
+              this.textCleanupProcess = true;
+              //this.isBatchProgress = true;
+              //this.isBatchProgressItems.push(this.currentBookMeta._id);
+              this.$root.$emit('hide-modal');
+              return new Promise((resolve, reject) => {
+                this.finishTextCleanup();
+                //console.log('Start Finish Text Cleanup');
+                this.textCleanupProcess = false;
+              })
+            },
+            'class': 'btn btn-primary'
+          },
+        ];
+
+        this.$root.$emit('show-modal', {
+          title: title,
+          text: text,
+          buttons: buttons,
+          class: ['align-modal', 'master-switcher-warning']
+        });
+
+      },
+
 
       toggleBatchApprove() {
         //console.log('toggle counters:', this.currentBookCounters, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup);
