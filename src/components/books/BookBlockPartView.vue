@@ -2106,7 +2106,7 @@ Save audio changes and realign the Block?`,
 
       canDeleteFlagPart: function (flagPart) {
           if (this.tc_allowNarrateUnassigned(this.block) && flagPart.creator === this.auth.getSession().user_id) {
-            return true;
+            return this.block.voicework === 'narration';
           }
           let result = false;
           let isProofreadUnassigned = this.isProofreadUnassigned();

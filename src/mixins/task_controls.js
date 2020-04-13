@@ -594,9 +594,6 @@ export default {
       return false;
     },
     tc_allowNarrateUnassigned(block) {
-      if (block.voicework !== 'narration') {
-        return false;
-      }
       if (this.bookMode !== 'narrate') {
         return true;
       }
