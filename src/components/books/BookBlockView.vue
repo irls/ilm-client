@@ -5549,6 +5549,11 @@ div.__unsave > div.content-wrap, div.__unsave > hr, div.__unsave > .illustration
   border-color: #ded056 !important;
   box-shadow: 0 0 10px #ded056 !important;
 }
+div.__unsave > hr {
+  border-width: 2px !important;
+  border-style: solid !important;
+  border-radius: 8px;
+}
 
 div.-content.editing  div.content-wrap {
   border-color: #ded056 !important;
