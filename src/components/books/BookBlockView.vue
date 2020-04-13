@@ -482,24 +482,30 @@
         </h4>
       </div>
       <div class="modal-body" style="padding-top: 10px; padding-bottom: 10px;">
-        <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
-        <div class="modal-content-flex">
-          <div class="modal-content-flex-block">
-          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
-          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
-          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
-          <!--v-if="!block.status.marked"-->
+        <section v-if="!(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration')">
+          <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
+          <div class="modal-content-flex">
+            <div class="modal-content-flex-block">
+            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
+            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
+            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
+            <!--v-if="!block.status.marked"-->
+            </div>
+            <div class="modal-content-flex-block">
+            <label class="modal-content-empty">&nbsp;</label>
+            <label class="modal-content-empty">&nbsp;</label>
+            <label class="modal-content-empty">&nbsp;</label>
+            </div>
           </div>
-          <div class="modal-content-flex-block">
-          <label class="modal-content-empty">&nbsp;</label>
-          <label class="modal-content-empty">&nbsp;</label>
-          <label class="modal-content-empty">&nbsp;</label>
-          </div>
-        </div>
-        <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': isSingleBlockRemoveAudio}]">This will also delete current audio from the {{blockTypeLabel}}</div>
-        <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
-        <div v-if="voiceworkUpdateType == 'single'">&nbsp;</div>
-        <div v-else :class="['attention-msg', 'visible']">The book will reload automatically</div>
+          <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': isSingleBlockRemoveAudio}]">This will also delete current audio from the {{blockTypeLabel}}</div>
+          <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
+          <div v-if="voiceworkUpdateType == 'single'">&nbsp;</div>
+          <div v-else :class="['attention-msg', 'visible']">The book will reload automatically</div>
+        </section>
+        <section v-else>
+          <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to this {{blockTypeLabel}}?</div>
+          <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': !isNarratedBlockCompleteAudio}]">Сurrent audio on the {{blockTypeLabel}} cannot be saved because it is incomplete</div>
+        </section>
       </div>
       <!-- custom buttons -->
       <div class="modal-footer vue-dialog-buttons">
@@ -1081,6 +1087,13 @@ export default {
       isSingleBlockRemoveAudio() {
         return this.block.audiosrc && this.block.audiosrc.length
           && !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration')
+      },
+      isNarratedBlockCompleteAudio() {
+        return this.block.voicework == 'narration'
+          && this.block.parts && this.block.parts.length
+          && this.block.parts.every((part)=>{
+            return part.audiosrc && part.audiosrc.length
+          })
       }
   },
   mounted: function() {
@@ -4185,15 +4198,6 @@ Save text changes and realign the Block?`,
         return true;
       },
 
-      voicework_change_close($ev) {
-        //console.log('voicework_change_close', $ev);
-        if (this.voiceworkUpdating) $ev.stop();
-        else {
-          this.voiceworkChange = false;
-          this.voiceworkUpdateType = 'single';
-        }
-      },
-
       eraseAudio(start, end, footnoteIdx = null, partIdx = null, check_id = null) {
         if (!this.isSplittedBlock) {
           partIdx = null;
@@ -4267,6 +4271,15 @@ Save text changes and realign the Block?`,
             this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
             return Promise.reject(err);
           });
+      },
+
+      voicework_change_close($ev) {
+        //console.log('voicework_change_close', $ev);
+        if (this.voiceworkUpdating) $ev.stop();
+        else {
+          //this.voiceworkChange = false;
+          this.voiceworkUpdateType = 'single';
+        }
       }
   },
   watch: {
