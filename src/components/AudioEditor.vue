@@ -1163,7 +1163,7 @@ Discard unsaved audio changes?`,
                 class: ['btn btn-default']
               },
               {
-                title: this.mode == 'block' ? 'Confirm' : 'Discard',
+                title: 'Discard',
                 handler: () => {
                   this.$root.$emit('hide-modal');
                   this.discardAndExit();

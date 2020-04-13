@@ -1727,7 +1727,7 @@ Save audio changes and realign the Block?`,
                   let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0)};
                   return this.assembleBlockProxy(false, false, update_fields, false)
                     .then(() => {
-                      return this.assembleBlockAudioEdit(this.footnoteIdx, realign, preparedData)
+                      return this.assembleBlockAudioEdit(this.footnoteIdx, true, preparedData)
                       .then(() => {
                         return Promise.resolve();
                       });
