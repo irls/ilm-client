@@ -821,7 +821,7 @@
               .then((response) => {
                 //console.log(response);
                 this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
-                  this.audiosourceEditor.activeTrack.setBuffer(buffer);
+                  this.setAudioBuffer(buffer);
                   this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
                   this._setText(text, block);
                   this.audiosourceEditor.drawRequest();
@@ -1106,7 +1106,8 @@
 
             new_buffer.copyToChannel(combined, i);
           }
-          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+          //this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+          this.setAudioBuffer(new_buffer);
           this.audiosourceEditor.activeTrack.duration+= length;
           this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
           this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
@@ -1211,12 +1212,7 @@
             original_buffer.copyFromChannel(cut_range, i, first_list_index);
           }
           //console.log(cut_range);
-          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
-          console.log(_Playout);
-          //console.log(new _Playout.default(this.audiosourceEditor.ac, new_buffer));
-          //console.log(new _Playout(this.audiosourceEditor.ac, new_buffer));
-          //this.audiosourceEditor.activeTrack.playout.setBuffer(new_buffer);
-          this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
+          this.setAudioBuffer(new_buffer);
           //this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
           this.audiosourceEditor.activeTrack.duration-= end - start;
           this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
@@ -1226,6 +1222,14 @@
           this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
           this.audiosourceEditor.drawRequest();
           return cut_range;
+        },
+        setAudioBuffer(new_buffer) {
+          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+          //console.log(_Playout);
+          //console.log(new _Playout.default(this.audiosourceEditor.ac, new_buffer));
+          //console.log(new _Playout(this.audiosourceEditor.ac, new_buffer));
+          //this.audiosourceEditor.activeTrack.playout.setBuffer(new_buffer);
+          this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
         },
         addTaskQueue(type, options) {
           let time = Date.now();
@@ -1293,16 +1297,18 @@
             });
         },
         undo() {
-          this.undoLocal();
-          return;
+          //this.undoLocal();
+          //return;
           if (this.mode === 'block') {
+            let make_event = this.audioTasksQueue.queue.length < 2;
             this.popTaskQueue();
             this.audioTasksQueue.log.pop();
-            let record = this._popHistory();
-            if (this.history.length === 0 && this.isHistoryFull) {
+            let record = this._popHistoryLocal(!make_event);
+            //let record = this._popHistory();
+            if (this.actionsLog.length === 0 && this.isHistoryFull) {
               this.isModified = false;
             }
-            if (record) {
+            if (make_event && record) {
               //this.block.manual_boundaries = record.manual_boundaries ? record.manual_boundaries.slice() : [];
               //this.setAudio(record.audio, record.text, false);
               this.$root.$emit('from-audioeditor:undo', this.blockId, record.audio, record.text, this.isModified);
@@ -1593,14 +1599,15 @@
           this.actionsLog.push(record);
           if (this.actionsLog.length >= 6) {
             this.actionsLog.shift();
+            this.isHistoryFull = false;
           }
         },
         _popHistory() {
           return this.history.pop();
         },
-        _popHistoryLocal() {
+        _popHistoryLocal(redraw = true) {
           let record = this.actionsLog.pop();
-          if (record) {
+          if (redraw && record) {
             this.audiosourceEditor.annotationList.annotations = [...record.annotations];
             switch (record.type) {
               case 'cut':
@@ -1615,6 +1622,7 @@
                 break;
             }
           }
+          return record;
         },
         _setSelectionOnWaveform() {
           if (this.selection && typeof this.selection.start != 'undefined' && typeof this.selection.end != 'undefined' && this.plEventEmitter) {
