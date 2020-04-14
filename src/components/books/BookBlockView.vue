@@ -1098,8 +1098,8 @@ export default {
           }).length;
 
           return (aPartsLength == 0 || aPartsLength == this.block.parts.length)
-       }
-        return false;
+        }
+        return true;
       }
   },
   mounted: function() {
