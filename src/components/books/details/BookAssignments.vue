@@ -296,15 +296,8 @@
           {
             title: 'Complete',
             handler: () => {
-              this.textCleanupProcess = true;
-              //this.isBatchProgress = true;
-              //this.isBatchProgressItems.push(this.currentBookMeta._id);
               this.$root.$emit('hide-modal');
-              return new Promise((resolve, reject) => {
-                this.finishTextCleanup();
-                //console.log('Start Finish Text Cleanup');
-                this.textCleanupProcess = false;
-              })
+              this.finishTextCleanup();
             },
             'class': 'btn btn-primary'
           },
@@ -446,7 +439,6 @@
               this.isBatchProgress = true;
               this.$root.$emit('hide-modal');
               return new Promise((resolve, reject) => {
-                console.log('inside 1');
                 this.completeBatchApproveModifications()
                 .then((doc) => {
                   if (!doc.data.error) {
