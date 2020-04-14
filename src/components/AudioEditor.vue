@@ -140,6 +140,9 @@
   var WaveformPlaylist = require('waveform-playlist');
   var Draggable = require ('draggable')
   var {TimeScale} = require('../store/AudioTimeScale.js');
+
+  import _Playout from 'waveform-playlist/lib/Playout';
+  //var _Playout2 = _interopRequireDefault(_Playout);
   Vue.use(v_modal, { dialog: true });
 
   export default {
@@ -1209,6 +1212,11 @@
           }
           //console.log(cut_range);
           this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+          console.log(_Playout);
+          //console.log(new _Playout.default(this.audiosourceEditor.ac, new_buffer));
+          //console.log(new _Playout(this.audiosourceEditor.ac, new_buffer));
+          //this.audiosourceEditor.activeTrack.playout.setBuffer(new_buffer);
+          this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
           //this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
           this.audiosourceEditor.activeTrack.duration-= end - start;
           this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
