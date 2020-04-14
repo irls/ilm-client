@@ -338,8 +338,9 @@
                       .then(() => {
                         this.$root.$emit('book-reimported');
                         if (this.currentBookCounters.not_marked_blocks === 0){
-                          //console.log('let is clean up start');
-                          this.finishTextCleanup();
+                          if (this.adminOrLibrarian){
+                            this.finishTextCleanup();
+                          }
                           this.textCleanupProcess = false;
                           
                         } else {
