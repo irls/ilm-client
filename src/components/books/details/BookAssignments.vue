@@ -418,10 +418,15 @@
           _nmb = editor_tasks.find(element => element.type == 'approve-modified-block').count;
         } 
 
-        let _am = this.currentBookCounters.not_marked_blocks_missed_audio;
+        /*let _am = this.currentBookCounters.not_marked_blocks_missed_audio;
         let _uf = this.currentBookCounters.unresolved_flags_blocks;
         let _nqa = _am + _uf;
-        let _qa = _nmb + _uf - _nqa;
+        let _qa = _nmb + _uf - _nqa;*/
+
+        let _am = this.currentBookCounters.not_marked_blocks_missed_audio;
+        let _nqa = _am;
+        let _qa = _nmb - _nqa;
+
         
         //console.log('_nmb, _qa, _nqa, _am, _uf', _nmb, _qa, _nqa, _am, _uf);
 
