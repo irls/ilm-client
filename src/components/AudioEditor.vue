@@ -832,7 +832,6 @@
                 console.log(err);
               });
           }
-          //this.nextTaskQueue();
         },
         play(cursorPosition) {
           if (typeof cursorPosition === 'undefined') {
@@ -1120,8 +1119,8 @@
           if (this.mode == 'block') {
             if (this.isModified) {
               this.setProcessRun(true, 'save');
-              //this.$root.$emit('from-audioeditor:save', this.blockId);
-              this.addTaskQueue('save', []);
+              this.$root.$emit('from-audioeditor:save', this.blockId);
+              //this.addTaskQueue('save', []);
               this.isModified = false;
             }
           } else if(this.mode == 'file') {
@@ -1242,15 +1241,6 @@
           this.audioTasksQueue.log.push(time);
           this._addHistory(this.content, this.audiofile, this.block && this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
           //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
-        },
-        nextTaskQueue() {
-          this.audioTasksQueue.queue.shift();
-          if (this.audioTasksQueue.queue.length > 0) {
-            this.audioTasksQueue.time = this.audioTasksQueue.queue[0].time;
-            this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
-          } else {
-            this.audioTasksQueue.time = null;
-          }
         },
         popTaskQueue() {
           this.audioTasksQueue.queue.pop();
