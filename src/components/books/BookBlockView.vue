@@ -482,7 +482,7 @@
         </h4>
       </div>
       <div class="modal-body" style="padding-top: 10px; padding-bottom: 10px;">
-        <section v-if="!(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration')">
+        <section v-if="!(voiceworkChange == 'audio_file' && block.voicework == 'narration')">
           <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
           <div class="modal-content-flex">
             <div class="modal-content-flex-block">
@@ -1089,11 +1089,17 @@ export default {
           && !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration')
       },
       isNarratedBlockCompleteAudio() {
-        return this.block.voicework == 'narration'
-          && this.block.parts && this.block.parts.length
-          && this.block.parts.every((part)=>{
+
+        if (this.block.voicework == 'narration'
+          && this.block.parts && this.block.parts.length) {
+
+          let aPartsLength = this.block.parts.filter((part)=>{
             return part.audiosrc && part.audiosrc.length
-          })
+          }).length;
+
+          return (aPartsLength == 0 || aPartsLength == this.block.parts.length)
+       }
+        return false;
       }
   },
   mounted: function() {
@@ -3732,6 +3738,7 @@ export default {
             this.voiceworkUpdating = false;
             if (response.status == 200) {
               if (response && response.data && response.data.blocks) {
+                this.voiceworkChange = false;
                 //console.log('BookBlockView.vue->Counters:', response.data.counters);
                 //console.log('response.data.blocks.length:', response.data.blocks.length);
 
@@ -3758,12 +3765,12 @@ export default {
                   this.getCurrentJobInfo();
                   this.getAlignCount();
                   this.$root.$emit('bookBlocksUpdates', response.data);
+                  this.setCurrentBookBlocksLeft(this.block.bookid);
                 }
-                //this.setCurrentBookBlocksLeft(this.block.bookid);
               }
             }
             this.currentBookCounters.voiceworks_for_remove = 0;
-            this.voiceworkChange = false;
+            //this.voiceworkChange = false;
           })
           .catch(err => {
             this.voiceworkUpdating = false;
