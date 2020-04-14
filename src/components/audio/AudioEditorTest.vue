@@ -16,9 +16,9 @@
   </div>
 </template>
 <script>
-  import WaveSurfer from 'wavesurfer.js';
-  import RegionsPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.regions.js';
-  import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.js';
+  //import WaveSurfer from 'wavesurfer.js';
+  //import RegionsPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.regions.js';
+  //import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.js';
   import api_config from '../../mixins/api_config.js';
   export default {
     data() {
@@ -33,7 +33,7 @@
       };
     },
     components: {
-      WaveSurfer
+      //WaveSurfer
     },
     mixins: [api_config],
     mounted() {
