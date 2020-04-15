@@ -474,11 +474,11 @@
           text = 'Approve ' + _qa + ' block(s)?'; 
         } 
         // 3.1.1
-        else if ( _qa > 0 && _am > 0 && _uf == 0 ) {
+        else if ( _qa > 0 && _am > 0 ) {
           title = 'Unable to Approve all Blocks';
           text = "" + _am + " block(s) can't be approved because audio alignment is missing.<br> In the meantime, you can approve " + _qa + " block(s) and continue editing. <br>Approve qualified block(s)? ";
         }
-        // 3.1.2
+/*        // 3.1.2
         else if ( _qa > 0 && _am == 0 && _uf > 0 ) {
           title = 'Unable to Approve all Blocks';
           text = "" + _uf + " block(s) can't be approved because of unresolved flag(s).<br> In the meantime, you can approve " + _qa + " block(s) and continue editing. <br>Approve qualified block(s)? ";
@@ -487,15 +487,15 @@
         else if ( _qa > 0 && _am > 0 && _uf > 0 ) {
           title = 'Unable to Approve all Blocks';
           text = "" + _am + " block(s) can't be approved because audio alignment is missing.<br> " + _uf + " block(s) can't be approved because of unresolved flag(s).<br> In the meantime, you can approve " + _qa + " block(s) and continue editing. <br>Approve qualified block(s)? ";
-        }
+        }*/
         // 3.2.1
-        else if ( _qa <= 0 && _am > 0 && _uf == 0 ) {
+        else if ( _qa <= 0 && _am > 0) {
           title = 'Unable to Approve all Blocks';
           text = "" + _am + " block(s) can't be approved because audio alignment is missing. ";
           buttons[0].title = 'Ok';
           buttons.pop();
         }
-        // 3.2.2
+/*        // 3.2.2
         else if ( _qa <= 0 && _am == 0 && _uf > 0 ) {
           title = 'Unable to Approve all Blocks';
           text = "" + _uf + " block(s) can't be approved because of unresolved flag(s). ";
@@ -509,7 +509,7 @@
           +  _uf + " block(s) can't be approved because of unresolved flag(s). ";
           buttons[0].title = 'Ok';
           buttons.pop();
-        }
+        }*/
       
         this.$root.$emit('show-modal', {
           title: title,
