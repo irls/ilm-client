@@ -2429,7 +2429,7 @@ Revert to original block audio?`,
                 }
               }
               if ($('[id="resize-selection-left"]').css('display') === 'none' && $('.playlist-overlay:hover').length === 0) {
-                this.cursorPosition = this.selection.start;
+                this.cursorPosition = typeof this.selection.start === 'number' && !isNaN(this.selection.start) ? this.selection.start : false;
                 this._showSelectionBorders();
               }
             })

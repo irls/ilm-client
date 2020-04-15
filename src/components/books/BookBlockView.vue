@@ -233,6 +233,7 @@
               :delFlagPart="delFlagPart"
               :isCompleted="isCompleted"
               :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
+              :addToQueueBlockAudioEdit="addToQueueBlockAudioEdit"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -2194,35 +2195,6 @@ Save audio changes and realign the Block?`,
 
       assembleBlockAudioEdit: function(footnoteIdx = null, realign = false, preparedData = false) {// to save changes from audio editor
         this.$root.$emit('closeFlagPopup', true);
-        if (this.isChanged && preparedData === false) {
-          this.$root.$emit('show-modal', {
-            title: 'Unsaved Changes',
-            text: `Block text has been modified and not saved.<br>
-Save text changes and realign the Block?`,
-            buttons: [
-              {
-                title: 'Cancel',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                },
-                class: ['btn btn-default']
-              },
-              {
-                title: 'Save & Realign',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                  return this.assembleBlockAudioEdit(footnoteIdx, false, {content: this.clearBlockContent()})
-                    .then(() => {
-                      return this.assembleBlockProxy(false, true, [], false);
-                    });
-                },
-                class: ['btn btn-primary']
-              }
-            ],
-            class: ['align-modal']
-          });
-          return Promise.resolve();
-        }
         let manual_boundaries = [];
         if (this.footnoteIdx) {
           if (this.audioEditFootnote && this.audioEditFootnote.footnote) {
@@ -2327,6 +2299,59 @@ Save text changes and realign the Block?`,
           return BPromise.reject();
         }
         //this.isAudioChanged = false;
+      },
+      addToQueueBlockAudioEdit(footnoteIdx = null, realign = false) {
+        
+        if (this.isChanged) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block text has been modified and not saved.<br>
+Save text changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  /*return this.assembleBlockAudioEdit(footnoteIdx, false, {content: this.clearBlockContent()})
+                    .then(() => {
+                      return this.assembleBlockProxy(false, true, [], false);
+                    });*/
+                  //console.log('ADD TO QUEUE');
+                  this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+                  let time = Date.now();
+                  this.audioTasksQueue.queue.push({
+                    type: 'save-audio-then-block',
+                    options: [footnoteIdx, realign],
+                    time: time
+                  });
+                  this.audioTasksQueue.time = time;
+                  this.audioTasksQueue.log.push(time);
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return Promise.resolve();
+        } else {
+          this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+          let time = Date.now();
+          this.audioTasksQueue.queue.push({
+            type: 'save-audio',
+            options: [footnoteIdx, realign],
+            time: time
+          });
+          this.audioTasksQueue.time = time;
+          this.audioTasksQueue.log.push(time);
+          return Promise.resolve();
+        }
       },
       reworkBlock: function(ev) {
         if (!this.isNeedWorkDisabled) {
@@ -2617,6 +2642,7 @@ Save text changes and realign the Block?`,
               this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
               this.$root.$emit('for-audioeditor:set-process-run', false);
             }
+            this.$forceUpdate();
             return Promise.resolve(response_params);
           })
           .catch(err => {
@@ -2769,6 +2795,7 @@ Save text changes and realign the Block?`,
               this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
               this.$root.$emit('for-audioeditor:set-process-run', false);
             }
+            this.$forceUpdate();
             return Promise.resolve(response_params);
           })
           .catch(err => {
@@ -3646,7 +3673,7 @@ Save text changes and realign the Block?`,
         }
       },
       evFromAudioeditorSave (blockId) {
-        if (blockId == this.check_id) {
+        if (blockId == this.check_id && this.footnoteIdx) {
           this.audStop();
           this.assembleBlockAudioEdit(this.footnoteIdx, false, false);
           //this.flushChanges();
@@ -4455,6 +4482,7 @@ Save text changes and realign the Block?`,
               this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
               //this.$root.$emit('for-audioeditor:set-process-run', false);
             }
+            this.$forceUpdate();
             return Promise.resolve(response_params);
           })
           .catch(err => {

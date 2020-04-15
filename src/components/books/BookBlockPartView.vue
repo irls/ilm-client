@@ -386,7 +386,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'eraseAudio', 'audDeletePartSilent', 'insertSilenceSilent', 'eraseAudioSilent'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'eraseAudio', 'audDeletePartSilent', 'insertSilenceSilent', 'eraseAudioSilent', 'addToQueueBlockAudioEdit'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -2637,11 +2637,11 @@ Save audio changes and realign the Block?`,
             //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false), {'m4a': this.block.getPartAudiosrc(this.blockPartIdx, 'm4a', false)});
             //this.block.setContent(this.blockContent());
             //this.block.setContent(this.blockContent());
-            return this.assembleBlockAudioEdit(null, false)
+            return this.addToQueueBlockAudioEdit(null, false)
               .then(() => {
                 //this.isAudioChanged = false;
-                this.blockAudio.map = this.blockContent();
-                this.blockAudio.src = this.blockAudiosrc('m4a');
+                //this.blockAudio.map = this.blockContent();
+                //this.blockAudio.src = this.blockAudiosrc('m4a');
                 //this.showPinnedInText();
                 return Promise.resolve();
               });
@@ -2818,35 +2818,46 @@ Save audio changes and realign the Block?`,
             this.audioTasksQueue.running = record;
             switch (record.type) {
               case 'cut':
+                if (this.isSplittedBlock) {
+                  this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+                } else {
+                  this.block.setContent(this.clearBlockContent());
+                }
                 task = this.audDeletePartSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
                 break;
               case 'insert_silence':
+                if (this.isSplittedBlock) {
+                  this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+                } else {
+                  console.log(`HAVE CONTENT: ${this.clearBlockContent()}\n${this.block.content}`);
+                  this.block.setContent(this.clearBlockContent());
+                }
                 task = this.insertSilenceSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
                 break;
               case 'erase':
                 task = this.eraseAudioSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
                 break;
-              case 'save':
-                this.audStop();
-                if (!this.isSplittedBlock) {
-                  //this.block.setAudiosrc(this.blockAudiosrc(null, false));
-                  //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false), {'m4a': this.block.getPartAudiosrc(this.blockPartIdx, 'm4a', false)});
-                  //this.block.setContent(this.blockContent());
-                  //this.block.setContent(this.blockContent());
-                  return this.assembleBlockAudioEdit(null, false)
+              case 'save-audio':
+                task = this.$parent.assembleBlockAudioEdit(...record.options, false);
+                break;
+              case 'save-audio-then-block':
+                task = new Promise((resolve, reject) => {
+                  return this.$parent.assembleBlockAudioEdit(...record.options.concat([{content: this.clearBlockContent()}]))
                     .then(() => {
-                      this.isAudioChanged = false;
-                      this.blockAudio.map = this.blockContent();
-                      this.blockAudio.src = this.blockAudiosrc('m4a');
-                      //this.showPinnedInText();
-                      return Promise.resolve();
+                      return this.$parent.assembleBlockProxy(false, true, [], false);
+                    })
+                    .then(() => {
+                      return resolve();
+                    })
+                    .catch(err => {
+                      console.log(err);
+                      return reject(err);
                     });
-                } else {
-                  this.assembleBlockPartAudioEdit(false);
-                }
+                });
                 break;
               default:
                 task = Promise.resolve();
+                console.log('Not implemented type', record.type);
                 break;
             }
             this.audStop();
