@@ -3096,7 +3096,7 @@ Save text changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  let preparedData = {content: this.clearBlockContent()}
+                  let preparedData = {content: this.clearBlockContent(), audiosrc: this.blockAudiosrc(null, false)}
                   return this.assembleBlockProxy(false, false, false)
                     .then(() => {
                       return this.assembleBlockPartAudioEdit(true, preparedData);

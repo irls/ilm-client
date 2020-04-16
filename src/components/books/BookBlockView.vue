@@ -1767,7 +1767,7 @@ Save audio changes and realign the Block?`,
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
-          return this.assembleBlockNarrate(true, false, update_fields);
+          return this.assembleBlockNarrate(true, realign, update_fields);
         }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
@@ -2133,10 +2133,26 @@ Save audio changes and realign the Block?`,
           upd_block.bookid = this.block.bookid;
         }
         this.isSaving = true;
+        if (this.isAudioEditing) {
+          this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+        }
         let refreshTasks = this.isCompleted;
         return this.putBlockNarrate([upd_block, realign])
           .then(() => {
-            this.isSaving = false;
+            if (realign) {
+              this.getBookAlign()
+                .then(() => {
+                  this.isSaving = false;
+                  if (this.isLocked && this.isAudioEditing) {
+                    this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+                  }
+                });
+            } else {
+              this.isSaving = false;
+              if (this.isAudioEditing) {
+                this.$root.$emit('for-audioeditor:set-process-run', false);
+              }
+            }
             this.isChanged = false;
             if (refreshTasks) {
               this.getCurrentJobInfo();
