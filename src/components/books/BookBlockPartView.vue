@@ -399,6 +399,9 @@ export default {
         if (this.isUpdating) {
           return true;
         }
+        if (this.audioTasksQueue.blockId === this.check_id && this.audioTasksQueue.running) {
+          return true;
+        }
         return this.block ? this.isBlockLocked(this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null) : false;
       },
       hasLock: {
@@ -417,6 +420,9 @@ export default {
           }
           if (this.isUpdating) {
             return 'editing-audio';
+          }
+          if (this.audioTasksQueue.blockId === this.check_id && this.audioTasksQueue.running) {
+            return 'audio-positioning';
           }
           let lockType = this.blockLockType(this.block.blockid);
           switch (lockType) {
@@ -925,7 +931,8 @@ export default {
         'checkError',
         'getBookAlign',
         'recountVoicedBlocks',
-        'revertAudio'
+        'revertAudio',
+        'addAudioTask'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -2473,6 +2480,8 @@ Save audio changes and realign the Block?`,
       evFromAudioeditorClosed(blockId) {
 
         if (blockId === this.check_id) {
+          this.audioTasksQueue.running = null;
+          this.audioTasksQueue.blockId = null;
           this.isAudioEditing = false;
           if (this.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false, this.isSplittedBlock ? this.blockPartIdx : null)
@@ -2596,15 +2605,15 @@ Save audio changes and realign the Block?`,
             //this.block.setAudiosrc(this.blockAudiosrc(null, false));
             //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
             //this.block.setContent(this.blockAudio.map);
-            return this.assembleBlockAudioEdit(null, true)
+            return this.addToQueueBlockAudioEdit(null, true)
               .then(() => {
                 //this.isAudioChanged = false;
-                this.blockAudio.map = this.blockContent();
-                this.blockAudio.src = this.block.getAudiosrc('m4a');
+                //this.blockAudio.map = this.blockContent();
+                //this.blockAudio.src = this.block.getAudiosrc('m4a');
                 return Promise.resolve();
               });
           } else {
-            this.assembleBlockPartAudioEdit(true);
+            this.addToQueueBlockPartAudioEdit(true);
           }
         }
       },
@@ -2646,7 +2655,7 @@ Save audio changes and realign the Block?`,
                 return Promise.resolve();
               });
           } else {
-            this.assembleBlockPartAudioEdit(false);
+            this.addToQueueBlockPartAudioEdit(false);
           }
         }
       },
@@ -2829,7 +2838,6 @@ Save audio changes and realign the Block?`,
                 if (this.isSplittedBlock) {
                   this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
                 } else {
-                  console.log(`HAVE CONTENT: ${this.clearBlockContent()}\n${this.block.content}`);
                   this.block.setContent(this.clearBlockContent());
                 }
                 task = this.insertSilenceSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
@@ -2854,6 +2862,25 @@ Save audio changes and realign the Block?`,
                       return reject(err);
                     });
                 });
+                break;
+              case 'save-part-then-audio':
+                task = new Promise((resolve, reject) => {
+                  //let preparedData = {content: this.clearBlockContent()}
+                  return this.assembleBlockProxy(false, false, false)
+                    .then(() => {
+                      return this.assembleBlockPartAudioEdit(...record.options.concat({content: this.clearBlockContent()}));
+                    })
+                    .then(() => {
+                      return resolve();
+                    })
+                    .catch(err => {
+                      console.log(err);
+                      return reject(err);
+                    });
+                });
+                break;
+              case 'save-part-audio':
+                task = this.assembleBlockPartAudioEdit(...record.options);
                 break;
               default:
                 task = Promise.resolve();
@@ -3207,37 +3234,7 @@ Save audio changes and realign the Block?`,
       },
       assembleBlockPartAudioEdit(realign, preparedData = false) {
         
-        this.$root.$emit('closeFlagPopup', true);
-        if (this.isChanged && preparedData === false) {
-          this.$root.$emit('show-modal', {
-            title: 'Unsaved Changes',
-            text: `Block text has been modified and not saved.<br>
-Save text changes and realign the Block?`,
-            buttons: [
-              {
-                title: 'Cancel',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                },
-                class: ['btn btn-default']
-              },
-              {
-                title: 'Save & Realign',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                  let preparedData = {content: this.clearBlockContent()}
-                  return this.assembleBlockProxy(false, false, false)
-                    .then(() => {
-                      return this.assembleBlockPartAudioEdit(true, preparedData);
-                    });
-                },
-                class: ['btn btn-primary']
-              }
-            ],
-            class: ['align-modal']
-          });
-          return Promise.resolve();
-        }
+        
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/audio_edit/part/' + this.blockPartIdx;
         let api = this.$store.state.auth.getHttp();
         let data = {
@@ -3298,6 +3295,44 @@ Save text changes and realign the Block?`,
             this.checkError(err);
             BPromise.reject(err)
           });
+      },
+      addToQueueBlockPartAudioEdit(realign = false) {
+        this.$root.$emit('closeFlagPopup', true);
+        if (this.isChanged) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block text has been modified and not saved.<br>
+Save text changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  //let preparedData = {content: this.clearBlockContent()}
+                  //return this.assembleBlockProxy(false, false, false)
+                    //.then(() => {
+                      //return this.assembleBlockPartAudioEdit(true, preparedData);
+                    //});
+                  this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+                  this.addAudioTask(['save-part-then-audio', [true]]);
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return Promise.resolve();
+        } else {
+          this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+          this.addAudioTask(['save-part-audio', [realign]]);
+        }
       },
 
       blockAudiosrc(ver = null, full = true) {

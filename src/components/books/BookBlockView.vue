@@ -647,6 +647,9 @@ export default {
         if (this.isUpdating) {
           return true;
         }
+        if (this.audioTasksQueue.blockId === this.block.blockid && this.audioTasksQueue.running) {
+          return true;
+        }
         return this.hasLock;
       },
       hasLock: {
@@ -661,6 +664,9 @@ export default {
           }
           if (this.isUpdating) {
             return 'editing-audio';
+          }
+          if (this.audioTasksQueue.blockId === this.block.blockid && this.audioTasksQueue.running) {
+            return 'audio-positioning';
           }
           let lockType = this.blockLockType(this.block.blockid);
           switch (lockType) {
@@ -1244,7 +1250,8 @@ export default {
         'checkError',
         'getBookAlign',
         'updateBlockPart',
-        'recountVoicedBlocks'
+        'recountVoicedBlocks',
+        'addAudioTask'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -2325,14 +2332,7 @@ Save text changes and realign the Block?`,
                     });*/
                   //console.log('ADD TO QUEUE');
                   this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
-                  let time = Date.now();
-                  this.audioTasksQueue.queue.push({
-                    type: 'save-audio-then-block',
-                    options: [footnoteIdx, realign],
-                    time: time
-                  });
-                  this.audioTasksQueue.time = time;
-                  this.audioTasksQueue.log.push(time);
+                  this.addAudioTask(['save-audio-then-block', [footnoteIdx, realign]]);
                 },
                 class: ['btn btn-primary']
               }
@@ -2342,14 +2342,7 @@ Save text changes and realign the Block?`,
           return Promise.resolve();
         } else {
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
-          let time = Date.now();
-          this.audioTasksQueue.queue.push({
-            type: 'save-audio',
-            options: [footnoteIdx, realign],
-            time: time
-          });
-          this.audioTasksQueue.time = time;
-          this.audioTasksQueue.log.push(time);
+          this.addAudioTask(['save-audio', [footnoteIdx, realign]]);
           return Promise.resolve();
         }
       },
@@ -2769,6 +2762,21 @@ Save text changes and realign the Block?`,
             let response_params = [];
             if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
               if (partIdx !== null) {
+                /*let response_map = [];
+                let mapRegExp = new RegExp('<w.*?data-map="([^"]*)"[^>]*?>.*?<\/w>', 'img');
+                let match;
+                while((match = mapRegExp.exec(response.data.content))) {
+                  response_map.push(match[1]);
+                }
+                this.$refs.blocks[partIdx].$refs.blockContent.querySelectorAll('[data-map]').forEach(el => {
+                  if (el.getAttribute('data-map').length > 0) {
+                    let map = response_map.shift();
+                    if (map) {
+                      el.setAttribute('data-map', map);
+                    }
+                  }
+                });
+                this.block.setPartContent(partIdx, this.$refs.blocks[partIdx].$refs.blockContent.innerHTML);*/
                 this.block.setPartContent(partIdx, response.data.content);
                 this.block.setPartAudiosrc(partIdx, response.data.audiosrc, response.data.audiosrc_ver);
                 this.block.setPartManualBoundaries(partIdx, response.data.manual_boundaries || []);
@@ -2776,6 +2784,22 @@ Save text changes and realign the Block?`,
                 part._id = check_id;
                 response_params = [this.block.getPartAudiosrc(partIdx, 'm4a'), this.block.getPartContent(partIdx), true, part];
               } else if (footnoteIdx === null) {
+                /*let response_map = [];
+                let mapRegExp = new RegExp('<w.*?data-map="([^"]*)"[^>]*?>.*?<\/w>', 'img');
+                let match;
+                while((match = mapRegExp.exec(response.data.content))) {
+                  response_map.push(match[1]);
+                }//;
+                this.$refs.blocks[0].$refs.blockContent.querySelectorAll('[data-map]').forEach(el => {
+                  if (el.getAttribute('data-map').length > 0) {
+                    let map = response_map.shift();
+                    if (map) {
+                      el.setAttribute('data-map', map);
+                    }
+                  }
+                });
+                this.blockAudio.map = this.$refs.blocks[0].$refs.blockContent.innerHTML;
+                this.block.setContent(this.$refs.blocks[0].$refs.blockContent.innerHTML);*/
                 this.blockAudio.map = response.data.content;
                 this.block.setContent(response.data.content);
                 this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);

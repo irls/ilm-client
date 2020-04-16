@@ -1218,14 +1218,7 @@
           this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
         },
         addTaskQueue(type, options) {
-          let time = Date.now();
-          this.audioTasksQueue.queue.push({
-            type: type,
-            options: options,
-            time: time
-          });
-          this.audioTasksQueue.time = time;
-          this.audioTasksQueue.log.push(time);
+          this.addAudioTask([type, options]);
           this._addHistory(this.content, this.audiofile, this.block && this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
           //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
         },
@@ -2168,7 +2161,8 @@ Revert to original block audio?`,
                 this.cursorPosition = 0;
               });
           }
-        }
+        },
+        ...mapActions(['addAudioTask'])
 
       },
       computed: {

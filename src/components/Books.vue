@@ -570,6 +570,9 @@ export default {
   &.preloader-align {
     background-image: url(/static/preloader-align.gif);
   }
+  &.preloader-audio-positioning {
+    background-image: url(/static/preloader-audio-positioning.gif);
+  }
 }
 
 </style>
