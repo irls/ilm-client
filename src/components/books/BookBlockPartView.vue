@@ -375,8 +375,7 @@ export default {
         start: Number,
         end: Number
       },
-      isSaving: false,
-      audioQueueRunning: false
+      isSaving: false
     }
   },
   components: {
@@ -932,7 +931,9 @@ export default {
         'getBookAlign',
         'recountVoicedBlocks',
         'revertAudio',
-        'addAudioTask'
+        'addAudioTask',
+        'clearAudioTasks',
+        'shiftAudioTask'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -2480,8 +2481,7 @@ Save audio changes and realign the Block?`,
       evFromAudioeditorClosed(blockId) {
 
         if (blockId === this.check_id) {
-          this.audioTasksQueue.running = null;
-          this.audioTasksQueue.blockId = null;
+          this.clearAudioTasks();
           this.isAudioEditing = false;
           if (this.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false, this.isSplittedBlock ? this.blockPartIdx : null)
@@ -2820,8 +2820,7 @@ Save audio changes and realign the Block?`,
       },
       evFromAudioEditorTasksQueuePush(blockId, queue) {
         if (blockId === this.check_id) {
-          if (!this.audioQueueRunning && this.audioTasksQueue.queue.length > 0) {
-            this.audioQueueRunning = true;
+          if (!this.audioTasksQueue.running && this.audioTasksQueue.queue.length > 0) {
             let task = null;
             let record = this.audioTasksQueue.queue[0];
             this.audioTasksQueue.running = record;
@@ -2891,22 +2890,15 @@ Save audio changes and realign the Block?`,
             this.isAudioChanged = true;
             return task
               .then((response) => {
-                this.audioQueueRunning = false;
                 this.audioTasksQueue.running = null;
                 if (Array.isArray(response)) {
                   this.$root.$emit('for-audioeditor:load-silent', record, ...response);
                 }
                 this.blockAudio.map = this.blockContent();
                 this.blockAudio.src = this.blockAudiosrc('m4a');
-                this.audioTasksQueue.queue.shift();
-                if (this.audioTasksQueue.queue.length > 0) {
-                  this.audioTasksQueue.time = this.audioTasksQueue.queue[this.audioTasksQueue.queue.length - 1].time;
-                } else {
-                  this.audioTasksQueue.time = null;
-                }
+                this.shiftAudioTask();
               })
               .catch(err => {
-                this.audioQueueRunning = false;
                 this.audioTasksQueue.running = null;
               });
           }

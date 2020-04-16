@@ -3156,6 +3156,21 @@ export const store = new Vuex.Store({
       } else {
         state.audioTasksQueue.time = null;
       }
+    },
+    clearAudioTasks({state}) {
+      state.audioTasksQueue.queue = [];
+      state.audioTasksQueue.log = [];
+      state.audioTasksQueue.time = null;
+      //state.audioTasksQueue.running = null;
+      state.audioTasksQueue.blockId = null;
+    },
+    shiftAudioTask({state}) {
+      state.audioTasksQueue.queue.shift();
+      if (state.audioTasksQueue.queue.length > 0) {
+        state.audioTasksQueue.time = state.audioTasksQueue.queue[state.audioTasksQueue.queue.length - 1].time;
+      } else {
+        state.audioTasksQueue.time = null;
+      }
     }
   }
 })

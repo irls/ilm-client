@@ -1223,12 +1223,7 @@
           //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
         },
         popTaskQueue() {
-          this.audioTasksQueue.queue.pop();
-          if (this.audioTasksQueue.queue.length > 0) {
-            this.audioTasksQueue.time = this.audioTasksQueue.queue[this.audioTasksQueue.queue.length - 1].time;
-          } else {
-            this.audioTasksQueue.time = null;
-          }
+          this.popAudioTask();
         },
         erase() {
           let pause;
@@ -2162,7 +2157,7 @@ Revert to original block audio?`,
               });
           }
         },
-        ...mapActions(['addAudioTask'])
+        ...mapActions(['addAudioTask', 'popAudioTask'])
 
       },
       computed: {
