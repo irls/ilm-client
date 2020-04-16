@@ -1839,6 +1839,9 @@ export const store = new Vuex.Store({
       if (typeof block.parts !== 'undefined' && Array.isArray(block.parts) && block.parts.length > 1) {
         update.block.parts = block.parts;
       }
+      if (Array.isArray(block.manual_boundaries)) {
+        update.block.manual_boundaries = block.manual_boundaries;
+      }
       return axios.put(url, update)
         .then((response) => {
           return dispatch('getBookAlign')
