@@ -364,7 +364,6 @@ export default {
       recordStartCounter: 0,
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
-      isAudioEditing: false,
       voiceworkUpdating: false,
       changes: [],
       deletePending: false,
@@ -804,6 +803,12 @@ export default {
               return this.allowEditing && this.mode === 'proofread';
           }
       },
+      isAudioEditing: {
+        get() {
+          return this.check_id && this.audioTasksQueue.blockId === this.check_id;
+        },
+        cache: false
+      }
   },
   mounted: function() {
       //this.initEditor();
@@ -830,12 +835,6 @@ export default {
       if (this.block.footnoteIdx) {
         this.footnoteIdx = this.block.footnoteIdx;
         delete this.block.footnoteIdx;
-      }
-      if (this.block.isAudioEditing) {
-        this.isAudioEditing = this.block.isAudioEditing;
-        this.audioEditorEventsOff();
-        this.audioEditorEventsOn();
-        delete this.block.isAudioEditing;
       }
       //console.log('mounted isChecked', this.blockO);
       //this.isChecked = this.blockO.checked;
@@ -874,9 +873,6 @@ export default {
     }
     if (this.footnoteIdx) {
       this.block.footnoteIdx = this.footnoteIdx;
-    }
-    if (this.isAudioEditing) {
-      this.block.isAudioEditing = this.isAudioEditing;
     }
     if (this.block && this.isChanged && Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
         this.block.parts[this.blockPartIdx].changes = this.changes;
@@ -2454,12 +2450,6 @@ Save audio changes and realign the Block?`,
         }
         //$('.table-body.-content').removeClass('editing');
         //$('#' + this.block._id + ' .table-body.-content').addClass('editing');
-        if (!footnoteIdx) {
-          this.isAudioEditing = true;
-          //if (this.isAudioChanged) {
-            //this.discardAudio();
-          //}
-        }
         this.footnoteIdx = footnoteIdx;
         this.check_id = this.generateAudioCheckId();
         this.audioEditorEventsOff();
@@ -2482,7 +2472,6 @@ Save audio changes and realign the Block?`,
 
         if (blockId === this.check_id) {
           this.clearAudioTasks();
-          this.isAudioEditing = false;
           if (this.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false, this.isSplittedBlock ? this.blockPartIdx : null)
               .then(() => {
@@ -2509,10 +2498,14 @@ Save audio changes and realign the Block?`,
       evFromAudioeditorBlockLoaded(blockId) {
         if (blockId == this.check_id) {
           $('nav.fixed-bottom').removeClass('hidden');
+          let lockedType = false;
           if (this.isLocked) {
-            this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+            lockedType = this.lockedType;
           } else if (this.$parent.isLocked) {
-            this.$root.$emit('for-audioeditor:set-process-run', true, this.$parent.lockedType);
+            lockedType = this.$parent.lockedType;
+          }
+          if (lockedType && lockedType !== 'audio-positioning') {
+            this.$root.$emit('for-audioeditor:set-process-run', true, lockedType);
           }
         }
       },
@@ -2864,10 +2857,10 @@ Save audio changes and realign the Block?`,
                 break;
               case 'save-part-then-audio':
                 task = new Promise((resolve, reject) => {
-                  //let preparedData = {content: this.clearBlockContent()}
+                  let preparedData = {content: this.clearBlockContent(), audiosrc: this.blockAudiosrc(null, false)};
                   return this.assembleBlockProxy(false, false, false)
                     .then(() => {
-                      return this.assembleBlockPartAudioEdit(...record.options.concat({content: this.clearBlockContent()}));
+                      return this.assembleBlockPartAudioEdit(...record.options.concat(preparedData));
                     })
                     .then(() => {
                       return resolve();
@@ -3587,13 +3580,6 @@ Save text changes and realign the Block?`,
           }
         }
       }*/
-      'isAudioEditing':  {
-        handler(val) {
-          if (!this.isSplittedBlock) {
-            this.$emit('isAudioEditing', val)
-          }
-        }
-      },
       'block.language' : {
         handler(val) {
           this.destroyEditor();

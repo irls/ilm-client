@@ -246,7 +246,6 @@
               @reopenFlagPart="onReopenFlagPart"
               @hideFlagPart="onHideFlagPart"
               @unHideFlagPart="onUnHideFlagPart"
-              @isAudioEditing="onIsAudioEditing"
               @isAudioChanged="onIsAudioChanged"
           /></BookBlockPartView>
             <div v-if="blockParts.length === 1" class="hidden" ref="blockContent" v-html="blockParts[0].content"></div>
@@ -375,9 +374,6 @@
                     </template>
                   </div>
                   <div class="table-cell -audio -right">
-                    <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && ((_is('editor', true) || adminOrLibrarian) && tc_isShowEdit(block._id))"> <!--&& !isAudioChanged"-->
-                      <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor(footnote, ftnIdx, $event)" v-if="allowEditing"></i>
-                    </template>
                     <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
                         <template v-if="!FtnAudio.isStarted || FtnAudio.isStarted!==`${block._id}_${ftnIdx}`">
                           <i class="fa fa-play-circle-o"
@@ -615,7 +611,6 @@ export default {
       recordStartCounter: 0,
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
-      isAudioEditing: false,
       voiceworkUpdating: false,
       changes: [],
       deletePending: false,
@@ -1088,6 +1083,12 @@ export default {
           return blockFlag;
         },
         cache: false
+      },
+      isAudioEditing: {
+        get() {
+          return this.audioTasksQueue.blockId === this.block.blockid;
+        },
+        cache: false
       }
   },
   mounted: function() {
@@ -1132,12 +1133,6 @@ export default {
       if (this.block.footnoteIdx) {
         this.footnoteIdx = this.block.footnoteIdx;
         delete this.block.footnoteIdx;
-      }
-      if (this.block.isAudioEditing) {
-        this.isAudioEditing = this.block.isAudioEditing;
-        this.audioEditorEventsOff();
-        this.audioEditorEventsOn();
-        delete this.block.isAudioEditing;
       }
       //console.log('mounted isChecked', this.blockO);
       //this.isChecked = this.blockO.checked;
@@ -1190,9 +1185,6 @@ export default {
     }
     if (this.footnoteIdx) {
       this.block.footnoteIdx = this.footnoteIdx;
-    }
-    if (this.isAudioEditing) {
-      this.block.isAudioEditing = this.isAudioEditing;
     }
     if (this.block && this.isChanged) {
         this.block.changes = this.changes;
@@ -1593,7 +1585,6 @@ export default {
           if (this._isDestroyed) {
             this.block.isChanged = false;
             this.block.isIllustrationChanged = false;
-            this.block.isAudioEditing = false;
             this.block.changes = [];
             return Promise.resolve();
           }
@@ -3546,13 +3537,11 @@ Save text changes and realign the Block?`,
         //$('nav.fixed-bottom').removeClass('hidden');
         this.audioEditFootnote.footnote = footnote;
         this.showAudioEditor(ftnIdx, footnote);
-        this.isAudioEditing = true;
       },
       showAudioEditor(footnoteIdx = null, footnote = null) {
         //$('.table-body.-content').removeClass('editing');
         //$('#' + this.block._id + ' .table-body.-content').addClass('editing');
         if (!footnoteIdx) {
-          this.isAudioEditing = true;
           if (this.isAudioChanged) {
             this.discardAudio();
           }
@@ -3575,7 +3564,6 @@ Save text changes and realign the Block?`,
       evFromAudioeditorClosed(blockId) {
 
         if (blockId === this.block._id || blockId === this.block._id + '_' + this.footnoteIdx) {
-          this.isAudioEditing = false;
           if (this.isAudioChanged || this.audioEditFootnote.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false);
           }
@@ -4310,9 +4298,6 @@ Save text changes and realign the Block?`,
             ref.audPlay();
           }
         }
-      },
-      onIsAudioEditing(val) {
-        this.isAudioEditing = val;
       },
       onIsAudioChanged(val) {
         this.isAudioChanged = val;
