@@ -1080,8 +1080,8 @@
           let new_list        = new Float32Array( parseInt( first_list_index ));
           let second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
           let combined        = new Float32Array( new_list.length + range.length + second_list.length );
-          console.log(new_list.length + second_list.length + range.length, first_list_index, second_list_index, combined.length);
-          console.log(new_list.length, range.length, second_list.length);
+          //console.log(new_list.length + second_list.length + range.length, first_list_index, second_list_index, combined.length);
+          //console.log(new_list.length, range.length, second_list.length);
           
           for (let i = 0; i < original_buffer.numberOfChannels; ++i ) {
 
@@ -1151,10 +1151,106 @@
             } else if (al.start >= this.selection.end) {// word after selection
               al.start-= diff;
               al.end-= diff;
+            } else if (al.start >= this.selection.start && al.end <= this.selection.end) {// cut word
+              al.start = this.selection.start;
+              al.end = this.selection.start;
             } else if (al.end > this.selection.start && al.end < this.selection.end) {// cut end of the word
               al.end = this.selection.start;
             } else if (al.start > this.selection.start && al.start < this.selection.end) {// cut end of the word
               al.start = this.selection.start;
+              al.end-= diff;
+            }
+          });
+          /*if (pos && pos.length == 2) {
+                let begin = parseInt(pos[0]);
+                let end = parseInt(pos[1]);
+                if (end < 0) {
+                  end = 0;
+                }
+                let mb_index = manual_boundaries.indexOf(begin);
+                //console.log(begin, end, $(item).text(), shift);
+                if (shift > 0) {
+                  if (end - shift > min) {
+                    begin+= shift;
+                    end-=shift;
+                    shift = 0;
+                    if (mb_index !== -1) {
+                      manual_boundaries.splice(mb_index, 1);
+                    }
+                    //console.log('SHIFT1', $(item).text(), shift)
+                  } else if (end > min && end - shift < min) {
+                    let delta = end - min;
+                    shift-=delta;
+                    begin+= delta;
+
+                    begin+= shift;
+                    end = min;
+                    if (mb_index !== -1) {
+                      manual_boundaries.splice(mb_index, 1);
+                    }
+                    //console.log('SHIFT2', $(item).text(), begin, end)
+                    //end+= shift;
+                  } else {
+                    begin+=shift;
+                    //console.log('SHIFT3', $(item).text(), shift)
+                    //end+=shift;
+                    //shift*=2;
+                    if (mb_index !== -1) {
+                      manual_boundaries.splice(mb_index, 1);
+                    }
+                  }
+                }
+                let dur = parseInt(end) || 0;
+                if (dur < min) {
+                  let delta = (min - dur);
+                  shift+= delta;
+                  end+=delta;
+                  //console.log('SHIFT4', $(item).text(), delta)
+                  //console.log('INCREASE', shift, end)
+                  //mapData[i].shift = delta;
+                }
+                //console.log(begin, end, $(this).text(), shift);
+                $(item).attr('data-map', begin + ',' + end);
+                lastMap = [begin, end];
+              }
+              if (shift > 0 && index === total - 1) {
+                addSilence = shift / 1000;
+              }
+            });*/
+          let shift = 0;
+          let min = 0.05;
+          this.audiosourceEditor.annotationList.annotations.forEach(al => {
+            let duration = al.end - al.start;
+            if (shift > 0) {
+              if (duration - shift > min) {
+                al.start+= shift;
+                //al.end-=shift;
+                shift = 0;
+                //if (mb_index !== -1) {
+                  //manual_boundaries.splice(mb_index, 1);
+                //}
+              } else if (duration > min && duration - shift < min) {
+                let delta = duration - min;
+                shift-=delta;
+                al.start+= delta;
+
+                al.start+= shift;
+                al.end = al.start + min;
+                //if (mb_index !== -1) {
+                  //manual_boundaries.splice(mb_index, 1);
+                //}
+              } else {
+                al.start+=shift;
+                al.end+=shift;
+                //if (mb_index !== -1) {
+                  //manual_boundaries.splice(mb_index, 1);
+                //}
+              }
+            }
+            if (al.end - al.start < min) {
+              let delta = (min - (al.end - al.start));
+              shift+= delta;
+              al.end+=delta;
             }
           });
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
@@ -1219,7 +1315,7 @@
         },
         addTaskQueue(type, options) {
           this.addAudioTask([type, options]);
-          this._addHistory(this.content, this.audiofile, this.block && this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
+          //this._addHistory(this.content, this.audiofile, this.block && this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
           //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
         },
         popTaskQueue() {
@@ -1265,7 +1361,7 @@
           //this.undoLocal();
           //return;
           if (this.mode === 'block') {
-            let make_event = this.audioTasksQueue.queue.length < 2;
+            let make_event = this.audioTasksQueue.queue.length === 0;
             this.popTaskQueue();
             this.audioTasksQueue.log.pop();
             let record = this._popHistoryLocal(!make_event);

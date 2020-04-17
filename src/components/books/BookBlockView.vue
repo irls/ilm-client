@@ -5728,6 +5728,9 @@ Save text changes and realign the Block?`,
     background-position: center;
     background-color: #8080807d;
     z-index: 999;
+    &.preloader-audio-positioning {
+      z-index: 890;/* this one not covering audio editor */
+    }
   }
   .recording-hover-controls {
     position: absolute;
