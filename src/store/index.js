@@ -202,6 +202,13 @@ export const store = new Vuex.Store({
       'engineer': [],
       'reader': [],
       'narrator': []
+    },
+    audioTasksQueue: {
+      time: null,
+      queue: [],
+      running: null,
+      log: [],
+      blockId: null
     }
   },
 
@@ -416,6 +423,9 @@ export const store = new Vuex.Store({
     },
     taskUsers: state => {
       return state.taskUsers;
+    },
+    audioTasksQueue: state => {
+      return state.audioTasksQueue;
     }
   },
 
@@ -3160,6 +3170,40 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    addAudioTask({state}, [type, options]) {
+      let time = Date.now();
+      state.audioTasksQueue.queue.push({
+        type: type,
+        options: options,
+        time: time
+      });
+      state.audioTasksQueue.time = time;
+      state.audioTasksQueue.log.push(time);
+      //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
+    },
+    popAudioTask({state}) {
+      state.audioTasksQueue.queue.pop();
+      if (state.audioTasksQueue.queue.length > 0) {
+        state.audioTasksQueue.time = state.audioTasksQueue.queue[state.audioTasksQueue.queue.length - 1].time;
+      } else {
+        state.audioTasksQueue.time = null;
+      }
+    },
+    clearAudioTasks({state}) {
+      state.audioTasksQueue.queue = [];
+      state.audioTasksQueue.log = [];
+      state.audioTasksQueue.time = null;
+      //state.audioTasksQueue.running = null;
+      state.audioTasksQueue.blockId = null;
+    },
+    shiftAudioTask({state}) {
+      state.audioTasksQueue.queue.shift();
+      if (state.audioTasksQueue.queue.length > 0) {
+        state.audioTasksQueue.time = state.audioTasksQueue.queue[state.audioTasksQueue.queue.length - 1].time;
+      } else {
+        state.audioTasksQueue.time = null;
+      }
     }
   }
 })
