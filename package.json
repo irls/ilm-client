@@ -62,8 +62,7 @@
     "vuedraggable": "^2.16.0",
     "vuex": "^2.2.1",
     "vuex-router-sync": "^4.1.2",
-    "waveform-playlist": "^3.0.4",
-    "wavesurfer.js": "^3.3.1"
+    "waveform-playlist": "^3.0.4"
   },
   "devDependencies": {
     "autoprefixer": "^6.7.2",

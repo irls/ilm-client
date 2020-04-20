@@ -384,7 +384,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'eraseAudio', 'audDeletePartSilent', 'insertSilenceSilent', 'eraseAudioSilent', 'addToQueueBlockAudioEdit'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -2819,23 +2819,23 @@ Save audio changes and realign the Block?`,
             this.audioTasksQueue.running = record;
             switch (record.type) {
               case 'cut':
-                if (this.isSplittedBlock) {
+                /*if (this.isSplittedBlock) {
                   this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
                 } else {
                   this.block.setContent(this.clearBlockContent());
-                }
-                task = this.audDeletePartSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
+                }*/
+                task = this.audDeletePartSilent(...record.options.concat([this.check_id]));
                 break;
               case 'insert_silence':
-                if (this.isSplittedBlock) {
+                /*if (this.isSplittedBlock) {
                   this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
                 } else {
                   this.block.setContent(this.clearBlockContent());
-                }
-                task = this.insertSilenceSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
+                }*/
+                task = this.insertSilenceSilent(...record.options.concat([this.check_id]));
                 break;
               case 'erase':
-                task = this.eraseAudioSilent(...record.options.concat([null, this.blockPartIdx, this.check_id]));
+                task = this.eraseAudioSilent(...record.options.concat([this.check_id]));
                 break;
               case 'save-audio':
                 task = this.$parent.assembleBlockAudioEdit(...record.options, false);
@@ -2876,7 +2876,7 @@ Save audio changes and realign the Block?`,
                 break;
               default:
                 task = Promise.resolve();
-                console.log('Not implemented type', record.type);
+                console.log('Not implemented type', record.type, record);
                 break;
             }
             this.audStop();
@@ -3407,6 +3407,225 @@ Save text changes and realign the Block?`,
             //}
           });
         }
+      },
+      audDeletePartSilent(start, end, check_id = null) {
+        let part_idx = this.isSplittedBlock ? this.blockPartIdx : null;
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_remove';
+        let api = this.$store.state.auth.getHttp();
+        let formData = {
+          content: this.clearBlockContent()
+        };
+        let position = [start, end];
+        formData.position = position;
+        if (part_idx !== null) {
+          formData.modified = this.isPartAudioChanged(part_idx);
+          formData.audio = this.block.getPartAudiosrc(part_idx, null, false);
+          formData.manual_boundaries = this.block.getPartManualBoundaries(part_idx);
+          formData.part_idx = part_idx;
+        } else {
+          formData.modified = this.isAudioChanged;
+          formData.audio = this.block.getAudiosrc(null, false);
+          formData.manual_boundaries = this.block.manual_boundaries || [];
+        }
+        return api.post(api_url, formData, {})
+          .then(response => {
+            if (this._isDestroyed) {
+              this.discardBlock();
+              return Promise.resolve();
+            }
+            if (this.audioTasksQueue.running && this.audioTasksQueue.log.indexOf(this.audioTasksQueue.running.time) === -1) {
+              return Promise.resolve();
+            }
+            let response_params = [];
+            if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
+
+              if (part_idx !== null) {
+                let part = response.data;
+                this.block.setPartContent(part_idx, part.content);
+                this.block.setPartAudiosrc(part_idx, part.audiosrc, part.audiosrc_ver);
+                this.block.setPartManualBoundaries(part_idx, part.manual_boundaries || []);
+                response_params = [this.block.getPartAudiosrc(part_idx, 'm4a'), this.block.getPartContent(part_idx), true, Object.assign({_id: check_id}, part)];
+              } else {
+                this.blockAudio.map = response.data.content;
+                this.block.setContent(response.data.content);
+                this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+                this.blockAudio.src = this.block.getAudiosrc('m4a');
+                this.block.setManualBoundaries(response.data.manual_boundaries || []);
+                this.isAudioChanged = true;
+                response_params = [this.blockAudio.src, this.blockAudio.map, true, this.block];
+              }
+            } else {
+              this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+              this.$root.$emit('for-audioeditor:set-process-run', false);
+            }
+            this.$forceUpdate();
+            this.$parent.$forceUpdate();
+            return Promise.resolve(response_params);
+          })
+          .catch(err => {
+            this.checkError(err);
+            this.isUpdating = false;
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+            return Promise.reject(err);
+          });
+      },
+      insertSilenceSilent(position, length, check_id = null) {
+        let partIdx = this.isSplittedBlock ? this.blockPartIdx : null;
+        let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio/insert_silence';
+        let api = this.$store.state.auth.getHttp();
+        let formData = {
+          content: this.clearBlockContent()
+        };
+        formData.position = position;
+        formData.length = length;
+        if (partIdx !== null) {
+          formData.audio = this.block.getPartAudiosrc(partIdx, null, false);
+          formData.modified = this.isPartAudioChanged(partIdx);
+          formData.manual_boundaries = this.block.getPartManualBoundaries(partIdx);
+          formData.part_idx = partIdx;
+        } else {
+          formData.audio = this.block.getAudiosrc(null, false);
+          formData.modified = this.isAudioChanged;
+          formData.manual_boundaries = this.block.manual_boundaries || [];
+        }
+        return api.post(api_url, formData, {})
+          .then(response => {
+            if (this._isDestroyed) {
+              this.discardBlock();
+              return Promise.resolve();
+            }
+            if (this.audioTasksQueue.running && this.audioTasksQueue.log.indexOf(this.audioTasksQueue.running.time) === -1) {
+              return Promise.resolve();
+            }
+            let response_params = [];
+            if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
+              if (partIdx !== null) {
+                /*let response_map = [];
+                let mapRegExp = new RegExp('<w.*?data-map="([^"]*)"[^>]*?>.*?<\/w>', 'img');
+                let match;
+                while((match = mapRegExp.exec(response.data.content))) {
+                  response_map.push(match[1]);
+                }
+                this.$refs.blocks[partIdx].$refs.blockContent.querySelectorAll('[data-map]').forEach(el => {
+                  if (el.getAttribute('data-map').length > 0) {
+                    let map = response_map.shift();
+                    if (map) {
+                      el.setAttribute('data-map', map);
+                    }
+                  }
+                });
+                this.block.setPartContent(partIdx, this.$refs.blocks[partIdx].$refs.blockContent.innerHTML);*/
+                this.block.setPartContent(partIdx, response.data.content);
+                this.block.setPartAudiosrc(partIdx, response.data.audiosrc, response.data.audiosrc_ver);
+                this.block.setPartManualBoundaries(partIdx, response.data.manual_boundaries || []);
+                let part = this.block.parts[partIdx];
+                part._id = check_id;
+                response_params = [this.block.getPartAudiosrc(partIdx, 'm4a'), this.block.getPartContent(partIdx), true, part];
+              } else {
+                /*let response_map = [];
+                let mapRegExp = new RegExp('<w.*?data-map="([^"]*)"[^>]*?>.*?<\/w>', 'img');
+                let match;
+                while((match = mapRegExp.exec(response.data.content))) {
+                  response_map.push(match[1]);
+                }//;
+                this.$refs.blocks[0].$refs.blockContent.querySelectorAll('[data-map]').forEach(el => {
+                  if (el.getAttribute('data-map').length > 0) {
+                    let map = response_map.shift();
+                    if (map) {
+                      el.setAttribute('data-map', map);
+                    }
+                  }
+                });
+                this.blockAudio.map = this.$refs.blocks[0].$refs.blockContent.innerHTML;
+                this.block.setContent(this.$refs.blocks[0].$refs.blockContent.innerHTML);*/
+                this.blockAudio.map = response.data.content;
+                this.block.setContent(response.data.content);
+                this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+                this.blockAudio.src = this.block.getAudiosrc('m4a');
+                this.block.setManualBoundaries(response.data.manual_boundaries || []);
+                response_params = [this.blockAudio.src, this.blockAudio.map, true, this.block];
+                this.isAudioChanged = true;
+              }
+            } else {
+              this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+              this.$root.$emit('for-audioeditor:set-process-run', false);
+            }
+            this.$forceUpdate();
+            this.$parent.$forceUpdate();
+            return Promise.resolve(response_params);
+          })
+          .catch(err => {
+            this.checkError(err);
+            this.isUpdating = false;
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+            return Promise.reject(err);
+          });
+      },
+      
+      eraseAudioSilent(start, end, check_id = null) {
+        let partIdx = this.isSplittedBlock ? this.blockPartIdx : null;
+        let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/audio_erase';
+        let api = this.$store.state.auth.getHttp();
+        
+        let formData = {
+          content: this.clearBlockContent()
+        };
+        let position = [start, end];
+        formData.position = position;
+        if (partIdx !== null) {
+          formData.modified = this.isPartAudioChanged(partIdx);
+          formData.audio = this.block.getPartAudiosrc(partIdx, null, false);
+          formData.manual_boundaries = this.block.getPartManualBoundaries(partIdx);
+          formData.part_idx = partIdx;
+        } else {
+          formData.modified = this.isAudioChanged;
+          formData.audio = this.block.getAudiosrc(null, false);
+          formData.manual_boundaries = this.block.manual_boundaries || [];
+        }
+        return api.post(api_url, formData, {})
+          .then(response => {
+            if (this._isDestroyed) {
+              this.discardBlock();
+              return Promise.resolve();
+            }
+            if (this.audioTasksQueue.running && this.audioTasksQueue.log.indexOf(this.audioTasksQueue.running.time) === -1) {
+              return Promise.resolve();
+            }
+            let response_params = [];
+            if (response.status == 200 && response.data && response.data.content && response.data.audiosrc) {
+
+              if (partIdx !== null) {
+                let part = response.data;
+                this.block.setPartContent(partIdx, part.content);
+                this.block.setPartAudiosrc(partIdx, part.audiosrc, part.audiosrc_ver);
+                this.block.setPartManualBoundaries(partIdx, part.manual_boundaries || []);
+                response_params = [this.block.getPartAudiosrc(partIdx, 'm4a'), this.block.getPartContent(partIdx), true, Object.assign({_id: check_id}, part)];
+              } else {
+                this.blockAudio.map = response.data.content;
+                this.block.setContent(response.data.content);
+                this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+                this.blockAudio.src = this.block.getAudiosrc('m4a');
+                this.block.setManualBoundaries(response.data.manual_boundaries || []);
+                this.isAudioChanged = true;
+                response_params = [this.blockAudio.src, this.blockAudio.map, true, this.block];
+              }
+            } else {
+              this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+              //this.$root.$emit('for-audioeditor:set-process-run', false);
+            }
+            this.$forceUpdate();
+            this.$parent.$forceUpdate();
+            return Promise.resolve(response_params);
+          })
+          .catch(err => {
+            this.checkError(err);
+            this.isUpdating = false;
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
+            return Promise.reject(err);
+          });
       }
 
   },

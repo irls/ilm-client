@@ -1693,21 +1693,28 @@ Discard unsaved audio changes?`,
         },
         _popHistoryLocal(redraw = true) {
           let record = this.actionsLog.pop();
-          if (redraw && record) {
+          if (record) {
             this.audiosourceEditor.annotationList.annotations = [...record.annotations];
-            switch (record.type) {
-              case 'cut':
-                this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
-                break;
-              case 'insert_silence':
-                this.cutRangeAction(record.selection.start, record.selection.end);
-                break;
-              case 'erase':
-                this.cutRangeAction(record.selection.start, record.selection.end);
-                this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
-                break;
+            if (redraw) {
+              switch (record.type) {
+                case 'cut':
+                  this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
+                  break;
+                case 'insert_silence':
+                  this.cutRangeAction(record.selection.start, record.selection.end);
+                  break;
+                case 'erase':
+                  this.cutRangeAction(record.selection.start, record.selection.end);
+                  this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
+                  break;
+              }
+            } else {
+              this.audiosourceEditor.renderAnnotations();
             }
           }
+          //this.audiosourceEditor.annotationList.annotations.forEach(an => {
+            //record.annotations.push(Object.assign({}, an));
+          //});
           return record;
         },
         _setSelectionOnWaveform() {
@@ -1719,7 +1726,8 @@ Discard unsaved audio changes?`,
         _setText(text, block, saveToHistory = false) {
           if (saveToHistory && this.content && this.audiofile) {
             this.isModified = true;
-            this._addHistory(this.content, this.audiofile, block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
+            //this._addHistory(this.content, this.audiofile, block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
+            //this._addHistoryLocal('manual_boundaries');
           }
           this.content = text;
           let self = this;
@@ -2065,7 +2073,9 @@ Discard unsaved audio changes?`,
           let shifted = false;
 
           if (shiftedAnnotation) {
-            this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
+            //this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
+            this._addHistoryLocal('manual_boundaries');
+            this.addTaskQueue('manual_boundaries');
             if (shiftedAnnotation.end - shiftedAnnotation.start < this.minWordSize) {// find words with length less than minimum
               let shift = this.minWordSize - (shiftedAnnotation.end - shiftedAnnotation.start);
               let found = false;

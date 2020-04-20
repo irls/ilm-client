@@ -16,7 +16,6 @@ import Align from '../components/Align'
 import AudioEditor from '../components/AudioEditor'
 import Collections from '../components/Collections'
 import CollectionsGrid from '../components/collections/CollectionsGrid';
-import AudioEditorTest from '../components/audio/AudioEditorTest';
 
 Vue.use(Router)
 
@@ -138,11 +137,6 @@ export default new Router({
           component: BookEdit, meta: { mode: 'proofread' }, props: { mode: 'proofread' }
         }
       ]
-    },
-    {
-      name: 'AudioEditorTest',
-      path: '/audio_editor_test',
-      component: AudioEditorTest
     },
     { path: '*', redirect: '/books' }
   ]
