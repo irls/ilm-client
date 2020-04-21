@@ -476,7 +476,7 @@
         </h4>
       </div>
       <div class="modal-body" style="padding-top: 10px; padding-bottom: 10px;">
-        <section v-if="!(voiceworkChange == 'audio_file' && block.voicework == 'narration')">
+        <section v-if="isAllowBatchVoiceworkNarration">
           <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
           <div class="modal-content-flex">
             <div class="modal-content-flex-block">
@@ -1106,6 +1106,11 @@ export default {
           return this.audioTasksQueue.blockId === this.block.blockid;
         },
         cache: false
+      },
+      isAllowBatchVoiceworkNarration() {
+        if (this.currentJobInfo.text_cleanup === true) return true;
+        if (this.currentJobInfo.mastering == true || this.currentJobInfo.mastering_complete == true) return true;
+        return !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration')
       }
   },
   mounted: function() {
@@ -2343,7 +2348,7 @@ Save audio changes and realign the Block?`,
         //this.isAudioChanged = false;
       },
       addToQueueBlockAudioEdit(footnoteIdx = null, realign = false) {
-        
+
         if (this.isChanged) {
           this.$root.$emit('show-modal', {
             title: 'Unsaved Changes',
