@@ -1883,6 +1883,9 @@ Save audio changes and realign the Block?`,
                     partUpdate['content'] = this.block.content;
                     partUpdate['parts'] = this.block.parts;
                     break;
+                  case 'manual_boundaries':
+                    partUpdate['content'] = this.block.content;
+                    break;
                   default:
                     partUpdate[c] = this.block[c];
                     break;
