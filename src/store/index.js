@@ -3138,6 +3138,13 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
+    setAudioTasksBlockId({state, dispatch}, blockId) {
+      if (blockId !== state.audioTasksQueue.blockId) {
+        dispatch('clearAudioTasks');
+        state.audioTasksQueue.running = null;
+        state.audioTasksQueue.blockId = blockId;
+      }
+    },
     addAudioTask({state}, [type, options]) {
       let time = Date.now();
       state.audioTasksQueue.queue.push({

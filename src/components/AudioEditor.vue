@@ -315,7 +315,7 @@
           this.isPaused = false;
           let clear = [];
           if (mode === 'block' && block) {
-            this.audioTasksQueue.blockId = block._id;
+            this.setAudioTasksBlockId(block._id);
           }
           if (this.audiosourceEditor) {
             this.audiosourceEditor.tracks.forEach(t => {
@@ -2266,7 +2266,7 @@ Revert to original block audio?`,
               });
           }
         },
-        ...mapActions(['addAudioTask', 'popAudioTask'])
+        ...mapActions(['addAudioTask', 'popAudioTask', 'setAudioTasksBlockId'])
 
       },
       computed: {
