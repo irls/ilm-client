@@ -314,6 +314,9 @@
           this.isPlaying = false;
           this.isPaused = false;
           let clear = [];
+          if (mode === 'block' && block) {
+            this.audioTasksQueue.blockId = block._id;
+          }
           if (this.audiosourceEditor) {
             this.audiosourceEditor.tracks.forEach(t => {
               //console.log(t.playout);

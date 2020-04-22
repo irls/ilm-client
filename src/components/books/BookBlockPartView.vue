@@ -2460,7 +2460,6 @@ Save audio changes and realign the Block?`,
           let text = this.blockAudio.map;
           let loadBlock = this.blockPart;
           loadBlock._id = this.check_id;
-          this.audioTasksQueue.blockId = this.check_id;
           this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
 
           this.audioEditorEventsOn();
