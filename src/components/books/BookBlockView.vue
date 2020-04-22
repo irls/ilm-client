@@ -3742,8 +3742,10 @@ export default {
           .then(response => {
             this.voiceworkUpdating = false;
             if (response.status == 200) {
+
+              this.voiceworkChange = false;
+
               if (response && response.data && response.data.blocks) {
-                this.voiceworkChange = false;
                 //console.log('BookBlockView.vue->Counters:', response.data.counters);
                 //console.log('response.data.blocks.length:', response.data.blocks.length);
 
