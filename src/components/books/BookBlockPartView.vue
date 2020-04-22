@@ -2098,7 +2098,7 @@ Save audio changes and realign the Block?`,
       },
 
       canResolveFlagPart: function (flagPart) {
-          return this.tc_canResolveFlagPart(flagPart);
+          return this.tc_canResolveFlagPart(flagPart, this.block);
       },
       canCommentFlagPart: function(flagPart) {
         return this.canResolveFlagPart(flagPart) && flagPart.status == 'open' && !flagPart.collapsed/* && (!this.isCompleted || this.isProofreadUnassigned())*/;
@@ -2106,7 +2106,7 @@ Save audio changes and realign the Block?`,
 
       canDeleteFlagPart: function (flagPart) {
           if (this.tc_allowNarrateUnassigned(this.block) && flagPart.creator === this.auth.getSession().user_id) {
-            return true;
+            return this.block.voicework === 'narration';
           }
           let result = false;
           let isProofreadUnassigned = this.isProofreadUnassigned();

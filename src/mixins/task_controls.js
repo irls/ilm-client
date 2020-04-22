@@ -189,9 +189,12 @@ export default {
       }
       return false;
     },
-    tc_canResolveFlagPart(part) {
+    tc_canResolveFlagPart(part, block) {
       let result = false;
       if (!this._is('editor', true) && !this._is('narrator', true) && !this._is('proofer', true) && !this.adminOrLibrarian) {
+        return false;
+      }
+      if (this._is('narrator') && this.bookMode === 'narrate' && block.voicework !== 'narration') {
         return false;
       }
       if (part.creator === this.auth.getSession().user_id) {
