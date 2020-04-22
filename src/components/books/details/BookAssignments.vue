@@ -409,7 +409,7 @@
       /* ************* */
 
       toggleBatchApproveModifications() {
-        //console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.unresolved_flags_blocks);
+        //console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio);
 
         let _nmb = 0;
         let editor_tasks = this.tasks_counter.find(element => element.key == 'editor');
