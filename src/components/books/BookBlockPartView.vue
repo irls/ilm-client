@@ -3417,7 +3417,7 @@ Save text changes and realign the Block?`,
         let position = [start, end];
         formData.position = position;
         if (part_idx !== null) {
-          formData.modified = this.isPartAudioChanged(part_idx);
+          formData.modified = this.isAudioChanged;
           formData.audio = this.block.getPartAudiosrc(part_idx, null, false);
           formData.manual_boundaries = this.block.getPartManualBoundaries(part_idx);
           formData.part_idx = part_idx;
@@ -3480,7 +3480,7 @@ Save text changes and realign the Block?`,
         formData.length = length;
         if (partIdx !== null) {
           formData.audio = this.block.getPartAudiosrc(partIdx, null, false);
-          formData.modified = this.isPartAudioChanged(partIdx);
+          formData.modified = this.isAudioChanged;
           formData.manual_boundaries = this.block.getPartManualBoundaries(partIdx);
           formData.part_idx = partIdx;
         } else {
@@ -3574,7 +3574,7 @@ Save text changes and realign the Block?`,
         let position = [start, end];
         formData.position = position;
         if (partIdx !== null) {
-          formData.modified = this.isPartAudioChanged(partIdx);
+          formData.modified = this.isAudioChanged;
           formData.audio = this.block.getPartAudiosrc(partIdx, null, false);
           formData.manual_boundaries = this.block.getPartManualBoundaries(partIdx);
           formData.part_idx = partIdx;
