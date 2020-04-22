@@ -502,7 +502,7 @@
           <div v-if="voiceworkUpdateType == 'single'">&nbsp;</div>
           <div v-else :class="['attention-msg', 'visible']">The book will reload automatically</div>
         </section>
-        <section v-else>
+        <section v-else> <!--!isAllowBatchVoiceworkNarration-->
           <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to this {{blockTypeLabel}}?</div>
           <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': !isNarratedBlockCompleteAudio}]">Сurrent audio on the {{blockTypeLabel}} cannot be saved because it is incomplete</div>
         </section>
@@ -1085,8 +1085,8 @@ export default {
         cache: false
       },
       isSingleBlockRemoveAudio() {
-        return this.block.audiosrc && this.block.audiosrc.length
-          && !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration')
+        return this.block.audiosrc && this.block.audiosrc.length;
+          //&& !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration'
       },
       isNarratedBlockCompleteAudio() {
 
