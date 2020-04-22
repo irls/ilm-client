@@ -1391,12 +1391,12 @@ export default {
                   } else {
                     //pBlock.status = pBlock.status || {};
                     //pBlock.status.marked = false;
-                    updatePromises.push(this.putBlockPart({
+                    updatePromises.push(this.putBlockPart([{
                       blockid: pBlock.blockid,
                       bookid: pBlock.bookid,
                       classes: pBlock.classes//,
                       //status: pBlock.status
-                    }));
+                    }]));
                   }
                 }
               }

@@ -429,7 +429,7 @@
                     </div>
                     <div class="save-block -right"
                     v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-                    @click="assembleBlockProxy(true)">
+                    @click="assembleBlockProxy(true, needsRealignment)">
                       {{saveBlockLabel}}
                     </div>
                     <template v-if="!isCompleted">
@@ -1697,7 +1697,43 @@ export default {
           });
       },
 
-      assembleBlockProxy: function (check_realign = true, realign = false, update_fields = []) {
+      assembleBlockProxy: function (check_realign = true, realign = true, update_fields = [], check_audio_changes = true) {
+        if (!this.block.audiosrc) {
+          realign = false;
+        }
+        if (this.isAudioChanged && check_audio_changes) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block audio has been modified and not saved.<br>
+Save audio changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0)};
+                  return this.assembleBlockProxy(false, false, update_fields, false)
+                    .then(() => {
+                      return this.assembleBlockAudioEdit(this.footnoteIdx, true, preparedData)
+                      .then(() => {
+                        return Promise.resolve();
+                      });
+                    });
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return Promise.resolve();
+        }
         if (this.isSplittedBlock && this.$refs.blocks) {
           this.$refs.blocks.forEach((blk, blkIdx) => {
             this.block.setPartContent(blkIdx, blk.clearBlockContent());
@@ -1706,7 +1742,7 @@ export default {
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
-          return this.assembleBlockNarrate(true, false, update_fields);
+          return this.assembleBlockNarrate(true, realign, update_fields);
         }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
@@ -1825,6 +1861,9 @@ export default {
                     partUpdate['content'] = this.block.content;
                     partUpdate['parts'] = this.block.parts;
                     break;
+                  case 'manual_boundaries':
+                    partUpdate['content'] = this.block.content;
+                    break;
                   default:
                     partUpdate[c] = this.block[c];
                     break;
@@ -1836,10 +1875,13 @@ export default {
               partUpdate.status.marked = false;
             }
             let updateTask = null;
+            if (this.isSplittedBlock) {
+              realign = false;
+            }
             if (fullUpdate) {
               updateTask = this.assembleBlock(partUpdate, realign);
             } else {
-              updateTask = this.assembleBlockPart(partUpdate);
+              updateTask = this.assembleBlockPart(partUpdate, realign);
             }
             return updateTask
               .then(() => {
@@ -1873,6 +1915,9 @@ export default {
             this.getBookAlign()
               .then(() => {
                 this.isSaving = false;
+                if (this.isLocked && this.isAudioEditing) {
+                  this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+                }
               });
           } else {
             this.isSaving = false;
@@ -1930,20 +1975,33 @@ export default {
           //});
         });
       },
-      assembleBlockPart: function(update) {
+      assembleBlockPart: function(update, realign = false) {
+        //if (!this.needsRealignment) {
+          //realign = false;
+        //}
         update.blockid = this.block.blockid;
         update.bookid = this.block.bookid;
         this.isSaving = true;
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         }
-        return this.putBlockPart(update)
+        return this.putBlockPart(update, realign)
           .then(() => {
-            this.isSaving = false;
-            this.isChanged = false;
-            if (this.isAudioEditing) {
-              this.$root.$emit('for-audioeditor:set-process-run', false);
+            if (realign) {
+              this.getBookAlign()
+                .then(() => {
+                  this.isSaving = false;
+                  if (this.isLocked && this.isAudioEditing) {
+                    this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+                  }
+                });
+            } else {
+              this.isSaving = false;
+              if (this.isAudioEditing) {
+                this.$root.$emit('for-audioeditor:set-process-run', false);
+              }
             }
+            this.isChanged = false;
             return Promise.resolve();
           });
       },
@@ -2053,15 +2111,32 @@ export default {
           upd_block.bookid = this.block.bookid;
         }
         this.isSaving = true;
+        if (this.isAudioEditing) {
+          this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+        }
         let refreshTasks = this.isCompleted;
         return this.putBlockNarrate([upd_block, realign])
           .then(() => {
-            this.isSaving = false;
+            if (realign) {
+              this.getBookAlign()
+                .then(() => {
+                  this.isSaving = false;
+                  if (this.isLocked && this.isAudioEditing) {
+                    this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+                  }
+                });
+            } else {
+              this.isSaving = false;
+              if (this.isAudioEditing) {
+                this.$root.$emit('for-audioeditor:set-process-run', false);
+              }
+            }
             this.isChanged = false;
             if (refreshTasks) {
               this.getCurrentJobInfo();
               this.tc_loadBookTask(this.block.bookid);
             }
+            return Promise.resolve();
           })
           .catch(err => {
             return Promise.reject(err);
@@ -2138,7 +2213,37 @@ export default {
         this.isAudioChanged = false;
       },
 
-      assembleBlockAudioEdit: function(footnoteIdx = null, realign = false) {// to save changes from audio editor
+      assembleBlockAudioEdit: function(footnoteIdx = null, realign = false, preparedData = false) {// to save changes from audio editor
+        this.$root.$emit('closeFlagPopup', true);
+        if (this.isChanged && preparedData === false) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block text has been modified and not saved.<br>
+Save text changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  return this.assembleBlockAudioEdit(footnoteIdx, false, {content: this.clearBlockContent()})
+                    .then(() => {
+                      return this.assembleBlockProxy(false, true, [], false);
+                    });
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return Promise.resolve();
+        }
         let manual_boundaries = [];
         if (this.footnoteIdx) {
           if (this.audioEditFootnote && this.audioEditFootnote.footnote) {
@@ -2156,9 +2261,9 @@ export default {
               //audiosrc: this.block.getAudiosrc(null, false),
               //content: this.blockAudio.map,
               //manual_boundaries: this.block.manual_boundaries
-              audiosrc: this.block.getPartAudiosrc(0, null, false),
+              audiosrc: preparedData.audiosrc || this.block.getPartAudiosrc(0, null, false),
               content: this.block.getPartContent(0),
-              manual_boundaries: this.block.getPartManualBoundaries(0),
+              manual_boundaries: preparedData.manual_boundaries || this.block.getPartManualBoundaries(0),
               mode: this.mode
             };
           } else {
@@ -2173,8 +2278,10 @@ export default {
           if (realign) {
             api_url+= '?realign=true';
           }
+          this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
           return api.post(api_url, data, {})
             .then(response => {
+              this.$root.$emit('for-audioeditor:flush');
               if (!realign) {
                 this.isSaving = false;
               } else {
@@ -2195,9 +2302,9 @@ export default {
                 }
                 //this.$emit('blockUpdated', this.block._id);
                 this.isAudioChanged = false;
-                this.isChanged = false;
+                //this.isChanged = false;
                 this.block.isAudioChanged = false;
-                this.block.isChanged = false;
+                //this.block.isChanged = false;
                 if (footnoteIdx === null) {
                   this.block.content = response.data.content;
                   this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
@@ -3318,6 +3425,11 @@ export default {
       evFromAudioeditorBlockLoaded(blockId) {
         if (blockId == this.check_id) {
           $('nav.fixed-bottom').removeClass('hidden');
+          if (this.isLocked) {
+            this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+          } else if (this.$parent.isLocked) {
+            this.$root.$emit('for-audioeditor:set-process-run', true, this.$parent.lockedType);
+          }
         }
       },
       evFromAudioeditorWordRealign(map, blockId) {
@@ -3406,7 +3518,7 @@ export default {
               this.assembleBlockAudioEdit(this.footnoteIdx, true, false);
               //this.flushChanges();
               //this.isChanged = false;
-              this.isAudioChanged = false;
+              //this.isAudioChanged = false;
             //});
         }
       },
@@ -3422,7 +3534,7 @@ export default {
           this.assembleBlockAudioEdit(this.footnoteIdx, false, false);
           //this.flushChanges();
           //this.isChanged = false;
-          this.isAudioChanged = false;
+          //this.isAudioChanged = false;
         }
       },
       evFromAudioeditorInsertSilence (blockId, position, length) {

@@ -277,7 +277,7 @@
           </div>
           <div class="save-block -right"
           v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-          @click="assembleBlockProxy(true)">
+          @click="assembleBlockProxy(true, needsRealignment)">
             {{saveBlockLabel}}
           </div>
         </div>
@@ -1302,12 +1302,56 @@ export default {
 //
 //           });
       },
-      assembleBlockProxy: function (check_realign = true, realign = false) {
+      assembleBlockProxy: function (check_realign = true, realign = false, check_audio_changes = true) {
+        this.$root.$emit('closeFlagPopup', true);
+        if (this.isAudioChanged && check_audio_changes) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block audio has been modified and not saved.<br>
+Save audio changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  let preparedData = {audiosrc: this.block.getPartAudiosrc(this.blockPartIdx, null, false), content: this.clearBlockContent()};
+                  return this.assembleBlockProxy(false, false, false)
+                    .then(() => {
+                      return this.assembleBlockPartAudioEdit(true, preparedData)
+                      .then(() => {
+                        return Promise.resolve();
+                      });
+                    });
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return Promise.resolve();
+        }
         let flagUpdate = this.hasChange('flags') ? this.block.flags : null;
         if (flagUpdate) {
+          if (this.isAudioEditing) {
+            this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
+          }
           return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
             .then(() => {
               this.isChanged = false;
+              if (this.isAudioEditing) {
+                if (this.isLocked) {
+                  this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+                } else {
+                  this.$root.$emit('for-audioeditor:set-process-run', false);
+                }
+              }
               return Promise.resolve();
             })
         }
@@ -1327,6 +1371,9 @@ export default {
         return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign)
           .then(() => {
             this.isChanged = false;
+            if (this.isLocked && this.isAudioEditing) {
+              this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+            }
             return Promise.resolve();
           });
       },
@@ -1471,6 +1518,9 @@ export default {
             this.isChanged = false;
             if (refreshTasks) {
               this.getCurrentJobInfo();
+            }
+            if (this.isAudioEditing && realign) {
+              this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
             }
             return Promise.resolve();
           })
@@ -2556,7 +2606,7 @@ export default {
             //this.block.setContent(this.blockAudio.map);
             return this.assembleBlockAudioEdit(null, true)
               .then(() => {
-                this.isAudioChanged = false;
+                //this.isAudioChanged = false;
                 this.blockAudio.map = this.blockContent();
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
                 return Promise.resolve();
@@ -2571,6 +2621,11 @@ export default {
           this.audStop();
           this.isAudioChanged = true;
           this.isUpdating = true;
+          if (this.isSplittedBlock) {
+            this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+          } else {
+            this.block.setContent(this.clearBlockContent());
+          }
           this.audDeletePart(start, end, null, this.blockPartIdx, this.check_id)
             .then(() => {
               this.isUpdating = false;
@@ -2592,7 +2647,7 @@ export default {
             //this.block.setContent(this.blockContent());
             return this.assembleBlockAudioEdit(null, false)
               .then(() => {
-                this.isAudioChanged = false;
+                //this.isAudioChanged = false;
                 this.blockAudio.map = this.blockContent();
                 this.blockAudio.src = this.blockAudiosrc('m4a');
                 //this.showPinnedInText();
@@ -2607,6 +2662,11 @@ export default {
         if (blockId == this.check_id) {
           this.audStop();
           this.isUpdating = true;
+          if (this.isSplittedBlock) {
+            this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+          } else {
+            this.block.setContent(this.clearBlockContent());
+          }
           this.insertSilence(position, length, null, this.blockPartIdx, this.check_id)
             .then(() => {
               this.isUpdating = false;
@@ -3011,12 +3071,44 @@ export default {
       generateAudioCheckId() {
         return this.isSplittedBlock ? this.block.blockid + '-part-' + this.blockPartIdx : this.block.blockid;
       },
-      assembleBlockPartAudioEdit(realign) {
+      assembleBlockPartAudioEdit(realign, preparedData = false) {
+        
+        this.$root.$emit('closeFlagPopup', true);
+        if (this.isChanged && preparedData === false) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block text has been modified and not saved.<br>
+Save text changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  let preparedData = {content: this.clearBlockContent(), audiosrc: this.blockAudiosrc(null, false)}
+                  return this.assembleBlockProxy(false, false, false)
+                    .then(() => {
+                      return this.assembleBlockPartAudioEdit(true, preparedData);
+                    });
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return Promise.resolve();
+        }
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/audio_edit/part/' + this.blockPartIdx;
         let api = this.$store.state.auth.getHttp();
         let data = {
-          audiosrc: this.blockAudiosrc(null, false),
-          content: this.blockAudio.map,//content: this.blockContent(),
+          audiosrc: preparedData.audiosrc || this.blockAudiosrc(null, false),
+          content: preparedData.content || this.blockAudio.map,//content: this.blockContent(),
           manual_boundaries: this.blockPart.manual_boundaries || [],
           mode: this.mode
         };
@@ -3024,8 +3116,10 @@ export default {
         if (realign) {
           api_url+= '?realign=true';
         }
+        this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         return api.post(api_url, data, {})
           .then(response => {
+            this.$root.$emit('for-audioeditor:flush');
             if (!realign) {
               this.isSaving = false;
             } else {
@@ -3059,9 +3153,9 @@ export default {
               this.blockAudio.map = this.blockContent();
               this.blockAudio.src = this.blockAudiosrc('m4a');
               this.isAudioChanged = false;
-              this.isChanged = false;
+              //this.isChanged = false;
               this.block.isAudioChanged = false;
-              this.block.isChanged = false;
+              //this.block.isChanged = false;
               return BPromise.resolve();
             }
           })

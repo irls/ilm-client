@@ -90,6 +90,7 @@
         </div>
       </div>
     </div>
+    
     <modal name="onDiscardMessage" :resizeable="false" :clickToClose="false" height="auto">
       <div class="modal-header"></div>
       <div class="modal-body">
@@ -98,18 +99,6 @@
       <div class="modal-footer">
         <button class="btn btn-default" v-on:click="hideModal('onDiscardMessage')">Cancel</button>
         <button class="btn btn-primary" v-on:click="discard()">Discard</button>
-      </div>
-    </modal>
-    <modal name="onExitMessage" :resizeable="false" :clickToClose="false" height="auto">
-      <div class="modal-header"></div>
-      <div class="modal-body">
-        <p v-if="mode == 'block'">Discard unsaved audio changes?</p>
-        <p v-if="mode == 'file'">Discard unsaved markers position?</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-default" v-on:click="checkExitState()">Cancel</button>
-        <button v-if="mode == 'block'" class="btn btn-primary" v-on:click="discardAndExit()">Confirm</button>
-        <button v-if="mode == 'file'" class="btn btn-primary" v-on:click="discardAndExit()">Discard</button>
       </div>
     </modal>
     <modal name="onWordRepositionMessage" :class="['on-word-reposition']" :resizeable="false" :clickToClose="false" height="auto">
@@ -285,7 +274,7 @@
           if ((this.blockId && this.blockId != blockId) || (mode == 'file' && reloadOnChange) || mode != this.mode) {
             if (this.isModifiedComputed && this.mode === 'block') {
               this.pendingLoad = arguments;
-              this.showModal('onExitMessage');
+              this.showOnExitMessage();
               return;
             }
             if (this.isModifiedComputed && this.mode === 'file') {
@@ -980,7 +969,7 @@
           //console.log('AudioEditor close', autosave);
           if (this.audiosourceEditor) this.audiosourceEditor.stopAnimation();
           if (this.isModifiedComputed && this.mode === 'block') {
-            this.showModal('onExitMessage');
+            this.showOnExitMessage();
           } else {
             if (autosave && this.isModifiedComputed && this.mode === 'file') {
               this.save();
@@ -1024,14 +1013,13 @@
           }
         },
         save() {
-          this.history = [];
           if (this.mode == 'block') {
             if (this.isModified) {
-              this.setProcessRun(true, 'save');
               this.$root.$emit('from-audioeditor:save', this.blockId);
-              this.isModified = false;
+              //this.isModified = false;
             }
           } else if(this.mode == 'file') {
+            this.history = [];
             this.$root.$emit('from-audioeditor:save-positions', this.audiofileId, this.selection);
             this.origFilePositions = this.selection;
           }
@@ -1050,10 +1038,9 @@
         },
         saveAndRealign() {
           if (this.isModified) {
-            this.history = [];
-            this.setProcessRun(true, 'align');
+            //this.history = [];
             this.$root.$emit('from-audioeditor:save-and-realign', this.blockId);
-            this.isModified = false;
+            //this.isModified = false;
           }
         },
         cut() {
@@ -1107,7 +1094,7 @@
         },
         discardAndExit() {
           //this.discardOnExit = true;
-          this.hideModal('onExitMessage');
+          //this.hideModal('onExitMessage');
           if (this.mode == 'file') {
             this.selection = this.origFilePositions;
           } else if (this.mode == 'block') {
@@ -1127,7 +1114,7 @@
           }
         },
         checkExitState() {
-          this.hideModal('onExitMessage');
+          //this.hideModal('onExitMessage');
           this.$root.$emit('from-audioeditor:close-cancelled');
           if (this.discardOnExit) {
             this.discard();
@@ -1153,13 +1140,38 @@
           this.isPlaying = false;
           this.isPaused = false;
           this.origFilePositions = {};
-          this.hideModal('onExitMessage');
+          //this.hideModal('onExitMessage');
           if (this.plEventEmitter) {
             this.plEventEmitter.emit('clear');
           }
         },
         showModal(name) {
           this.$modal.show(name);
+        },
+        showOnExitMessage() {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block audio has been modified and not saved.<br>
+Discard unsaved audio changes?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  this.checkExitState();
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Discard',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  this.discardAndExit();
+                },
+                class: ['btn btn-primary']
+              }
+            ]
+          });
         },
         hideModal(name) {
           this.$modal.hide(name);

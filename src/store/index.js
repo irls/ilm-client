@@ -1839,6 +1839,9 @@ export const store = new Vuex.Store({
       if (typeof block.parts !== 'undefined' && Array.isArray(block.parts) && block.parts.length > 1) {
         update.block.parts = block.parts;
       }
+      if (Array.isArray(block.manual_boundaries)) {
+        update.block.manual_boundaries = block.manual_boundaries;
+      }
       return axios.put(url, update)
         .then((response) => {
           return dispatch('getBookAlign')
@@ -1885,7 +1888,7 @@ export const store = new Vuex.Store({
           });
     },
 
-    putBlockPart ({commit, state, dispatch}, update) {
+    putBlockPart ({commit, state, dispatch}, [update, realign]) {
       let cleanBlock = Object.assign({}, update);
       delete cleanBlock.parnum;
       delete cleanBlock.secnum;
@@ -1894,7 +1897,11 @@ export const store = new Vuex.Store({
         return Promise.reject(new Error('blockid is not set'));
       }
       commit('set_blocker', 'putBlock');
-      return axios.put(state.API_URL + 'book/block/' + cleanBlock.blockid,
+      let url = `${state.API_URL}book/block/${cleanBlock.blockid}`;
+      if (realign) {
+        url+= '?realign=true';
+      }
+      return axios.put(url,
         {
           'block': cleanBlock,
         })
