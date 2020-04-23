@@ -316,6 +316,7 @@
           let clear = [];
           if (mode === 'block' && block) {
             this.setAudioTasksBlockId(block._id);
+            this._clearHistoryLocal();
           }
           if (this.audiosourceEditor) {
             this.audiosourceEditor.tracks.forEach(t => {
@@ -1446,6 +1447,7 @@
           this.isModified = false;
           this.isAudioModified = false;
           this.history = [];
+          this.actionsLog = [];
           this.isPlaying = false;
           this.isPaused = false;
           this.origFilePositions = {};
@@ -1690,6 +1692,10 @@ Discard unsaved audio changes?`,
             this.actionsLog.shift();
             this.isHistoryFull = false;
           }
+        },
+        _clearHistoryLocal() {
+          this.actionsLog = [];
+          this.isHistoryFull = true;
         },
         _popHistory() {
           return this.history.pop();
@@ -2262,6 +2268,7 @@ Revert to original block audio?`,
                 this.isModified = false;
                 this.isAudioModified = false;
                 this.history = [];
+                this.actionsLog = [];
                 this.cursorPosition = 0;
               });
           }
