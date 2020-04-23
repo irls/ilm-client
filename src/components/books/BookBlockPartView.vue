@@ -773,7 +773,8 @@ export default {
           currentJobInfo: 'currentJobInfo',
           mode: 'bookMode',
           blockLockType: 'blockLockType',
-          audioTasksQueue: 'audioTasksQueue'
+          audioTasksQueue: 'audioTasksQueue',
+          checkRunningAudioTask: 'checkRunningAudioTask'
       }),
       getBlockLang: {
         cache: false,
@@ -2470,7 +2471,7 @@ Save audio changes and realign the Block?`,
       evFromAudioeditorClosed(blockId) {
 
         if (blockId === this.check_id) {
-          this.clearAudioTasks();
+          this.clearAudioTasks(false);
           if (this.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false, this.isSplittedBlock ? this.blockPartIdx : null)
               .then(() => {
@@ -2788,6 +2789,7 @@ Save audio changes and realign the Block?`,
       },
       evFromAudioEditorRevert(blockId) {
         if (blockId == this.check_id) {
+          this.clearAudioTasks(true);
           if (this.blockPart.audiosrc_original) {
             this.isSaving = true;
             return this.revertAudio([this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null])
@@ -3432,7 +3434,7 @@ Save text changes and realign the Block?`,
               this.discardBlock();
               return Promise.resolve();
             }
-            if (this.audioTasksQueue.running && this.audioTasksQueue.log.indexOf(this.audioTasksQueue.running.time) === -1) {
+            if (!this.checkRunningAudioTask(this.check_id)) {
               return Promise.resolve();
             }
             let response_params = [];
@@ -3494,7 +3496,7 @@ Save text changes and realign the Block?`,
               this.discardBlock();
               return Promise.resolve();
             }
-            if (this.audioTasksQueue.running && this.audioTasksQueue.log.indexOf(this.audioTasksQueue.running.time) === -1) {
+            if (!this.checkRunningAudioTask(this.check_id)) {
               return Promise.resolve();
             }
             let response_params = [];
@@ -3589,7 +3591,7 @@ Save text changes and realign the Block?`,
               this.discardBlock();
               return Promise.resolve();
             }
-            if (this.audioTasksQueue.running && this.audioTasksQueue.log.indexOf(this.audioTasksQueue.running.time) === -1) {
+            if (!this.checkRunningAudioTask(this.check_id)) {
               return Promise.resolve();
             }
             let response_params = [];

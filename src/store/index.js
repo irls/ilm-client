@@ -428,6 +428,12 @@ export const store = new Vuex.Store({
     },
     audioTasksQueue: state => {
       return state.audioTasksQueue;
+    },
+    checkRunningAudioTask: state => (check_id) => {
+      if (!state.audioTasksQueue.running || check_id !== state.audioTasksQueue.blockId || (state.audioTasksQueue.running && state.audioTasksQueue.log.indexOf(state.audioTasksQueue.running.time) === -1)) {
+        return false;
+      }
+      return true;
     }
   },
 
@@ -3140,7 +3146,7 @@ export const store = new Vuex.Store({
     },
     setAudioTasksBlockId({state, dispatch}, blockId) {
       if (blockId !== state.audioTasksQueue.blockId) {
-        dispatch('clearAudioTasks');
+        dispatch('clearAudioTasks', true);
         state.audioTasksQueue.running = null;
         state.audioTasksQueue.blockId = blockId;
       }
@@ -3164,11 +3170,13 @@ export const store = new Vuex.Store({
         state.audioTasksQueue.time = null;
       }
     },
-    clearAudioTasks({state}) {
+    clearAudioTasks({state}, cancel_running = true) {
       state.audioTasksQueue.queue = [];
       state.audioTasksQueue.log = [];
       state.audioTasksQueue.time = null;
-      //state.audioTasksQueue.running = null;
+      if (cancel_running) {
+        state.audioTasksQueue.running = null;
+      }
       state.audioTasksQueue.blockId = null;
     },
     shiftAudioTask({state}) {

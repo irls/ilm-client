@@ -76,8 +76,8 @@
         </template>
         <div class="audio-controls" v-if="isModifiedComputed && mode == 'block'">
           <button class="btn btn-default" v-if="actionsLog.length" v-on:click="undo()">Undo {{lastActionName}}</button>
-          <button class="btn btn-primary" v-on:click="save()">Save</button>
-          <button class="btn btn-primary" v-on:click="saveAndRealign()">Save & Re-align</button>
+          <button class="btn btn-primary" v-on:click="save()" :disabled="isSaveDisabled">Save</button>
+          <button class="btn btn-primary" v-on:click="saveAndRealign()" :disabled="isSaveDisabled">Save & Re-align</button>
         </div>
         <div class="audio-controls" v-if="mode == 'file'">
           <button class="btn btn-default" :disabled="!isModifiedComputed" v-on:click="undo()">Undo</button>
@@ -2431,6 +2431,16 @@ Revert to original block audio?`,
                   return 'Silence';
                   break;
               }
+            }
+          },
+          cache: false
+        },
+        isSaveDisabled: {
+          get() {
+            if (this.audioTasksQueue.queue.length > 0 || this.audioTasksQueue.running) {
+              return true;
+            } else {
+              return false;
             }
           },
           cache: false
