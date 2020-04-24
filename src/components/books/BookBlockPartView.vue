@@ -2785,6 +2785,11 @@ Save audio changes and realign the Block?`,
           this.isAudioChanged = true;
           this.isUpdating = true;
           this.audStop();
+          if (this.isSplittedBlock) {
+            this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+          } else {
+            this.block.setContent(this.clearBlockContent());
+          }
           return this.eraseAudio(start, end, null, this.blockPartIdx, this.check_id)
             .then(() => {
               this.isUpdating = false;
