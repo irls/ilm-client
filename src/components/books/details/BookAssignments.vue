@@ -374,10 +374,8 @@
         });
       },
 
-      /* ************* */
-
       toggleBatchApproveModifications() {
-        //console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio, this.currentBookCounters.unresolved_flags_blocks);
+        //console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio);
 
         let _nmb = 0;
         let editor_tasks = this.tasks_counter.find(element => element.key == 'editor');
@@ -386,10 +384,15 @@
           _nmb = editor_tasks.find(element => element.type == 'approve-modified-block').count;
         } 
 
-        let _am = this.currentBookCounters.not_marked_blocks_missed_audio;
+        /*let _am = this.currentBookCounters.not_marked_blocks_missed_audio;
         let _uf = this.currentBookCounters.unresolved_flags_blocks;
         let _nqa = _am + _uf;
-        let _qa = _nmb + _uf - _nqa;
+        let _qa = _nmb + _uf - _nqa;*/
+
+        let _am = this.currentBookCounters.not_marked_blocks_missed_audio;
+        let _nqa = _am;
+        let _qa = _nmb - _nqa;
+
         
         //console.log('_nmb, _qa, _nqa, _am, _uf', _nmb, _qa, _nqa, _am, _uf);
 
@@ -408,7 +411,6 @@
               this.isBatchProgress = true;
               this.$root.$emit('hide-modal');
               return new Promise((resolve, reject) => {
-                console.log('inside 1');
                 this.completeBatchApproveModifications()
                 .then((doc) => {
                   if (!doc.data.error) {
@@ -438,11 +440,11 @@
           text = 'Approve ' + _qa + ' block(s)?'; 
         } 
         // 3.1.1
-        else if ( _qa > 0 && _am > 0 && _uf == 0 ) {
+        else if ( _qa > 0 && _am > 0 ) {
           title = 'Unable to Approve all Blocks';
           text = "" + _am + " block(s) can't be approved because audio alignment is missing.<br> In the meantime, you can approve " + _qa + " block(s) and continue editing. <br>Approve qualified block(s)? ";
         }
-        // 3.1.2
+/*        // 3.1.2
         else if ( _qa > 0 && _am == 0 && _uf > 0 ) {
           title = 'Unable to Approve all Blocks';
           text = "" + _uf + " block(s) can't be approved because of unresolved flag(s).<br> In the meantime, you can approve " + _qa + " block(s) and continue editing. <br>Approve qualified block(s)? ";
@@ -451,15 +453,15 @@
         else if ( _qa > 0 && _am > 0 && _uf > 0 ) {
           title = 'Unable to Approve all Blocks';
           text = "" + _am + " block(s) can't be approved because audio alignment is missing.<br> " + _uf + " block(s) can't be approved because of unresolved flag(s).<br> In the meantime, you can approve " + _qa + " block(s) and continue editing. <br>Approve qualified block(s)? ";
-        }
+        }*/
         // 3.2.1
-        else if ( _qa <= 0 && _am > 0 && _uf == 0 ) {
+        else if ( _qa <= 0 && _am > 0) {
           title = 'Unable to Approve all Blocks';
           text = "" + _am + " block(s) can't be approved because audio alignment is missing. ";
           buttons[0].title = 'Ok';
           buttons.pop();
         }
-        // 3.2.2
+/*        // 3.2.2
         else if ( _qa <= 0 && _am == 0 && _uf > 0 ) {
           title = 'Unable to Approve all Blocks';
           text = "" + _uf + " block(s) can't be approved because of unresolved flag(s). ";
@@ -473,7 +475,7 @@
           +  _uf + " block(s) can't be approved because of unresolved flag(s). ";
           buttons[0].title = 'Ok';
           buttons.pop();
-        }
+        }*/
       
         this.$root.$emit('show-modal', {
           title: title,
