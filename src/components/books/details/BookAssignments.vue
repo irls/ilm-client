@@ -58,7 +58,7 @@
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
                       <button v-if="!task.complete && adminOrLibrarian"  class="btn btn-primary btn-edit-complete"  v-on:click="toggleBatchApprove()" :disabled="isBatchProgress">Complete</button>
-                      <button v-else-if="!task.complete && !adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleBatchApprove()" :disabled="!isAllowEditingComplete">Complete</button>
+                      <button v-else-if="!task.complete && !adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleCleanupComplete()" :disabled="!isAllowEditingComplete">Complete</button>
                     </template>
                     <template v-else>
                       <div class="preloader-task"></div>
@@ -283,6 +283,36 @@
           });
       },
 
+      toggleCleanupComplete() {
+        let title = 'Complete the Task';
+        let text = 'Complete editing?';
+        let buttons = [
+          {
+            title: 'Cancel',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+            },
+          },
+          {
+            title: 'Complete',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+              this.finishTextCleanup();
+            },
+            'class': 'btn btn-primary'
+          },
+        ];
+
+        this.$root.$emit('show-modal', {
+          title: title,
+          text: text,
+          buttons: buttons,
+          class: ['align-modal', 'master-switcher-warning']
+        });
+
+      },
+
+
       toggleBatchApprove() {
         //console.log('toggle counters:', this.currentBookCounters, this.currentBookCounters.not_marked_blocks_missed_audio, this.counterTextCleanup);
         let title = '';
@@ -308,7 +338,9 @@
                       .then(() => {
                         this.$root.$emit('book-reimported');
                         if (this.currentBookCounters.not_marked_blocks === 0){
-                          this.finishTextCleanup();
+                          if (this.adminOrLibrarian){
+                            this.finishTextCleanup();
+                          }
                           this.textCleanupProcess = false;
                           
                         } else {
@@ -373,6 +405,8 @@
           class: ['align-modal', 'master-switcher-warning']
         });
       },
+
+      /* ************* */
 
       toggleBatchApproveModifications() {
         //console.log('toggle counters:', this.currentBookCounters.not_marked_blocks, this.currentBookCounters.not_marked_blocks_missed_audio);
