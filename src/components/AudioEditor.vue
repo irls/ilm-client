@@ -1274,6 +1274,9 @@
           let first_list_index        = (start * original_buffer.sampleRate);
           let second_list_index       = (end * original_buffer.sampleRate);
           let second_list_mem_alloc   = (original_buffer.length - (end * original_buffer.sampleRate));
+          if (second_list_mem_alloc < 0) {
+            second_list_mem_alloc = 0;
+          }
           
           let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, parseInt( first_list_index ) + parseInt( second_list_mem_alloc ), original_buffer.sampleRate);
 
@@ -1289,10 +1292,13 @@
 
           for (let i = 0; i < original_buffer.numberOfChannels; ++i) {
             original_buffer.copyFromChannel(new_list, i);
-            original_buffer.copyFromChannel(second_list, i, second_list_index)
 
-            combined.set(new_list)
-            combined.set(second_list, first_list_index)
+            combined.set(new_list);
+            
+            if (second_list_mem_alloc > 0) {
+              original_buffer.copyFromChannel(second_list, i, second_list_index);
+              combined.set(second_list, first_list_index);
+            }
 
             new_buffer.copyToChannel(combined, i);
             original_buffer.copyFromChannel(cut_range, i, first_list_index);
