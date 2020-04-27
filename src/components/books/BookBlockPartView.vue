@@ -370,10 +370,6 @@ export default {
       audioEditFootnote: {footnote: {}, isAudioChanged: false},
       check_id: null,
       footnoteIdx: null,
-      audioSelectPos: {
-        start: Number,
-        end: Number
-      },
       isSaving: false
     }
   },
@@ -2713,43 +2709,19 @@ Save audio changes and realign the Block?`,
             });
         }
       },
-      evFromAudioeditorSelect (blockId, start, end) {
+      evFromAudioeditorSelect (blockId, indexes) {
         if (blockId == this.check_id) {
-          if (start !== this.audioSelectPos.start || end !== this.audioSelectPos.end) {
-            let ref;
-            if (this.footnoteIdx !== null) {
-              ref = this.$refs['footnoteContent_' + this.footnoteIdx];
-              if (ref) {
-                ref = ref[0];
-              }
-            } else {
-              if (this.$refs.blockContent) {
-                ref = this.$refs.blockContent;
-              }
-            }
-            if (ref && ref.querySelectorAll) {
-              let startInt = parseInt(start * 1000);
-              let endInt = parseInt(end * 1000);
-              //console.log('evFromAudioeditorSelect', startInt, endInt);
-              ref.querySelectorAll('w').forEach(e => {
-                let map = $(e).attr('data-map');
-                if(map) {
-                  map = map.split(',');
-                  if (map.length == 2) {
-                    map[0] = parseInt(map[0]);
-                    map[1] = map[0] + parseInt(map[1]);
-                    if ((map[0] >= startInt && map[0] < endInt) ||
-                            (map[0] < startInt && map[1] > startInt)) {
-                       $(e).addClass('selected');
-                    } else {
-                      $(e).removeClass('selected');
-                    }
-                  }
-                }
+          if (Array.isArray(indexes) && indexes.length > 0) {
+            
+            if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
+              this.$refs.blockContent.querySelectorAll('w.selected').forEach(el => {
+                el.classList.remove('selected');
               });
+              indexes.forEach(i => {
+                this.$refs.blockContent.querySelectorAll('w[data-map]')[i].classList.add('selected');
+              });
+              //this.$forceUpdate();
             }
-            this.audioSelectPos.start = start;
-            this.audioSelectPos.end = end;
           }
         }
       },

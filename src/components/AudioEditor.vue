@@ -2036,7 +2036,17 @@ Discard unsaved audio changes?`,
             if (typeof val.start !== 'undefined' && typeof val.end !== 'undefined') {
               if (val.start !== oldVal.start || val.end !== oldVal.end) {
                 this._clearWordSelection();
-                this.$root.$emit('from-audioeditor:select', this.blockId, val.start, val.end);
+                let list = [];
+                this.audiosourceEditor.annotationList.annotations.every((al, i) => {
+                  if ((al.start >= val.start && al.start <= val.end) || (al.end >= val.start && al.end <= val.end) || (al.start < val.start && al.end > val.end)) {
+                    list.push(i);
+                  }
+                  if (al.start > val.end) {
+                    return false;
+                  }
+                  return true;
+                });
+                this.$root.$emit('from-audioeditor:select', this.blockId, list);
               }
             }
           } else {
