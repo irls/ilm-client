@@ -2505,65 +2505,40 @@ Save audio changes and realign the Block?`,
           }
         }
       },
-      evFromAudioeditorWordRealign(map, blockId, shiftedInfo) {
+      evFromAudioeditorWordRealign(map, blockId) {
         if (blockId == this.check_id) {
           this.audStop();
           //console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
           if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
             let current_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
-            let manual_boundaries = [];
-            this.$refs.blockContent.querySelectorAll('[data-map]').forEach((_w, i) => {
-              if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
-                let _m = map.shift();
-                if (_m) {
-                  let w_map = _m.join()
-                  let currentMap = $(_w).attr('data-map').split(',');
-                  currentMap[0] = parseInt(currentMap[0]);
-                  currentMap[1] = parseInt(currentMap[1]);
-                  if (shiftedInfo.index == i) {
-                    if (shiftedInfo.position == 0) {
-                      //console.log(`PUSH 0 ${_m[0]}, ${currentMap[0]}`, $(_w).text())
-                      manual_boundaries.push(_m[0])
-                    }
-                    if (shiftedInfo.position == 1) {
-                      //console.log(`PUSH 1 ${_m[1]}, ${currentMap[1]}`, $(_w).text())
-                      //console.log(`PUSH 1 ${_m[0] + _m[1]}, ${currentMap[0] + currentMap[1]}`, $(_w).text())
-                      manual_boundaries.push(_m[0] + _m[1])
-                    }
-                    if (currentMap[0] != _m[0] && manual_boundaries.indexOf(_m[0]) == -1) {
-                      if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
-                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
-                      }
-                      //manual_boundaries.push(_m[0]);
-                    }
-                    if (currentMap[0] + currentMap[1] != _m[0] + _m[1] && manual_boundaries.indexOf(_m[0] + _m[1]) == -1) {
-                      if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
-                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
-                      }
-                      //manual_boundaries.push(_m[0] + _m[1]);
-                    }
-                  }
-                  //console.log(current_boundaries, currentMap[0], manual_boundaries, _m[0])
-                  //console.log(current_boundaries.indexOf(currentMap[0]))
-                  if (current_boundaries.indexOf(currentMap[0]) !== -1 && manual_boundaries.indexOf(_m[0]) === -1) {
-                    manual_boundaries.push(_m[0]);
-                    //console.log(`PUSH ${_m[0]}`);
-                  }
-                  $(_w).attr('data-map', w_map)
-                }
-              }
+            let w_maps = this.$refs.blockContent.querySelectorAll('[data-map]');
+            
+            let currentMap = w_maps[map[1].index].getAttribute('data-map').split(',');
+            currentMap[0] = parseInt(currentMap[0]);
+            currentMap[1] = parseInt(currentMap[1]);
+            
+            map.forEach(m => {
+              w_maps[m.index].setAttribute('data-map', m.map.join());
             });
-            /*this.blockPart.manual_boundaries = manual_boundaries;
-            this.blockPart.content = this.$refs.blockContent.innerHTML;
-            this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries);
-            this.blockAudio.map = this.blockPart.content;
-            this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
-            if (!this.isSplittedBlock) {
-              this.block.setManualBoundaries(manual_boundaries);
-              this.block.setContent(this.blockPart.content);
-              this.$parent.refreshBlockAudio();
+            let manual_boundaries = [map[1].map[0]];
+            if (currentMap[0] !== map[1].map[0] && manual_boundaries.indexOf(map[1].map[0]) === -1) {
+              if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
+                manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
+              }
+              //manual_boundaries.push(_m[0]);
             }
-            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);*/
+            if (currentMap[0] + currentMap[1] !== map[1].map[0] + map[1].map[1] && manual_boundaries.indexOf(map[1].map[0] + map[1].map[1]) === -1) {
+              if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
+                manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
+              }
+              //manual_boundaries.push(_m[0] + _m[1]);
+            }
+            current_boundaries.forEach(_m => {
+              if (manual_boundaries.indexOf(_m) === -1) {
+                manual_boundaries.push(_m);
+                //console.log(`PUSH ${_m[0]}`);
+              }
+            })
             this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
             this.blockPart.manual_boundaries = manual_boundaries.slice();
             manual_boundaries = null;
@@ -2572,7 +2547,9 @@ Save audio changes and realign the Block?`,
             this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
-            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            if (this.audioTasksQueue.queue.length === 0) {
+              this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            }
             this.showPinnedInText();
             //this.pushChange('content');
 
@@ -2846,6 +2823,12 @@ Save audio changes and realign the Block?`,
                 break;
               case 'save-part-audio':
                 task = this.assembleBlockPartAudioEdit(...record.options);
+                break;
+              case 'manual_boundaries':
+                task = new Promise((resolve, reject) => {
+                  this.evFromAudioeditorWordRealign(...record.options);
+                  return resolve();
+                });
                 break;
               default:
                 task = Promise.resolve();

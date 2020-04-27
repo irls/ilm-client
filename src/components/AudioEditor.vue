@@ -315,8 +315,10 @@
           this.isPaused = false;
           let clear = [];
           if (mode === 'block' && block) {
+            if (block._id !== this.blockId) {
+              this._clearHistoryLocal();
+            }
             this.setAudioTasksBlockId(block._id);
-            this._clearHistoryLocal();
           }
           if (this.audiosourceEditor) {
             this.audiosourceEditor.tracks.forEach(t => {
@@ -808,23 +810,40 @@
           //console.log(`%c COMPARE ${this.audioTasksQueue.time}, ${queue_record.time}`, `color: #bada55; background-color: #222;`)
           this.emitDisplayWordSelection();
           if (this.audioTasksQueue.time === queue_record.time) {
-            let api = this.$store.state.auth.getHttp();
-            api.get(audio, {
-              responseType: 'arraybuffer'
-            })
-              .then((response) => {
-                //console.log(response);
-                this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
-                  this.setAudioBuffer(buffer);
-                  this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
-                  this._setText(text, block);
-                  this.audiosourceEditor.drawRequest();
-                });
-              })
-              .catch(err => {
-                console.log('ERROR');
-                console.log(err);
-              });
+            let replay = this.isPlaying;
+            let stopPlay = new Promise((resolve, reject) => {
+              if (replay) {
+                return this.pause()
+                  .then(() => {
+                    return resolve();
+                  });
+              } else {
+                return resolve();
+              }
+            });
+            return stopPlay
+              .then(() => {
+                let api = this.$store.state.auth.getHttp();
+                return api.get(audio, {
+                  responseType: 'arraybuffer'
+                })
+                  .then((response) => {
+                    //console.log(response);
+                    this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
+                      this.setAudioBuffer(buffer);
+                      this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+                      this._setText(text, block);
+                      this.audiosourceEditor.drawRequest();
+                      if (replay) {
+                        this.play();
+                      }
+                    });
+                  })
+                  .catch(err => {
+                    console.log('ERROR');
+                    console.log(err);
+                  });
+                })
           }
         },
         play(cursorPosition) {
@@ -1180,7 +1199,7 @@
             } else if (al.start > this.selection.start && al.start < this.selection.end) {// cut end of the word
               al.start = this.selection.start;
               al.end-= diff;
-              this._changeWordPositions();
+              this._changeWordPositions(al, i);
             }
           });
           /*if (pos && pos.length == 2) {
@@ -1241,7 +1260,7 @@
             });*/
           let shift = 0;
           let min = 0.05;
-          this.audiosourceEditor.annotationList.annotations.forEach(al => {
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
             let duration = al.end - al.start;
             if (shift > 0) {
               if (duration - shift > min) {
@@ -1268,6 +1287,7 @@
                   //manual_boundaries.splice(mb_index, 1);
                 //}
               }
+              this._changeWordPositions(al, i);
             }
             if (al.end - al.start < min) {
               let delta = (min - (al.end - al.start));
@@ -1698,7 +1718,7 @@ Discard unsaved audio changes?`,
             this.isHistoryFull = false;
           }
         },
-        _addHistoryLocal(type, range, start, end) {
+        _addHistoryLocal(type, range, start, end, additional = []) {
           let record = {
             type: type,
             range: range,
@@ -1706,7 +1726,8 @@ Discard unsaved audio changes?`,
               start: start,
               end: end
             },
-            annotations: []
+            annotations: [],
+            additional: additional
           };
           this.audiosourceEditor.annotationList.annotations.forEach(an => {
             record.annotations.push(Object.assign({}, an));
@@ -2108,8 +2129,6 @@ Discard unsaved audio changes?`,
 
           if (shiftedAnnotation) {
             //this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
-            this._addHistoryLocal('manual_boundaries');
-            this.addTaskQueue('manual_boundaries');
             if (shiftedAnnotation.end - shiftedAnnotation.start < this.minWordSize) {// find words with length less than minimum
               let shift = this.minWordSize - (shiftedAnnotation.end - shiftedAnnotation.start);
               let found = false;
@@ -2210,10 +2229,23 @@ Discard unsaved audio changes?`,
             });
           }
           this.audiosourceEditor.drawRequest();
-          this.$root.$emit('from-audioeditor:word-realign', map, this.blockId, {
-            index: parseInt(moveIndex / 2),
-            position: moveIndex % 2
-          });
+          this._addHistoryLocal('manual_boundaries');
+          let shiftedWords = [];
+          let index = parseInt(moveIndex / 2);
+          if (moveIndex % 2 === 1) {
+            shiftedWords.push({index: index, map: map[index]});
+            shiftedWords.push({index: index + 1, map: map[index + 1]});
+          } else {
+            shiftedWords.push({index: index - 1, map: map[index - 1]});
+            shiftedWords.push({index: index, map: map[index]});
+          }
+          if (this.audioTasksQueue.queue.length > 0) {
+            this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), this.blockId]);
+          }
+          $($(`.annotation-box`)[shiftedWords[1].index]).find(`.resize-handle.resize-w`).addClass('manual');
+          
+          $($(`.annotation-box`)[shiftedWords[0].index]).find(`.resize-handle.resize-e`).addClass('manual');
+          this.$root.$emit('from-audioeditor:word-realign', shiftedWords, this.blockId);
           this.isModified = true;
           if (this.wordSelectionMode !== false) {
             if (shiftedIndex === this.wordSelectionMode ||
