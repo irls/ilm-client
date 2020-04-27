@@ -1062,17 +1062,29 @@
           this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
           
           this._addHistoryLocal('insert_silence', null, this.cursorPosition, this.cursorPosition + this.silenceLength);
-          this.audiosourceEditor.annotationList.annotations.forEach(al => {
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
             if (al.start > time) {
               al.start+= this.silenceLength;
+              this._changeWordPositions(al, i);
             }
             if (al.end > time) {
               al.end+= this.silenceLength;
+              this._changeWordPositions(al, i);
             }
           });
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
           //this.clearSelection();
           this.isModified = true;
+        },
+        _changeWordPositions(new_positions, index) {
+          
+          let w = this.words.find(_w => {
+            return _w.index === index;
+          });//this.words.push({start: map[0], end: map[1], index: this.words.length, alignedIndex: alignedWords++})
+          if (w) {
+            w.start = new_positions.start;
+            w.end = new_positions.end;
+          }
         },
         insertRangeAction(position, range, length) {
           let original_buffer = this.audiosourceEditor.activeTrack.buffer;
@@ -1150,20 +1162,25 @@
           let cut_range = this.cutRangeAction(this.selection.start, this.selection.end);
           this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
           let diff = this.selection.end - this.selection.start;
-          this.audiosourceEditor.annotationList.annotations.forEach(al => {
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
             if (al.start <= this.selection.start && al.end >= this.selection.end) {// cut middle of the word
               al.end-= diff;
+              this._changeWordPositions(al, i);
             } else if (al.start >= this.selection.end) {// word after selection
               al.start-= diff;
               al.end-= diff;
+              this._changeWordPositions(al, i);
             } else if (al.start >= this.selection.start && al.end <= this.selection.end) {// cut word
               al.start = this.selection.start;
               al.end = this.selection.start;
+              this._changeWordPositions(al, i);
             } else if (al.end > this.selection.start && al.end < this.selection.end) {// cut end of the word
               al.end = this.selection.start;
+              this._changeWordPositions(al, i);
             } else if (al.start > this.selection.start && al.start < this.selection.end) {// cut end of the word
               al.start = this.selection.start;
               al.end-= diff;
+              this._changeWordPositions();
             }
           });
           /*if (pos && pos.length == 2) {
@@ -2284,15 +2301,19 @@ Revert to original block audio?`,
         emitDisplayWordSelection() {
           if (!this.isSinglePointSelection && typeof this.selection.start !== 'undefined' && typeof this.selection.end!== 'undefined') {
             let list = [];
-            this.audiosourceEditor.annotationList.annotations.every((al, i) => {
-              if ((al.start >= this.selection.start && al.start <= this.selection.end) || (al.end >= this.selection.start && al.end <= this.selection.end) || (al.start < this.selection.start && al.end > this.selection.end)) {
-                list.push(i);
-              }
-              if (al.start > this.selection.end) {
-                return false;
-              }
-              return true;
-            });
+            if (this.wordSelectionMode !== false) {
+              list.push(this.wordSelectionMode);
+            } else {
+              this.audiosourceEditor.annotationList.annotations.every((al, i) => {
+                if ((al.start >= this.selection.start && al.start <= this.selection.end) || (al.end >= this.selection.start && al.end <= this.selection.end) || (al.start < this.selection.start && al.end > this.selection.end)) {
+                  list.push(i);
+                }
+                if (al.start > this.selection.end) {
+                  return false;
+                }
+                return true;
+              });
+            }
             this.$root.$emit('from-audioeditor:select', this.blockId, list);
           }
         },
