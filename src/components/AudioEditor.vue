@@ -806,6 +806,7 @@
         },
         setAudioSilent(queue_record, audio, text, saveToHistory = true, block = null) {
           //console.log(`%c COMPARE ${this.audioTasksQueue.time}, ${queue_record.time}`, `color: #bada55; background-color: #222;`)
+          this.emitDisplayWordSelection();
           if (this.audioTasksQueue.time === queue_record.time) {
             let api = this.$store.state.auth.getHttp();
             api.get(audio, {
@@ -2032,21 +2033,12 @@ Discard unsaved audio changes?`,
           this.$root.$emit('cancel-align');
         },
         smoothSelection: _.debounce(function (val, oldVal) {
+          
           if (!this.blockSelectionEmit) {
             if (typeof val.start !== 'undefined' && typeof val.end !== 'undefined') {
               if (val.start !== oldVal.start || val.end !== oldVal.end) {
                 this._clearWordSelection();
-                let list = [];
-                this.audiosourceEditor.annotationList.annotations.every((al, i) => {
-                  if ((al.start >= val.start && al.start <= val.end) || (al.end >= val.start && al.end <= val.end) || (al.start < val.start && al.end > val.end)) {
-                    list.push(i);
-                  }
-                  if (al.start > val.end) {
-                    return false;
-                  }
-                  return true;
-                });
-                this.$root.$emit('from-audioeditor:select', this.blockId, list);
+                this.emitDisplayWordSelection();
               }
             }
           } else {
@@ -2287,6 +2279,21 @@ Revert to original block audio?`,
                 this.actionsLog = [];
                 this.cursorPosition = 0;
               });
+          }
+        },
+        emitDisplayWordSelection() {
+          if (!this.isSinglePointSelection && typeof this.selection.start !== 'undefined' && typeof this.selection.end!== 'undefined') {
+            let list = [];
+            this.audiosourceEditor.annotationList.annotations.every((al, i) => {
+              if ((al.start >= this.selection.start && al.start <= this.selection.end) || (al.end >= this.selection.start && al.end <= this.selection.end) || (al.start < this.selection.start && al.end > this.selection.end)) {
+                list.push(i);
+              }
+              if (al.start > this.selection.end) {
+                return false;
+              }
+              return true;
+            });
+            this.$root.$emit('from-audioeditor:select', this.blockId, list);
           }
         },
         ...mapActions(['addAudioTask', 'popAudioTask', 'setAudioTasksBlockId'])
