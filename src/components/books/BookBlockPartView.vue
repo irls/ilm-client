@@ -2715,10 +2715,11 @@ Save audio changes and realign the Block?`,
         if (this.check_id === blockId) {
           if (Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
             let oldBoundaries = this.blockPart.manual_boundaries;
-            this.blockPart.manual_boundaries = this.blockPart.manual_boundaries.filter(mb => {
+            let new_mb = this.blockPart.manual_boundaries.filter(mb => {
               return mb <= position;
             });
-            this.block.setPartManualBoundaries(this.blockPartIdx, this.blockPart.manual_boundaries);
+            this.block.setPartManualBoundaries(this.blockPartIdx, new_mb);
+            this.blockPart.manual_boundaries = new_mb;
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
             this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
