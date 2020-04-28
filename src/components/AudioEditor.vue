@@ -2241,11 +2241,12 @@ Discard unsaved audio changes?`,
           }
           if (this.audioTasksQueue.queue.length > 0) {
             this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), this.blockId]);
+            $($(`.annotation-box`)[shiftedWords[1].index]).find(`.resize-handle.resize-w`).addClass('manual');
+
+            $($(`.annotation-box`)[shiftedWords[0].index]).find(`.resize-handle.resize-e`).addClass('manual');
+          } else {
+            this.$root.$emit('from-audioeditor:word-realign', shiftedWords, this.blockId);
           }
-          $($(`.annotation-box`)[shiftedWords[1].index]).find(`.resize-handle.resize-w`).addClass('manual');
-          
-          $($(`.annotation-box`)[shiftedWords[0].index]).find(`.resize-handle.resize-e`).addClass('manual');
-          this.$root.$emit('from-audioeditor:word-realign', shiftedWords, this.blockId);
           this.isModified = true;
           if (this.wordSelectionMode !== false) {
             if (shiftedIndex === this.wordSelectionMode ||
@@ -2262,6 +2263,9 @@ Discard unsaved audio changes?`,
           this.processRun = val;
           this.processRunType = type;
           if (val) {
+            if (this.mode === 'block' && ['save', 'align'].indexOf(type) !== -1) {
+              this._clearHistoryLocal();
+            }
             this.$root.$emit('preloader-toggle', true, type);
           } else {
             this.$root.$emit('preloader-toggle', false, '');
