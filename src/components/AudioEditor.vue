@@ -810,6 +810,9 @@
           //console.log(`%c COMPARE ${this.audioTasksQueue.time}, ${queue_record.time}`, `color: #bada55; background-color: #222;`)
           this.emitDisplayWordSelection();
           if (this.audioTasksQueue.time === queue_record.time) {
+            if (block) {
+              this.block.manual_boundaries = block.manual_boundaries || [];
+            }
             let replay = this.isPlaying;
             let stopPlay = new Promise((resolve, reject) => {
               if (replay) {
@@ -1718,7 +1721,7 @@ Discard unsaved audio changes?`,
             this.isHistoryFull = false;
           }
         },
-        _addHistoryLocal(type, range, start, end, additional = []) {
+        _addHistoryLocal(type, range, start, end, additional = {}) {
           let record = {
             type: type,
             range: range,
@@ -1760,6 +1763,26 @@ Discard unsaved audio changes?`,
                 case 'erase':
                   this.cutRangeAction(record.selection.start, record.selection.end);
                   this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
+                  break;
+                case 'manual_boundaries':
+                  if (record.additional && record.additional.shifted && record.additional.oldMap) {
+                    record.additional.shifted.forEach(sw => {
+                      let oldMap = record.additional.oldMap.shift();
+                      if (oldMap) {
+                        this.audiosourceEditor.annotationList.annotations[sw.index].start = oldMap.start;
+                        this.audiosourceEditor.annotationList.annotations[sw.index].end = oldMap.end;
+                      }
+                    });
+                    if (Array.isArray(record.additional.manual_boundaries) && record.additional.manual_boundaries.indexOf(record.additional.shifted[1].start) === -1) {
+                      $($(`.annotation-box`)[record.additional.shifted[1].index]).find(`.resize-handle.resize-w`).removeClass('manual');
+
+                      $($(`.annotation-box`)[record.additional.shifted[0].index]).find(`.resize-handle.resize-e`).removeClass('manual');
+                    }
+                    //this.audiosourceEditor.renderAnnotations();
+                    //this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+                    //this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+                    this.audiosourceEditor.drawRequest();
+                  }
                   break;
               }
             } else {
@@ -2093,6 +2116,10 @@ Discard unsaved audio changes?`,
 
         smoothDrag:_.debounce(function (ev) {
           let moveIndex = $('.annotations-boxes .annotation-box .resize-handle').index(ev.target);
+          let oldMap = [];
+          this.words.forEach(w => {
+            oldMap.push(Object.assign({}, w));
+          });
           $('.annotation-resize-pos').remove();// hide resize marker
           if (!this._isAnnotationsEditable()) {
             this.showModal('onWordRepositionMessage');
@@ -2229,7 +2256,6 @@ Discard unsaved audio changes?`,
             });
           }
           this.audiosourceEditor.drawRequest();
-          this._addHistoryLocal('manual_boundaries');
           let shiftedWords = [];
           let index = parseInt(moveIndex / 2);
           if (moveIndex % 2 === 1) {
@@ -2239,6 +2265,15 @@ Discard unsaved audio changes?`,
             shiftedWords.push({index: index - 1, map: map[index - 1]});
             shiftedWords.push({index: index, map: map[index]});
           }
+          let shiftedOldMap = [];
+          shiftedWords.forEach(sw => {
+            shiftedOldMap.push(oldMap[sw.index]);
+          })
+          this._addHistoryLocal('manual_boundaries', null, null, null, {
+            shifted: shiftedWords,
+            oldMap: shiftedOldMap,
+            manual_boundaries: this.block.manual_boundaries
+          });
           if (this.audioTasksQueue.queue.length > 0) {
             this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), this.blockId]);
             $($(`.annotation-box`)[shiftedWords[1].index]).find(`.resize-handle.resize-w`).addClass('manual');

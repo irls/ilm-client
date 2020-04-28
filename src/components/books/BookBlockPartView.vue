@@ -2506,6 +2506,7 @@ Save audio changes and realign the Block?`,
         }
       },
       evFromAudioeditorWordRealign(map, blockId) {
+        let response_params = null;
         if (blockId == this.check_id) {
           this.audStop();
           //console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
@@ -2549,6 +2550,12 @@ Save audio changes and realign the Block?`,
             this.blockAudio.map = this.blockPart.content;
             if (this.audioTasksQueue.queue.length === 0) {
               this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            } else {
+              if (this.isSplittedBlock) {
+                response_params = [this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), true, Object.assign({_id: check_id}, this.blockPart)];
+              } else {
+                response_params = [this.blockAudio.src, this.blockAudio.map, true, this.block];
+              }
             }
             this.showPinnedInText();
             //this.pushChange('content');
@@ -2563,6 +2570,7 @@ Save audio changes and realign the Block?`,
           }
           this.isAudioChanged = true;
         }
+        return response_params;
       },
       evFromAudioeditorSaveAndRealign (blockId, check_realign = true, realign = false) {
         if (blockId == this.check_id) {
@@ -2826,8 +2834,8 @@ Save audio changes and realign the Block?`,
                 break;
               case 'manual_boundaries':
                 task = new Promise((resolve, reject) => {
-                  this.evFromAudioeditorWordRealign(...record.options);
-                  return resolve();
+                  let response = this.evFromAudioeditorWordRealign(...record.options);
+                  return resolve(response);
                 });
                 break;
               default:
