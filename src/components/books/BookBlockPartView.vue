@@ -2552,7 +2552,7 @@ Save audio changes and realign the Block?`,
               this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
             } else {
               if (this.isSplittedBlock) {
-                response_params = [this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), true, Object.assign({_id: check_id}, this.blockPart)];
+                response_params = [this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), true, Object.assign({_id: this.check_id}, this.blockPart)];
               } else {
                 response_params = [this.blockAudio.src, this.blockAudio.map, true, this.block];
               }
