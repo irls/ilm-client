@@ -2711,6 +2711,7 @@ Save audio changes and realign the Block?`,
         }
       },
       evFromAudioeditorUnpinRight(position, blockId) {
+        let response = null;
         if (this.check_id === blockId) {
           if (Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
             let oldBoundaries = this.blockPart.manual_boundaries;
@@ -2727,9 +2728,11 @@ Save audio changes and realign the Block?`,
               this.isAudioChanged = true;
             }
             this.showPinnedInText();
-            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
+            //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
+            response = [this.blockAudio.src, this.blockAudio.map, true, this.blockPart];
           }
         }
+        return response;
       },
       evFromAudioeditorEraseAudio(blockId, start, end) {
         if (blockId === this.check_id) {
@@ -2835,6 +2838,12 @@ Save audio changes and realign the Block?`,
               case 'manual_boundaries':
                 task = new Promise((resolve, reject) => {
                   let response = this.evFromAudioeditorWordRealign(...record.options);
+                  return resolve(response);
+                });
+                break;
+              case 'unpin_right':
+                task = new Promise((resolve, reject) => {
+                  let response = this.evFromAudioeditorUnpinRight(...record.options.concat([this.check_id]));
                   return resolve(response);
                 });
                 break;

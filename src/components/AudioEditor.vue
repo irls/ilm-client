@@ -1784,6 +1784,9 @@ Discard unsaved audio changes?`,
                     this.audiosourceEditor.drawRequest();
                   }
                   break;
+                case 'unpin_rightward':
+                  
+                  break;
               }
             } else {
               this.audiosourceEditor.renderAnnotations();
@@ -2314,7 +2317,18 @@ Discard unsaved audio changes?`,
 
         unpinRight(event) {
           let position = (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
-          this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+            if (al.start >= position) {
+              $($(`.annotation-box`)[i]).find(`.resize-handle.resize-w`).removeClass('manual');
+            }
+            if (al.end >= position) {
+              $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e`).removeClass('manual');
+            }
+          });
+          this._addHistoryLocal('unpin_right', null, null, null, {manual_boundaries: this.block.manual_boundaries});
+          this.addTaskQueue('unpin_right', [position * 1000]);
+          this.isModified = true;
+          //this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
         },
         revert(warn = false) {
           if (this.isRevertDisabled) {
