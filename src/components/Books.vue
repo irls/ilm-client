@@ -577,5 +577,10 @@ export default {
     background-image: url(/static/preloader-audio-positioning.gif);
   }
 }
+.-subblock {
+  .locked-block-cover {
+    height: 125%;
+  }
+}
 
 </style>
