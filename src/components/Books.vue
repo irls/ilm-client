@@ -579,7 +579,7 @@ export default {
 }
 .-subblock {
   .locked-block-cover {
-    height: 125%;
+    height: 123%;
   }
 }
 
