@@ -1793,8 +1793,15 @@ Discard unsaved audio changes?`,
                     this.audiosourceEditor.drawRequest();
                   }
                   break;
-                case 'unpin_rightward':
-                  
+                case 'unpin_right':
+                  if (record.additional.unpinned_indexes) {
+                    record.additional.unpinned_indexes.start.forEach(i => {
+                      $($(`.annotation-box`)[i]).find(`.resize-handle.resize-w`).addClass('manual');
+                    });
+                    record.additional.unpinned_indexes.end.forEach(i => {
+                      $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e`).addClass('manual');
+                    });
+                  }
                   break;
               }
             } else {
@@ -2326,15 +2333,21 @@ Discard unsaved audio changes?`,
 
         unpinRight(event) {
           let position = (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+          let unpinned_indexes = {start: [], end: []};
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
-            if (al.start >= position) {
-              $($(`.annotation-box`)[i]).find(`.resize-handle.resize-w`).removeClass('manual');
+            let resize_w = $($(`.annotation-box`)[i]).find(`.resize-handle.resize-w.manual`);
+            if (al.start >= position && resize_w.length > 0) {
+              unpinned_indexes.start.push(i);
+              resize_w.removeClass('manual');
             }
-            if (al.end >= position) {
-              $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e`).removeClass('manual');
+            let resize_e = $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e.manual`);
+            if (al.end >= position && resize_e.length > 0) {
+              unpinned_indexes.end.push(i);
+              resize_e.removeClass('manual');
             }
           });
-          this._addHistoryLocal('unpin_right', null, null, null, {manual_boundaries: this.block.manual_boundaries});
+          
+          this._addHistoryLocal('unpin_right', null, null, null, {unpinned_indexes: unpinned_indexes});
           this.addTaskQueue('unpin_right', [position * 1000]);
           this.isModified = true;
           //this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
