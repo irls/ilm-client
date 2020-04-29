@@ -2480,9 +2480,9 @@ Save audio changes and realign the Block?`,
               }, 1000);
             });
             if (this.isSplittedBlock) {
-              this.isSaving = true;
+              this.isUpdating = true;
             } else {
-              this.$parent.isSaving = true;
+              this.$parent.isUpdating = true;
             }
             return waitStopRunning
               .then(() => {
@@ -2495,7 +2495,7 @@ Save audio changes and realign the Block?`,
                     this.unsetChange('manual_boundaries');
 
                     this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
-                    this.isSaving = false;
+                    this.isUpdating = false;
                   });
                 });
           }
