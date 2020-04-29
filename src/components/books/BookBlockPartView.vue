@@ -393,7 +393,7 @@ export default {
         if (this.isUpdating) {
           return true;
         }
-        if (this.audioTasksQueue.blockId === this.check_id && this.audioTasksQueue.running) {
+        if (this.check_id && this.audioTasksQueue.blockId === this.check_id && this.audioTasksQueue.running) {
           return true;
         }
         return this.block ? this.isBlockLocked(this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null) : false;
@@ -2469,16 +2469,35 @@ Save audio changes and realign the Block?`,
         if (blockId === this.check_id) {
           this.clearAudioTasks(false);
           if (this.isAudioChanged) {
-            this.discardAudioEdit(this.footnoteIdx, false, this.isSplittedBlock ? this.blockPartIdx : null)
+            let checks = 0;
+            let waitStopRunning = new Promise((resolve, reject) => {// if there is running queue request then wait for it to finish
+              let waitInterval = setInterval(() => {
+                ++checks;
+                if (this.audioTasksQueue.running === null || checks >= 20) {
+                  clearInterval(waitInterval);
+                  return resolve();
+                }
+              }, 1000);
+            });
+            if (this.isSplittedBlock) {
+              this.isSaving = true;
+            } else {
+              this.$parent.isSaving = true;
+            }
+            return waitStopRunning
               .then(() => {
-                this.isAudioChanged = false;
-                this.isChanged = false;
-                this.unsetChange('audio');
-                this.unsetChange('content');
-                this.unsetChange('manual_boundaries');
+                this.discardAudioEdit(this.footnoteIdx, false, this.isSplittedBlock ? this.blockPartIdx : null)
+                  .then(() => {
+                    this.isAudioChanged = false;
+                    this.isChanged = false;
+                    this.unsetChange('audio');
+                    this.unsetChange('content');
+                    this.unsetChange('manual_boundaries');
 
-                this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
-              });
+                    this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
+                    this.isSaving = false;
+                  });
+                });
           }
           //$('nav.fixed-bottom').addClass('hidden');
 

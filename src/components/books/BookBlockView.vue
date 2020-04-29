@@ -1649,6 +1649,7 @@ export default {
           api_url+= '/part/' + partIdx;
         }
         let api = this.$store.state.auth.getHttp();
+        this.isSaving = !this.isSplittedBlock;
         return api.delete(api_url, {}, {})
           .then(response => {
             if (response.status == 200 && response.data) {
@@ -1685,6 +1686,7 @@ export default {
                 this.audioEditFootnote.isAudioChanged = false;
               }
             }
+            this.isSaving = false;
             return Promise.resolve();
           })
           .catch(err => {

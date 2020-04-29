@@ -1061,6 +1061,7 @@
           $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
           $(`#content-${this.blockId}`).off('click', 'w', this.showSelection);
           this.$root.$off('for-audioeditor:select', this.select);
+          this.$root.$off('for-audioeditor:reload-text', this._setText);
         },
         addSilence() {
           if (this.silenceLength > 0 && this.cursorPosition >= 0) {
