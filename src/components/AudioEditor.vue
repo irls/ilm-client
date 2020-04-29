@@ -834,8 +834,11 @@
                     //console.log(response);
                     this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
                       this.setAudioBuffer(buffer);
-                      this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+                      this.audiosourceEditor.activeTrack.duration = buffer.duration;
+                      this.audiosourceEditor.duration = buffer.duration;
                       this._setText(text, block);
+                      this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+                      this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
                       this.audiosourceEditor.drawRequest();
                       if (replay) {
                         this.play();
@@ -1299,6 +1302,9 @@
               al.end+=delta;
             }
           });
+          if (shift > 0) {
+            this.insertRangeAction(this.audiosourceEditor.duration, new Float32Array(shift * this.audiosourceEditor.activeTrack.buffer.sampleRate), shift);
+          }
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
           this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000)]);
           this.clearSelection();
@@ -1363,6 +1369,8 @@
           //console.log(new _Playout.default(this.audiosourceEditor.ac, new_buffer));
           //console.log(new _Playout(this.audiosourceEditor.ac, new_buffer));
           //this.audiosourceEditor.activeTrack.playout.setBuffer(new_buffer);
+          //this.audiosourceEditor.activeTrack.duration = new_buffer.duration;
+          //this.audiosourceEditor.duration = new_buffer.duration;
           this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
         },
         addTaskQueue(type, options) {
