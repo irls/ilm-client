@@ -2776,24 +2776,6 @@ Save audio changes and realign the Block?`,
         }
         return response;
       },
-      evFromAudioeditorEraseAudio(blockId, start, end) {
-        if (blockId === this.check_id) {
-          this.isAudioChanged = true;
-          this.isUpdating = true;
-          this.audStop();
-          if (this.isSplittedBlock) {
-            this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
-          } else {
-            this.block.setContent(this.clearBlockContent());
-          }
-          return this.eraseAudio(start, end, null, this.blockPartIdx, this.check_id)
-            .then(() => {
-              this.isUpdating = false;
-              this.blockAudio.map = this.blockContent();
-              this.blockAudio.src = this.blockAudiosrc('m4a');
-            });
-          }
-      },
       evFromAudioEditorRevert(blockId) {
         if (blockId == this.check_id) {
           this.clearAudioTasks(true);
@@ -2817,6 +2799,24 @@ Save audio changes and realign the Block?`,
           } else {
             return this.discardAudioEdit(null, true, this.blockPartIdx, this.check_id);
           }
+        }
+      },
+      evFromAudioeditorEraseAudio(blockId, start, end) {
+        if (blockId === this.check_id) {
+          this.isAudioChanged = true;
+          this.isUpdating = true;
+          this.audStop();
+          if (this.isSplittedBlock) {
+            this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+          } else {
+            this.block.setContent(this.clearBlockContent());
+          }
+          return this.eraseAudio(start, end, null, this.blockPartIdx, this.check_id)
+            .then(() => {
+              this.isUpdating = false;
+              this.blockAudio.map = this.blockContent();
+              this.blockAudio.src = this.blockAudiosrc('m4a');
+            });
         }
       },
       evFromAudioEditorTasksQueuePush(blockId, queue) {
@@ -2935,8 +2935,8 @@ Save audio changes and realign the Block?`,
 
         this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
         this.$root.$on('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
-        this.$root.$on('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
         this.$root.$on('from-audioeditor:revert', this.evFromAudioEditorRevert);
+        this.$root.$on('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
         this.$root.$on('from-audioeditor:tasks-queue-push', this.evFromAudioEditorTasksQueuePush);
       },
       audioEditorEventsOff() {
@@ -2951,8 +2951,8 @@ Save audio changes and realign the Block?`,
         this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
         this.$root.$off('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
-        this.$root.$off('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
         this.$root.$off('from-audioeditor:revert', this.evFromAudioEditorRevert);
+        this.$root.$off('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
         this.$root.$off('from-audioeditor:tasks-queue-push', this.evFromAudioEditorTasksQueuePush);
       },
       //-- } -- end -- Events --//
@@ -3179,7 +3179,6 @@ Save audio changes and realign the Block?`,
         return this.isSplittedBlock ? this.block.blockid + '-part-' + this.blockPartIdx : this.block.blockid;
       },
       assembleBlockPartAudioEdit(realign, preparedData = false) {
-        
         
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/audio_edit/part/' + this.blockPartIdx;
         let api = this.$store.state.auth.getHttp();
