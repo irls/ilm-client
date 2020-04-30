@@ -2269,6 +2269,11 @@ Save audio changes and realign the Block?`,
                   if (!realign) {
                     this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
                   }
+                  if (!this.isSplittedBlock) {
+                    if (this.$refs.blocks && this.$refs.blocks[0]) {
+                      this.$refs.blocks[0].isAudioChanged = false;
+                    }
+                  }
                   return BPromise.resolve();
                 } else {
                   let resp_block = response.data;

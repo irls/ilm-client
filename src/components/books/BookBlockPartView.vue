@@ -2819,7 +2819,11 @@ Save audio changes and realign the Block?`,
                 task = this.eraseAudioSilent(...record.options.concat([this.check_id]));
                 break;
               case 'save-audio':
-                task = this.$parent.assembleBlockAudioEdit(...record.options, false);
+                task = this.$parent.assembleBlockAudioEdit(...record.options, false)
+                  .then(response => {
+                    this.isAudioChanged = false;
+                    return Promise.resolve(response);
+                  });
                 break;
               case 'save-audio-then-block':
                 task = new Promise((resolve, reject) => {
@@ -2828,6 +2832,7 @@ Save audio changes and realign the Block?`,
                       return this.$parent.assembleBlockProxy(false, true, [], false);
                     })
                     .then(() => {
+                      this.isAudioChanged = false;
                       return resolve();
                     })
                     .catch(err => {
