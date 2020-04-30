@@ -2532,7 +2532,7 @@ Save audio changes and realign the Block?`,
           }
         }
       },
-      evFromAudioeditorWordRealign(map, blockId) {
+      evFromAudioeditorWordRealign(map, pinnedIndex, blockId) {
         let response_params = null;
         if (blockId == this.check_id) {
           this.audStop();
@@ -2541,24 +2541,34 @@ Save audio changes and realign the Block?`,
             let current_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
             let w_maps = this.$refs.blockContent.querySelectorAll('[data-map]');
             
-            let currentMap = w_maps[map[1].index].getAttribute('data-map').split(',');
+            let currentMap = w_maps[map[pinnedIndex].index].getAttribute('data-map').split(',');
             currentMap[0] = parseInt(currentMap[0]);
             currentMap[1] = parseInt(currentMap[1]);
             
+            let manual_boundaries = [map[pinnedIndex].map[0]];
             map.forEach(m => {
+              let cMap = w_maps[m.index].getAttribute('data-map');
+              if (cMap) {
+                cMap = cMap.split(',');
+                cMap[0] = parseInt(cMap[0]);
+                cMap[1] = parseInt(cMap[1]);
+                if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
+                  manual_boundaries.push(m.map[0]);
+                  current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
+                }
+              }
               w_maps[m.index].setAttribute('data-map', m.map.join());
               if (m.map[1] > 50) {
                 w_maps[m.index].classList.remove('alignment-changed');
               }
             });
-            let manual_boundaries = [map[1].map[0]];
-            if (currentMap[0] !== map[1].map[0] && manual_boundaries.indexOf(map[1].map[0]) === -1) {
+            if (currentMap[0] !== map[pinnedIndex].map[0] && manual_boundaries.indexOf(map[pinnedIndex].map[0]) === -1) {
               if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
                 manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
               }
               //manual_boundaries.push(_m[0]);
             }
-            if (currentMap[0] + currentMap[1] !== map[1].map[0] + map[1].map[1] && manual_boundaries.indexOf(map[1].map[0] + map[1].map[1]) === -1) {
+            if (currentMap[0] + currentMap[1] !== map[pinnedIndex].map[0] + map[pinnedIndex].map[1] && manual_boundaries.indexOf(map[pinnedIndex].map[0] + map[pinnedIndex].map[1]) === -1) {
               if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
                 manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
               }
@@ -2569,7 +2579,8 @@ Save audio changes and realign the Block?`,
                 manual_boundaries.push(_m);
                 //console.log(`PUSH ${_m[0]}`);
               }
-            })
+            });
+            manual_boundaries = [...new Set(manual_boundaries)].sort((a, b) => {return a - b;});
             this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
             this.blockPart.manual_boundaries = manual_boundaries.slice();
             manual_boundaries = null;

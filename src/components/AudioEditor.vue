@@ -2277,13 +2277,19 @@ Discard unsaved audio changes?`,
           this.audiosourceEditor.drawRequest();
           let shiftedWords = [];
           let index = parseInt(moveIndex / 2);
+          let pinnedIndex = null
           if (moveIndex % 2 === 1) {
-            shiftedWords.push({index: index, map: map[index]});
-            shiftedWords.push({index: index + 1, map: map[index + 1]});
+            //shiftedWords.push({index: index, map: map[index]});
+            //shiftedWords.push({index: index + 1, map: map[index + 1]});
+            pinnedIndex = index + 1;
           } else {
-            shiftedWords.push({index: index - 1, map: map[index - 1]});
-            shiftedWords.push({index: index, map: map[index]});
+            //shiftedWords.push({index: index - 1, map: map[index - 1]});
+            //shiftedWords.push({index: index, map: map[index]});
+            pinnedIndex = index;
           }
+          map.forEach((m, i) => {
+            shiftedWords.push({index: i, map: m});
+          });
           let shiftedOldMap = [];
           shiftedWords.forEach(sw => {
             shiftedOldMap.push(oldMap[sw.index]);
@@ -2294,12 +2300,12 @@ Discard unsaved audio changes?`,
             manual_boundaries: this.block.manual_boundaries
           });
           if (this.audioTasksQueue.queue.length > 0) {
-            this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), this.blockId]);
-            $($(`.annotation-box`)[shiftedWords[1].index]).find(`.resize-handle.resize-w`).addClass('manual');
+            this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), pinnedIndex, this.blockId]);
+            $($(`.annotation-box`)[shiftedWords[pinnedIndex].index]).find(`.resize-handle.resize-w`).addClass('manual');
 
-            $($(`.annotation-box`)[shiftedWords[0].index]).find(`.resize-handle.resize-e`).addClass('manual');
+            $($(`.annotation-box`)[shiftedWords[pinnedIndex - 1].index]).find(`.resize-handle.resize-e`).addClass('manual');
           } else {
-            this.$root.$emit('from-audioeditor:word-realign', shiftedWords, this.blockId);
+            this.$root.$emit('from-audioeditor:word-realign', shiftedWords, pinnedIndex, this.blockId);
           }
           this.isModified = true;
           if (this.wordSelectionMode !== false) {
