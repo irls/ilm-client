@@ -2924,8 +2924,8 @@ Save text changes and realign the Block?`,
       },
 
       canDeleteFlagPart: function (flagPart) {
-          if (this.tc_allowNarrateUnassigned(this.block) && flagPart.creator === this.auth.getSession().user_id) {
-            return this.block.voicework === 'narration';
+          if (this.tc_allowNarrateUnassigned(this.block) && flagPart.creator === this.auth.getSession().user_id && this.block.voicework === 'narration') {
+            return true;
           }
           let result = false;
           let isProofreadUnassigned = this.isProofreadUnassigned();
