@@ -676,9 +676,9 @@ export default {
       .catch((err)=>{})
     },
 
-    putBlockPartProxy: function (blockData) {
+    putBlockPartProxy: function (blockData, realign = false) {
       //console.log('putBlockPartProxy', blockData);
-      return this.putBlockPart(blockData)
+      return this.putBlockPart([blockData, realign])
       .then((updated)=>{
         this.updateVisibleBlocks();
         this.refreshPreviewTmpl([updated.blockid]);
