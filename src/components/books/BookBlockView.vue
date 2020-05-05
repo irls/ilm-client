@@ -389,7 +389,7 @@
 
                 <div class="table-row">
                   <div class="table-cell -num">{{ftnIdx+1}}.</div>
-                  <div 
+                  <div
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
@@ -3981,7 +3981,10 @@ Save text changes and realign the Block?`,
         if (audiosrc) {
           audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
         }
-        this.$refs['block-html' + this.block.blockid].value = `<div id="${this.shortBlockid}" data-audiosrc="${audiosrc}">
+        let blockData = `data-audiosrc="${audiosrc}"`;
+        if (this.block.updated) blockData += ` data-lastmodified="${this.block.updated}"`;
+        if (this.block.audioHash) blockData += ` data-audiohash="${this.block.audioHash}"`;
+        this.$refs['block-html' + this.block.blockid].value = `<div id="${this.shortBlockid}" ${blockData}>
   ${content}
 </div>`;
       },
