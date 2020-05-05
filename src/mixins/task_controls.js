@@ -9,7 +9,7 @@ export default {
         tc_test: 'Test property',
         editor_tasks: ['fix-block-text', 'approve-new-block', 'approve-modified-block', 'approve-new-published-block', 'approve-published-block', 'text-cleanup', 'master-audio', 'approve-trimming', 'verify-alignment'],
         narrator_tasks: ['narrate-block', 'fix-block-narration', 'approve-re-narration'],
-        proofer_tasks: ['approve-block', 'approve-revoked-block'],
+        proofer_tasks: ['approve-block', 'approve-revoked-block', 'verify-block'],
         editor_resolve_tasks: ['fix-block-narration']
     }
   },
