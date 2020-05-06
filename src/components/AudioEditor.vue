@@ -1103,13 +1103,19 @@
           this.isModified = true;
         },
         _changeWordPositions(new_positions, index) {
-          
+          new_positions.start = this._round(new_positions.start, 2);
+          new_positions.end = this._round(new_positions.end, 2);
           let w = this.words.find(_w => {
             return _w.index === index;
           });//this.words.push({start: map[0], end: map[1], index: this.words.length, alignedIndex: alignedWords++})
           if (w) {
             w.start = new_positions.start;
             w.end = new_positions.end;
+          }
+          let a = this.annotations[index];
+          if (a) {
+            a.begin = new_positions.start;
+            a.end = new_positions.end;
           }
         },
         insertRangeAction(position, range, length) {
@@ -1187,7 +1193,7 @@
         cutLocal() {
           let cut_range = this.cutRangeAction(this.selection.start, this.selection.end);
           this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
-          let diff = this.selection.end - this.selection.start;
+          let diff = this._round(this.selection.end - this.selection.start, 2);
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
             if (al.start <= this.selection.start && al.end >= this.selection.end) {// cut middle of the word
               al.end-= diff;
@@ -1297,9 +1303,9 @@
               this._changeWordPositions(al, i);
             }
             if (al.end - al.start < min) {
-              let delta = (min - (al.end - al.start));
-              shift+= delta;
-              al.end+=delta;
+              let delta = this._round(min - (al.end - al.start), 2);
+              shift = this._round(shift + delta, 2);
+              al.end = this._round(al.end + delta, 2);
             }
           });
           if (shift > 0) {
@@ -2154,7 +2160,7 @@ Discard unsaved audio changes?`,
 
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {// find the shifted annotation, find shift direction
             if (this.annotations[i]) {
-              if (this.annotations[i].begin == al.start && this.annotations[i].end != al.end) {
+              if (!shiftedAnnotation && this._round(this.annotations[i].begin, 2) == this._round(al.start, 2) && this._round(this.annotations[i].end, 2) != this._round(al.end, 2)) {
                 direction = this.annotations[i].end > al.end ? 'left' : 'right';
                 if (direction === 'left') {
                   shiftedAnnotation = Object.assign({}, al);
