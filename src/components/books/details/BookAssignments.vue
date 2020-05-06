@@ -521,25 +521,25 @@
 
       toggleMastering() {
         if (this.tc_allowToggleMetaMastering() && !this.currentJobInfo.mastering && this.currentJobInfo.workflow.status == 'active' && !this.currentBookMeta.isMastered) {
-          if (!this.currentBookMeta.masteringRequired) {
+          if (this.currentBookMeta.masteringRequired) {
             this.$root.$emit('show-modal', {
               title: ``,
-              text: `<div class="bottom"><h5>Unmastered audio flow:</h5></div>
-<ol>
-<li>The book is edited, aligned with unmastered audio and proofread.</li>
-<li>The audio from the book is exported, mastered and imported back in ILM.</li>
-<li>The book is realigned with the mastered audio and proofread.</li>
-</ol>
-<div class="bottom">Define the audio as unmastered?</div>`,
+              text: `<div class="bottom"><h5>Activate audio mastering</h5></div>
+                     <p>Activation of the Mastering workflow implies that:</p>
+                     <ol>
+                       <li>The audio from the book should be exported, mastered and reimported to the file audio catalog</li>
+                       <li>Mastered audio should be realigned and alignment corrections performed in the scope of "Master audio" task</li>
+                     </ol>
+                     <div class="bottom">Activate audio mastering workflow?</div>`,
               buttons: [
                 {
-                  title: 'CANCEL',
+                  title: 'Cancel',
                   handler: () => {
                     this.$root.$emit('hide-modal');
                   },
                 },
                 {
-                  title: 'OK',
+                  title: 'Activate',
                   handler: () => {
                     this.$root.$emit('hide-modal');
                     return new Promise((resolve, reject) => {
@@ -565,7 +565,48 @@
               class: ['align-modal', 'master-switcher-warning']
             });
           } else {
-            this.updateBookMeta({'masteringRequired': !this.currentBookMeta.masteringRequired})
+            this.$root.$emit('show-modal', {
+              title: ``,
+              text: `<div class="bottom"><h5>Deactivate audio mastering</h5></div>
+                     <p>Deactivation of the Mastering workflow implies that:</p>
+                     <ol>
+                       <li>"Master audio" task is excluded from the workflow</li>
+                       <li>Narrated audio alignment corrections should be performed in the scope of "Verify alignment" task</li>
+                     </ol>
+                     <div class="bottom">Deactivate audio mastering workflow?</div>`,
+              buttons: [
+                {
+                  title: 'Cancel',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                  },
+                },
+                {
+                  title: 'Deactivate',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                    return new Promise((resolve, reject) => {
+                      this.updateBookMeta({'masteringRequired': !this.currentBookMeta.masteringRequired})
+                        .then(() => {
+                          return resolve();
+                        })
+                        .catch(err => {
+                          return resolve();
+                        })
+                      })
+                      .then(() => {
+                        return this.reloadBook()
+                          .then(() => {
+                            this.$root.$emit('book-reimported');
+                            console.log('EMIT REIMPORTED')
+                          })
+                      })
+                  },
+                  'class': 'btn btn-primary'
+                }
+              ],
+              class: ['align-modal', 'master-switcher-warning']
+            });
           }
         }
       },
