@@ -521,7 +521,7 @@
 
       toggleMastering() {
         if (this.tc_allowToggleMetaMastering() && !this.currentJobInfo.mastering && this.currentJobInfo.workflow.status == 'active' && !this.currentBookMeta.isMastered) {
-          if (this.currentBookMeta.masteringRequired) {
+          if (!this.currentBookMeta.masteringRequired) {
             this.$root.$emit('show-modal', {
               title: ``,
               text: `<div class="bottom"><h5>Activate audio mastering</h5></div>
