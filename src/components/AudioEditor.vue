@@ -2178,17 +2178,37 @@ Discard unsaved audio changes?`,
             }
           });
           let shifted = false;
+          //console.log(this.audiosourceEditor.annotationList.annotations[8].start, this.audiosourceEditor.annotationList.annotations[8].end);
+          //console.log(this.annotations[8].begin, this.annotations[8].end);
+          let length = 0;
+          //let shift = 0;
+          this.annotations.forEach((an, i) => {
+            if (length > an.begin) {
+              //console.log(an.begin, 'overlapped by ', this.annotations[i - 1]);
+              an.begin = length;
+              //if (this._round(an.end - an.begin) < this.minWordSize) {
+                //shift = this._round(this.minWordSize)
+              //}
+            } else if (length < an.begin) {
+              //console.log('HERE LESS', length, an.begin)
+              an.begin = length;
+            }
+            length = an.end;
+          });
 
-          if (shiftedAnnotation) {
+          this.annotations.forEach((an, i) => {
+            //console.log(an);
             //this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
-            if (shiftedAnnotation.end - shiftedAnnotation.start < this.minWordSize) {// find words with length less than minimum
-              let shift = this.minWordSize - (shiftedAnnotation.end - shiftedAnnotation.start);
+            if (this._round(an.end - an.begin, 2) < this.minWordSize) {// find words with length less than minimum
+              //console.log('MIN WORD SIZE', an.begin, an.end, an.id);
+              let shift = this.minWordSize - (an.end - an.begin);
+              //console.log(shift);
               let found = false;
               let shiftIndexes = [];
               switch (direction) {
                 case 'left':
-                  this.annotations[shiftedIndex].begin-= shift;
-                  let j = shiftedIndex - 1;
+                  this.annotations[i].begin-= shift;
+                  let j = i - 1;
                   do {
                     if (this.annotations[j]) {
                       this.annotations[j].end-=shift;
@@ -2203,7 +2223,7 @@ Discard unsaved audio changes?`,
                   } while (j >= 0 && !shifted);
                   shifted = true;
                   shift = 0;
-                  for (j = 0; j <= shiftedIndex + 2; ++j) {// if some words start is before zero, shift all words
+                  for (j = 0; j <= i + 2; ++j) {// if some words start is before zero, shift all words
                     if (this.annotations[j]) {
                       if (this.annotations[j].begin < 0) {
                         if (shift == 0) {
@@ -2225,8 +2245,8 @@ Discard unsaved audio changes?`,
                   }
                   break;
                 case 'right':
-                  this.annotations[shiftedIndex].end+= shift;
-                  j = shiftedIndex + 1;
+                  this.annotations[i].end+= shift;
+                  j = i + 1;
                   do {
                     if (this.annotations[j]) {
                       this.annotations[j].begin+=shift;
@@ -2241,7 +2261,7 @@ Discard unsaved audio changes?`,
                   } while (j < this.annotations.length && !shifted);
                   shifted = true;
                   shift = 0;
-                  for (j = this.annotations.length; j >= shiftedIndex - 2; --j) {// if some words end if after audio finish, shift all words
+                  for (j = this.annotations.length; j >= i - 2; --j) {// if some words end if after audio finish, shift all words
                     if (this.annotations[j]) {
                       if (this.annotations[j].end > this.audiosourceEditor.duration) {
                         if (shift == 0) {
@@ -2263,9 +2283,14 @@ Discard unsaved audio changes?`,
                   break;
               }
             }
-          }
+          });
           this.annotations.forEach((al, i) => {
             map.push([Math.round(al.begin * 1000), Math.round((al.end - al.begin) * 1000)]);
+            //console.log(i, ':', map[i][0], map[i][1]);
+            if (map[i - 1] && map[i - 1][0] + map[i - 1][1] != map[i][0]) {
+              //console.log('FIX MAP', map[i - 1][0] + map[i - 1][1], map[i][0]);
+              map[i][0] = map[i - 1][0] + map[i - 1][1];
+            }
             let w = this.words.find(_w => {
               return _w.alignedIndex == i;
             });
@@ -2306,6 +2331,7 @@ Discard unsaved audio changes?`,
             manual_boundaries: this.block.manual_boundaries
           });
           if (this.audioTasksQueue.queue.length > 0) {
+            //console.log(shiftedWords.slice());
             this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), pinnedIndex, this.blockId]);
             $($(`.annotation-box`)[shiftedWords[pinnedIndex].index]).find(`.resize-handle.resize-w`).addClass('manual');
 
