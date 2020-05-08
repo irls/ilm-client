@@ -1745,7 +1745,7 @@ Save audio changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0)};
+                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0), content: this.clearBlockContent()};
                   return this.assembleBlockProxy(false, false, update_fields, false)
                     .then(() => {
                       return this.assembleBlockAudioEdit(this.footnoteIdx, true, preparedData)
@@ -2260,7 +2260,7 @@ Save audio changes and realign the Block?`,
               //content: this.blockAudio.map,
               //manual_boundaries: this.block.manual_boundaries
               audiosrc: preparedData.audiosrc || this.block.getPartAudiosrc(0, null, false),
-              content: this.block.getPartContent(0),
+              content: preparedData.content || this.block.getPartContent(0),
               manual_boundaries: preparedData.manual_boundaries || this.block.getPartManualBoundaries(0),
               mode: this.mode
             };
