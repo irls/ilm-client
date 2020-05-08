@@ -189,7 +189,8 @@
           processRunType: null,
           selectionBordersVisible: false,
           audioDuration: 0,
-          isFootnote: false
+          isFootnote: false,
+          wordRepositioning: false
         }
       },
       mounted() {
@@ -661,8 +662,14 @@
             self._setWordSelection(index, true, true);
             self.wordSelectionMode = index;
           });
+          $('.wf-playlist').on('dragstart', '.annotations-boxes .annotation-box .resize-handle', (ev) => {
+            //console.log('DRAG START');
+            this.wordRepositioning = true;
+          });
           $('.wf-playlist').on('dragend', '.annotations-boxes .annotation-box .resize-handle', (ev)=>{
             this.smoothDrag(ev);
+            //console.log('DRAG END');
+            this.wordRepositioning = false;
           });
 
           let waitPlaylist = setInterval(() => {
@@ -809,7 +816,7 @@
         setAudioSilent(queue_record, audio, text, saveToHistory = true, block = null) {
           //console.log(`%c COMPARE ${this.audioTasksQueue.time}, ${queue_record.time}`, `color: #bada55; background-color: #222;`)
           this.emitDisplayWordSelection();
-          if (this.audioTasksQueue.time === queue_record.time) {
+          if (this.audioTasksQueue.time === queue_record.time && !this.wordRepositioning) {
             if (block) {
               this.block.manual_boundaries = block.manual_boundaries || [];
             }
