@@ -3184,12 +3184,13 @@ export const store = new Vuex.Store({
         state.audioTasksQueue.blockId = blockId;
       }
     },
-    addAudioTask({state}, [type, options]) {
+    addAudioTask({state}, [type, options, wordMap]) {
       let time = Date.now();
       state.audioTasksQueue.queue.push({
         type: type,
         options: options,
-        time: time
+        time: time,
+        wordMap: wordMap
       });
       state.audioTasksQueue.time = time;
       state.audioTasksQueue.log.push(time);
@@ -3219,6 +3220,30 @@ export const store = new Vuex.Store({
       } else {
         state.audioTasksQueue.time = null;
       }
+    },
+    applyTasksQueue({state}, [blockid, partIdx]) {
+      let block = state.storeList.get(blockid);
+      let content = block.getPartContent(partIdx || 0);
+      let queue = state.audioTasksQueue.queue.slice();
+      queue.forEach((q, i) => {
+        if (i < queue.length - 1) {
+          delete q.wordMap;
+        }
+      })
+      return axios.post(`${state.API_URL}book/block/${blockid}${partIdx !== null ? '/' + partIdx : ''}/apply_queue`, {
+        queue: queue,
+        content: content
+      })
+        .then((res) => {
+          //return dispatch('getBookAlign')
+            //.then(() => {
+          return Promise.resolve(res);
+            //});
+
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })

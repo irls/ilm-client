@@ -1267,7 +1267,8 @@ export default {
         'getBookAlign',
         'updateBlockPart',
         'recountVoicedBlocks',
-        'addAudioTask'
+        'addAudioTask',
+        'applyTasksQueue'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -2242,6 +2243,19 @@ Save audio changes and realign the Block?`,
 
       assembleBlockAudioEdit: function(footnoteIdx = null, realign = false, preparedData = false) {// to save changes from audio editor
         this.$root.$emit('closeFlagPopup', true);
+        return this.applyTasksQueue([this.block.blockid, null])
+          .then(() => {
+            this.$root.$emit('for-audioeditor:flush');
+            if (!realign) {
+              this.isSaving = false;
+            } else {
+              this.getBookAlign()
+                .then(() => {
+                  this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+                  this.isSaving = false;
+                })
+            }
+          });
         let manual_boundaries = [];
         if (this.footnoteIdx) {
           if (this.audioEditFootnote && this.audioEditFootnote.footnote) {

@@ -2823,27 +2823,54 @@ Save audio changes and realign the Block?`,
         if (blockId === this.check_id) {
           if (!this.audioTasksQueue.running && this.audioTasksQueue.queue.length > 0) {
             let task = null;
-            let record = this.audioTasksQueue.queue[0];
+            let record = this.audioTasksQueue.queue[this.audioTasksQueue.queue.length - 1];
             this.audioTasksQueue.running = record;
             switch (record.type) {
               case 'cut':
-                /*if (this.isSplittedBlock) {
-                  this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
-                } else {
-                  this.block.setContent(this.clearBlockContent());
-                }*/
-                task = this.audDeletePartSilent(...record.options.concat([this.check_id]));
-                break;
               case 'insert_silence':
-                /*if (this.isSplittedBlock) {
-                  this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
-                } else {
-                  this.block.setContent(this.clearBlockContent());
-                }*/
-                task = this.insertSilenceSilent(...record.options.concat([this.check_id]));
-                break;
               case 'erase':
-                task = this.eraseAudioSilent(...record.options.concat([this.check_id]));
+                //let record = this.audioTasksQueue.queue[this.audioTasksQueue.queue.length - 1];
+                console.log(record);
+                console.log(record.wordMap);
+                if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
+                  let current_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
+                  let w_maps = this.$refs.blockContent.querySelectorAll('[data-map]');
+
+                  let manual_boundaries = [];
+                  record.wordMap.forEach((m, i) => {
+                    let cMap = w_maps[i].getAttribute('data-map');
+                    if (cMap) {
+                      cMap = cMap.split(',');
+                      cMap[0] = parseInt(cMap[0]);
+                      cMap[1] = parseInt(cMap[1]);
+                      if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
+                        manual_boundaries.push(m[0]);
+                        current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
+                      }
+                    }
+                    w_maps[i].setAttribute('data-map', m.join(','));
+                    if (m[1] > 50) {
+                      w_maps[i].classList.remove('alignment-changed');
+                    }
+                  });
+                  current_boundaries.forEach(_m => {
+                    if (manual_boundaries.indexOf(_m) === -1) {
+                      manual_boundaries.push(_m);
+                      //console.log(`PUSH ${_m[0]}`);
+                    }
+                  });
+                  manual_boundaries = [...new Set(manual_boundaries)].sort((a, b) => {return a - b;});
+                  this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
+                  this.blockPart.manual_boundaries = manual_boundaries.slice();
+                  manual_boundaries = null;
+                  this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
+                  this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
+                  this.blockPart.content = this.$refs.blockContent.innerHTML;
+                  this.blockAudio.map = this.blockPart.content;
+                  this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+                  this.showPinnedInText();
+                }
+                task = Promise.resolve();
                 break;
               case 'save-audio':
                 task = this.$parent.assembleBlockAudioEdit(...record.options, false)
@@ -2914,7 +2941,7 @@ Save audio changes and realign the Block?`,
                 }
                 this.blockAudio.map = this.blockContent();
                 this.blockAudio.src = this.blockAudiosrc('m4a');
-                this.shiftAudioTask();
+                //this.shiftAudioTask();
               })
               .catch(err => {
                 this.audioTasksQueue.running = null;
@@ -3773,7 +3800,7 @@ Save text changes and realign the Block?`,
           this.destroyEditor();
           this.initEditor(true);
         }
-      },
+      }/*,
       'audioTasksQueue.time': {
         handler(val, oldVal) {
           //console.log(`audioTasksQueue.time: ${val}`, Object.assign({}, this.audioTasksQueue));
@@ -3787,6 +3814,17 @@ Save text changes and realign the Block?`,
         handler(val) {
           //console.log(`audioTasksQueue.running: ${val}`, val);
           if (val === null && this.audioTasksQueue.blockId === this.check_id) {
+            //console.log('CONTINUE', this.check_id);
+            if (this.audioTasksQueue.queue.length > 0) {
+              this.evFromAudioEditorTasksQueuePush(this.check_id);
+            }
+          }
+        }
+      }*/,
+      'audioTasksQueue.queue.length': {
+        handler(val) {
+          //console.log(`audioTasksQueue.running: ${val}`, val);
+          if (this.audioTasksQueue.blockId === this.check_id) {
             //console.log('CONTINUE', this.check_id);
             if (this.audioTasksQueue.queue.length > 0) {
               this.evFromAudioEditorTasksQueuePush(this.check_id);

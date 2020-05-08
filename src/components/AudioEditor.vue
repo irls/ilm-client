@@ -76,7 +76,7 @@
         </template>
         <div class="audio-controls" v-if="isModifiedComputed && mode == 'block'">
           <button class="btn btn-default" v-if="actionsLog.length" v-on:click="undo()">Undo {{lastActionName}}</button>
-          <button class="btn btn-primary" v-on:click="save()" :disabled="isSaveDisabled">Save</button>
+          <button class="btn btn-primary" v-on:click="save()">Save</button>
           <button class="btn btn-primary" v-on:click="saveAndRealign()" :disabled="isSaveDisabled">Save & Re-align</button>
         </div>
         <div class="audio-controls" v-if="mode == 'file'">
@@ -1085,7 +1085,6 @@
           //this.audiosourceEditor.drawRequest();
           //this.audiosourceEditor.renderTrackSection();
           
-          this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
           
           this._addHistoryLocal('insert_silence', null, this.cursorPosition, this.cursorPosition + this.silenceLength);
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
@@ -1099,6 +1098,7 @@
             }
           });
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
+          this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
           //this.clearSelection();
           this.isModified = true;
         },
@@ -1380,7 +1380,16 @@
           this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
         },
         addTaskQueue(type, options) {
-          this.addAudioTask([type, options]);
+          let wordMap = [];
+          this.audiosourceEditor.annotationList.annotations.forEach((an, i) => {
+            wordMap.push([Math.round(an.start * 1000), Math.round((an.end - an.start) * 1000)]);
+            //console.log(i, ':', map[i][0], map[i][1]);
+            if (wordMap[i - 1] && wordMap[i - 1][0] + wordMap[i - 1][1] != wordMap[i][0]) {
+              //console.log('FIX MAP', map[i - 1][0] + map[i - 1][1], map[i][0]);
+              wordMap[i][0] = wordMap[i - 1][0] + wordMap[i - 1][1];
+            }
+          });
+          this.addAudioTask([type, options, wordMap]);
           //this._addHistory(this.content, this.audiofile, this.block && this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
           //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
         },
@@ -2330,15 +2339,15 @@ Discard unsaved audio changes?`,
             oldMap: shiftedOldMap,
             manual_boundaries: this.block.manual_boundaries
           });
-          if (this.audioTasksQueue.queue.length > 0) {
+          //if (this.audioTasksQueue.queue.length > 0) {
             //console.log(shiftedWords.slice());
-            this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), pinnedIndex, this.blockId]);
-            $($(`.annotation-box`)[shiftedWords[pinnedIndex].index]).find(`.resize-handle.resize-w`).addClass('manual');
+            //this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), pinnedIndex, this.blockId]);
+            //$($(`.annotation-box`)[shiftedWords[pinnedIndex].index]).find(`.resize-handle.resize-w`).addClass('manual');
 
-            $($(`.annotation-box`)[shiftedWords[pinnedIndex - 1].index]).find(`.resize-handle.resize-e`).addClass('manual');
-          } else {
+            //$($(`.annotation-box`)[shiftedWords[pinnedIndex - 1].index]).find(`.resize-handle.resize-e`).addClass('manual');
+          //} else {
             this.$root.$emit('from-audioeditor:word-realign', shiftedWords, pinnedIndex, this.blockId);
-          }
+          //}
           this.isModified = true;
           if (this.wordSelectionMode !== false) {
             if (shiftedIndex === this.wordSelectionMode ||
