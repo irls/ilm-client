@@ -2597,7 +2597,9 @@ Save audio changes and realign the Block?`,
                 response_params = [this.blockAudio.src, this.blockAudio.map, true, this.block];
               }
             }
-            this.showPinnedInText();
+            Vue.nextTick(() => {
+              this.showPinnedInText();
+            });
             //this.pushChange('content');
 
 
