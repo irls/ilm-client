@@ -1169,7 +1169,7 @@ export const store = new Vuex.Store({
       }
       if (bookid) {
         state.liveDB.startWatch(bookid, 'blockV', {bookid: bookid}, (data) => {
-          if (data && (!state.audioTasksQueue.blockId || state.audioTasksQueue.blockId.replace(/-part-\d+$/, '').indexOf(data.block.blockid) === -1)) {
+          if (data && (!state.audioTasksQueue.blockId || !(state.audioTasksQueue.blockId.indexOf(data.block.blockid) === 0 && state.audioTasksQueue.blockId.indexOf('-part-') === data.block.blockid.length))) {
             //state.storeListO.delBlock(data.block);
             if (data.action === 'insert' && data.block) {
               if (!state.storeListO.get(data.block.id)) {
@@ -2448,7 +2448,7 @@ export const store = new Vuex.Store({
                       //blockStore.content+=' realigned';
                       checks.push(dispatch('getBlock', b._id)
                         .then(block => {
-                          if ((!state.audioTasksQueue.blockId || state.audioTasksQueue.blockId.replace(/-part-\d+$/, '').indexOf(block.blockid) === -1)) {
+                          if ((!state.audioTasksQueue.blockId || !(state.audioTasksQueue.blockId.indexOf(block.blockid) === 0 && state.audioTasksQueue.blockId.indexOf('-part-') === block.blockid.length))) {
                             store.commit('set_storeList', new BookBlock(block));
                           }
                           return Promise.resolve();
