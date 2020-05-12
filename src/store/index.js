@@ -1169,16 +1169,14 @@ export const store = new Vuex.Store({
       }
       if (bookid) {
         state.liveDB.startWatch(bookid, 'blockV', {bookid: bookid}, (data) => {
-          if (data) {
+          if (data && (!state.audioTasksQueue.blockId || state.audioTasksQueue.blockId.replace(/-part-\d+$/, '').indexOf(data.block.blockid) === -1)) {
             //state.storeListO.delBlock(data.block);
             if (data.action === 'insert' && data.block) {
               if (!state.storeListO.get(data.block.id)) {
                 state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
               }
             } else if (data.action === 'change' && data.block) {
-              if (!state.audioTasksQueue.blockId || state.audioTasksQueue.blockId.replace(/-part-\d+$/, '').indexOf(data.block.blockid) === -1) {
-                state.storeListO.updBlockByRid(data.block.id, data.block);
-              }
+              state.storeListO.updBlockByRid(data.block.id, data.block);
             } else if (data.action === 'delete') {
 
             }
@@ -2450,7 +2448,9 @@ export const store = new Vuex.Store({
                       //blockStore.content+=' realigned';
                       checks.push(dispatch('getBlock', b._id)
                         .then(block => {
-                          store.commit('set_storeList', new BookBlock(block));
+                          if ((!state.audioTasksQueue.blockId || state.audioTasksQueue.blockId.replace(/-part-\d+$/, '').indexOf(block.blockid) === -1)) {
+                            store.commit('set_storeList', new BookBlock(block));
+                          }
                           return Promise.resolve();
                         })
                         .catch(err => {
