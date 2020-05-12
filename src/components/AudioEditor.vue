@@ -1313,6 +1313,7 @@
               let delta = this._round(min - (al.end - al.start), 2);
               shift = this._round(shift + delta, 2);
               al.end = this._round(al.end + delta, 2);
+              this._changeWordPositions(al, i);
             }
           });
           if (shift > 0) {
