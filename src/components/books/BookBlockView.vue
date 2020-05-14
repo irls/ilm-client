@@ -2353,7 +2353,7 @@ Save audio changes and realign the Block?`,
         //this.isAudioChanged = false;
       },
       addToQueueBlockAudioEdit(footnoteIdx = null, realign = false) {
-        
+
         if (this.isChanged) {
           this.$root.$emit('show-modal', {
             title: 'Unsaved Changes',
@@ -3982,8 +3982,8 @@ Save text changes and realign the Block?`,
           audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
         }
         let blockData = `data-audiosrc="${audiosrc}"`;
-        if (this.block.updated) blockData += ` data-lastmodified="${this.block.updated}"`;
-        if (this.block.audioHash) blockData += ` data-audiohash="${this.block.audioHash}"`;
+        if (this.block.updated) blockData += ` data-last_modified="${this.block.updated}"`;
+        if (audiosrc) blockData += ` data-audiohash="${this.block.audioHash || ''}"`;
         this.$refs['block-html' + this.block.blockid].value = `<div id="${this.shortBlockid}" ${blockData}>
   ${content}
 </div>`;
