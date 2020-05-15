@@ -232,6 +232,7 @@
             this.blockSelectionEmit = true;
             this.selection.start = start / 1000;
             this.selection.end = end / 1000;
+            this.cursorPosition = this.selection.start;
             this.wordSelectionMode = false;
             this._clearWordSelection();
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
