@@ -951,6 +951,14 @@ class BookBlock {
     });
     return part ? true : false;
   }
+  
+  getIsSplittedBlock() {
+    //Vue.prototype.globalJobInfo.id
+    if (this.voicework === 'narration' && !Vue.prototype.globalJobInfo.text_cleanup && Array.isArray(this.parts) && this.parts.length > 1 && !(Vue.prototype.globalJobInfo.mastering || Vue.prototype.globalJobInfo.mastering_complete)) {
+      return true;
+    }
+    return false;
+  }
 }
 
 class FlagPart {

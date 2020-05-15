@@ -76,7 +76,7 @@
         </template>
         <div class="audio-controls" v-if="isModifiedComputed && mode == 'block'">
           <button class="btn btn-default" v-if="actionsLog.length" v-on:click="undo()">Undo {{lastActionName}}</button>
-          <button class="btn btn-primary" v-on:click="save()">Save</button>
+          <button class="btn btn-primary" v-on:click="save()"  :disabled="isSaveDisabled">Save</button>
           <button class="btn btn-primary" v-on:click="saveAndRealign()" :disabled="isSaveDisabled">Save & Re-align</button>
         </div>
         <div class="audio-controls" v-if="mode == 'file'">
@@ -318,7 +318,7 @@
             if (block._id !== this.blockId) {
               this._clearHistoryLocal();
             }
-            this.setAudioTasksBlockId(block._id);
+            this.setAudioTasksBlockId([block.blockid, block._id, block.partIdx]);
           }
           if (this.audiosourceEditor) {
             this.audiosourceEditor.tracks.forEach(t => {
@@ -1436,9 +1436,8 @@
           //this.undoLocal();
           //return;
           if (this.mode === 'block') {
-            let make_event = this.audioTasksQueue.queue.length === 0;
+            let make_event = false;//this.audioTasksQueue.queue.length === 0 && !this.audioTasksQueue.running;
             this.popTaskQueue();
-            this.audioTasksQueue.log.pop();
             let record = this._popHistoryLocal(!make_event);
             //let record = this._popHistory();
             if (this.actionsLog.length === 0 && this.isHistoryFull) {
@@ -2642,7 +2641,7 @@ Revert to original block audio?`,
         },
         isSaveDisabled: {
           get() {
-            if (this.audioTasksQueue.queue.length > 0 || this.audioTasksQueue.running) {
+            if (this.audioTasksQueue.running) {
               return true;
             } else {
               return false;

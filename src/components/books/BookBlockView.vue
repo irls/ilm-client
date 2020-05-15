@@ -642,7 +642,7 @@ export default {
         if (this.isUpdating) {
           return true;
         }
-        if (this.audioTasksQueue.blockId === this.block.blockid && this.audioTasksQueue.running) {
+        if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.running) {
           return true;
         }
         return this.hasLock;
@@ -660,7 +660,7 @@ export default {
           if (this.isUpdating) {
             return 'editing-audio';
           }
-          if (this.audioTasksQueue.blockId === this.block.blockid && this.audioTasksQueue.running) {
+          if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.running) {
             return 'audio-positioning';
           }
           let lockType = this.blockLockType(this.block.blockid);
@@ -1108,7 +1108,7 @@ export default {
       },
       isAudioEditing: {
         get() {
-          return this.audioTasksQueue.blockId === this.block.blockid;
+          return this.audioTasksQueue.block.blockId === this.block.blockid;
         },
         cache: false
       }
@@ -1268,7 +1268,8 @@ export default {
         'updateBlockPart',
         'recountVoicedBlocks',
         'addAudioTask',
-        'applyTasksQueue'
+        'applyTasksQueue',
+        'saveBlockAudio'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1746,10 +1747,10 @@ Save audio changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0)};
+                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0), content: this.clearBlockContent()};
                   return this.assembleBlockProxy(false, false, update_fields, false)
                     .then(() => {
-                      return this.assembleBlockAudioEdit(this.footnoteIdx, true, preparedData)
+                      return this.assembleBlockAudioEdit(true, preparedData)
                       .then(() => {
                         return Promise.resolve();
                       });
@@ -2241,57 +2242,58 @@ Save audio changes and realign the Block?`,
         this.isAudioChanged = false;
       },
 
-      assembleBlockAudioEdit: function(footnoteIdx = null, realign = false, preparedData = false) {// to save changes from audio editor
+      assembleBlockAudioEdit: function(realign = false, preparedData = false) {// to save changes from audio editor
         this.$root.$emit('closeFlagPopup', true);
-        return this.applyTasksQueue([this.block.blockid, null])
-          .then(() => {
-            this.$root.$emit('for-audioeditor:flush');
-            if (!realign) {
-              this.isSaving = false;
-            } else {
-              this.getBookAlign()
-                .then(() => {
-                  this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
-                  this.isSaving = false;
-                })
-            }
+        if (this.isChanged && preparedData === false) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block text has been modified and not saved.<br>
+Save text changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  return this.assembleBlockAudioEdit(false, {content: this.clearBlockContent()})
+                    .then(() => {
+                      return this.assembleBlockProxy(false, true, [], false);
+                    });
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
           });
-        let manual_boundaries = [];
-        if (this.footnoteIdx) {
-          if (this.audioEditFootnote && this.audioEditFootnote.footnote) {
-            manual_boundaries = this.audioEditFootnote.footnote.manual_boundaries || [];
-          }
-        } else {
-          manual_boundaries = this.block.manual_boundaries || [];
+          return Promise.resolve();
         }
-        if ((this.blockAudio.map && this.blockAudio.src) || (typeof footnoteIdx !== 'undefined' && footnoteIdx !== null && this.audioEditFootnote.footnote)) {
-          let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
+        this.isSaving = true;
+        this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+        return this.applyTasksQueue([null])
+          .then(() => {
+          /*let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
           let api = this.$store.state.auth.getHttp();
           let data = {};
-          if (footnoteIdx === null) {
-            data = {
-              //audiosrc: this.block.getAudiosrc(null, false),
-              //content: this.blockAudio.map,
-              //manual_boundaries: this.block.manual_boundaries
-              audiosrc: preparedData.audiosrc || this.block.getPartAudiosrc(0, null, false),
-              content: this.block.getPartContent(0),
-              manual_boundaries: preparedData.manual_boundaries || this.block.getPartManualBoundaries(0),
-              mode: this.mode
-            };
-          } else {
-            data = {
-              audiosrc: this.block.getAudiosrcFootnote(footnoteIdx, null, false),
-              content: this.audioEditFootnote.footnote.content,
-              footnote_idx: footnoteIdx,
-              manual_boundaries: this.audioEditFootnote.footnote.manual_boundaries || []
-            }
-          }
-          this.isSaving = true;
+          data = {
+            //audiosrc: this.block.getAudiosrc(null, false),
+            //content: this.blockAudio.map,
+            //manual_boundaries: this.block.manual_boundaries
+            audiosrc: preparedData.audiosrc || this.block.getPartAudiosrc(0, null, false),
+            content: preparedData.content || this.block.getPartContent(0),
+            manual_boundaries: preparedData.manual_boundaries || this.block.getPartManualBoundaries(0),
+            mode: this.mode
+          };
           if (realign) {
             api_url+= '?realign=true';
-          }
-          this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
-          return api.post(api_url, data, {})
+          }*/
+          //this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+          return this.saveBlockAudio([realign, preparedData])
             .then(response => {
               this.$root.$emit('for-audioeditor:flush');
               if (!realign) {
@@ -2317,43 +2319,30 @@ Save audio changes and realign the Block?`,
                 //this.isChanged = false;
                 this.block.isAudioChanged = false;
                 //this.block.isChanged = false;
-                if (footnoteIdx === null) {
-                  this.block.content = response.data.content;
-                  this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
-                  this.blockAudio.map = response.data.content;
-                  this.blockAudio.src = this.block.getAudiosrc('m4a');
-                  this.block.manual_boundaries = response.data.manual_boundaries || [];
-                  this.block.audiosrc_original = response.data.audiosrc_original;
-                  Vue.nextTick(() => {
-                    if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
-                      this.block.flags.forEach(f => {
-                        this.updateFlagStatus(f._id);
-                      });
-                      //console.log(this.$refs.blockContent.innerHTML)
-                    }
-                  })
-                  //return this.putBlock(this.block);
-                  if (!realign) {
-                    this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
+                this.block.content = response.data.content;
+                this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+                this.blockAudio.map = response.data.content;
+                this.blockAudio.src = this.block.getAudiosrc('m4a');
+                this.block.manual_boundaries = response.data.manual_boundaries || [];
+                this.block.audiosrc_original = response.data.audiosrc_original;
+                Vue.nextTick(() => {
+                  if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
+                    this.block.flags.forEach(f => {
+                      this.updateFlagStatus(f._id);
+                    });
+                    //console.log(this.$refs.blockContent.innerHTML)
                   }
-                  if (!this.isSplittedBlock) {
-                    if (this.$refs.blocks && this.$refs.blocks[0]) {
-                      this.$refs.blocks[0].isAudioChanged = false;
-                    }
-                  }
-                  return BPromise.resolve();
-                } else {
-                  let resp_block = response.data;
-                  let resp_f = resp_block.footnotes[footnoteIdx];
-                  this.block.setContentFootnote(footnoteIdx, resp_f.content);
-                  this.block.setAudiosrcFootnote(footnoteIdx, resp_f.audiosrc, resp_f.audiosrc_ver);
-                  this.audioEditFootnote.footnote.manual_boundaries = resp_f.manual_boundaries || [];
-                  if (!realign) {
-                    this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id, is_footnote: true}, this.audioEditFootnote.footnote));
-                  }
-                  this.audioEditFootnote.isAudioChanged = false;
-                  return BPromise.resolve();
+                })
+                //return this.putBlock(this.block);
+                if (!realign) {
+                  this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
                 }
+                if (!this.isSplittedBlock) {
+                  if (this.$refs.blocks && this.$refs.blocks[0]) {
+                    this.$refs.blocks[0].isAudioChanged = false;
+                  }
+                }
+                return BPromise.resolve();
               }
             })
             .catch(err => {
@@ -2361,9 +2350,7 @@ Save audio changes and realign the Block?`,
               this.checkError(err);
               BPromise.reject(err)
             });
-        } else {
-          return BPromise.reject();
-        }
+        });
         //this.isAudioChanged = false;
       },
       addToQueueBlockAudioEdit(footnoteIdx = null, realign = false) {

@@ -394,7 +394,7 @@ export default {
         if (this.isUpdating) {
           return true;
         }
-        if (this.check_id && this.audioTasksQueue.blockId === this.check_id && this.audioTasksQueue.running) {
+        if (this.check_id && this.audioTasksQueue.block.blockId === this.check_id && this.audioTasksQueue.running) {
           return true;
         }
         return this.block ? this.isBlockLocked(this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null) : false;
@@ -416,7 +416,7 @@ export default {
           if (this.isUpdating) {
             return 'editing-audio';
           }
-          if (this.audioTasksQueue.blockId === this.check_id && this.audioTasksQueue.running) {
+          if (this.audioTasksQueue.block.blockId === this.check_id && this.audioTasksQueue.running) {
             return 'audio-positioning';
           }
           let lockType = this.blockLockType(this.block.blockid);
@@ -815,7 +815,7 @@ export default {
       },
       isAudioEditing: {
         get() {
-          return this.check_id && this.audioTasksQueue.blockId === this.check_id;
+          return this.check_id && this.audioTasksQueue.block.blockId === this.check_id;
         },
         cache: false
       }
@@ -2463,8 +2463,10 @@ Save audio changes and realign the Block?`,
         Vue.nextTick(() => {
           let audiosrc = this.blockAudio.src;
           let text = this.blockAudio.map;
-          let loadBlock = this.blockPart;
+          let loadBlock = Object.assign({}, this.blockPart);
           loadBlock._id = this.check_id;
+          loadBlock.blockid = this.block.blockid;
+          loadBlock.partIdx = this.isSplittedBlock ? this.blockPartIdx : null;
           this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
 
           this.audioEditorEventsOn();
@@ -2584,7 +2586,6 @@ Save audio changes and realign the Block?`,
             this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
             this.blockPart.manual_boundaries = manual_boundaries.slice();
             manual_boundaries = null;
-            this.pushChange('manual_boundaries');
             this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
             this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
             this.blockPart.content = this.$refs.blockContent.innerHTML;
@@ -2620,7 +2621,8 @@ Save audio changes and realign the Block?`,
             //this.block.setAudiosrc(this.blockAudiosrc(null, false));
             //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
             //this.block.setContent(this.blockAudio.map);
-            return this.addToQueueBlockAudioEdit(null, true)
+            //return this.addToQueueBlockAudioEdit(null, true)
+            return this.assembleBlockAudioEdit(true)
               .then(() => {
                 //this.isAudioChanged = false;
                 //this.blockAudio.map = this.blockContent();
@@ -2628,7 +2630,8 @@ Save audio changes and realign the Block?`,
                 return Promise.resolve();
               });
           } else {
-            this.addToQueueBlockPartAudioEdit(true);
+            //this.addToQueueBlockPartAudioEdit(true);
+            this.assembleBlockPartAudioEdit(true);
           }
         }
       },
@@ -2661,16 +2664,18 @@ Save audio changes and realign the Block?`,
             //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false), {'m4a': this.block.getPartAudiosrc(this.blockPartIdx, 'm4a', false)});
             //this.block.setContent(this.blockContent());
             //this.block.setContent(this.blockContent());
-            return this.addToQueueBlockAudioEdit(null, false)
+            /*return this.addToQueueBlockAudioEdit(null, false)
               .then(() => {
                 //this.isAudioChanged = false;
                 //this.blockAudio.map = this.blockContent();
                 //this.blockAudio.src = this.blockAudiosrc('m4a');
                 //this.showPinnedInText();
                 return Promise.resolve();
-              });
+              });*/
+            this.$parent.assembleBlockAudioEdit(false);
           } else {
-            this.addToQueueBlockPartAudioEdit(false);
+            //this.addToQueueBlockPartAudioEdit(false);
+            this.assembleBlockPartAudioEdit(false);
           }
         }
       },
@@ -2821,10 +2826,10 @@ Save audio changes and realign the Block?`,
       },
       evFromAudioEditorTasksQueuePush(blockId, queue) {
         if (blockId === this.check_id) {
-          if (!this.audioTasksQueue.running && this.audioTasksQueue.queue.length > 0) {
+          if (this.audioTasksQueue.log.length > 0) {
             let task = null;
-            let record = this.audioTasksQueue.queue[this.audioTasksQueue.queue.length - 1];
-            this.audioTasksQueue.running = record;
+            let record = this.audioTasksQueue.log[this.audioTasksQueue.log.length - 1];
+            //this.audioTasksQueue.running = record;
             switch (record.type) {
               case 'cut':
               case 'insert_silence':
@@ -2935,7 +2940,7 @@ Save audio changes and realign the Block?`,
             this.isAudioChanged = true;
             return task
               .then((response) => {
-                this.audioTasksQueue.running = null;
+                //this.audioTasksQueue.running = null;
                 if (Array.isArray(response)) {
                   this.$root.$emit('for-audioeditor:load-silent', record, ...response);
                 }
@@ -3207,7 +3212,37 @@ Save audio changes and realign the Block?`,
       },
       assembleBlockPartAudioEdit(realign, preparedData = false) {
         
-        
+        this.$root.$emit('closeFlagPopup', true);
+        if (this.isChanged && preparedData === false) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block text has been modified and not saved.<br>
+Save text changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  let preparedData = {content: this.clearBlockContent()}
+                  return this.assembleBlockProxy(false, false, false)
+                    .then(() => {
+                      return this.assembleBlockPartAudioEdit(true, preparedData);
+                    });
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return Promise.resolve();
+        }
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/audio_edit/part/' + this.blockPartIdx;
         let api = this.$store.state.auth.getHttp();
         let data = {
@@ -3692,6 +3727,13 @@ Save text changes and realign the Block?`,
           this.showPinnedInText();
         }
       },
+      'blockPart.audiosrc': {
+        handler(val) {
+          console.log(`audiosrc changed HERE ${val}`);
+          this.blockAudio.src = this.blockAudiosrc('m4a');
+          this.$forceUpdate();
+        }
+      },
       'isChanged' : {
         handler(val) {
           if (val === false) {
@@ -3800,16 +3842,18 @@ Save text changes and realign the Block?`,
           this.destroyEditor();
           this.initEditor(true);
         }
-      }/*,
+      },
       'audioTasksQueue.time': {
         handler(val, oldVal) {
-          //console.log(`audioTasksQueue.time: ${val}`, Object.assign({}, this.audioTasksQueue));
-          if (oldVal === null && val !== null && this.audioTasksQueue.blockId === this.check_id) {
+          console.log(`audioTasksQueue.time: ${val}`, Object.assign({}, this.audioTasksQueue));
+          if (oldVal < val && this.audioTasksQueue.block.checkId === this.check_id) {
             //console.log('START ', this.check_id);
+            console.log('FIRE');
             this.evFromAudioEditorTasksQueuePush(this.check_id);
           }
-        }
-      },
+        },
+        deep: true
+      }/*,
       'audioTasksQueue.running': {
         handler(val) {
           //console.log(`audioTasksQueue.running: ${val}`, val);
@@ -3820,18 +3864,18 @@ Save text changes and realign the Block?`,
             }
           }
         }
-      }*/,
+      },
       'audioTasksQueue.queue.length': {
         handler(val) {
           //console.log(`audioTasksQueue.running: ${val}`, val);
-          if (this.audioTasksQueue.blockId === this.check_id) {
+          if (this.audioTasksQueue.block.blockId === this.check_id) {
             //console.log('CONTINUE', this.check_id);
             if (this.audioTasksQueue.queue.length > 0) {
               this.evFromAudioEditorTasksQueuePush(this.check_id);
             }
           }
         }
-      }
+      }*/
   }
 }
 </script>
