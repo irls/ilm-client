@@ -1097,14 +1097,15 @@
           this._addHistoryLocal('insert_silence', null, this.cursorPosition, this.cursorPosition + this.silenceLength);
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
             if (al.start > time) {
-              al.start+= this.silenceLength;
+              al.start = this._round(al.start + this.silenceLength, 2);
               this._changeWordPositions(al, i);
             }
             if (al.end > time) {
-              al.end+= this.silenceLength;
+              al.end = this._round(al.end + this.silenceLength, 2);
               this._changeWordPositions(al, i);
             }
           });
+          this.fixMap();
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
           //this.clearSelection();
           this.isModified = true;
@@ -1124,6 +1125,16 @@
             a.begin = new_positions.start;
             a.end = new_positions.end;
           }
+        },
+        fixMap() {
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+            //console.log(i, ':', map[i][0], map[i][1]);
+            if (this.audiosourceEditor.annotationList.annotations[i - 1] && this.audiosourceEditor.annotationList.annotations[i - 1].end != al.start) {
+              al.start = this.audiosourceEditor.annotationList.annotations[i - 1].end;
+              this._changeWordPositions(al, i);
+            }
+            
+          });
         },
         insertRangeAction(position, range, length) {
           let original_buffer = this.audiosourceEditor.activeTrack.buffer;
@@ -1318,6 +1329,7 @@
           if (shift > 0) {
             this.insertRangeAction(this.audiosourceEditor.duration, new Float32Array(shift * this.audiosourceEditor.activeTrack.buffer.sampleRate), shift);
           }
+          this.fixMap();
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
           this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000)]);
           this.clearSelection();
@@ -1856,8 +1868,8 @@ Discard unsaved audio changes?`,
             word = unescape(word.replace(/<[^>]+?>/img, ''));
             currentLength = match.index + match[0].length;
             let map = match[1] && match[1].indexOf(',') !== -1 ? match[1].split(',') : [0, 0]
-            map[0] = parseInt(map[0]) / 1000
-            map[1] = this._round(parseInt(map[1]) / 1000 + map[0], 3)
+            map[0] = this._round(parseInt(map[0]) / 1000, 2);
+            map[1] = this._round(parseInt(map[1]) / 1000 + map[0], 2)
             annotations.push({
               "begin": map[0],
               "children": [],
@@ -1885,6 +1897,7 @@ Discard unsaved audio changes?`,
                 isContinuousPlay: false,
                 linkEndpoints: true
               });
+            self.fixMap();
             $('.resize-handle').removeClass('manual');
             if (block && block.manual_boundaries && block.manual_boundaries.length > 0) {
               let waitAnnotations = setInterval(() => {
