@@ -621,7 +621,7 @@ export default {
         start: Number,
         end: Number
       },
-      isSaving: false
+      //isSaving: false
     }
   },
   components: {
@@ -1109,6 +1109,15 @@ export default {
       isAudioEditing: {
         get() {
           return this.audioTasksQueue.block.blockId === this.block.blockid;
+        },
+        cache: false
+      },
+      isSaving: {
+        get() {
+          return this.block.isSaving;
+        },
+        set(val) {
+          this.block.isSaving = val;
         },
         cache: false
       }
@@ -2296,54 +2305,48 @@ Save text changes and realign the Block?`,
           return this.saveBlockAudio([realign, preparedData])
             .then(response => {
               this.$root.$emit('for-audioeditor:flush');
-              if (!realign) {
-                this.isSaving = false;
+              if (realign) {
+                this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
               } else {
-                this.getBookAlign()
-                  .then(() => {
-                    this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
-                    this.isSaving = false;
-                  })
+                this.$root.$emit('for-audioeditor:load', this.block.getAudiosrc('m4a'), this.block.content, false, this.block);
               }
-              if (response.status == 200) {
-                if (this.isCompleted) {
-                  this.tc_loadBookTask();
-                }
-                this.getCurrentJobInfo();
+              if (this.isCompleted) {
+                this.tc_loadBookTask();
+              }
+              /*this.getCurrentJobInfo();
 
-                if (this.block.status.marked != response.data.status.marked) {
-                  this.block.status.marked = response.data.status.marked;
-                }
-                //this.$emit('blockUpdated', this.block._id);
-                this.isAudioChanged = false;
-                //this.isChanged = false;
-                this.block.isAudioChanged = false;
-                //this.block.isChanged = false;
-                this.block.content = response.data.content;
-                this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
-                this.blockAudio.map = response.data.content;
-                this.blockAudio.src = this.block.getAudiosrc('m4a');
-                this.block.manual_boundaries = response.data.manual_boundaries || [];
-                this.block.audiosrc_original = response.data.audiosrc_original;
-                Vue.nextTick(() => {
-                  if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
-                    this.block.flags.forEach(f => {
-                      this.updateFlagStatus(f._id);
-                    });
-                    //console.log(this.$refs.blockContent.innerHTML)
-                  }
-                })
-                //return this.putBlock(this.block);
-                if (!realign) {
-                  this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
-                }
-                if (!this.isSplittedBlock) {
-                  if (this.$refs.blocks && this.$refs.blocks[0]) {
-                    this.$refs.blocks[0].isAudioChanged = false;
-                  }
-                }
-                return BPromise.resolve();
+              if (this.block.status.marked != response.data.status.marked) {
+                this.block.status.marked = response.data.status.marked;
               }
+              //this.$emit('blockUpdated', this.block._id);
+              this.isAudioChanged = false;
+              //this.isChanged = false;
+              this.block.isAudioChanged = false;
+              //this.block.isChanged = false;
+              this.block.content = response.data.content;
+              this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+              this.blockAudio.map = response.data.content;
+              this.blockAudio.src = this.block.getAudiosrc('m4a');
+              this.block.manual_boundaries = response.data.manual_boundaries || [];
+              this.block.audiosrc_original = response.data.audiosrc_original;
+              Vue.nextTick(() => {
+                if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
+                  this.block.flags.forEach(f => {
+                    this.updateFlagStatus(f._id);
+                  });
+                  //console.log(this.$refs.blockContent.innerHTML)
+                }
+              })
+              //return this.putBlock(this.block);
+              if (!realign) {
+                this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
+              }
+              if (!this.isSplittedBlock) {
+                if (this.$refs.blocks && this.$refs.blocks[0]) {
+                  this.$refs.blocks[0].isAudioChanged = false;
+                }
+              }*/
+              return BPromise.resolve();
             })
             .catch(err => {
               this.isSaving = false;

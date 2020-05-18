@@ -2835,8 +2835,8 @@ Save audio changes and realign the Block?`,
               case 'insert_silence':
               case 'erase':
                 //let record = this.audioTasksQueue.queue[this.audioTasksQueue.queue.length - 1];
-                console.log(record);
-                console.log(record.wordMap);
+                //console.log(record);
+                //console.log(record.wordMap);
                 if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
                   let current_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
                   let w_maps = this.$refs.blockContent.querySelectorAll('[data-map]');
@@ -3845,10 +3845,10 @@ Save text changes and realign the Block?`,
       },
       'audioTasksQueue.time': {
         handler(val, oldVal) {
-          console.log(`audioTasksQueue.time: ${val}`, Object.assign({}, this.audioTasksQueue));
+          //console.log(`audioTasksQueue.time: ${val}`, Object.assign({}, this.audioTasksQueue));
           if (oldVal < val && this.audioTasksQueue.block.checkId === this.check_id) {
             //console.log('START ', this.check_id);
-            console.log('FIRE');
+            //console.log('FIRE');
             this.evFromAudioEditorTasksQueuePush(this.check_id);
           }
         },

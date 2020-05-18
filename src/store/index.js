@@ -3300,7 +3300,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    saveBlockAudio({state}, [realign, preparedData]) {
+    saveBlockAudio({state, dispatch}, [realign, preparedData]) {
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
       let alignBlock = state.audioTasksQueue.block;
       let api_url = `${state.API_URL}book/block/${block.blockid}/audio_edit${alignBlock.partIdx === null ? '' : '/part/alignBlock.partIdx'}`;
@@ -3310,26 +3310,51 @@ export const store = new Vuex.Store({
         manual_boundaries: block.getPartManualBoundaries(alignBlock.partIdx || 0),
         mode: state.mode
       };
+      if (block.getIsSplittedBlock()) {
+        
+      } else {
+        block.isSaving = true;
+      }
       if (realign) {
         api_url+= '?realign=true';
       }
       return axios.post(api_url, data, {})
         .then(response => {
-          return Promise.resolve(response);
-          if (!realign) {
-            this.isSaving = false;
-          } else {
-            this.getBookAlign()
-              .then(() => {
-                this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
-                this.isSaving = false;
-              })
+          //return Promise.resolve(response);
+          if (realign) {
+            dispatch('getBookAlign');
           }
           if (response.status == 200) {
             if (block.getIsSplittedBlock()) {
               
             } else {
-              
+              //if (this.isCompleted) {
+                //this.tc_loadBookTask();
+              //}
+              dispatch('getCurrentJobInfo');
+
+              if (block.status.marked != response.data.status.marked) {
+                block.status.marked = response.data.status.marked;
+              }
+              block.isAudioChanged = false;
+              //this.block.isChanged = false;
+              block.content = response.data.content;
+              block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+              //this.blockAudio.map = response.data.content;
+              //this.blockAudio.src = this.block.getAudiosrc('m4a');
+              block.isSaving = false;
+              block.manual_boundaries = response.data.manual_boundaries || [];
+              block.audiosrc_original = response.data.audiosrc_original;
+              /*Vue.nextTick(() => {
+                if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
+                  this.block.flags.forEach(f => {
+                    this.updateFlagStatus(f._id);
+                  });
+                  //console.log(this.$refs.blockContent.innerHTML)
+                }
+              })*/
+              //return this.putBlock(this.block);
+              return Promise.resolve(response);
             }
             if (this.isCompleted) {
               this.tc_loadBookTask();
