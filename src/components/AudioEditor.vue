@@ -1083,7 +1083,7 @@
         },
         addSilenceLocal() {
           let original_buffer = this.audiosourceEditor.activeTrack.buffer;
-          let time = this.cursorPosition;
+          let time = this._round(this.cursorPosition, 2);
           this.silenceLength = parseFloat(this.silenceLength);
           
           let silence = new Float32Array(this.silenceLength * original_buffer.sampleRate);
@@ -1097,11 +1097,11 @@
           
           this._addHistoryLocal('insert_silence', null, this.cursorPosition, this.cursorPosition + this.silenceLength);
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
-            if (al.start > time) {
+            if (al.start >= time) {
               al.start = this._round(al.start + this.silenceLength, 2);
               this._changeWordPositions(al, i);
             }
-            if (al.end > time) {
+            if (al.end >= time) {
               al.end = this._round(al.end + this.silenceLength, 2);
               this._changeWordPositions(al, i);
             }
