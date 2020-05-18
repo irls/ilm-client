@@ -874,12 +874,6 @@ export default {
 //     console.log('this.isChanged', this.isChanged);
     this.audioEditorEventsOff();
 
-    if (this.$refs.illustrationInput) {
-      // a trick to avoid console warning about incorrect resizeCanvas
-      // because somehow VuePictureInput does not destroyed in normal way
-      // and window.listener for 'resize' stil exists
-      this.$refs.illustrationInput.$refs.container = {};
-    }
     this.$root.$off('block-state-refresh-' + this.block._id, this.$forceUpdate);
 
     if (this.check_id) {

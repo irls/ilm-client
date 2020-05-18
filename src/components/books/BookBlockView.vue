@@ -555,7 +555,6 @@ import access             from '../../mixins/access.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
-import VuePictureInput    from 'vue-picture-input'
 import BookBlockPartView from './BookBlockPartView';
 var BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
@@ -629,7 +628,6 @@ export default {
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
       //'modal': modal,
-      'vue-picture-input': VuePictureInput,
       BookBlockPartView: BookBlockPartView
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
