@@ -1907,7 +1907,7 @@ Discard unsaved audio changes?`,
                     $(this).attr('data-index', index);
                   });
                   block.manual_boundaries.forEach(mb => {
-                    let position = parseInt(mb) / 1000;
+                    let position = this._round(parseInt(mb) / 1000, 2);
                     self.audiosourceEditor.annotationList.annotations.forEach((al, index) => {
                       if (al.start == position) {
                         $(`.annotation-box[data-index="${index}"] .resize-handle.resize-w`).addClass('manual');
