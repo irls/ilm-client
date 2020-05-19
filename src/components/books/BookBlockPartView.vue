@@ -394,7 +394,7 @@ export default {
         if (this.isUpdating) {
           return true;
         }
-        if (this.check_id && this.audioTasksQueue.block.blockId === this.check_id && this.audioTasksQueue.running) {
+        if (this.audioTasksQueue.block.blockId === this.block.blockid && this.blockPartIdx === this.audioTasksQueue.block.partIdx && this.audioTasksQueue.running) {
           return true;
         }
         return this.block ? this.isBlockLocked(this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null) : false;
@@ -416,7 +416,7 @@ export default {
           if (this.isUpdating) {
             return 'editing-audio';
           }
-          if (this.audioTasksQueue.block.blockId === this.check_id && this.audioTasksQueue.running) {
+          if (this.audioTasksQueue.block.blockId === this.block.blockid && this.blockPartIdx === this.audioTasksQueue.block.partIdx && this.audioTasksQueue.running) {
             return 'audio-positioning';
           }
           let lockType = this.blockLockType(this.block.blockid);
@@ -815,7 +815,7 @@ export default {
       },
       isAudioEditing: {
         get() {
-          return this.check_id && this.audioTasksQueue.block.blockId === this.check_id;
+          return this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx !== null && this.audioTasksQueue.block.partIdx === this.blockPartIdx;
         },
         cache: false
       }
@@ -939,7 +939,9 @@ export default {
         'revertAudio',
         'addAudioTask',
         'clearAudioTasks',
-        'shiftAudioTask'
+        'shiftAudioTask',
+        'applyTasksQueue',
+        'saveBlockAudio'
       ]),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
@@ -1324,10 +1326,10 @@ Save audio changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  let preparedData = {audiosrc: this.block.getPartAudiosrc(this.blockPartIdx, null, false), content: this.clearBlockContent()};
-                  return this.assembleBlockProxy(false, false, false)
+                  //let preparedData = {audiosrc: this.block.getPartAudiosrc(this.blockPartIdx, null, false), content: this.clearBlockContent()};
+                  return this.assembleBlockPartAudioEdit(false, {})
                     .then(() => {
-                      return this.assembleBlockPartAudioEdit(true, preparedData)
+                      return this.assembleBlockProxy(false, true, false)
                       .then(() => {
                         return Promise.resolve();
                       });
@@ -3243,6 +3245,28 @@ Save text changes and realign the Block?`,
           });
           return Promise.resolve();
         }
+        this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+        return this.applyTasksQueue([null])
+          .then(() => {
+            return this.saveBlockAudio([realign, preparedData])
+          })
+          .then((response) => {
+            this.$root.$emit('for-audioeditor:flush');
+            if (realign) {
+              this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+            } else {
+              let part = response.data.parts[this.blockPartIdx];
+              part._id = this.check_id;
+              part.blockid = this.block.blockid;
+              part.partIdx = this.isSplittedBlock ? this.blockPartIdx : null;
+              this.$root.$emit('for-audioeditor:load',
+                this.blockAudiosrc('m4a'),
+                this.block.getPartContent(this.blockPartIdx), false, part);
+            }
+            if (this.isCompleted) {
+              this.tc_loadBookTask();
+            }
+          });
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/audio_edit/part/' + this.blockPartIdx;
         let api = this.$store.state.auth.getHttp();
         let data = {
@@ -3670,7 +3694,7 @@ Save text changes and realign the Block?`,
         handler(val) {
           if (!val) {
             if (this.isAudioEditing) {
-              if (this.check_id === this.generateAudioCheckId()) {
+              if (this.block.blockid === this.audioTasksQueue.block.blockId && this.blockPartIdx === this.audioTasksQueue.block.partIdx) {
                 this.refreshBlockAudio();
                 this.showAudioEditor();
               }

@@ -589,7 +589,7 @@ export default {
       isAudPaused: false,
       isRecording: false,
       isRecordingPaused: false,
-      isAudioChanged: false,
+      //isAudioChanged: false,
       isIllustrationChanged: false,
       blockAudio: {
         src: '',
@@ -642,7 +642,7 @@ export default {
         if (this.isUpdating) {
           return true;
         }
-        if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.running) {
+        if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx === null && this.audioTasksQueue.running) {
           return true;
         }
         return this.hasLock;
@@ -660,7 +660,7 @@ export default {
           if (this.isUpdating) {
             return 'editing-audio';
           }
-          if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.running) {
+          if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx === null && this.audioTasksQueue.running) {
             return 'audio-positioning';
           }
           let lockType = this.blockLockType(this.block.blockid);
@@ -1108,7 +1108,7 @@ export default {
       },
       isAudioEditing: {
         get() {
-          return this.audioTasksQueue.block.blockId === this.block.blockid;
+          return this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx === null;
         },
         cache: false
       },
@@ -1118,6 +1118,15 @@ export default {
         },
         set(val) {
           this.block.isSaving = val;
+        },
+        cache: false
+      },
+      isAudioChanged: {
+        get() {
+          return this.block && this.block.isAudioChanged;
+        },
+        set(val) {
+          this.block.isAudioChanged = val;
         },
         cache: false
       }
@@ -1756,10 +1765,10 @@ Save audio changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0), content: this.clearBlockContent()};
-                  return this.assembleBlockProxy(false, false, update_fields, false)
+                  //let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0), content: this.clearBlockContent()};
+                  return this.assembleBlockAudioEdit(false, {})
                     .then(() => {
-                      return this.assembleBlockAudioEdit(true, preparedData)
+                      return this.assembleBlockProxy(false, true, update_fields, false)
                       .then(() => {
                         return Promise.resolve();
                       });
@@ -4331,14 +4340,11 @@ Save text changes and realign the Block?`,
       'hasLock': {
         handler(val) {
           if (!val) {
-            if (this.isAudioEditing && (this.check_id !== null || this.footnoteIdx !== null)) {
+            if (this.isAudioEditing) {
               //this.$root.$emit('for-audioeditor:set-process-run', false);
-              if (this.check_id === this.block.blockid) {
+              if (this.audioTasksQueue.block.blockId === this.block.blockid) {
                 this.refreshBlockAudio(!this.isChanged);
                 this.showAudioEditor();
-              } else {
-                let ftn = this.block.footnotes[this.footnoteIdx];
-                this.showFootnoteAudioEditor(ftn, this.footnoteIdx);
               }
             } else if (!this.isSplittedBlock) {
               if (this.$refs.blocks && this.$refs.blocks[0]) {

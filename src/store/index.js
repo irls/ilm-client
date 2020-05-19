@@ -3195,13 +3195,15 @@ export const store = new Vuex.Store({
     addAudioTask({state, dispatch, commit}, [type, options, wordMap]) {
       let time = Date.now();
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
+      let queueBlock = state.audioTasksQueue.block;
       let record = {
         type: type,
         options: options,
         time: time,
         wordMap: wordMap,
-        modified: block.isAudioChanged
+        modified: queueBlock.partIdx === null ? block.isAudioChanged : block.parts[queueBlock.partIdx].isAudioChanged
       };
+      block.isAudioChanged = true;
       state.audioTasksQueue.queue.push(record);
       state.audioTasksQueue.time = time;
       state.audioTasksQueue.log.push(record);
@@ -3303,7 +3305,7 @@ export const store = new Vuex.Store({
     saveBlockAudio({state, dispatch}, [realign, preparedData]) {
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
       let alignBlock = state.audioTasksQueue.block;
-      let api_url = `${state.API_URL}book/block/${block.blockid}/audio_edit${alignBlock.partIdx === null ? '' : '/part/alignBlock.partIdx'}`;
+      let api_url = `${state.API_URL}book/block/${block.blockid}/audio_edit${alignBlock.partIdx === null ? '' : '/part/' + alignBlock.partIdx}`;
       let data = {
         audiosrc: preparedData.audiosrc || block.getPartAudiosrc(alignBlock.partIdx || 0, false, false),
         content: preparedData.content || block.getPartContent(alignBlock.partIdx || 0),//content: this.blockContent(),
@@ -3324,14 +3326,22 @@ export const store = new Vuex.Store({
           if (realign) {
             dispatch('getBookAlign');
           }
+          dispatch('getCurrentJobInfo');
           if (response.status == 200) {
             if (block.getIsSplittedBlock()) {
-              
+              let part = response.data.parts[alignBlock.partIdx];
+              block.setPartContent(alignBlock.partIdx, part.content);
+              block.setPartAudiosrc(alignBlock.partIdx, part.audiosrc, part.audiosrc_ver);
+              block.setPartManualBoundaries(alignBlock.partIdx, part.manual_boundaries || []);
+              block.setPartAudiosrcOriginal(alignBlock.partIdx, part.audiosrc_original || null);
+              block.isAudioChanged = false;
+              //this.isChanged = false;
+              block.parts[alignBlock.partIdx].isAudioChanged = false;
+              return Promise.resolve(response);
             } else {
               //if (this.isCompleted) {
                 //this.tc_loadBookTask();
               //}
-              dispatch('getCurrentJobInfo');
 
               if (block.status.marked != response.data.status.marked) {
                 block.status.marked = response.data.status.marked;
