@@ -1436,14 +1436,14 @@
           //this.undoLocal();
           //return;
           if (this.mode === 'block') {
-            let make_event = false;//this.audioTasksQueue.queue.length === 0 && !this.audioTasksQueue.running;
+            let make_event = !this.audioTasksQueue.running;
             this.popTaskQueue();
-            let record = this._popHistoryLocal(!make_event);
+            let record = this._popHistoryLocal(true);
             //let record = this._popHistory();
             if (this.actionsLog.length === 0 && this.isHistoryFull) {
               this.isModified = false;
             }
-            if (make_event && record) {
+            if (record) {
               //this.block.manual_boundaries = record.manual_boundaries ? record.manual_boundaries.slice() : [];
               //this.setAudio(record.audio, record.text, false);
               this.$root.$emit('from-audioeditor:undo', this.blockId, record.audio, record.text, this.isModified);

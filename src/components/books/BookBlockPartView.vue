@@ -2706,7 +2706,7 @@ Save audio changes and realign the Block?`,
             this.block.undoPartContent(this.blockPartIdx);
             this.block.undoPartAudiosrc(this.blockPartIdx);
             this.block.undoPartManualBoundaries(this.blockPartIdx);
-            this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), false, this.blockPart);
+            //this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), false, this.blockPart);
           } else {
             this.block.undoContent();
             this.block.undoAudiosrc();
@@ -2714,7 +2714,7 @@ Save audio changes and realign the Block?`,
             //this.blockPart.content = this.block.content;
             //this.blockPart.audiosrc = this.block.audiosrc;
             this.blockPart.manual_boundaries = this.block.manual_boundaries;
-            this.$root.$emit('for-audioeditor:load', this.blockAudiosrc('m4a'), this.block.content, false, this.block);
+            //this.$root.$emit('for-audioeditor:load', this.blockAudiosrc('m4a'), this.block.content, false, this.block);
           }
           this.blockAudio.map = this.blockContent();
           this.blockAudio.src = this.blockAudiosrc('m4a');

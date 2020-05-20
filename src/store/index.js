@@ -3203,7 +3203,11 @@ export const store = new Vuex.Store({
         wordMap: wordMap,
         modified: queueBlock.partIdx === null ? block.isAudioChanged : block.parts[queueBlock.partIdx].isAudioChanged
       };
-      block.isAudioChanged = true;
+      if (queueBlock.partIdx === null) {
+        block.isAudioChanged = true;
+      } else {
+        block.parts[queueBlock.partIdx].isAudioChanged = true;
+      }
       state.audioTasksQueue.queue.push(record);
       state.audioTasksQueue.time = time;
       state.audioTasksQueue.log.push(record);
@@ -3254,6 +3258,7 @@ export const store = new Vuex.Store({
       let block = state.storeList.get(blockid);
       let content = block.getPartContent(partIdx || 0);
       let queue = state.audioTasksQueue.queue.splice(0, runSize);
+      let queueBlock = state.audioTasksQueue.block;
       queue.forEach((q, i) => {
         if (i < queue.length - 1) {
           delete q.wordMap;
@@ -3283,14 +3288,30 @@ export const store = new Vuex.Store({
               });
               if (l) {
                 l.audiosrc = r.audiosrc;
-                l.ver = r.ver;
+                l.audiosrc_ver = r.audiosrc_ver;
               }
             });
           }
           if (data.length > 0) {
             block.setPartAudiosrc(state.audioTasksQueue.block.partIdx || 0, data[data.length - 1].audiosrc, data[data.length - 1].audiosrc_ver);
+            let historyKey = queueBlock.partIdx === null ? '' : `parts.${queueBlock.partIdx}.`;
+            //let j = block.history[historyKey + 'audiosrc'].length;
+            if (Array.isArray(block.history[historyKey + 'audiosrc'])) {
+              for (let i = data.length - 1, j = block.history[historyKey + 'audiosrc'].length - 1; i >= 0 && j >= 0; --i, --j) {
+                //console.log(i, j);
+                ['audiosrc', 'audiosrc_ver'].forEach(k => {
+                  let h = block.history[`${historyKey}${k}`][j];
+                  if (h) {
+                    block.history[`${historyKey}${k}`][j] = data[i][k];
+                  }
+                });
+              }
+              block.history[historyKey + 'audiosrc'].pop();
+              block.history[historyKey + 'audiosrc_ver'].pop();
+            }
+            //console.log(block.history);
           }
-          console.log(state.audioTasksQueue);
+          //console.log(state.audioTasksQueue);
           if (state.audioTasksQueue.queue.length >= 5 && !state.audioTasksQueue.running) {
             dispatch('applyTasksQueue', [null]);
           }
