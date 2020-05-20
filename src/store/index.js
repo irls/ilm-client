@@ -187,6 +187,13 @@ export const store = new Vuex.Store({
         ]
       }
     ],
+    bookDifficulties: [
+      'Primary',
+      'Beginner',
+      'Elementary',
+      'Intermediate',
+      'Advanced'
+    ],
     loadBookWait: null,
     loadBookTaskWait: null,
     jobInfoRequest: null,
@@ -384,6 +391,7 @@ export const store = new Vuex.Store({
     taskTypes: state => state.taskTypes,
     liveDB: state => state.liveDB,
     bookCategories: state => state.bookCategories,
+    bookDifficulties: state => state.bookDifficulties,
     tasks_counter: state => state.currentJobInfo.tasks_counter,
     jobStatusError: state => state.jobStatusError,
     activeTasksCount: state => {
