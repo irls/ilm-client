@@ -83,27 +83,28 @@
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
-
-                <div v-else-if="block.type == 'illustration'"
-                :class="['table-body illustration-block', {'checked': blockO.checked}]"
-                @click="onClick($event)" :key="blockIllustration">
-                  <img v-if="hasIllustration" :src="blockIllustration"
+                <div
+                  v-else-if="block.type == 'illustration'"
+                  :class="['table-body illustration-block', block.getClass(mode), {'checked': blockO.checked}]"
+                  @click="onClick($event)"
+                >
+                  <img
+                    v-if="block.illustration && !allowEditing"
+                    :src="block.getIllustration()"
                     :height="illustrationHeight"
-                    :class="[block.getClass(mode)]"/>
-                  <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': this.isChanged && !isIllustrationChanged}]" v-if="allowEditing && !this.proofreadModeReadOnly">
-                    <vue-picture-input
-                      @change="onIllustrationChange"
-                      @remove="onIllustrationChange"
-                      ref="illustrationInput"
-                      accept="image/*"
-                      :customStrings="{ drag: 'Click here or drag image here' }"
-                      :removable="true"
-                      :crop="false">
-                    </vue-picture-input>
+                  />
+                    <UploadImage
+                      v-if="allowEditing && !proofreadModeReadOnly"
+                      :id="block._id"
+                      :value="block.getIllustration()"
+                      :height="+block.illustration_height"
+                      :width="+block.illustration_width"
+                      @input="onIllustrationChange"
+                    />
+
                     <!-- <div class="save-illustration" v-if="isIllustrationChanged">
                       <button class="btn btn-default" @click="uploadIllustration">Save picture</button>
                     </div> -->
-                  </div>
 
                 </div>
                 <!--<img v-if="block.illustration"-->
@@ -292,7 +293,7 @@
 <script>
 import Vue from 'vue'
 import moment from 'moment'
-import { mapGetters, mapActions }    from 'vuex'
+import { mapGetters, mapActions, mapMutations }    from 'vuex'
 import {  QuoteButton, QuotePreview,
           SuggestButton, SuggestPreview
         } from '../generic/ExtMediumEditor';
@@ -308,8 +309,8 @@ import access             from '../../mixins/access.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
-import VuePictureInput    from 'vue-picture-input'
 import RecordingBlock from './block/RecordingBlock';
+import UploadImage from './block/UploadImage'
 var BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true, dynamic: true });
 
@@ -375,11 +376,11 @@ export default {
     }
   },
   components: {
+    UploadImage,
       'block-menu': BlockMenu,
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
       //'modal': modal,
-      'vue-picture-input': VuePictureInput
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit'],
   mixins: [taskControls, apiConfig, access],
@@ -773,6 +774,9 @@ export default {
           audioTasksQueue: 'audioTasksQueue',
           checkRunningAudioTask: 'checkRunningAudioTask'
       }),
+    ...mapGetters('uploadImage', {
+      tempImage: 'file'
+    }),
       getBlockLang: {
         cache: false,
         get() {
@@ -870,12 +874,6 @@ export default {
 //     console.log('this.isChanged', this.isChanged);
     this.audioEditorEventsOff();
 
-    if (this.$refs.illustrationInput) {
-      // a trick to avoid console warning about incorrect resizeCanvas
-      // because somehow VuePictureInput does not destroyed in normal way
-      // and window.listener for 'resize' stil exists
-      this.$refs.illustrationInput.$refs.container = {};
-    }
     this.$root.$off('block-state-refresh-' + this.block._id, this.$forceUpdate);
 
     if (this.check_id) {
@@ -941,6 +939,9 @@ export default {
         'clearAudioTasks',
         'shiftAudioTask'
       ]),
+    ...mapMutations('uploadImage',{
+      removeTempImg: 'removeImage'
+    }),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
         if (flagType === 'narrator' && this.block.voicework !== 'narration') {
@@ -1279,10 +1280,8 @@ export default {
 
           this.isChanged = false;
           this.updateFlagStatus(block._id);
-          if (this.block.type === 'illustration') {
-            if (this.$refs.illustrationInput) {
-              this.$refs.illustrationInput.removeImage();
-            }
+          if (block.type === 'illustration') {
+              this.removeTempImg(block._id);
             this.block.description = block.description;
             if (this.$refs.blockDescription) {
               this.$refs.blockDescription.innerHTML = block.description;
@@ -3020,21 +3019,74 @@ Save audio changes and realign the Block?`,
           } while (next && next !== endElement);
         }
       },
-      onIllustrationChange() {
-        //console.log(arguments, this.$refs.illustrationInput.image);
-        if (this.$refs.illustrationInput && this.$refs.illustrationInput.image) {
+      uploadIllustration(event) {
+        let formData = new FormData();
+        let image = this.tempImage(this.block._id)
+        formData.append('illustration', image, image.name);
+        formData.append('block', JSON.stringify({'description': this.$refs.blockDescription.innerHTML}));
 
-          this.isIllustrationChanged = true;
-          Vue.nextTick(() => {
-            $('[id="' + this.block._id + '"] .drag-uploader').removeClass('no-picture');
-          });
-        } else {
+        let api = this.$store.state.auth.getHttp()
+        let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
-          this.isIllustrationChanged = false;
-          Vue.nextTick(() => {
-            $('[id="' + this.block._id + '"] .drag-uploader').addClass('no-picture');
-          });
-        }
+        api.post(api_url, formData, {}).then((response) => {
+          if (response.status===200) {
+            if (this.isCompleted) {
+              this.tc_loadBookTask();
+              this.getCurrentJobInfo();
+            }
+            this.removeTempImg(this.block._id)
+            // hide modal after one second
+            this.$emit('blockUpdated', this.block._id);
+            //let offset = document.getElementById(self.block._id).getBoundingClientRect()
+            //window.scrollTo(0, window.pageYOffset + offset.top);
+            this.isIllustrationChanged = false;
+            this.isChanged = false;
+            this.block.isIllustrationChanged = false;
+            this.block.isChanged = false;
+            this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
+            //if (self.editor) {
+              //self.editor.destroy();
+            //}
+            $('[id="' + this.block._id + '"] .illustration-block')
+              .removeAttr('contenteditable')
+              .removeAttr('data-placeholder');
+          } else {
+
+          }
+
+          //if (this.blockO.type !== this.block.type) {
+            this.blockO.status = Object.assign(this.blockO.status, {
+              marked: this.block.markedAsDone,
+              assignee: this.block.status.assignee,
+              proofed: this.block.status.proofed,
+              stage: this.block.status.stage
+            })
+            let upd = {
+              rid: this.blockO.rid,
+              type: this.block.type,
+              status: this.blockO.status
+            }
+            this.putBlockO(upd).then(()=>{
+              this.putNumBlockO({
+                bookId: this.block.bookid,
+                rid: this.blockO.rid,
+                type: this.block.type,
+                secnum: '',
+                parnum: ''
+              }).then((blocks)=>{
+                //console.log('assembleBlock putNumBlockO', blocks[0]);
+                //this.storeListO.updBlockByRid(this.blockO.rid, {
+                //  type: this.block.type
+                //})
+              });
+            });
+          //}
+        }).catch((err) => {
+          console.log(err)
+        });
+      },
+      onIllustrationChange(obj ={}) {
+       this.isIllustrationChanged = true;
       },
       setRangeSelection(type, ev) {
         this.$emit('setRangeSelection', type, ev);
