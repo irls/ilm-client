@@ -1130,8 +1130,10 @@
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
             //console.log(i, ':', map[i][0], map[i][1]);
             if (this.audiosourceEditor.annotationList.annotations[i - 1] && this.audiosourceEditor.annotationList.annotations[i - 1].end != al.start) {
-              al.start = this.audiosourceEditor.annotationList.annotations[i - 1].end;
-              this._changeWordPositions(al, i);
+              //al.start = this.audiosourceEditor.annotationList.annotations[i - 1].end;
+              this.audiosourceEditor.annotationList.annotations[i - 1].end = al.start;
+              //this._changeWordPositions(al, i);
+              this._changeWordPositions(this.audiosourceEditor.annotationList.annotations[i - 1], i - 1);
             }
             
           });
@@ -1909,10 +1911,10 @@ Discard unsaved audio changes?`,
                   block.manual_boundaries.forEach(mb => {
                     let position = this._round(parseInt(mb) / 1000, 2);
                     self.audiosourceEditor.annotationList.annotations.forEach((al, index) => {
-                      if (al.start == position) {
+                      if (Math.abs(al.start - position) <= 0.02) {
                         $(`.annotation-box[data-index="${index}"] .resize-handle.resize-w`).addClass('manual');
                       }
-                      if (al.end == position) {
+                      if (Math.abs(al.end - position) <= 0.02) {
                         $(`.annotation-box[data-index="${index}"] .resize-handle.resize-e`).addClass('manual');
                       }
                     });
@@ -2308,7 +2310,7 @@ Discard unsaved audio changes?`,
             map.push([Math.round(al.begin * 1000), Math.round((al.end - al.begin) * 1000)]);
             //console.log(i, ':', map[i][0], map[i][1]);
             if (map[i - 1] && map[i - 1][0] + map[i - 1][1] != map[i][0]) {
-              //console.log('FIX MAP', map[i - 1][0] + map[i - 1][1], map[i][0]);
+              //console.log('FIX MAP', map[i - 1][0] + map[i - 1][1], map[i][0], al);
               map[i][0] = map[i - 1][0] + map[i - 1][1];
             }
             let w = this.words.find(_w => {
