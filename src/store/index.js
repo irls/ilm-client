@@ -438,6 +438,13 @@ export const store = new Vuex.Store({
         return false;
       }
       return true;
+    },
+    audioTasksQueueBlock: state => {
+      if (state.audioTasksQueue.block.blockId) {
+        return state.storeList.get(state.audioTasksQueue.block.blockId);
+      } else {
+        return null;
+      }
     }
   },
 
@@ -3240,6 +3247,27 @@ export const store = new Vuex.Store({
         state.audioTasksQueue.time = state.audioTasksQueue.queue[state.audioTasksQueue.queue.length - 1].time;
       } else {
         state.audioTasksQueue.time = null;
+      }
+    },
+    undoTasksQueue({state, dispatch}) {
+      let queueBlock = state.audioTasksQueue.block;
+      let block = state.storeList.get(queueBlock.blockId);
+        if (block) {
+        if (block.getIsSplittedBlock()) {
+          block.undoPartContent(queueBlock.blockPartIdx);
+          if (state.audioTaskskQueue.queue.length === 0) {
+            block.undoPartAudiosrc(queueBlock.blockPartIdx);
+          }
+          block.undoPartManualBoundaries(queueBlock.blockPartIdx);
+          //this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), false, this.blockPart);
+        } else {
+          block.undoContent();
+          if (state.audioTasksQueue.queue.length === 0) {
+            block.undoAudiosrc();
+          }
+          block.undoManualBoundaries();
+        }
+        dispatch('popAudioTask');
       }
     },
     applyTasksQueue({state, dispatch}, [runSize, blockid, partIdx]) {

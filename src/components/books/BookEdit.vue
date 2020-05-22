@@ -153,7 +153,8 @@ export default {
           parlist: 'storeList',
           parlistO: 'storeListO',
           blockSelection: 'blockSelection',
-          currentJobInfo: 'currentJobInfo'
+          currentJobInfo: 'currentJobInfo',
+          audioTasksQueue: 'audioTasksQueue'
       }),
       metaStyles: function () {
           let result = '';
@@ -2085,6 +2086,20 @@ export default {
       handler(val) {
         if (val) {
           this.checkMode();
+        }
+      }
+    },
+    'audioTasksQueue.running': {
+      handler(val, oldVal) {
+        if (val === null && oldVal !== null) {
+          //console.log('STOP RUNNING');
+          let log = this.audioTasksQueue.log[this.audioTasksQueue.log.length - 1];
+          let block = this.parlist.get(this.audioTasksQueue.block.blockId);
+          if (log && this.audioTasksQueue.queue.length === 0 && block) {
+            //console.log(log.time, this.audioTasksQueue.time, this.audioTasksQueue);
+            this.$root.$emit('for-audioeditor:load-silent', log, block.getAudiosrc('m4a'), block.content, true, block);
+            //setAudioSilent(queue_record, audio, text, saveToHistory = true, block = null) {
+          }
         }
       }
     }

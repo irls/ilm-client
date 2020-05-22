@@ -2291,7 +2291,7 @@ Save text changes and realign the Block?`,
           });
           return Promise.resolve();
         }
-        this.isSaving = true;
+        //this.isSaving = true;
         this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         return this.applyTasksQueue([null])
           .then(() => {
@@ -2313,6 +2313,7 @@ Save text changes and realign the Block?`,
           //this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
           return this.saveBlockAudio([realign, preparedData])
             .then(response => {
+              //this.isSaving = false;
               this.$root.$emit('for-audioeditor:flush');
               if (realign) {
                 this.$root.$emit('for-audioeditor:set-process-run', true, 'align');

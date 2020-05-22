@@ -1394,7 +1394,7 @@
           //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
         },
         popTaskQueue() {
-          this.popAudioTask();
+          this.undoTasksQueue();
         },
         erase() {
           let pause;
@@ -2470,7 +2470,7 @@ Revert to original block audio?`,
             this.$root.$emit('from-audioeditor:select', this.blockId, list);
           }
         },
-        ...mapActions(['addAudioTask', 'popAudioTask', 'setAudioTasksBlockId'])
+        ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId'])
 
       },
       computed: {

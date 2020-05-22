@@ -2703,14 +2703,8 @@ Save audio changes and realign the Block?`,
         if (blockId == this.check_id) {
           this.audStop();
           if (this.isSplittedBlock) {
-            this.block.undoPartContent(this.blockPartIdx);
-            this.block.undoPartAudiosrc(this.blockPartIdx);
-            this.block.undoPartManualBoundaries(this.blockPartIdx);
             //this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), false, this.blockPart);
           } else {
-            this.block.undoContent();
-            this.block.undoAudiosrc();
-            this.block.undoManualBoundaries();
             //this.blockPart.content = this.block.content;
             //this.blockPart.audiosrc = this.block.audiosrc;
             this.blockPart.manual_boundaries = this.block.manual_boundaries;
