@@ -1849,6 +1849,9 @@ Discard unsaved audio changes?`,
           }
         },
         _setText(text, block, saveToHistory = false) {
+          if (this.wordRepositioning) {
+            return false;
+          }
           if (saveToHistory && this.content && this.audiofile) {
             this.isModified = true;
             //this._addHistory(this.content, this.audiofile, block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
