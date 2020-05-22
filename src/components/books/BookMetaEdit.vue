@@ -107,7 +107,6 @@
                   <td class="pull-left">{{ Math.round(currentBook.wordcount / 300) }} pages</td>
                 </tr>
 
-
                 <tr class='category'>
                   <td>Category</td>
                   <td>
@@ -119,6 +118,15 @@
                       </template>
                     </select>
                     <span v-if="requiredFields && requiredFields.category" class="validation-error">Please define a Category</span>
+                  </td>
+                       </tr>
+                <tr class='difficulty'>
+                  <td>Difficulty</td>
+                  <td>
+                    <select id="difficultySelection" :class="{ 'text-danger': requiredFields && requiredFields.difficulty }" class="form-control" v-model='currentBook.difficulty' @change="change('difficulty')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                      <option v-for="(value, ind) in subjectDifficulties" :value="value">{{ value }}</option>
+                    </select>
+                    <span v-if="requiredFields && requiredFields.difficulty" class="validation-error">Please define a Difficulty</span>
                   </td>
                 </tr>
 
@@ -594,6 +602,7 @@ export default {
       alignCounter: 'alignCounter',
       audiobook: 'currentAudiobook',
       subjectCategories: 'bookCategories',
+      subjectDifficulties: 'bookDifficulties',
       tasks_counter: 'tasks_counter',
       taskTypes: 'taskTypes',
       adminOrLibrarian: 'adminOrLibrarian',
@@ -836,6 +845,9 @@ export default {
       this.isOwner = this.currentBook.owner == superlogin.getSession().user_id;
       if (this.currentBook.author && !Array.isArray(this.currentBook.author)) {
         this.currentBook.author = [this.currentBook.author];
+      }
+      if(!this.currentBook.difficulty){
+        this.currentBook.difficulty = this.subjectDifficulties[3]
       }
       //this.loadAudiobook();
       /*this.setCurrentBookBlocksLeft(this.currentBook._id)

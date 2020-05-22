@@ -58,23 +58,26 @@
           <template v-if="mode == 'block'">
             <div>
               <button class="btn btn-default" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection">Clear</button>
-              <button class="btn btn-primary" v-on:click="cut()"  :disabled="!hasSelection || isSinglePointSelection">Cut</button>
-              <button class="btn btn-primary" v-on:click="erase()"  :disabled="!hasSelection || isSinglePointSelection">Erase</button>
+              <!-- <button class="btn btn-primary" v-on:click="cut()"  :disabled="!hasSelection || isSinglePointSelection">Cut</button> -->
+              <button class="btn btn-primary" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection">Cut</button>
+              <!-- <button class="btn btn-primary" v-on:click="erase()"  :disabled="!hasSelection || isSinglePointSelection">Erase</button> -->
+              <button class="btn btn-primary" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection">Erase</button>
             </div>
           </template>
         </div>
         <div class="selection-controls" v-if="mode == 'block'">
           <input type="number" step="0.1" v-model="silenceLength" />
-          <button class="btn btn-primary" v-on:click="addSilence()" :disabled="cursorPosition === false">Add Silence</button>
+          <!-- <button class="btn btn-primary" v-on:click="addSilence()" :disabled="cursorPosition === false">Add Silence</button> -->
+          <button class="btn btn-primary" v-on:click="addSilenceLocal()" :disabled="cursorPosition === false">Add Silence</button>
         </div>
         <template v-if="mode == 'block' && !isFootnote">
           <label v-if="isRevertDisabled" class="btn btn-default disabled">Revert</label>
           <button v-else class="btn btn-default" v-on:click="revert(true)">Revert</button>
         </template>
         <div class="audio-controls" v-if="isModifiedComputed && mode == 'block'">
-          <button class="btn btn-default" v-if="history.length" v-on:click="undo()">Undo</button>
-          <button class="btn btn-primary" v-on:click="save()">Save</button>
-          <button class="btn btn-primary" v-on:click="saveAndRealign()">Save & Re-align</button>
+          <button class="btn btn-default" v-if="actionsLog.length" v-on:click="undo()">Undo {{lastActionName}}</button>
+          <button class="btn btn-primary" v-on:click="save()" :disabled="isSaveDisabled">Save</button>
+          <button class="btn btn-primary" v-on:click="saveAndRealign()" :disabled="isSaveDisabled">Save & Re-align</button>
         </div>
         <div class="audio-controls" v-if="mode == 'file'">
           <button class="btn btn-default" :disabled="!isModifiedComputed" v-on:click="undo()">Undo</button>
@@ -126,6 +129,9 @@
   var WaveformPlaylist = require('waveform-playlist');
   var Draggable = require ('draggable')
   var {TimeScale} = require('../store/AudioTimeScale.js');
+
+  import _Playout from 'waveform-playlist/lib/Playout';
+  //var _Playout2 = _interopRequireDefault(_Playout);
   Vue.use(v_modal, { dialog: true });
 
   export default {
@@ -158,6 +164,7 @@
           isModified: false,
           isAudioModified: false,
           history: [],
+          actionsLog: [],
           isHistoryFull: true,
           discardOnExit: false,
           mode: 'block',
@@ -182,12 +189,14 @@
           processRunType: null,
           selectionBordersVisible: false,
           audioDuration: 0,
-          isFootnote: false
+          isFootnote: false,
+          wordRepositioning: false
         }
       },
       mounted() {
         this.$root.$on('for-audioeditor:load-and-play', this.load);
         this.$root.$on('for-audioeditor:load', this.setAudio);
+        this.$root.$on('for-audioeditor:load-silent', this.setAudioSilent);
         //this.$root.$on('for-audioeditor:reload-text', this._setText);
         //this.$root.$on('for-audioeditor:select', this.select);
         this.$root.$on('for-audioeditor:close', this.close);
@@ -211,6 +220,7 @@
         this.$root.$off('for-audioeditor:force-close', this.forceClose);
         this.$root.$off('for-audioeditor:load-and-play', this.load);
         this.$root.$off('for-audioeditor:load', this.setAudio);
+        this.$root.$off('for-audioeditor:load-silent', this.setAudioSilent);
         this.$root.$off('for-audioeditor:reload-text', this._setText);
         this.$root.$off('for-audioeditor:select', this.select);
         this.$root.$off('for-audioeditor:set-process-run', this.setProcessRun);
@@ -222,6 +232,7 @@
             this.blockSelectionEmit = true;
             this.selection.start = start / 1000;
             this.selection.end = end / 1000;
+            this.cursorPosition = this.selection.start;
             this.wordSelectionMode = false;
             this._clearWordSelection();
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
@@ -305,6 +316,12 @@
           this.isPlaying = false;
           this.isPaused = false;
           let clear = [];
+          if (mode === 'block' && block) {
+            if (block._id !== this.blockId) {
+              this._clearHistoryLocal();
+            }
+            this.setAudioTasksBlockId(block._id);
+          }
           if (this.audiosourceEditor) {
             this.audiosourceEditor.tracks.forEach(t => {
               //console.log(t.playout);
@@ -646,8 +663,14 @@
             self._setWordSelection(index, true, true);
             self.wordSelectionMode = index;
           });
+          $('.wf-playlist').on('dragstart', '.annotations-boxes .annotation-box .resize-handle', (ev) => {
+            //console.log('DRAG START');
+            this.wordRepositioning = true;
+          });
           $('.wf-playlist').on('dragend', '.annotations-boxes .annotation-box .resize-handle', (ev)=>{
             this.smoothDrag(ev);
+            //console.log('DRAG END');
+            this.wordRepositioning = false;
           });
 
           let waitPlaylist = setInterval(() => {
@@ -790,6 +813,52 @@
             this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
           }
           this.load(audio, text, block ? block : this.block);
+        },
+        setAudioSilent(queue_record, audio, text, saveToHistory = true, block = null) {
+          //console.log(`%c COMPARE ${this.audioTasksQueue.time}, ${queue_record.time}`, `color: #bada55; background-color: #222;`)
+          this.emitDisplayWordSelection();
+          if (this.audioTasksQueue.time === queue_record.time && !this.wordRepositioning) {
+            if (block) {
+              this.block.manual_boundaries = block.manual_boundaries || [];
+            }
+            let replay = this.isPlaying;
+            let stopPlay = new Promise((resolve, reject) => {
+              if (replay) {
+                return this.pause()
+                  .then(() => {
+                    return resolve();
+                  });
+              } else {
+                return resolve();
+              }
+            });
+            return stopPlay
+              .then(() => {
+                let api = this.$store.state.auth.getHttp();
+                return api.get(audio, {
+                  responseType: 'arraybuffer'
+                })
+                  .then((response) => {
+                    //console.log(response);
+                    this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
+                      this.setAudioBuffer(buffer);
+                      this.audiosourceEditor.activeTrack.duration = buffer.duration;
+                      this.audiosourceEditor.duration = buffer.duration;
+                      this._setText(text, block);
+                      this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+                      this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+                      this.audiosourceEditor.drawRequest();
+                      if (replay) {
+                        this.play();
+                      }
+                    });
+                  })
+                  .catch(err => {
+                    console.log('ERROR');
+                    console.log(err);
+                  });
+                })
+          }
         },
         play(cursorPosition) {
           if (typeof cursorPosition === 'undefined') {
@@ -982,7 +1051,6 @@
             this._setDefaults();
             this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
             this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
-            console.log('AudioEditor close this.blockId', this.blockId);
             $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
             $(`#content-${this.blockId}`).off('click', 'w', this.showSelection);
             this.$root.$off('for-audioeditor:select', this.select);
@@ -1004,6 +1072,7 @@
           $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
           $(`#content-${this.blockId}`).off('click', 'w', this.showSelection);
           this.$root.$off('for-audioeditor:select', this.select);
+          this.$root.$off('for-audioeditor:reload-text', this._setText);
         },
         addSilence() {
           if (this.silenceLength > 0 && this.cursorPosition >= 0) {
@@ -1012,10 +1081,103 @@
             this.isModified = true;
           }
         },
+        addSilenceLocal() {
+          let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+          let time = this._round(this.cursorPosition, 2);
+          this.silenceLength = parseFloat(this.silenceLength);
+          
+          let silence = new Float32Array(this.silenceLength * original_buffer.sampleRate);
+          
+          this.insertRangeAction(time, silence, this.silenceLength);
+          //this.audiosourceEditor.draw(this.audiosourceEditor.render());
+          //this.audiosourceEditor.drawRequest();
+          //this.audiosourceEditor.renderTrackSection();
+          
+          this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
+          
+          this._addHistoryLocal('insert_silence', null, this.cursorPosition, this.cursorPosition + this.silenceLength);
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+            if (al.start >= time) {
+              al.start = this._round(al.start + this.silenceLength, 2);
+              this._changeWordPositions(al, i);
+            }
+            if (al.end >= time) {
+              al.end = this._round(al.end + this.silenceLength, 2);
+              this._changeWordPositions(al, i);
+            }
+          });
+          this.fixMap();
+          this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
+          //this.clearSelection();
+          this.isModified = true;
+        },
+        _changeWordPositions(new_positions, index) {
+          new_positions.start = this._round(new_positions.start, 2);
+          new_positions.end = this._round(new_positions.end, 2);
+          let w = this.words.find(_w => {
+            return _w.index === index;
+          });//this.words.push({start: map[0], end: map[1], index: this.words.length, alignedIndex: alignedWords++})
+          if (w) {
+            w.start = new_positions.start;
+            w.end = new_positions.end;
+          }
+          let a = this.annotations[index];
+          if (a) {
+            a.begin = new_positions.start;
+            a.end = new_positions.end;
+          }
+        },
+        fixMap() {
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+            //console.log(i, ':', map[i][0], map[i][1]);
+            if (this.audiosourceEditor.annotationList.annotations[i - 1] && this.audiosourceEditor.annotationList.annotations[i - 1].end != al.start) {
+              //al.start = this.audiosourceEditor.annotationList.annotations[i - 1].end;
+              this.audiosourceEditor.annotationList.annotations[i - 1].end = al.start;
+              //this._changeWordPositions(al, i);
+              this._changeWordPositions(this.audiosourceEditor.annotationList.annotations[i - 1], i - 1);
+            }
+            
+          });
+        },
+        insertRangeAction(position, range, length) {
+          let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+          let first_list_index        = parseInt(position * original_buffer.sampleRate);
+          let second_list_index       = parseInt(first_list_index + range.length);
+          let second_list_mem_alloc   = (original_buffer.length - first_list_index);
+
+          let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, original_buffer.length + parseInt((length) * original_buffer.sampleRate), original_buffer.sampleRate);
+            
+          let new_list        = new Float32Array( parseInt( first_list_index ));
+          let second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
+          let combined        = new Float32Array( new_list.length + range.length + second_list.length );
+          //console.log(new_list.length + second_list.length + range.length, first_list_index, second_list_index, combined.length);
+          //console.log(new_list.length, range.length, second_list.length);
+          
+          for (let i = 0; i < original_buffer.numberOfChannels; ++i ) {
+
+            original_buffer.copyFromChannel(new_list, i);
+            original_buffer.copyFromChannel(second_list, i, first_list_index)
+
+            combined.set(new_list)
+            combined.set(range, first_list_index);
+            combined.set(second_list, second_list_index)
+
+            new_buffer.copyToChannel(combined, i);
+          }
+          //this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+          this.setAudioBuffer(new_buffer);
+          this.audiosourceEditor.activeTrack.duration+= length;
+          this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
+          this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
+          this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+          this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+          this.audiosourceEditor.drawRequest();
+        },
         save() {
           if (this.mode == 'block') {
             if (this.isModified) {
               this.$root.$emit('from-audioeditor:save', this.blockId);
+              //this.addTaskQueue('save', []);
               //this.isModified = false;
             }
           } else if(this.mode == 'file') {
@@ -1049,26 +1211,254 @@
           this.$root.$emit('from-audioeditor:cut', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
           this.isModified = true;
         },
+        cutLocal() {
+          let cut_range = this.cutRangeAction(this.selection.start, this.selection.end);
+          this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
+          let diff = this._round(this.selection.end - this.selection.start, 2);
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+            if (al.start <= this.selection.start && al.end >= this.selection.end) {// cut middle of the word
+              al.end-= diff;
+              this._changeWordPositions(al, i);
+            } else if (al.start >= this.selection.end) {// word after selection
+              al.start-= diff;
+              al.end-= diff;
+              this._changeWordPositions(al, i);
+            } else if (al.start >= this.selection.start && al.end <= this.selection.end) {// cut word
+              al.start = this.selection.start;
+              al.end = this.selection.start;
+              this._changeWordPositions(al, i);
+            } else if (al.end > this.selection.start && al.end < this.selection.end) {// cut end of the word
+              al.end = this.selection.start;
+              this._changeWordPositions(al, i);
+            } else if (al.start > this.selection.start && al.start < this.selection.end) {// cut end of the word
+              al.start = this.selection.start;
+              al.end-= diff;
+              this._changeWordPositions(al, i);
+            }
+          });
+          /*if (pos && pos.length == 2) {
+                let begin = parseInt(pos[0]);
+                let end = parseInt(pos[1]);
+                if (end < 0) {
+                  end = 0;
+                }
+                let mb_index = manual_boundaries.indexOf(begin);
+                //console.log(begin, end, $(item).text(), shift);
+                if (shift > 0) {
+                  if (end - shift > min) {
+                    begin+= shift;
+                    end-=shift;
+                    shift = 0;
+                    if (mb_index !== -1) {
+                      manual_boundaries.splice(mb_index, 1);
+                    }
+                    //console.log('SHIFT1', $(item).text(), shift)
+                  } else if (end > min && end - shift < min) {
+                    let delta = end - min;
+                    shift-=delta;
+                    begin+= delta;
+
+                    begin+= shift;
+                    end = min;
+                    if (mb_index !== -1) {
+                      manual_boundaries.splice(mb_index, 1);
+                    }
+                    //console.log('SHIFT2', $(item).text(), begin, end)
+                    //end+= shift;
+                  } else {
+                    begin+=shift;
+                    //console.log('SHIFT3', $(item).text(), shift)
+                    //end+=shift;
+                    //shift*=2;
+                    if (mb_index !== -1) {
+                      manual_boundaries.splice(mb_index, 1);
+                    }
+                  }
+                }
+                let dur = parseInt(end) || 0;
+                if (dur < min) {
+                  let delta = (min - dur);
+                  shift+= delta;
+                  end+=delta;
+                  //console.log('SHIFT4', $(item).text(), delta)
+                  //console.log('INCREASE', shift, end)
+                  //mapData[i].shift = delta;
+                }
+                //console.log(begin, end, $(this).text(), shift);
+                $(item).attr('data-map', begin + ',' + end);
+                lastMap = [begin, end];
+              }
+              if (shift > 0 && index === total - 1) {
+                addSilence = shift / 1000;
+              }
+            });*/
+          let shift = 0;
+          let min = 0.05;
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+            let duration = al.end - al.start;
+            if (shift > 0) {
+              if (duration - shift > min) {
+                al.start+= shift;
+                //al.end-=shift;
+                shift = 0;
+                //if (mb_index !== -1) {
+                  //manual_boundaries.splice(mb_index, 1);
+                //}
+              } else if (duration > min && duration - shift < min) {
+                let delta = duration - min;
+                shift-=delta;
+                al.start+= delta;
+
+                al.start+= shift;
+                al.end = al.start + min;
+                //if (mb_index !== -1) {
+                  //manual_boundaries.splice(mb_index, 1);
+                //}
+              } else {
+                al.start+=shift;
+                al.end+=shift;
+                //if (mb_index !== -1) {
+                  //manual_boundaries.splice(mb_index, 1);
+                //}
+              }
+              this._changeWordPositions(al, i);
+            }
+            if (al.end - al.start < min) {
+              let delta = this._round(min - (al.end - al.start), 2);
+              shift = this._round(shift + delta, 2);
+              al.end = this._round(al.end + delta, 2);
+              this._changeWordPositions(al, i);
+            }
+          });
+          if (shift > 0) {
+            this.insertRangeAction(this.audiosourceEditor.duration, new Float32Array(shift * this.audiosourceEditor.activeTrack.buffer.sampleRate), shift);
+          }
+          this.fixMap();
+          this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
+          this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000)]);
+          this.clearSelection();
+          this.isModified = true;
+          //this.audiosourceEditor.ee.emit('scroll');
+          //durationformat
+          //statechange + state
+          //trim + clear selection
+          //scroll
+          //playbackReset call
+        },
+        cutRangeAction(start, end) {
+          let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+
+          let first_list_index        = (start * original_buffer.sampleRate);
+          let second_list_index       = (end * original_buffer.sampleRate);
+          let second_list_mem_alloc   = (original_buffer.length - (end * original_buffer.sampleRate));
+          if (second_list_mem_alloc < 0) {
+            second_list_mem_alloc = 0;
+          }
+          
+          let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, parseInt( first_list_index ) + parseInt( second_list_mem_alloc ), original_buffer.sampleRate);
+
+          let new_list        = new Float32Array( parseInt( first_list_index ));
+          let second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
+          let combined        = new Float32Array( parseInt( first_list_index ) + parseInt( second_list_mem_alloc ) );
+          let cut_range = new Float32Array((end - start) * original_buffer.sampleRate);
+          
+          //this.actionsLog.push({
+            //type: 'cut',
+            //buffer: original_buffer
+          //});
+
+          for (let i = 0; i < original_buffer.numberOfChannels; ++i) {
+            original_buffer.copyFromChannel(new_list, i);
+
+            combined.set(new_list);
+            
+            if (second_list_mem_alloc > 0) {
+              original_buffer.copyFromChannel(second_list, i, second_list_index);
+              combined.set(second_list, first_list_index);
+            }
+
+            new_buffer.copyToChannel(combined, i);
+            original_buffer.copyFromChannel(cut_range, i, first_list_index);
+          }
+          //console.log(cut_range);
+          this.setAudioBuffer(new_buffer);
+          //this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
+          this.audiosourceEditor.activeTrack.duration-= end - start;
+          this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
+          this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
+          
+          this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+          this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+          this.audiosourceEditor.drawRequest();
+          return cut_range;
+        },
+        setAudioBuffer(new_buffer) {
+          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+          //console.log(_Playout);
+          //console.log(new _Playout.default(this.audiosourceEditor.ac, new_buffer));
+          //console.log(new _Playout(this.audiosourceEditor.ac, new_buffer));
+          //this.audiosourceEditor.activeTrack.playout.setBuffer(new_buffer);
+          //this.audiosourceEditor.activeTrack.duration = new_buffer.duration;
+          //this.audiosourceEditor.duration = new_buffer.duration;
+          this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
+        },
+        addTaskQueue(type, options) {
+          this.addAudioTask([type, options]);
+          //this._addHistory(this.content, this.audiofile, this.block && this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
+          //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
+        },
+        popTaskQueue() {
+          this.popAudioTask();
+        },
         erase() {
           let pause;
-            if (this.isPlaying) {
-              pause = this.pause();
-            } else {
-              pause = new Promise((res, rej) => {res()});
-            }
-            return pause
-              .then(() => {
-                this.$root.$emit('from-audioeditor:erase-audio', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
-                this.isModified = true;
-              });
+          if (this.isPlaying) {
+            pause = this.pause();
+          } else {
+            pause = new Promise((res, rej) => {res()});
+          }
+          return pause
+            .then(() => {
+              this.$root.$emit('from-audioeditor:erase-audio', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
+              this.isModified = true;
+            });
+        },
+        eraseLocal() {
+          let pause;
+          if (this.isPlaying) {
+            pause = this.pause();
+          } else {
+            pause = new Promise((res, rej) => {res()});
+          }
+          return pause
+            .then(() => {
+              
+              let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+
+              let silence = new Float32Array((this.selection.end - this.selection.start) * original_buffer.sampleRate);
+              let range = this.cutRangeAction(this.selection.start, this.selection.end);
+              this.insertRangeAction(this.selection.start, silence, this.selection.end - this.selection.start);
+
+              this.addTaskQueue('erase', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000)]);
+              this._addHistoryLocal('erase', range, this.selection.start, this.selection.end);
+              //this.$root.$emit('from-audioeditor:erase-audio', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
+              this.clearSelection();
+              this.isModified = true;
+            });
         },
         undo() {
+          //this.undoLocal();
+          //return;
           if (this.mode === 'block') {
-            let record = this._popHistory();
-            if (this.history.length === 0 && this.isHistoryFull) {
+            let make_event = this.audioTasksQueue.queue.length === 0;
+            this.popTaskQueue();
+            this.audioTasksQueue.log.pop();
+            let record = this._popHistoryLocal(!make_event);
+            //let record = this._popHistory();
+            if (this.actionsLog.length === 0 && this.isHistoryFull) {
               this.isModified = false;
             }
-            if (record) {
+            if (make_event && record) {
               //this.block.manual_boundaries = record.manual_boundaries ? record.manual_boundaries.slice() : [];
               //this.setAudio(record.audio, record.text, false);
               this.$root.$emit('from-audioeditor:undo', this.blockId, record.audio, record.text, this.isModified);
@@ -1085,6 +1475,11 @@
               this.setSelectionEnd(this.origFilePositions.end);
             }
           }
+        },
+        undoLocal() {
+          this.audioTasksQueue.log.pop();
+          this.popTaskQueue();
+          this._popHistoryLocal();
         },
         discard() {
           this.setProcessRun(true, '');
@@ -1137,6 +1532,7 @@
           this.isModified = false;
           this.isAudioModified = false;
           this.history = [];
+          this.actionsLog = [];
           this.isPlaying = false;
           this.isPaused = false;
           this.origFilePositions = {};
@@ -1363,8 +1759,88 @@ Discard unsaved audio changes?`,
             this.isHistoryFull = false;
           }
         },
+        _addHistoryLocal(type, range, start, end, additional = {}) {
+          let record = {
+            type: type,
+            range: range,
+            selection: {
+              start: start,
+              end: end
+            },
+            annotations: [],
+            additional: additional
+          };
+          this.audiosourceEditor.annotationList.annotations.forEach(an => {
+            record.annotations.push(Object.assign({}, an));
+          });
+          this.actionsLog.push(record);
+          if (this.actionsLog.length >= 6) {
+            this.actionsLog.shift();
+            this.isHistoryFull = false;
+          }
+        },
+        _clearHistoryLocal() {
+          this.actionsLog = [];
+          this.isHistoryFull = true;
+        },
         _popHistory() {
           return this.history.pop();
+        },
+        _popHistoryLocal(redraw = true) {
+          let record = this.actionsLog.pop();
+          if (record) {
+            this.audiosourceEditor.annotationList.annotations = [...record.annotations];
+            if (redraw) {
+              switch (record.type) {
+                case 'cut':
+                  this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
+                  break;
+                case 'insert_silence':
+                  this.cutRangeAction(record.selection.start, record.selection.end);
+                  break;
+                case 'erase':
+                  this.cutRangeAction(record.selection.start, record.selection.end);
+                  this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
+                  break;
+                case 'manual_boundaries':
+                  if (record.additional && record.additional.shifted && record.additional.oldMap) {
+                    record.additional.shifted.forEach(sw => {
+                      let oldMap = record.additional.oldMap.shift();
+                      if (oldMap) {
+                        this.audiosourceEditor.annotationList.annotations[sw.index].start = oldMap.start;
+                        this.audiosourceEditor.annotationList.annotations[sw.index].end = oldMap.end;
+                      }
+                    });
+                    if (Array.isArray(record.additional.manual_boundaries) && record.additional.manual_boundaries.indexOf(record.additional.shifted[1].start) === -1) {
+                      $($(`.annotation-box`)[record.additional.shifted[1].index]).find(`.resize-handle.resize-w`).removeClass('manual');
+
+                      $($(`.annotation-box`)[record.additional.shifted[0].index]).find(`.resize-handle.resize-e`).removeClass('manual');
+                    }
+                    //this.audiosourceEditor.renderAnnotations();
+                    //this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+                    //this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+                    this.audiosourceEditor.drawRequest();
+                  }
+                  break;
+                case 'unpin_right':
+                  if (record.additional.unpinned_indexes) {
+                    record.additional.unpinned_indexes.start.forEach(i => {
+                      $($(`.annotation-box`)[i]).find(`.resize-handle.resize-w`).addClass('manual');
+                    });
+                    record.additional.unpinned_indexes.end.forEach(i => {
+                      $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e`).addClass('manual');
+                    });
+                  }
+                  break;
+              }
+            } else {
+              this.audiosourceEditor.renderAnnotations();
+            }
+          }
+          //this.audiosourceEditor.annotationList.annotations.forEach(an => {
+            //record.annotations.push(Object.assign({}, an));
+          //});
+          return record;
         },
         _setSelectionOnWaveform() {
           if (this.selection && typeof this.selection.start != 'undefined' && typeof this.selection.end != 'undefined' && this.plEventEmitter) {
@@ -1373,9 +1849,13 @@ Discard unsaved audio changes?`,
           }
         },
         _setText(text, block, saveToHistory = false) {
+          if (this.wordRepositioning) {
+            return false;
+          }
           if (saveToHistory && this.content && this.audiofile) {
             this.isModified = true;
-            this._addHistory(this.content, this.audiofile, block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
+            //this._addHistory(this.content, this.audiofile, block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
+            //this._addHistoryLocal('manual_boundaries');
           }
           this.content = text;
           let self = this;
@@ -1395,8 +1875,8 @@ Discard unsaved audio changes?`,
             word = unescape(word.replace(/<[^>]+?>/img, ''));
             currentLength = match.index + match[0].length;
             let map = match[1] && match[1].indexOf(',') !== -1 ? match[1].split(',') : [0, 0]
-            map[0] = parseInt(map[0]) / 1000
-            map[1] = this._round(parseInt(map[1]) / 1000 + map[0], 3)
+            map[0] = this._round(parseInt(map[0]) / 1000, 2);
+            map[1] = this._round(parseInt(map[1]) / 1000 + map[0], 2)
             annotations.push({
               "begin": map[0],
               "children": [],
@@ -1424,6 +1904,7 @@ Discard unsaved audio changes?`,
                 isContinuousPlay: false,
                 linkEndpoints: true
               });
+            self.fixMap();
             $('.resize-handle').removeClass('manual');
             if (block && block.manual_boundaries && block.manual_boundaries.length > 0) {
               let waitAnnotations = setInterval(() => {
@@ -1433,12 +1914,12 @@ Discard unsaved audio changes?`,
                     $(this).attr('data-index', index);
                   });
                   block.manual_boundaries.forEach(mb => {
-                    let position = parseInt(mb) / 1000;
+                    let position = this._round(parseInt(mb) / 1000, 2);
                     self.audiosourceEditor.annotationList.annotations.forEach((al, index) => {
-                      if (al.start == position) {
+                      if (Math.abs(al.start - position) <= 0.02) {
                         $(`.annotation-box[data-index="${index}"] .resize-handle.resize-w`).addClass('manual');
                       }
-                      if (al.end == position) {
+                      if (Math.abs(al.end - position) <= 0.02) {
                         $(`.annotation-box[data-index="${index}"] .resize-handle.resize-e`).addClass('manual');
                       }
                     });
@@ -1665,11 +2146,12 @@ Discard unsaved audio changes?`,
           this.$root.$emit('cancel-align');
         },
         smoothSelection: _.debounce(function (val, oldVal) {
+          
           if (!this.blockSelectionEmit) {
             if (typeof val.start !== 'undefined' && typeof val.end !== 'undefined') {
               if (val.start !== oldVal.start || val.end !== oldVal.end) {
                 this._clearWordSelection();
-                this.$root.$emit('from-audioeditor:select', this.blockId, val.start, val.end);
+                this.emitDisplayWordSelection();
               }
             }
           } else {
@@ -1686,6 +2168,10 @@ Discard unsaved audio changes?`,
 
         smoothDrag:_.debounce(function (ev) {
           let moveIndex = $('.annotations-boxes .annotation-box .resize-handle').index(ev.target);
+          let oldMap = [];
+          this.words.forEach(w => {
+            oldMap.push(Object.assign({}, w));
+          });
           $('.annotation-resize-pos').remove();// hide resize marker
           if (!this._isAnnotationsEditable()) {
             this.showModal('onWordRepositionMessage');
@@ -1701,7 +2187,7 @@ Discard unsaved audio changes?`,
 
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {// find the shifted annotation, find shift direction
             if (this.annotations[i]) {
-              if (this.annotations[i].begin == al.start && this.annotations[i].end != al.end) {
+              if (!shiftedAnnotation && this._round(this.annotations[i].begin, 2) == this._round(al.start, 2) && this._round(this.annotations[i].end, 2) != this._round(al.end, 2)) {
                 direction = this.annotations[i].end > al.end ? 'left' : 'right';
                 if (direction === 'left') {
                   shiftedAnnotation = Object.assign({}, al);
@@ -1719,17 +2205,37 @@ Discard unsaved audio changes?`,
             }
           });
           let shifted = false;
+          //console.log(this.audiosourceEditor.annotationList.annotations[8].start, this.audiosourceEditor.annotationList.annotations[8].end);
+          //console.log(this.annotations[8].begin, this.annotations[8].end);
+          let length = 0;
+          //let shift = 0;
+          this.annotations.forEach((an, i) => {
+            if (length > an.begin) {
+              //console.log(an.begin, 'overlapped by ', this.annotations[i - 1]);
+              an.begin = length;
+              //if (this._round(an.end - an.begin) < this.minWordSize) {
+                //shift = this._round(this.minWordSize)
+              //}
+            } else if (length < an.begin) {
+              //console.log('HERE LESS', length, an.begin)
+              an.begin = length;
+            }
+            length = an.end;
+          });
 
-          if (shiftedAnnotation) {
-            this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
-            if (shiftedAnnotation.end - shiftedAnnotation.start < this.minWordSize) {// find words with length less than minimum
-              let shift = this.minWordSize - (shiftedAnnotation.end - shiftedAnnotation.start);
+          this.annotations.forEach((an, i) => {
+            //console.log(an);
+            //this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
+            if (this._round(an.end - an.begin, 2) < this.minWordSize) {// find words with length less than minimum
+              //console.log('MIN WORD SIZE', an.begin, an.end, an.id);
+              let shift = this.minWordSize - (an.end - an.begin);
+              //console.log(shift);
               let found = false;
               let shiftIndexes = [];
               switch (direction) {
                 case 'left':
-                  this.annotations[shiftedIndex].begin-= shift;
-                  let j = shiftedIndex - 1;
+                  this.annotations[i].begin-= shift;
+                  let j = i - 1;
                   do {
                     if (this.annotations[j]) {
                       this.annotations[j].end-=shift;
@@ -1744,7 +2250,7 @@ Discard unsaved audio changes?`,
                   } while (j >= 0 && !shifted);
                   shifted = true;
                   shift = 0;
-                  for (j = 0; j <= shiftedIndex + 2; ++j) {// if some words start is before zero, shift all words
+                  for (j = 0; j <= i + 2; ++j) {// if some words start is before zero, shift all words
                     if (this.annotations[j]) {
                       if (this.annotations[j].begin < 0) {
                         if (shift == 0) {
@@ -1766,8 +2272,8 @@ Discard unsaved audio changes?`,
                   }
                   break;
                 case 'right':
-                  this.annotations[shiftedIndex].end+= shift;
-                  j = shiftedIndex + 1;
+                  this.annotations[i].end+= shift;
+                  j = i + 1;
                   do {
                     if (this.annotations[j]) {
                       this.annotations[j].begin+=shift;
@@ -1782,7 +2288,7 @@ Discard unsaved audio changes?`,
                   } while (j < this.annotations.length && !shifted);
                   shifted = true;
                   shift = 0;
-                  for (j = this.annotations.length; j >= shiftedIndex - 2; --j) {// if some words end if after audio finish, shift all words
+                  for (j = this.annotations.length; j >= i - 2; --j) {// if some words end if after audio finish, shift all words
                     if (this.annotations[j]) {
                       if (this.annotations[j].end > this.audiosourceEditor.duration) {
                         if (shift == 0) {
@@ -1804,9 +2310,14 @@ Discard unsaved audio changes?`,
                   break;
               }
             }
-          }
+          });
           this.annotations.forEach((al, i) => {
             map.push([Math.round(al.begin * 1000), Math.round((al.end - al.begin) * 1000)]);
+            //console.log(i, ':', map[i][0], map[i][1]);
+            if (map[i - 1] && map[i - 1][0] + map[i - 1][1] != map[i][0]) {
+              //console.log('FIX MAP', map[i - 1][0] + map[i - 1][1], map[i][0], al);
+              map[i][0] = map[i - 1][0] + map[i - 1][1];
+            }
             let w = this.words.find(_w => {
               return _w.alignedIndex == i;
             });
@@ -1822,10 +2333,39 @@ Discard unsaved audio changes?`,
             });
           }
           this.audiosourceEditor.drawRequest();
-          this.$root.$emit('from-audioeditor:word-realign', map, this.blockId, {
-            index: parseInt(moveIndex / 2),
-            position: moveIndex % 2
+          let shiftedWords = [];
+          let index = parseInt(moveIndex / 2);
+          let pinnedIndex = null
+          if (moveIndex % 2 === 1) {
+            //shiftedWords.push({index: index, map: map[index]});
+            //shiftedWords.push({index: index + 1, map: map[index + 1]});
+            pinnedIndex = index + 1;
+          } else {
+            //shiftedWords.push({index: index - 1, map: map[index - 1]});
+            //shiftedWords.push({index: index, map: map[index]});
+            pinnedIndex = index;
+          }
+          map.forEach((m, i) => {
+            shiftedWords.push({index: i, map: m});
           });
+          let shiftedOldMap = [];
+          shiftedWords.forEach(sw => {
+            shiftedOldMap.push(oldMap[sw.index]);
+          })
+          this._addHistoryLocal('manual_boundaries', null, null, null, {
+            shifted: shiftedWords,
+            oldMap: shiftedOldMap,
+            manual_boundaries: this.block.manual_boundaries
+          });
+          if (this.audioTasksQueue.queue.length > 0) {
+            //console.log(shiftedWords.slice());
+            this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), pinnedIndex, this.blockId]);
+            $($(`.annotation-box`)[shiftedWords[pinnedIndex].index]).find(`.resize-handle.resize-w`).addClass('manual');
+
+            $($(`.annotation-box`)[shiftedWords[pinnedIndex - 1].index]).find(`.resize-handle.resize-e`).addClass('manual');
+          } else {
+            this.$root.$emit('from-audioeditor:word-realign', shiftedWords, pinnedIndex, this.blockId);
+          }
           this.isModified = true;
           if (this.wordSelectionMode !== false) {
             if (shiftedIndex === this.wordSelectionMode ||
@@ -1842,6 +2382,9 @@ Discard unsaved audio changes?`,
           this.processRun = val;
           this.processRunType = type;
           if (val) {
+            if (this.mode === 'block' && ['save', 'align'].indexOf(type) !== -1) {
+              this._clearHistoryLocal();
+            }
             this.$root.$emit('preloader-toggle', true, type);
           } else {
             this.$root.$emit('preloader-toggle', false, '');
@@ -1855,7 +2398,24 @@ Discard unsaved audio changes?`,
 
         unpinRight(event) {
           let position = (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
-          this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
+          let unpinned_indexes = {start: [], end: []};
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+            let resize_w = $($(`.annotation-box`)[i]).find(`.resize-handle.resize-w.manual`);
+            if (al.start >= position && resize_w.length > 0) {
+              unpinned_indexes.start.push(i);
+              resize_w.removeClass('manual');
+            }
+            let resize_e = $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e.manual`);
+            if (al.end >= position && resize_e.length > 0) {
+              unpinned_indexes.end.push(i);
+              resize_e.removeClass('manual');
+            }
+          });
+          
+          this._addHistoryLocal('unpin_right', null, null, null, {unpinned_indexes: unpinned_indexes});
+          this.addTaskQueue('unpin_right', [position * 1000]);
+          this.isModified = true;
+          //this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
         },
         revert(warn = false) {
           if (this.isRevertDisabled) {
@@ -1905,10 +2465,31 @@ Revert to original block audio?`,
                 this.isModified = false;
                 this.isAudioModified = false;
                 this.history = [];
+                this.actionsLog = [];
                 this.cursorPosition = 0;
               });
           }
-        }
+        },
+        emitDisplayWordSelection() {
+          if (!this.isSinglePointSelection && typeof this.selection.start !== 'undefined' && typeof this.selection.end!== 'undefined') {
+            let list = [];
+            if (this.wordSelectionMode !== false) {
+              list.push(this.wordSelectionMode);
+            } else {
+              this.audiosourceEditor.annotationList.annotations.every((al, i) => {
+                if ((al.start >= this.selection.start && al.start <= this.selection.end) || (al.end >= this.selection.start && al.end <= this.selection.end) || (al.start < this.selection.start && al.end > this.selection.end)) {
+                  list.push(i);
+                }
+                if (al.start > this.selection.end) {
+                  return false;
+                }
+                return true;
+              });
+            }
+            this.$root.$emit('from-audioeditor:select', this.blockId, list);
+          }
+        },
+        ...mapActions(['addAudioTask', 'popAudioTask', 'setAudioTasksBlockId'])
 
       },
       computed: {
@@ -2059,13 +2640,42 @@ Revert to original block audio?`,
           },
           cache: false
         },
+        lastActionName: {
+          get() {
+            if (this.actionsLog.length > 0) {
+              switch (this.actionsLog[this.actionsLog.length - 1].type) {
+                case 'cut':
+                  return 'Cut';
+                  break;
+                case 'erase':
+                  return 'Erase';
+                  break;
+                case 'insert_silence':
+                  return 'Silence';
+                  break;
+              }
+            }
+          },
+          cache: false
+        },
+        isSaveDisabled: {
+          get() {
+            if (this.audioTasksQueue.queue.length > 0 || this.audioTasksQueue.running) {
+              return true;
+            } else {
+              return false;
+            }
+          },
+          cache: false
+        },
         ...mapGetters({
           currentBookMeta: 'currentBookMeta',
           blkSelection: 'blockSelection',
           alignCounter: 'alignCounter',
           hasLocks: 'hasLocks',
           currentAudiobook: 'currentAudiobook', 
-          storeListO: 'storeListO'})
+          storeListO: 'storeListO',
+          audioTasksQueue: 'audioTasksQueue'})
       },
       watch: {
         'cursorPosition': {
@@ -2150,7 +2760,7 @@ Revert to original block audio?`,
                 }
               }
               if ($('[id="resize-selection-left"]').css('display') === 'none' && $('.playlist-overlay:hover').length === 0) {
-                this.cursorPosition = this.selection.start;
+                this.cursorPosition = typeof this.selection.start === 'number' && !isNaN(this.selection.start) ? this.selection.start : false;
                 this._showSelectionBorders();
               }
             })

@@ -214,13 +214,10 @@
               :isSplittedBlock="isSplittedBlock"
               :parnum="subBlockParnumComp"
               :assembleBlockAudioEdit="assembleBlockAudioEdit"
-              :insertSilence="insertSilence"
-              :audDeletePart="_audDeletePart"
               :startRecording="startRecording"
               :initRecorder="initRecorder"
               :saveBlockPart="saveBlockPart"
               :isCanReopen="isCanReopen"
-              :eraseAudio="eraseAudio"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
@@ -230,6 +227,7 @@
               :delFlagPart="delFlagPart"
               :isCompleted="isCompleted"
               :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
+              :addToQueueBlockAudioEdit="addToQueueBlockAudioEdit"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -242,7 +240,6 @@
               @reopenFlagPart="onReopenFlagPart"
               @hideFlagPart="onHideFlagPart"
               @unHideFlagPart="onUnHideFlagPart"
-              @isAudioEditing="onIsAudioEditing"
               @isAudioChanged="onIsAudioChanged"
           /></BookBlockPartView>
             <div v-if="blockParts.length === 1" class="hidden" ref="blockContent" v-html="blockParts[0].content"></div>
@@ -371,9 +368,6 @@
                     </template>
                   </div>
                   <div class="table-cell -audio -right">
-                    <template v-if="(footnote.audiosrc && footnote.audiosrc.length) && ((_is('editor', true) || adminOrLibrarian) && tc_isShowEdit(block._id))"> <!--&& !isAudioChanged"-->
-                      <i class="fa fa-pencil" v-on:click="showFootnoteAudioEditor(footnote, ftnIdx, $event)" v-if="allowEditing"></i>
-                    </template>
                     <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
                         <template v-if="!FtnAudio.isStarted || FtnAudio.isStarted!==`${block._id}_${ftnIdx}`">
                           <i class="fa fa-play-circle-o"
@@ -482,13 +476,13 @@
         </h4>
       </div>
       <div class="modal-body" style="padding-top: 10px; padding-bottom: 10px;">
-        <section v-if="!(voiceworkChange == 'audio_file' && block.voicework == 'narration')">
+        <section v-if="isAllowBatchVoiceworkNarration">
           <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
           <div class="modal-content-flex">
             <div class="modal-content-flex-block">
             <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
             <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
-            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
+            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating || !adminOrLibrarian"/><span v-if="adminOrLibrarian">all {{blockTypeLabel}}s</span><span v-else style="color: #bbb;">all {{blockTypeLabel}}s</span></label>
             <!--v-if="!block.status.marked"-->
             </div>
             <div class="modal-content-flex-block">
@@ -502,7 +496,7 @@
           <div v-if="voiceworkUpdateType == 'single'">&nbsp;</div>
           <div v-else :class="['attention-msg', 'visible']">The book will reload automatically</div>
         </section>
-        <section v-else>
+        <section v-else> <!--!isAllowBatchVoiceworkNarration-->
           <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to this {{blockTypeLabel}}?</div>
           <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': !isNarratedBlockCompleteAudio}]">Сurrent audio on the {{blockTypeLabel}} cannot be saved because it is incomplete</div>
         </section>
@@ -545,7 +539,7 @@
 <script>
 import Vue from 'vue'
 import moment from 'moment'
-import { mapGetters, mapActions }    from 'vuex'
+import { mapGetters, mapActions, mapMutations }    from 'vuex'
 import {  QuoteButton, QuotePreview,
           SuggestButton, SuggestPreview
         } from '../generic/ExtMediumEditor';
@@ -561,7 +555,6 @@ import access             from '../../mixins/access.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
-import VuePictureInput    from 'vue-picture-input'
 import BookBlockPartView from './BookBlockPartView';
 var BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
@@ -617,7 +610,6 @@ export default {
       recordStartCounter: 0,
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
-      isAudioEditing: false,
       voiceworkUpdating: false,
       changes: [],
       deletePending: false,
@@ -636,7 +628,6 @@ export default {
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
       //'modal': modal,
-      'vue-picture-input': VuePictureInput,
       BookBlockPartView: BookBlockPartView
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
@@ -647,6 +638,9 @@ export default {
           return true;
         }
         if (this.isUpdating) {
+          return true;
+        }
+        if (this.audioTasksQueue.blockId === this.block.blockid && this.audioTasksQueue.running) {
           return true;
         }
         return this.hasLock;
@@ -663,6 +657,9 @@ export default {
           }
           if (this.isUpdating) {
             return 'editing-audio';
+          }
+          if (this.audioTasksQueue.blockId === this.block.blockid && this.audioTasksQueue.running) {
+            return 'audio-positioning';
           }
           let lockType = this.blockLockType(this.block.blockid);
           switch (lockType) {
@@ -1023,11 +1020,13 @@ export default {
           currentJobInfo: 'currentJobInfo',
           blockLockType: 'blockLockType',
           storeListById: 'storeListById',
-          currentBookCounters: 'currentBookCounters'
+          currentBookCounters: 'currentBookCounters',
+          audioTasksQueue: 'audioTasksQueue'
       }),
-      illustrationChaged() {
-        return this.$refs.illustrationInput.image
-      },
+    ...mapGetters('uploadImage', {
+      tempImage: 'file'
+    }),
+
       allowEditing: {
         get() {
           return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
@@ -1085,8 +1084,8 @@ export default {
         cache: false
       },
       isSingleBlockRemoveAudio() {
-        return this.block.audiosrc && this.block.audiosrc.length
-          && !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration')
+        return this.block.audiosrc && this.block.audiosrc.length;
+          //&& !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration'
       },
       isNarratedBlockCompleteAudio() {
 
@@ -1100,6 +1099,17 @@ export default {
           return (aPartsLength == 0 || aPartsLength == this.block.parts.length)
         }
         return true;
+      },
+      isAllowBatchVoiceworkNarration() {
+        if (this.currentJobInfo.text_cleanup === true) return true;
+        if (this.currentJobInfo.mastering == true || this.currentJobInfo.mastering_complete == true) return true;
+        return !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration')
+      },
+      isAudioEditing: {
+        get() {
+          return this.audioTasksQueue.blockId === this.block.blockid;
+        },
+        cache: false
       }
   },
   mounted: function() {
@@ -1145,12 +1155,6 @@ export default {
         this.footnoteIdx = this.block.footnoteIdx;
         delete this.block.footnoteIdx;
       }
-      if (this.block.isAudioEditing) {
-        this.isAudioEditing = this.block.isAudioEditing;
-        this.audioEditorEventsOff();
-        this.audioEditorEventsOn();
-        delete this.block.isAudioEditing;
-      }
       //console.log('mounted isChecked', this.blockO);
       //this.isChecked = this.blockO.checked;
       //this.detectMissedFlags();
@@ -1189,12 +1193,6 @@ export default {
 //     console.log('this.isChanged', this.isChanged);
     this.audioEditorEventsOff();
 
-    if (this.$refs.illustrationInput) {
-      // a trick to avoid console warning about incorrect resizeCanvas
-      // because somehow VuePictureInput does not destroyed in normal way
-      // and window.listener for 'resize' stil exists
-      this.$refs.illustrationInput.$refs.container = {};
-    }
     this.$root.$off('block-state-refresh-' + this.block._id, this.$forceUpdate);
 
     if (this.check_id) {
@@ -1202,9 +1200,6 @@ export default {
     }
     if (this.footnoteIdx) {
       this.block.footnoteIdx = this.footnoteIdx;
-    }
-    if (this.isAudioEditing) {
-      this.block.isAudioEditing = this.isAudioEditing;
     }
     if (this.block && this.isChanged) {
         this.block.changes = this.changes;
@@ -1266,8 +1261,12 @@ export default {
         'checkError',
         'getBookAlign',
         'updateBlockPart',
-        'recountVoicedBlocks'
+        'recountVoicedBlocks',
+        'addAudioTask'
       ]),
+    ...mapMutations('uploadImage',{
+      removeTempImg: 'removeImage'
+    }),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
         if (flagType === 'narrator' && this.block.voicework !== 'narration') {
@@ -1608,7 +1607,6 @@ export default {
           if (this._isDestroyed) {
             this.block.isChanged = false;
             this.block.isIllustrationChanged = false;
-            this.block.isAudioEditing = false;
             this.block.changes = [];
             return Promise.resolve();
           }
@@ -1654,10 +1652,8 @@ export default {
           });
 
           this.updateFlagStatus(block._id);
-          if (this.block.type === 'illustration' && this.$refs.blocks && this.$refs.blocks[0]) {
-            if (this.$refs.blocks[0].$refs.illustrationInput) {
-              this.$refs.blocks[0].$refs.illustrationInput.removeImage();
-            }
+          if (this.block.type === 'illustration') {
+            this.removeTempImg(block._id)
             this.block.description = block.description;
             if (this.$refs.blocks[0].$refs.blockDescription) {
               this.$refs.blocks[0].$refs.blockDescription.innerHTML = block.description;
@@ -1679,6 +1675,7 @@ export default {
           api_url+= '/part/' + partIdx;
         }
         let api = this.$store.state.auth.getHttp();
+        this.isUpdating = !this.isSplittedBlock;
         return api.delete(api_url, {}, {})
           .then(response => {
             if (response.status == 200 && response.data) {
@@ -1715,6 +1712,7 @@ export default {
                 this.audioEditFootnote.isAudioChanged = false;
               }
             }
+            this.isUpdating = false;
             return Promise.resolve();
           })
           .catch(err => {
@@ -1743,7 +1741,7 @@ Save audio changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0)};
+                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0), content: this.clearBlockContent()};
                   return this.assembleBlockProxy(false, false, update_fields, false)
                     .then(() => {
                       return this.assembleBlockAudioEdit(this.footnoteIdx, true, preparedData)
@@ -1767,7 +1765,7 @@ Save audio changes and realign the Block?`,
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
-          return this.assembleBlockNarrate(true, false, update_fields);
+          return this.assembleBlockNarrate(true, realign, update_fields);
         }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
@@ -1885,6 +1883,9 @@ Save audio changes and realign the Block?`,
                     partUpdate['flags'] = this.block.flags;
                     partUpdate['content'] = this.block.content;
                     partUpdate['parts'] = this.block.parts;
+                    break;
+                  case 'manual_boundaries':
+                    partUpdate['content'] = this.block.content;
                     break;
                   default:
                     partUpdate[c] = this.block[c];
@@ -2133,10 +2134,26 @@ Save audio changes and realign the Block?`,
           upd_block.bookid = this.block.bookid;
         }
         this.isSaving = true;
+        if (this.isAudioEditing) {
+          this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+        }
         let refreshTasks = this.isCompleted;
         return this.putBlockNarrate([upd_block, realign])
           .then(() => {
-            this.isSaving = false;
+            if (realign) {
+              this.getBookAlign()
+                .then(() => {
+                  this.isSaving = false;
+                  if (this.isLocked && this.isAudioEditing) {
+                    this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+                  }
+                });
+            } else {
+              this.isSaving = false;
+              if (this.isAudioEditing) {
+                this.$root.$emit('for-audioeditor:set-process-run', false);
+              }
+            }
             this.isChanged = false;
             if (refreshTasks) {
               this.getCurrentJobInfo();
@@ -2221,35 +2238,6 @@ Save audio changes and realign the Block?`,
 
       assembleBlockAudioEdit: function(footnoteIdx = null, realign = false, preparedData = false) {// to save changes from audio editor
         this.$root.$emit('closeFlagPopup', true);
-        if (this.isChanged && preparedData === false) {
-          this.$root.$emit('show-modal', {
-            title: 'Unsaved Changes',
-            text: `Block text has been modified and not saved.<br>
-Save text changes and realign the Block?`,
-            buttons: [
-              {
-                title: 'Cancel',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                },
-                class: ['btn btn-default']
-              },
-              {
-                title: 'Save & Realign',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                  return this.assembleBlockAudioEdit(footnoteIdx, false, {content: this.clearBlockContent()})
-                    .then(() => {
-                      return this.assembleBlockProxy(false, true, [], false);
-                    });
-                },
-                class: ['btn btn-primary']
-              }
-            ],
-            class: ['align-modal']
-          });
-          return Promise.resolve();
-        }
         let manual_boundaries = [];
         if (this.footnoteIdx) {
           if (this.audioEditFootnote && this.audioEditFootnote.footnote) {
@@ -2268,7 +2256,7 @@ Save text changes and realign the Block?`,
               //content: this.blockAudio.map,
               //manual_boundaries: this.block.manual_boundaries
               audiosrc: preparedData.audiosrc || this.block.getPartAudiosrc(0, null, false),
-              content: this.block.getPartContent(0),
+              content: preparedData.content || this.block.getPartContent(0),
               manual_boundaries: preparedData.manual_boundaries || this.block.getPartManualBoundaries(0),
               mode: this.mode
             };
@@ -2330,6 +2318,11 @@ Save text changes and realign the Block?`,
                   if (!realign) {
                     this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
                   }
+                  if (!this.isSplittedBlock) {
+                    if (this.$refs.blocks && this.$refs.blocks[0]) {
+                      this.$refs.blocks[0].isAudioChanged = false;
+                    }
+                  }
                   return BPromise.resolve();
                 } else {
                   let resp_block = response.data;
@@ -2354,6 +2347,45 @@ Save text changes and realign the Block?`,
           return BPromise.reject();
         }
         //this.isAudioChanged = false;
+      },
+      addToQueueBlockAudioEdit(footnoteIdx = null, realign = false) {
+
+        if (this.isChanged) {
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block text has been modified and not saved.<br>
+Save text changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  /*return this.assembleBlockAudioEdit(footnoteIdx, false, {content: this.clearBlockContent()})
+                    .then(() => {
+                      return this.assembleBlockProxy(false, true, [], false);
+                    });*/
+                  //console.log('ADD TO QUEUE');
+                  this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+                  this.addAudioTask(['save-audio-then-block', [footnoteIdx, realign]]);
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return Promise.resolve();
+        } else {
+          this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+          this.addAudioTask(['save-audio', [footnoteIdx, realign]]);
+          return Promise.resolve();
+        }
       },
       reworkBlock: function(ev) {
         if (!this.isNeedWorkDisabled) {
@@ -2505,19 +2537,6 @@ Save text changes and realign the Block?`,
           this.isAudPaused = false;
           this.audCleanClasses(block_id, ev);
         }
-      },
-      audDeleteSelection() {
-        let startElement = this._getParent(this.range.startContainer, 'w');
-        let endElement = this._getParent(this.range.endContainer, 'w');
-        let startRange = this._getClosestAligned(startElement, 1);
-        if (!startRange) {
-          startRange = [0, 0];
-        }
-        let endRange = this._getClosestAligned(endElement, 0);
-        if (!endRange) {
-          endRange = this._getClosestAligned(endElement, 1)
-        }
-        this._audDeletePart(startRange[0], endRange[0] + endRange[1]);
       },
       _audDeletePart(start, end, footnoteIdx = null, part_idx = null, check_id = null) {
         if (!this.isSplittedBlock) {
@@ -2901,8 +2920,8 @@ Save text changes and realign the Block?`,
       },
 
       canDeleteFlagPart: function (flagPart) {
-          if (this.tc_allowNarrateUnassigned(this.block) && flagPart.creator === this.auth.getSession().user_id) {
-            return this.block.voicework === 'narration';
+          if (this.tc_allowNarrateUnassigned(this.block) && flagPart.creator === this.auth.getSession().user_id && this.block.voicework === 'narration') {
+            return true;
           }
           let result = false;
           let isProofreadUnassigned = this.isProofreadUnassigned();
@@ -3384,13 +3403,11 @@ Save text changes and realign the Block?`,
         //$('nav.fixed-bottom').removeClass('hidden');
         this.audioEditFootnote.footnote = footnote;
         this.showAudioEditor(ftnIdx, footnote);
-        this.isAudioEditing = true;
       },
       showAudioEditor(footnoteIdx = null, footnote = null) {
         //$('.table-body.-content').removeClass('editing');
         //$('#' + this.block._id + ' .table-body.-content').addClass('editing');
         if (!footnoteIdx) {
-          this.isAudioEditing = true;
           if (this.isAudioChanged) {
             this.discardAudio();
           }
@@ -3413,7 +3430,6 @@ Save text changes and realign the Block?`,
       evFromAudioeditorClosed(blockId) {
 
         if (blockId === this.block._id || blockId === this.block._id + '_' + this.footnoteIdx) {
-          this.isAudioEditing = false;
           if (this.isAudioChanged || this.audioEditFootnote.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false);
           }
@@ -3535,7 +3551,7 @@ Save text changes and realign the Block?`,
         }
       },
       evFromAudioeditorSave (blockId) {
-        if (blockId == this.check_id) {
+        if (blockId == this.check_id && this.footnoteIdx) {
           this.audStop();
           this.assembleBlockAudioEdit(this.footnoteIdx, false, false);
           //this.flushChanges();
@@ -3717,8 +3733,10 @@ Save text changes and realign the Block?`,
         if (!this.$refs.blocks || !this.$refs.blocks[0]) {
           return Promise.reject();
         }
+        let image = this.tempImage(this.block._id)
+
         let formData = new FormData();
-        formData.append('illustration', this.$refs.blocks[0].$refs.illustrationInput.file, this.$refs.blocks[0].$refs.illustrationInput.file.name);
+        formData.append('illustration', image, image.name);
         formData.append('block', JSON.stringify({'description': this.$refs.blocks[0].$refs.blockDescription.innerHTML, flags: this.block.flags || []}));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
@@ -3727,12 +3745,13 @@ Save text changes and realign the Block?`,
         api.post(api_url, formData, {}).then((response) => {
           this.isSaving = false;
           if (response.status===200) {
+            this.removeTempImg(this.block._id)
+
             if (this.isCompleted) {
               this.tc_loadBookTask();
               this.getCurrentJobInfo();
             }
             // hide modal after one second
-            this.$refs.blocks[0].$refs.illustrationInput.removeImage();
             this.$emit('blockUpdated', this.block._id);
             //let offset = document.getElementById(self.block._id).getBoundingClientRect()
             //window.scrollTo(0, window.pageYOffset + offset.top);
@@ -3785,20 +3804,8 @@ Save text changes and realign the Block?`,
         });
       },
       onIllustrationChange() {
-        //console.log(arguments, this.$refs.illustrationInput.image);
-        if (this.$refs.illustrationInput && this.$refs.illustrationInput.image) {
-
           this.isIllustrationChanged = true;
-          Vue.nextTick(() => {
-            $('[id="' + this.block._id + '"] .drag-uploader').removeClass('no-picture');
-          });
-        } else {
 
-          this.isIllustrationChanged = false;
-          Vue.nextTick(() => {
-            $('[id="' + this.block._id + '"] .drag-uploader').addClass('no-picture');
-          });
-        }
       },
       setRangeSelection(type, ev) {
         if (this.block && !this.tc_isShowEdit(this.block._id)) {
@@ -3839,8 +3846,10 @@ Save text changes and realign the Block?`,
           .then(response => {
             this.voiceworkUpdating = false;
             if (response.status == 200) {
+
+              this.voiceworkChange = false;
+
               if (response && response.data && response.data.blocks) {
-                this.voiceworkChange = false;
                 //console.log('BookBlockView.vue->Counters:', response.data.counters);
                 //console.log('response.data.blocks.length:', response.data.blocks.length);
 
@@ -3959,7 +3968,10 @@ Save text changes and realign the Block?`,
         if (audiosrc) {
           audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
         }
-        this.$refs['block-html' + this.block.blockid].value = `<div id="${this.shortBlockid}" data-audiosrc="${audiosrc}">
+        let blockData = `data-audiosrc="${audiosrc}"`;
+        if (this.block.updated) blockData += ` data-last_modified="${this.block.updated}"`;
+        if (audiosrc) blockData += ` data-audiohash="${this.block.audioHash || ''}"`;
+        this.$refs['block-html' + this.block.blockid].value = `<div id="${this.shortBlockid}" ${blockData}>
   ${content}
 </div>`;
       },
@@ -4150,9 +4162,6 @@ Save text changes and realign the Block?`,
             ref.audPlay();
           }
         }
-      },
-      onIsAudioEditing(val) {
-        this.isAudioEditing = val;
       },
       onIsAudioChanged(val) {
         this.isAudioChanged = val;
@@ -5351,6 +5360,7 @@ Save text changes and realign the Block?`,
   }
 
   .drag-uploader {
+    margin: 0 auto;
     /*display: table-row;*/
     .picture-input {
       .preview-container, .picture-preview {
@@ -5361,7 +5371,7 @@ Save text changes and realign the Block?`,
     }
     .save-illustration {
       float: left !important;
-      width: 100% !important;
+      //width: 100% !important;
       text-align: center !important;
     }
   }
@@ -5370,7 +5380,7 @@ Save text changes and realign the Block?`,
     .picture-input {
       .preview-container, .picture-preview {
         max-height: 100px;
-        width: auto;
+        //width: auto;
         float: left;
         background-color: transparent !important;
         width: 100%;
@@ -5509,6 +5519,9 @@ Save text changes and realign the Block?`,
     background-position: center;
     background-color: #8080807d;
     z-index: 999;
+    &.preloader-audio-positioning {
+      z-index: 890;/* this one not covering audio editor */
+    }
   }
   .recording-hover-controls {
     position: absolute;

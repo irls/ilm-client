@@ -9,7 +9,7 @@ import {liveDB} from './liveDB'
 const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
-
+import uploadImage from './uploadImage'
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -61,6 +61,9 @@ function defer() {
 }
 
 export const store = new Vuex.Store({
+  modules: {
+    uploadImage
+  },
   state: {
     auth: superlogin,
     isLoggedIn: false,
@@ -123,7 +126,7 @@ export const store = new Vuex.Store({
     currentLibraryId: false,
 
     user: {},
-    currentBookCounters: {not_marked_blocks: '0', not_marked_blocks_missed_audio: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0', voiced_in_range: '0', voiceworks_for_remove: '0', unresolved_flags_blocks: '0'},
+    currentBookCounters: {not_marked_blocks: '0', not_marked_blocks_missed_audio: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0', voiced_in_range: '0', voiceworks_for_remove: '0'},
 
     ttsVoices : [],
 
@@ -187,6 +190,13 @@ export const store = new Vuex.Store({
         ]
       }
     ],
+    bookDifficulties: [
+      'Primary',
+      'Beginner',
+      'Elementary',
+      'Intermediate',
+      'Advanced'
+    ],
     loadBookWait: null,
     loadBookTaskWait: null,
     jobInfoRequest: null,
@@ -202,6 +212,13 @@ export const store = new Vuex.Store({
       'engineer': [],
       'reader': [],
       'narrator': []
+    },
+    audioTasksQueue: {
+      time: null,
+      queue: [],
+      running: null,
+      log: [],
+      blockId: null
     }
   },
 
@@ -377,6 +394,7 @@ export const store = new Vuex.Store({
     taskTypes: state => state.taskTypes,
     liveDB: state => state.liveDB,
     bookCategories: state => state.bookCategories,
+    bookDifficulties: state => state.bookDifficulties,
     tasks_counter: state => state.currentJobInfo.tasks_counter,
     jobStatusError: state => state.jobStatusError,
     activeTasksCount: state => {
@@ -416,6 +434,15 @@ export const store = new Vuex.Store({
     },
     taskUsers: state => {
       return state.taskUsers;
+    },
+    audioTasksQueue: state => {
+      return state.audioTasksQueue;
+    },
+    checkRunningAudioTask: state => (check_id) => {
+      if (!state.audioTasksQueue.running || check_id !== state.audioTasksQueue.blockId || (state.audioTasksQueue.running && state.audioTasksQueue.log.indexOf(state.audioTasksQueue.running.time) === -1)) {
+        return false;
+      }
+      return true;
     }
   },
 
@@ -1153,14 +1180,24 @@ export const store = new Vuex.Store({
       }
       if (bookid) {
         state.liveDB.startWatch(bookid, 'blockV', {bookid: bookid}, (data) => {
-          if (data) {
+          if (data && data.block) {
             //state.storeListO.delBlock(data.block);
+            if (state.audioTasksQueue.blockId && state.audioTasksQueue.blockId.indexOf(data.block.blockid) === 0 && state.audioTasksQueue.blockId.indexOf('-part-') === data.block.blockid.length) {
+              let blockStore = state.storeList.get(data.block.blockid);
+              if (Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
+                blockStore.parts.forEach((p, i) => {
+                  if (p.isAudioChanged) {
+                    data.block.parts[i] = p;
+                  }
+                });
+              }
+            }
             if (data.action === 'insert' && data.block) {
               if (!state.storeListO.get(data.block.id)) {
                 state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
               }
             } else if (data.action === 'change' && data.block) {
-              state.storeListO.updBlockByRid(data.block.id, data.block)
+              state.storeListO.updBlockByRid(data.block.id, data.block);
             } else if (data.action === 'delete') {
 
             }
@@ -1264,7 +1301,7 @@ export const store = new Vuex.Store({
           commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
 
           commit('TASK_LIST_LOADED')
-          dispatch('setCurrentBookCounters', ['narration_blocks', 'not_proofed_audio', 'voiced_in_range', 'not_marked_blocks_missed_audio', 'not_marked_blocks', 'unresolved_flags_blocks']);
+          dispatch('setCurrentBookCounters', ['narration_blocks', 'not_proofed_audio', 'voiced_in_range', 'not_marked_blocks_missed_audio', 'not_marked_blocks']);
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);
@@ -1838,6 +1875,9 @@ export const store = new Vuex.Store({
       }
       if (typeof block.parts !== 'undefined' && Array.isArray(block.parts) && block.parts.length > 1) {
         update.block.parts = block.parts;
+      }
+      if (Array.isArray(block.manual_boundaries)) {
+        update.block.manual_boundaries = block.manual_boundaries;
       }
       return axios.put(url, update)
         .then((response) => {
@@ -2429,7 +2469,19 @@ export const store = new Vuex.Store({
                       //blockStore.content+=' realigned';
                       checks.push(dispatch('getBlock', b._id)
                         .then(block => {
-                          store.commit('set_storeList', new BookBlock(block));
+                          if (state.audioTasksQueue.blockId && state.audioTasksQueue.blockId.indexOf(block.blockid) === 0 && state.audioTasksQueue.blockId.indexOf('-part-') === block.blockid.length) {
+                            blockStore = state.storeList.get(b._id);
+                            if (Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(block.parts) && block.parts.length === blockStore.parts.length) {
+                              blockStore.parts.forEach((p, i) => {
+                                if (p.isAudioChanged) {
+                                  block.parts[i] = p;
+                                }
+                              });
+                            }
+                            store.commit('set_storeList', new BookBlock(block));
+                          } else {
+                            store.commit('set_storeList', new BookBlock(block));
+                          }
                           return Promise.resolve();
                         })
                         .catch(err => {
@@ -3157,6 +3209,49 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    setAudioTasksBlockId({state, dispatch}, blockId) {
+      if (blockId !== state.audioTasksQueue.blockId) {
+        dispatch('clearAudioTasks', true);
+        state.audioTasksQueue.running = null;
+        state.audioTasksQueue.blockId = blockId;
+      }
+    },
+    addAudioTask({state}, [type, options]) {
+      let time = Date.now();
+      state.audioTasksQueue.queue.push({
+        type: type,
+        options: options,
+        time: time
+      });
+      state.audioTasksQueue.time = time;
+      state.audioTasksQueue.log.push(time);
+      //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
+    },
+    popAudioTask({state}) {
+      state.audioTasksQueue.queue.pop();
+      if (state.audioTasksQueue.queue.length > 0) {
+        state.audioTasksQueue.time = state.audioTasksQueue.queue[state.audioTasksQueue.queue.length - 1].time;
+      } else {
+        state.audioTasksQueue.time = null;
+      }
+    },
+    clearAudioTasks({state}, cancel_running = true) {
+      state.audioTasksQueue.queue = [];
+      state.audioTasksQueue.log = [];
+      state.audioTasksQueue.time = null;
+      if (cancel_running) {
+        state.audioTasksQueue.running = null;
+      }
+      state.audioTasksQueue.blockId = null;
+    },
+    shiftAudioTask({state}) {
+      state.audioTasksQueue.queue.shift();
+      if (state.audioTasksQueue.queue.length > 0) {
+        state.audioTasksQueue.time = state.audioTasksQueue.queue[state.audioTasksQueue.queue.length - 1].time;
+      } else {
+        state.audioTasksQueue.time = null;
+      }
     }
   }
 })
