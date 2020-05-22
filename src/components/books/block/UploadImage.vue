@@ -11,10 +11,9 @@
         accept="image/*"
         @input="onChange"
       />
-      <div v-if="!image" class="ilm-upload-image__drop">Click to upload image</div>
-      <button v-else class="btn btn-primary ilm-upload-image__change">Change image</button>
+      <div class="ilm-upload-image__drop">Click here or drag image here</div>
     </label>
-<!--    <button v-if="getImage(id)" class="btn btn-default ilm-upload-image__remove" @click.stop="removeImage(id)">Remove image</button>-->
+    <!--    <button v-if="getImage(id)" class="btn btn-default ilm-upload-image__remove" @click.stop="removeImage(id)">Remove image</button>-->
 
   </div>
 </template>
@@ -34,7 +33,7 @@
     },
     props: {
       value: {
-        type: [File,String],
+        type: [File,String, Boolean],
         default: ''
       },
       //blockID or any unique ID
@@ -65,7 +64,7 @@
       },
       image(){
         //get temp image if exists or original image url
-          return this.getImage(this.id) || this.value
+        return this.getImage(this.id) || this.value
 
       },
       key(){
@@ -78,21 +77,21 @@
         if(!data.file){
           return;
         }
-          this.createImageNode(data).then(res => {
+        this.createImageNode(data).then(res => {
 
-              this.setImage({
-                id: this.id,
-                data: {
-                  file: data.file,
-                  height: res.height,
-                  width: res.width,
-                  objectURL: res.src
-                }
-              })
+          this.setImage({
+            id: this.id,
+            data: {
+              file: data.file,
+              height: res.height,
+              width: res.width,
+              objectURL: res.src
+            }
+          })
 
 
-            })
-            this.$emit('input', true)
+        })
+        this.$emit('input', true)
 
       },
       //TODO pmove to helpers
@@ -109,7 +108,7 @@
           };
         })
       },
-    }
+    },
   }
 </script>
 <style lang="less" scoped>
@@ -117,22 +116,29 @@
     position:relative;
     margin: 0 auto;
 
-  &__label {
-    position:relative;
-    display: block;
-  }
+    &__label {
+      position:relative;
+      display: block;
+    }
     &__change,
     &__remove {
       display: block;
       margin: 0 auto;
     }
     &__drop{
-        margin: 2rem auto;
-        padding:3rem;
-        border: 2px dashed grey;
-        text-align: center;
+      text-align: center;
+      margin: 1em auto;
+      padding: .5em;
+      border: 4px dashed rgba(66, 66, 66, 0.15);
+      height: 70px;
+      border-radius: 0;
+      font-size: 20pt;
+      font-weight: normal;
+      cursor:move;
+      z-index:100;
+      &:hover {
+        opacity: 0.5;
       }
+    }
   }
 </style>
-
-
