@@ -2097,7 +2097,11 @@ export default {
           let block = this.parlist.get(this.audioTasksQueue.block.blockId);
           if (log && this.audioTasksQueue.queue.length === 0 && block) {
             //console.log(log.time, this.audioTasksQueue.time, this.audioTasksQueue);
-            this.$root.$emit('for-audioeditor:load-silent', log, block.getAudiosrc('m4a'), block.content, true, block);
+            if (this.audioTasksQueue.block.partIdx === null) {
+              this.$root.$emit('for-audioeditor:load-silent', log, block.getAudiosrc('m4a'), block.content, true, block);
+            } else {
+              this.$root.$emit('for-audioeditor:load-silent', log, block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a'), block.getPartContent(this.audioTasksQueue.block.partIdx), true, block);
+            }
             //setAudioSilent(queue_record, audio, text, saveToHistory = true, block = null) {
           }
         }

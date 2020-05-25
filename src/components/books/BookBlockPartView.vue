@@ -343,7 +343,7 @@ export default {
       isAudPartStarted: false,
       isRecording: false,
       isRecordingPaused: false,
-      isAudioChanged: false,
+      //isAudioChanged: false,
       isIllustrationChanged: false,
       blockAudio: {
         src: '',
@@ -816,6 +816,23 @@ export default {
       isAudioEditing: {
         get() {
           return this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx !== null && this.audioTasksQueue.block.partIdx === this.blockPartIdx;
+        },
+        cache: false
+      },
+      isAudioChanged: {
+        get() {
+          if (!this.block.getIsSplittedBlock()) {
+            return this.block && this.block.isAudioChanged;
+          } else {
+            return this.block && this.block.parts[this.blockPartIdx] && this.block.parts[this.blockPartIdx].isAudioChanged;
+          }
+        },
+        set(val) {
+          if (!this.block.getIsSplittedBlock()) {
+            this.block.isAudioChanged = val;
+          } else {
+            this.block.parts[this.blockPartIdx].isAudioChanged = val;
+          }
         },
         cache: false
       }
@@ -2713,6 +2730,7 @@ Save audio changes and realign the Block?`,
           this.blockAudio.map = this.blockContent();
           this.blockAudio.src = this.blockAudiosrc('m4a');
           this.isAudioChanged = isModified;
+          this.$parent.$forceUpdate();
           if (!isModified) {
             this.unsetChange('audio');
             this.unsetChange('content');
@@ -2810,6 +2828,8 @@ Save audio changes and realign the Block?`,
                 let loadBlock = this.blockPart;
                 loadBlock.manual_boundaries = this.block.getPartManualBoundaries(this.blockPartIdx);
                 loadBlock._id = this.check_id;
+                loadBlock.blockid = this.block.blockid;
+                loadBlock.partIdx = this.isSplittedBlock ? this.blockPartIdx : null;
                 this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), text, false, loadBlock);
                 //this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
                 this.showPinnedInText();
