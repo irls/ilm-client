@@ -319,7 +319,7 @@ class BookBlock {
 
     this.updated = init.updated || null;
     if (this.updated) {
-      this.updated = moment(this.updated).format('YYYY-MM-DD HH:mm:ss');
+      //this.updated = moment(this.updated).format('YYYY-MM-DD HH:mm:ss');
       //this.updated = moment(this.updated).utc().format('YYYY-MM-DD HH:mm:ss')
     }
 
