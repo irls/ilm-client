@@ -22,7 +22,7 @@
   <template v-if="!sVal.length">{{styleValue(blockType, styleKey, 'none')}}</template>
   <template v-else-if="styleTabs['lang']">{{styleValue(blockType, styleKey, sVal, styleTabs['lang'])}}</template>
   <template v-else-if="sVal.length">{{styleValue(blockType, styleKey, sVal, 'en')}}</template>
-  
+
 </label>
 </section>
 </template>
@@ -39,7 +39,9 @@
     methods: {
       selectStyle(blockType, styleKey, sVal) {
         //console.log('selectStyle', blockType, styleKey, sVal);
-        this.$emit('selectStyleEv', blockType, styleKey, sVal);
+        if (!this.parseStyle(this.styleTabs.get(blockType), styleKey).has(sVal.length?sVal:'none')) {
+          this.$emit('selectStyleEv', blockType, styleKey, sVal);
+        }
       },
       parseStyle(parentMap, styleKey) {
         //console.log('this.styleTabs', this.styleTabs['lang']);
