@@ -3203,12 +3203,15 @@ export const store = new Vuex.Store({
       let time = Date.now();
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
       let queueBlock = state.audioTasksQueue.block;
+      let part = queueBlock.partIdx === null ? block : block.parts[queueBlock.partIdx];
       let record = {
         type: type,
         options: options,
         time: time,
         wordMap: wordMap,
-        modified: queueBlock.partIdx === null ? block.isAudioChanged : block.parts[queueBlock.partIdx].isAudioChanged
+        modified: part.isAudioChanged,
+        //audiosrc: part.audiosrc,
+        //audiosrc_ver: Object.assign({}, part.audiosrc_ver)
       };
       if (queueBlock.partIdx === null) {
         block.isAudioChanged = true;
@@ -3255,17 +3258,28 @@ export const store = new Vuex.Store({
         if (block) {
         if (block.getIsSplittedBlock()) {
           block.undoPartContent(queueBlock.blockPartIdx);
-          if (state.audioTaskskQueue.queue.length === 0) {
-            block.undoPartAudiosrc(queueBlock.blockPartIdx);
-          }
           block.undoPartManualBoundaries(queueBlock.blockPartIdx);
+          if (state.audioTasksQueue.log.length > 1) {
+            //block.undoPartAudiosrc(queueBlock.blockPartIdx);
+            let log = state.audioTasksQueue.log[state.audioTasksQueue.log.length - 2];
+            if (log.audiosrc && log.audiosrc_ver) {
+              block.parts[queueBlock.partIdx].audiosrc = log.audiosrc;
+              block.parts[queueBlock.partIdx].audiosrc_ver = log.audiosrc_ver;
+            }
+          }
           //this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), false, this.blockPart);
         } else {
+          //console.log(state.audioTasksQueue.log[state.audioTasksQueue.log.length - 1], state.audioTasksQueue.log[0]);
           block.undoContent();
-          if (state.audioTasksQueue.queue.length === 0) {
-            block.undoAudiosrc();
-          }
           block.undoManualBoundaries();
+          //block.undoAudiosrc();
+          if (state.audioTasksQueue.log.length > 1) {
+            let log = state.audioTasksQueue.log[state.audioTasksQueue.log.length - 2];
+            if (log.audiosrc && log.audiosrc_ver) {
+              block.audiosrc = log.audiosrc;
+              block.audiosrc_ver = log.audiosrc_ver;
+            }
+          }
         }
         dispatch('popAudioTask');
       }
@@ -3325,7 +3339,7 @@ export const store = new Vuex.Store({
             let historyKey = queueBlock.partIdx === null ? '' : `parts.${queueBlock.partIdx}.`;
             //let j = block.history[historyKey + 'audiosrc'].length;
             if (Array.isArray(block.history[historyKey + 'audiosrc'])) {
-              for (let i = data.length - 1, j = block.history[historyKey + 'audiosrc'].length - 1; i >= 0 && j >= 0; --i, --j) {
+              /*for (let i = data.length - 1, j = block.history[historyKey + 'audiosrc'].length - 1; i >= 0 && j >= 0; --i, --j) {
                 //console.log(i, j);
                 ['audiosrc', 'audiosrc_ver'].forEach(k => {
                   let h = block.history[`${historyKey}${k}`][j];
@@ -3333,7 +3347,7 @@ export const store = new Vuex.Store({
                     block.history[`${historyKey}${k}`][j] = data[i][k];
                   }
                 });
-              }
+              }*/
               block.history[historyKey + 'audiosrc'].pop();
               block.history[historyKey + 'audiosrc_ver'].pop();
             }
@@ -3362,7 +3376,7 @@ export const store = new Vuex.Store({
         mode: state.mode
       };
       if (block.getIsSplittedBlock()) {
-        
+        block.parts[alignBlock.partIdx].isSaving = true;
       } else {
         block.isSaving = true;
       }
@@ -3373,7 +3387,20 @@ export const store = new Vuex.Store({
         .then(response => {
           //return Promise.resolve(response);
           if (realign) {
-            dispatch('getBookAlign');
+            dispatch('getBookAlign')
+              .then(() => {
+                if (block.getIsSplittedBlock()) {
+                  block.parts[alignBlock.partIdx].isSaving = false;
+                } else {
+                  block.isSaving = false;
+                }
+              });
+          } else {
+            if (block.getIsSplittedBlock()) {
+              block.parts[alignBlock.partIdx].isSaving = false;
+            } else {
+              block.isSaving = false;
+            }
           }
           dispatch('getCurrentJobInfo');
           if (response.status == 200) {
@@ -3401,7 +3428,7 @@ export const store = new Vuex.Store({
               block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
               //this.blockAudio.map = response.data.content;
               //this.blockAudio.src = this.block.getAudiosrc('m4a');
-              block.isSaving = false;
+              //block.isSaving = false;
               block.manual_boundaries = response.data.manual_boundaries || [];
               block.audiosrc_original = response.data.audiosrc_original;
               /*Vue.nextTick(() => {
@@ -3415,140 +3442,15 @@ export const store = new Vuex.Store({
               //return this.putBlock(this.block);
               return Promise.resolve(response);
             }
-            if (this.isCompleted) {
-              this.tc_loadBookTask();
-            }
-            this.getCurrentJobInfo();
-
-            if (this.block.status.marked != response.data.status.marked) {
-              this.block.status.marked = response.data.status.marked;
-            }
-            let part = response.data.parts[this.blockPartIdx];
-            this.block.setPartContent(this.blockPartIdx, part.content);
-            this.block.setPartAudiosrc(this.blockPartIdx, part.audiosrc, part.audiosrc_ver);
-            this.block.setPartManualBoundaries(this.blockPartIdx, part.manual_boundaries || []);
-            this.block.setPartAudiosrcOriginal(this.blockPartIdx, part.audiosrc_original || null);
-            //return this.putBlock(this.block);
-            if (!realign) {
-              part._id = this.check_id;
-              this.$root.$emit('for-audioeditor:load',
-              this.blockAudiosrc('m4a'),
-              this.block.getPartContent(this.blockPartIdx), false, part);
-            }
-            this.blockAudio.map = this.blockContent();
-            this.blockAudio.src = this.blockAudiosrc('m4a');
-            this.isAudioChanged = false;
-            //this.isChanged = false;
-            this.block.isAudioChanged = false;
-            //this.block.isChanged = false;
-            return BPromise.resolve();
           }
         })
         .catch(err => {
-          this.isSaving = false;
+          /*this.isSaving = false;
           this.checkError(err);
           this.$root.$emit('for-audioeditor:set-process-run', false);
-          this.$root.$emit('set-error-alert', err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Failed to apply your correction. Please try again.');
-          BPromise.reject(err)
+          this.$root.$emit('set-error-alert', err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Failed to apply your correction. Please try again.');*/
+          return Promise.reject(err)
         });
-      
-      
-      /*let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
-      let api = this.$store.state.auth.getHttp();
-      let data = {};
-      if (footnoteIdx === null) {
-        data = {
-          //audiosrc: this.block.getAudiosrc(null, false),
-          //content: this.blockAudio.map,
-          //manual_boundaries: this.block.manual_boundaries
-          audiosrc: preparedData.audiosrc || this.block.getPartAudiosrc(0, null, false),
-          content: this.block.getPartContent(0),
-          manual_boundaries: preparedData.manual_boundaries || this.block.getPartManualBoundaries(0),
-          mode: this.mode
-        };
-      } else {
-        data = {
-          audiosrc: this.block.getAudiosrcFootnote(footnoteIdx, null, false),
-          content: this.audioEditFootnote.footnote.content,
-          footnote_idx: footnoteIdx,
-          manual_boundaries: this.audioEditFootnote.footnote.manual_boundaries || []
-        }
-      }
-      this.isSaving = true;
-      if (realign) {
-        api_url+= '?realign=true';
-      }
-      this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
-      return api.post(api_url, data, {})
-        .then(response => {
-          this.$root.$emit('for-audioeditor:flush');
-          if (!realign) {
-            this.isSaving = false;
-          } else {
-            this.getBookAlign()
-              .then(() => {
-                this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
-                this.isSaving = false;
-              })
-          }
-          if (response.status == 200) {
-            if (this.isCompleted) {
-              this.tc_loadBookTask();
-            }
-            this.getCurrentJobInfo();
-
-            if (this.block.status.marked != response.data.status.marked) {
-              this.block.status.marked = response.data.status.marked;
-            }
-            //this.$emit('blockUpdated', this.block._id);
-            this.isAudioChanged = false;
-            //this.isChanged = false;
-            this.block.isAudioChanged = false;
-            //this.block.isChanged = false;
-            if (footnoteIdx === null) {
-              this.block.content = response.data.content;
-              this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
-              this.blockAudio.map = response.data.content;
-              this.blockAudio.src = this.block.getAudiosrc('m4a');
-              this.block.manual_boundaries = response.data.manual_boundaries || [];
-              this.block.audiosrc_original = response.data.audiosrc_original;
-              Vue.nextTick(() => {
-                if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
-                  this.block.flags.forEach(f => {
-                    this.updateFlagStatus(f._id);
-                  });
-                  //console.log(this.$refs.blockContent.innerHTML)
-                }
-              })
-              //return this.putBlock(this.block);
-              if (!realign) {
-                this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
-              }
-              if (!this.isSplittedBlock) {
-                if (this.$refs.blocks && this.$refs.blocks[0]) {
-                  this.$refs.blocks[0].isAudioChanged = false;
-                }
-              }
-              return BPromise.resolve();
-            } else {
-              let resp_block = response.data;
-              let resp_f = resp_block.footnotes[footnoteIdx];
-              this.block.setContentFootnote(footnoteIdx, resp_f.content);
-              this.block.setAudiosrcFootnote(footnoteIdx, resp_f.audiosrc, resp_f.audiosrc_ver);
-              this.audioEditFootnote.footnote.manual_boundaries = resp_f.manual_boundaries || [];
-              if (!realign) {
-                this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id, is_footnote: true}, this.audioEditFootnote.footnote));
-              }
-              this.audioEditFootnote.isAudioChanged = false;
-              return BPromise.resolve();
-            }
-          }
-        })
-        .catch(err => {
-          this.isSaving = false;
-          this.checkError(err);
-          BPromise.reject(err)
-        });*/
     }
   }
 })

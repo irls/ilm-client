@@ -635,17 +635,20 @@ export default {
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
   mixins: [taskControls, apiConfig, access],
   computed: {
-      isLocked: function () {
-        if (this.isSaving) {
-          return true;
-        }
-        if (this.isUpdating) {
-          return true;
-        }
-        if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx === null && this.audioTasksQueue.running) {
-          return true;
-        }
-        return this.hasLock;
+      isLocked: {
+        get() {
+          if (this.block.isSaving) {
+            return true;
+          }
+          if (this.isUpdating) {
+            return true;
+          }
+          if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx === null && this.audioTasksQueue.running) {
+            return true;
+          }
+          return this.hasLock;
+        },
+        cache: false
       },
       hasLock: {
         get() {
@@ -654,7 +657,7 @@ export default {
       },
       lockedType: {
         get() {
-          if (this.isSaving) {
+          if (this.block.isSaving) {
             return 'save';
           }
           if (this.isUpdating) {
@@ -1952,7 +1955,7 @@ Save audio changes and realign the Block?`,
         this.updateFlagStatus(this.block._id);
         let is_content_changed = this.hasChange('content');
         let is_type_changed = this.hasChange('type');
-        this.isSaving = true;
+        this.block.isSaving = true;
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
@@ -1961,13 +1964,13 @@ Save audio changes and realign the Block?`,
           if (realign) {
             this.getBookAlign()
               .then(() => {
-                this.isSaving = false;
+                this.block.isSaving = false;
                 if (this.isLocked && this.isAudioEditing) {
                   this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                 }
               });
           } else {
-            this.isSaving = false;
+            this.block.isSaving = false;
           }
           if (this.isCompleted) {
             this.tc_loadBookTask(this.block.bookid);
@@ -2028,7 +2031,7 @@ Save audio changes and realign the Block?`,
         //}
         update.blockid = this.block.blockid;
         update.bookid = this.block.bookid;
-        this.isSaving = true;
+        this.block.isSaving = true;
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         }
@@ -2037,13 +2040,13 @@ Save audio changes and realign the Block?`,
             if (realign) {
               this.getBookAlign()
                 .then(() => {
-                  this.isSaving = false;
+                  this.block.isSaving = false;
                   if (this.isLocked && this.isAudioEditing) {
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                   }
                 });
             } else {
-              this.isSaving = false;
+              this.block.isSaving = false;
               if (this.isAudioEditing) {
                 this.$root.$emit('for-audioeditor:set-process-run', false);
               }
@@ -2128,10 +2131,10 @@ Save audio changes and realign the Block?`,
         if (this.$refs.blockContent) {
           this.block.content = this.clearBlockContent();
         }
-        this.isSaving = true;
+        this.block.isSaving = true;
         return this.putBlockProofread(this.block.clean())
           .then(() => {
-            this.isSaving = false;
+            this.block.isSaving = false;
             this.isChanged = false;
             //if (this.isCompleted) {
               //this.tc_loadBookTask(this.block.bookid);
@@ -2157,7 +2160,7 @@ Save audio changes and realign the Block?`,
           upd_block.blockid = this.block.blockid;
           upd_block.bookid = this.block.bookid;
         }
-        this.isSaving = true;
+        this.block.isSaving = true;
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         }
@@ -2167,13 +2170,13 @@ Save audio changes and realign the Block?`,
             if (realign) {
               this.getBookAlign()
                 .then(() => {
-                  this.isSaving = false;
+                  this.block.isSaving = false;
                   if (this.isLocked && this.isAudioEditing) {
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                   }
                 });
             } else {
-              this.isSaving = false;
+              this.block.isSaving = false;
               if (this.isAudioEditing) {
                 this.$root.$emit('for-audioeditor:set-process-run', false);
               }
@@ -2359,7 +2362,7 @@ Save text changes and realign the Block?`,
               return BPromise.resolve();
             })
             .catch(err => {
-              this.isSaving = false;
+              this.block.isSaving = false;
               this.checkError(err);
               BPromise.reject(err)
             });
@@ -2476,10 +2479,10 @@ Save text changes and realign the Block?`,
               break;
           }
         }
-        this.isSaving = true;
+        this.block.isSaving = true;
         this.tc_approveBookTask(task)
         .then(response => {
-          this.isSaving = false;
+          this.block.isSaving = false;
           //this.isApproving = false;
           if (response.status == 200) {
             if (typeof response.data._id !== 'undefined') {
@@ -2494,7 +2497,7 @@ Save text changes and realign the Block?`,
           }
         })
         .catch(err => {
-          this.isSaving = false;
+          this.block.isSaving = false;
           //this.isApproving = false;
         });
 
@@ -3344,7 +3347,7 @@ Save text changes and realign the Block?`,
         if (!this.blockReindexProcess) {
           this.deletePending = false;
           this.hideModal('delete-block-message');
-          this.isSaving = true;
+          this.block.isSaving = true;
           this.$emit('deleteBlock', this.block, this.blockId);
         } else {
           this.deletePending = true;
@@ -3583,27 +3586,6 @@ Save text changes and realign the Block?`,
           this.insertSilence(position, length, this.footnoteIdx);
         }
       },
-      evFromAudioeditorUndo (blockId, audio, text, isModified) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          if (this.footnoteIdx === null) {
-            this.block.undoContent();
-            this.block.undoAudiosrc();
-            this.blockAudio.map = this.block.content;
-            this.blockAudio.src = this.block.getAudiosrc('m4a');
-            this.block.undoManualBoundaries();
-            this.isAudioChanged = isModified;
-          } else {
-            //this.audioEditFootnote.footnote.content = text;
-            //this.block.setAudiosrcFootnote(footnoteIdx, audio);
-            //this.audioEditFootnote.isAudioChanged = isModified;
-            this.block.undoContentFootnote(this.footnoteIdx);
-            this.block.undoAudiosrcFootnote(this.footnoteIdx);
-            this.block.undoManualBoundariesFootnote(this.footnoteIdx);
-            this.$root.$emit('for-audioeditor:load', this.block.getAudiosrcFootnote(this.footnoteIdx, 'm4a'), this.audioEditFootnote.footnote.content, false, Object.assign({_id: this.check_id, is_footnote: true}, this.audioEditFootnote.footnote));
-          }
-        }
-      },
       evFromAudioeditorDiscard (blockId) {
         if (blockId == this.check_id) {
           this.audStop();
@@ -3663,7 +3645,6 @@ Save text changes and realign the Block?`,
         this.$root.$on('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
         this.$root.$on('from-audioeditor:cut', this.evFromAudioeditorCut);
         this.$root.$on('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-        this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
         this.$root.$on('from-audioeditor:discard', this.evFromAudioeditorDiscard);
         this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
 
@@ -3677,7 +3658,6 @@ Save text changes and realign the Block?`,
         this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
         this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
         this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-        this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
         this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
         this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
@@ -3757,9 +3737,9 @@ Save text changes and realign the Block?`,
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
-        this.isSaving = true;
+        this.block.isSaving = true;
         api.post(api_url, formData, {}).then((response) => {
-          this.isSaving = false;
+          this.block.isSaving = false;
           if (response.status===200) {
             if (this.isCompleted) {
               this.tc_loadBookTask();
@@ -3815,7 +3795,7 @@ Save text changes and realign the Block?`,
           //}
         }).catch((err) => {
           console.log(err)
-          this.isSaving = false;
+          this.block.isSaving = false;
         });
       },
       onIllustrationChange() {

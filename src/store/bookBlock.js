@@ -289,6 +289,7 @@ class BookBlock {
     this.isAudioChanged = init.isAudioChanged || false;
     this.isIllustrationChanged = init.isIllustrationChanged || false;
     this.timestamp = new Date().toJSON();
+    this.isSaving = init.isSaving || false;
 
     //     this.checkedStart = init.checkedStart || false;
     //     this.checkedEnd = init.checkedEnd || false;

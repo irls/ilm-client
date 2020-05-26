@@ -371,7 +371,7 @@ export default {
       audioEditFootnote: {footnote: {}, isAudioChanged: false},
       check_id: null,
       footnoteIdx: null,
-      isSaving: false
+      //isSaving: false
     }
   },
   components: {
@@ -832,6 +832,20 @@ export default {
             this.block.isAudioChanged = val;
           } else {
             this.block.parts[this.blockPartIdx].isAudioChanged = val;
+          }
+        },
+        cache: false
+      },
+      isSaving: {
+        get() {
+          if (this.isSplittedBlock) {
+            return this.block.parts[this.blockPartIdx].isSaving;
+          }
+          return false;
+        },
+        set(val) {
+          if (this.isSplittedBlock) {
+            this.block.parts[this.blockPartIdx].isSaving = val;
           }
         },
         cache: false
@@ -3277,71 +3291,11 @@ Save text changes and realign the Block?`,
                 this.blockAudiosrc('m4a'),
                 this.block.getPartContent(this.blockPartIdx), false, part);
             }
+            this.blockAudio.map = this.blockContent();
+            this.blockAudio.src = this.blockAudiosrc('m4a');
             if (this.isCompleted) {
               this.tc_loadBookTask();
             }
-          });
-        let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/audio_edit/part/' + this.blockPartIdx;
-        let api = this.$store.state.auth.getHttp();
-        let data = {
-          audiosrc: preparedData.audiosrc || this.blockAudiosrc(null, false),
-          content: preparedData.content || this.blockAudio.map,//content: this.blockContent(),
-          manual_boundaries: this.blockPart.manual_boundaries || [],
-          mode: this.mode
-        };
-        this.isSaving = true;
-        if (realign) {
-          api_url+= '?realign=true';
-        }
-        this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
-        return api.post(api_url, data, {})
-          .then(response => {
-            this.$root.$emit('for-audioeditor:flush');
-            if (!realign) {
-              this.isSaving = false;
-            } else {
-              this.getBookAlign()
-                .then(() => {
-                  this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
-                  this.isSaving = false;
-                })
-            }
-            if (response.status == 200) {
-              if (this.isCompleted) {
-                this.tc_loadBookTask();
-              }
-              this.getCurrentJobInfo();
-
-              if (this.block.status.marked != response.data.status.marked) {
-                this.block.status.marked = response.data.status.marked;
-              }
-              let part = response.data.parts[this.blockPartIdx];
-              this.block.setPartContent(this.blockPartIdx, part.content);
-              this.block.setPartAudiosrc(this.blockPartIdx, part.audiosrc, part.audiosrc_ver);
-              this.block.setPartManualBoundaries(this.blockPartIdx, part.manual_boundaries || []);
-              this.block.setPartAudiosrcOriginal(this.blockPartIdx, part.audiosrc_original || null);
-              //return this.putBlock(this.block);
-              if (!realign) {
-                part._id = this.check_id;
-                this.$root.$emit('for-audioeditor:load',
-                this.blockAudiosrc('m4a'),
-                this.block.getPartContent(this.blockPartIdx), false, part);
-              }
-              this.blockAudio.map = this.blockContent();
-              this.blockAudio.src = this.blockAudiosrc('m4a');
-              this.isAudioChanged = false;
-              //this.isChanged = false;
-              this.block.isAudioChanged = false;
-              //this.block.isChanged = false;
-              return BPromise.resolve();
-            }
-          })
-          .catch(err => {
-            this.isSaving = false;
-            this.checkError(err);
-            this.$root.$emit('for-audioeditor:set-process-run', false);
-            this.$root.$emit('set-error-alert', err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Failed to apply your correction. Please try again.');
-            BPromise.reject(err)
           });
       },
       addToQueueBlockPartAudioEdit(realign = false) {
@@ -3767,7 +3721,7 @@ Save text changes and realign the Block?`,
       },
       'blockPart.audiosrc': {
         handler(val) {
-          console.log(`audiosrc changed HERE ${val}`);
+          //console.log(`audiosrc changed HERE ${val}`);
           this.blockAudio.src = this.blockAudiosrc('m4a');
           this.$forceUpdate();
         }
