@@ -48,6 +48,7 @@ const authorsLangFarsi =
 };
 
 const audioTasksQueueRunSize = 5;
+const localAudioTasks = ['manual_boundaries', 'unpin_right'];
 
 // const API_ALLBOOKS = '/static/books.json'
 
@@ -3218,7 +3219,9 @@ export const store = new Vuex.Store({
       } else {
         block.parts[queueBlock.partIdx].isAudioChanged = true;
       }
-      state.audioTasksQueue.queue.push(record);
+      if (localAudioTasks.indexOf(type) === -1) {
+        state.audioTasksQueue.queue.push(record);
+      }
       state.audioTasksQueue.time = time;
       state.audioTasksQueue.log.push(record);
       if (state.audioTasksQueue.queue.length >= audioTasksQueueRunSize && !state.audioTasksQueue.running) {
@@ -3227,8 +3230,10 @@ export const store = new Vuex.Store({
       //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
     },
     popAudioTask({state}) {
-      state.audioTasksQueue.queue.pop();
-      state.audioTasksQueue.log.pop();
+      let log = state.audioTasksQueue.log.pop();
+      if (localAudioTasks.indexOf(log.type) === -1) {
+        state.audioTasksQueue.queue.pop();
+      }
       if (state.audioTasksQueue.log.length > 0) {
         state.audioTasksQueue.time = state.audioTasksQueue.log[state.audioTasksQueue.log.length - 1].time;
       } else {

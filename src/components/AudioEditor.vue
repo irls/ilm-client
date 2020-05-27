@@ -1758,6 +1758,12 @@ Discard unsaved audio changes?`,
           this.audiosourceEditor.annotationList.annotations.forEach(an => {
             record.annotations.push(Object.assign({}, an));
           });
+          if (type === 'manual_boundaries') {
+            record.annotations.forEach((an, i) => {
+              an.start = record.additional.oldMap[i].start;
+              an.end = record.additional.oldMap[i].end;
+            });
+          }
           this.actionsLog.push(record);
           if (this.actionsLog.length >= 6) {
             this.actionsLog.shift();
@@ -1775,6 +1781,15 @@ Discard unsaved audio changes?`,
           let record = this.actionsLog.pop();
           if (record) {
             this.audiosourceEditor.annotationList.annotations = [...record.annotations];
+            this.words = [];
+            this.audiosourceEditor.annotationList.annotations.forEach((an, i) => {
+              this.words.push({
+                start: an.start,
+                end: an.end,
+                index: i,
+                alignedIndex: i
+              });
+            });
             if (redraw) {
               switch (record.type) {
                 case 'cut':
@@ -1796,10 +1811,19 @@ Discard unsaved audio changes?`,
                         this.audiosourceEditor.annotationList.annotations[sw.index].end = oldMap.end;
                       }
                     });
-                    if (Array.isArray(record.additional.manual_boundaries) && record.additional.manual_boundaries.indexOf(record.additional.shifted[1].start) === -1) {
-                      $($(`.annotation-box`)[record.additional.shifted[1].index]).find(`.resize-handle.resize-w`).removeClass('manual');
+                    $(`.annotation-box`).find(`.resize-handle`).removeClass('manual');
+                    if (Array.isArray(record.additional.manual_boundaries)) {
+                      record.additional.manual_boundaries.forEach(mb => {
+                        this.audiosourceEditor.annotationList.annotations.forEach((an, i) => {
+                          //console.log(mb, an);
+                          if (an.start * 1000 === mb) {
+                            $($(`.annotation-box`)[i]).find(`.resize-handle.resize-w`).addClass('manual');
+                          } else if (an.end * 1000 === mb) {
 
-                      $($(`.annotation-box`)[record.additional.shifted[0].index]).find(`.resize-handle.resize-e`).removeClass('manual');
+                            $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e`).addClass('manual');
+                          }
+                        })
+                      });
                     }
                     //this.audiosourceEditor.renderAnnotations();
                     //this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
@@ -2333,19 +2357,20 @@ Discard unsaved audio changes?`,
           shiftedWords.forEach(sw => {
             shiftedOldMap.push(oldMap[sw.index]);
           })
+          let queueBlock = this.audioTasksQueueBlock;
           this._addHistoryLocal('manual_boundaries', null, null, null, {
             shifted: shiftedWords,
             oldMap: shiftedOldMap,
-            manual_boundaries: this.block.manual_boundaries
+            manual_boundaries: queueBlock ? queueBlock.manual_boundaries : []
           });
           //if (this.audioTasksQueue.queue.length > 0) {
             //console.log(shiftedWords.slice());
-            //this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), pinnedIndex, this.blockId]);
+            this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), pinnedIndex, this.blockId]);
             //$($(`.annotation-box`)[shiftedWords[pinnedIndex].index]).find(`.resize-handle.resize-w`).addClass('manual');
 
             //$($(`.annotation-box`)[shiftedWords[pinnedIndex - 1].index]).find(`.resize-handle.resize-e`).addClass('manual');
           //} else {
-            this.$root.$emit('from-audioeditor:word-realign', shiftedWords, pinnedIndex, this.blockId);
+            //this.$root.$emit('from-audioeditor:word-realign', shiftedWords, pinnedIndex, this.blockId);
           //}
           this.isModified = true;
           if (this.wordSelectionMode !== false) {
@@ -2656,7 +2681,8 @@ Revert to original block audio?`,
           hasLocks: 'hasLocks',
           currentAudiobook: 'currentAudiobook', 
           storeListO: 'storeListO',
-          audioTasksQueue: 'audioTasksQueue'})
+          audioTasksQueue: 'audioTasksQueue', 
+          audioTasksQueueBlock: 'audioTasksQueueBlock'})
       },
       watch: {
         'cursorPosition': {

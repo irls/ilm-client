@@ -2958,7 +2958,7 @@ Save audio changes and realign the Block?`,
               case 'unpin_right':
                 task = new Promise((resolve, reject) => {
                   let response = this.evFromAudioeditorUnpinRight(...record.options.concat([this.check_id]));
-                  return resolve(response);
+                  return resolve();
                 });
                 break;
               default:
