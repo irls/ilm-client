@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const _id = require('uniqid');
+const moment = require('moment');
 import superlogin from 'superlogin-client';
 import Vue from 'vue';
 
@@ -315,6 +316,14 @@ class BookBlock {
     } else {
       this.parts = parts;
     }
+
+    this.updated = init.updated || null;
+    if (this.updated) {
+      //this.updated = moment(this.updated).format('YYYY-MM-DD HH:mm:ss');
+      //this.updated = moment(this.updated).utc().format('YYYY-MM-DD HH:mm:ss')
+    }
+
+    this.audioHash = init.audioHash || null;
   }
 
   clean() {
@@ -729,7 +738,7 @@ class BookBlock {
       this.setManualBoundaries(boundaries);
     }
   }
-  
+
   setPartAudiosrcOriginal(partIdx, src) {
     let partCheck =
       Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
@@ -739,7 +748,7 @@ class BookBlock {
       this.setAudiosrcOriginal(src);
     }
   }
-  
+
   setAudiosrcOriginal(src) {
     this.set('audiosrc_original', src);
   }
