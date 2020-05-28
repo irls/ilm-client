@@ -2870,6 +2870,8 @@ Save audio changes and realign the Block?`,
               case 'save-part-then-audio':
                 task = new Promise((resolve, reject) => {
                   let preparedData = {content: this.clearBlockContent(), audiosrc: this.blockAudiosrc(null, false)};
+                  delete this.blockPart.audiosrc;
+                  delete this.blockPart.audiosrc_ver;// temporary remove edited audio link in block, not save it
                   return this.assembleBlockProxy(false, false, false)
                     .then(() => {
                       return this.assembleBlockPartAudioEdit(...record.options.concat(preparedData));
