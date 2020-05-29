@@ -389,7 +389,7 @@
 
                 <div class="table-row">
                   <div class="table-cell -num">{{ftnIdx+1}}.</div>
-                  <div 
+                  <div
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
@@ -482,7 +482,7 @@
             <div class="modal-content-flex-block">
             <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
             <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
-            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
+            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating || !adminOrLibrarian"/><span v-if="adminOrLibrarian">all {{blockTypeLabel}}s</span><span v-else style="color: #bbb;">all {{blockTypeLabel}}s</span></label>
             <!--v-if="!block.status.marked"-->
             </div>
             <div class="modal-content-flex-block">
@@ -2353,7 +2353,7 @@ Save audio changes and realign the Block?`,
         //this.isAudioChanged = false;
       },
       addToQueueBlockAudioEdit(footnoteIdx = null, realign = false) {
-        
+
         if (this.isChanged) {
           this.$root.$emit('show-modal', {
             title: 'Unsaved Changes',
@@ -3981,7 +3981,10 @@ Save text changes and realign the Block?`,
         if (audiosrc) {
           audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
         }
-        this.$refs['block-html' + this.block.blockid].value = `<div id="${this.shortBlockid}" data-audiosrc="${audiosrc}">
+        let blockData = `data-audiosrc="${audiosrc}"`;
+        if (this.block.updated) blockData += ` data-last_modified="${this.block.updated}"`;
+        if (audiosrc) blockData += ` data-audiohash="${this.block.audioHash || ''}"`;
+        this.$refs['block-html' + this.block.blockid].value = `<div id="${this.shortBlockid}" ${blockData}>
   ${content}
 </div>`;
       },

@@ -232,6 +232,7 @@
             this.blockSelectionEmit = true;
             this.selection.start = start / 1000;
             this.selection.end = end / 1000;
+            this.cursorPosition = this.selection.start;
             this.wordSelectionMode = false;
             this._clearWordSelection();
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
@@ -1082,7 +1083,7 @@
         },
         addSilenceLocal() {
           let original_buffer = this.audiosourceEditor.activeTrack.buffer;
-          let time = this.cursorPosition;
+          let time = this._round(this.cursorPosition, 2);
           this.silenceLength = parseFloat(this.silenceLength);
           
           let silence = new Float32Array(this.silenceLength * original_buffer.sampleRate);
@@ -1096,15 +1097,16 @@
           
           this._addHistoryLocal('insert_silence', null, this.cursorPosition, this.cursorPosition + this.silenceLength);
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
-            if (al.start > time) {
-              al.start+= this.silenceLength;
+            if (al.start >= time) {
+              al.start = this._round(al.start + this.silenceLength, 2);
               this._changeWordPositions(al, i);
             }
-            if (al.end > time) {
-              al.end+= this.silenceLength;
+            if (al.end >= time) {
+              al.end = this._round(al.end + this.silenceLength, 2);
               this._changeWordPositions(al, i);
             }
           });
+          this.fixMap();
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
           //this.clearSelection();
           this.isModified = true;
@@ -1124,6 +1126,18 @@
             a.begin = new_positions.start;
             a.end = new_positions.end;
           }
+        },
+        fixMap() {
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+            //console.log(i, ':', map[i][0], map[i][1]);
+            if (this.audiosourceEditor.annotationList.annotations[i - 1] && this.audiosourceEditor.annotationList.annotations[i - 1].end != al.start) {
+              //al.start = this.audiosourceEditor.annotationList.annotations[i - 1].end;
+              this.audiosourceEditor.annotationList.annotations[i - 1].end = al.start;
+              //this._changeWordPositions(al, i);
+              this._changeWordPositions(this.audiosourceEditor.annotationList.annotations[i - 1], i - 1);
+            }
+            
+          });
         },
         insertRangeAction(position, range, length) {
           let original_buffer = this.audiosourceEditor.activeTrack.buffer;
@@ -1313,11 +1327,13 @@
               let delta = this._round(min - (al.end - al.start), 2);
               shift = this._round(shift + delta, 2);
               al.end = this._round(al.end + delta, 2);
+              this._changeWordPositions(al, i);
             }
           });
           if (shift > 0) {
             this.insertRangeAction(this.audiosourceEditor.duration, new Float32Array(shift * this.audiosourceEditor.activeTrack.buffer.sampleRate), shift);
           }
+          this.fixMap();
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
           this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000)]);
           this.clearSelection();
@@ -1833,6 +1849,9 @@ Discard unsaved audio changes?`,
           }
         },
         _setText(text, block, saveToHistory = false) {
+          if (this.wordRepositioning) {
+            return false;
+          }
           if (saveToHistory && this.content && this.audiofile) {
             this.isModified = true;
             //this._addHistory(this.content, this.audiofile, block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
@@ -1856,8 +1875,8 @@ Discard unsaved audio changes?`,
             word = unescape(word.replace(/<[^>]+?>/img, ''));
             currentLength = match.index + match[0].length;
             let map = match[1] && match[1].indexOf(',') !== -1 ? match[1].split(',') : [0, 0]
-            map[0] = parseInt(map[0]) / 1000
-            map[1] = this._round(parseInt(map[1]) / 1000 + map[0], 3)
+            map[0] = this._round(parseInt(map[0]) / 1000, 2);
+            map[1] = this._round(parseInt(map[1]) / 1000 + map[0], 2)
             annotations.push({
               "begin": map[0],
               "children": [],
@@ -1885,6 +1904,7 @@ Discard unsaved audio changes?`,
                 isContinuousPlay: false,
                 linkEndpoints: true
               });
+            self.fixMap();
             $('.resize-handle').removeClass('manual');
             if (block && block.manual_boundaries && block.manual_boundaries.length > 0) {
               let waitAnnotations = setInterval(() => {
@@ -1894,12 +1914,12 @@ Discard unsaved audio changes?`,
                     $(this).attr('data-index', index);
                   });
                   block.manual_boundaries.forEach(mb => {
-                    let position = parseInt(mb) / 1000;
+                    let position = this._round(parseInt(mb) / 1000, 2);
                     self.audiosourceEditor.annotationList.annotations.forEach((al, index) => {
-                      if (al.start == position) {
+                      if (Math.abs(al.start - position) <= 0.02) {
                         $(`.annotation-box[data-index="${index}"] .resize-handle.resize-w`).addClass('manual');
                       }
-                      if (al.end == position) {
+                      if (Math.abs(al.end - position) <= 0.02) {
                         $(`.annotation-box[data-index="${index}"] .resize-handle.resize-e`).addClass('manual');
                       }
                     });
@@ -2295,7 +2315,7 @@ Discard unsaved audio changes?`,
             map.push([Math.round(al.begin * 1000), Math.round((al.end - al.begin) * 1000)]);
             //console.log(i, ':', map[i][0], map[i][1]);
             if (map[i - 1] && map[i - 1][0] + map[i - 1][1] != map[i][0]) {
-              //console.log('FIX MAP', map[i - 1][0] + map[i - 1][1], map[i][0]);
+              //console.log('FIX MAP', map[i - 1][0] + map[i - 1][1], map[i][0], al);
               map[i][0] = map[i - 1][0] + map[i - 1][1];
             }
             let w = this.words.find(_w => {
