@@ -2879,7 +2879,9 @@ Save audio changes and realign the Block?`,
                       cMap[0] = parseInt(cMap[0]);
                       cMap[1] = parseInt(cMap[1]);
                       if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
-                        manual_boundaries.push(m[0]);
+                        if (!(record.type === 'cut' && record.options[0] < cMap[0] && record.options[1] > cMap[0])) {
+                          manual_boundaries.push(m[0]);
+                        }
                         current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
                       }
                     }
