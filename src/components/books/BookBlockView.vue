@@ -1447,7 +1447,8 @@ export default {
                 onQuoteSave: this.onQuoteSave,
                 suggestEl: this.suggestEl,
                 extensions: extensions,
-                disableEditing: !this.allowEditing
+                disableEditing: !this.allowEditing,
+              imageDragging: false
             });
           } else if (this.tc_showBlockNarrate(this.block._id) && this.mode === 'narrate') {
             extensions = {
@@ -1464,7 +1465,8 @@ export default {
                 onQuoteSave: this.onQuoteSave,
                 suggestEl: this.suggestEl,
                 extensions: extensions,
-                disableEditing: true
+                disableEditing: true,
+              imageDragging: false
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
@@ -1535,7 +1537,8 @@ export default {
                 onQuoteSave: this.onQuoteSave,
                 suggestEl: this.suggestEl,
                 extensions: extensions,
-                disableEditing: !this.allowEditing
+                disableEditing: !this.allowEditing,
+              imageDragging: false
             });
 
           if(!this.proofreadModeReadOnly)
@@ -1547,7 +1550,8 @@ export default {
                 onQuoteSave: this.onQuoteSave,
                 suggestEl: this.suggestEl,
                 extensions: extensions,
-                disableEditing: !this.allowEditing
+                disableEditing: !this.allowEditing,
+              imageDragging: false
             });
 
         } else if (this.editorFootn) this.editorFootn.setup();

@@ -52,7 +52,8 @@
     },
     beforeDestroy() {
       if (this.tempURL) {
-        URL.revokeObjectURL(this.tempURL);
+        //TODO after save image
+        //URL.revokeObjectURL(this.tempURL);
       }
     },
   }
