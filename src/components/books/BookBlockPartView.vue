@@ -815,7 +815,11 @@ export default {
       },
       isAudioEditing: {
         get() {
-          return this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx !== null && this.audioTasksQueue.block.partIdx === this.blockPartIdx;
+          if (this.isSplittedBlock) {
+            return this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx !== null && this.audioTasksQueue.block.partIdx === this.blockPartIdx;
+          } else {
+            return this.$parent.isAudioEditing;
+          }
         },
         cache: false
       },
