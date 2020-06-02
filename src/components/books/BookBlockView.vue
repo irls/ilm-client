@@ -408,7 +408,7 @@
             </div>
             <div class="table-row controls-bottom" >
               <div class="controls-bottom-wrapper">
-                <div class="-hidden -left">
+                <div class="-left" :class="{'-hidden': isHideArchFlags}">
                   <span v-if="showBlockFlag">
                     <i :class="['glyphicon', 'glyphicon-flag']"
                       ref="blockFlagControl"
@@ -5232,6 +5232,7 @@ Save text changes and realign the Block?`,
   [data-flag] {
     border-bottom: 2px solid red;
     pointer-events: none;
+    font-size: 23pt; // === font-size in block
     &:before {
       pointer-events: all;
       /*content: "\F024";*/
@@ -5247,12 +5248,14 @@ Save text changes and realign the Block?`,
 
     &[data-status="open"] {
       border-bottom: 2px solid red;
+      visibility: initial;
       &:before {
         color: red;
       }
     }
     &[data-status="resolved"] {
       border-bottom: 2px solid green;
+      visibility: initial;
       &:before {
         color: green;
       }
