@@ -28,17 +28,14 @@ import Vue from 'vue'
      },
     methods: {
         setMenu: function(x, y, target) {
-
-            let dir = this.$refs.menu.getAttribute('dir') || 'top';
-            x+= 2;
-            if (x + $(this.$refs.menu).outerWidth() > $('.content-scroll-wrapper').outerWidth()) {
-              x = $('.content-scroll-wrapper').outerWidth() - $(this.$refs.menu).outerWidth() - 10;
+          let menuWidth = $(this.$refs.menu).outerWidth();
+          let containerWidth = $('.content-scroll-wrapper > div').outerWidth();
+            if (x + menuWidth > containerWidth) {
+              //show menu on the left-bottom of cursor position
+              x = x - menuWidth;
             }
             this.left = x + 'px';
             this.top = y + 'px';
-            //this.top = y + window.pageYOffset + 'px';
-            //this.top = y - this.$refs.menu.offsetHeight + 'px';
-
         },
 
         getSelectionCoords: function() {
@@ -65,7 +62,7 @@ import Vue from 'vue'
                   }
               }
           }
-          return { x: x, y: y, width: width, height: height };
+          return { x: parseInt(x), y: parseInt(y), width: width, height: height };
         },
 
         close: function() {
@@ -81,7 +78,7 @@ import Vue from 'vue'
             ev.preventDefault();
             this.$root.$emit('closeBlockContextMenu');
             let coords = {};
-            if (range.collapsed == true) {
+            if (range.collapsed) {
               coords = this.getSelectionCoords();
               coords.x = coords.x + coords.width;
             } else {
@@ -90,6 +87,7 @@ import Vue from 'vue'
                 y: ev.clientY - offsetY
               }
             }
+            coords.x = ev.layerX - offsetX;
             coords.y = ev.layerY - offsetY;
 
             this.viewMenu = true;
