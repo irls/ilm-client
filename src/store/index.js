@@ -47,6 +47,9 @@ const authorsLangFarsi =
  husayn:   'حسین'
 };
 
+const audioTasksQueueRunSize = 5;
+const localAudioTasks = ['manual_boundaries', 'unpin_right'];
+
 // const API_ALLBOOKS = '/static/books.json'
 
 function defer() {
@@ -218,7 +221,11 @@ export const store = new Vuex.Store({
       queue: [],
       running: null,
       log: [],
-      blockId: null
+      block: {
+        blockId: null,
+        partIdx: null,
+        checkId: null
+      }
     }
   },
 
@@ -439,10 +446,17 @@ export const store = new Vuex.Store({
       return state.audioTasksQueue;
     },
     checkRunningAudioTask: state => (check_id) => {
-      if (!state.audioTasksQueue.running || check_id !== state.audioTasksQueue.blockId || (state.audioTasksQueue.running && state.audioTasksQueue.log.indexOf(state.audioTasksQueue.running.time) === -1)) {
+      if (!state.audioTasksQueue.running || check_id !== state.audioTasksQueue.block.blockId || (state.audioTasksQueue.running && state.audioTasksQueue.log.indexOf(state.audioTasksQueue.running.time) === -1)) {
         return false;
       }
       return true;
+    },
+    audioTasksQueueBlock: state => {
+      if (state.audioTasksQueue.block.blockId) {
+        return state.storeList.get(state.audioTasksQueue.block.blockId);
+      } else {
+        return null;
+      }
     }
   },
 
@@ -675,22 +689,20 @@ export const store = new Vuex.Store({
       if (state.isAdmin || state.isLibrarian) {
         state.bookCollections = state.bookCollectionsAll;
       } else if (state.tc_userTasks) {
-        if (state.tc_userTasks.total) {
-          let collections = [];
-          for (let jobid in state.tc_userTasks.list) {
-            state.bookCollectionsAll.forEach(c => {
-              if (c.books && c.books.indexOf(state.tc_userTasks.list[jobid].bookid) !== -1) {
-                if (state.tc_userTasks.list[jobid].tasks && state.tc_userTasks.list[jobid].tasks.length > 0) {
-                  let exists = collections.find(_c => _c._id === c._id);
-                  if (!exists) {
-                    collections.push(c);
-                  }
+        let collections = [];
+        for (let jobid in state.tc_userTasks.list) {
+          state.bookCollectionsAll.forEach(c => {
+            if (c.books && c.books.indexOf(state.tc_userTasks.list[jobid].bookid) !== -1) {
+              if ((state.tc_userTasks.list[jobid].tasks && state.tc_userTasks.list[jobid].tasks.length > 0) || state.tc_userTasks.list[jobid].completed_tasks > 0) {
+                let exists = collections.find(_c => _c._id === c._id);
+                if (!exists) {
+                  collections.push(c);
                 }
               }
-            });
-          }
-          state.bookCollections = collections;
+            }
+          });
         }
+        state.bookCollections = collections;
       }
       state.bookCollections.forEach(c => {
         let pages = 0;
@@ -3210,28 +3222,51 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    setAudioTasksBlockId({state, dispatch}, blockId) {
-      if (blockId !== state.audioTasksQueue.blockId) {
+    setAudioTasksBlockId({state, dispatch}, [blockId, checkId, partIdx]) {
+      if (blockId !== state.audioTasksQueue.block.blockId) {
         dispatch('clearAudioTasks', true);
         state.audioTasksQueue.running = null;
-        state.audioTasksQueue.blockId = blockId;
+        state.audioTasksQueue.block.blockId = blockId;
+        state.audioTasksQueue.block.checkId = checkId;
+        state.audioTasksQueue.block.partIdx = partIdx;
       }
     },
-    addAudioTask({state}, [type, options]) {
+    addAudioTask({state, dispatch, commit}, [type, options, wordMap]) {
       let time = Date.now();
-      state.audioTasksQueue.queue.push({
+      let block = state.storeList.get(state.audioTasksQueue.block.blockId);
+      let queueBlock = state.audioTasksQueue.block;
+      let part = queueBlock.partIdx === null ? block : block.parts[queueBlock.partIdx];
+      let record = {
         type: type,
         options: options,
-        time: time
-      });
+        time: time,
+        wordMap: wordMap,
+        modified: part.isAudioChanged,
+        //audiosrc: part.audiosrc,
+        //audiosrc_ver: Object.assign({}, part.audiosrc_ver)
+      };
+      if (queueBlock.partIdx === null) {
+        block.isAudioChanged = true;
+      } else {
+        block.parts[queueBlock.partIdx].isAudioChanged = true;
+      }
+      if (localAudioTasks.indexOf(type) === -1) {
+        state.audioTasksQueue.queue.push(record);
+      }
       state.audioTasksQueue.time = time;
-      state.audioTasksQueue.log.push(time);
+      state.audioTasksQueue.log.push(record);
+      if (state.audioTasksQueue.queue.length >= audioTasksQueueRunSize && !state.audioTasksQueue.running) {
+        dispatch('applyTasksQueue', [audioTasksQueueRunSize, state.audioTasksQueue.block.blockId, state.audioTasksQueue.block.partIdx]);
+      }
       //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
     },
     popAudioTask({state}) {
-      state.audioTasksQueue.queue.pop();
-      if (state.audioTasksQueue.queue.length > 0) {
-        state.audioTasksQueue.time = state.audioTasksQueue.queue[state.audioTasksQueue.queue.length - 1].time;
+      let log = state.audioTasksQueue.log.pop();
+      if (localAudioTasks.indexOf(log.type) === -1) {
+        state.audioTasksQueue.queue.pop();
+      }
+      if (state.audioTasksQueue.log.length > 0) {
+        state.audioTasksQueue.time = state.audioTasksQueue.log[state.audioTasksQueue.log.length - 1].time;
       } else {
         state.audioTasksQueue.time = null;
       }
@@ -3243,7 +3278,7 @@ export const store = new Vuex.Store({
       if (cancel_running) {
         state.audioTasksQueue.running = null;
       }
-      state.audioTasksQueue.blockId = null;
+      state.audioTasksQueue.block.blockId = null;
     },
     shiftAudioTask({state}) {
       state.audioTasksQueue.queue.shift();
@@ -3252,6 +3287,206 @@ export const store = new Vuex.Store({
       } else {
         state.audioTasksQueue.time = null;
       }
+    },
+    undoTasksQueue({state, dispatch}) {
+      let queueBlock = state.audioTasksQueue.block;
+      let block = state.storeList.get(queueBlock.blockId);
+        if (block) {
+        if (block.getIsSplittedBlock()) {
+          block.undoPartContent(queueBlock.blockPartIdx);
+          block.undoPartManualBoundaries(queueBlock.blockPartIdx);
+          if (state.audioTasksQueue.log.length > 1) {
+            //block.undoPartAudiosrc(queueBlock.blockPartIdx);
+            let log = state.audioTasksQueue.log[state.audioTasksQueue.log.length - 2];
+            if (log.audiosrc && log.audiosrc_ver) {
+              block.parts[queueBlock.partIdx].audiosrc = log.audiosrc;
+              block.parts[queueBlock.partIdx].audiosrc_ver = log.audiosrc_ver;
+            }
+          }
+          //this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), false, this.blockPart);
+        } else {
+          //console.log(state.audioTasksQueue.log[state.audioTasksQueue.log.length - 1], state.audioTasksQueue.log[0]);
+          block.undoContent();
+          block.undoManualBoundaries();
+          //block.undoAudiosrc();
+          if (state.audioTasksQueue.log.length > 1) {
+            let log = state.audioTasksQueue.log[state.audioTasksQueue.log.length - 2];
+            if (log.audiosrc && log.audiosrc_ver) {
+              block.audiosrc = log.audiosrc;
+              block.audiosrc_ver = log.audiosrc_ver;
+            }
+          }
+        }
+        dispatch('popAudioTask');
+      }
+    },
+    applyTasksQueue({state, dispatch}, [runSize, blockid, partIdx]) {
+      if (!blockid) {
+        blockid = state.audioTasksQueue.block.blockId;
+      }
+      if (!partIdx) {
+        partIdx = state.audioTasksQueue.block.partIdx;
+      }
+      if (runSize === null) {
+        runSize = state.audioTasksQueue.queue.length;
+      }
+      if (state.audioTasksQueue.queue.length === 0) {
+        return Promise.resolve();
+      }
+      let block = state.storeList.get(blockid);
+      let content = block.getPartContent(partIdx || 0);
+      let queue = state.audioTasksQueue.queue.splice(0, runSize);
+      let queueBlock = state.audioTasksQueue.block;
+      queue.forEach((q, i) => {
+        if (i < queue.length - 1) {
+          delete q.wordMap;
+        }
+      })
+      state.audioTasksQueue.running = Object.assign({}, queue[queue.length - 1]);
+      return axios.post(`${state.API_URL}book/block/${blockid}${partIdx !== null ? '/' + partIdx : ''}/apply_queue`, {
+        queue: queue,
+        block: {
+          content: content,
+          audiosrc: block.getPartAudiosrc(partIdx || 0, false, false),
+          modified: queue[0].modified
+        }
+      })
+        .then((res) => {
+          state.audioTasksQueue.running = null;
+          //return dispatch('getBookAlign')
+            //.then(() => {
+          let data = [];
+          if (Array.isArray(res.data)) {
+            data = res.data.filter(r => {
+              return r.time <= state.audioTasksQueue.time;
+            })
+            data.forEach(r => {
+              let l = state.audioTasksQueue.log.find(l => {
+                return l.time === r.time;
+              });
+              if (l) {
+                l.audiosrc = r.audiosrc;
+                l.audiosrc_ver = r.audiosrc_ver;
+              }
+            });
+          }
+          if (data.length > 0) {
+            block.setPartAudiosrc(state.audioTasksQueue.block.partIdx || 0, data[data.length - 1].audiosrc, data[data.length - 1].audiosrc_ver);
+            let historyKey = queueBlock.partIdx === null ? '' : `parts.${queueBlock.partIdx}.`;
+            //let j = block.history[historyKey + 'audiosrc'].length;
+            if (Array.isArray(block.history[historyKey + 'audiosrc'])) {
+              /*for (let i = data.length - 1, j = block.history[historyKey + 'audiosrc'].length - 1; i >= 0 && j >= 0; --i, --j) {
+                //console.log(i, j);
+                ['audiosrc', 'audiosrc_ver'].forEach(k => {
+                  let h = block.history[`${historyKey}${k}`][j];
+                  if (h) {
+                    block.history[`${historyKey}${k}`][j] = data[i][k];
+                  }
+                });
+              }*/
+              block.history[historyKey + 'audiosrc'].pop();
+              block.history[historyKey + 'audiosrc_ver'].pop();
+            }
+            //console.log(block.history);
+          }
+          //console.log(state.audioTasksQueue);
+          if (state.audioTasksQueue.queue.length >= 5 && !state.audioTasksQueue.running) {
+            dispatch('applyTasksQueue', [null]);
+          }
+          return Promise.resolve(data);
+            //});
+
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    saveBlockAudio({state, dispatch}, [realign, preparedData]) {
+      let block = state.storeList.get(state.audioTasksQueue.block.blockId);
+      let alignBlock = state.audioTasksQueue.block;
+      let api_url = `${state.API_URL}book/block/${block.blockid}/audio_edit${alignBlock.partIdx === null ? '' : '/part/' + alignBlock.partIdx}`;
+      let data = {
+        audiosrc: preparedData.audiosrc || block.getPartAudiosrc(alignBlock.partIdx || 0, false, false),
+        content: preparedData.content || block.getPartContent(alignBlock.partIdx || 0),//content: this.blockContent(),
+        manual_boundaries: block.getPartManualBoundaries(alignBlock.partIdx || 0),
+        mode: state.mode
+      };
+      if (block.getIsSplittedBlock()) {
+        block.parts[alignBlock.partIdx].isSaving = true;
+      } else {
+        block.isSaving = true;
+      }
+      if (realign) {
+        api_url+= '?realign=true';
+      }
+      return axios.post(api_url, data, {})
+        .then(response => {
+          //return Promise.resolve(response);
+          if (realign) {
+            dispatch('getBookAlign')
+              .then(() => {
+                if (block.getIsSplittedBlock()) {
+                  block.parts[alignBlock.partIdx].isSaving = false;
+                } else {
+                  block.isSaving = false;
+                }
+              });
+          } else {
+            if (block.getIsSplittedBlock()) {
+              block.parts[alignBlock.partIdx].isSaving = false;
+            } else {
+              block.isSaving = false;
+            }
+          }
+          dispatch('getCurrentJobInfo');
+          if (response.status == 200) {
+            if (block.getIsSplittedBlock()) {
+              let part = response.data.parts[alignBlock.partIdx];
+              block.setPartContent(alignBlock.partIdx, part.content);
+              block.setPartAudiosrc(alignBlock.partIdx, part.audiosrc, part.audiosrc_ver);
+              block.setPartManualBoundaries(alignBlock.partIdx, part.manual_boundaries || []);
+              block.setPartAudiosrcOriginal(alignBlock.partIdx, part.audiosrc_original || null);
+              block.isAudioChanged = false;
+              //this.isChanged = false;
+              block.parts[alignBlock.partIdx].isAudioChanged = false;
+              return Promise.resolve(response);
+            } else {
+              //if (this.isCompleted) {
+                //this.tc_loadBookTask();
+              //}
+
+              if (block.status.marked != response.data.status.marked) {
+                block.status.marked = response.data.status.marked;
+              }
+              block.isAudioChanged = false;
+              //this.block.isChanged = false;
+              block.content = response.data.content;
+              block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+              //this.blockAudio.map = response.data.content;
+              //this.blockAudio.src = this.block.getAudiosrc('m4a');
+              //block.isSaving = false;
+              block.manual_boundaries = response.data.manual_boundaries || [];
+              block.audiosrc_original = response.data.audiosrc_original;
+              /*Vue.nextTick(() => {
+                if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
+                  this.block.flags.forEach(f => {
+                    this.updateFlagStatus(f._id);
+                  });
+                  //console.log(this.$refs.blockContent.innerHTML)
+                }
+              })*/
+              //return this.putBlock(this.block);
+              return Promise.resolve(response);
+            }
+          }
+        })
+        .catch(err => {
+          /*this.isSaving = false;
+          this.checkError(err);
+          this.$root.$emit('for-audioeditor:set-process-run', false);
+          this.$root.$emit('set-error-alert', err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Failed to apply your correction. Please try again.');*/
+          return Promise.reject(err)
+        });
     }
   }
 })
