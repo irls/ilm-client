@@ -5232,7 +5232,6 @@ Save text changes and realign the Block?`,
   [data-flag] {
     border-bottom: 2px solid red;
     pointer-events: none;
-    font-size: 23pt; // === font-size in block
     &:before {
       pointer-events: all;
       /*content: "\F024";*/
