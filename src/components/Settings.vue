@@ -128,33 +128,28 @@ export default {
       this.edit = false;
     },
     saveLangList: function(){
-      console.log('send', this.API_URL);
-      let api_url = this.API_URL + '/settings/languages';
-      let api = this.$store.state.auth.getHttp();
-      let self = this;
-      api.post(api_url, {
-        languages: this.languagesList
-      }, {}).then(function(response){
-        console.log('Saved');  
-
-        if (response.status===200) {
-        } else {
+      var result = {};
+      let i = 0;
+      for (i = 0; i < this.languagesList.length; i++){
+        result[this.languagesList[i][0]] = this.languagesList[i][1];
+      }
+      axios.post(this.API_URL + '/settings/languages', {
+        languages: result,
+        params: {
         }
-      }).catch((err) => {
+      })
+        .then((response) => {
+          this.tc_loadBookTask(this.meta._id);
+          this.getCurrentJobInfo();
+        })
+        .catch((err) => {})
 
-      });
     }
-
-
   },
-
   watch: {
-
   }
-                                               
 }
 </script>
-
 
 <style lang="less" scoped>
 
