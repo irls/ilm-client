@@ -30,7 +30,7 @@
             <input type="text" v-show="edit === index" v-model="entry.name" @blur="edit = false" @keyup.enter="edit === false"  style="width: 200px;">
           </td>
           <td >
-            <button type="button" class="btn btn-success" @click="edit === false" v-if="edit === index"><i class="fa fa-pencil"></i></button>
+            <button type="button" class="btn btn-success" @click="edit = false" v-if="edit === index"><i class="fa fa-pencil"></i></button>
             <button type="button" class="btn btn-success" @click="editingLang(index)" v-if="edit !== index" :disabled="edit !== false"><i class="fa fa-pencil" ></i></button>
             <button type="button" class="btn btn-danger"  @click="deleteLang(index)" :disabled="edit !== false"><i class="fa fa-trash" ></i></button>
             <button v-if="index < languagesList.length-1" type="button" class="btn btn-primary" @click="moveLangDown(index)" :disabled="edit !== false"><i class="fa fa-arrow-down" ></i></button>
@@ -52,6 +52,9 @@
 
       </tbody>
     </table>
+    <br/>
+    <button type="button" class="btn btn-success" @click="saveLangList()" >Save changes</button>
+
   </div>
 </template>
 
@@ -123,9 +126,12 @@ export default {
       this.languagesList.splice(index+1, 0, this.languagesList.splice(index, 1)[0]);
       this.langListRefresh();
     },
-    langListRefresh(){
+    langListRefresh: function(){
       this.edit = 0;
       this.edit = false;
+    },
+    saveLangList: function(){
+      
     }
 
 
