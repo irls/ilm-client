@@ -62,13 +62,12 @@
 
 import axios from 'axios'
 import superlogin from 'superlogin-client'
+import api_config from '../mixins/api_config';
 import { Languages }      from "../mixins/lang_config.js"
 import { alert } from 'vue-strap'
 
-const API_ALLUSERS = process.env.ILM_API + '/api/v1/users'
+//const API_ALLUSERS = process.env.ILM_API + '/api/v1/users'
 import Vue from 'vue';
-
-//Vue.use(Vuetable);
 
 export default {
 
@@ -100,22 +99,19 @@ export default {
   created () {
 
   },
-
+  mixins: [api_config],
   methods: {
     focused: function() {
-      console.log('focused')
     },
     editingLang: function(index) {
 	  this.edit = index;
     },
     deleteLang: function(index) {
       Vue.delete(this.languagesList, index);
-      console.log(this.languagesList);
       this.langListRefresh();
     },
     addLang: function() {
       Vue.set(this.languagesList, this.languagesList.length, [this.langNewCode, this.langNewName]);
-      console.log(this.languagesList);
       this.langNewCode = '';
       this.langNewName = '';
     },
@@ -132,7 +128,21 @@ export default {
       this.edit = false;
     },
     saveLangList: function(){
-      console.log('Saving...');  
+      console.log('send', this.API_URL);
+      let api_url = this.API_URL + '/settings/languages';
+      let api = this.$store.state.auth.getHttp();
+      let self = this;
+      api.post(api_url, {
+        languages: this.languagesList
+      }, {}).then(function(response){
+        console.log('Saved');  
+
+        if (response.status===200) {
+        } else {
+        }
+      }).catch((err) => {
+
+      });
     }
 
 
