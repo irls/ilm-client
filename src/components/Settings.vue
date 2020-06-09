@@ -19,15 +19,15 @@
         <tr v-for="(entry, index) in languagesList">
           <td >
             <div v-show="edit !== index" style="width: 200px;">
-              <label > {{ entry.code }}</label>
+              <label > {{ entry[0] }}</label>
             </div>
-            <input type="text" maxlength="2" v-show="edit === index" v-model="entry.code" @blur="edit = false" @keyup.enter="edit === false"  style="width: 200px;">
+            <input type="text" maxlength="2" v-show="edit === index" v-model="entry[0]" @blur="edit = false" @keyup.enter="edit === false"  style="width: 200px;">
           </td>
           <td >
             <div v-show="edit !== index" style="width: 200px;">
-              <label > {{ entry.name }}</label>
+              <label > {{ entry[1] }}</label>
             </div>
-            <input type="text" v-show="edit === index" v-model="entry.name" @blur="edit = false" @keyup.enter="edit === false"  style="width: 200px;">
+            <input type="text" v-show="edit === index" v-model="entry[1]" @blur="edit = false" @keyup.enter="edit === false"  style="width: 200px;">
           </td>
           <td >
             <button type="button" class="btn btn-success" @click="edit = false" v-if="edit === index"><i class="fa fa-pencil"></i></button>
@@ -62,13 +62,12 @@
 
 import axios from 'axios'
 import superlogin from 'superlogin-client'
-import LANGUAGES from '../../static/languages.json';
+import api_config from '../mixins/api_config';
+import { Languages }      from "../mixins/lang_config.js"
 import { alert } from 'vue-strap'
 
-const API_ALLUSERS = process.env.ILM_API + '/api/v1/users'
+//const API_ALLUSERS = process.env.ILM_API + '/api/v1/users'
 import Vue from 'vue';
-
-//Vue.use(Vuetable);
 
 export default {
 
@@ -79,7 +78,8 @@ export default {
 
   data () {
     return {
-      languages: LANGUAGES,
+      //languages: LANGUAGES,
+      languages: Languages,
       edit: false,
       langNewCode: '',
       langNewName: ''
@@ -88,7 +88,7 @@ export default {
 
   computed: {
     languagesList() {
-      return LANGUAGES;
+      return Object.entries(Languages)
     }
   },
   mounted () {
@@ -99,22 +99,19 @@ export default {
   created () {
 
   },
-
+  mixins: [api_config],
   methods: {
     focused: function() {
-      console.log('focused')
     },
     editingLang: function(index) {
 	  this.edit = index;
     },
     deleteLang: function(index) {
       Vue.delete(this.languagesList, index);
-      console.log(this.languagesList);
       this.langListRefresh();
     },
     addLang: function() {
-      Vue.set(this.languagesList, this.languagesList.length, {code:this.langNewCode, name: this.langNewName})
-      console.log(this.languagesList);
+      Vue.set(this.languagesList, this.languagesList.length, [this.langNewCode, this.langNewName]);
       this.langNewCode = '';
       this.langNewName = '';
     },
@@ -131,19 +128,28 @@ export default {
       this.edit = false;
     },
     saveLangList: function(){
-      
+      var result = {};
+      let i = 0;
+      for (i = 0; i < this.languagesList.length; i++){
+        result[this.languagesList[i][0]] = this.languagesList[i][1];
+      }
+      axios.post(this.API_URL + '/settings/languages', {
+        languages: result,
+        params: {
+        }
+      })
+        .then((response) => {
+          this.tc_loadBookTask(this.meta._id);
+          this.getCurrentJobInfo();
+        })
+        .catch((err) => {})
+
     }
-
-
   },
-
   watch: {
-
   }
-                                               
 }
 </script>
-
 
 <style lang="less" scoped>
 
