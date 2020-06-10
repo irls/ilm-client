@@ -2959,6 +2959,7 @@ Save audio changes and realign the Block?`,
               case 'manual_boundaries':
                 task = new Promise((resolve, reject) => {
                   let response = this.evFromAudioeditorWordRealign(...record.options);
+                  response[0] = false;// not needed to reload audio
                   return resolve(response);
                 });
                 break;
