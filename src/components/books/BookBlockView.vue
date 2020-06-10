@@ -3639,7 +3639,7 @@ Save text changes and realign the Block?`,
         }
       },
       audioEditorEventsOn() {
-        this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
+        /*this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
         //this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
         this.$root.$on('from-audioeditor:save', this.evFromAudioeditorSave);
         this.$root.$on('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
@@ -3649,10 +3649,10 @@ Save text changes and realign the Block?`,
         this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
 
         this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
-        this.$root.$on('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
+        this.$root.$on('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);*/
       },
       audioEditorEventsOff() {
-        this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
+        /*this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
         this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
         this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
         this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
@@ -3661,7 +3661,7 @@ Save text changes and realign the Block?`,
         this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
         this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
-        this.$root.$off('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
+        this.$root.$off('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);*/
       },
       //-- } -- end -- Events --//
 
