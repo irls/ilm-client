@@ -60,17 +60,6 @@ import Vue from 'vue'
             coords.y = ev.layerY - offsetY;
 
             this.setMenu(coords.x, coords.y, container);
-            //this.$refs.menu.focus();
-          // TODO what is it for?
-            Vue.nextTick(function() {
-                this.setMenu(coords.x, coords.y, container);
-                let slots = this.$refs.menu.querySelector(`li`);
-                if (slots) $('.medium-editor-toolbar-active').each(
-                function(){
-                  $(this).css('visibility', 'hidden');
-                });
-                //this.$refs.menu.focus();
-            }.bind(this));
         }
     },
     mounted: function() {

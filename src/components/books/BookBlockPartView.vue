@@ -1205,6 +1205,10 @@ export default {
         let offsetX = container.offsetLeft
 
         this.$refs.blockCntx.open(e, container, offsetX);
+        this.$nextTick(() => {
+          //hide medium editor if context menu is active
+          $('.medium-editor-toolbar-active').css('visibility', 'hidden');
+        })
       },
 
 
@@ -3084,10 +3088,10 @@ Save audio changes and realign the Block?`,
         let handler = (id, ref) => {
           if (window.getSelection) {
             //let content = this.range.extractContents();
-            let range = window.getSelection().getRangeAt(0).cloneRange();
+            this.range = window.getSelection().getRangeAt(0).cloneRange();
             //console.log(this.range, window.getSelection(), range)
-            let startElement = this._getParent(range.startContainer, 'w');
-            let endElement = this._getParent(range.endContainer, 'w');
+            let startElement = this._getParent(this.range.startContainer, 'w');
+            let endElement = this._getParent(this.range.endContainer, 'w');
             let startRange = this._getClosestAligned(startElement, 1);
             if (!startRange) {
               startRange = [0, 0];
