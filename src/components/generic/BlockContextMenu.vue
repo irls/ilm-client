@@ -2,7 +2,7 @@
 <ul ref="menu"
     class="click-menu"
     tabindex="-1"
-    v-bind:style="{ visibility: viewMenu?'visible':'hidden', top:top, left:left }"
+    :style="{ visibility: viewMenu?'visible':'hidden', top, left }"
     @click="close">
     <!--@blur="close"-->
     <slot></slot>
@@ -36,31 +36,23 @@ import Vue from 'vue'
             }
             this.left = x + 'px';
             this.top = y + 'px';
-            //this.top = y + window.pageYOffset + 'px';
-            //this.top = y - this.$refs.menu.offsetHeight + 'px';
 
         },
 
-        close: function() {
-            this.viewMenu = false;
-            this.top = 0 + 'px';
-            this.left = 0 + 'px';
-            $('.medium-editor-toolbar').each(function(){
-                $(this).css('visibility', '');
-            });
+        close() {
+           this.viewMenu = false;
         },
 
         open(ev, container = ev.target, offsetX =0, offsetY = 0) {
-           this.$root.$emit('closeBlockContextMenu');
-            this.viewMenu = true;
-
+            this.$root.$emit('closeBlockContextMenu');
             let coords = {};
 
             coords.x = ev.clientX - offsetX;
             coords.y = ev.layerY - offsetY;
 
             this.setMenu(coords.x, coords.y, container);
-        }
+            this.viewMenu = true;
+        },
     },
     mounted: function() {
       this.$root.$on('closeBlockContextMenu', ()=>{
