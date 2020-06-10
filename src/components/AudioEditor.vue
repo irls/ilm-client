@@ -832,18 +832,25 @@
                 })
                   .then((response) => {
                     //console.log(response);
-                    this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
-                      this.setAudioBuffer(buffer);
-                      this.audiosourceEditor.activeTrack.duration = buffer.duration;
-                      this.audiosourceEditor.duration = buffer.duration;
-                      this._setText(text, block);
-                      this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
-                      this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
-                      this.audiosourceEditor.drawRequest();
+                    if (this.audioTasksQueue.time === queue_record.time) {
+                      this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
+                        this.setAudioBuffer(buffer);
+                        this.audiosourceEditor.activeTrack.duration = buffer.duration;
+                        this.audiosourceEditor.duration = buffer.duration;
+                        this._setText(text, block);
+                        this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+                        this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+                        this.audiosourceEditor.drawRequest();
+                        if (replay) {
+                          this.play();
+                        }
+                      });
+                      
+                    } else {
                       if (replay) {
                         this.play();
                       }
-                    });
+                    }
                   })
                   .catch(err => {
                     console.log('ERROR');
