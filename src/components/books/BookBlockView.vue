@@ -1769,6 +1769,7 @@ Save audio changes and realign the Block?`,
                 handler: () => {
                   this.$root.$emit('hide-modal');
                   //let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0), content: this.clearBlockContent()};
+                  this.block.content = this.clearBlockContent();
                   return this.assembleBlockAudioEdit(false, {})
                     .then(() => {
                       return this.assembleBlockProxy(false, true, update_fields, false)

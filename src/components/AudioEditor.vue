@@ -1377,14 +1377,16 @@
           return cut_range;
         },
         setAudioBuffer(new_buffer) {
-          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
-          //console.log(_Playout);
-          //console.log(new _Playout.default(this.audiosourceEditor.ac, new_buffer));
-          //console.log(new _Playout(this.audiosourceEditor.ac, new_buffer));
-          //this.audiosourceEditor.activeTrack.playout.setBuffer(new_buffer);
-          //this.audiosourceEditor.activeTrack.duration = new_buffer.duration;
-          //this.audiosourceEditor.duration = new_buffer.duration;
-          this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
+          if (this.audiosourceEditor && this.audiosourceEditor.activeTrack) {
+            this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+            //console.log(_Playout);
+            //console.log(new _Playout.default(this.audiosourceEditor.ac, new_buffer));
+            //console.log(new _Playout(this.audiosourceEditor.ac, new_buffer));
+            //this.audiosourceEditor.activeTrack.playout.setBuffer(new_buffer);
+            //this.audiosourceEditor.activeTrack.duration = new_buffer.duration;
+            //this.audiosourceEditor.duration = new_buffer.duration;
+            this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
+          }
         },
         addTaskQueue(type, options) {
           let wordMap = [];
