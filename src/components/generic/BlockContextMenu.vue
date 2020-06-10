@@ -75,6 +75,7 @@ import Vue from 'vue'
             $('.medium-editor-toolbar').each(function(){
                 $(this).css('visibility', '');
             });
+            this.$emit('close');
         },
 
         open: function(ev, range, offsetX = 0, offsetY = 0) {

@@ -228,6 +228,7 @@
               :isCompleted="isCompleted"
               :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
               :addToQueueBlockAudioEdit="addToQueueBlockAudioEdit"
+              :splitPointAdded="splitPointAdded"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -953,6 +954,9 @@ export default {
       },
       saveBlockLabel: {
         get() {
+          if (this.changes.indexOf('split_point') !== -1) {
+            return 'Save & Split';
+          }
           return this.needsRealignment ? 'Save & Re-align' : 'Save';
         }
       },
@@ -1889,6 +1893,9 @@ Save audio changes and realign the Block?`,
                     partUpdate['parts'] = this.block.parts;
                     break;
                   case 'manual_boundaries':
+                    partUpdate['content'] = this.block.content;
+                    break;
+                  case 'split_point':
                     partUpdate['content'] = this.block.content;
                     break;
                   default:
@@ -4309,6 +4316,10 @@ Save text changes and realign the Block?`,
           //this.voiceworkChange = false;
           this.voiceworkUpdateType = 'single';
         }
+      },
+      
+      splitPointAdded() {
+        this.pushChange('split_point');
       }
   },
   watch: {

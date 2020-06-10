@@ -3249,6 +3249,16 @@ export const store = new Vuex.Store({
       } else {
         state.audioTasksQueue.time = null;
       }
+    },
+    mergeBlockParts({state, commit}, [blockid, partFrom, partTo]) {
+      return axios.post(`${state.API_URL}books/blocks/${blockid}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
+        .then((response) => {
+          commit('set_storeList', new BookBlock(response.data));
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })
