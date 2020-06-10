@@ -1201,6 +1201,7 @@ export default {
         if (!this.$refs.blockCntx) {
           return;
         }
+        this.range = window.getSelection().getRangeAt(0).cloneRange();
         let container = $(e.target).closest('.-block.-subblock')[0]
         let offsetX = container.offsetLeft
 
