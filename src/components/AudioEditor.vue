@@ -840,18 +840,25 @@
                 })
                   .then((response) => {
                     //console.log(response);
-                    this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
-                      this.setAudioBuffer(buffer);
-                      this.audiosourceEditor.activeTrack.duration = buffer.duration;
-                      this.audiosourceEditor.duration = buffer.duration;
-                      this._setText(text, block);
-                      this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
-                      this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
-                      this.audiosourceEditor.drawRequest();
+                    if (this.audioTasksQueue.time === queue_record.time) {
+                      this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
+                        this.setAudioBuffer(buffer);
+                        this.audiosourceEditor.activeTrack.duration = buffer.duration;
+                        this.audiosourceEditor.duration = buffer.duration;
+                        this._setText(text, block);
+                        this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+                        this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+                        this.audiosourceEditor.drawRequest();
+                        if (replay) {
+                          this.play();
+                        }
+                      });
+                      
+                    } else {
                       if (replay) {
                         this.play();
                       }
-                    });
+                    }
                   })
                   .catch(err => {
                     console.log('ERROR');
@@ -1393,14 +1400,16 @@
           return cut_range;
         },
         setAudioBuffer(new_buffer) {
-          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
-          //console.log(_Playout);
-          //console.log(new _Playout.default(this.audiosourceEditor.ac, new_buffer));
-          //console.log(new _Playout(this.audiosourceEditor.ac, new_buffer));
-          //this.audiosourceEditor.activeTrack.playout.setBuffer(new_buffer);
-          //this.audiosourceEditor.activeTrack.duration = new_buffer.duration;
-          //this.audiosourceEditor.duration = new_buffer.duration;
-          this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
+          if (this.audiosourceEditor && this.audiosourceEditor.activeTrack) {
+            this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+            //console.log(_Playout);
+            //console.log(new _Playout.default(this.audiosourceEditor.ac, new_buffer));
+            //console.log(new _Playout(this.audiosourceEditor.ac, new_buffer));
+            //this.audiosourceEditor.activeTrack.playout.setBuffer(new_buffer);
+            //this.audiosourceEditor.activeTrack.duration = new_buffer.duration;
+            //this.audiosourceEditor.duration = new_buffer.duration;
+            this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
+          }
         },
         addTaskQueue(type, options) {
           let wordMap = [];
