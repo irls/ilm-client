@@ -2062,7 +2062,7 @@ Discard unsaved audio changes?`,
               $(this).css('display', 'none');
           });
           if (this.$refs.waveformContext) {
-            this.$refs.waveformContext.open(e, {}, 0, e.layerY - 80);
+            this.$refs.waveformContext.open(e);
             $('body').one('click', this.$refs.waveformContext.close);
           }
         },

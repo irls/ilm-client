@@ -125,7 +125,7 @@
                   @selectionchange.prevent="onSelect"
                   @input="onInput"
                   @mouseenter="onHover"
-                  @contextmenu.prevent="onContext"
+                  @contextmenu.prevent.stop="onContext"
                   @focusout="onFocusout"
                   @inputSuggestion="onInputSuggestion">
                 </div>
@@ -135,7 +135,7 @@
                     ref="blockDescription"
                     @input="commitDescription($event)"
                     v-html="block.description"
-                    @contextmenu.prevent="onContext">
+                    @contextmenu.prevent.stop="onContext">
                   </div>
                 </div>
                 <!-- <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div> -->
@@ -1197,17 +1197,17 @@ export default {
         $event.target.checked = true;
         this.setRangeSelection('byOne', $event)
       },
-      onContext: function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.range = window.getSelection().getRangeAt(0).cloneRange();
-
-        if (this.$refs.blockCntx) {
-          let narrationShift = ($('.content-scroll-wrapper').outerWidth() - $('.-block.-subblock').outerWidth()) / 2;//shift for specific width
-          this.$refs.blockCntx.open(e, this.range, this.mode === 'narrate' ? narrationShift : 0);
+      onContext(e) {
+        if (!this.$refs.blockCntx) {
+          return;
         }
+        let container = $(e.target).closest('.-block.-subblock')[0]
+        let offsetX = container.offsetLeft
+
+        this.$refs.blockCntx.open(e, container, offsetX);
       },
+
+
       update: function() {
         //console.log('update');
         //this.isChanged = true;
