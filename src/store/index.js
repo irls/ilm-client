@@ -3293,8 +3293,8 @@ export const store = new Vuex.Store({
       let block = state.storeList.get(queueBlock.blockId);
         if (block) {
         if (block.getIsSplittedBlock()) {
-          block.undoPartContent(queueBlock.blockPartIdx);
-          block.undoPartManualBoundaries(queueBlock.blockPartIdx);
+          block.undoPartContent(queueBlock.partIdx);
+          block.undoPartManualBoundaries(queueBlock.partIdx);
           if (state.audioTasksQueue.log.length > 1) {
             //block.undoPartAudiosrc(queueBlock.blockPartIdx);
             let log = state.audioTasksQueue.log[state.audioTasksQueue.log.length - 2];
