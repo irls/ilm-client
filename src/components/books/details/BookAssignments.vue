@@ -4,20 +4,35 @@
     <div v-for="counter in tasks_counter">
       <div class="counters-container">
         <div class="counter-executor">
-          <span v-if="counter.key == 'editor'">
-            <div ><i>Editor:</i> {{counter.data.executor || counter.data.executor_id}}</div>
-            <div style="margin-bottom: 0.5em" v-if="adminOrLibrarian">Change performer: <select v-model="counter.data.executor_id" @change="updateAssignee('editor', counter.data.executor_id)" ><option v-for="user in usersList['editor']" :value="user._id">{{user.name || user._id}} {{user.email}}</option></select></div>
-          </span>
+          <template v-if="counter.key == 'editor'">
+            <div class="performer-info"><i>Editor:</i> {{counter.data.executor || counter.data.executor_id}}</div>
+            <div class="performer-container" v-if="adminOrLibrarian">
+              <div class="performer-caption">Change performer:</div>
+              <div class="performer-select-wrap">
+                <select class="performer-select" v-model="counter.data.executor_id" @change="updateAssignee('editor', counter.data.executor_id)" ><option v-for="user in usersList['editor']" :value="user._id">{{user.name || user._id}} {{user.email}}</option></select>
+              </div>
+            </div>
+          </template>
 
-          <span v-if="counter.key == 'proofer'">
-            <div><i>Proofreader:</i> {{counter.data.executor || counter.data.executor_id}}</div>
-            <div style="margin-bottom: 0.5em" v-if="adminOrLibrarian">Change performer: <select v-model="counter.data.executor_id" @change="updateAssignee('proofer', counter.data.executor_id)"><option v-for="user in usersList['proofer']" :value="user._id">{{user.name || user._id}} {{user.email}}</option></select></div>
-          </span>
+          <template v-if="counter.key == 'proofer'">
+            <div class="performer-info"><i>Proofreader:</i> {{counter.data.executor || counter.data.executor_id}}</div>
+            <div class="performer-container"  v-if="adminOrLibrarian">
+              <div class="performer-caption">Change performer:</div>
+              <div class="performer-select-wrap">
+                <select class="performer-select" v-model="counter.data.executor_id" @change="updateAssignee('proofer', counter.data.executor_id)"><option v-for="user in usersList['proofer']" :value="user._id">{{user.name || user._id}} {{user.email}}</option></select>
+              </div>
+            </div>
+          </template>
 
-          <span v-if="counter.key == 'narrator'">
-            <div><i>Narrator:</i> {{counter.data.executor || counter.data.executor_id}}</div>
-            <div style="margin-bottom: 0.5em" v-if="adminOrLibrarian">Change performer: <select v-model="counter.data.executor_id" @change="updateAssignee('narrator', counter.data.executor_id)"><option v-for="user in usersList['narrator']" :value="user._id">{{user.name || user._id}} {{user.email}}</option></select></div>
-          </span>
+          <template v-if="counter.key == 'narrator'">
+            <div class="performer-info"><i>Narrator:</i> {{counter.data.executor || counter.data.executor_id}}</div>
+            <div class="performer-container"  v-if="adminOrLibrarian">
+              <div class="performer-caption">Change performer:</div>
+              <div class="performer-select-wrap">
+                <select class="performer-select" v-model="counter.data.executor_id" @change="updateAssignee('narrator', counter.data.executor_id)"><option v-for="user in usersList['narrator']" :value="user._id">{{user.name || user._id}} {{user.email}}</option></select>
+              </div>
+            </div>
+          </template>
         </div>
         <table class="counters" v-if="counter.data.tasks.length > 0">
           <thead>
@@ -119,7 +134,7 @@
     },
     mixins: [access, task_controls],
     props: {
-      
+
     },
     components: {
       modal
@@ -145,7 +160,7 @@
         },
         set(value){
           return value
-        } 
+        }
       },
       counterTextCleanup:{
         get() {
@@ -162,7 +177,7 @@
           } catch (e) {
             return null;
           }
-          
+
         }
       },
       startBlockId: {
@@ -342,7 +357,7 @@
                             this.finishTextCleanup();
                           }
                           this.textCleanupProcess = false;
-                          
+
                         } else {
                           this.isBatchProgress = false;
                           this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id);
@@ -367,19 +382,19 @@
 
         if (this.currentBookCounters.not_marked_blocks_missed_audio === 0){
           title = 'Complete the Task';
-          text = 'Approve ' + this.counterTextCleanup + ' block(s) and complete editing?'; 
+          text = 'Approve ' + this.counterTextCleanup + ' block(s) and complete editing?';
           buttons[1].title = 'Complete';
         };
         if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.counterTextCleanup){
           title = 'Unable to complete the Task';
-          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.</br>' + 
-            'In the meantime, you can approve ' + (this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' + 
-            'Approve qualified blocks?';          
+          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.</br>' +
+            'In the meantime, you can approve ' + (this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' +
+            'Approve qualified blocks?';
           buttons[1].title = 'Approve';
         };
         if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks_missed_audio == this.counterTextCleanup){
           title = 'Unable to complete the Task';
-          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";          
+          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";
           buttons = [
             {
               title: 'Ok',
@@ -393,11 +408,11 @@
         };
         if (this.counterTextCleanup === 0){
           title = 'Complete the Task';
-          text = 'Complete editing?'; 
+          text = 'Complete editing?';
           buttons[1].title = 'Complete';
         };
 
-      
+
         this.$root.$emit('show-modal', {
           title: title,
           text: text,
@@ -416,7 +431,7 @@
         editor_tasks = editor_tasks.data.tasks;
         if (editor_tasks !== undefined ) {
           _nmb = editor_tasks.find(element => element.type == 'approve-modified-block').count;
-        } 
+        }
 
         /*let _am = this.currentBookCounters.not_marked_blocks_missed_audio;
         let _uf = this.currentBookCounters.unresolved_flags_blocks;
@@ -427,7 +442,7 @@
         let _nqa = _am;
         let _qa = _nmb - _nqa;
 
-        
+
         //console.log('_nmb, _qa, _nqa, _am, _uf', _nmb, _qa, _nqa, _am, _uf);
 
         let title = '';
@@ -471,8 +486,8 @@
         // 3.3
         if ( _nqa <= 0 ){
           title = 'Approve all Blocks';
-          text = 'Approve ' + _qa + ' block(s)?'; 
-        } 
+          text = 'Approve ' + _qa + ' block(s)?';
+        }
         // 3.1.1
         else if ( _qa > 0 && _am > 0 ) {
           title = 'Unable to Approve all Blocks';
@@ -510,7 +525,7 @@
           buttons[0].title = 'Ok';
           buttons.pop();
         }*/
-      
+
         this.$root.$emit('show-modal', {
           title: title,
           text: text,
@@ -772,7 +787,7 @@
     }
     table.counters {
       border: 1px solid black;
-      width: 94%;
+      width: 100%;
       -webkit-touch-callout: none; /* iOS Safari */
       -webkit-user-select: none; /* Safari */
       -moz-user-select: none; /* Old versions of Firefox */
@@ -870,6 +885,25 @@
     i.fa-angle-right {
       padding: 0px 0px 0px 7px;
     }
+  }
+  .performer-container {
+    width: 100%;
+    display: flex;
+    margin-bottom: 0.5em;
+    .performer-caption {
+      padding-right: 4px;
+    }
+    .performer-select-wrap {
+      flex-grow: 1;
+      max-width: 70%;
+      .performer-select {
+        width: 100%;
+      }
+    }
+  }
+  .performer-info {
+    max-width: 100%;
+    overflow-x: hidden;
   }
 </style>
 <style lang="less">
