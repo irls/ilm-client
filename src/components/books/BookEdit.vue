@@ -2100,7 +2100,13 @@ export default {
             if (this.audioTasksQueue.block.partIdx === null) {
               this.$root.$emit('for-audioeditor:load-silent', log, block.getAudiosrc('m4a'), block.content, true, block);
             } else {
-              this.$root.$emit('for-audioeditor:load-silent', log, block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a'), block.getPartContent(this.audioTasksQueue.block.partIdx), true, block);
+              let _block = block.parts[this.audioTasksQueue.block.partIdx];
+              if (_block) {
+                //_block._id = this.check_id;
+                _block.blockid = block.blockid;
+                _block.partIdx = this.audioTasksQueue.block.partIdx;
+              }
+              this.$root.$emit('for-audioeditor:load-silent', log, block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a'), block.getPartContent(this.audioTasksQueue.block.partIdx), true, _block);
             }
             //setAudioSilent(queue_record, audio, text, saveToHistory = true, block = null) {
           }
