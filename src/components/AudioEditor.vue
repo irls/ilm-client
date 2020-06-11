@@ -1134,6 +1134,9 @@
           let first_list_index        = parseInt(position * original_buffer.sampleRate);
           let second_list_index       = parseInt(first_list_index + range.length);
           let second_list_mem_alloc   = (original_buffer.length - first_list_index);
+          if (second_list_mem_alloc < 0) {
+            second_list_mem_alloc = 0;
+          }
 
           let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, original_buffer.length + parseInt((length) * original_buffer.sampleRate), original_buffer.sampleRate);
             
