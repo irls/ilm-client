@@ -2628,7 +2628,7 @@ Save audio changes and realign the Block?`,
             this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
-            if (this.audioTasksQueue.queue.length === 0) {
+            if (this.audioTasksQueue.log.length === 0) {
               this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
             } else {
               if (this.isSplittedBlock) {
