@@ -81,6 +81,7 @@
   import {mapActions, mapGetters} from 'vuex';
   import LinkBook from './LinkBook';
   import api_config from '../../mixins/api_config';
+  import { Languages }      from "../../mixins/lang_config.js"
   import {modal} from 'vue-strap';
   import CollectionCoverModal from './CollectionCoverModal';
   export default {
@@ -88,16 +89,6 @@
       data() {
         return {
           'collection': {},
-          'languages': {
-            en: 'English',
-            es: 'Spanish',
-            de: 'German',
-            ru: 'Russian',
-            ar: 'Arabic',
-            fs: 'Farsi',
-            zh: 'Chinese',
-            ro: 'Romanian'
-          },
           linkBookModal: false,
           onRemoveMessage: false,
           showCollectionCoverModal: false
@@ -182,6 +173,13 @@
             return this.allowCollectionsEdit && (!this.collection.title || this.collection.title.length == 0);
           }
         },
+        languages() {
+          console.log('languages', Languages);
+          //return Object.entries(Languages)
+          return Languages;
+
+        },
+
         ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'currentCollectionFiles', 'allowPublishCurrentCollection'])
       },
       watch: {

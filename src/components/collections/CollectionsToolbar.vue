@@ -101,12 +101,11 @@
       }
     },
     computed: {
-    languages() {
-      console.log('languages', Languages);
-      //return Object.entries(Languages)
-      return Languages;
+      languages() {
+        //return Object.entries(Languages)
+        return Languages;
 
-    },
+      },
 
       ...mapGetters(['bookCollections', 'collectionsFilter', 'allowCollectionsEdit', 'currentBookMeta', 'adminOrLibrarian'])
     }
