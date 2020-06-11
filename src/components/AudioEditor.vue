@@ -821,6 +821,10 @@
             if (block) {
               this.block.manual_boundaries = block.manual_boundaries || [];
             }
+            if (!audio) {
+              this._setText(text, block);
+              return Promise.resolve();
+            }
             let replay = this.isPlaying;
             let stopPlay = new Promise((resolve, reject) => {
               if (replay) {
