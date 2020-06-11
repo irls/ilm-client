@@ -1789,6 +1789,7 @@ Save audio changes and realign the Block?`,
           this.$refs.blocks.forEach((blk, blkIdx) => {
             this.block.setPartContent(blkIdx, blk.clearBlockContent());
           });
+          this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
         }
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
