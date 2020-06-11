@@ -1194,7 +1194,7 @@ export const store = new Vuex.Store({
         state.liveDB.startWatch(bookid, 'blockV', {bookid: bookid}, (data) => {
           if (data && data.block) {
             //state.storeListO.delBlock(data.block);
-            if (state.audioTasksQueue.blockId && state.audioTasksQueue.blockId.indexOf(data.block.blockid) === 0 && state.audioTasksQueue.blockId.indexOf('-part-') === data.block.blockid.length) {
+            if (state.audioTasksQueue.block.blockId && state.audioTasksQueue.block.blockId === data.block.blockid && state.audioTasksQueue.block.partIdx !== null) {
               let blockStore = state.storeList.get(data.block.blockid);
               if (Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
                 blockStore.parts.forEach((p, i) => {
@@ -2481,7 +2481,7 @@ export const store = new Vuex.Store({
                       //blockStore.content+=' realigned';
                       checks.push(dispatch('getBlock', b._id)
                         .then(block => {
-                          if (state.audioTasksQueue.blockId && state.audioTasksQueue.blockId.indexOf(block.blockid) === 0 && state.audioTasksQueue.blockId.indexOf('-part-') === block.blockid.length) {
+                          if (state.audioTasksQueue.block.blockId && state.audioTasksQueue.block.blockId === block.blockid && state.audioTasksQueue.block.partIdx !== null) {
                             blockStore = state.storeList.get(b._id);
                             if (Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(block.parts) && block.parts.length === blockStore.parts.length) {
                               blockStore.parts.forEach((p, i) => {
