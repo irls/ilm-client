@@ -76,7 +76,7 @@
         </template>
         <div class="audio-controls" v-if="isModifiedComputed && mode == 'block'">
           <button class="btn btn-default" v-if="actionsLog.length" v-on:click="undo()">Undo {{lastActionName}}</button>
-          <button class="btn btn-primary" v-on:click="save()" :disabled="isSaveDisabled">Save</button>
+          <button class="btn btn-primary" v-on:click="save()"  :disabled="isSaveDisabled">Save</button>
           <button class="btn btn-primary" v-on:click="saveAndRealign()" :disabled="isSaveDisabled">Save & Re-align</button>
         </div>
         <div class="audio-controls" v-if="mode == 'file'">
@@ -320,7 +320,7 @@
             if (block._id !== this.blockId) {
               this._clearHistoryLocal();
             }
-            this.setAudioTasksBlockId(block._id);
+            this.setAudioTasksBlockId([block.blockid, block._id, block.partIdx]);
           }
           if (this.audiosourceEditor) {
             this.audiosourceEditor.tracks.forEach(t => {
@@ -821,6 +821,10 @@
             if (block) {
               this.block.manual_boundaries = block.manual_boundaries || [];
             }
+            if (!audio) {
+              this._setText(text, block);
+              return Promise.resolve();
+            }
             let replay = this.isPlaying;
             let stopPlay = new Promise((resolve, reject) => {
               if (replay) {
@@ -840,18 +844,25 @@
                 })
                   .then((response) => {
                     //console.log(response);
-                    this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
-                      this.setAudioBuffer(buffer);
-                      this.audiosourceEditor.activeTrack.duration = buffer.duration;
-                      this.audiosourceEditor.duration = buffer.duration;
-                      this._setText(text, block);
-                      this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
-                      this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
-                      this.audiosourceEditor.drawRequest();
+                    if (this.audioTasksQueue.time === queue_record.time) {
+                      this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
+                        this.setAudioBuffer(buffer);
+                        this.audiosourceEditor.activeTrack.duration = buffer.duration;
+                        this.audiosourceEditor.duration = buffer.duration;
+                        this._setText(text, block);
+                        this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+                        this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+                        this.audiosourceEditor.drawRequest();
+                        if (replay) {
+                          this.play();
+                        }
+                      });
+                      
+                    } else {
                       if (replay) {
                         this.play();
                       }
-                    });
+                    }
                   })
                   .catch(err => {
                     console.log('ERROR');
@@ -1093,7 +1104,6 @@
           //this.audiosourceEditor.drawRequest();
           //this.audiosourceEditor.renderTrackSection();
           
-          this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
           
           this._addHistoryLocal('insert_silence', null, this.cursorPosition, this.cursorPosition + this.silenceLength);
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
@@ -1108,6 +1118,7 @@
           });
           this.fixMap();
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
+          this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
           //this.clearSelection();
           this.isModified = true;
         },
@@ -1144,6 +1155,9 @@
           let first_list_index        = parseInt(position * original_buffer.sampleRate);
           let second_list_index       = parseInt(first_list_index + range.length);
           let second_list_mem_alloc   = (original_buffer.length - first_list_index);
+          if (second_list_mem_alloc < 0) {
+            second_list_mem_alloc = 0;
+          }
 
           let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, original_buffer.length + parseInt((length) * original_buffer.sampleRate), original_buffer.sampleRate);
             
@@ -1331,11 +1345,12 @@
             }
           });
           if (shift > 0) {
+            shift = this._round(shift, 2);
             this.insertRangeAction(this.audiosourceEditor.duration, new Float32Array(shift * this.audiosourceEditor.activeTrack.buffer.sampleRate), shift);
           }
           this.fixMap();
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
-          this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000)]);
+          this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000), shift]);
           this.clearSelection();
           this.isModified = true;
           //this.audiosourceEditor.ee.emit('scroll');
@@ -1393,22 +1408,33 @@
           return cut_range;
         },
         setAudioBuffer(new_buffer) {
-          this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
-          //console.log(_Playout);
-          //console.log(new _Playout.default(this.audiosourceEditor.ac, new_buffer));
-          //console.log(new _Playout(this.audiosourceEditor.ac, new_buffer));
-          //this.audiosourceEditor.activeTrack.playout.setBuffer(new_buffer);
-          //this.audiosourceEditor.activeTrack.duration = new_buffer.duration;
-          //this.audiosourceEditor.duration = new_buffer.duration;
-          this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
+          if (this.audiosourceEditor && this.audiosourceEditor.activeTrack) {
+            this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
+            //console.log(_Playout);
+            //console.log(new _Playout.default(this.audiosourceEditor.ac, new_buffer));
+            //console.log(new _Playout(this.audiosourceEditor.ac, new_buffer));
+            //this.audiosourceEditor.activeTrack.playout.setBuffer(new_buffer);
+            //this.audiosourceEditor.activeTrack.duration = new_buffer.duration;
+            //this.audiosourceEditor.duration = new_buffer.duration;
+            this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
+          }
         },
         addTaskQueue(type, options) {
-          this.addAudioTask([type, options]);
+          let wordMap = [];
+          this.audiosourceEditor.annotationList.annotations.forEach((an, i) => {
+            wordMap.push([Math.round(an.start * 1000), Math.round((an.end - an.start) * 1000)]);
+            //console.log(i, ':', map[i][0], map[i][1]);
+            if (wordMap[i - 1] && wordMap[i - 1][0] + wordMap[i - 1][1] != wordMap[i][0]) {
+              //console.log('FIX MAP', map[i - 1][0] + map[i - 1][1], map[i][0]);
+              wordMap[i][0] = wordMap[i - 1][0] + wordMap[i - 1][1];
+            }
+          });
+          this.addAudioTask([type, options, wordMap]);
           //this._addHistory(this.content, this.audiofile, this.block && this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
           //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
         },
         popTaskQueue() {
-          this.popAudioTask();
+          this.undoTasksQueue();
         },
         erase() {
           let pause;
@@ -1450,15 +1476,14 @@
           //this.undoLocal();
           //return;
           if (this.mode === 'block') {
-            let make_event = this.audioTasksQueue.queue.length === 0;
+            let make_event = !this.audioTasksQueue.running;
             this.popTaskQueue();
-            this.audioTasksQueue.log.pop();
-            let record = this._popHistoryLocal(!make_event);
+            let record = this._popHistoryLocal(true);
             //let record = this._popHistory();
             if (this.actionsLog.length === 0 && this.isHistoryFull) {
               this.isModified = false;
             }
-            if (make_event && record) {
+            if (record) {
               //this.block.manual_boundaries = record.manual_boundaries ? record.manual_boundaries.slice() : [];
               //this.setAudio(record.audio, record.text, false);
               this.$root.$emit('from-audioeditor:undo', this.blockId, record.audio, record.text, this.isModified);
@@ -1773,6 +1798,12 @@ Discard unsaved audio changes?`,
           this.audiosourceEditor.annotationList.annotations.forEach(an => {
             record.annotations.push(Object.assign({}, an));
           });
+          if (type === 'manual_boundaries') {
+            record.annotations.forEach((an, i) => {
+              an.start = record.additional.oldMap[i].start;
+              an.end = record.additional.oldMap[i].end;
+            });
+          }
           this.actionsLog.push(record);
           if (this.actionsLog.length >= 6) {
             this.actionsLog.shift();
@@ -1790,6 +1821,15 @@ Discard unsaved audio changes?`,
           let record = this.actionsLog.pop();
           if (record) {
             this.audiosourceEditor.annotationList.annotations = [...record.annotations];
+            this.words = [];
+            this.audiosourceEditor.annotationList.annotations.forEach((an, i) => {
+              this.words.push({
+                start: an.start,
+                end: an.end,
+                index: i,
+                alignedIndex: i
+              });
+            });
             if (redraw) {
               switch (record.type) {
                 case 'cut':
@@ -1811,10 +1851,19 @@ Discard unsaved audio changes?`,
                         this.audiosourceEditor.annotationList.annotations[sw.index].end = oldMap.end;
                       }
                     });
-                    if (Array.isArray(record.additional.manual_boundaries) && record.additional.manual_boundaries.indexOf(record.additional.shifted[1].start) === -1) {
-                      $($(`.annotation-box`)[record.additional.shifted[1].index]).find(`.resize-handle.resize-w`).removeClass('manual');
+                    $(`.annotation-box`).find(`.resize-handle`).removeClass('manual');
+                    if (Array.isArray(record.additional.manual_boundaries)) {
+                      record.additional.manual_boundaries.forEach(mb => {
+                        this.audiosourceEditor.annotationList.annotations.forEach((an, i) => {
+                          //console.log(mb, an);
+                          if (an.start * 1000 === mb) {
+                            $($(`.annotation-box`)[i]).find(`.resize-handle.resize-w`).addClass('manual');
+                          } else if (an.end * 1000 === mb) {
 
-                      $($(`.annotation-box`)[record.additional.shifted[0].index]).find(`.resize-handle.resize-e`).removeClass('manual');
+                            $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e`).addClass('manual');
+                          }
+                        })
+                      });
                     }
                     //this.audiosourceEditor.renderAnnotations();
                     //this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
@@ -1867,6 +1916,7 @@ Discard unsaved audio changes?`,
           let tokens = [];
           let currentLength = 0;
           text = text.replace(/[\r\n]/img, '');// remove line breaks for clear regular expressions
+          text = $('<textarea/>').html(text).text();// remove html entities
           while((match = textRg.exec(text))) {
             let word = match[2];
             if (currentLength < match.index) {
@@ -2352,20 +2402,21 @@ Discard unsaved audio changes?`,
           shiftedWords.forEach(sw => {
             shiftedOldMap.push(oldMap[sw.index]);
           })
+          let queueBlock = this.audioTasksQueueBlock;
           this._addHistoryLocal('manual_boundaries', null, null, null, {
             shifted: shiftedWords,
             oldMap: shiftedOldMap,
-            manual_boundaries: this.block.manual_boundaries
+            manual_boundaries: queueBlock ? queueBlock.manual_boundaries : []
           });
-          if (this.audioTasksQueue.queue.length > 0) {
+          //if (this.audioTasksQueue.queue.length > 0) {
             //console.log(shiftedWords.slice());
             this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), pinnedIndex, this.blockId]);
-            $($(`.annotation-box`)[shiftedWords[pinnedIndex].index]).find(`.resize-handle.resize-w`).addClass('manual');
+            //$($(`.annotation-box`)[shiftedWords[pinnedIndex].index]).find(`.resize-handle.resize-w`).addClass('manual');
 
-            $($(`.annotation-box`)[shiftedWords[pinnedIndex - 1].index]).find(`.resize-handle.resize-e`).addClass('manual');
-          } else {
-            this.$root.$emit('from-audioeditor:word-realign', shiftedWords, pinnedIndex, this.blockId);
-          }
+            //$($(`.annotation-box`)[shiftedWords[pinnedIndex - 1].index]).find(`.resize-handle.resize-e`).addClass('manual');
+          //} else {
+            //this.$root.$emit('from-audioeditor:word-realign', shiftedWords, pinnedIndex, this.blockId);
+          //}
           this.isModified = true;
           if (this.wordSelectionMode !== false) {
             if (shiftedIndex === this.wordSelectionMode ||
@@ -2489,7 +2540,7 @@ Revert to original block audio?`,
             this.$root.$emit('from-audioeditor:select', this.blockId, list);
           }
         },
-        ...mapActions(['addAudioTask', 'popAudioTask', 'setAudioTasksBlockId'])
+        ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId'])
 
       },
       computed: {
@@ -2660,7 +2711,7 @@ Revert to original block audio?`,
         },
         isSaveDisabled: {
           get() {
-            if (this.audioTasksQueue.queue.length > 0 || this.audioTasksQueue.running) {
+            if (this.audioTasksQueue.running) {
               return true;
             } else {
               return false;
@@ -2675,7 +2726,8 @@ Revert to original block audio?`,
           hasLocks: 'hasLocks',
           currentAudiobook: 'currentAudiobook', 
           storeListO: 'storeListO',
-          audioTasksQueue: 'audioTasksQueue'})
+          audioTasksQueue: 'audioTasksQueue', 
+          audioTasksQueueBlock: 'audioTasksQueueBlock'})
       },
       watch: {
         'cursorPosition': {
