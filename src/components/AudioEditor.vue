@@ -1323,10 +1323,11 @@
             }
           });
           if (shift > 0) {
+            shift = this._round(shift, 2);
             this.insertRangeAction(this.audiosourceEditor.duration, new Float32Array(shift * this.audiosourceEditor.activeTrack.buffer.sampleRate), shift);
           }
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
-          this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000)]);
+          this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000), shift]);
           this.clearSelection();
           this.isModified = true;
           //this.audiosourceEditor.ee.emit('scroll');
