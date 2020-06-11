@@ -41,22 +41,13 @@
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
   import {mapGetters} from 'vuex';
+  import { Languages }      from "../../mixins/lang_config.js"
   import Vue from 'vue';
   export default {
     name: 'CollectionsToolbar',
     data() {
       return {
-        languages: {
-          '' : '',
-          en: 'English',
-          es: 'Spanish',
-          de: 'German',
-          ru: 'Russian',
-          ar: 'Arabic',
-          fs: 'Farsi',
-          zh: 'Chinese',
-          ro: 'Romanian'
-        }/*,
+        /*,
         metaVisible: false*/
       };
     },
@@ -64,7 +55,7 @@
       'hasItemSelected', 'metaVisible', 'hasBookSelected'
     ],
     mounted() {
-
+       9
     },
     methods: {
       collectionCount() {
@@ -110,6 +101,12 @@
       }
     },
     computed: {
+    languages() {
+      console.log('languages', Languages);
+      //return Object.entries(Languages)
+      return Languages;
+
+    },
 
       ...mapGetters(['bookCollections', 'collectionsFilter', 'allowCollectionsEdit', 'currentBookMeta', 'adminOrLibrarian'])
     }
