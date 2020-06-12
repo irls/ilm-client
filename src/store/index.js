@@ -3230,7 +3230,7 @@ export const store = new Vuex.Store({
         state.audioTasksQueue.running = null;
         state.audioTasksQueue.block.blockId = blockId;
         state.audioTasksQueue.block.checkId = checkId;
-        state.audioTasksQueue.block.partIdx = partIdx;
+        state.audioTasksQueue.block.partIdx = typeof partIdx === 'undefined' ? null : partIdx;
       }
     },
     addAudioTask({state, dispatch, commit}, [type, options, wordMap]) {

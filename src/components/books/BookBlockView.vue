@@ -1711,6 +1711,8 @@ export default {
                 this.block.setPartAudiosrc(partIdx, part.audiosrc, part.audiosrc_ver);
                 this.block.setPartManualBoundaries(partIdx, part.manual_boundaries || []);
                 part._id = check_id;
+                part.blockid = this.block.blockid;
+                part.partIdx = partIdx;
                 if (reload) {
                   this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(partIdx, 'm4a'), this.block.getPartContent(partIdx), true, part);
                 }
@@ -3469,10 +3471,12 @@ Save text changes and realign the Block?`,
         /*if (blockId == this.check_id) {
           Vue.nextTick(() => {
           $('nav.fixed-bottom').removeClass('hidden');
+          let lockedType = false;
           if (this.isLocked) {
-            this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
-          } else if (this.$parent.isLocked) {
-            this.$root.$emit('for-audioeditor:set-process-run', true, this.$parent.lockedType);
+            lockedType = this.lockedType;
+          }
+          if (lockedType && lockedType !== 'audio-positioning' && lockedType !== 'save') {
+            this.$root.$emit('for-audioeditor:set-process-run', true, lockedType);
           }
           });
         }*/
