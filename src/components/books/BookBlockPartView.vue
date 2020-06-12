@@ -385,20 +385,23 @@ export default {
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit'],
   mixins: [taskControls, apiConfig, access],
   computed: {
-      isLocked: function () {
-        if (!this.isSplittedBlock) {
-          return false;
-        }
-        if (this.isSaving) {
-          return true;
-        }
-        if (this.isUpdating) {
-          return true;
-        }
-        if (this.audioTasksQueue.block.blockId === this.block.blockid && this.blockPartIdx === this.audioTasksQueue.block.partIdx && this.audioTasksQueue.running) {
-          return true;
-        }
-        return this.block ? this.isBlockLocked(this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null) : false;
+      isLocked: {
+        get () {
+          if (!this.isSplittedBlock) {
+            return false;
+          }
+          if (this.isSaving) {
+            return true;
+          }
+          if (this.isUpdating) {
+            return true;
+          }
+          if (this.audioTasksQueue.block.blockId === this.block.blockid && this.blockPartIdx === this.audioTasksQueue.block.partIdx && this.audioTasksQueue.running) {
+            return true;
+          }
+          return this.block ? this.isBlockLocked(this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null) : false;
+        },
+        cache: false
       },
       hasLock: {
         get() {
