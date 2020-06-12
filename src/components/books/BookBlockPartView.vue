@@ -2576,7 +2576,7 @@ Save audio changes and realign the Block?`,
           } else if (this.$parent.isLocked) {
             lockedType = this.$parent.lockedType;
           }
-          if (lockedType && lockedType !== 'audio-positioning') {
+          if (lockedType && lockedType !== 'audio-positioning' && lockedType !== 'save') {
             this.$root.$emit('for-audioeditor:set-process-run', true, lockedType);
           }
           });
