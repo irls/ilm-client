@@ -3684,7 +3684,7 @@ Save text changes and realign the Block?`,
         if (!this.isSplittedBlock) {
           this.splitPointAdded();
         } else {
-          this.pushChange('split_position');
+          this.pushChange('split_point');
           this.isChanged = true;
         }
       },
