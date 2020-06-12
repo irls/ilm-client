@@ -2559,7 +2559,7 @@ Save audio changes and realign the Block?`,
 
       },
       evFromAudioeditorBlockLoaded(blockId) {
-        if (blockId == this.check_id) {
+        /*if (blockId == this.check_id) {
           Vue.nextTick(() => {
           $('nav.fixed-bottom').removeClass('hidden');
           let lockedType = false;
@@ -2572,7 +2572,7 @@ Save audio changes and realign the Block?`,
             this.$root.$emit('for-audioeditor:set-process-run', true, lockedType);
           }
           });
-        }
+        }*/
       },
       evFromAudioeditorWordRealign(map, pinnedIndex, blockId) {
         let response_params = null;
