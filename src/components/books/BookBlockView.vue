@@ -3468,12 +3468,14 @@ Save text changes and realign the Block?`,
       },
       evFromAudioeditorBlockLoaded(blockId) {
         if (blockId == this.check_id) {
+          Vue.nextTick(() => {
           $('nav.fixed-bottom').removeClass('hidden');
           if (this.isLocked) {
             this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
           } else if (this.$parent.isLocked) {
             this.$root.$emit('for-audioeditor:set-process-run', true, this.$parent.lockedType);
           }
+          });
         }
       },
       evFromAudioeditorWordRealign(map, blockId) {
