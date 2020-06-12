@@ -126,7 +126,7 @@
                   @selectionchange.prevent="onSelect"
                   @input="onInput"
                   @mouseenter="onHover"
-                  @contextmenu.prevent="onContext"
+                  @contextmenu.prevent.stop="onContext"
                   @focusout="onFocusout"
                   @inputSuggestion="onInputSuggestion">
                 </div>
@@ -136,7 +136,7 @@
                     ref="blockDescription"
                     @input="commitDescription($event)"
                     v-html="block.description"
-                    @contextmenu.prevent="onContext">
+                    @contextmenu.prevent.stop="onContext">
                   </div>
                 </div>
                 <!-- <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div> -->
@@ -1239,17 +1239,22 @@ export default {
         $event.target.checked = true;
         this.setRangeSelection('byOne', $event)
       },
-      onContext: function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.range = window.getSelection().getRangeAt(0).cloneRange();
-
-        if (this.$refs.blockCntx) {
-          let narrationShift = ($('.content-scroll-wrapper').outerWidth() - $('.-block.-subblock').outerWidth()) / 2;//shift for specific width
-          this.$refs.blockCntx.open(e, this.range, this.mode === 'narrate' ? narrationShift : 0);
+      onContext(e) {
+        if (!this.$refs.blockCntx) {
+          return;
         }
+        this.range = window.getSelection().getRangeAt(0).cloneRange();
+        let container = $(e.target).closest('.-block.-subblock')[0]
+        let offsetX = container.offsetLeft
+
+        this.$refs.blockCntx.open(e, container, offsetX);
+        this.$nextTick(() => {
+          //hide medium editor if context menu is active
+          $('.medium-editor-toolbar-active').css('visibility', 'hidden');
+        })
       },
+
+
       update: function() {
         //console.log('update');
         //this.isChanged = true;
@@ -3215,10 +3220,10 @@ Save audio changes and realign the Block?`,
         let handler = (id, ref) => {
           if (window.getSelection) {
             //let content = this.range.extractContents();
-            let range = window.getSelection().getRangeAt(0).cloneRange();
+            this.range = window.getSelection().getRangeAt(0).cloneRange();
             //console.log(this.range, window.getSelection(), range)
-            let startElement = this._getParent(range.startContainer, 'w');
-            let endElement = this._getParent(range.endContainer, 'w');
+            let startElement = this._getParent(this.range.startContainer, 'w');
+            let endElement = this._getParent(this.range.endContainer, 'w');
             let startRange = this._getClosestAligned(startElement, 1);
             if (!startRange) {
               startRange = [0, 0];
