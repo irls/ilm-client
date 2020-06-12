@@ -134,6 +134,7 @@
                   <td>Language</td>
                   <td>
                     <select class="form-control" v-model='currentBook.language' @change="change('language')" :key="currentBookid" :disabled="!allowMetadataEdit || currentBookMeta.collection_id">
+                      <option v-if="!languages.hasOwnProperty(currentBook.language)" :value="currentBook.language">{{ currentBook.language }}</option>
                       <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
                     </select>
                   </td>
