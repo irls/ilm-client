@@ -2875,21 +2875,23 @@ Save audio changes and realign the Block?`,
 
                   let manual_boundaries = [];
                   record.wordMap.forEach((m, i) => {
-                    let cMap = w_maps[i].getAttribute('data-map');
-                    if (cMap) {
-                      cMap = cMap.split(',');
-                      cMap[0] = parseInt(cMap[0]);
-                      cMap[1] = parseInt(cMap[1]);
-                      if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
-                        if (!(record.type === 'cut' && record.options[0] < cMap[0] && record.options[1] > cMap[0])) {
-                          manual_boundaries.push(m[0]);
+                    if (w_maps[i]) {
+                      let cMap = w_maps[i].getAttribute('data-map');
+                      if (cMap) {
+                        cMap = cMap.split(',');
+                        cMap[0] = parseInt(cMap[0]);
+                        cMap[1] = parseInt(cMap[1]);
+                        if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
+                          if (!(record.type === 'cut' && record.options[0] < cMap[0] && record.options[1] > cMap[0])) {
+                            manual_boundaries.push(m[0]);
+                          }
+                          current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
                         }
-                        current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
                       }
-                    }
-                    w_maps[i].setAttribute('data-map', m.join(','));
-                    if (m[1] > 50) {
-                      w_maps[i].classList.remove('alignment-changed');
+                      w_maps[i].setAttribute('data-map', m.join(','));
+                      if (m[1] > 50) {
+                        w_maps[i].classList.remove('alignment-changed');
+                      }
                     }
                   });
                   current_boundaries.forEach(_m => {
