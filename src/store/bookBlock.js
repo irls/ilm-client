@@ -290,6 +290,7 @@ class BookBlock {
     this.isAudioChanged = init.isAudioChanged || false;
     this.isIllustrationChanged = init.isIllustrationChanged || false;
     this.timestamp = new Date().toJSON();
+    this.isSaving = init.isSaving || false;
 
     //     this.checkedStart = init.checkedStart || false;
     //     this.checkedEnd = init.checkedEnd || false;
@@ -959,6 +960,14 @@ class BookBlock {
       return p.isAudioChanged === true;
     });
     return part ? true : false;
+  }
+  
+  getIsSplittedBlock() {
+    //Vue.prototype.globalJobInfo.id
+    if (this.voicework === 'narration' && !Vue.prototype.globalJobInfo.text_cleanup && Array.isArray(this.parts) && this.parts.length > 1 && !(Vue.prototype.globalJobInfo.mastering || Vue.prototype.globalJobInfo.mastering_complete)) {
+      return true;
+    }
+    return false;
   }
 }
 

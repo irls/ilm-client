@@ -2,7 +2,7 @@
 <ul ref="menu"
     class="click-menu"
     tabindex="-1"
-    v-bind:style="{ visibility: viewMenu?'visible':'hidden', top:top, left:left }"
+    :style="{ visibility: viewMenu?'visible':'hidden', top, left }"
     @click="close">
     <!--@blur="close"-->
     <slot></slot>
@@ -12,7 +12,6 @@
 </template>
 
 <script>
-import Vue from 'vue'
 
   export default {
     name: 'block-context-menu',
@@ -27,84 +26,31 @@ import Vue from 'vue'
         }
      },
     methods: {
-        setMenu: function(x, y, target) {
-
-            let dir = this.$refs.menu.getAttribute('dir') || 'top';
-            x+= 2;
-            if (x + $(this.$refs.menu).outerWidth() > $('.content-scroll-wrapper').outerWidth()) {
-              x = $('.content-scroll-wrapper').outerWidth() - $(this.$refs.menu).outerWidth() - 10;
+        setMenu(x, y, container) {
+          let menuWidth = this.$refs.menu.offsetWidth;
+          let containerWidth = container.offsetWidth;
+            if (x + menuWidth > containerWidth) {
+              //show menu on the left-bottom of cursor position
+              x = x - menuWidth;
             }
             this.left = x + 'px';
             this.top = y + 'px';
-            //this.top = y + window.pageYOffset + 'px';
-            //this.top = y - this.$refs.menu.offsetHeight + 'px';
-
         },
 
-        getSelectionCoords: function() {
-          let sel = document.selection, range;
-          let x = 0, y = 0, width = 0, height = 0;
-          if (sel) {
-              if (sel.type != "Control") {
-                  range = sel.createRange();
-                  x = range.boundingLeft;
-                  y = range.boundingTop;
-                  width = range.boundingWidth;
-                  height = range.boundingHeight;
-              }
-          } else if (window.getSelection) {
-              sel = window.getSelection();
-              if (sel.rangeCount) {
-                  range = sel.getRangeAt(0).cloneRange();
-                  if (range.getBoundingClientRect) {
-                      let rect = range.getBoundingClientRect();
-                      x = rect.left;
-                      y = rect.top;
-                      width = rect.right - rect.left;
-                      height = rect.bottom - rect.top;
-                  }
-              }
-          }
-          return { x: x, y: y, width: width, height: height };
+        close() {
+           this.viewMenu = false;
         },
 
-        close: function() {
-            this.viewMenu = false;
-            this.top = 0 + 'px';
-            this.left = 0 + 'px';
-            $('.medium-editor-toolbar').each(function(){
-                $(this).css('visibility', '');
-            });
-        },
-
-        open: function(ev, range, offsetX = 0, offsetY = 0) {
-            ev.preventDefault();
+        open(ev, container = ev.target, offsetX =0, offsetY = 0) {
             this.$root.$emit('closeBlockContextMenu');
             let coords = {};
-            if (range.collapsed == true) {
-              coords = this.getSelectionCoords();
-              coords.x = coords.x + coords.width;
-            } else {
-              coords = {
-                x: ev.clientX - offsetX,
-                y: ev.clientY - offsetY
-              }
-            }
+
+            coords.x = ev.clientX - offsetX;
             coords.y = ev.layerY - offsetY;
 
+            this.setMenu(coords.x, coords.y, container);
             this.viewMenu = true;
-            this.setMenu(coords.x, coords.y, ev.target);
-            //this.$refs.menu.focus();
-            Vue.nextTick(function() {
-                this.setMenu(coords.x, coords.y, ev.target);
-                let slots = this.$refs.menu.querySelector(`li`);
-                if (slots) $('.medium-editor-toolbar-active').each(
-                function(){
-                  $(this).css('visibility', 'hidden');
-                });
-                //this.$refs.menu.focus();
-            }.bind(this));
-        }
+        },
     },
     mounted: function() {
       this.$root.$on('closeBlockContextMenu', ()=>{
