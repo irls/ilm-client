@@ -853,13 +853,13 @@
                         this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
                         this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
                         this.audiosourceEditor.drawRequest();
-                        if (replay) {
+                        if (replay && (this.audiosourceEditor.pausedAt || this.cursorPosition)) {
                           this.play();
                         }
                       });
                       
                     } else {
-                      if (replay) {
+                      if (replay && (this.audiosourceEditor.pausedAt || this.cursorPosition)) {
                         this.play();
                       }
                     }
@@ -873,7 +873,7 @@
         },
         play(cursorPosition) {
           if (typeof cursorPosition === 'undefined') {
-            if (this.cursorPosition !== false) {
+            if (this.cursorPosition !== false && !isNaN(this.cursorPosition)) {
               cursorPosition = this.cursorPosition;
             } else if (!this.selection.start && this.selection.start !== 0 && this.mode === 'block') {
               //this.cursorPosition = 0;

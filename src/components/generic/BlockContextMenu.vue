@@ -12,7 +12,6 @@
 </template>
 
 <script>
-import Vue from 'vue'
 
   export default {
     name: 'block-context-menu',
@@ -38,7 +37,6 @@ import Vue from 'vue'
             }
             this.left = x + 'px';
             this.top = y + 'px';
-
         },
 
         close() {
