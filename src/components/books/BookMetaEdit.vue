@@ -903,6 +903,17 @@ export default {
 
     change (key) {
       this.liveUpdate(key, this.currentBook[key])
+      //if changed language let's refresh the page for update default block & footnote language.
+
+      if (key == 'language'){
+        this.reloadBook()
+        .then(() => {
+          this.$root.$emit('book-reimported');
+          this.isBatchProgress = false;
+        })
+      }
+
+
     },
 
     update: _.debounce(function (key, event) {
@@ -1669,7 +1680,7 @@ export default {
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook'])
   }
 }
 
