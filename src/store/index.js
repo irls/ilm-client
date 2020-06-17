@@ -3228,7 +3228,7 @@ export const store = new Vuex.Store({
         state.audioTasksQueue.running = null;
         state.audioTasksQueue.block.blockId = blockId;
         state.audioTasksQueue.block.checkId = checkId;
-        state.audioTasksQueue.block.partIdx = partIdx;
+        state.audioTasksQueue.block.partIdx = typeof partIdx === 'undefined' ? null : partIdx;
       }
     },
     addAudioTask({state, dispatch, commit}, [type, options, wordMap]) {
@@ -3409,7 +3409,7 @@ export const store = new Vuex.Store({
         audiosrc: preparedData.audiosrc || block.getPartAudiosrc(alignBlock.partIdx || 0, false, false),
         content: preparedData.content || block.getPartContent(alignBlock.partIdx || 0),//content: this.blockContent(),
         manual_boundaries: block.getPartManualBoundaries(alignBlock.partIdx || 0),
-        mode: state.mode
+        mode: state.bookMode
       };
       if (block.getIsSplittedBlock()) {
         block.parts[alignBlock.partIdx].isSaving = true;

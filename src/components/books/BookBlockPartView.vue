@@ -385,20 +385,23 @@ export default {
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit'],
   mixins: [taskControls, apiConfig, access],
   computed: {
-      isLocked: function () {
-        if (!this.isSplittedBlock) {
-          return false;
-        }
-        if (this.isSaving) {
-          return true;
-        }
-        if (this.isUpdating) {
-          return true;
-        }
-        if (this.audioTasksQueue.block.blockId === this.block.blockid && this.blockPartIdx === this.audioTasksQueue.block.partIdx && this.audioTasksQueue.running) {
-          return true;
-        }
-        return this.block ? this.isBlockLocked(this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null) : false;
+      isLocked: {
+        get () {
+          if (!this.isSplittedBlock) {
+            return false;
+          }
+          if (this.isSaving) {
+            return true;
+          }
+          if (this.isUpdating) {
+            return true;
+          }
+          if (this.audioTasksQueue.block.blockId === this.block.blockid && this.blockPartIdx === this.audioTasksQueue.block.partIdx && this.audioTasksQueue.running) {
+            return true;
+          }
+          return this.block ? this.isBlockLocked(this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null) : false;
+        },
+        cache: false
       },
       hasLock: {
         get() {
@@ -2568,6 +2571,7 @@ Save audio changes and realign the Block?`,
       },
       evFromAudioeditorBlockLoaded(blockId) {
         if (blockId == this.check_id) {
+          Vue.nextTick(() => {
           $('nav.fixed-bottom').removeClass('hidden');
           let lockedType = false;
           if (this.isLocked) {
@@ -2575,9 +2579,10 @@ Save audio changes and realign the Block?`,
           } else if (this.$parent.isLocked) {
             lockedType = this.$parent.lockedType;
           }
-          if (lockedType && lockedType !== 'audio-positioning') {
+          if (lockedType && lockedType !== 'audio-positioning' && lockedType !== 'save') {
             this.$root.$emit('for-audioeditor:set-process-run', true, lockedType);
           }
+          });
         }
       },
       evFromAudioeditorWordRealign(map, pinnedIndex, blockId) {
@@ -2870,21 +2875,23 @@ Save audio changes and realign the Block?`,
 
                   let manual_boundaries = [];
                   record.wordMap.forEach((m, i) => {
-                    let cMap = w_maps[i].getAttribute('data-map');
-                    if (cMap) {
-                      cMap = cMap.split(',');
-                      cMap[0] = parseInt(cMap[0]);
-                      cMap[1] = parseInt(cMap[1]);
-                      if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
-                        if (!(record.type === 'cut' && record.options[0] < cMap[0] && record.options[1] > cMap[0])) {
-                          manual_boundaries.push(m[0]);
+                    if (w_maps[i]) {
+                      let cMap = w_maps[i].getAttribute('data-map');
+                      if (cMap) {
+                        cMap = cMap.split(',');
+                        cMap[0] = parseInt(cMap[0]);
+                        cMap[1] = parseInt(cMap[1]);
+                        if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
+                          if (!(record.type === 'cut' && record.options[0] < cMap[0] && record.options[1] > cMap[0])) {
+                            manual_boundaries.push(m[0]);
+                          }
+                          current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
                         }
-                        current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
                       }
-                    }
-                    w_maps[i].setAttribute('data-map', m.join(','));
-                    if (m[1] > 50) {
-                      w_maps[i].classList.remove('alignment-changed');
+                      w_maps[i].setAttribute('data-map', m.join(','));
+                      if (m[1] > 50) {
+                        w_maps[i].classList.remove('alignment-changed');
+                      }
                     }
                   });
                   current_boundaries.forEach(_m => {

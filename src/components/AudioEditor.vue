@@ -1856,13 +1856,23 @@ Discard unsaved audio changes?`,
                       record.additional.manual_boundaries.forEach(mb => {
                         this.audiosourceEditor.annotationList.annotations.forEach((an, i) => {
                           //console.log(mb, an);
-                          if (an.start * 1000 === mb) {
+                          let position = this._round(parseInt(mb) / 1000, 2);
+                          if (Math.abs(an.start - position) <= 0.02) {
                             $($(`.annotation-box`)[i]).find(`.resize-handle.resize-w`).addClass('manual');
-                          } else if (an.end * 1000 === mb) {
+                          } else if (Math.abs(an.end - position) <= 0.02) {
 
                             $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e`).addClass('manual');
                           }
                         })
+                        /*let position = this._round(parseInt(mb) / 1000, 2);
+                        self.audiosourceEditor.annotationList.annotations.forEach((al, index) => {
+                          if (Math.abs(al.start - position) <= 0.02) {
+                            $(`.annotation-box[data-index="${index}"] .resize-handle.resize-w`).addClass('manual');
+                          }
+                          if (Math.abs(al.end - position) <= 0.02) {
+                            $(`.annotation-box[data-index="${index}"] .resize-handle.resize-e`).addClass('manual');
+                          }
+                        });*/
                       });
                     }
                     //this.audiosourceEditor.renderAnnotations();
