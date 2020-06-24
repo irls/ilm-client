@@ -1388,6 +1388,7 @@ Save audio changes and realign the Block?`,
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isSaving = true;
+        this.$forceUpdate();
         let reloadParent = this.hasChange('split_point');
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
@@ -1535,6 +1536,7 @@ Save audio changes and realign the Block?`,
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isSaving = true;
+        this.$forceUpdate();
         let refreshTasks = this.isCompleted;
         let reloadParent = this.hasChange('split_point');
         return this.putBlockNarrate([Object.assign(this.blockPart, {
@@ -3686,7 +3688,7 @@ Save text changes and realign the Block?`,
       },
       handlePinClick(e) {
         if (this.$refs.splitPinCntx && e.target) {
-          console.log(`OFFSET: ${-1 * e.target.offsetTop}, ${-1 * e.originalEvent.target.offsetTop}`)
+          //console.log(`OFFSET: ${-1 * e.target.offsetTop}, ${-1 * e.originalEvent.target.offsetTop}`)
           this.$refs.splitPinCntx.open(e.originalEvent, this.range, /*this.mode === 'narrate' ? narrationShift : */0, -1 * e.target.offsetTop);
           this.splitPinSelection = e.target;
         }
@@ -3726,6 +3728,7 @@ Save text changes and realign the Block?`,
           });
         } else {
           this.$parent.isSaving = true;
+          this.$parent.$forceUpdate();this.$parent.$forceUpdate();
           return this.mergeBlockParts([this.block.blockid, this.blockPartIdx, this.blockPartIdx + 1])
             .then(() => {
               this.$parent.isSaving = false;
@@ -3733,6 +3736,7 @@ Save text changes and realign the Block?`,
                 this.tc_loadBookTask(this.block.bookid);
                 this.getCurrentJobInfo();
               }*/
+              this.$parent.$parent.refreshTmpl();
               return Promise.resolve();
             });
         }
