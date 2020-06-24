@@ -1947,8 +1947,12 @@ Save audio changes and realign the Block?`,
             } else {
               updateTask = this.assembleBlockPart(partUpdate, realign);
             }
+            let reloadParent = this.hasChange('split_point');
             return updateTask
               .then(() => {
+                if (reloadParent) {
+                  this.$parent.refreshTmpl();
+                }
                 return Promise.resolve();
               });
           }
