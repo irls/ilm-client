@@ -849,7 +849,7 @@ export default {
       },
       isSaving: {
         get() {
-          if (this.isSplittedBlock) {
+          if (this.isSplittedBlock && this.block.parts[this.blockPartIdx]) {
             return this.block.parts[this.blockPartIdx].isSaving;
           }
           return false;
