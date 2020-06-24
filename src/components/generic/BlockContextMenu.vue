@@ -41,6 +41,7 @@
 
         close() {
            this.viewMenu = false;
+            this.$emit('close');
         },
 
         open(ev, container = ev.target, offsetX =0, offsetY = 0) {

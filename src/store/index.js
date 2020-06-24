@@ -1893,6 +1893,7 @@ export const store = new Vuex.Store({
       }
       return axios.put(url, update)
         .then((response) => {
+          commit('set_storeList', new BookBlock(response.data));
           return dispatch('getBookAlign')
             .then(() => {
               commit('clear_blocker', 'putBlock');
@@ -3013,13 +3014,14 @@ export const store = new Vuex.Store({
           return Promise.reject();
         });
     },
-    updateBlockPart({state, dispatch}, [id, update, blockIdx, realign]) {
+    updateBlockPart({state, dispatch, commit}, [id, update, blockIdx, realign]) {
       let url = `books/blocks/${encodeURIComponent(id)}/part/${blockIdx}`;
       if (realign) {
         url+= '?realign=true';
       }
       return axios.put(state.API_URL + url, update)
         .then((response) => {
+          commit('set_storeList', new BookBlock(response.data));
           return Promise.all([dispatch('getBookAlign'), dispatch('getCurrentJobInfo')])
             .then(() => {
               return Promise.resolve(response);
@@ -3486,6 +3488,17 @@ export const store = new Vuex.Store({
           this.$root.$emit('for-audioeditor:set-process-run', false);
           this.$root.$emit('set-error-alert', err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Failed to apply your correction. Please try again.');*/
           return Promise.reject(err)
+        });
+    },
+
+    mergeBlockParts({state, commit}, [blockid, partFrom, partTo]) {
+      return axios.post(`${state.API_URL}books/blocks/${blockid}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
+        .then((response) => {
+          commit('set_storeList', new BookBlock(response.data));
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          return Promise.reject(err);
         });
     }
   }

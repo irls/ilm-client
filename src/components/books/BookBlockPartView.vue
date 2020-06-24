@@ -258,8 +258,18 @@
                     <li @click="audPlayFromSelection()">Play from here</li>
                     <li @click="audPlaySelection()">Play selection</li>
                   </template>
+                  <template v-if="isSplitPointAllowed()">
+                    <li class="separator"></li>
+                    <li @click="setSplitPoint($event)">Set split point</li>
+                  </template>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
+                <split-pin-cntx-menu
+                  ref="splitPinCntx"
+                  dir="bottom"
+                  @close="splitPinCntxClose">
+                  <li @click="delSplitPoint">Delete split point</li>
+                </split-pin-cntx-menu>
               </div>
             </div>
             <!--<div class="table-row ilm-block">-->
@@ -271,6 +281,10 @@
   <div class="table-body">
     <div class="table-row controls-bottom" v-if="isSplittedBlock">
       <div class="controls-bottom-wrapper">
+        <div class="par-ctrl -hidden -left" v-if="blockPartIdx < block.parts.length - 1">
+          <div class="merge-subblocks" @click="mergeSubblocks()"></div>
+          <!-- <object type="image/svg+xml" data="/static/merge-blocks.svg" style="width: 25px; height: 25px;"></object> -->
+        </div>
         <div class="par-ctrl -hidden -right">
           <div class="save-block -right" @click="discardBlock"
                v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing || isLocked}">
@@ -373,6 +387,7 @@ export default {
       check_id: null,
       footnoteIdx: null,
       //isSaving: false
+      splitPinSelection: null
     }
   },
   components: {
@@ -381,8 +396,9 @@ export default {
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
       //'modal': modal,
+      'split-pin-cntx-menu': BlockContextMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -642,6 +658,9 @@ export default {
       },
       saveBlockLabel: {
         get() {
+          if (this.changes.indexOf('split_point') !== -1) {
+            return 'Save & Split';
+          }
           return this.needsRealignment ? 'Save & Re-align' : 'Save';
         }
       },
@@ -977,7 +996,8 @@ export default {
         'clearAudioTasks',
         'shiftAudioTask',
         'applyTasksQueue',
-        'saveBlockAudio'
+        'saveBlockAudio',
+        'mergeBlockParts'
       ]),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
@@ -1417,6 +1437,8 @@ Save audio changes and realign the Block?`,
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isSaving = true;
+        this.$forceUpdate();
+        let reloadParent = this.hasChange('split_point');
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
@@ -1425,6 +1447,9 @@ Save audio changes and realign the Block?`,
             this.isChanged = false;
             if (this.isLocked && this.isAudioEditing) {
               this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+            }
+            if (reloadParent) {
+              this.$parent.$parent.refreshTmpl();
             }
             return Promise.resolve();
           });
@@ -1560,7 +1585,9 @@ Save audio changes and realign the Block?`,
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isSaving = true;
+        this.$forceUpdate();
         let refreshTasks = this.isCompleted;
+        let reloadParent = this.hasChange('split_point');
         return this.putBlockNarrate([Object.assign(this.blockPart, {
             blockid: this.block.blockid,
             bookid: this.block.bookid,
@@ -1573,6 +1600,9 @@ Save audio changes and realign the Block?`,
             }
             if (this.isAudioEditing && realign) {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+            }
+            if (reloadParent) {
+              this.$parent.$parent.refreshTmpl();
             }
             return Promise.resolve();
           })
@@ -3237,6 +3267,9 @@ Save audio changes and realign the Block?`,
           });
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', '[data-flag]', this.handleFlagClick);
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', '[data-flag]', this.handleFlagClick);
+          
+          $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', 'i.pin', this.handlePinClick);
+          $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', 'i.pin', this.handlePinClick);
         }
         if (this.mode !== 'narrate') {
           if (this.block && this.block.footnotes) {
@@ -3703,6 +3736,123 @@ Save text changes and realign the Block?`,
             this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
             return Promise.reject(err);
           });
+      },
+      isSplitPointAllowed() {
+        /*if (this.isSplittedBlock) {
+          return false;
+        }*/
+        if (this.block.voicework !== 'narration') {
+          return false;
+        }
+        /*if (this._is('narrator', true) && this.mode === 'narrate') {
+          console.log(this.range, `${this.range.startOffset}:${this.range.endOffset}`);
+        } else */if (((this._is('editor', true) || this.adminOrLibrarian) && this.mode === 'edit') || (this._is('narrator', true) && this.mode === 'narrate')) {
+          if (!(this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
+            if (!this.range) {
+              return false;
+            }
+            //console.log(this.range);
+            let container = this.range.commonAncestorContainer;
+            if (typeof container.length == 'undefined') {
+              return false;
+            }
+            if (this.range.endOffset >= container.length && !container.nextSibling) {
+              //console.log('LENGTH CHECK'/*this.range*/);
+              return false;
+            }
+            let checkSibling = container.previousElementSibling ? container.previousElementSibling : (container.previousSibling ? container.previousSibling : null);
+            if (checkSibling) {
+              if (checkSibling.nodeName === 'I' && checkSibling.classList.contains('pin') && this.range.startOffset === 0) {
+                //console.log('SIBLING CHECK')
+                return false;
+              }
+            }
+            //console.log(container.previousElementSibling, container.previousSibling, this.range);
+            let checkRange = document.createRange();
+            //console.log(container, container.length, this.range.endOffset);
+            checkRange.setStart( container, this.range.startOffset );
+            checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
+            let regexp = /^[\s]*$/i;
+            /*console.log(checkRange.toString());
+            if (this.range.startOffset > 0) {
+              let _checkRange = document.createRange();
+              //console.log(container, container.length, this.range.endOffset);
+              _checkRange.setStart( container, this.range.startOffset-1 );
+              _checkRange.setEnd( container, this.range.endOffset+1 );
+              console.log(_checkRange.toString());
+            }*/
+            //console.log('IS ALLOWED', `"${checkRange.toString()}"`, regexp.test(checkRange.toString()));
+            return regexp.test(checkRange.toString());
+          }
+        }
+        return false;
+      },
+      setSplitPoint() {
+        let el = document.createElement('i');
+        el.classList.add('pin');
+        this.range.insertNode(el);
+        //this.$parent.$forceUpdate();
+        if (!this.isSplittedBlock) {
+          this.splitPointAdded();
+        } else {
+          this.pushChange('split_point');
+          this.isChanged = true;
+        }
+      },
+      handlePinClick(e) {
+        if (this.$refs.splitPinCntx && e.target) {
+          //console.log(`OFFSET: ${-1 * e.target.offsetTop}, ${-1 * e.originalEvent.target.offsetTop}`)
+          this.$refs.splitPinCntx.open(e.originalEvent, this.range, /*this.mode === 'narrate' ? narrationShift : */0, -1 * e.target.offsetTop);
+          this.splitPinSelection = e.target;
+        }
+      },
+      delSplitPoint() {
+        if (this.splitPinSelection) {
+          this.splitPinSelection.remove();
+          this.splitPinSelection = null;
+        }
+      },
+      splitPinCntxClose() {
+        this.splitPinSelection = null;
+      },
+      mergeSubblocks(confirm = true) {
+        if (confirm) {
+          this.$root.$emit('show-modal', {
+            title: 'Join subblocks',
+            text: `Join with the next subblock?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Join',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  return this.mergeSubblocks(false);
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+        } else {
+          this.$parent.isSaving = true;
+          this.$parent.$forceUpdate();this.$parent.$forceUpdate();
+          return this.mergeBlockParts([this.block.blockid, this.blockPartIdx, this.blockPartIdx + 1])
+            .then(() => {
+              this.$parent.isSaving = false;
+              /*if (this.isCompleted) {
+                this.tc_loadBookTask(this.block.bookid);
+                this.getCurrentJobInfo();
+              }*/
+              this.$parent.$parent.refreshTmpl();
+              return Promise.resolve();
+            });
+        }
       }
 
   },

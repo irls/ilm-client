@@ -229,6 +229,7 @@
               :isCompleted="isCompleted"
               :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
               :addToQueueBlockAudioEdit="addToQueueBlockAudioEdit"
+              :splitPointAdded="splitPointAdded"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -956,6 +957,9 @@ export default {
       },
       saveBlockLabel: {
         get() {
+          if (this.changes.indexOf('split_point') !== -1) {
+            return 'Save & Split';
+          }
           return this.needsRealignment ? 'Save & Re-align' : 'Save';
         }
       },
@@ -1919,6 +1923,10 @@ Save audio changes and realign the Block?`,
                     break;
                   case 'manual_boundaries':
                     partUpdate['content'] = this.block.content;
+                    break;
+                  case 'split_point':
+                    partUpdate['content'] = this.block.content;
+                    partUpdate['manual_boundaries'] = this.block.manual_boundaries ? this.block.manual_boundaries : [];
                     break;
                   default:
                     partUpdate[c] = this.block[c];
@@ -4304,6 +4312,10 @@ Save text changes and realign the Block?`,
           //this.voiceworkChange = false;
           this.voiceworkUpdateType = 'single';
         }
+      },
+      
+      splitPointAdded() {
+        this.pushChange('split_point');
       }
   },
   watch: {
@@ -4451,11 +4463,13 @@ Save text changes and realign the Block?`,
         handler(val) {
           if (val === false) {
             this.flushChanges();
-            if (this.$refs.blocks) {
-              this.blockParts.forEach((part, partIdx) => {
-                this.$refs.blocks[partIdx].isChanged = false;
-              });
-            }
+            Vue.nextTick(() => {
+              if (this.$refs.blocks) {
+                this.blockParts.forEach((part, partIdx) => {
+                  this.$refs.blocks[partIdx].isChanged = false;
+                });
+              }
+            });
             this.recountVoicedBlocks();
           }
           this.block.isChanged = val;

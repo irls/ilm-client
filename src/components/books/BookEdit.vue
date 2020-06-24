@@ -2534,5 +2534,38 @@ export default {
 .medium-editor-toolbar-anchor-preview {
   background: #a6a6a6 !important;
 }
+i.pin {
+  background-color: #aaa;
+  background-image: linear-gradient(left, hsla(0,0%,100%,.2), hsla(0,0%,0%,.2));
+  display: inline-block;
+  height: 24px;
+  margin: 0px 2px -3px 2px;
+  position: relative;
+  width: 2px;
+  cursor: pointer;
+  &:before {
+    background-color: skyBlue;
+    background-image: radial-gradient(25% 25%, circle, hsla(0,0%,100%,.2), hsla(0,0%,0%,.2));
+    border-radius: 50%;
+    content: '';
+    left: -4px;
+    position: absolute;
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    top: -5px;
+  }
+}
+div.merge-subblocks {
+   /*background-image: url(/static/merge-blocks.svg); */
+   width: 20px; 
+   height: 24px; 
+   /*background-size: 20px; */
+   background-repeat: no-repeat; 
+   background-color: gray; 
+   -webkit-mask-image: url(/static/merge-blocks.svg); 
+   mask-image: url(/static/merge-blocks.svg);
+   cursor: pointer;
+}
 
 </style>
