@@ -1897,6 +1897,7 @@ Save audio changes and realign the Block?`,
                     break;
                   case 'split_point':
                     partUpdate['content'] = this.block.content;
+                    partUpdate['manual_boundaries'] = this.block.manual_boundaries ? this.block.manual_boundaries : [];
                     break;
                   default:
                     partUpdate[c] = this.block[c];
@@ -4470,11 +4471,13 @@ Save text changes and realign the Block?`,
         handler(val) {
           if (val === false) {
             this.flushChanges();
-            if (this.$refs.blocks) {
-              this.blockParts.forEach((part, partIdx) => {
-                this.$refs.blocks[partIdx].isChanged = false;
-              });
-            }
+            Vue.nextTick(() => {
+              if (this.$refs.blocks) {
+                this.blockParts.forEach((part, partIdx) => {
+                  this.$refs.blocks[partIdx].isChanged = false;
+                });
+              }
+            });
             this.recountVoicedBlocks();
           }
           this.block.isChanged = val;

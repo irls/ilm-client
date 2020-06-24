@@ -1388,6 +1388,7 @@ Save audio changes and realign the Block?`,
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isSaving = true;
+        let reloadParent = this.hasChange('split_point');
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
@@ -1396,6 +1397,9 @@ Save audio changes and realign the Block?`,
             this.isChanged = false;
             if (this.isLocked && this.isAudioEditing) {
               this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+            }
+            if (reloadParent) {
+              this.$parent.$parent.refreshTmpl();
             }
             return Promise.resolve();
           });
@@ -1532,6 +1536,7 @@ Save audio changes and realign the Block?`,
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isSaving = true;
         let refreshTasks = this.isCompleted;
+        let reloadParent = this.hasChange('split_point');
         return this.putBlockNarrate([Object.assign(this.blockPart, {
             blockid: this.block.blockid,
             bookid: this.block.bookid,
@@ -1544,6 +1549,9 @@ Save audio changes and realign the Block?`,
             }
             if (this.isAudioEditing && realign) {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+            }
+            if (reloadParent) {
+              this.$parent.$parent.refreshTmpl();
             }
             return Promise.resolve();
           })
@@ -3634,13 +3642,13 @@ Save text changes and realign the Block?`,
               return false;
             }
             if (this.range.endOffset >= container.length && !container.nextSibling) {
-              console.log('LENGTH CHECK'/*this.range*/);
+              //console.log('LENGTH CHECK'/*this.range*/);
               return false;
             }
             let checkSibling = container.previousElementSibling ? container.previousElementSibling : (container.previousSibling ? container.previousSibling : null);
             if (checkSibling) {
               if (checkSibling.nodeName === 'I' && checkSibling.classList.contains('pin') && this.range.startOffset === 0) {
-                console.log('SIBLING CHECK')
+                //console.log('SIBLING CHECK')
                 return false;
               }
             }
@@ -3658,23 +3666,11 @@ Save text changes and realign the Block?`,
               _checkRange.setEnd( container, this.range.endOffset+1 );
               console.log(_checkRange.toString());
             }*/
-            console.log('IS ALLOWED', `"${checkRange.toString()}"`, regexp.test(checkRange.toString()));
+            //console.log('IS ALLOWED', `"${checkRange.toString()}"`, regexp.test(checkRange.toString()));
             return regexp.test(checkRange.toString());
           }
         }
         return false;
-        if (!this.allowEditing) return false;
-        if (this.block.type == 'illustration') return false;
-        if (!this.range) return false;
-        let container = this.range.commonAncestorContainer;
-        if (typeof container.length == 'undefined') return false;
-        if (this.range.endOffset >= container.length) return true;
-        let checkRange = document.createRange();
-        //console.log(container, container.length, this.range.endOffset);
-        checkRange.setStart( container, this.range.startOffset );
-        checkRange.setEnd( container, this.range.endOffset+1 );
-        let regexp = /^[\.\s]+$/i;
-        return regexp.test(checkRange.toString());
       },
       setSplitPoint() {
         let el = document.createElement('i');

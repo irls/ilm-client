@@ -1878,6 +1878,7 @@ export const store = new Vuex.Store({
       }
       return axios.put(url, update)
         .then((response) => {
+          commit('set_storeList', new BookBlock(response.data));
           return dispatch('getBookAlign')
             .then(() => {
               commit('clear_blocker', 'putBlock');
@@ -2998,13 +2999,14 @@ export const store = new Vuex.Store({
           return Promise.reject();
         });
     },
-    updateBlockPart({state, dispatch}, [id, update, blockIdx, realign]) {
+    updateBlockPart({state, dispatch, commit}, [id, update, blockIdx, realign]) {
       let url = `books/blocks/${encodeURIComponent(id)}/part/${blockIdx}`;
       if (realign) {
         url+= '?realign=true';
       }
       return axios.put(state.API_URL + url, update)
         .then((response) => {
+          commit('set_storeList', new BookBlock(response.data));
           return Promise.all([dispatch('getBookAlign'), dispatch('getCurrentJobInfo')])
             .then(() => {
               return Promise.resolve(response);
