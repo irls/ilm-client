@@ -2154,6 +2154,7 @@ Save audio changes and realign the Block?`,
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         }
         let refreshTasks = this.isCompleted;
+        let reloadParent = this.hasChange('split_point');
         return this.putBlockNarrate([upd_block, realign])
           .then(() => {
             if (realign) {
@@ -2174,6 +2175,9 @@ Save audio changes and realign the Block?`,
             if (refreshTasks) {
               this.getCurrentJobInfo();
               this.tc_loadBookTask(this.block.bookid);
+            }
+            if (reloadParent) {
+              this.$parent.refreshTmpl();
             }
             return Promise.resolve();
           })

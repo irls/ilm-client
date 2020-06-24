@@ -1876,6 +1876,10 @@ export const store = new Vuex.Store({
       if (Array.isArray(block.manual_boundaries)) {
         update.block.manual_boundaries = block.manual_boundaries;
       }
+      if (block.audiosrc) {
+        update.block.audiosrc = block.audiosrc;
+        update.block.audiosrc_ver = block.audiosrc_ver;
+      }
       return axios.put(url, update)
         .then((response) => {
           commit('set_storeList', new BookBlock(response.data));
