@@ -3512,6 +3512,19 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+
+    updateStoreFlag({state}, [blockid, flagId, updated]) {
+      let block = state.storeList.get(blockid);
+      if (block) {
+        let storeFlag = block.flags.find(f => {
+          return f._id === flagId;
+        });
+        let index = block.flags.indexOf(storeFlag);
+        if (storeFlag && index !== -1) {
+          block.flags[index] = updated;
+        }
+      }
     }
   }
 })
