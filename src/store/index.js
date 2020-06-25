@@ -1204,6 +1204,14 @@ export const store = new Vuex.Store({
                     data.block.parts[i] = p;
                   }
                 });
+                let hasChanges = blockStore.parts.find(p => {
+                  return p.isChanged;
+                });
+                if (hasChanges) {
+                  if (Array.isArray(blockStore.flags)) {
+                    data.block.flags = blockStore.flags;// do not update flags for edited block
+                  }
+                }
               }
             }
             if (data.action === 'insert' && data.block) {
