@@ -3523,6 +3523,8 @@ export const store = new Vuex.Store({
         let index = block.flags.indexOf(storeFlag);
         if (storeFlag && index !== -1) {
           block.flags[index] = updated;
+        } else {
+          block.flags.push(updated);
         }
       }
     }
