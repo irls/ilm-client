@@ -1367,6 +1367,10 @@ Save audio changes and realign the Block?`,
           }
           return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
             .then(() => {
+              if (this.hasChange('split_point')) {// can be pending split
+                this.changes = ['split_point']
+                return this.assembleBlockProxy(false, false, false);
+              }
               this.isChanged = false;
               if (this.isAudioEditing) {
                 if (this.isLocked) {
