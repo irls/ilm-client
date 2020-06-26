@@ -254,7 +254,11 @@ export default {
     test(ev) {
         console.log('test', ev);
     },
-
+    stopWatchLiveQueries(){
+      this.$store.state.liveDB.stopWatch('metaV');
+      this.$store.state.liveDB.stopWatch('job');
+      this.$store.state.liveDB.stopWatch('blockV');
+    },
     refreshTmpl() {
       // a hack to update template
       //Vue.set(this, 'screenTop', this.screenTop + 0.1);
@@ -1973,6 +1977,7 @@ export default {
   },
 
   beforeDestroy:  function() {
+    this.stopWatchLiveQueries();
     this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
     this.setBlockSelection({start: {}, end: {}});
