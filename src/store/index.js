@@ -1135,6 +1135,16 @@ export const store = new Vuex.Store({
       });
     },
 
+    stopWatchLiveQueries({state}, vertex){
+      if(vertex) {
+        state.liveDB.stopWatch(vertex)
+        return;
+      }
+
+      state.liveDB.stopWatch('metaV');
+      state.liveDB.stopWatch('job');
+      state.liveDB.stopWatch('blockV');
+    },
     // logout event
     disconnectDB ({ state, commit }) {
       state.liveDB.stopWatchAll();
@@ -1302,7 +1312,7 @@ export const store = new Vuex.Store({
         commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: ''});
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
         //let metaDB = state.metaRemoteDB;
-        state.liveDB.stopWatch('blockV');
+        dispatch('stopWatchLiveQueries', 'blockV');
         let bookMeta = new Promise((resolve, reject) => {
           axios.get(state.API_URL + 'books/book_meta/' + book_id)
             .then((answer) => {
@@ -1327,8 +1337,8 @@ export const store = new Vuex.Store({
           dispatch('getCurrentJobInfo', true);
           commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: answer.coverimgURL});
           //dispatch('loadBookToc', {bookId: book_id});
-          state.liveDB.stopWatch('metaV');
-          state.liveDB.stopWatch('job');
+          dispatch('stopWatchLiveQueries', 'metaV');
+          dispatch('stopWatchLiveQueries', 'job');
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
               //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
