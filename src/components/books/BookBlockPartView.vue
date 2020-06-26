@@ -3771,6 +3771,12 @@ Save text changes and realign the Block?`,
                 return false;
               }
             }
+            checkSibling = container.nextElementSibling ? container.nextElementSibling : (container.nextSibling ? container.nextSibling : null);
+            if (checkSibling) {
+              if (checkSibling.nodeName === 'I' && checkSibling.classList.contains('pin') && this.range.startOffset === container.length) {
+                return;
+              }
+            }
             //console.log(container.previousElementSibling, container.previousSibling, this.range);
             let checkRange = document.createRange();
             //console.log(container, container.length, this.range.endOffset);
