@@ -3647,7 +3647,8 @@ Save text changes and realign the Block?`,
             if (typeof container.length == 'undefined') {
               return false;
             }
-            if (this.range.endOffset >= container.length && !container.nextSibling) {
+            let skipLengthCheck = this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName === 'W' && container.parentElement.nextSibling;// means click at the end of <w></w> tag
+            if (this.range.endOffset >= container.length && !container.nextSibling && !skipLengthCheck) {
               //console.log('LENGTH CHECK'/*this.range*/);
               return false;
             }
@@ -3668,8 +3669,11 @@ Save text changes and realign the Block?`,
             let checkRange = document.createRange();
             //console.log(container, container.length, this.range.endOffset);
             checkRange.setStart( container, this.range.startOffset );
+            if (skipLengthCheck && this.range.startOffset > 0) {
+              checkRange.setStart(container, this.range.startOffset - 1);
+            }
             checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
-            let regexp = /^[\s]*$/i;
+            let regexp = skipLengthCheck ? /^[\S]*$/i : /^[\s]+$/i;
             /*console.log(checkRange.toString());
             if (this.range.startOffset > 0) {
               let _checkRange = document.createRange();
@@ -3678,7 +3682,7 @@ Save text changes and realign the Block?`,
               _checkRange.setEnd( container, this.range.endOffset+1 );
               console.log(_checkRange.toString());
             }*/
-            //console.log('IS ALLOWED', `"${checkRange.toString()}"`, regexp.test(checkRange.toString()));
+            //console.log('IS ALLOWED', `"${checkRange.toString()}"`, regexp.test(checkRange.toString()), regexp);
             return regexp.test(checkRange.toString());
           }
         }
@@ -3713,10 +3717,38 @@ Save text changes and realign the Block?`,
         this.splitPinSelection = null;
       },
       mergeSubblocks(confirm = true) {
+        let partFrom = this.blockPart;
+        let partTo = this.block.parts[this.blockPartIdx + 1];
+        if (partFrom && partTo) {
+          if (this.isChanged || this.isAudioChanged || partTo.isChanged || partTo.isAudioChanged) {
+            
+            this.$root.$emit('show-modal', {
+              title: `Unsaved Changes`,
+              text: `Subblocks have unsaved changes.<br>
+Please save or discard your changes before joining.`,
+              buttons: [
+                {
+                  title: 'Ok',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                  },
+                  class: ['btn btn-primary']
+                }
+              ]
+            });
+          }
+        }
         if (confirm) {
+          let message = `Join with the next subblock?`;
+          if (partFrom && partTo) {
+            if ((partFrom.audiosrc && !partTo.audiosrc) || (!partFrom.audiosrc && partTo.audiosrc)) {
+              message = `Join of narrated and pending subblocks will also delete current audio.<br>
+Join with next subblock?`;
+            }
+          }
           this.$root.$emit('show-modal', {
             title: 'Join subblocks',
-            text: `Join with the next subblock?`,
+            text: message,
             buttons: [
               {
                 title: 'Cancel',
