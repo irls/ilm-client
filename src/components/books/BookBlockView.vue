@@ -100,7 +100,7 @@
                       <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
                           <i class="fa fa-language" aria-hidden="true"></i>
                           Language: <select :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
-                            <option v-if="!blockLanguages.hasOwnProperty(block.language)" :value="block.language">{{ block.language }}</option>
+                            <option v-if="!blockLanguages.hasOwnProperty(block.language) && block.language != false" :value="block.language">{{ block.language }}</option>
                             <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
                         </select>
                       </li>
