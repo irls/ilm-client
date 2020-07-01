@@ -1922,7 +1922,9 @@ Save audio changes and realign the Block?`,
                     this.checkBlockContentFlags();
                     this.updateFlagStatus(this.block._id);
                     partUpdate['flags'] = this.block.flags;
-                    partUpdate['content'] = this.block.content;
+                    if (!this.isSplittedBlock) {
+                      partUpdate['content'] = this.block.content;// updating content only for not splitted block, ILM-3287
+                    }
                     partUpdate['parts'] = this.block.parts;
                     break;
                   case 'manual_boundaries':
