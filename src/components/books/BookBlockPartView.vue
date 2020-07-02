@@ -280,7 +280,7 @@
   <div class="table-body">
     <div class="table-row controls-bottom" v-if="isSplittedBlock">
       <div class="controls-bottom-wrapper">
-        <div class="par-ctrl -hidden -left" v-if="blockPartIdx < block.parts.length - 1">
+        <div class="par-ctrl -hidden -left" v-if="isMergeSubblocksAllowed">
           <div class="merge-subblocks" @click="mergeSubblocks()"></div>
           <!-- <object type="image/svg+xml" data="/static/merge-blocks.svg" style="width: 25px; height: 25px;"></object> -->
         </div>
@@ -835,6 +835,26 @@ export default {
       isAudioEditing: {
         get() {
           return this.check_id && this.audioTasksQueue.blockId === this.check_id;
+        },
+        cache: false
+      },
+      isMergeSubblocksAllowed: {
+        get() {
+          if (this.blockPartIdx >= this.block.parts.length - 1) {
+            return false;
+          }
+          if (this.isLocked) {
+            return false;
+          }
+          if (this.$parent.$refs.blocks) {
+            let locked = this.$parent.$refs.blocks.find(blk => {
+              return blk.isLocked;
+            });
+            if (locked) {
+              return false;
+            }
+          }
+          return true;
         },
         cache: false
       }
@@ -3647,7 +3667,7 @@ Save text changes and realign the Block?`,
             if (typeof container.length == 'undefined') {
               return false;
             }
-            let skipLengthCheck = this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName === 'W' && container.parentElement.nextSibling;// means click at the end of <w></w> tag
+            let skipLengthCheck = this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling;// means click at the end of <w></w> tag
             if (this.range.endOffset >= container.length && !container.nextSibling && !skipLengthCheck) {
               //console.log('LENGTH CHECK'/*this.range*/);
               return false;
