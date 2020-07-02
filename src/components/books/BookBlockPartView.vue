@@ -1420,6 +1420,9 @@ Save audio changes and realign the Block?`,
         return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign)
           .then(() => {
             this.isChanged = false;
+            if (this.blockAudio.map) {
+              this.blockAudio.map = this.blockPart.content;
+            }
             if (this.isLocked && this.isAudioEditing) {
               this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
             }

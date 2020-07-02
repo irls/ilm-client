@@ -1194,6 +1194,14 @@ export const store = new Vuex.Store({
                 state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
               }
             } else if (data.action === 'change' && data.block) {
+              let blockStore = state.storeList.get(data.block.blockid);
+              let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
+                return p.isChanged;
+              }) : false;
+              if (blockStore.isSaving || hasChangedPart) {
+                //console.log('isSaving hasChangedPart');
+                return;
+              }
               state.storeListO.updBlockByRid(data.block.id, data.block);
             } else if (data.action === 'delete') {
 
