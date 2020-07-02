@@ -981,7 +981,7 @@ export default {
       getBlockLang: {
         cache: false,
         get() {
-          if (this.block.language && this.block.language.length) {
+          if (this.block.language && this.block.language.length && this.block.language !== false) {
             return this.block.language;
           } else {
             return this.meta.language;
