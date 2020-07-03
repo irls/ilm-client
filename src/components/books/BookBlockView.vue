@@ -3406,12 +3406,18 @@ Save text changes and realign the Block?`,
       },
       joinWithPrevious() {
         this.joinBlocks(this.block, this.blockId, 'previous')
-        .then(()=>{})
+        .then(()=>{
+            this.tc_loadBookTask(this.block.bookid);
+            this.getCurrentJobInfo();
+        })
         .catch(()=>{})
       },
       joinWithNext() {
         this.joinBlocks(this.block, this.blockId, 'next')
-        .then(()=>{})
+        .then(()=>{
+            this.tc_loadBookTask(this.block.bookid);
+            this.getCurrentJobInfo();
+        })
         .catch(()=>{})
       },
       showFootnoteAudioEditor(footnote, ftnIdx) {
