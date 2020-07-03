@@ -3696,6 +3696,18 @@ Save text changes and realign the Block?`,
               checkRange.setStart(container, this.range.startOffset - 1);
             }
             checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
+            if (this.range.endOffset < container.length && checkRange.endOffset === container.length/* && !container.nextSibling*/) {
+              if (!(container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling)) {
+                //console.log(container.parentElement, container.parentElement.nextSibling, skipLengthCheck);
+                let beforeDiv = container.parentElement;
+                while (beforeDiv && beforeDiv.parentElement.nodeName !== 'DIV') {// search for container before block wrapper, skip if it has no sibling
+                  beforeDiv = beforeDiv.parentElement;
+                }
+                if (beforeDiv && !beforeDiv.nextSibling) {
+                  return false;
+                }
+              }
+            }
             let regexp = skipLengthCheck ? /^[\S]*$/i : /^[\s]+$/i;
             /*console.log(checkRange.toString());
             if (this.range.startOffset > 0) {
