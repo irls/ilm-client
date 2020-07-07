@@ -3784,6 +3784,9 @@ Save text changes and realign the Block?`,
               return false;
             }
             let skipLengthCheck = this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling;// means click at the end of <w></w> tag
+            if (!skipLengthCheck && container.nodeType === 3) {// not aligned block
+              skipLengthCheck = this.range.endOffset >= container.length && container.nextSibling;
+            }
             if (this.range.endOffset >= container.length && !container.nextSibling && !skipLengthCheck) {
               //console.log('LENGTH CHECK'/*this.range*/);
               return false;
@@ -3812,7 +3815,7 @@ Save text changes and realign the Block?`,
             if (this.range.endOffset < container.length && checkRange.endOffset === container.length/* && !container.nextSibling*/) {
               if (!(container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling)) {
                 //console.log(container.parentElement, container.parentElement.nextSibling, skipLengthCheck);
-                let beforeDiv = container.parentElement;
+                let beforeDiv = container;
                 while (beforeDiv && beforeDiv.parentElement.nodeName !== 'DIV') {// search for container before block wrapper, skip if it has no sibling
                   beforeDiv = beforeDiv.parentElement;
                 }
