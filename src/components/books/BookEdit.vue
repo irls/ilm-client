@@ -801,7 +801,13 @@ export default {
       }
       return true;
     },
+    evFromAudioeditorClosedIndicator(blockId) {
+        //console.log('evFromAudioeditorClosed bookedit', blockId, this.audioTasksQueue.block);
+        if (this.audioTasksQueue.block.blockId === blockId){
+            this.audioTasksQueue.block.blockId = null;
+        }
 
+      },
     eventKeyDown: function(key) {
         if (key.code==='Escape' || key.keyCode===27) this.$events.emit('currentEditingBlock_id', key);
     },
@@ -1963,6 +1969,8 @@ export default {
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
       this.$root.$on('from-toolbar:toggle-meta', this.correctEditWrapper);
+      this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosedIndicator);
+
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
