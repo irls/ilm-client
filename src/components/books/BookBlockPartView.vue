@@ -3720,7 +3720,9 @@ Save text changes and realign the Block?`,
               _checkRange.setEnd( container, this.range.endOffset+1 );
               console.log(_checkRange.toString());
             }*/
-            //console.log('IS ALLOWED', `"${checkRange.toString()}"`, regexp.test(checkRange.toString()), regexp);
+            if (navigator && navigator.platform === 'MacIntel') {
+              console.log('IS ALLOWED', `"${checkRange.toString()}"`, regexp.test(checkRange.toString()), regexp, checkRange, this.range);
+            }
             return regexp.test(checkRange.toString());
           }
         }
