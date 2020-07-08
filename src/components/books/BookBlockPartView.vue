@@ -3779,11 +3779,12 @@ Save text changes and realign the Block?`,
               return false;
             }
             //console.log(this.range);
+            let isMac = navigator && navigator.platform === 'MacIntel';
             let container = this.range.commonAncestorContainer;
             if (typeof container.length == 'undefined') {
               return false;
             }
-            let skipLengthCheck = this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling;// means click at the end of <w></w> tag
+            let skipLengthCheck = !isMac && this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling;// means click at the end of <w></w> tag
             if (!skipLengthCheck && container.nodeType === 3) {// not aligned block
               skipLengthCheck = this.range.endOffset >= container.length && container.nextSibling;
             }
@@ -3806,12 +3807,19 @@ Save text changes and realign the Block?`,
             }
             //console.log(container.previousElementSibling, container.previousSibling, this.range);
             let checkRange = document.createRange();
+            let regexp = null;
             //console.log(container, container.length, this.range.endOffset);
             checkRange.setStart( container, this.range.startOffset );
-            if (skipLengthCheck && this.range.startOffset > 0) {
-              checkRange.setStart(container, this.range.startOffset - 1);
+            if (!isMac) {
+              regexp = skipLengthCheck ? /^[\S]*$/i : /^[\s]+$/i;
+              if (skipLengthCheck && this.range.startOffset > 0) {
+                checkRange.setStart(container, this.range.startOffset - 1);
+              }
+              checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
+            } else {// Mac OS right mouse click selects psrt of the text
+              checkRange.setEnd(container, this.range.endOffset);
+              regexp = /^[\s]*$/i;
             }
-            checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
             if (this.range.endOffset < container.length && checkRange.endOffset === container.length/* && !container.nextSibling*/) {
               if (!(container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling)) {
                 //console.log(container.parentElement, container.parentElement.nextSibling, skipLengthCheck);
@@ -3824,7 +3832,6 @@ Save text changes and realign the Block?`,
                 }
               }
             }
-            let regexp = skipLengthCheck ? /^[\S]*$/i : /^[\s]+$/i;
             /*console.log(checkRange.toString());
             if (this.range.startOffset > 0) {
               let _checkRange = document.createRange();
@@ -3833,7 +3840,7 @@ Save text changes and realign the Block?`,
               _checkRange.setEnd( container, this.range.endOffset+1 );
               console.log(_checkRange.toString());
             }*/
-            if (navigator && navigator.platform === 'MacIntel') {
+            if (isMac) {
               console.log('IS ALLOWED', `"${checkRange.toString()}"`, regexp.test(checkRange.toString()), regexp, checkRange, this.range);
             }
             return regexp.test(checkRange.toString());
