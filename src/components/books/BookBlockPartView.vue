@@ -3671,7 +3671,7 @@ Save text changes and realign the Block?`,
             if (typeof container.length == 'undefined') {
               return false;
             }
-            let skipLengthCheck = !isMac && this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling;// means click at the end of <w></w> tag
+            let skipLengthCheck = this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling;// means click at the end of <w></w> tag
             if (!skipLengthCheck && container.nodeType === 3) {// not aligned block
               skipLengthCheck = this.range.endOffset >= container.length && container.nextSibling;
             }
