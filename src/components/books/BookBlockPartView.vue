@@ -1245,7 +1245,7 @@ export default {
         let isRangeDiffers = !this.range ? true : currentRange.compareBoundaryPoints(Range.START_TO_START, this.range) !== 0;
         this.range = currentRange.cloneRange();
         let isMac = navigator && navigator.platform === 'MacIntel';
-        if (this.mode === 'edit' && isMac && isRangeDiffers) {
+        if (this.mode === 'edit' && this.block.voicework === 'narration' && isMac && isRangeDiffers) {
           if (this.range.startContainer && this.range.startContainer.nodeName === 'DIV') {// possible click at line break <br>
             let targetElement = this.range.endContainer/*.parentElement.previousElementSibling.previousElementSibling.firstChild*/;
             if (targetElement.parentElement && targetElement.parentElement.nodeName === 'W') {
