@@ -1288,10 +1288,10 @@ export default {
         }
 
         let currentRange = window.getSelection().getRangeAt(0);
-        let isRangeDiffers = !this.range ? false : currentRange.compareBoundaryPoints(Range.START_TO_START, this.range) !== 0;
+        let isRangeDiffers = !this.range ? true : currentRange.compareBoundaryPoints(Range.START_TO_START, this.range) !== 0;
         this.range = currentRange.cloneRange();
         let isMac = navigator && navigator.platform === 'MacIntel';
-        if (isMac && isRangeDiffers) {
+        if (this.mode === 'edit' && this.block.voicework === 'narration' && isMac && isRangeDiffers) {
           if (this.range.startContainer && this.range.startContainer.nodeName === 'DIV') {// possible click at line break <br>
             let targetElement = this.range.endContainer/*.parentElement.previousElementSibling.previousElementSibling.firstChild*/;
             if (targetElement.parentElement && targetElement.parentElement.nodeName === 'W') {
@@ -1306,8 +1306,11 @@ export default {
                 }
               }
             }
-            this.range.setStart(targetElement, targetElement.length - 1);
-            this.range.setEnd(targetElement, targetElement.length - 1);
+            this.range.setStart(targetElement, targetElement.length);
+            this.range.setEnd(targetElement, targetElement.length);
+          } else if (this.range.startContainer && this.range.startContainer.nodeType === 3 && this.range.endContainer && this.range.endContainer.nodeName === 'LI') {
+            this.range.setStart(this.range.startContainer, this.range.startContainer.length);
+            this.range.setEnd(this.range.startContainer, this.range.startContainer.length);
           }
         }
         let container = $(e.target).closest('.-block.-subblock')[0]
