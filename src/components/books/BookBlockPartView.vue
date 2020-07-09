@@ -1286,7 +1286,30 @@ export default {
         if (!this.$refs.blockCntx) {
           return;
         }
-        this.range = window.getSelection().getRangeAt(0).cloneRange();
+
+        let currentRange = window.getSelection().getRangeAt(0);
+        let isRangeDiffers = !this.range ? false : currentRange.compareBoundaryPoints(Range.START_TO_START, this.range) !== 0;
+        this.range = currentRange.cloneRange();
+        let isMac = navigator && navigator.platform === 'MacIntel';
+        if (isMac && isRangeDiffers) {
+          if (this.range.startContainer && this.range.startContainer.nodeName === 'DIV') {// possible click at line break <br>
+            let targetElement = this.range.endContainer/*.parentElement.previousElementSibling.previousElementSibling.firstChild*/;
+            if (targetElement.parentElement && targetElement.parentElement.nodeName === 'W') {
+              targetElement = targetElement.parentElement;
+              while (targetElement.previousElementSibling) {
+                targetElement = targetElement.previousElementSibling;
+                if (targetElement.childNodes.length > 0) {
+                  do {
+                    targetElement = targetElement.firstChild;
+                  } while (targetElement.nodeType !== 3);
+                  break;
+                }
+              }
+            }
+            this.range.setStart(targetElement, targetElement.length - 1);
+            this.range.setEnd(targetElement, targetElement.length - 1);
+          }
+        }
         let container = $(e.target).closest('.-block.-subblock')[0]
         let offsetX = container.offsetLeft
 
