@@ -1263,8 +1263,9 @@ export default {
             this.range.setStart(targetElement, targetElement.length);
             this.range.setEnd(targetElement, targetElement.length);
           } else if (this.range.startContainer && this.range.startContainer.nodeType === 3 && this.range.endContainer && this.range.endContainer.nodeName === 'LI') {
-            this.range.setStart(this.range.startContainer, this.range.startContainer.length);
-            this.range.setEnd(this.range.startContainer, this.range.startContainer.length);
+            let rangeLength = /[\s]+$/.test(this.range.startContainer.nodeValue) ? this.range.startContainer.length - 1 : this.range.startContainer.length;
+            this.range.setStart(this.range.startContainer, rangeLength);
+            this.range.setEnd(this.range.startContainer, rangeLength);
           }
         }
 
