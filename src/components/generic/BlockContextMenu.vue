@@ -1,9 +1,8 @@
 <template>
 <ul ref="menu"
-    v-show="viewMenu"
     class="click-menu"
     tabindex="-1"
-    :style="{ top, left }"
+    :style="{ visibility: viewMenu? 'visible': 'hidden', top, left }"
     @click="close">
     <!--@blur="close"-->
     <slot></slot>
