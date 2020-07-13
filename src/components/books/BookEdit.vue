@@ -154,7 +154,8 @@ export default {
           parlistO: 'storeListO',
           blockSelection: 'blockSelection',
           currentJobInfo: 'currentJobInfo',
-          audioTasksQueue: 'audioTasksQueue'
+          audioTasksQueue: 'audioTasksQueue',
+          audioTasksQueueBlock: 'audioTasksQueueBlock'
       }),
       metaStyles: function () {
           let result = '';
@@ -1880,6 +1881,16 @@ export default {
           this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
         }
       }
+    },
+    saveBlockAudioChanges(realign = false, preparedData = false) {
+      if (this.audioTasksQueueBlock) {
+        console.log(`saveBlockAudioChanges: `, this.audioTasksQueueBlock)
+        this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+        return this.applyTasksQueue([null])
+          .then(() => {
+            return this.saveBlockAudio([realign, preparedData])
+          });
+      }
     }
   },
   events: {
@@ -1963,6 +1974,7 @@ export default {
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
       this.$root.$on('from-toolbar:toggle-meta', this.correctEditWrapper);
+      this.$root.$on('from-audioeditor:save', this.saveBlockAudioChanges);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -1987,6 +1999,7 @@ export default {
     this.$root.$off('book-reloaded', this.bookReloaded);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
     this.$root.$off('from-toolbar:toggle-meta', this.correctEditWrapper);
+    this.$root.$off('from-audioeditor:save', this.saveBlockAudioChanges);
   },
   watch: {
     'meta._id': {
