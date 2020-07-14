@@ -250,7 +250,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio']),
 
     test(ev) {
         console.log('test', ev);
@@ -1889,6 +1889,27 @@ export default {
         return this.applyTasksQueue([null])
           .then(() => {
             return this.saveBlockAudio([realign, preparedData])
+          })
+          .then(response => {
+            this.$root.$emit('for-audioeditor:flush');
+            let block = this.audioTasksQueueBlock;
+            let isSplitted = block.getIsSplittedBlock();
+            if (realign) {
+              this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+            } else {
+              let part = isSplitted ? response.data.parts[this.audioTasksQueue.block.partIdx] : response.data;
+              part._id = this.audioTasksQueue.block.checkId;
+              part.blockid = this.audioTasksQueue.block.blockid;
+              part.partIdx = this.audioTasksQueue.block.partIdx;
+              this.$root.$emit('for-audioeditor:load',
+                isSplitted ? block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a', true) : block.getAudiosrc('m4a', true),
+                isSplitted ? block.getPartContent(this.audioTasksQueue.block.partIdx) : block.content, false, part);
+            }
+            /*this.blockAudio.map = this.blockContent();
+            this.blockAudio.src = this.blockAudiosrc('m4a');
+            if (this.isCompleted) {
+              this.tc_loadBookTask();
+            }*/
           });
       }
     }

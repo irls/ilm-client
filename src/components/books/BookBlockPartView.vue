@@ -3014,8 +3014,8 @@ Save audio changes and realign the Block?`,
       audioEditorEventsOn() {
         this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
         this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-        this.$root.$on('from-audioeditor:save', this.evFromAudioeditorSave);
-        this.$root.$on('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
+        //this.$root.$on('from-audioeditor:save', this.evFromAudioeditorSave);
+        //this.$root.$on('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
         this.$root.$on('from-audioeditor:cut', this.evFromAudioeditorCut);
         this.$root.$on('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
         this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
@@ -3031,8 +3031,8 @@ Save audio changes and realign the Block?`,
       audioEditorEventsOff() {
         this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
         this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-        this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
-        this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
+        //this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
+        //this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
         this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
         this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
         this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
