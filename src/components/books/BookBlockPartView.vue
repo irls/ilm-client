@@ -3921,7 +3921,7 @@ Save text changes and realign the Block?`,
           if (oldVal < val && this.audioTasksQueue.block.checkId === this.check_id) {
             //console.log('START ', this.check_id);
             //console.log('FIRE');
-            this.evFromAudioEditorTasksQueuePush(this.check_id);
+            //this.evFromAudioEditorTasksQueuePush(this.check_id);
           }
         },
         deep: true
