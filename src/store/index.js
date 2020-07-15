@@ -689,22 +689,20 @@ export const store = new Vuex.Store({
       if (state.isAdmin || state.isLibrarian) {
         state.bookCollections = state.bookCollectionsAll;
       } else if (state.tc_userTasks) {
-        if (state.tc_userTasks.total) {
-          let collections = [];
-          for (let jobid in state.tc_userTasks.list) {
-            state.bookCollectionsAll.forEach(c => {
-              if (c.books && c.books.indexOf(state.tc_userTasks.list[jobid].bookid) !== -1) {
-                if (state.tc_userTasks.list[jobid].tasks && state.tc_userTasks.list[jobid].tasks.length > 0) {
-                  let exists = collections.find(_c => _c._id === c._id);
-                  if (!exists) {
-                    collections.push(c);
-                  }
+        let collections = [];
+        for (let jobid in state.tc_userTasks.list) {
+          state.bookCollectionsAll.forEach(c => {
+            if (c.books && c.books.indexOf(state.tc_userTasks.list[jobid].bookid) !== -1) {
+              if ((state.tc_userTasks.list[jobid].tasks && state.tc_userTasks.list[jobid].tasks.length > 0) || state.tc_userTasks.list[jobid].completed_tasks > 0) {
+                let exists = collections.find(_c => _c._id === c._id);
+                if (!exists) {
+                  collections.push(c);
                 }
               }
-            });
-          }
-          state.bookCollections = collections;
+            }
+          });
         }
+        state.bookCollections = collections;
       }
       state.bookCollections.forEach(c => {
         let pages = 0;
