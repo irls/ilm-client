@@ -2069,8 +2069,10 @@ export default {
             if (Array.isArray(response)) {
               this.$root.$emit('for-audioeditor:load-silent', record, ...response);
             }
-            this.blockAudio.map = this.blockContent();
-            this.blockAudio.src = this.blockAudiosrc('m4a');
+            if (refContainer) {
+              refContainer.blockAudio.map = refContainer.blockContent();
+              refContainer.blockAudio.src = refContainer.blockAudiosrc('m4a');
+            }
             //this.shiftAudioTask();
           })
           .catch(err => {
