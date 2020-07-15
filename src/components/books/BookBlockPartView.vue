@@ -906,6 +906,9 @@ export default {
 //
 //       });
       //this.showPinnedInText();
+      if (this.audioTasksQueue.block.blockId === this.block.blockid && (!this.isSplittedBlock || this.blockPartIdx === this.audioTasksQueue.block.partIdx)) {
+        this.audioEditorEventsOn();// was scrolled out of visible, and scrolled back, with audio editor opened
+      }
   },
   beforeDestroy: function () {
 //     console.log('beforeDestroy', this.block._id);
