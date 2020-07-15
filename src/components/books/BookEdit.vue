@@ -1899,7 +1899,7 @@ export default {
             } else {
               let part = isSplitted ? response.data.parts[this.audioTasksQueue.block.partIdx] : response.data;
               part._id = this.audioTasksQueue.block.checkId;
-              part.blockid = this.audioTasksQueue.block.blockid;
+              part.blockid = this.audioTasksQueue.block.blockId;
               part.partIdx = this.audioTasksQueue.block.partIdx;
               this.$root.$emit('for-audioeditor:load',
                 isSplitted ? block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a', true) : block.getAudiosrc('m4a', true),
@@ -1918,6 +1918,19 @@ export default {
         let task = null;
         let record = this.audioTasksQueue.log[this.audioTasksQueue.log.length - 1];
         //this.audioTasksQueue.running = record;
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === this.audioTasksQueue.block.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = this.audioTasksQueue.block.partIdx === null ? refContainer.$refs.blocks[0] : refContainer.$refs.blocks[this.audioTasksQueue.block.partIdx];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        let block = this.audioTasksQueueBlock;
+        if (!block) {
+          return;
+        }
+        let blockPart = this.audioTasksQueue.block.partIdx === null ? block : block.parts[this.audioTasksQueue.block.partIdx];
         switch (record.type) {
           case 'cut':
           case 'insert_silence':
@@ -1925,9 +1938,16 @@ export default {
             //let record = this.audioTasksQueue.queue[this.audioTasksQueue.queue.length - 1];
             //console.log(record);
             //console.log(record.wordMap);
-            if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
-              let current_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
-              let w_maps = this.$refs.blockContent.querySelectorAll('[data-map]');
+            let contentContainer = null;
+            if (refContainer && refContainer.$refs.blockContent && refContainer.$refs.blockContent.querySelectorAll) {
+              contentContainer = refContainer.$refs.blockContent;
+            } else {
+              contentContainer = document.createElement('div');// scrolled, container absent, create temporary div
+              contentContainer.innerHTML = blockPart.content;
+            }
+            if (contentContainer) {
+              let current_boundaries = blockPart.manual_boundaries ? blockPart.manual_boundaries.slice() : [];
+              let w_maps = contentContainer.querySelectorAll('[data-map]');
 
               let manual_boundaries = [];
               record.wordMap.forEach((m, i) => {
@@ -1957,15 +1977,21 @@ export default {
                 }
               });
               manual_boundaries = [...new Set(manual_boundaries)].sort((a, b) => {return a - b;});
-              this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
-              this.blockPart.manual_boundaries = manual_boundaries.slice();
+              block.setPartManualBoundaries(this.audioTasksQueue.block.partIdx || 0, manual_boundaries.slice());
+              if (refContainer) {
+                refContainer.blockPart.manual_boundaries = manual_boundaries.slice();
+              }
               manual_boundaries = null;
-              this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
-              this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
-              this.blockPart.content = this.$refs.blockContent.innerHTML;
-              this.blockAudio.map = this.blockPart.content;
-              this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
-              this.showPinnedInText();
+              block.setPartContent(this.audioTasksQueue.block.partIdx || 0, contentContainer.innerHTML);
+              block.setPartAudiosrc(this.audioTasksQueue.block.partIdx || 0, 
+                this.audioTasksQueue.block.partIdx === null ? block.getAudiosrc(null, false) : block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, null, false), 
+                {m4a: this.audioTasksQueue.block.partIdx === null ? block.getAudiosrc('m4a', false) : block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a', false)});
+              if (refContainer) {
+                refContainer.blockPart.content = contentContainer.innerHTML;
+                refContainer.blockAudio.map = blockPart.content;
+                refContainer.showPinnedInText();
+              }
+              this.$root.$emit('for-audioeditor:reload-text', contentContainer.innerHTML, blockPart);
             }
             task = Promise.resolve();
             break;
@@ -2031,8 +2057,12 @@ export default {
             console.log('Not implemented type', record.type, record);
             break;
         }
-        this.audStop();
-        this.isAudioChanged = true;
+        if (refContainer) {
+          refContainer.audStop();
+          refContainer.isAudioChanged = true;
+        } else {
+          block.isAudioChanged = true;
+        }
         return task
           .then((response) => {
             //this.audioTasksQueue.running = null;
