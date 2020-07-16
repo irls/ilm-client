@@ -2191,6 +2191,52 @@ export default {
           block.isAudioChanged = true;
         }
         return response_params;
+      },
+      evFromAudioeditorUnpinRight(position, blockId) {
+        let response = null;
+        let block = this.audioTasksQueueBlock;
+        if (!block) {
+          return;
+        }
+        let audioQueueBlock = this.audioTasksQueue.block;
+        let isBlockPart = audioQueueBlock.partIdx !== null && block.getIsSplittedBlock();
+        let blockPart = isBlockPart ? block.parts[audioQueueBlock.partIdx] : block;
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === audioQueueBlock.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = isBlockPart ? refContainer.$refs.blocks[audioQueueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        if (Array.isArray(blockPart.manual_boundaries) && blockPart.manual_boundaries.length > 0) {
+          let oldBoundaries = blockPart.manual_boundaries;
+          let new_mb = blockPart.manual_boundaries.filter(mb => {
+            return mb <= position;
+          });
+          block.setPartManualBoundaries(isBlockPart ? audioQueueBlock.partIdx : 0, new_mb);
+          blockPart.manual_boundaries = new_mb;
+          //this.blockPart.content = this.$refs.blockContent.innerHTML;
+          //this.blockAudio.map = this.blockPart.content;
+          block.setPartContent(isBlockPart ? audioQueueBlock.partIdx : 0, blockPart.content);
+          block.setPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 
+            block.getPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, null, false), 
+            {m4a: block.getPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 'm4a', false)});
+          let changed = oldBoundaries.length > blockPart.manual_boundaries.length ? true : false;
+          if (changed) {
+            if (refContainer) {
+              refContainer.isAudioChanged = true;
+            } else {
+              blockPart.isAudioChanged = true;
+            }
+          }
+          if (refContainer) {
+            refContainer.showPinnedInText();
+          }
+          //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
+          response = [block.getPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 'm4a', true), blockPart.content, true, blockPart];
+        }
+        return response;
       }
   },
   events: {
