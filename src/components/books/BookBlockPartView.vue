@@ -3029,7 +3029,7 @@ Save audio changes and realign the Block?`,
         this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
         this.$root.$on('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
         this.$root.$on('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
-        this.$root.$on('from-audioeditor:revert', this.evFromAudioEditorRevert);
+        //this.$root.$on('from-audioeditor:revert', this.evFromAudioEditorRevert);
         this.$root.$on('from-audioeditor:tasks-queue-push', this.evFromAudioEditorTasksQueuePush);
       },
       audioEditorEventsOff() {
@@ -3045,7 +3045,7 @@ Save audio changes and realign the Block?`,
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
         this.$root.$off('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
         this.$root.$off('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
-        this.$root.$off('from-audioeditor:revert', this.evFromAudioEditorRevert);
+        //this.$root.$off('from-audioeditor:revert', this.evFromAudioEditorRevert);
         this.$root.$off('from-audioeditor:tasks-queue-push', this.evFromAudioEditorTasksQueuePush);
       },
       //-- } -- end -- Events --//

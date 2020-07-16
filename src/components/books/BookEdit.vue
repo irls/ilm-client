@@ -155,7 +155,8 @@ export default {
           blockSelection: 'blockSelection',
           currentJobInfo: 'currentJobInfo',
           audioTasksQueue: 'audioTasksQueue',
-          audioTasksQueueBlock: 'audioTasksQueueBlock'
+          audioTasksQueueBlock: 'audioTasksQueueBlock',
+          audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart'
       }),
       metaStyles: function () {
           let result = '';
@@ -250,7 +251,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges']),
 
     test(ev) {
         console.log('test', ev);
@@ -2237,6 +2238,87 @@ export default {
           response = [block.getPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 'm4a', true), blockPart.content, true, blockPart];
         }
         return response;
+      },
+      evFromAudioEditorRevert() {
+        let block = this.audioTasksQueueBlock;// storeList block
+        let blk = this.audioTasksQueueBlockOrPart;// storeList block or it's part for splitted block
+        let queueBlock = this.audioTasksQueue.block;// short block info for audio tasks queue
+        if (!block || !blk) {
+          return Promise.resolve();
+        }
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === queueBlock.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = queueBlock.partIdx !== null ? refContainer.$refs.blocks[queueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        //this.clearAudioTasks(true);
+        if (blk && blk.audiosrc_original) {// should revert to original audio, otherwise usual discard of changes
+          block.isSaving = true;
+          return this.revertAudio([block.blockid, queueBlock.partIdx])
+            .then((res) => {
+              block.isSaving = false;
+              //console.log(res.data);
+              block.setPartAudiosrc(queueBlock.partIdx || 0, res.data.audiosrc, res.data.audiosrc_ver);
+              block.setPartManualBoundaries(queueBlock.partIdx, res.data.manual_boundaries);
+              let text = blk.content;
+              let loadBlock = blk;
+              loadBlock.manual_boundaries = block.getPartManualBoundaries(queueBlock.partIdx || 0);
+              loadBlock._id = queueBlock.checkId;
+              loadBlock.blockid = block.blockid;
+              loadBlock.partIdx = queueBlock.partIdx;
+              //this.$root.$emit('for-audioeditor:load', block.getPartAudiosrc(queueBlock.partIdx || 0, 'm4a'), text, false, loadBlock);
+              this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+              if (refContainer) {
+                refContainer.showPinnedInText();
+              }
+              return Promise.resolve();
+            });
+        } else {
+          return this.discardAudioEdit(true);
+        }
+      },
+      discardAudioEdit: function(reload = true) {
+        let queueBlock = this.audioTasksQueue.block;
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === queueBlock.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = queueBlock.partIdx !== null ? refContainer.$refs.blocks[queueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        if (refContainer) {
+          refContainer.isUpdating = true;
+        }
+        return this.discardAudioChanges()
+          .then(response => {
+            let block = this.audioTasksQueueBlock;
+            if (response.status == 200 && response.data) {
+              if (queueBlock.partIdx !== null) {
+                let part = this.audioTasksQueueBlockOrPart;
+                part._id = queueBlock.checkId;
+                part.blockid = block.blockid;
+                part.partIdx = queueBlock.partIdx;
+                if (reload) {
+                  this.$root.$emit('for-audioeditor:load', block.getPartAudiosrc(queueBlock.partIdx, 'm4a'), block.getPartContent(queueBlock.partIdx), true, part);
+                }
+              } else {
+                if (reload) {
+                  this.$root.$emit('for-audioeditor:load', block.getAudiosrc('m4a'), block.content, false, block);
+                }
+              }
+            }
+            if (refContainer) {
+              refContainer.isUpdating = false;
+            }
+            return Promise.resolve();
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
       }
   },
   events: {
@@ -2321,6 +2403,7 @@ export default {
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
       this.$root.$on('from-toolbar:toggle-meta', this.correctEditWrapper);
       this.$root.$on('from-audioeditor:save', this.saveBlockAudioChanges);
+      this.$root.$on('from-audioeditor:revert', this.evFromAudioEditorRevert);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -2346,6 +2429,7 @@ export default {
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
     this.$root.$off('from-toolbar:toggle-meta', this.correctEditWrapper);
     this.$root.$off('from-audioeditor:save', this.saveBlockAudioChanges);
+    this.$root.$off('from-audioeditor:revert', this.evFromAudioEditorRevert);
   },
   watch: {
     'meta._id': {
