@@ -39,7 +39,7 @@ class liveDB {
         this.stopWatch(data.class);
       });
       socket.on('connect_error', (data) => {
-        console.log('connect_error')
+        console.error(data)
         socket.close();
       })
     }
@@ -61,8 +61,9 @@ class liveDB {
   }
 
   onBookReimport() {
-    if (this.keys['blockV']) {
-      socket.emit('stop-watch-all', {class: 'blockV', key: this.keys['blockV']});
+    let key = this.keys['blockV'];
+    if (key) {
+      socket.emit('stop-watch-all', {class: 'blockV', key});
       this.stopWatch('blockV');
     }
   }

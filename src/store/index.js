@@ -1135,6 +1135,16 @@ export const store = new Vuex.Store({
       });
     },
 
+    stopWatchLiveQueries({state}, vertex){
+      if(vertex) {
+        state.liveDB.stopWatch(vertex)
+        return;
+      }
+
+      state.liveDB.stopWatch('metaV');
+      state.liveDB.stopWatch('job');
+      state.liveDB.stopWatch('blockV');
+    },
     // logout event
     disconnectDB ({ state, commit }) {
       state.liveDB.stopWatchAll();
@@ -1288,13 +1298,15 @@ export const store = new Vuex.Store({
 //         // save old state
 //       }
 
-      if (book_id && book_id === state.currentBookid) return Promise.resolve(state.currentBookMeta);
+      if (book_id && book_id === state.currentBookid) {
+        return Promise.resolve(state.currentBookMeta);
+      }
 
       if (book_id) {
         commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: ''});
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
         //let metaDB = state.metaRemoteDB;
-        state.liveDB.stopWatch('blockV');
+        dispatch('stopWatchLiveQueries', 'blockV');
         let bookMeta = new Promise((resolve, reject) => {
           axios.get(state.API_URL + 'books/book_meta/' + book_id)
             .then((answer) => {
@@ -1319,8 +1331,8 @@ export const store = new Vuex.Store({
           dispatch('getCurrentJobInfo', true);
           commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: answer.coverimgURL});
           //dispatch('loadBookToc', {bookId: book_id});
-          state.liveDB.stopWatch('metaV');
-          state.liveDB.stopWatch('job');
+          dispatch('stopWatchLiveQueries', 'metaV');
+          dispatch('stopWatchLiveQueries', 'job');
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
               //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
@@ -2715,7 +2727,7 @@ export const store = new Vuex.Store({
         .then((doc) => {
           return axios.put(state.API_URL + 'task/' + state.currentBookMeta.bookid + '/finish_cleanup')
             .then((doc) => {
-              if (!doc.data.error) {
+              if (doc.data && !doc.data.error) {
                 state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
                 dispatch('getProcessQueue');
                 return Promise.all([dispatch('tc_loadBookTask', state.currentBookMeta.bookid),
@@ -2766,14 +2778,14 @@ export const store = new Vuex.Store({
         return Promise.reject({error: 'Book is not selected'});
       }
       if (!(state.isAdmin || state.isLibrarian)){
-            return Promise.resolve({data: {}});
+        return Promise.resolve({data: {}});
       }
 
       return dispatch('updateBookMeta', {private: false})
-        .then((doc) => {
+        .then(() => {
           return axios.put(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/batch_approve_edit_align')
             .then((doc) => {
-              if (!doc.data.error) {
+              if (doc.data && !doc.data.error) {
                 state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
                 dispatch('getProcessQueue');
                 return Promise.all([dispatch('tc_loadBookTask', state.currentBookMeta.bookid),

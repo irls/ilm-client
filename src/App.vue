@@ -49,12 +49,22 @@ export default {
   },
 
   created () {
+    window.addEventListener('beforeunload', this.stopWatchLiveQueries)
     let mode = this.$route.meta && this.$route.meta.mode ? this.$route.meta.mode : null;
     this.$store.commit('set_book_mode', mode);
   },
 
   methods: {
-    ...mapActions(['loadBook', 'updateBooksList', 'loadCollection', 'loadLibrary'])
+    ...mapActions(['loadBook', 'updateBooksList', 'loadCollection', 'loadLibrary']),
+    //doesn't work from store in case with beforeDestroy
+    stopWatchLiveQueries(){
+      this.$store.state.liveDB.stopWatch('metaV');
+      this.$store.state.liveDB.stopWatch('job');
+      this.$store.state.liveDB.stopWatch('blockV');
+    },
+  },
+  beforeDestroy () {
+    window.removeEventListener('beforeunload', this.stopWatchLiveQueries)
   }
 }
 </script>

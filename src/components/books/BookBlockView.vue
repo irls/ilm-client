@@ -3843,12 +3843,6 @@ Save text changes and realign the Block?`,
 
         this.voiceworkUpdating = true;
 
-        if (false && this.voiceworkUpdateType !== 'single') {
-          this.$store.state.liveDB.onBookReimport();
-          this.$store.state.liveDB.stopWatch('metaV');
-          this.$store.state.liveDB.stopWatch('job');
-        }
-
         let api_url = `${this.API_URL}book/block/${this.meta.bookid}/${this.block._uRid}/set_voicework`;
         let api = this.$store.state.auth.getHttp();
         return api.post(api_url, {
