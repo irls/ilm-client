@@ -2079,7 +2079,119 @@ export default {
             this.audioTasksQueue.running = null;
           });
       }
-    }
+    },
+    evFromAudioeditorWordRealign(map, pinnedIndex, blockId) {
+        let response_params = null;
+        let block = this.audioTasksQueueBlock;
+        if (!block) {
+          return;
+        }
+        let audioQueueBlock = this.audioTasksQueue.block;
+        let isBlockPart = audioQueueBlock.partIdx !== null && block.getIsSplittedBlock();
+        let blockPart = isBlockPart ? block.parts[audioQueueBlock.partIdx] : block;
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === audioQueueBlock.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = isBlockPart ? refContainer.$refs.blocks[audioQueueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        let contentContainer = null;
+        if (refContainer && refContainer.$refs.blockContent && refContainer.$refs.blockContent.querySelectorAll) {
+          contentContainer = refContainer.$refs.blockContent;
+        } else {
+          contentContainer = document.createElement('div');// scrolled, container absent, create temporary div
+          contentContainer.innerHTML = blockPart.content;
+        }
+        if (contentContainer) {
+          if (refContainer) {
+            refContainer.audStop();
+          }
+          //console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
+          let current_boundaries = blockPart.manual_boundaries ? blockPart.manual_boundaries.slice() : [];
+          let w_maps = contentContainer.querySelectorAll('[data-map]');
+
+          let currentMap = w_maps[map[pinnedIndex].index].getAttribute('data-map').split(',');
+          currentMap[0] = parseInt(currentMap[0]);
+          currentMap[1] = parseInt(currentMap[1]);
+
+          let manual_boundaries = [map[pinnedIndex].map[0]];
+          map.forEach(m => {
+            let cMap = w_maps[m.index].getAttribute('data-map');
+            if (cMap) {
+              cMap = cMap.split(',');
+              cMap[0] = parseInt(cMap[0]);
+              cMap[1] = parseInt(cMap[1]);
+              if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
+                manual_boundaries.push(m.map[0]);
+                current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
+              }
+            }
+            w_maps[m.index].setAttribute('data-map', m.map.join());
+            if (m.map[1] > 50) {
+              w_maps[m.index].classList.remove('alignment-changed');
+            }
+          });
+          if (currentMap[0] !== map[pinnedIndex].map[0] && manual_boundaries.indexOf(map[pinnedIndex].map[0]) === -1) {
+            if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
+              manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
+            }
+            //manual_boundaries.push(_m[0]);
+          }
+          if (currentMap[0] + currentMap[1] !== map[pinnedIndex].map[0] + map[pinnedIndex].map[1] && manual_boundaries.indexOf(map[pinnedIndex].map[0] + map[pinnedIndex].map[1]) === -1) {
+            if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
+              manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
+            }
+            //manual_boundaries.push(_m[0] + _m[1]);
+          }
+          current_boundaries.forEach(_m => {
+            if (manual_boundaries.indexOf(_m) === -1) {
+              manual_boundaries.push(_m);
+              //console.log(`PUSH ${_m[0]}`);
+            }
+          });
+          manual_boundaries = [...new Set(manual_boundaries)].sort((a, b) => {return a - b;});
+          block.setPartManualBoundaries(isBlockPart ? audioQueueBlock.partIdx : 0, manual_boundaries.slice());
+          if (refContainer) {
+            refContainer.blockPart.manual_boundaries = manual_boundaries.slice();
+          }
+          manual_boundaries = null;
+          block.setPartContent(isBlockPart ? audioQueueBlock.partIdx : 0, contentContainer.innerHTML);
+          block.setPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 
+            isBlockPart ? block.getPartAudiosrc(audioQueueBlock.partIdx, null, false) : block.getAudiosrc(null, false), 
+            {m4a: isBlockPart ? block.getPartAudiosrc(audioQueueBlock.partIdx, 'm4a', false) : block.getAudiosrc('m4a', false)});
+          if (refContainer) {
+            refContainer.blockPart.content = contentContainer.innerHTML;
+            refContainer.blockAudio.map = refContainer.blockPart.content;
+          }
+          if (this.audioTasksQueue.log.length === 0) {
+            this.$root.$emit('for-audioeditor:reload-text', refContainer.innerHTML, blockPart);
+          } else {
+            if (isBlockPart) {
+              response_params = [block.getPartAudiosrc(audioQueueBlock.partIdx, 'm4a'), block.getPartContent(audioQueueBlock.partIdx), true, Object.assign({_id: audioQueueBlock.checkId}, blockPart)];
+            } else {
+              response_params = [block.getAudiosrc(null), block.content, true, block];
+            }
+          }
+          if (refContainer) {
+            Vue.nextTick(() => {
+              refContainer.showPinnedInText();
+            });
+          }
+          //this.pushChange('content');
+
+
+          //this.blockPart.manual_boundaries = manual_boundaries.slice();
+          //this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
+          //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+          //this.blockPart.content = this.$refs.blockContent.innerHTML;
+          //this.blockAudio.map = this.$refs.blockContent.innerHTML;
+          //this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
+          block.isAudioChanged = true;
+        }
+        return response_params;
+      }
   },
   events: {
       currentEditingBlock_id : function (key) {
