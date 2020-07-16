@@ -100,7 +100,8 @@
                       <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
                           <i class="fa fa-language" aria-hidden="true"></i>
                           Language: <select :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
-                          <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
+                            <option v-if="!blockLanguages.hasOwnProperty(block.language) && block.language != false" :value="block.language">{{ block.language }}</option>
+                            <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
                         </select>
                       </li>
                       <li class="separator"></li>
@@ -361,6 +362,7 @@
                         </label>
                         <label><i class="fa fa-language" aria-hidden="true"></i>
                         <select :disabled="!allowEditing ||  proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
+                          <option v-if="!footnLanguages.hasOwnProperty(footnote.language)" :value="footnote.language">{{ footnote.language }}</option>
                           <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
                         </select>
                         </label>
@@ -980,7 +982,7 @@ export default {
       getBlockLang: {
         cache: false,
         get() {
-          if (this.block.language && this.block.language.length) {
+          if (this.block.language && this.block.language.length && this.block.language !== false) {
             return this.block.language;
           } else {
             return this.meta.language;

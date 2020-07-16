@@ -16,6 +16,8 @@ import Align from '../components/Align'
 import AudioEditor from '../components/AudioEditor'
 import Collections from '../components/Collections'
 import CollectionsGrid from '../components/collections/CollectionsGrid';
+import Settings from '../components/Settings'
+
 
 Vue.use(Router)
 
@@ -100,6 +102,10 @@ export default new Router({
     {
       path: '/audio_editor',
       component: AudioEditor
+    },
+    {
+      path: '/settings',
+      component: Settings
     },
     {
       path: '/collections',
