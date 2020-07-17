@@ -1212,6 +1212,14 @@ export const store = new Vuex.Store({
                     data.block.parts[i] = p;
                   }
                 });
+                let hasChanges = blockStore.parts.find(p => {
+                  return p.isChanged;
+                });
+                if (hasChanges) {
+                  if (Array.isArray(blockStore.flags)) {
+                    data.block.flags = blockStore.flags;// do not update flags for edited block
+                  }
+                }
               }
             }
             if (data.action === 'insert' && data.block) {
@@ -3499,6 +3507,20 @@ export const store = new Vuex.Store({
           this.$root.$emit('set-error-alert', err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Failed to apply your correction. Please try again.');*/
           return Promise.reject(err)
         });
+    },
+    updateStoreFlag({state}, [blockid, flagId, updated]) {
+      let block = state.storeList.get(blockid);
+      if (block) {
+        let storeFlag = block.flags.find(f => {
+          return f._id === flagId;
+        });
+        let index = block.flags.indexOf(storeFlag);
+        if (storeFlag && index !== -1) {
+          block.flags[index] = updated;
+        } else {
+          block.flags.push(updated);
+        }
+      }
     }
   }
 })

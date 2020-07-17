@@ -1285,7 +1285,8 @@ export default {
         'recountVoicedBlocks',
         'addAudioTask',
         'applyTasksQueue',
-        'saveBlockAudio'
+        'saveBlockAudio',
+        'updateStoreFlag'
       ]),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
@@ -1791,6 +1792,9 @@ Save audio changes and realign the Block?`,
           this.$refs.blocks.forEach((blk, blkIdx) => {
             this.block.setPartContent(blkIdx, blk.clearBlockContent());
           });
+          this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
+        }
+        if (this.hasChange('flags')) {
           this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
         }
         if (this.mode === 'proofread') {
@@ -2934,6 +2938,12 @@ Save text changes and realign the Block?`,
             node = _this.$refs.blockContent.querySelector(`[data-flag="${flagId}"]`);
           }
           if (node) node.dataset.status = this.block.calcFlagStatus(flagId);
+        }
+        let flag = this.block.flags.find(f => {
+          return f._id === flagId;
+        });
+        if (flag) {
+          this.updateStoreFlag([this.block.blockid, flagId, flag]);// if editing flags with saving and without page reload store flags are not updated in other way
         }
       },
 
