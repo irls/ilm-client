@@ -689,22 +689,20 @@ export const store = new Vuex.Store({
       if (state.isAdmin || state.isLibrarian) {
         state.bookCollections = state.bookCollectionsAll;
       } else if (state.tc_userTasks) {
-        if (state.tc_userTasks.total) {
-          let collections = [];
-          for (let jobid in state.tc_userTasks.list) {
-            state.bookCollectionsAll.forEach(c => {
-              if (c.books && c.books.indexOf(state.tc_userTasks.list[jobid].bookid) !== -1) {
-                if (state.tc_userTasks.list[jobid].tasks && state.tc_userTasks.list[jobid].tasks.length > 0) {
-                  let exists = collections.find(_c => _c._id === c._id);
-                  if (!exists) {
-                    collections.push(c);
-                  }
+        let collections = [];
+        for (let jobid in state.tc_userTasks.list) {
+          state.bookCollectionsAll.forEach(c => {
+            if (c.books && c.books.indexOf(state.tc_userTasks.list[jobid].bookid) !== -1) {
+              if ((state.tc_userTasks.list[jobid].tasks && state.tc_userTasks.list[jobid].tasks.length > 0) || state.tc_userTasks.list[jobid].completed_tasks > 0) {
+                let exists = collections.find(_c => _c._id === c._id);
+                if (!exists) {
+                  collections.push(c);
                 }
               }
-            });
-          }
-          state.bookCollections = collections;
+            }
+          });
         }
+        state.bookCollections = collections;
       }
       state.bookCollections.forEach(c => {
         let pages = 0;
@@ -1137,6 +1135,16 @@ export const store = new Vuex.Store({
       });
     },
 
+    stopWatchLiveQueries({state}, vertex){
+      if(vertex) {
+        state.liveDB.stopWatch(vertex)
+        return;
+      }
+
+      state.liveDB.stopWatch('metaV');
+      state.liveDB.stopWatch('job');
+      state.liveDB.stopWatch('blockV');
+    },
     // logout event
     disconnectDB ({ state, commit }) {
       state.liveDB.stopWatchAll();
@@ -1204,6 +1212,14 @@ export const store = new Vuex.Store({
                     data.block.parts[i] = p;
                   }
                 });
+                let hasChanges = blockStore.parts.find(p => {
+                  return p.isChanged;
+                });
+                if (hasChanges) {
+                  if (Array.isArray(blockStore.flags)) {
+                    data.block.flags = blockStore.flags;// do not update flags for edited block
+                  }
+                }
               }
             }
             if (data.action === 'insert' && data.block) {
@@ -1290,13 +1306,15 @@ export const store = new Vuex.Store({
 //         // save old state
 //       }
 
-      if (book_id && book_id === state.currentBookid) return Promise.resolve(state.currentBookMeta);
+      if (book_id && book_id === state.currentBookid) {
+        return Promise.resolve(state.currentBookMeta);
+      }
 
       if (book_id) {
         commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: ''});
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
         //let metaDB = state.metaRemoteDB;
-        state.liveDB.stopWatch('blockV');
+        dispatch('stopWatchLiveQueries', 'blockV');
         let bookMeta = new Promise((resolve, reject) => {
           axios.get(state.API_URL + 'books/book_meta/' + book_id)
             .then((answer) => {
@@ -1321,8 +1339,8 @@ export const store = new Vuex.Store({
           dispatch('getCurrentJobInfo', true);
           commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: answer.coverimgURL});
           //dispatch('loadBookToc', {bookId: book_id});
-          state.liveDB.stopWatch('metaV');
-          state.liveDB.stopWatch('job');
+          dispatch('stopWatchLiveQueries', 'metaV');
+          dispatch('stopWatchLiveQueries', 'job');
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
               //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
@@ -2717,7 +2735,7 @@ export const store = new Vuex.Store({
         .then((doc) => {
           return axios.put(state.API_URL + 'task/' + state.currentBookMeta.bookid + '/finish_cleanup')
             .then((doc) => {
-              if (!doc.data.error) {
+              if (doc.data && !doc.data.error) {
                 state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
                 dispatch('getProcessQueue');
                 return Promise.all([dispatch('tc_loadBookTask', state.currentBookMeta.bookid),
@@ -2768,14 +2786,14 @@ export const store = new Vuex.Store({
         return Promise.reject({error: 'Book is not selected'});
       }
       if (!(state.isAdmin || state.isLibrarian)){
-            return Promise.resolve({data: {}});
+        return Promise.resolve({data: {}});
       }
 
       return dispatch('updateBookMeta', {private: false})
-        .then((doc) => {
+        .then(() => {
           return axios.put(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/batch_approve_edit_align')
             .then((doc) => {
-              if (!doc.data.error) {
+              if (doc.data && !doc.data.error) {
                 state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
                 dispatch('getProcessQueue');
                 return Promise.all([dispatch('tc_loadBookTask', state.currentBookMeta.bookid),
@@ -3489,6 +3507,20 @@ export const store = new Vuex.Store({
           this.$root.$emit('set-error-alert', err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Failed to apply your correction. Please try again.');*/
           return Promise.reject(err)
         });
+    },
+    updateStoreFlag({state}, [blockid, flagId, updated]) {
+      let block = state.storeList.get(blockid);
+      if (block) {
+        let storeFlag = block.flags.find(f => {
+          return f._id === flagId;
+        });
+        let index = block.flags.indexOf(storeFlag);
+        if (storeFlag && index !== -1) {
+          block.flags[index] = updated;
+        } else {
+          block.flags.push(updated);
+        }
+      }
     }
   }
 })

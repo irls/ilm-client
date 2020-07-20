@@ -8,7 +8,7 @@
         <div class="col-md-6 pull-left">
           Language
           <select v-model="lang">
-            <option v-for="ll in langList" :value="ll.code">{{ll.title}}</option>
+            <option v-for="ll in langList" :value="ll[0]">{{ll[1]}}</option>
           </select>
         </div>
         <div class="col-md-6 pull-right">
@@ -55,6 +55,7 @@
 </template>
 <script>
   import api_config from '../../mixins/api_config.js'
+  import { Languages }      from "../../mixins/lang_config.js"
   import ReadAlong from 'readalong'
   import Split from 'split.js'
   export default {
@@ -74,23 +75,16 @@
           file: {},
           audioSrc: '',
           player: false,
-          lang: '',
-          langList: [
-            {
-              code: 'en',
-              title: 'English'
-            },
-            {
-              code: 'fa',
-              title: 'Persian'
-            },
-            {
-              code: 'ar',
-              title: 'Arabic'
-            }
-          ]
+          lang: ''
         }
       },
+      computed: {
+        langList() {
+          console.log(Languages);
+          return Object.entries(Languages)
+        }
+      },
+
       mounted() {
         Split(['#top', '#bottom'], {
           direction: 'vertical'

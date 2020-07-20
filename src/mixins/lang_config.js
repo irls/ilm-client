@@ -1,29 +1,24 @@
+//import axios from 'axios'
+import API_CONFIG  from './api_config.js'
+//import access from './access.js';
 
-let Languages = {
-  "en":     'English',
-  "de":     'German',
-  "da":     'Danish',
-  "cy":     'Welsh',
-  "es":     'Spanish',
-  "fr":     'French',
-  "is":     'Icelandic',
-  "it":     'Italian',
-  "ko":     'Korean',
-  "ja":     'Japanese',
-  "nb":     'Norwegian',
-  "nl":     'Dutch',
-  "pl":     'Polish',
-  "pt":     'Portuguese',
-  "ro":     'Romanian',
-  "ru":     'Russian',
-  "sv":     'Swedish',
-  "tr":     'Turkish',
+//console.log('1', data());
+console.log('1', API_CONFIG.data().API_URL);
 
-  // Not in Polly:
-  "ar":     'Arabic',
-  "fa":     'Farsi',
-  "cn":     'Chinese',
-};
+function getLanguages(){
+  var result = null;
+  var xmlhttp = new XMLHttpRequest();
+  let filePath = API_CONFIG.data().API_URL + '/settings/languages';
+  xmlhttp.open("GET", filePath, false);
+  xmlhttp.send();
+  if (xmlhttp.status==200) {
+    result = xmlhttp.responseText;
+    result = JSON.parse(result);
+  }
+  return result;
+}
+
+let Languages = getLanguages();
 
 export {
   Languages

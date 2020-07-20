@@ -254,7 +254,11 @@ export default {
     test(ev) {
         console.log('test', ev);
     },
-
+    stopWatchLiveQueries(){
+      this.$store.state.liveDB.stopWatch('metaV');
+      this.$store.state.liveDB.stopWatch('job');
+      this.$store.state.liveDB.stopWatch('blockV');
+    },
     refreshTmpl() {
       // a hack to update template
       //Vue.set(this, 'screenTop', this.screenTop + 0.1);
@@ -801,7 +805,13 @@ export default {
       }
       return true;
     },
+    evFromAudioeditorClosedIndicator(blockId) {
+        //console.log('evFromAudioeditorClosed bookedit', blockId, this.audioTasksQueue.block);
+        if (this.audioTasksQueue.block.blockId === blockId){
+            this.audioTasksQueue.block.blockId = null;
+        }
 
+      },
     eventKeyDown: function(key) {
         if (key.code==='Escape' || key.keyCode===27) this.$events.emit('currentEditingBlock_id', key);
     },
@@ -1963,6 +1973,8 @@ export default {
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
       this.$root.$on('from-toolbar:toggle-meta', this.correctEditWrapper);
+      this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosedIndicator);
+
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -1973,6 +1985,7 @@ export default {
   },
 
   beforeDestroy:  function() {
+    this.stopWatchLiveQueries();
     this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
     this.setBlockSelection({start: {}, end: {}});

@@ -100,7 +100,8 @@
                       <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
                           <i class="fa fa-language" aria-hidden="true"></i>
                           Language: <select :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
-                          <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
+                            <option v-if="!blockLanguages.hasOwnProperty(block.language) && block.language != false" :value="block.language">{{ block.language }}</option>
+                            <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
                         </select>
                       </li>
                       <li class="separator"></li>
@@ -361,6 +362,7 @@
                         </label>
                         <label><i class="fa fa-language" aria-hidden="true"></i>
                         <select :disabled="!allowEditing ||  proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
+                          <option v-if="!footnLanguages.hasOwnProperty(footnote.language)" :value="footnote.language">{{ footnote.language }}</option>
                           <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
                         </select>
                         </label>
@@ -980,7 +982,7 @@ export default {
       getBlockLang: {
         cache: false,
         get() {
-          if (this.block.language && this.block.language.length) {
+          if (this.block.language && this.block.language.length && this.block.language !== false) {
             return this.block.language;
           } else {
             return this.meta.language;
@@ -1283,7 +1285,8 @@ export default {
         'recountVoicedBlocks',
         'addAudioTask',
         'applyTasksQueue',
-        'saveBlockAudio'
+        'saveBlockAudio',
+        'updateStoreFlag'
       ]),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
@@ -1789,6 +1792,9 @@ Save audio changes and realign the Block?`,
           this.$refs.blocks.forEach((blk, blkIdx) => {
             this.block.setPartContent(blkIdx, blk.clearBlockContent());
           });
+          this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
+        }
+        if (this.hasChange('flags')) {
           this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
         }
         if (this.mode === 'proofread') {
@@ -2933,6 +2939,12 @@ Save text changes and realign the Block?`,
           }
           if (node) node.dataset.status = this.block.calcFlagStatus(flagId);
         }
+        let flag = this.block.flags.find(f => {
+          return f._id === flagId;
+        });
+        if (flag) {
+          this.updateStoreFlag([this.block.blockid, flagId, flag]);// if editing flags with saving and without page reload store flags are not updated in other way
+        }
       },
 
       canResolveFlagPart: function (flagPart) {
@@ -3406,12 +3418,18 @@ Save text changes and realign the Block?`,
       },
       joinWithPrevious() {
         this.joinBlocks(this.block, this.blockId, 'previous')
-        .then(()=>{})
+        .then(()=>{
+            this.tc_loadBookTask(this.block.bookid);
+            this.getCurrentJobInfo();
+        })
         .catch(()=>{})
       },
       joinWithNext() {
         this.joinBlocks(this.block, this.blockId, 'next')
-        .then(()=>{})
+        .then(()=>{
+            this.tc_loadBookTask(this.block.bookid);
+            this.getCurrentJobInfo();
+        })
         .catch(()=>{})
       },
       showFootnoteAudioEditor(footnote, ftnIdx) {
@@ -3834,12 +3852,6 @@ Save text changes and realign the Block?`,
         }
 
         this.voiceworkUpdating = true;
-
-        if (false && this.voiceworkUpdateType !== 'single') {
-          this.$store.state.liveDB.onBookReimport();
-          this.$store.state.liveDB.stopWatch('metaV');
-          this.$store.state.liveDB.stopWatch('job');
-        }
 
         let api_url = `${this.API_URL}book/block/${this.meta.bookid}/${this.block._uRid}/set_voicework`;
         let api = this.$store.state.auth.getHttp();
