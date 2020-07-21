@@ -3727,6 +3727,10 @@ Save text changes and realign the Block?`,
             this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
             return Promise.reject(err);
           });
+      },
+      reloadBlockPart() {
+        this.blockPart.audiosrc = this.blockAudiosrc(null, false);
+        this.blockPart.audiosrc_ver['m4a'] = this.blockAudiosrc('m4a', false);
       }
 
   },

@@ -1885,7 +1885,60 @@ export default {
     },
     saveBlockAudioChanges(realign = false, preparedData = false) {
       if (this.audioTasksQueueBlock) {
-        console.log(`saveBlockAudioChanges: `, this.audioTasksQueueBlock)
+        //console.log(`saveBlockAudioChanges: `, this.audioTasksQueueBlock)
+        let blk = this.audioTasksQueueBlock;
+        //console.log(blk.isChanged);
+        if ((blk.isChanged || (this.audioTasksQueue.block.partIdx && blk.parts[this.audioTasksQueue.block.partIdx].isChanged)) && preparedData === false) {
+          this.scrollToBlock(this.audioTasksQueue.block.blockId, this.audioTasksQueue.block.partIdx);
+          this.$root.$emit('closeFlagPopup', true);
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block text has been modified and not saved.<br>
+Save text changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+                    return b.block.blockid === this.audioTasksQueue.block.blockId;
+                  });
+                  if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+                    refContainer = this.audioTasksQueue.block.partIdx === null ? refContainer.$refs.blocks[0] : refContainer.$refs.blocks[this.audioTasksQueue.block.partIdx];// need subblock, container BookBlockPartView
+                  } else {
+                    refContainer = null;
+                  }
+                  this.$root.$emit('hide-modal');
+                  if (!refContainer) {
+                    return Promise.resolve();
+                  }
+                  if (blk.isChanged) {
+                    return this.saveBlockAudioChanges(false, {content: refContainer.clearBlockContent()})
+                      .then(() => {
+                        refContainer.reloadBlockPart();
+                        return refContainer.assembleBlockProxy(false, true, [], false);
+                      });
+                  } else {
+                    let preparedData = {content: refContainer.clearBlockContent()}
+                    return refContainer.assembleBlockProxy(false, false, false)
+                      .then(() => {
+                        return this.saveBlockAudioChanges(true, preparedData);
+                      });
+                  }
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return Promise.resolve();
+        }
         this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         return this.applyTasksQueue([null])
           .then(() => {
