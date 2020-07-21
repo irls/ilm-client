@@ -1884,9 +1884,9 @@ export default {
       }
     },
     saveBlockAudioChanges(realign = false, preparedData = false) {
-      if (this.audioTasksQueueBlock) {
+      let blk = this.audioTasksQueueBlock();
+      if (blk) {
         //console.log(`saveBlockAudioChanges: `, this.audioTasksQueueBlock)
-        let blk = this.audioTasksQueueBlock;
         //console.log(blk.isChanged);
         if ((blk.isChanged || (this.audioTasksQueue.block.partIdx && blk.parts[this.audioTasksQueue.block.partIdx].isChanged)) && preparedData === false) {
           this.scrollToBlock(this.audioTasksQueue.block.blockId, this.audioTasksQueue.block.partIdx);
@@ -1946,7 +1946,7 @@ Save text changes and realign the Block?`,
           })
           .then(response => {
             this.$root.$emit('for-audioeditor:flush');
-            let block = this.audioTasksQueueBlock;
+            let block = this.audioTasksQueueBlock();
             let isSplitted = block.getIsSplittedBlock();
             if (realign) {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
@@ -1980,7 +1980,7 @@ Save text changes and realign the Block?`,
         } else {
           refContainer = null;
         }
-        let block = this.audioTasksQueueBlock;
+        let block = this.audioTasksQueueBlock();
         if (!block) {
           return;
         }
@@ -2136,7 +2136,7 @@ Save text changes and realign the Block?`,
     },
     evFromAudioeditorWordRealign(map, pinnedIndex, blockId) {
         let response_params = null;
-        let block = this.audioTasksQueueBlock;
+        let block = this.audioTasksQueueBlock();
         if (!block) {
           return;
         }
@@ -2248,7 +2248,7 @@ Save text changes and realign the Block?`,
       },
       evFromAudioeditorUnpinRight(position, blockId) {
         let response = null;
-        let block = this.audioTasksQueueBlock;
+        let block = this.audioTasksQueueBlock();
         if (!block) {
           return;
         }
@@ -2293,7 +2293,7 @@ Save text changes and realign the Block?`,
         return response;
       },
       evFromAudioEditorRevert() {
-        let block = this.audioTasksQueueBlock;// storeList block
+        let block = this.audioTasksQueueBlock();// storeList block
         let blk = this.audioTasksQueueBlockOrPart;// storeList block or it's part for splitted block
         let queueBlock = this.audioTasksQueue.block;// short block info for audio tasks queue
         if (!block || !blk) {
@@ -2348,7 +2348,7 @@ Save text changes and realign the Block?`,
         }
         return this.discardAudioChanges()
           .then(response => {
-            let block = this.audioTasksQueueBlock;
+            let block = this.audioTasksQueueBlock();
             if (response.status == 200 && response.data) {
               if (queueBlock.partIdx !== null) {
                 let part = this.audioTasksQueueBlockOrPart;
@@ -2374,7 +2374,7 @@ Save text changes and realign the Block?`,
           });
       },
       evFromAudioeditorUndo (blockId, audio, text, isModified) {
-        let block = this.audioTasksQueueBlock;// block from storeList
+        let block = this.audioTasksQueueBlock();// block from storeList
         let queueBlock = this.audioTasksQueue.block;// queue block info
         let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
           return b.block.blockid === queueBlock.blockId;

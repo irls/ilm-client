@@ -2412,7 +2412,7 @@ Discard unsaved audio changes?`,
           shiftedWords.forEach(sw => {
             shiftedOldMap.push(oldMap[sw.index]);
           })
-          let queueBlock = this.audioTasksQueueBlock;
+          let queueBlock = this.audioTasksQueueBlock();
           this._addHistoryLocal('manual_boundaries', null, null, null, {
             shifted: shiftedWords,
             oldMap: shiftedOldMap,
