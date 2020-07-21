@@ -2372,6 +2372,42 @@ Save text changes and realign the Block?`,
           .catch(err => {
             return Promise.reject(err);
           });
+      },
+      evFromAudioeditorUndo (blockId, audio, text, isModified) {
+        let block = this.audioTasksQueueBlock;// block from storeList
+        let queueBlock = this.audioTasksQueue.block;// queue block info
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === queueBlock.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = queueBlock.partIdx !== null ? refContainer.$refs.blocks[queueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        if (refContainer) {
+          refContainer.audStop();
+        }
+        //console.log(block.changes, block.isAudioChanged);
+        //return;
+        /*if (this.isSplittedBlock) {
+          //this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), false, this.blockPart);
+        } else {
+          //this.blockPart.content = this.block.content;
+          //this.blockPart.audiosrc = this.block.audiosrc;
+          this.blockPart.manual_boundaries = this.block.manual_boundaries;
+          //this.$root.$emit('for-audioeditor:load', this.blockAudiosrc('m4a'), this.block.content, false, this.block);
+        }*/
+        //this.blockAudio.map = this.blockContent();
+        //this.blockAudio.src = this.blockAudiosrc('m4a');
+        block.isAudioChanged = isModified;
+        if (refContainer) {
+          refContainer.$parent.$forceUpdate();
+          if (!isModified) {
+            refContainer.unsetChange('audio');
+            refContainer.unsetChange('content');
+            refContainer.unsetChange('manual_boundaries');
+          }
+        }
       }
   },
   events: {
@@ -2457,6 +2493,7 @@ Save text changes and realign the Block?`,
       this.$root.$on('from-toolbar:toggle-meta', this.correctEditWrapper);
       this.$root.$on('from-audioeditor:save', this.saveBlockAudioChanges);
       this.$root.$on('from-audioeditor:revert', this.evFromAudioEditorRevert);
+      this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -2483,6 +2520,7 @@ Save text changes and realign the Block?`,
     this.$root.$off('from-toolbar:toggle-meta', this.correctEditWrapper);
     this.$root.$off('from-audioeditor:save', this.saveBlockAudioChanges);
     this.$root.$off('from-audioeditor:revert', this.evFromAudioEditorRevert);
+    this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
   },
   watch: {
     'meta._id': {
