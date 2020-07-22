@@ -258,8 +258,18 @@
                     <li @click="audPlayFromSelection()">Play from here</li>
                     <li @click="audPlaySelection()">Play selection</li>
                   </template>
+                  <template v-if="isSplitPointAllowed()">
+                    <li class="separator"></li>
+                    <li @click="setSplitPoint($event)">Set split point</li>
+                  </template>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
+                <split-pin-cntx-menu
+                  ref="splitPinCntx"
+                  dir="bottom"
+                  @close="splitPinCntxClose">
+                  <li @click="delSplitPoint">Delete split point</li>
+                </split-pin-cntx-menu>
               </div>
             </div>
             <!--<div class="table-row ilm-block">-->
@@ -271,6 +281,10 @@
   <div class="table-body">
     <div class="table-row controls-bottom" v-if="isSplittedBlock">
       <div class="controls-bottom-wrapper">
+        <div class="par-ctrl -hidden -left" v-if="isMergeSubblocksAllowed">
+          <div class="merge-subblocks" @click="mergeSubblocks()"></div>
+          <!-- <object type="image/svg+xml" data="/static/merge-blocks.svg" style="width: 25px; height: 25px;"></object> -->
+        </div>
         <div class="par-ctrl -hidden -right">
           <div class="save-block -right" @click="discardBlock"
                v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing || isLocked}">
@@ -372,7 +386,8 @@ export default {
       audioEditFootnote: {footnote: {}, isAudioChanged: false},
       check_id: null,
       footnoteIdx: null,
-      //isSaving: false
+      //isSaving: false,
+      splitPinSelection: null
     }
   },
   components: {
@@ -381,8 +396,9 @@ export default {
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
       //'modal': modal,
+      'split-pin-cntx-menu': BlockContextMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -642,6 +658,9 @@ export default {
       },
       saveBlockLabel: {
         get() {
+          if (this.changes.indexOf('split_point') !== -1) {
+            return 'Save & Split';
+          }
           return this.needsRealignment ? 'Save & Re-align' : 'Save';
         }
       },
@@ -860,6 +879,26 @@ export default {
           }
         },
         cache: false
+      },
+      isMergeSubblocksAllowed: {
+        get() {
+          if (this.blockPartIdx >= this.block.parts.length - 1) {
+            return false;
+          }
+          if (this.isLocked) {
+            return false;
+          }
+          if (this.$parent.$refs.blocks) {
+            let locked = this.$parent.$refs.blocks.find(blk => {
+              return blk.isLocked;
+            });
+            if (locked) {
+              return false;
+            }
+          }
+          return true;
+        },
+        cache: false
       }
   },
   mounted: function() {
@@ -977,7 +1016,8 @@ export default {
         'clearAudioTasks',
         'shiftAudioTask',
         'applyTasksQueue',
-        'saveBlockAudio'
+        'saveBlockAudio',
+        'mergeBlockParts'
       ]),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
@@ -1229,8 +1269,11 @@ export default {
         //console.log(this.block.calcFlagsSummary());
         //console.log(this.tc_currentBookTasks.job.executors);
       },
-      onBlur: function() {
+      onBlur: function(e) {
         if (this.$refs.blockCntx && this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
+        if (this.$refs.splitPinCntx && this.$refs.splitPinCntx.viewMenu && (!e.target || e.target.nodeName !== 'I')) {
+          this.$refs.splitPinCntx.close();
+        }
       },
       onSelect: function($event) {
         console.log('onSelect');
@@ -1246,9 +1289,53 @@ export default {
         if (!this.$refs.blockCntx) {
           return;
         }
-        this.range = window.getSelection().getRangeAt(0).cloneRange();
         let container = $(e.target).closest('.-block.-subblock')[0]
         let offsetX = container.offsetLeft
+        e.preventDefault();
+        e.stopPropagation();
+
+        let currentRange = window.getSelection().getRangeAt(0);
+        let isRangeDiffers = !this.range ? true : currentRange.compareBoundaryPoints(Range.START_TO_START, this.range) !== 0;
+        this.range = currentRange.cloneRange();
+        let isMac = navigator && navigator.platform === 'MacIntel';
+        if (this.mode === 'edit' && this.block.voicework === 'narration' && isMac && isRangeDiffers) {
+          if (this.range.startContainer && this.range.startContainer.nodeName === 'DIV') {// possible click at line break <br>
+            let targetElement = this.range.endContainer/*.parentElement.previousElementSibling.previousElementSibling.firstChild*/;
+            if (targetElement.parentElement && targetElement.parentElement.nodeName === 'W') {
+              targetElement = targetElement.parentElement;
+              while (targetElement.previousElementSibling) {
+                targetElement = targetElement.previousElementSibling;
+                if (targetElement.childNodes.length > 0) {
+                  do {
+                    targetElement = targetElement.firstChild;
+                  } while (targetElement.nodeType !== 3);
+                  break;
+                }
+              }
+            }
+            this.range.setStart(targetElement, targetElement.length);
+            this.range.setEnd(targetElement, targetElement.length);
+          } else if (this.range.startContainer && this.range.startContainer.nodeType === 3 && this.range.endContainer && this.range.endContainer.nodeName === 'LI') {
+            let rangeLength = /[\s]+$/.test(this.range.startContainer.nodeValue) ? this.range.startContainer.length - 1 : this.range.startContainer.length;
+            this.range.setStart(this.range.startContainer, rangeLength);
+            this.range.setEnd(this.range.startContainer, rangeLength);
+          } else if (this.range.startContainer && this.range.startContainer.nodeType === 3 && this.range.endContainer && (this.range.endContainer.nodeName === 'W' || this.range.endContainer.nodeType === 3)) {
+            let parentElement = this.range.startContainer.parentElement;
+            let isUl = false;
+            while (parentElement.nodeName !== 'DIV' && !isUl) {
+              if (parentElement.nodeName === 'LI') {
+                break;
+              }
+              isUl = parentElement.nodeName === 'UL';
+              parentElement = parentElement.parentElement;
+            }
+            if (isUl) {
+              let rangeLength = /[\s]+$/.test(this.range.startContainer.nodeValue) ? this.range.startContainer.length - 1 : this.range.startContainer.length;
+              this.range.setStart(this.range.startContainer, rangeLength);
+              this.range.setEnd(this.range.startContainer, rangeLength);
+            }
+          }
+        }
 
         this.$refs.blockCntx.open(e, container, offsetX);
         this.$nextTick(() => {
@@ -1396,6 +1483,10 @@ Save audio changes and realign the Block?`,
           }
           return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
             .then(() => {
+              if (this.hasChange('split_point')) {// can be pending split
+                this.changes = ['split_point']
+                return this.assembleBlockProxy(false, false, false);
+              }
               this.isChanged = false;
               if (this.isAudioEditing) {
                 if (this.isLocked) {
@@ -1417,14 +1508,22 @@ Save audio changes and realign the Block?`,
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isSaving = true;
+        this.$forceUpdate();
+        let reloadParent = this.hasChange('split_point');
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
         return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign)
           .then(() => {
             this.isChanged = false;
+            if (this.blockAudio.map) {
+              this.blockAudio.map = this.blockPart.content;
+            }
             if (this.isLocked && this.isAudioEditing) {
               this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+            }
+            if (reloadParent) {
+              this.$parent.$parent.refreshTmpl();
             }
             return Promise.resolve();
           });
@@ -1560,7 +1659,9 @@ Save audio changes and realign the Block?`,
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isSaving = true;
+        this.$forceUpdate();
         let refreshTasks = this.isCompleted;
+        let reloadParent = this.hasChange('split_point');
         return this.putBlockNarrate([Object.assign(this.blockPart, {
             blockid: this.block.blockid,
             bookid: this.block.bookid,
@@ -1573,6 +1674,9 @@ Save audio changes and realign the Block?`,
             }
             if (this.isAudioEditing && realign) {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+            }
+            if (reloadParent) {
+              this.$parent.$parent.refreshTmpl();
             }
             return Promise.resolve();
           })
@@ -3257,6 +3361,9 @@ Save audio changes and realign the Block?`,
           });
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', '[data-flag]', this.handleFlagClick);
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', '[data-flag]', this.handleFlagClick);
+          
+          $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', 'i.pin', this.handlePinClick);
+          $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', 'i.pin', this.handlePinClick);
         }
         if (this.mode !== 'narrate') {
           if (this.block && this.block.footnotes) {
@@ -3723,6 +3830,197 @@ Save text changes and realign the Block?`,
             this.$root.$emit('set-error-alert', 'Failed to apply your correction. Please try again.')
             return Promise.reject(err);
           });
+      },
+      isSplitPointAllowed() {
+        /*if (this.isSplittedBlock) {
+          return false;
+        }*/
+        if (this.block.voicework !== 'narration') {
+          return false;
+        }
+        /*if (this._is('narrator', true) && this.mode === 'narrate') {
+          console.log(this.range, `${this.range.startOffset}:${this.range.endOffset}`);
+        } else */if (((this._is('editor', true) || this.adminOrLibrarian) && this.mode === 'edit') || (this._is('narrator', true) && this.mode === 'narrate')) {
+          if (!(this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
+            if (!this.range) {
+              return false;
+            }
+            //console.log(this.range);
+            let isMac = navigator && navigator.platform === 'MacIntel';
+            let container = this.range.commonAncestorContainer;
+            if (typeof container.length == 'undefined') {
+              return false;
+            }
+            if (this.range.startOffset === 0) {
+              if (!(container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.previousSibling)) {
+                return false;
+              }
+            }
+            if (!isMac && this.range.startOffset < this.range.endOffset) {// do not display menu for range
+              return false;
+            }
+            let skipLengthCheck = this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV' && (container.parentElement.nextSibling || (container.parentElement.parentElement && container.parentElement.parentElement.nodeName !== 'DIV'));// means click at the end of <w></w> tag, and this tag is not last in container DIV
+            if (!skipLengthCheck && container.nodeType === 3) {// not aligned block
+              skipLengthCheck = this.range.endOffset >= container.length && container.nextSibling;
+            }
+            if (this.range.endOffset >= container.length && !container.nextSibling && !skipLengthCheck) {
+              //console.log('LENGTH CHECK'/*this.range*/);
+              return false;
+            }
+            let checkSibling = container.previousElementSibling ? container.previousElementSibling : (container.previousSibling ? container.previousSibling : null);
+            if (checkSibling) {
+              if (checkSibling.nodeName === 'I' && checkSibling.classList.contains('pin') && this.range.startOffset === 0) {
+                //console.log('SIBLING CHECK')
+                return false;
+              }
+            }
+            checkSibling = container.nextElementSibling ? container.nextElementSibling : (container.nextSibling ? container.nextSibling : null);
+            if (checkSibling) {
+              if (checkSibling.nodeName === 'I' && checkSibling.classList.contains('pin') && this.range.startOffset === container.length) {
+                return;
+              }
+            }
+            //console.log(container.previousElementSibling, container.previousSibling, this.range);
+            let checkRange = document.createRange();
+            let regexp = null;
+            //console.log(container, container.length, this.range.endOffset);
+            checkRange.setStart( container, this.range.startOffset );
+            if (this.range.startOffset > 0) {
+              checkRange.setStart(container, this.range.startOffset - 1);
+            }
+            if (!isMac) {
+              let wordString = `a-zA-Zа-яА-Я0-9À-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ’"\\?\\!\\:\\;\\.,“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…`;
+              regexp = skipLengthCheck ? /^(\S+)|(\s+)$/i : new RegExp(`^([${wordString}]+[^${wordString}]+[${wordString}]*)|([^${wordString}]+[${wordString}]+)|(\s+)$`, 'i');
+              checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
+            } else {// Mac OS right mouse click selects psrt of the text
+              checkRange.setEnd(container, this.range.endOffset);
+              regexp = /^([\s]*)|(\s+\S*)$/i;
+            }
+            if (this.range.endOffset < container.length && checkRange.endOffset === container.length/* && !container.nextSibling*/) {
+              if (!(container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling)) {
+                //console.log(container.parentElement, container.parentElement.nextSibling, skipLengthCheck);
+                let beforeDiv = container;
+                while (beforeDiv && beforeDiv.parentElement.nodeName !== 'DIV') {// search for container before block wrapper, skip if it has no sibling
+                  beforeDiv = beforeDiv.parentElement;
+                }
+                if (beforeDiv && !beforeDiv.nextSibling) {
+                  return false;
+                }
+              }
+            }
+            /*console.log(checkRange.toString());
+            if (this.range.startOffset > 0) {
+              let _checkRange = document.createRange();
+              //console.log(container, container.length, this.range.endOffset);
+              _checkRange.setStart( container, this.range.startOffset-1 );
+              _checkRange.setEnd( container, this.range.endOffset+1 );
+              console.log(_checkRange.toString());
+            }*/
+            if (isMac) {
+              console.log('IS ALLOWED', `"${checkRange.toString()}"`, regexp.test(checkRange.toString()), regexp, checkRange, this.range);
+            }
+            //console.log(`${skipLengthCheck}, '${checkRange.toString()}'`);
+            return regexp.test(checkRange.toString());
+          }
+        }
+        return false;
+      },
+      setSplitPoint() {
+        let el = document.createElement('i');
+        el.classList.add('pin');
+        this.range.insertNode(el);
+        //this.$parent.$forceUpdate();
+        if (!this.isSplittedBlock) {
+          this.splitPointAdded();
+        } else {
+          this.pushChange('split_point');
+          this.isChanged = true;
+        }
+      },
+      handlePinClick(e) {
+        if (this.$refs.splitPinCntx && e.target) {
+          //console.log(`OFFSET: ${-1 * e.target.offsetTop}, ${-1 * e.originalEvent.target.offsetTop}`)
+          let container = $(e.target).closest('.-block.-subblock')[0];
+          let offsetX = container.offsetLeft;
+          this.$refs.splitPinCntx.open(e.originalEvent, container, /*this.mode === 'narrate' ? narrationShift : */offsetX, -1 * e.target.offsetTop);
+          this.splitPinSelection = e.target;
+        }
+      },
+      delSplitPoint() {
+        if (this.splitPinSelection) {
+          this.splitPinSelection.remove();
+          this.splitPinSelection = null;
+        }
+      },
+      splitPinCntxClose() {
+        this.splitPinSelection = null;
+      },
+      mergeSubblocks(confirm = true) {
+        let partFrom = this.blockPart;
+        let partTo = this.block.parts[this.blockPartIdx + 1];
+        if (partFrom && partTo) {
+          if (this.isChanged || this.isAudioChanged || partTo.isChanged || partTo.isAudioChanged) {
+            
+            this.$root.$emit('show-modal', {
+              title: `Unsaved Changes`,
+              text: `Subblocks have unsaved changes.<br>
+Please save or discard your changes before joining.`,
+              buttons: [
+                {
+                  title: 'Ok',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                  },
+                  class: ['btn btn-primary']
+                }
+              ]
+            });
+          }
+        }
+        if (confirm) {
+          let message = `Join with the next subblock?`;
+          if (partFrom && partTo) {
+            if ((partFrom.audiosrc && !partTo.audiosrc) || (!partFrom.audiosrc && partTo.audiosrc)) {
+              message = `Join of narrated and pending subblocks will also delete current audio.<br>
+Join with next subblock?`;
+            }
+          }
+          this.$root.$emit('show-modal', {
+            title: 'Join subblocks',
+            text: message,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Join',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  return this.mergeSubblocks(false);
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+        } else {
+          this.$parent.isSaving = true;
+          this.$parent.$forceUpdate();this.$parent.$forceUpdate();
+          return this.mergeBlockParts([this.block.blockid, this.blockPartIdx, this.blockPartIdx + 1])
+            .then(() => {
+              this.$parent.isSaving = false;
+              /*if (this.isCompleted) {
+                this.tc_loadBookTask(this.block.bookid);
+                this.getCurrentJobInfo();
+              }*/
+              this.$parent.$parent.refreshTmpl();
+              return Promise.resolve();
+            });
+        }
       }
 
   },

@@ -1206,7 +1206,7 @@ export const store = new Vuex.Store({
             //state.storeListO.delBlock(data.block);
             if (state.audioTasksQueue.block.blockId && state.audioTasksQueue.block.blockId === data.block.blockid && state.audioTasksQueue.block.partIdx !== null) {
               let blockStore = state.storeList.get(data.block.blockid);
-              if (Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
+              if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
                 blockStore.parts.forEach((p, i) => {
                   if (p.isAudioChanged) {
                     data.block.parts[i] = p;
@@ -1227,6 +1227,16 @@ export const store = new Vuex.Store({
                 state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
               }
             } else if (data.action === 'change' && data.block) {
+              let blockStore = state.storeList.get(data.block.blockid);
+              if (blockStore) {
+                let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
+                  return p.isChanged;
+                }) : false;
+                if (blockStore.isSaving || hasChangedPart) {
+                  //console.log('isSaving hasChangedPart');
+                  return;
+                }
+              }
               state.storeListO.updBlockByRid(data.block.id, data.block);
             } else if (data.action === 'delete') {
 
@@ -1911,8 +1921,13 @@ export const store = new Vuex.Store({
       if (Array.isArray(block.manual_boundaries)) {
         update.block.manual_boundaries = block.manual_boundaries;
       }
+      if (block.audiosrc) {
+        update.block.audiosrc = block.audiosrc;
+        update.block.audiosrc_ver = block.audiosrc_ver;
+      }
       return axios.put(url, update)
         .then((response) => {
+          commit('set_storeList', new BookBlock(response.data));
           return dispatch('getBookAlign')
             .then(() => {
               commit('clear_blocker', 'putBlock');
@@ -3033,13 +3048,14 @@ export const store = new Vuex.Store({
           return Promise.reject();
         });
     },
-    updateBlockPart({state, dispatch}, [id, update, blockIdx, realign]) {
+    updateBlockPart({state, dispatch, commit}, [id, update, blockIdx, realign]) {
       let url = `books/blocks/${encodeURIComponent(id)}/part/${blockIdx}`;
       if (realign) {
         url+= '?realign=true';
       }
       return axios.put(state.API_URL + url, update)
         .then((response) => {
+          commit('set_storeList', new BookBlock(response.data));
           return Promise.all([dispatch('getBookAlign'), dispatch('getCurrentJobInfo')])
             .then(() => {
               return Promise.resolve(response);
@@ -3415,7 +3431,17 @@ export const store = new Vuex.Store({
           }
           return Promise.resolve(data);
             //});
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
 
+    mergeBlockParts({state, commit}, [blockid, partFrom, partTo]) {
+      return axios.post(`${state.API_URL}books/blocks/${blockid}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
+        .then((response) => {
+          commit('set_storeList', new BookBlock(response.data));
+          return Promise.resolve(response.data);
         })
         .catch(err => {
           return Promise.reject(err);

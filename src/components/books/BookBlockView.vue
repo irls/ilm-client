@@ -229,6 +229,7 @@
               :isCompleted="isCompleted"
               :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
               :addToQueueBlockAudioEdit="addToQueueBlockAudioEdit"
+              :splitPointAdded="splitPointAdded"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -956,6 +957,9 @@ export default {
       },
       saveBlockLabel: {
         get() {
+          if (this.changes.indexOf('split_point') !== -1) {
+            return 'Save & Split';
+          }
           return this.needsRealignment ? 'Save & Re-align' : 'Save';
         }
       },
@@ -1916,11 +1920,17 @@ Save audio changes and realign the Block?`,
                     this.checkBlockContentFlags();
                     this.updateFlagStatus(this.block._id);
                     partUpdate['flags'] = this.block.flags;
-                    partUpdate['content'] = this.block.content;
+                    if (!this.isSplittedBlock) {
+                      partUpdate['content'] = this.block.content;// updating content only for not splitted block, ILM-3287
+                    }
                     partUpdate['parts'] = this.block.parts;
                     break;
                   case 'manual_boundaries':
                     partUpdate['content'] = this.block.content;
+                    break;
+                  case 'split_point':
+                    partUpdate['content'] = this.block.content;
+                    partUpdate['manual_boundaries'] = this.block.manual_boundaries ? this.block.manual_boundaries : [];
                     break;
                   default:
                     partUpdate[c] = this.block[c];
@@ -1941,8 +1951,12 @@ Save audio changes and realign the Block?`,
             } else {
               updateTask = this.assembleBlockPart(partUpdate, realign);
             }
+            let reloadParent = this.hasChange('split_point');
             return updateTask
               .then(() => {
+                if (reloadParent) {
+                  this.$parent.refreshTmpl();
+                }
                 return Promise.resolve();
               });
           }
@@ -2173,6 +2187,7 @@ Save audio changes and realign the Block?`,
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         }
         let refreshTasks = this.isCompleted;
+        let reloadParent = this.hasChange('split_point');
         return this.putBlockNarrate([upd_block, realign])
           .then(() => {
             if (realign) {
@@ -2193,6 +2208,9 @@ Save audio changes and realign the Block?`,
             if (refreshTasks) {
               this.getCurrentJobInfo();
               this.tc_loadBookTask(this.block.bookid);
+            }
+            if (reloadParent) {
+              this.$parent.refreshTmpl();
             }
             return Promise.resolve();
           })
@@ -4312,6 +4330,10 @@ Save text changes and realign the Block?`,
           //this.voiceworkChange = false;
           this.voiceworkUpdateType = 'single';
         }
+      },
+      
+      splitPointAdded() {
+        this.pushChange('split_point');
       }
   },
   watch: {
@@ -4459,11 +4481,13 @@ Save text changes and realign the Block?`,
         handler(val) {
           if (val === false) {
             this.flushChanges();
-            if (this.$refs.blocks) {
-              this.blockParts.forEach((part, partIdx) => {
-                this.$refs.blocks[partIdx].isChanged = false;
-              });
-            }
+            Vue.nextTick(() => {
+              if (this.$refs.blocks) {
+                this.blockParts.forEach((part, partIdx) => {
+                  this.$refs.blocks[partIdx].isChanged = false;
+                });
+              }
+            });
             this.recountVoicedBlocks();
           }
           this.block.isChanged = val;
