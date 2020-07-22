@@ -3720,7 +3720,10 @@ Save text changes and realign the Block?`,
                 return false;
               }
             }
-            let skipLengthCheck = this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling;// means click at the end of <w></w> tag
+            if (!isMac && this.range.startOffset < this.range.endOffset) {// do not display menu for range
+              return false;
+            }
+            let skipLengthCheck = this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV' && (container.parentElement.nextSibling || (container.parentElement.parentElement && container.parentElement.parentElement.nodeName !== 'DIV'));// means click at the end of <w></w> tag, and this tag is not last in container DIV
             if (!skipLengthCheck && container.nodeType === 3) {// not aligned block
               skipLengthCheck = this.range.endOffset >= container.length && container.nextSibling;
             }
@@ -3750,7 +3753,7 @@ Save text changes and realign the Block?`,
               checkRange.setStart(container, this.range.startOffset - 1);
             }
             if (!isMac) {
-              let wordString = `a-zA-Zа-яА-Я0-9À-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ’"\\?\\!:\\.,“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…`;
+              let wordString = `a-zA-Zа-яА-Я0-9À-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ’"\\?\\!\\:\\;\\.,“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…`;
               regexp = skipLengthCheck ? /^(\S+)|(\s+)$/i : new RegExp(`^([${wordString}]+[^${wordString}]+[${wordString}]*)|([^${wordString}]+[${wordString}]+)|(\s+)$`, 'i');
               checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
             } else {// Mac OS right mouse click selects psrt of the text
