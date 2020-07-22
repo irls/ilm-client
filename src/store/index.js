@@ -451,12 +451,34 @@ export const store = new Vuex.Store({
       }
       return true;
     },
-    audioTasksQueueBlock: state => {
+    audioTasksQueueBlock: state => () => {
       if (state.audioTasksQueue.block.blockId) {
         return state.storeList.get(state.audioTasksQueue.block.blockId);
       } else {
         return null;
       }
+    },
+    audioTasksQueueBlockOrPart: state => {
+      if (state.audioTasksQueue.block.blockId) {
+        let block = state.storeList.get(state.audioTasksQueue.block.blockId);
+        if (block) {
+          if (block.getIsSplittedBlock() && state.audioTasksQueue.block.partIdx) {
+            return block.parts[state.audioTasksQueue.block.partIdx];
+          } else {
+            return block;
+          }
+        }
+      }
+      return null;
+    },
+    isAudioEditAligning: state => {
+      if (state.audioTasksQueue.block.blockId && state.aligningBlocks.length > 0) {
+        let blk = state.aligningBlocks.find(b => {
+          return b._id === state.audioTasksQueue.block.blockId && (state.audioTasksQueue.block.partIdx === null || state.audioTasksQueue.block.partIdx === b.partIdx);
+        });
+        return blk ? true : false;
+      }
+      return false;
     }
   },
 
@@ -3547,6 +3569,32 @@ export const store = new Vuex.Store({
           block.flags.push(updated);
         }
       }
+    },
+    discardAudioChanges({state}) {
+      let block = state.storeList.get(state.audioTasksQueue.block.blockId);
+      let queueBlock = state.audioTasksQueue.block;
+      let api_url = `${state.API_URL}book/block/${block.blockid}/audio_edit`;
+      if (queueBlock.partIdx !== null) {
+        api_url+= '/part/' + queueBlock.partIdx;
+      }
+      return axios.delete(api_url, {}, {})
+        .then(response => {
+          if (response.status == 200 && response.data) {
+            let part = response.data.parts[queueBlock.partIdx];
+            block.setPartContent(queueBlock.partIdx || 0, part.content);
+            block.setPartAudiosrc(queueBlock.partIdx || 0, part.audiosrc, part.audiosrc_ver);
+            block.setPartManualBoundaries(queueBlock.partIdx || 0, part.manual_boundaries || []);
+            if (queueBlock.partIdx !== null) {
+              block.parts[queueBlock.partIdx].isAudioChanged = false;
+            } else {
+              block.isAudioChanged = false;
+            }
+          }
+          return Promise.resolve(response);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })

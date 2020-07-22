@@ -945,6 +945,10 @@ export default {
 //
 //       });
       //this.showPinnedInText();
+      if (this.audioTasksQueue.block.blockId === this.block.blockid && (!this.isSplittedBlock || this.blockPartIdx === this.audioTasksQueue.block.partIdx)) {
+        this.check_id = this.generateAudioCheckId();
+        this.audioEditorEventsOn();// was scrolled out of visible, and scrolled back, with audio editor opened
+      }
   },
   beforeDestroy: function () {
 //     console.log('beforeDestroy', this.block._id);
@@ -2689,193 +2693,6 @@ Save audio changes and realign the Block?`,
           });
         }
       },
-      evFromAudioeditorWordRealign(map, pinnedIndex, blockId) {
-        let response_params = null;
-        if (blockId == this.check_id) {
-          this.audStop();
-          //console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
-          if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
-            let current_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
-            let w_maps = this.$refs.blockContent.querySelectorAll('[data-map]');
-            
-            let currentMap = w_maps[map[pinnedIndex].index].getAttribute('data-map').split(',');
-            currentMap[0] = parseInt(currentMap[0]);
-            currentMap[1] = parseInt(currentMap[1]);
-            
-            let manual_boundaries = [map[pinnedIndex].map[0]];
-            map.forEach(m => {
-              let cMap = w_maps[m.index].getAttribute('data-map');
-              if (cMap) {
-                cMap = cMap.split(',');
-                cMap[0] = parseInt(cMap[0]);
-                cMap[1] = parseInt(cMap[1]);
-                if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
-                  manual_boundaries.push(m.map[0]);
-                  current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
-                }
-              }
-              w_maps[m.index].setAttribute('data-map', m.map.join());
-              if (m.map[1] > 50) {
-                w_maps[m.index].classList.remove('alignment-changed');
-              }
-            });
-            if (currentMap[0] !== map[pinnedIndex].map[0] && manual_boundaries.indexOf(map[pinnedIndex].map[0]) === -1) {
-              if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
-                manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
-              }
-              //manual_boundaries.push(_m[0]);
-            }
-            if (currentMap[0] + currentMap[1] !== map[pinnedIndex].map[0] + map[pinnedIndex].map[1] && manual_boundaries.indexOf(map[pinnedIndex].map[0] + map[pinnedIndex].map[1]) === -1) {
-              if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
-                manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
-              }
-              //manual_boundaries.push(_m[0] + _m[1]);
-            }
-            current_boundaries.forEach(_m => {
-              if (manual_boundaries.indexOf(_m) === -1) {
-                manual_boundaries.push(_m);
-                //console.log(`PUSH ${_m[0]}`);
-              }
-            });
-            manual_boundaries = [...new Set(manual_boundaries)].sort((a, b) => {return a - b;});
-            this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
-            this.blockPart.manual_boundaries = manual_boundaries.slice();
-            manual_boundaries = null;
-            this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
-            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
-            this.blockPart.content = this.$refs.blockContent.innerHTML;
-            this.blockAudio.map = this.blockPart.content;
-            if (this.audioTasksQueue.log.length === 0) {
-              this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
-            } else {
-              if (this.isSplittedBlock) {
-                response_params = [this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), true, Object.assign({_id: this.check_id}, this.blockPart)];
-              } else {
-                response_params = [this.blockAudio.src, this.blockAudio.map, true, this.block];
-              }
-            }
-            Vue.nextTick(() => {
-              this.showPinnedInText();
-            });
-            //this.pushChange('content');
-
-
-            //this.blockPart.manual_boundaries = manual_boundaries.slice();
-            //this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
-            //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
-            //this.blockPart.content = this.$refs.blockContent.innerHTML;
-            //this.blockAudio.map = this.$refs.blockContent.innerHTML;
-            //this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
-          }
-          this.isAudioChanged = true;
-        }
-        return response_params;
-      },
-      evFromAudioeditorSaveAndRealign (blockId, check_realign = true, realign = false) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          if (!this.isSplittedBlock) {
-            //this.block.setAudiosrc(this.blockAudiosrc(null, false));
-            //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false));
-            //this.block.setContent(this.blockAudio.map);
-            //return this.addToQueueBlockAudioEdit(null, true)
-            return this.assembleBlockAudioEdit(true)
-              .then(() => {
-                //this.isAudioChanged = false;
-                //this.blockAudio.map = this.blockContent();
-                //this.blockAudio.src = this.block.getAudiosrc('m4a');
-                return Promise.resolve();
-              });
-          } else {
-            //this.addToQueueBlockPartAudioEdit(true);
-            this.assembleBlockPartAudioEdit(true);
-          }
-        }
-      },
-      evFromAudioeditorCut (blockId, start, end) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          this.isAudioChanged = true;
-          this.isUpdating = true;
-          if (this.isSplittedBlock) {
-            this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
-          } else {
-            this.block.setContent(this.clearBlockContent());
-          }
-          this.audDeletePart(start, end, null, this.blockPartIdx, this.check_id)
-            .then(() => {
-              this.isUpdating = false;
-              this.blockAudio.map = this.blockContent();
-              this.blockAudio.src = this.blockAudiosrc('m4a');
-            })
-            .catch(err => {
-              this.isUpdating = false;
-            });
-        }
-      },
-      evFromAudioeditorSave (blockId) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          if (!this.isSplittedBlock) {
-            //this.block.setAudiosrc(this.blockAudiosrc(null, false));
-            //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false), {'m4a': this.block.getPartAudiosrc(this.blockPartIdx, 'm4a', false)});
-            //this.block.setContent(this.blockContent());
-            //this.block.setContent(this.blockContent());
-            /*return this.addToQueueBlockAudioEdit(null, false)
-              .then(() => {
-                //this.isAudioChanged = false;
-                //this.blockAudio.map = this.blockContent();
-                //this.blockAudio.src = this.blockAudiosrc('m4a');
-                //this.showPinnedInText();
-                return Promise.resolve();
-              });*/
-            this.$parent.assembleBlockAudioEdit(false);
-          } else {
-            //this.addToQueueBlockPartAudioEdit(false);
-            this.assembleBlockPartAudioEdit(false);
-          }
-        }
-      },
-      evFromAudioeditorInsertSilence (blockId, position, length) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          this.isUpdating = true;
-          if (this.isSplittedBlock) {
-            this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
-          } else {
-            this.block.setContent(this.clearBlockContent());
-          }
-          this.insertSilence(position, length, null, this.blockPartIdx, this.check_id)
-            .then(() => {
-              this.isUpdating = false;
-              this.isAudioChanged = true;
-              this.blockAudio.map = this.blockContent();
-              this.blockAudio.src = this.blockAudiosrc('m4a');
-            });
-        }
-      },
-      evFromAudioeditorUndo (blockId, audio, text, isModified) {
-        if (blockId == this.check_id) {
-          this.audStop();
-          if (this.isSplittedBlock) {
-            //this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), false, this.blockPart);
-          } else {
-            //this.blockPart.content = this.block.content;
-            //this.blockPart.audiosrc = this.block.audiosrc;
-            this.blockPart.manual_boundaries = this.block.manual_boundaries;
-            //this.$root.$emit('for-audioeditor:load', this.blockAudiosrc('m4a'), this.block.content, false, this.block);
-          }
-          this.blockAudio.map = this.blockContent();
-          this.blockAudio.src = this.blockAudiosrc('m4a');
-          this.isAudioChanged = isModified;
-          this.$parent.$forceUpdate();
-          if (!isModified) {
-            this.unsetChange('audio');
-            this.unsetChange('content');
-            this.unsetChange('manual_boundaries');
-          }
-        }
-      },
       evFromAudioeditorDiscard (blockId) {
         if (blockId == this.check_id) {
           this.audStop();
@@ -2908,245 +2725,20 @@ Save audio changes and realign the Block?`,
           }
         }
       },
-      evFromAudioeditorUnpinRight(position, blockId) {
-        let response = null;
-        if (this.check_id === blockId) {
-          if (Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
-            let oldBoundaries = this.blockPart.manual_boundaries;
-            let new_mb = this.blockPart.manual_boundaries.filter(mb => {
-              return mb <= position;
-            });
-            this.block.setPartManualBoundaries(this.blockPartIdx, new_mb);
-            this.blockPart.manual_boundaries = new_mb;
-            this.blockPart.content = this.$refs.blockContent.innerHTML;
-            this.blockAudio.map = this.blockPart.content;
-            this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
-            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
-            let changed = oldBoundaries.length > this.blockPart.manual_boundaries.length ? true : false;
-            if (changed) {
-              this.isAudioChanged = true;
-            }
-            this.showPinnedInText();
-            //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
-            response = [this.blockAudio.src, this.blockAudio.map, true, this.blockPart];
-          }
-        }
-        return response;
-      },
-      evFromAudioeditorEraseAudio(blockId, start, end) {
-        if (blockId === this.check_id) {
-          this.isAudioChanged = true;
-          this.isUpdating = true;
-          this.audStop();
-          if (this.isSplittedBlock) {
-            this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
-          } else {
-            this.block.setContent(this.clearBlockContent());
-          }
-          return this.eraseAudio(start, end, null, this.blockPartIdx, this.check_id)
-            .then(() => {
-              this.isUpdating = false;
-              this.blockAudio.map = this.blockContent();
-              this.blockAudio.src = this.blockAudiosrc('m4a');
-            });
-          }
-      },
-      evFromAudioEditorRevert(blockId) {
-        if (blockId == this.check_id) {
-          this.clearAudioTasks(true);
-          if (this.blockPart.audiosrc_original) {
-            this.isSaving = true;
-            return this.revertAudio([this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null])
-              .then((res) => {
-                this.isSaving = false;
-                //console.log(res.data);
-                this.block.setPartAudiosrc(this.blockPartIdx, res.data.audiosrc, res.data.audiosrc_ver);
-                this.block.setPartManualBoundaries(this.blockPartIdx, res.data.manual_boundaries);
-                let text = this.blockAudio.map;
-                let loadBlock = this.blockPart;
-                loadBlock.manual_boundaries = this.block.getPartManualBoundaries(this.blockPartIdx);
-                loadBlock._id = this.check_id;
-                loadBlock.blockid = this.block.blockid;
-                loadBlock.partIdx = this.isSplittedBlock ? this.blockPartIdx : null;
-                this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), text, false, loadBlock);
-                //this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
-                this.showPinnedInText();
-                return Promise.resolve();
-              });
-          } else {
-            return this.discardAudioEdit(null, true, this.blockPartIdx, this.check_id);
-          }
-        }
-      },
-      evFromAudioEditorTasksQueuePush(blockId, queue) {
-        if (blockId === this.check_id) {
-          if (this.audioTasksQueue.log.length > 0) {
-            let task = null;
-            let record = this.audioTasksQueue.log[this.audioTasksQueue.log.length - 1];
-            //this.audioTasksQueue.running = record;
-            switch (record.type) {
-              case 'cut':
-              case 'insert_silence':
-              case 'erase':
-                //let record = this.audioTasksQueue.queue[this.audioTasksQueue.queue.length - 1];
-                //console.log(record);
-                //console.log(record.wordMap);
-                if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
-                  let current_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
-                  let w_maps = this.$refs.blockContent.querySelectorAll('[data-map]');
-
-                  let manual_boundaries = [];
-                  record.wordMap.forEach((m, i) => {
-                    if (w_maps[i]) {
-                      let cMap = w_maps[i].getAttribute('data-map');
-                      if (cMap) {
-                        cMap = cMap.split(',');
-                        cMap[0] = parseInt(cMap[0]);
-                        cMap[1] = parseInt(cMap[1]);
-                        if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
-                          if (!(record.type === 'cut' && record.options[0] < cMap[0] && record.options[1] > cMap[0])) {
-                            manual_boundaries.push(m[0]);
-                          }
-                          current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
-                        }
-                      }
-                      w_maps[i].setAttribute('data-map', m.join(','));
-                      if (m[1] > 50) {
-                        w_maps[i].classList.remove('alignment-changed');
-                      }
-                    }
-                  });
-                  current_boundaries.forEach(_m => {
-                    if (manual_boundaries.indexOf(_m) === -1) {
-                      manual_boundaries.push(_m);
-                      //console.log(`PUSH ${_m[0]}`);
-                    }
-                  });
-                  manual_boundaries = [...new Set(manual_boundaries)].sort((a, b) => {return a - b;});
-                  this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
-                  this.blockPart.manual_boundaries = manual_boundaries.slice();
-                  manual_boundaries = null;
-                  this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
-                  this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
-                  this.blockPart.content = this.$refs.blockContent.innerHTML;
-                  this.blockAudio.map = this.blockPart.content;
-                  this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
-                  this.showPinnedInText();
-                }
-                task = Promise.resolve();
-                break;
-              case 'save-audio':
-                task = this.$parent.assembleBlockAudioEdit(...record.options, false)
-                  .then(response => {
-                    this.isAudioChanged = false;
-                    return Promise.resolve(response);
-                  });
-                break;
-              case 'save-audio-then-block':
-                task = new Promise((resolve, reject) => {
-                  return this.$parent.assembleBlockAudioEdit(...record.options.concat([{content: this.clearBlockContent()}]))
-                    .then(() => {
-                      return this.$parent.assembleBlockProxy(false, true, [], false);
-                    })
-                    .then(() => {
-                      this.isAudioChanged = false;
-                      return resolve();
-                    })
-                    .catch(err => {
-                      console.log(err);
-                      return reject(err);
-                    });
-                });
-                break;
-              case 'save-part-then-audio':
-                task = new Promise((resolve, reject) => {
-                  let preparedData = {content: this.clearBlockContent(), audiosrc: this.blockAudiosrc(null, false)};
-                  delete this.blockPart.audiosrc;
-                  delete this.blockPart.audiosrc_ver;// temporary remove edited audio link in block, not save it
-                  return this.assembleBlockProxy(false, false, false)
-                    .then(() => {
-                      return this.assembleBlockPartAudioEdit(...record.options.concat(preparedData));
-                    })
-                    .then(() => {
-                      return resolve();
-                    })
-                    .catch(err => {
-                      console.log(err);
-                      return reject(err);
-                    });
-                });
-                break;
-              case 'save-part-audio':
-                task = this.assembleBlockPartAudioEdit(...record.options);
-                break;
-              case 'manual_boundaries':
-                task = new Promise((resolve, reject) => {
-                  let response = this.evFromAudioeditorWordRealign(...record.options);
-                  response[0] = false;// not needed to reload audio
-                  return resolve(response);
-                });
-                break;
-              case 'unpin_right':
-                task = new Promise((resolve, reject) => {
-                  let response = this.evFromAudioeditorUnpinRight(...record.options.concat([this.check_id]));
-                  return resolve();
-                });
-                break;
-              default:
-                task = Promise.resolve();
-                console.log('Not implemented type', record.type, record);
-                break;
-            }
-            this.audStop();
-            this.isAudioChanged = true;
-            return task
-              .then((response) => {
-                //this.audioTasksQueue.running = null;
-                if (Array.isArray(response)) {
-                  this.$root.$emit('for-audioeditor:load-silent', record, ...response);
-                }
-                this.blockAudio.map = this.blockContent();
-                this.blockAudio.src = this.blockAudiosrc('m4a');
-                //this.shiftAudioTask();
-              })
-              .catch(err => {
-                this.audioTasksQueue.running = null;
-              });
-          }
-        }
-      },
       audioEditorEventsOn() {
         this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
-        this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-        this.$root.$on('from-audioeditor:save', this.evFromAudioeditorSave);
-        this.$root.$on('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
-        this.$root.$on('from-audioeditor:cut', this.evFromAudioeditorCut);
-        this.$root.$on('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-        this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
+        //this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
         this.$root.$on('from-audioeditor:discard', this.evFromAudioeditorDiscard);
         this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
 
         this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
-        this.$root.$on('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
-        this.$root.$on('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
-        this.$root.$on('from-audioeditor:revert', this.evFromAudioEditorRevert);
-        this.$root.$on('from-audioeditor:tasks-queue-push', this.evFromAudioEditorTasksQueuePush);
       },
       audioEditorEventsOff() {
         this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
-        this.$root.$off('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
-        this.$root.$off('from-audioeditor:save-and-realign', this.evFromAudioeditorSaveAndRealign);
-        this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
-        this.$root.$off('from-audioeditor:cut', this.evFromAudioeditorCut);
-        this.$root.$off('from-audioeditor:insert-silence', this.evFromAudioeditorInsertSilence);
-        this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
+        //this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
         this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
         this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
-        this.$root.$off('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
-        this.$root.$off('from-audioeditor:erase-audio', this.evFromAudioeditorEraseAudio);
-        this.$root.$off('from-audioeditor:revert', this.evFromAudioEditorRevert);
-        this.$root.$off('from-audioeditor:tasks-queue-push', this.evFromAudioEditorTasksQueuePush);
       },
       //-- } -- end -- Events --//
 
@@ -4021,6 +3613,12 @@ Join with next subblock?`;
               return Promise.resolve();
             });
         }
+      },
+      reloadBlockPart() {
+        this.blockPart.audiosrc = this.blockAudiosrc(null, false);
+        this.blockPart.audiosrc_ver['m4a'] = this.blockAudiosrc('m4a', false);
+        this.blockAudio.map = this.blockContent();
+        this.blockAudio.src = this.blockAudiosrc('m4a');
       }
 
   },
@@ -4219,7 +3817,7 @@ Join with next subblock?`;
           if (oldVal < val && this.audioTasksQueue.block.checkId === this.check_id) {
             //console.log('START ', this.check_id);
             //console.log('FIRE');
-            this.evFromAudioEditorTasksQueuePush(this.check_id);
+            //this.evFromAudioEditorTasksQueuePush(this.check_id);
           }
         },
         deep: true

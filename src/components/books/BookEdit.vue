@@ -154,7 +154,10 @@ export default {
           parlistO: 'storeListO',
           blockSelection: 'blockSelection',
           currentJobInfo: 'currentJobInfo',
-          audioTasksQueue: 'audioTasksQueue'
+          audioTasksQueue: 'audioTasksQueue',
+          audioTasksQueueBlock: 'audioTasksQueueBlock',
+          audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
+          isAudioEditAligning: 'isAudioEditAligning'
       }),
       metaStyles: function () {
           let result = '';
@@ -249,7 +252,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges']),
 
     test(ev) {
         console.log('test', ev);
@@ -1890,7 +1893,533 @@ export default {
           this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
         }
       }
-    }
+    },
+    saveBlockAudioChanges(realign = false, preparedData = false) {
+      let blk = this.audioTasksQueueBlock();
+      if (blk) {
+        //console.log(`saveBlockAudioChanges: `, this.audioTasksQueueBlock)
+        //console.log(blk.isChanged);
+        if ((blk.isChanged || (this.audioTasksQueue.block.partIdx && blk.parts[this.audioTasksQueue.block.partIdx].isChanged)) && preparedData === false) {
+          this.scrollToBlock(this.audioTasksQueue.block.blockId, this.audioTasksQueue.block.partIdx);
+          this.$root.$emit('closeFlagPopup', true);
+          this.$root.$emit('show-modal', {
+            title: 'Unsaved Changes',
+            text: `Block text has been modified and not saved.<br>
+Save text changes and realign the Block?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Save & Realign',
+                handler: () => {
+                  let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+                    return b.block.blockid === this.audioTasksQueue.block.blockId;
+                  });
+                  if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+                    refContainer = this.audioTasksQueue.block.partIdx === null ? refContainer.$refs.blocks[0] : refContainer.$refs.blocks[this.audioTasksQueue.block.partIdx];// need subblock, container BookBlockPartView
+                  } else {
+                    refContainer = null;
+                  }
+                  this.$root.$emit('hide-modal');
+                  if (!refContainer) {
+                    return Promise.resolve();
+                  }
+                  if (blk.isChanged) {
+                    return this.saveBlockAudioChanges(false, {content: refContainer.clearBlockContent()})
+                      .then(() => {
+                        refContainer.reloadBlockPart();
+                        return refContainer.assembleBlockProxy(false, true, [], false);
+                      });
+                  } else {
+                    let preparedData = {content: refContainer.clearBlockContent()}
+                    return refContainer.assembleBlockProxy(false, false, false)
+                      .then(() => {
+                        return this.saveBlockAudioChanges(true, preparedData);
+                      });
+                  }
+                },
+                class: ['btn btn-primary']
+              }
+            ],
+            class: ['align-modal']
+          });
+          return Promise.resolve();
+        }
+        this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+        return this.applyTasksQueue([null])
+          .then(() => {
+            return this.saveBlockAudio([realign, preparedData])
+          })
+          .then(response => {
+            this.$root.$emit('for-audioeditor:flush');
+            let block = this.audioTasksQueueBlock();
+            let isSplitted = block.getIsSplittedBlock();
+            if (realign) {
+              this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+            } else {
+              let part = isSplitted ? response.data.parts[this.audioTasksQueue.block.partIdx] : response.data;
+              part._id = this.audioTasksQueue.block.checkId;
+              part.blockid = this.audioTasksQueue.block.blockId;
+              part.partIdx = this.audioTasksQueue.block.partIdx;
+              this.$root.$emit('for-audioeditor:load',
+                isSplitted ? block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a', true) : block.getAudiosrc('m4a', true),
+                isSplitted ? block.getPartContent(this.audioTasksQueue.block.partIdx) : block.content, false, part);
+            }
+            /*this.blockAudio.map = this.blockContent();
+            this.blockAudio.src = this.blockAudiosrc('m4a');
+            if (this.isCompleted) {
+              this.tc_loadBookTask();
+            }*/
+          });
+      }
+    },
+    audioTasksQueueAdded() {
+      if (this.audioTasksQueue.log.length > 0) {
+        let task = null;
+        let record = this.audioTasksQueue.log[this.audioTasksQueue.log.length - 1];
+        //this.audioTasksQueue.running = record;
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === this.audioTasksQueue.block.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = this.audioTasksQueue.block.partIdx === null ? refContainer.$refs.blocks[0] : refContainer.$refs.blocks[this.audioTasksQueue.block.partIdx];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        let block = this.audioTasksQueueBlock();
+        if (!block) {
+          return;
+        }
+        let blockPart = this.audioTasksQueue.block.partIdx === null ? block : block.parts[this.audioTasksQueue.block.partIdx];
+        switch (record.type) {
+          case 'cut':
+          case 'insert_silence':
+          case 'erase':
+            //let record = this.audioTasksQueue.queue[this.audioTasksQueue.queue.length - 1];
+            //console.log(record);
+            //console.log(record.wordMap);
+            let contentContainer = null;
+            if (refContainer && refContainer.$refs.blockContent && refContainer.$refs.blockContent.querySelectorAll) {
+              contentContainer = refContainer.$refs.blockContent;
+            } else {
+              contentContainer = document.createElement('div');// scrolled, container absent, create temporary div
+              contentContainer.innerHTML = blockPart.content;
+            }
+            if (contentContainer) {
+              let current_boundaries = blockPart.manual_boundaries ? blockPart.manual_boundaries.slice() : [];
+              let w_maps = contentContainer.querySelectorAll('[data-map]');
+
+              let manual_boundaries = [];
+              record.wordMap.forEach((m, i) => {
+                if (w_maps[i]) {
+                  let cMap = w_maps[i].getAttribute('data-map');
+                  if (cMap) {
+                    cMap = cMap.split(',');
+                    cMap[0] = parseInt(cMap[0]);
+                    cMap[1] = parseInt(cMap[1]);
+                    if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
+                      if (!(record.type === 'cut' && record.options[0] < cMap[0] && record.options[1] > cMap[0])) {
+                        manual_boundaries.push(m[0]);
+                      }
+                      current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
+                    }
+                  }
+                  w_maps[i].setAttribute('data-map', m.join(','));
+                  if (m[1] > 50) {
+                    w_maps[i].classList.remove('alignment-changed');
+                  }
+                }
+              });
+              current_boundaries.forEach(_m => {
+                if (manual_boundaries.indexOf(_m) === -1) {
+                  manual_boundaries.push(_m);
+                  //console.log(`PUSH ${_m[0]}`);
+                }
+              });
+              manual_boundaries = [...new Set(manual_boundaries)].sort((a, b) => {return a - b;});
+              block.setPartManualBoundaries(this.audioTasksQueue.block.partIdx || 0, manual_boundaries.slice());
+              if (refContainer) {
+                refContainer.blockPart.manual_boundaries = manual_boundaries.slice();
+              }
+              manual_boundaries = null;
+              block.setPartContent(this.audioTasksQueue.block.partIdx || 0, contentContainer.innerHTML);
+              block.setPartAudiosrc(this.audioTasksQueue.block.partIdx || 0, 
+                this.audioTasksQueue.block.partIdx === null ? block.getAudiosrc(null, false) : block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, null, false), 
+                {m4a: this.audioTasksQueue.block.partIdx === null ? block.getAudiosrc('m4a', false) : block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a', false)});
+              if (refContainer) {
+                refContainer.blockPart.content = contentContainer.innerHTML;
+                refContainer.blockAudio.map = blockPart.content;
+                refContainer.showPinnedInText();
+              }
+              this.$root.$emit('for-audioeditor:reload-text', contentContainer.innerHTML, blockPart);
+            }
+            task = Promise.resolve();
+            break;
+          case 'save-audio':
+            task = this.$parent.assembleBlockAudioEdit(...record.options, false)
+              .then(response => {
+                this.isAudioChanged = false;
+                return Promise.resolve(response);
+              });
+            break;
+          case 'save-audio-then-block':
+            task = new Promise((resolve, reject) => {
+              return this.$parent.assembleBlockAudioEdit(...record.options.concat([{content: this.clearBlockContent()}]))
+                .then(() => {
+                  return this.$parent.assembleBlockProxy(false, true, [], false);
+                })
+                .then(() => {
+                  this.isAudioChanged = false;
+                  return resolve();
+                })
+                .catch(err => {
+                  console.log(err);
+                  return reject(err);
+                });
+            });
+            break;
+          case 'save-part-then-audio':
+            task = new Promise((resolve, reject) => {
+              let preparedData = {content: this.clearBlockContent(), audiosrc: this.blockAudiosrc(null, false)};
+              delete this.blockPart.audiosrc;
+              delete this.blockPart.audiosrc_ver;// temporary remove edited audio link in block, not save it
+              return this.assembleBlockProxy(false, false, false)
+                .then(() => {
+                  return this.assembleBlockPartAudioEdit(...record.options.concat(preparedData));
+                })
+                .then(() => {
+                  return resolve();
+                })
+                .catch(err => {
+                  console.log(err);
+                  return reject(err);
+                });
+            });
+            break;
+          case 'save-part-audio':
+            task = this.assembleBlockPartAudioEdit(...record.options);
+            break;
+          case 'manual_boundaries':
+            task = new Promise((resolve, reject) => {
+              let response = this.evFromAudioeditorWordRealign(...record.options);
+              response[0] = false;// not needed to reload audio
+              return resolve(response);
+            });
+            break;
+          case 'unpin_right':
+            task = new Promise((resolve, reject) => {
+              let response = this.evFromAudioeditorUnpinRight(...record.options.concat([this.check_id]));
+              return resolve();
+            });
+            break;
+          default:
+            task = Promise.resolve();
+            console.log('Not implemented type', record.type, record);
+            break;
+        }
+        if (refContainer) {
+          refContainer.audStop();
+          refContainer.isAudioChanged = true;
+        } else {
+          block.isAudioChanged = true;
+        }
+        return task
+          .then((response) => {
+            //this.audioTasksQueue.running = null;
+            if (Array.isArray(response)) {
+              this.$root.$emit('for-audioeditor:load-silent', record, ...response);
+            }
+            if (refContainer) {
+              refContainer.blockAudio.map = refContainer.blockContent();
+              refContainer.blockAudio.src = refContainer.blockAudiosrc('m4a');
+            }
+            //this.shiftAudioTask();
+          })
+          .catch(err => {
+            this.audioTasksQueue.running = null;
+          });
+      }
+    },
+    evFromAudioeditorWordRealign(map, pinnedIndex, blockId) {
+        let response_params = null;
+        let block = this.audioTasksQueueBlock();
+        if (!block) {
+          return;
+        }
+        let audioQueueBlock = this.audioTasksQueue.block;
+        let isBlockPart = audioQueueBlock.partIdx !== null && block.getIsSplittedBlock();
+        let blockPart = isBlockPart ? block.parts[audioQueueBlock.partIdx] : block;
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === audioQueueBlock.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = isBlockPart ? refContainer.$refs.blocks[audioQueueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        let contentContainer = null;
+        if (refContainer && refContainer.$refs.blockContent && refContainer.$refs.blockContent.querySelectorAll) {
+          contentContainer = refContainer.$refs.blockContent;
+        } else {
+          contentContainer = document.createElement('div');// scrolled, container absent, create temporary div
+          contentContainer.innerHTML = blockPart.content;
+        }
+        if (contentContainer) {
+          if (refContainer) {
+            refContainer.audStop();
+          }
+          //console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
+          let current_boundaries = blockPart.manual_boundaries ? blockPart.manual_boundaries.slice() : [];
+          let w_maps = contentContainer.querySelectorAll('[data-map]');
+
+          let currentMap = w_maps[map[pinnedIndex].index].getAttribute('data-map').split(',');
+          currentMap[0] = parseInt(currentMap[0]);
+          currentMap[1] = parseInt(currentMap[1]);
+
+          let manual_boundaries = [map[pinnedIndex].map[0]];
+          map.forEach(m => {
+            let cMap = w_maps[m.index].getAttribute('data-map');
+            if (cMap) {
+              cMap = cMap.split(',');
+              cMap[0] = parseInt(cMap[0]);
+              cMap[1] = parseInt(cMap[1]);
+              if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
+                manual_boundaries.push(m.map[0]);
+                current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
+              }
+            }
+            w_maps[m.index].setAttribute('data-map', m.map.join());
+            if (m.map[1] > 50) {
+              w_maps[m.index].classList.remove('alignment-changed');
+            }
+          });
+          if (currentMap[0] !== map[pinnedIndex].map[0] && manual_boundaries.indexOf(map[pinnedIndex].map[0]) === -1) {
+            if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
+              manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
+            }
+            //manual_boundaries.push(_m[0]);
+          }
+          if (currentMap[0] + currentMap[1] !== map[pinnedIndex].map[0] + map[pinnedIndex].map[1] && manual_boundaries.indexOf(map[pinnedIndex].map[0] + map[pinnedIndex].map[1]) === -1) {
+            if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
+              manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
+            }
+            //manual_boundaries.push(_m[0] + _m[1]);
+          }
+          current_boundaries.forEach(_m => {
+            if (manual_boundaries.indexOf(_m) === -1) {
+              manual_boundaries.push(_m);
+              //console.log(`PUSH ${_m[0]}`);
+            }
+          });
+          manual_boundaries = [...new Set(manual_boundaries)].sort((a, b) => {return a - b;});
+          block.setPartManualBoundaries(isBlockPart ? audioQueueBlock.partIdx : 0, manual_boundaries.slice());
+          if (refContainer) {
+            refContainer.blockPart.manual_boundaries = manual_boundaries.slice();
+          }
+          manual_boundaries = null;
+          block.setPartContent(isBlockPart ? audioQueueBlock.partIdx : 0, contentContainer.innerHTML);
+          block.setPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 
+            isBlockPart ? block.getPartAudiosrc(audioQueueBlock.partIdx, null, false) : block.getAudiosrc(null, false), 
+            {m4a: isBlockPart ? block.getPartAudiosrc(audioQueueBlock.partIdx, 'm4a', false) : block.getAudiosrc('m4a', false)});
+          if (refContainer) {
+            refContainer.blockPart.content = contentContainer.innerHTML;
+            refContainer.blockAudio.map = refContainer.blockPart.content;
+          }
+          if (this.audioTasksQueue.log.length === 0) {
+            this.$root.$emit('for-audioeditor:reload-text', refContainer.innerHTML, blockPart);
+          } else {
+            if (isBlockPart) {
+              response_params = [block.getPartAudiosrc(audioQueueBlock.partIdx, 'm4a'), block.getPartContent(audioQueueBlock.partIdx), true, Object.assign({_id: audioQueueBlock.checkId}, blockPart)];
+            } else {
+              response_params = [block.getAudiosrc(null), block.content, true, block];
+            }
+          }
+          if (refContainer) {
+            Vue.nextTick(() => {
+              refContainer.showPinnedInText();
+            });
+          }
+          //this.pushChange('content');
+
+
+          //this.blockPart.manual_boundaries = manual_boundaries.slice();
+          //this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
+          //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+          //this.blockPart.content = this.$refs.blockContent.innerHTML;
+          //this.blockAudio.map = this.$refs.blockContent.innerHTML;
+          //this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
+          block.isAudioChanged = true;
+        }
+        return response_params;
+      },
+      evFromAudioeditorUnpinRight(position, blockId) {
+        let response = null;
+        let block = this.audioTasksQueueBlock();
+        if (!block) {
+          return;
+        }
+        let audioQueueBlock = this.audioTasksQueue.block;
+        let isBlockPart = audioQueueBlock.partIdx !== null && block.getIsSplittedBlock();
+        let blockPart = isBlockPart ? block.parts[audioQueueBlock.partIdx] : block;
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === audioQueueBlock.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = isBlockPart ? refContainer.$refs.blocks[audioQueueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        if (Array.isArray(blockPart.manual_boundaries) && blockPart.manual_boundaries.length > 0) {
+          let oldBoundaries = blockPart.manual_boundaries;
+          let new_mb = blockPart.manual_boundaries.filter(mb => {
+            return mb <= position;
+          });
+          block.setPartManualBoundaries(isBlockPart ? audioQueueBlock.partIdx : 0, new_mb);
+          blockPart.manual_boundaries = new_mb;
+          //this.blockPart.content = this.$refs.blockContent.innerHTML;
+          //this.blockAudio.map = this.blockPart.content;
+          block.setPartContent(isBlockPart ? audioQueueBlock.partIdx : 0, blockPart.content);
+          block.setPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 
+            block.getPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, null, false), 
+            {m4a: block.getPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 'm4a', false)});
+          let changed = oldBoundaries.length > blockPart.manual_boundaries.length ? true : false;
+          if (changed) {
+            if (refContainer) {
+              refContainer.isAudioChanged = true;
+            } else {
+              blockPart.isAudioChanged = true;
+            }
+          }
+          if (refContainer) {
+            refContainer.showPinnedInText();
+          }
+          //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
+          response = [block.getPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 'm4a', true), blockPart.content, true, blockPart];
+        }
+        return response;
+      },
+      evFromAudioEditorRevert() {
+        let block = this.audioTasksQueueBlock();// storeList block
+        let blk = this.audioTasksQueueBlockOrPart;// storeList block or it's part for splitted block
+        let queueBlock = this.audioTasksQueue.block;// short block info for audio tasks queue
+        if (!block || !blk) {
+          return Promise.resolve();
+        }
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === queueBlock.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = queueBlock.partIdx !== null ? refContainer.$refs.blocks[queueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        //this.clearAudioTasks(true);
+        if (blk && blk.audiosrc_original) {// should revert to original audio, otherwise usual discard of changes
+          block.isSaving = true;
+          return this.revertAudio([block.blockid, queueBlock.partIdx])
+            .then((res) => {
+              block.isSaving = false;
+              //console.log(res.data);
+              block.setPartAudiosrc(queueBlock.partIdx || 0, res.data.audiosrc, res.data.audiosrc_ver);
+              block.setPartManualBoundaries(queueBlock.partIdx, res.data.manual_boundaries);
+              let text = blk.content;
+              let loadBlock = blk;
+              loadBlock.manual_boundaries = block.getPartManualBoundaries(queueBlock.partIdx || 0);
+              loadBlock._id = queueBlock.checkId;
+              loadBlock.blockid = block.blockid;
+              loadBlock.partIdx = queueBlock.partIdx;
+              //this.$root.$emit('for-audioeditor:load', block.getPartAudiosrc(queueBlock.partIdx || 0, 'm4a'), text, false, loadBlock);
+              this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+              if (refContainer) {
+                refContainer.showPinnedInText();
+              }
+              return Promise.resolve();
+            });
+        } else {
+          return this.discardAudioEdit(true);
+        }
+      },
+      discardAudioEdit: function(reload = true) {
+        let queueBlock = this.audioTasksQueue.block;
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === queueBlock.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = queueBlock.partIdx !== null ? refContainer.$refs.blocks[queueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        if (refContainer) {
+          refContainer.isUpdating = true;
+        }
+        return this.discardAudioChanges()
+          .then(response => {
+            let block = this.audioTasksQueueBlock();
+            if (response.status == 200 && response.data) {
+              if (queueBlock.partIdx !== null) {
+                let part = this.audioTasksQueueBlockOrPart;
+                part._id = queueBlock.checkId;
+                part.blockid = block.blockid;
+                part.partIdx = queueBlock.partIdx;
+                if (reload) {
+                  this.$root.$emit('for-audioeditor:load', block.getPartAudiosrc(queueBlock.partIdx, 'm4a'), block.getPartContent(queueBlock.partIdx), true, part);
+                }
+              } else {
+                if (reload) {
+                  this.$root.$emit('for-audioeditor:load', block.getAudiosrc('m4a'), block.content, false, block);
+                }
+              }
+            }
+            if (refContainer) {
+              refContainer.isUpdating = false;
+            }
+            return Promise.resolve();
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      },
+      evFromAudioeditorUndo (blockId, audio, text, isModified) {
+        let block = this.audioTasksQueueBlock();// block from storeList
+        let queueBlock = this.audioTasksQueue.block;// queue block info
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === queueBlock.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = queueBlock.partIdx !== null ? refContainer.$refs.blocks[queueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        if (refContainer) {
+          refContainer.audStop();
+        }
+        //console.log(block.changes, block.isAudioChanged);
+        //return;
+        /*if (this.isSplittedBlock) {
+          //this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), false, this.blockPart);
+        } else {
+          //this.blockPart.content = this.block.content;
+          //this.blockPart.audiosrc = this.block.audiosrc;
+          this.blockPart.manual_boundaries = this.block.manual_boundaries;
+          //this.$root.$emit('for-audioeditor:load', this.blockAudiosrc('m4a'), this.block.content, false, this.block);
+        }*/
+        //this.blockAudio.map = this.blockContent();
+        //this.blockAudio.src = this.blockAudiosrc('m4a');
+        block.isAudioChanged = isModified;
+        if (refContainer) {
+          refContainer.$parent.$forceUpdate();
+          if (!isModified) {
+            refContainer.unsetChange('audio');
+            refContainer.unsetChange('content');
+            refContainer.unsetChange('manual_boundaries');
+          }
+        }
+      }
   },
   events: {
       currentEditingBlock_id : function (key) {
@@ -1975,6 +2504,9 @@ export default {
       this.$root.$on('from-toolbar:toggle-meta', this.correctEditWrapper);
       this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosedIndicator);
 
+      this.$root.$on('from-audioeditor:save', this.saveBlockAudioChanges);
+      this.$root.$on('from-audioeditor:revert', this.evFromAudioEditorRevert);
+      this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -2000,6 +2532,9 @@ export default {
     this.$root.$off('book-reloaded', this.bookReloaded);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
     this.$root.$off('from-toolbar:toggle-meta', this.correctEditWrapper);
+    this.$root.$off('from-audioeditor:save', this.saveBlockAudioChanges);
+    this.$root.$off('from-audioeditor:revert', this.evFromAudioEditorRevert);
+    this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
   },
   watch: {
     'meta._id': {
@@ -2124,6 +2659,23 @@ export default {
             //setAudioSilent(queue_record, audio, text, saveToHistory = true, block = null) {
           }
         }
+      }
+    },
+    'audioTasksQueue.time': {
+      handler(val, oldVal) {
+        //console.log(`audioTasksQueue.time: ${val}`, Object.assign({}, this.audioTasksQueue));
+        if (oldVal < val) {
+          //console.log('START ', this.check_id);
+          //console.log('FIRE');
+          this.audioTasksQueueAdded();
+        }
+      },
+      deep: true
+    },
+    'isAudioEditAligning': {
+      handler(val) {
+        //console.log(`isAudioEditAligning: ${val}`);
+        this.$root.$emit('for-audioeditor:set-process-run', val, 'align');
       }
     }
   }
