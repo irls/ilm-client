@@ -470,6 +470,15 @@ export const store = new Vuex.Store({
         }
       }
       return null;
+    },
+    isAudioEditAligning: state => {
+      if (state.audioTasksQueue.block.blockId && state.aligningBlocks.length > 0) {
+        let blk = state.aligningBlocks.find(b => {
+          return b._id === state.audioTasksQueue.block.blockId && (state.audioTasksQueue.block.partIdx === null || state.audioTasksQueue.block.partIdx === b.partIdx);
+        });
+        return blk ? true : false;
+      }
+      return false;
     }
   },
 

@@ -156,7 +156,8 @@ export default {
           currentJobInfo: 'currentJobInfo',
           audioTasksQueue: 'audioTasksQueue',
           audioTasksQueueBlock: 'audioTasksQueueBlock',
-          audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart'
+          audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
+          isAudioEditAligning: 'isAudioEditAligning'
       }),
       metaStyles: function () {
           let result = '';
@@ -2657,6 +2658,12 @@ Save text changes and realign the Block?`,
         }
       },
       deep: true
+    },
+    'isAudioEditAligning': {
+      handler(val) {
+        //console.log(`isAudioEditAligning: ${val}`);
+        this.$root.$emit('for-audioeditor:set-process-run', val, 'align');
+      }
     }
   }
 }
