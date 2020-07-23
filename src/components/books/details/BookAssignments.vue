@@ -65,7 +65,7 @@
                     </template>
                   </div>
                   <div v-if="action=='mastering_required'">
-                    <div class="btn-switch" @click="toggleMastering()">
+                    <div class="btn-switch" @click="/*toggleMastering()*/">
                       <i class="fa fa-toggle-on" v-if="!currentBookMeta.masteringRequired"></i>
                       <i class="fa fa-toggle-off" v-else></i>
                       <span class="s-label">&nbsp;Mastered</span>
