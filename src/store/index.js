@@ -3521,6 +3521,22 @@ export const store = new Vuex.Store({
           block.flags.push(updated);
         }
       }
+    },
+    setPauseBefore({state}, [blockType, value]) {
+      if (state.blockSelection.start._id && state.blockSelection.end._id) {
+        return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/pause_before`, {
+          start_id: state.blockSelection.start._id,
+          end_id: state.blockSelection.end._id,
+          block_type: blockType,
+          value: value
+        })
+          .then((response) => {
+            
+          })
+          .catch(err => {
+            
+          });
+      }
     }
   }
 })

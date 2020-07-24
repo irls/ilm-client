@@ -421,6 +421,17 @@
                       Hide from display
                     </label>
                   </fieldset> -->
+                  <fieldset v-if="pausesBeforeProps.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                    <legend>Pause before block (sec.)</legend>
+                    <block-style-labels
+                      :blockType="blockType"
+                      :styleArr="['none', '0.6', '1', '2', '4']"
+                      :styleKey="'pause_before'"
+                      :styleTabs="pausesBeforeProps"
+                      :styleValue="styleValue"
+                      @selectStyleEv="selectPauseBefore"
+                    ></block-style-labels>
+                  </fieldset>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
                     <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && styleKey !== 'table of contents' && !(styleKey == 'level' && blockType == 'header') && !(styleKey == 'style' && blockType == 'title')" :key="styleKey" class="block-style-fieldset">
@@ -1310,15 +1321,18 @@ export default {
                 }
               }
               if (!pausesBefore.has(oBlock.type)) {
-                pausesBefore.set(oBlock.type, new Map(/*[
+                pausesBefore.set(oBlock.type, new Map());
+                pausesBefore.get(oBlock.type).set('pause_before', new Map());
+                /*pausesBefore.get(oBlock.type).get('pauses_before').set(new Map([
                   ['none', !pBlock.pause_before],
                   [0.6, pBlock.pause_before == 0.6],
                   [1, pBlock.pause_before == 1],
                   [2, pBlock.pause_before == 2],
                   [4, pBlock.pause_before == 4]
-                ]*/));
+                ]));*/
               }
-              pausesBefore.get(oBlock.type).set(pBlock.pause_before ? pBlock.pause_before : 'none', true);
+              pausesBefore.get(oBlock.type).get('pause_before').set(pBlock.pause_before ? `${pBlock.pause_before}` : 'none', true);
+              //pausesBefore.get(oBlock.type).get('pause_before').set(pBlock.pause_before ? pBlock.pause_before : '0.6', true);
             }
           }
 
@@ -1331,6 +1345,7 @@ export default {
 
       this.styleTabs = result;
       this.numProps = nums;
+      this.pausesBeforeProps = pausesBefore;
 
       //console.log('result', result);
       //console.log('nums', nums);
@@ -1490,6 +1505,10 @@ export default {
             }
           })
       }
+    },
+    selectPauseBefore(blockType, styleKey, styleVal) {
+      console.log(blockType, styleKey, styleVal);
+      return this.setPauseBefore([blockType, styleVal]);
     },
 
     listenSetStyle () {
@@ -1722,7 +1741,7 @@ export default {
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseBefore'])
   }
 }
 
