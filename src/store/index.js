@@ -2143,6 +2143,7 @@ export const store = new Vuex.Store({
               dispatch('tc_loadBookTask', task.bookid);
             //}
             //dispatch('getCurrentJobInfo');
+            dispatch('getCurrentJobInfo');
             return Promise.resolve(list);
           })
       })
