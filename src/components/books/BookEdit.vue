@@ -1931,9 +1931,19 @@ Save text changes and realign the Block?`,
                   }
                   if (blk.isChanged) {
                     return this.saveBlockAudioChanges(false, {content: refContainer.clearBlockContent()})
-                      .then(() => {
+                      .then((part) => {
                         refContainer.reloadBlockPart();
-                        return refContainer.assembleBlockProxy(false, true, [], false);
+                        if (part) {
+                          return refContainer.assembleBlockProxy(false, true, [], false);
+                        } else {
+                          //console.log(refContainer);
+                          if (refContainer.$parent) {
+                            if (refContainer.$parent.isChanged) {
+                              refContainer.$parent.isChanged = false;
+                            }
+                          }
+                          return Promise.resolve();
+                        }
                       });
                   } else {
                     let preparedData = {content: refContainer.clearBlockContent()}
@@ -1961,14 +1971,20 @@ Save text changes and realign the Block?`,
             let isSplitted = block.getIsSplittedBlock();
             if (realign) {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+              return Promise.resolve(true);
             } else {
               let part = isSplitted ? response.data.parts[this.audioTasksQueue.block.partIdx] : response.data;
-              part._id = this.audioTasksQueue.block.checkId;
-              part.blockid = this.audioTasksQueue.block.blockId;
-              part.partIdx = this.audioTasksQueue.block.partIdx;
-              this.$root.$emit('for-audioeditor:load',
-                isSplitted ? block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a', true) : block.getAudiosrc('m4a', true),
-                isSplitted ? block.getPartContent(this.audioTasksQueue.block.partIdx) : block.content, false, part);
+              if (part) {
+                part._id = this.audioTasksQueue.block.checkId;
+                part.blockid = this.audioTasksQueue.block.blockId;
+                part.partIdx = this.audioTasksQueue.block.partIdx;
+                this.$root.$emit('for-audioeditor:load',
+                  isSplitted ? block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a', true) : block.getAudiosrc('m4a', true),
+                  isSplitted ? block.getPartContent(this.audioTasksQueue.block.partIdx) : block.content, false, part);
+              } else {
+                this.$root.$emit('for-audioeditor:force-close');
+              }
+              return Promise.resolve(part ? true : false);
             }
             /*this.blockAudio.map = this.blockContent();
             this.blockAudio.src = this.blockAudiosrc('m4a');
