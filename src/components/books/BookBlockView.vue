@@ -2328,6 +2328,9 @@ Save audio changes and realign the Block?`,
                   this.blockAudio.src = this.block.getAudiosrc('m4a');
                   this.block.manual_boundaries = response.data.manual_boundaries || [];
                   this.block.audiosrc_original = response.data.audiosrc_original;
+                  if (Array.isArray(response.data.parts)) {
+                    this.block.parts = response.data.parts;
+                  }
                   Vue.nextTick(() => {
                     if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
                       this.block.flags.forEach(f => {
