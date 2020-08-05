@@ -2166,6 +2166,10 @@ Save audio changes and realign the Block?`,
                   if (this.isLocked && this.isAudioEditing) {
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                   }
+                  if (reloadParent) {
+                    //this.$parent.refreshTmpl();
+                    this.$root.$emit('for-audioeditor:force-close');
+                  }
                 });
             } else {
               this.isSaving = false;
@@ -2180,6 +2184,7 @@ Save audio changes and realign the Block?`,
             }
             if (reloadParent) {
               this.$parent.refreshTmpl();
+              this.$root.$emit('for-audioeditor:force-close');
             }
             return Promise.resolve();
           })
