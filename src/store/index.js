@@ -3491,6 +3491,9 @@ export const store = new Vuex.Store({
               //block.isSaving = false;
               block.manual_boundaries = response.data.manual_boundaries || [];
               block.audiosrc_original = response.data.audiosrc_original;
+              if (Array.isArray(response.data.parts)) {
+                block.parts = response.data.parts;
+              }
               /*Vue.nextTick(() => {
                 if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
                   this.block.flags.forEach(f => {
