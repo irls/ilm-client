@@ -1947,9 +1947,10 @@ Save text changes and realign the Block?`,
                       });
                   } else {
                     let preparedData = {content: refContainer.clearBlockContent()}
-                    return refContainer.assembleBlockProxy(false, false, false)
+                    return this.saveBlockAudioChanges(false, {})
                       .then(() => {
-                        return this.saveBlockAudioChanges(true, preparedData);
+                        refContainer.reloadBlockPart();
+                        return refContainer.assembleBlockProxy(false, true, false);
                       });
                   }
                 },
@@ -1986,7 +1987,7 @@ Save text changes and realign the Block?`,
               return Promise.resolve(true);
             } else {
               let part = isSplitted ? response.data.parts[this.audioTasksQueue.block.partIdx] : response.data;
-              if (part) {
+              if (part && (!refContainer || !refContainer.hasChange('split_point'))) {
                 part._id = this.audioTasksQueue.block.checkId;
                 part.blockid = this.audioTasksQueue.block.blockId;
                 part.partIdx = this.audioTasksQueue.block.partIdx;
