@@ -1502,6 +1502,10 @@ Save audio changes and realign the Block?`,
               return Promise.resolve();
             })
         }
+        let isSplitting = this.hasChange('split_point');
+        if (isSplitting && this.isAudioEditing) {
+          this.$root.$emit('for-audioeditor:force-close');
+        }
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
@@ -1514,7 +1518,7 @@ Save audio changes and realign the Block?`,
         this.isSaving = true;
         this.$forceUpdate();
         let reloadParent = this.hasChange('split_point');
-        if (this.isAudioEditing) {
+        if (this.isAudioEditing && !isSplitting) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
         return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign)
@@ -1523,7 +1527,7 @@ Save audio changes and realign the Block?`,
             if (this.blockAudio.map) {
               this.blockAudio.map = this.blockPart.content;
             }
-            if (this.isLocked && this.isAudioEditing) {
+            if (this.isLocked && this.isAudioEditing && !isSplitting) {
               this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
             }
             if (reloadParent) {
@@ -1676,7 +1680,7 @@ Save audio changes and realign the Block?`,
             if (refreshTasks) {
               this.getCurrentJobInfo();
             }
-            if (this.isAudioEditing && realign) {
+            if (this.isAudioEditing && realign && !reloadParent) {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
             }
             if (reloadParent) {
@@ -3052,6 +3056,7 @@ Save text changes and realign the Block?`,
           });
           return Promise.resolve();
         }
+        let isSplitting = this.hasChange('split_point');
         this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         return this.applyTasksQueue([null])
           .then(() => {
