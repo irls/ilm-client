@@ -1446,6 +1446,10 @@ Save audio changes and realign the Block?`,
               return Promise.resolve();
             })
         }
+        let isSplitting = this.hasChange('split_point');
+        if (isSplitting && this.isAudioEditing) {
+          this.$root.$emit('for-audioeditor:force-close');
+        }
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
@@ -1458,7 +1462,7 @@ Save audio changes and realign the Block?`,
         this.isSaving = true;
         this.$forceUpdate();
         let reloadParent = this.hasChange('split_point');
-        if (this.isAudioEditing) {
+        if (this.isAudioEditing && !isSplitting) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
         return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign)
@@ -1467,7 +1471,7 @@ Save audio changes and realign the Block?`,
             if (this.blockAudio.map) {
               this.blockAudio.map = this.blockPart.content;
             }
-            if (this.isLocked && this.isAudioEditing) {
+            if (this.isLocked && this.isAudioEditing && !isSplitting) {
               this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
             }
             if (reloadParent) {
@@ -1620,7 +1624,7 @@ Save audio changes and realign the Block?`,
             if (refreshTasks) {
               this.getCurrentJobInfo();
             }
-            if (this.isAudioEditing && realign) {
+            if (this.isAudioEditing && realign && !reloadParent) {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
             }
             if (reloadParent) {
@@ -2973,7 +2977,21 @@ Save audio changes and realign the Block?`,
               case 'save-part-then-audio':
                 task = new Promise((resolve, reject) => {
                   let preparedData = {content: this.clearBlockContent(), audiosrc: this.blockAudiosrc(null, false)};
-                  return this.assembleBlockProxy(false, false, false)
+                  let isSplitting = this.hasChange('split_point');
+                  if (isSplitting) {
+                    return this.assembleBlockPartAudioEdit(false, {})
+                      .then(() => {
+                        return this.assembleBlockProxy(false, false, false);
+                      })
+                      .then(() => {
+                        return resolve();
+                      })
+                      .catch(err => {
+                        console.log(err);
+                        return reject(err);
+                      });
+                  } else {
+                    return this.assembleBlockProxy(false, false, false)
                     .then(() => {
                       return this.assembleBlockPartAudioEdit(...record.options.concat(preparedData));
                     })
@@ -2984,6 +3002,7 @@ Save audio changes and realign the Block?`,
                       console.log(err);
                       return reject(err);
                     });
+                  }
                 });
                 break;
               case 'save-part-audio':
@@ -3298,6 +3317,7 @@ Save audio changes and realign the Block?`,
         if (realign) {
           api_url+= '?realign=true';
         }
+        let isSplitting = this.hasChange('split_point');
         this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         return api.post(api_url, data, {})
           .then(response => {
@@ -3325,8 +3345,11 @@ Save audio changes and realign the Block?`,
               this.block.setPartAudiosrc(this.blockPartIdx, part.audiosrc, part.audiosrc_ver);
               this.block.setPartManualBoundaries(this.blockPartIdx, part.manual_boundaries || []);
               this.block.setPartAudiosrcOriginal(this.blockPartIdx, part.audiosrc_original || null);
+              if (Array.isArray(response.data.parts)) {
+                this.block.parts = response.data.parts;
+              }
               //return this.putBlock(this.block);
-              if (!realign) {
+              if (!realign && !isSplitting) {
                 part._id = this.check_id;
                 this.$root.$emit('for-audioeditor:load',
                 this.blockAudiosrc('m4a'),
