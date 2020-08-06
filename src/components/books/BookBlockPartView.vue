@@ -3619,6 +3619,7 @@ Join with next subblock?`;
         this.blockPart.audiosrc_ver['m4a'] = this.blockAudiosrc('m4a', false);
         this.blockAudio.map = this.blockContent();
         this.blockAudio.src = this.blockAudiosrc('m4a');
+        this.showPinnedInText();
       }
 
   },
