@@ -1899,7 +1899,7 @@ export default {
       if (blk) {
         //console.log(`saveBlockAudioChanges: `, this.audioTasksQueueBlock)
         //console.log(blk.isChanged);
-        if ((blk.isChanged || (this.audioTasksQueue.block.partIdx && blk.parts[this.audioTasksQueue.block.partIdx].isChanged)) && preparedData === false) {
+        if ((blk.isChanged || (this.audioTasksQueue.block.partIdx !== null && blk.parts[this.audioTasksQueue.block.partIdx].isChanged)) && preparedData === false) {
           this.scrollToBlock(this.audioTasksQueue.block.blockId, this.audioTasksQueue.block.partIdx);
           this.$root.$emit('closeFlagPopup', true);
           this.$root.$emit('show-modal', {
