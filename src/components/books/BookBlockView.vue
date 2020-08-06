@@ -2026,6 +2026,7 @@ Save audio changes and realign the Block?`,
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         }
+        let isSplitting = this.hasChange('split_point');
         return this.putBlockPart(update, realign)
           .then(() => {
             if (realign) {
@@ -2035,10 +2036,14 @@ Save audio changes and realign the Block?`,
                   if (this.isLocked && this.isAudioEditing) {
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                   }
+                  if (isSplitting) {
+                    //this.$parent.refreshTmpl();
+                    this.$root.$emit('for-audioeditor:force-close');
+                  }
                 });
             } else {
               this.isSaving = false;
-              if (this.isAudioEditing) {
+              if (this.isAudioEditing && !isSplitting) {
                 this.$root.$emit('for-audioeditor:set-process-run', false);
               }
             }
