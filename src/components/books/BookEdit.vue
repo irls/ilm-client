@@ -1959,6 +1959,18 @@ Save text changes and realign the Block?`,
             this.$root.$emit('for-audioeditor:flush');
             let block = this.audioTasksQueueBlock();
             let isSplitted = block.getIsSplittedBlock();
+            let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+              return b.block.blockid === this.audioTasksQueue.block.blockId;
+            });
+            if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+              refContainer = this.audioTasksQueue.block.partIdx === null ? refContainer.$refs.blocks[0] : refContainer.$refs.blocks[this.audioTasksQueue.block.partIdx];// need subblock, container BookBlockPartView
+            } else {
+              refContainer = null;
+            }
+            if (refContainer) {
+              //refContainer.showPinnedInText();
+              refContainer.reloadBlockPart();
+            }
             if (realign) {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
               return Promise.resolve(true);
