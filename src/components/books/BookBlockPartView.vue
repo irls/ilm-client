@@ -3897,6 +3897,9 @@ Join with next subblock?`;
         } else {
           this.$parent.isSaving = true;
           this.$parent.$forceUpdate();this.$parent.$forceUpdate();
+          let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
+            return b.isAudioEditing;
+          }) : false;
           return this.mergeBlockParts([this.block.blockid, this.blockPartIdx, this.blockPartIdx + 1])
             .then(() => {
               this.$parent.isSaving = false;
@@ -3904,6 +3907,9 @@ Join with next subblock?`;
                 this.tc_loadBookTask(this.block.bookid);
                 this.getCurrentJobInfo();
               }*/
+              if (isAudioEditorOpened) {
+                this.$root.$emit('for-audioeditor:force-close');
+              }
               this.$parent.$parent.refreshTmpl();
               return Promise.resolve();
             });
