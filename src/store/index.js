@@ -462,7 +462,7 @@ export const store = new Vuex.Store({
       if (state.audioTasksQueue.block.blockId) {
         let block = state.storeList.get(state.audioTasksQueue.block.blockId);
         if (block) {
-          if (block.getIsSplittedBlock() && state.audioTasksQueue.block.partIdx) {
+          if (block.getIsSplittedBlock() && state.audioTasksQueue.block.partIdx !== null) {
             return block.parts[state.audioTasksQueue.block.partIdx];
           } else {
             return block;
@@ -3525,7 +3525,7 @@ export const store = new Vuex.Store({
       return axios.delete(api_url, {}, {})
         .then(response => {
           if (response.status == 200 && response.data) {
-            let part = response.data.parts[queueBlock.partIdx];
+            let part = queueBlock.partIdx !== null ? response.data.parts[queueBlock.partIdx] : response.data;
             block.setPartContent(queueBlock.partIdx || 0, part.content);
             block.setPartAudiosrc(queueBlock.partIdx || 0, part.audiosrc, part.audiosrc_ver);
             block.setPartManualBoundaries(queueBlock.partIdx || 0, part.manual_boundaries || []);
