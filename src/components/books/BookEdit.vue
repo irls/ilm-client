@@ -2439,8 +2439,13 @@ Save text changes and realign the Block?`,
         }*/
         //this.blockAudio.map = this.blockContent();
         //this.blockAudio.src = this.blockAudiosrc('m4a');
-        block.isAudioChanged = isModified;
+        if (!block.getIsSplittedBlock()) {
+          block.isAudioChanged = isModified;
+        } else {
+          block.parts[queueBlock.partIdx].isAudioChanged = isModified;
+        }
         if (refContainer) {
+          refContainer.blockAudio.map = block.getIsSplittedBlock() ? block.parts[queueBlock.partIdx].content : block.content;
           refContainer.$parent.$forceUpdate();
           if (!isModified) {
             refContainer.unsetChange('audio');
