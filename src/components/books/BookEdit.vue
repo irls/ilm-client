@@ -2406,6 +2406,7 @@ Save text changes and realign the Block?`,
             }
             if (refContainer) {
               refContainer.isUpdating = false;
+              refContainer.blockAudio.map = block.getIsSplittedBlock() ? block.parts[queueBlock.partIdx].content : block.content;
               refContainer.$parent.$forceUpdate();
             }
             return Promise.resolve();
