@@ -3488,12 +3488,15 @@ Save text changes and realign the Block?`,
             if (!isMac) {
               let wordString = `a-zA-Zа-яА-Я0-9À-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ’"\\?\\!\\:\\;\\.,“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…`;
               regexp = skipLengthCheck ? /^(\S+)|(\s+)$/i : new RegExp(`^([${wordString}]+[^${wordString}]+[${wordString}]*)|([^${wordString}]+[${wordString}]+)|(\\s+)$`, 'i');
-              checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
+              checkRange.setEnd( container, this.range.endOffset );
+              while (checkRange.endOffset < container.length && container.data.substring(checkRange.endOffset, checkRange.endOffset + 1) === ' ') {// add all speces till container end to range
+                checkRange.setEnd( container, checkRange.endOffset+1 );
+              }
             } else {// Mac OS right mouse click selects psrt of the text
               checkRange.setEnd(container, this.range.endOffset);
               regexp = /^([\s]*)|(\s+\S*)$/i;
             }
-            if (this.range.endOffset < container.length && checkRange.endOffset === container.length/* && !container.nextSibling*/) {
+            if (this.range.endOffset < container.length && checkRange.endOffset === container.length/* && !container.nextSibling*/ && /\s$/.test(checkRange.toString())) {// check if click made at the end of text with space
               if (!(container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling)) {
                 //console.log(container.parentElement, container.parentElement.nextSibling, skipLengthCheck);
                 let beforeDiv = container;
@@ -3607,6 +3610,9 @@ Join with next subblock?`;
         } else {
           this.$parent.isSaving = true;
           this.$parent.$forceUpdate();this.$parent.$forceUpdate();
+          let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
+            return b.isAudioEditing;
+          }) : false;
           return this.mergeBlockParts([this.block.blockid, this.blockPartIdx, this.blockPartIdx + 1])
             .then(() => {
               this.$parent.isSaving = false;
@@ -3614,6 +3620,9 @@ Join with next subblock?`;
                 this.tc_loadBookTask(this.block.bookid);
                 this.getCurrentJobInfo();
               }*/
+              if (isAudioEditorOpened) {
+                this.$root.$emit('for-audioeditor:force-close');
+              }
               this.$parent.$parent.refreshTmpl();
               return Promise.resolve();
             });
