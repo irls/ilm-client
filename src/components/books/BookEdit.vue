@@ -2272,7 +2272,11 @@ Save text changes and realign the Block?`,
           //this.blockPart.content = this.$refs.blockContent.innerHTML;
           //this.blockAudio.map = this.$refs.blockContent.innerHTML;
           //this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
-          block.isAudioChanged = true;
+          if (audioQueueBlock.partIdx !== null) {
+            block.parts[audioQueueBlock.partIdx].isAudioChanged = true;
+          } else {
+            block.isAudioChanged = true;
+          }
         }
         return response_params;
       },
