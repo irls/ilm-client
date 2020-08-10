@@ -2518,6 +2518,7 @@ i.pin {
   position: relative;
   width: 2px;
   cursor: pointer;
+  pointer-events: all;
   &:before {
     background-color: skyBlue;
     background-image: radial-gradient(25% 25%, circle, hsla(0,0%,100%,.2), hsla(0,0%,0%,.2));
