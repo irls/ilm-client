@@ -2396,6 +2396,7 @@ Save text changes and realign the Block?`,
             }
             if (refContainer) {
               refContainer.isUpdating = false;
+              refContainer.$parent.$forceUpdate();
             }
             return Promise.resolve();
           })
