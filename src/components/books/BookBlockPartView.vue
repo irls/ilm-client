@@ -1450,9 +1450,6 @@ Save audio changes and realign the Block?`,
             })
         }
         let isSplitting = this.hasChange('split_point');
-        if (isSplitting && this.isAudioEditing) {
-          this.$root.$emit('for-audioeditor:force-close');
-        }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
@@ -1460,6 +1457,12 @@ Save audio changes and realign the Block?`,
         
         let splitPoints = this.blockPart.content ? this.blockPart.content.match(/<i class="pin"><\/i>/img) : [];
         splitPoints = splitPoints ? splitPoints.length : 0;
+        let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
+            return b.isAudioEditing;
+          }) : false;
+        if (isSplitting && isAudioEditorOpened) {
+          this.$root.$emit('for-audioeditor:force-close');
+        }
         if (splitPoints) {
           this.$parent.isSaving = true;
         }
@@ -3930,7 +3933,7 @@ Join with next subblock?`;
           });
         } else {
           this.$parent.isSaving = true;
-          this.$parent.$forceUpdate();this.$parent.$forceUpdate();
+          this.$parent.$forceUpdate();
           let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
             return b.isAudioEditing;
           }) : false;
