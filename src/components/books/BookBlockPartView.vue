@@ -1463,9 +1463,6 @@ Save audio changes and realign the Block?`,
         if (isSplitting && isAudioEditorOpened) {
           this.$root.$emit('for-audioeditor:force-close');
         }
-        if (splitPoints) {
-          this.$parent.isSaving = true;
-        }
         this.block.parts.forEach((p, pIdx) => {
           if (pIdx !== this.blockPartIdx) {
             let ref = this.$parent.$refs.blocks.find(br => {
@@ -1476,7 +1473,13 @@ Save audio changes and realign the Block?`,
             }
           }
         });
-        this.isSaving = true;
+        if (splitPoints) {
+          this.$parent.isSaving = true;
+          this.block.isSaving = true;
+          this.$parent.$forceUpdate();
+        } else {
+          this.isSaving = true;
+        }
         this.$forceUpdate();
         let reloadParent = this.hasChange('split_point');
         if (this.isAudioEditing && !isSplitting) {
