@@ -1450,23 +1450,42 @@ Save audio changes and realign the Block?`,
         if (isSplitting && this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:force-close');
         }
-        if (this.mode === 'proofread') {
-          return this.assembleBlockProofread();
-        } else if (this.mode === 'narrate') {
-          return this.assembleBlockNarrate();
-        }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+        
+        let splitPoints = this.blockPart.content ? this.blockPart.content.match(/<i class="pin"><\/i>/img) : [];
+        splitPoints = splitPoints ? splitPoints.length : 0;
+        if (splitPoints) {
+          this.$parent.isSaving = true;
+        }
+        this.block.parts.forEach((p, pIdx) => {
+          if (pIdx !== this.blockPartIdx) {
+            let ref = this.$parent.$refs.blocks.find(br => {
+              return br.blockPartIdx === pIdx;
+            });
+            if (ref) {
+              p.content = ref.clearBlockContent();
+            }
+          }
+        });
         this.isSaving = true;
         this.$forceUpdate();
         let reloadParent = this.hasChange('split_point');
         if (this.isAudioEditing && !isSplitting) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
-        return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign)
-          .then(() => {
+        let saveBlockPromise;
+        if (this.mode === 'proofread') {
+          saveBlockPromise = this.assembleBlockProofread();
+        } else if (this.mode === 'narrate') {
+          saveBlockPromise = this.assembleBlockNarrate();
+        } else {
+          saveBlockPromise = this.saveBlockPart(this.blockPart, this.blockPartIdx, realign)
+        }
+        return saveBlockPromise
+          .then((response) => {
             this.isChanged = false;
             if (this.blockAudio.map) {
               this.blockAudio.map = this.blockPart.content;
@@ -1475,8 +1494,26 @@ Save audio changes and realign the Block?`,
               this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
             }
             if (reloadParent) {
+              //let oldLength = this.$parent.$refs.blocks.length;
               this.$parent.$parent.refreshTmpl();
+              this.$parent.$forceUpdate();
+              /*if (isSplitting && splitPoints && oldLength < response.parts.length) {
+                //commit('set_storeList', new BookBlock(response.data));
+                Vue.nextTick(() => {
+                  this.$parent.$refs.blocks.forEach((p, pIdx) => {
+                    if (pIdx > this.blockPartIdx && (p.isChanged || p.isAudioChanged) && pIdx < oldLength) {
+                      this.$parent.$refs.blocks[pIdx + splitPoints].isChanged = p.isChanged;
+                      this.$parent.$refs.blocks[pIdx + splitPoints].isAudioChanged = p.isAudioChanged;
+                      this.$parent.$refs.blocks[pIdx + splitPoints].changes = p.changes;
+                      p.isChanged = false;
+                      p.isAudioChanged = false;
+                    }
+                  });
+                });
+              }*/
             }
+            this.$parent.isSaving = false;
+            this.isSaving = false;
             return Promise.resolve();
           });
       },
@@ -1609,28 +1646,16 @@ Save audio changes and realign the Block?`,
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
-        this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
-        this.isSaving = true;
-        this.$forceUpdate();
         let refreshTasks = this.isCompleted;
-        let reloadParent = this.hasChange('split_point');
         return this.putBlockNarrate([Object.assign(this.blockPart, {
             blockid: this.block.blockid,
             bookid: this.block.bookid,
         }), realign, this.blockPartIdx])
-          .then(() => {
-            this.isSaving = false;
-            this.isChanged = false;
+          .then((response) => {
             if (refreshTasks) {
               this.getCurrentJobInfo();
             }
-            if (this.isAudioEditing && realign && !reloadParent) {
-              this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
-            }
-            if (reloadParent) {
-              this.$parent.$parent.refreshTmpl();
-            }
-            return Promise.resolve();
+            return Promise.resolve(response);
           })
           .catch(err => {
             return Promise.reject(err);
