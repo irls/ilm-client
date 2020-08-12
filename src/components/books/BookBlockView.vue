@@ -193,7 +193,7 @@
             <!-- <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
-            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + block.type + '-' + blockPartIdx + (isSplittedBlock ? '-split' : '')" ref="blocks"
+            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + block.type + '-' + (blockPart.inid ? blockPart.inid : blockPartIdx) + (isSplittedBlock ? '-split' : '')" ref="blocks"
               :block="storeListById(block.blockid)"
               :blockO="blockO"
               :blockId = "blockId"
@@ -2140,12 +2140,12 @@ Save audio changes and realign the Block?`,
           updateTask = this.updateBlockPart([this.block._rid, update, blockPartIdx, realign]);
         }
         return updateTask
-          .then(() => {
+          .then((response) => {
             this.isChanged = false;
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
               this.$refs.blocks[blockPartIdx].isSaving = false;
             }
-            return Promise.resolve();
+            return Promise.resolve(response);
           })
           .catch(err => {
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
