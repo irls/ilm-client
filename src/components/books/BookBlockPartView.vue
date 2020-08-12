@@ -840,6 +840,9 @@ export default {
       },
       isMergeSubblocksAllowed: {
         get() {
+          if (['edit', 'narrate'].indexOf(this.mode) === -1) {
+            return false;
+          }
           if (this.blockPartIdx >= this.block.parts.length - 1) {
             return false;
           }
