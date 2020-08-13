@@ -1269,7 +1269,7 @@ export const store = new Vuex.Store({
               if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
                 block.parts.forEach((p, i) => {
                   if (p.inid) {
-                    block.parts[i].inid = p.inid;
+                    data.block.parts[i].inid = p.inid;
                   }
                 });
               }
