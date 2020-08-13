@@ -1233,9 +1233,6 @@ export const store = new Vuex.Store({
                   if (p.isAudioChanged) {
                     data.block.parts[i] = p;
                   }
-                  if (p.inid) {
-                    data.block.parts[i].inid = p.inid;
-                  }
                 });
                 let hasChanges = blockStore.parts.find(p => {
                   return p.isChanged;
@@ -1269,6 +1266,13 @@ export const store = new Vuex.Store({
 
             if (data.block && state.storeList.has(data.block.blockid)) {
               let block = state.storeList.get(data.block.blockid);
+              if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
+                block.parts.forEach((p, i) => {
+                  if (p.inid) {
+                    block.parts[i].inid = p.inid;
+                  }
+                });
+              }
               if (block.isChanged) {
                 if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
                     if (block.voicework != data.block.voicework) {
@@ -2573,6 +2577,13 @@ export const store = new Vuex.Store({
                                 block.parts[pIdx] = p;
                               } else if (pIdx > b.partIdx && (p.isChanged || p.isAudioChanged)) {
                                 block.parts[pIdx + addedSubblocks] = p;
+                              }
+                            });
+                          }
+                          if (Array.isArray(block.parts) && Array.isArray(blockStore.parts) && block.parts.length === blockStore.parts.length) {
+                            blockStore.parts.forEach((p, i) => {
+                              if (p.inid) {
+                                block.parts[i].inid = p.inid;
                               }
                             });
                           }
