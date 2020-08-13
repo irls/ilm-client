@@ -1211,9 +1211,6 @@ export const store = new Vuex.Store({
                   if (p.isAudioChanged) {
                     data.block.parts[i] = p;
                   }
-                  if (p.inid) {
-                    data.block.parts[i].inid = p.inid;
-                  }
                 });
                 let hasChanges = blockStore.parts.find(p => {
                   return p.isChanged;
@@ -1237,6 +1234,13 @@ export const store = new Vuex.Store({
 
             if (data.block && state.storeList.has(data.block.blockid)) {
               let block = state.storeList.get(data.block.blockid);
+              if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
+                block.parts.forEach((p, i) => {
+                  if (p.inid) {
+                    block.parts[i].inid = p.inid;
+                  }
+                });
+              }
               if (block.isChanged) {
                 if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
                     if (block.voicework != data.block.voicework) {
@@ -2504,6 +2508,13 @@ export const store = new Vuex.Store({
                       //blockStore.content+=' realigned';
                       checks.push(dispatch('getBlock', b._id)
                         .then(block => {
+                          if (Array.isArray(block.parts) && Array.isArray(blockStore.parts) && block.parts.length === blockStore.parts.length) {
+                            blockStore.parts.forEach((p, i) => {
+                              if (p.inid) {
+                                block.parts[i].inid = p.inid;
+                              }
+                            });
+                          }
                           if (state.audioTasksQueue.block.blockId && state.audioTasksQueue.block.blockId === block.blockid && state.audioTasksQueue.block.partIdx !== null) {
                             blockStore = state.storeList.get(b._id);
                             if (Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(block.parts) && block.parts.length === blockStore.parts.length) {
