@@ -3489,7 +3489,17 @@ Save text changes and realign the Block?`,
             if (!isMac && this.range.startOffset < this.range.endOffset) {// do not display menu for range
               return false;
             }
-            let skipLengthCheck = this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV' && (container.parentElement.nextSibling || (container.parentElement.parentElement && container.parentElement.parentElement.nodeName !== 'DIV'));// means click at the end of <w></w> tag, and this tag is not last in container DIV
+            let skipLengthCheck = false;
+            if (this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV') {// && (container.parentElement.nextSibling || (container.parentElement.parentElement && container.parentElement.parentElement.nodeName !== 'DIV' && this.$refs.blockContent.lastChild !== container.parentElement.parentElement));// means click at the end of <w></w> tag, and this tag is not last in container DIV
+              let parent = container.parentElement;
+              while (parent.parentElement && parent.parentElement !== this.$refs.blockContent && !skipLengthCheck) {
+                skipLengthCheck = parent.nextSibling ? true : false;
+                parent = parent.parentElement;
+              }
+              if (!skipLengthCheck) {
+                skipLengthCheck = parent.nextSibling ? true : false;
+              }
+            }
             if (!skipLengthCheck && container.nodeType === 3) {// not aligned block
               skipLengthCheck = this.range.endOffset >= container.length && container.nextSibling;
             }

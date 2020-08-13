@@ -1801,6 +1801,9 @@ Save audio changes and realign the Block?`,
         if (this.hasChange('flags')) {
           this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
         }
+        if (this.hasChange('split_point')) {
+          this.$root.$emit('for-audioeditor:force-close');
+        }
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
