@@ -1907,14 +1907,7 @@ Save text changes and realign the Block?`,
               {
                 title: 'Save & Realign',
                 handler: () => {
-                  let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
-                    return b.block.blockid === this.audioTasksQueue.block.blockId;
-                  });
-                  if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
-                    refContainer = this.audioTasksQueue.block.partIdx === null ? refContainer.$refs.blocks[0] : refContainer.$refs.blocks[this.audioTasksQueue.block.partIdx];// need subblock, container BookBlockPartView
-                  } else {
-                    refContainer = null;
-                  }
+                  let refContainer = this._getRefContainer(blk);
                   this.$root.$emit('hide-modal');
                   if (!refContainer) {
                     return Promise.resolve();
@@ -1960,14 +1953,7 @@ Save text changes and realign the Block?`,
             this.$root.$emit('for-audioeditor:flush');
             let block = this.audioTasksQueueBlock();
             let isSplitted = block.getIsSplittedBlock();
-            let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
-              return b.block.blockid === this.audioTasksQueue.block.blockId;
-            });
-            if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
-              refContainer = this.audioTasksQueue.block.partIdx === null ? refContainer.$refs.blocks[0] : refContainer.$refs.blocks[this.audioTasksQueue.block.partIdx];// need subblock, container BookBlockPartView
-            } else {
-              refContainer = null;
-            }
+            let refContainer = this._getRefContainer(block);
             if (refContainer) {
               //refContainer.showPinnedInText();
               refContainer.reloadBlockPart();
@@ -1999,21 +1985,14 @@ Save text changes and realign the Block?`,
     },
     audioTasksQueueAdded() {
       if (this.audioTasksQueue.log.length > 0) {
-        let task = null;
-        let record = this.audioTasksQueue.log[this.audioTasksQueue.log.length - 1];
-        //this.audioTasksQueue.running = record;
-        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
-          return b.block.blockid === this.audioTasksQueue.block.blockId;
-        });
-        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
-          refContainer = this.audioTasksQueue.block.partIdx === null ? refContainer.$refs.blocks[0] : refContainer.$refs.blocks[this.audioTasksQueue.block.partIdx];// need subblock, container BookBlockPartView
-        } else {
-          refContainer = null;
-        }
         let block = this.audioTasksQueueBlock();
         if (!block) {
           return;
         }
+        let task = null;
+        let record = this.audioTasksQueue.log[this.audioTasksQueue.log.length - 1];
+        //this.audioTasksQueue.running = record;
+        let refContainer = this._getRefContainer(block);
         let blockPart = this.audioTasksQueue.block.partIdx === null ? block : block.parts[this.audioTasksQueue.block.partIdx];
         switch (record.type) {
           case 'cut':
@@ -2173,14 +2152,7 @@ Save text changes and realign the Block?`,
         let audioQueueBlock = this.audioTasksQueue.block;
         let isBlockPart = audioQueueBlock.partIdx !== null && block.getIsSplittedBlock();
         let blockPart = isBlockPart ? block.parts[audioQueueBlock.partIdx] : block;
-        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
-          return b.block.blockid === audioQueueBlock.blockId;
-        });
-        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
-          refContainer = isBlockPart ? refContainer.$refs.blocks[audioQueueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
-        } else {
-          refContainer = null;
-        }
+        let refContainer = this._getRefContainer(block);
         let contentContainer = null;
         if (refContainer && refContainer.$refs.blockContent && refContainer.$refs.blockContent.querySelectorAll) {
           contentContainer = refContainer.$refs.blockContent;
@@ -2289,14 +2261,7 @@ Save text changes and realign the Block?`,
         let audioQueueBlock = this.audioTasksQueue.block;
         let isBlockPart = audioQueueBlock.partIdx !== null && block.getIsSplittedBlock();
         let blockPart = isBlockPart ? block.parts[audioQueueBlock.partIdx] : block;
-        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
-          return b.block.blockid === audioQueueBlock.blockId;
-        });
-        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
-          refContainer = isBlockPart ? refContainer.$refs.blocks[audioQueueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
-        } else {
-          refContainer = null;
-        }
+        let refContainer = this._getRefContainer(block);
         if (Array.isArray(blockPart.manual_boundaries) && blockPart.manual_boundaries.length > 0) {
           let oldBoundaries = blockPart.manual_boundaries;
           let new_mb = blockPart.manual_boundaries.filter(mb => {
@@ -2333,14 +2298,7 @@ Save text changes and realign the Block?`,
         if (!block || !blk) {
           return Promise.resolve();
         }
-        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
-          return b.block.blockid === queueBlock.blockId;
-        });
-        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
-          refContainer = queueBlock.partIdx !== null ? refContainer.$refs.blocks[queueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
-        } else {
-          refContainer = null;
-        }
+        let refContainer = this._getRefContainer(block);
         //this.clearAudioTasks(true);
         if (blk && blk.audiosrc_original) {// should revert to original audio, otherwise usual discard of changes
           block.isSaving = true;
@@ -2369,14 +2327,7 @@ Save text changes and realign the Block?`,
       },
       discardAudioEdit: function(reload = true) {
         let queueBlock = this.audioTasksQueue.block;
-        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
-          return b.block.blockid === queueBlock.blockId;
-        });
-        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
-          refContainer = queueBlock.partIdx !== null ? refContainer.$refs.blocks[queueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
-        } else {
-          refContainer = null;
-        }
+        let refContainer = this._getRefContainer(this.audioTasksQueueBlock());
         if (refContainer) {
           refContainer.isUpdating = true;
         }
@@ -2412,14 +2363,7 @@ Save text changes and realign the Block?`,
       evFromAudioeditorUndo (blockId, audio, text, isModified) {
         let block = this.audioTasksQueueBlock();// block from storeList
         let queueBlock = this.audioTasksQueue.block;// queue block info
-        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
-          return b.block.blockid === queueBlock.blockId;
-        });
-        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
-          refContainer = queueBlock.partIdx !== null ? refContainer.$refs.blocks[queueBlock.partIdx] : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
-        } else {
-          refContainer = null;
-        }
+        let refContainer = this._getRefContainer(block);
         if (refContainer) {
           refContainer.audStop();
         }
@@ -2449,6 +2393,21 @@ Save text changes and realign the Block?`,
             refContainer.unsetChange('manual_boundaries');
           }
         }
+      },
+      _getRefContainer(block) {
+        let audioQueueBlock = this.audioTasksQueue.block;
+        let isBlockPart = audioQueueBlock.partIdx !== null && block.getIsSplittedBlock();
+        let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
+          return b.block.blockid === audioQueueBlock.blockId;
+        });
+        if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
+          refContainer = isBlockPart ? refContainer.$refs.blocks.find(b => {
+            return b.blockPartIdx === audioQueueBlock.partIdx;
+          }) : refContainer.$refs.blocks[0];// need subblock, container BookBlockPartView
+        } else {
+          refContainer = null;
+        }
+        return refContainer;
       }
   },
   events: {
