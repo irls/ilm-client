@@ -1211,6 +1211,9 @@ export const store = new Vuex.Store({
                   if (p.isAudioChanged) {
                     data.block.parts[i] = p;
                   }
+                  if (p.inid) {
+                    data.block.parts[i].inid = p.inid;
+                  }
                 });
                 let hasChanges = blockStore.parts.find(p => {
                   return p.isChanged;
