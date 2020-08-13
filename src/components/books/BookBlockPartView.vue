@@ -1014,7 +1014,6 @@ export default {
         'getCurrentJobInfo',
         'updateBookVersion',
         'updateBlockToc',
-        'saveNarrated',
         'checkError',
         'getBookAlign',
         'recountVoicedBlocks',
