@@ -1770,6 +1770,9 @@ Save audio changes and realign the Block?`,
             this.block.setPartContent(blkIdx, blk.clearBlockContent());
           });
         }
+        if (this.hasChange('split_point')) {
+          this.$root.$emit('for-audioeditor:force-close');
+        }
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
