@@ -1411,14 +1411,19 @@ Save audio changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
+                  //let preparedData = {audiosrc: this.block.getPartAudiosrc(this.blockPartIdx, null, false), content: this.clearBlockContent()};
+                  this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
                   let isSplitting = this.hasChange('split_point');
                   let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
                     return b.isAudioEditing;
                   }) : false;
-                  let preparedData = {audiosrc: this.block.getPartAudiosrc(this.blockPartIdx, null, false), content: this.clearBlockContent()};
-                  return this.assembleBlockProxy(false, false, false)
+                  let saveAudioData = {};//{content: this.blockPart.content.replace(/<i class="pin"><\/i>/img, '')};
+                  return this.assembleBlockPartAudioEdit(false, saveAudioData)
                     .then(() => {
-                      return this.assembleBlockPartAudioEdit(true, preparedData)
+                      /*if (isSplitting) {// block was split in audio saving
+                        this.unsetChange('split_point');
+                      }*/
+                      return this.assembleBlockProxy(false, true, false)
                       .then(() => {
                         if (isSplitting && isAudioEditorOpened) {
                           this.$root.$emit('for-audioeditor:force-close');
@@ -3350,7 +3355,7 @@ Save audio changes and realign the Block?`,
         let api = this.$store.state.auth.getHttp();
         let data = {
           audiosrc: preparedData.audiosrc || this.blockAudiosrc(null, false),
-          content: preparedData.content || this.blockAudio.map,//content: this.blockContent(),
+          content: preparedData.content || this.block.getPartContent(this.blockPartIdx),//content: this.blockContent(),
           manual_boundaries: this.blockPart.manual_boundaries || [],
           mode: this.mode
         };
@@ -3382,6 +3387,12 @@ Save audio changes and realign the Block?`,
               this.block.setPartAudiosrcOriginal(this.blockPartIdx, part.audiosrc_original || null);
               if (Array.isArray(response.data.parts)) {
                 this.block.parts = response.data.parts;
+              }
+              if (this.hasChange('split_point')) {// block was split in audio saving
+                this.unsetChange('split_point');
+                this.$refs.blockContent.innerHTML = this.block.getPartContent(this.blockPartIdx);
+                //this.$forceUpdate();
+                this.$parent.$forceUpdate();
               }
               //return this.putBlock(this.block);
               if (!realign && !isSplitting) {

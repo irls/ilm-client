@@ -1766,8 +1766,13 @@ Save audio changes and realign the Block?`,
           return Promise.resolve();
         }
         if (this.isSplittedBlock && this.$refs.blocks) {
-          this.$refs.blocks.forEach((blk, blkIdx) => {
-            this.block.setPartContent(blkIdx, blk.clearBlockContent());
+          this.block.parts.forEach((blk, blkIdx) => {
+            let ref = this.$refs.blocks.find(rb => {
+              return rb.blockPartIdx === blkIdx;
+            });
+            if (ref) {
+              this.block.setPartContent(blkIdx, ref.clearBlockContent());
+            }
           });
         }
         if (this.hasChange('split_point')) {
