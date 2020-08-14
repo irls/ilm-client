@@ -3403,21 +3403,6 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    updateStoreFootnotes({state}, [blockid, ftnId, updated]) {
-      let block = state.storeList.get(blockid);
-      if (block) {
-        let storeFtn = block.footnotes.find(f => {
-          return f._id === ftnId;
-        });
-        let index = block.footnotes.indexOf(storeFtn);
-        if (storeFtn && index !== -1) {
-          block.footnotes[index] = updated;
-        } else {
-          block.footnotes.push(updated);
-        }
-      }
-    },
-
     saveBlockAudio({state, dispatch}, [realign, preparedData]) {
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
       let alignBlock = state.audioTasksQueue.block;

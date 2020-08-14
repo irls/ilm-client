@@ -1746,10 +1746,8 @@ Save audio changes and realign the Block?`,
         let el = document.createElement('SUP');
         el.setAttribute('data-idx', this.block.footnotes.length + 1);
         this.range.insertNode(el);
-        console.log('ftn length', this.block.footnotes.length, this.block.footnotes);
-        //console.log('footnotes',  this.block.footnotes);
-        //console.log('stringify', JSON.stringify(this.block.footnotes))
-        //console.log('el', el);
+        let pos = this.updFootnotes(this.block.footnotes.length + 1);
+        //console.log('ftn length', this.block.footnotes.length, this.block.footnotes);
 
         /*this.block.footnotes.forEach((ftn, ftnIdx) => {
           let ref = this.$refs['footnoteContent_' + ftnIdx]
