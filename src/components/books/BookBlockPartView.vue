@@ -1411,11 +1411,18 @@ Save audio changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
+                  let isSplitting = this.hasChange('split_point');
+                  let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
+                    return b.isAudioEditing;
+                  }) : false;
                   let preparedData = {audiosrc: this.block.getPartAudiosrc(this.blockPartIdx, null, false), content: this.clearBlockContent()};
                   return this.assembleBlockProxy(false, false, false)
                     .then(() => {
                       return this.assembleBlockPartAudioEdit(true, preparedData)
                       .then(() => {
+                        if (isSplitting && isAudioEditorOpened) {
+                          this.$root.$emit('for-audioeditor:force-close');
+                        }
                         return Promise.resolve();
                       });
                     });
@@ -3358,12 +3365,6 @@ Save audio changes and realign the Block?`,
             this.$root.$emit('for-audioeditor:flush');
             if (!realign) {
               this.isSaving = false;
-            } else {
-              this.getBookAlign()
-                .then(() => {
-                  this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
-                  this.isSaving = false;
-                })
             }
             if (response.status == 200) {
               if (this.isCompleted) {
@@ -3395,7 +3396,18 @@ Save audio changes and realign the Block?`,
               //this.isChanged = false;
               this.block.isAudioChanged = false;
               //this.block.isChanged = false;
-              return BPromise.resolve();
+              if (!realign) {
+                return BPromise.resolve();
+              } else {
+                return this.getBookAlign()
+                  .then(() => {
+                    if (!isSplitting) {
+                      this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+                    }
+                    this.isSaving = false;
+                    return BPromise.resolve();
+                  })
+              }
             }
           })
           .catch(err => {
