@@ -765,6 +765,11 @@ export default {
           res.checked = oldBlock.checked;
         }
         let block = new BookBlock(res);
+        if (Array.isArray(block.parts) && Array.isArray(oldBlock.parts) && block.parts.length === oldBlock.parts.length) {
+          oldBlock.parts.forEach((p, pIdx) => {
+            block.parts[pIdx].inid = p.inid;
+          });
+        }
         this.$store.commit('set_storeList', block);
         this.$root.$emit('from-block-edit:set-style');
         this.refreshTmpl();

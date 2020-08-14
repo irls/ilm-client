@@ -1467,10 +1467,17 @@ Save audio changes and realign the Block?`,
                   this.$root.$emit('hide-modal');
                   //let preparedData = {audiosrc: this.block.getPartAudiosrc(this.blockPartIdx, null, false), content: this.clearBlockContent()};
                   this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+                  let isSplitting = this.hasChange('split_point');
+                  let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
+                    return b.isAudioEditing;
+                  }) : false;
                   return this.assembleBlockPartAudioEdit(false, {})
                     .then(() => {
                       return this.assembleBlockProxy(false, true, false)
                       .then(() => {
+                        if (isSplitting && isAudioEditorOpened) {
+                          this.$root.$emit('for-audioeditor:force-close');
+                        }
                         return Promise.resolve();
                       });
                     });
@@ -3107,9 +3114,9 @@ Save text changes and realign the Block?`,
               this.$root.$emit('for-audioeditor:load',
                 this.blockAudiosrc('m4a'),
                 this.block.getPartContent(this.blockPartIdx), false, part);
-            }
-            this.blockAudio.map = this.blockContent();
-            this.blockAudio.src = this.blockAudiosrc('m4a');
+              }
+              this.blockAudio.map = this.blockContent();
+              this.blockAudio.src = this.blockAudiosrc('m4a');
             if (this.isCompleted) {
               this.tc_loadBookTask();
             }
