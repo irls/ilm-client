@@ -3069,6 +3069,9 @@ Save text changes and realign the Block?`,
             //if (this.block.blockid === '1306_s_0005_en-bl37') {
               //console.time('showPinnedInText');
             //}
+            if (!this.$refs.blockContent) {
+              return;
+            }
             this.$refs.blockContent.querySelectorAll('.pinned-word').forEach(el => {
               el.classList.remove('pinned-word');
             });
