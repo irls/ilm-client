@@ -1898,6 +1898,9 @@ Save audio changes and realign the Block?`,
         let el = document.createElement('SUP');
         el.setAttribute('data-idx', this.block.footnotes.length + 1);
         this.range.insertNode(el);
+        let pos = this.updFootnotes(this.block.footnotes.length + 1);
+        //console.log('ftn length', this.block.footnotes.length, this.block.footnotes);
+
         /*this.block.footnotes.forEach((ftn, ftnIdx) => {
           let ref = this.$refs['footnoteContent_' + ftnIdx]
           if (ref && ref[0]) {
@@ -1912,7 +1915,7 @@ Save audio changes and realign the Block?`,
         if (ref && ref[0]) {
           ref[0].innerHTML = this.block.footnotes[pos].content;
         }*/
-        //this.pushChange('footnotes');
+        this.pushChange('footnotes');
         /*Vue.nextTick(() => {
           //this.destroyEditor();
           this.initFtnEditor(true);
