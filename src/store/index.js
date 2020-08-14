@@ -3600,6 +3600,9 @@ export const store = new Vuex.Store({
               block.isAudioChanged = false;
               //this.isChanged = false;
               block.parts[alignBlock.partIdx].isAudioChanged = false;
+              if (Array.isArray(response.data.parts) && response.data.parts.length !== block.parts.length) {
+                block.parts = response.data.parts;
+              }
               return Promise.resolve(response);
             } else {
               //if (this.isCompleted) {

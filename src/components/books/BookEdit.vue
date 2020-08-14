@@ -1987,6 +1987,12 @@ Save text changes and realign the Block?`,
                   isSplitted ? block.getPartContent(this.audioTasksQueue.block.partIdx) : block.content, false, part);
               } else {
                 this.$root.$emit('for-audioeditor:force-close');
+                if (refContainer && refContainer.hasChange('split_point') && isSplitted) {
+                  refContainer.unsetChange('split_point');
+                  refContainer.$refs.blockContent.innerHTML = block.getPartContent(this.audioTasksQueue.block.partIdx);
+                  //this.$forceUpdate();
+                  refContainer.$parent.$forceUpdate();
+                }
               }
               return Promise.resolve(part ? true : false);
             }
