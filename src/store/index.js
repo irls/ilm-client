@@ -1906,7 +1906,14 @@ export const store = new Vuex.Store({
               if (pIdx < partIdx && (p.isChanged || p.isAudioChanged)) {
                 response.data.parts[pIdx] = p;
               } else if (pIdx > partIdx && (p.isChanged || p.isAudioChanged)) {
-                response.data.parts[pIdx + isSplitting] = p;
+                response.data.parts[pIdx + isSplitting] = Object.assign(response.data.parts[pIdx + isSplitting], {
+                  content: p.content,
+                  inid: p.inid,
+                  isAudioChanged: p.isAudioChanged,
+                  isChanged: p.isChanged,
+                  manual_boundaries: p.manual_boundaries,
+                  _id: p._id
+                });
               }
             });
           } else if (Array.isArray(storeBlock.parts)) {
@@ -3065,7 +3072,15 @@ export const store = new Vuex.Store({
               if (pIdx < blockIdx && (p.isChanged || p.isAudioChanged)) {
                 response.data.parts[pIdx] = p;
               } else if (pIdx > blockIdx && (p.isChanged || p.isAudioChanged)) {
-                response.data.parts[pIdx + isSplitting] = p;
+                //response.data.parts[pIdx + isSplitting] = p;
+                response.data.parts[pIdx + isSplitting] = Object.assign(response.data.parts[pIdx + isSplitting], {
+                  content: p.content,
+                  inid: p.inid,
+                  isAudioChanged: p.isAudioChanged,
+                  isChanged: p.isChanged,
+                  manual_boundaries: p.manual_boundaries,
+                  _id: p._id
+                });
               }
             });
           } else if (Array.isArray(storeBlock.parts)) {
