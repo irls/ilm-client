@@ -3115,6 +3115,12 @@ Save text changes and realign the Block?`,
                 this.blockAudiosrc('m4a'),
                 this.block.getPartContent(this.blockPartIdx), false, part);
               }
+              if (this.hasChange('split_point')) {// block was split in audio saving
+                this.unsetChange('split_point');
+                this.$refs.blockContent.innerHTML = this.block.getPartContent(this.blockPartIdx);
+                //this.$forceUpdate();
+                this.$parent.$forceUpdate();
+              }
               this.blockAudio.map = this.blockContent();
               this.blockAudio.src = this.blockAudiosrc('m4a');
             if (this.isCompleted) {
