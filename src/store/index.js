@@ -1918,7 +1918,7 @@ export const store = new Vuex.Store({
             });
           } else if (Array.isArray(storeBlock.parts)) {
             storeBlock.parts.forEach((p, pIdx) => {
-              if (p.isChanged || p.isAudioChanged) {
+              if ((p.isChanged || p.isAudioChanged) && pIdx !== partIdx) {
                 response.data.parts[pIdx] = p;
               }
             });
@@ -3085,7 +3085,7 @@ export const store = new Vuex.Store({
             });
           } else if (Array.isArray(storeBlock.parts)) {
             storeBlock.parts.forEach((p, pIdx) => {
-              if (p.isChanged || p.isAudioChanged) {
+              if ((p.isChanged || p.isAudioChanged) && pIdx !== blockIdx) {
                 response.data.parts[pIdx] = p;
               }
             });
