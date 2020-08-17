@@ -356,6 +356,12 @@ export const store = new Vuex.Store({
       }
       return locked;
     },
+    isBlockOrPartLocked: state => id => {
+      let part = state.aligningBlocks.find(b => {
+        return b._id === id;
+      });
+      return part ? true : false;
+    },
     blockLockType: state => (id) => {
       if (state.aligningBlocks.length > 0) {
         let l = state.aligningBlocks.find(b => {
@@ -1956,6 +1962,25 @@ export const store = new Vuex.Store({
       }
       let isSplitting = update.block.content ? update.block.content.match(/<i class="pin"><\/i>/img) : [];
       isSplitting = isSplitting ? isSplitting.length : 0;
+      
+      let checkSplit = new Promise((resolve, reject) => {// temporary solution, not allow split if any aligning task is running. Correct solution in develop in branch ilm-server 0.133-ILM-3110-align-part ; saving part id in block parts array
+        if (isSplitting) {
+          if (this.getters.isBlockOrPartLocked(block.blockid)) {
+            let checkAlign = setInterval(() => {
+              if (!this.getters.isBlockOrPartLocked(block.blockid)) {
+                clearInterval(checkAlign);
+                return resolve();
+              }
+            }, 1000);
+          } else {
+            return resolve();
+          }
+        } else {
+          return resolve();
+        }
+      });
+      return checkSplit
+        .then(() => {
       return axios.put(url, update)
         .then((response) => {
           
@@ -1999,6 +2024,7 @@ export const store = new Vuex.Store({
           dispatch('checkError', err);
           return Promise.reject(err);
         });
+      });
     },
 
     putNumBlock ({commit, state, dispatch}, block) {
@@ -2645,7 +2671,10 @@ export const store = new Vuex.Store({
             }
             return Promise.resolve();
           })
-          .catch(err => Promise.reject(err));
+          .catch(err => {
+            console.log(err);
+            return Promise.resolve(err);
+          });
       }
     },
 
@@ -3132,6 +3161,26 @@ export const store = new Vuex.Store({
       }
       let isSplitting = update.content ? update.content.match(/<i class="pin"><\/i>/img) : [];
       isSplitting = isSplitting ? isSplitting.length : 0;
+      
+      let checkSplit = new Promise((resolve, reject) => {// temporary solution, not allow split if any aligning task is running. Correct solution in develop in branch ilm-server 0.133-ILM-3110-align-part ; saving part id in block parts array
+        if (isSplitting) {
+          let blk = state.storeListO.getBlockByRid(id);
+          if (this.getters.isBlockOrPartLocked(blk.blockid)) {
+            let checkAlign = setInterval(() => {
+              if (!this.getters.isBlockOrPartLocked(blk.blockid)) {
+                clearInterval(checkAlign);
+                return resolve();
+              }
+            }, 1000);
+          } else {
+            return resolve();
+          }
+        } else {
+          return resolve();
+        }
+      });
+      return checkSplit
+        .then(() => {
       return axios.put(state.API_URL + url, update)
         .then((response) => {
           let storeBlock = state.storeList.get(response.data.blockid);
@@ -3168,6 +3217,7 @@ export const store = new Vuex.Store({
             .then(() => {
               return Promise.resolve(response.data);
             });
+        });
         });
     },
     getProcessQueue({state, dispatch, commit}) {
