@@ -3386,7 +3386,24 @@ Save audio changes and realign the Block?`,
               this.block.setPartManualBoundaries(this.blockPartIdx, part.manual_boundaries || []);
               this.block.setPartAudiosrcOriginal(this.blockPartIdx, part.audiosrc_original || null);
               if (Array.isArray(response.data.parts)) {
-                this.block.parts = response.data.parts;
+                //this.block.parts = response.data.parts;
+                if (isSplitting && this.block.parts.length !== response.data.parts.length) {
+                  let addedParts = response.data.parts.length - this.block.parts.length;
+                  response.data.parts.forEach((p, pIdx) => {
+                    if (pIdx < this.blockPartIdx && (p.isChanged)) {
+                      response.data.parts[pIdx] = p;
+                    } else if (pIdx > this.blockPartIdx && pIdx <= this.blockPartIdx + addedParts) {
+                      let inid = Date.now() + `-${pIdx}`;
+                      this.block.parts.splice(pIdx, 0, Object.assign(p, {inid: inid}));
+                    }
+                  });
+                }/* else if (Array.isArray(this.block.parts)) {
+                  this.block.parts.forEach((p, pIdx) => {
+                    if ((p.isChanged) && pIdx !== partIdx) {
+                      response.data.parts[pIdx] = p;
+                    }
+                  });
+                }*/
               }
               if (this.hasChange('split_point')) {// block was split in audio saving
                 this.unsetChange('split_point');
