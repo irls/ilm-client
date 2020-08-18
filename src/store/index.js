@@ -464,7 +464,7 @@ export const store = new Vuex.Store({
         return null;
       }
     },
-    audioTasksQueueBlockOrPart: state => {
+    audioTasksQueueBlockOrPart: state => () => {
       if (state.audioTasksQueue.block.blockId) {
         let block = state.storeList.get(state.audioTasksQueue.block.blockId);
         if (block) {
