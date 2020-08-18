@@ -2627,14 +2627,14 @@ Save audio changes and realign the Block?`,
         this.$root.$on('from-audioeditor:discard', this.evFromAudioeditorDiscard);
         this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
 
-        this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
+        //this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
       },
       audioEditorEventsOff() {
         this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
         //this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
         this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
         this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
-        this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+        //this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
       },
       //-- } -- end -- Events --//
 

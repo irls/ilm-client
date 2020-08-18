@@ -2130,7 +2130,11 @@ Save text changes and realign the Block?`,
           refContainer.audStop();
           refContainer.isAudioChanged = true;
         } else {
-          block.isAudioChanged = true;
+          if (block.getIsSplittedBlock()) {
+            block.parts[this.audioTasksQueue.block.partIdx].isAudioChanged = true;
+          } else {
+            block.isAudioChanged = true;
+          }
         }
         return task
           .then((response) => {
@@ -2414,7 +2418,71 @@ Save text changes and realign the Block?`,
           refContainer = null;
         }
         return refContainer;
-      }
+      },
+      evFromAudioeditorClosed(blockId) {
+        let block = this.audioTasksQueueBlock();// block from storeList
+        let queueBlock = this.audioTasksQueue.block;// queue block info
+        let part = this.audioTasksQueueBlockOrPart;
+        if (!block) {
+          return;
+        }
+        let refContainer = this._getRefContainer(block);
+        if (refContainer) {
+          refContainer.audStop();
+        }
+        //this.clearAudioTasks(false);
+        if (part.isAudioChanged) {
+          let checks = 0;
+          let waitStopRunning = new Promise((resolve, reject) => {// if there is running queue request then wait for it to finish
+            let waitInterval = setInterval(() => {
+              ++checks;
+              if (this.audioTasksQueue.running === null || checks >= 20) {
+                clearInterval(waitInterval);
+                return resolve();
+              }
+            }, 1000);
+          });
+          if (refContainer) {
+            if (block.getIsSplittedBlock()) {
+              refContainer.isUpdating = true;
+            } else {
+              refContainer.$parent.isUpdating = true;
+            }
+          }
+          return waitStopRunning
+            .then(() => {
+              this.discardAudioEdit(false)
+                .then(() => {
+                  /*this.isAudioChanged = false;
+                  this.isChanged = false;
+                  this.unsetChange('audio');
+                  this.unsetChange('content');
+                  this.unsetChange('manual_boundaries');
+
+                  this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
+                  this.isUpdating = false;*/
+                  part.isAudioChanged = false;
+                  if (refContainer) {
+                    if (block.getIsSplittedBlock()) {
+                      refContainer.isUpdating = false;
+                    } else {
+                      refContainer.$parent.isUpdating = false;
+                    }
+                  }
+                  this.clearAudioTasks(false);
+                });
+              });
+        } else {
+          this.clearAudioTasks(false);
+        }
+        //$('nav.fixed-bottom').addClass('hidden');
+
+        //this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
+        //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
+        //this.check_id = null;
+        //this.audioEditorEventsOff();
+
+      },
   },
   events: {
       currentEditingBlock_id : function (key) {
@@ -2500,6 +2568,7 @@ Save text changes and realign the Block?`,
       this.$root.$on('from-audioeditor:save', this.saveBlockAudioChanges);
       this.$root.$on('from-audioeditor:revert', this.evFromAudioEditorRevert);
       this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
+      this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -2527,6 +2596,7 @@ Save text changes and realign the Block?`,
     this.$root.$off('from-audioeditor:save', this.saveBlockAudioChanges);
     this.$root.$off('from-audioeditor:revert', this.evFromAudioEditorRevert);
     this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
+    this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
   },
   watch: {
     'meta._id': {
