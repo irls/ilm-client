@@ -2312,6 +2312,7 @@ Save audio changes and realign the Block?`,
           if (realign) {
             api_url+= '?realign=true';
           }
+          let isSplitting = this.hasChange('split_point');
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
           return api.post(api_url, data, {})
             .then(response => {
@@ -2321,7 +2322,9 @@ Save audio changes and realign the Block?`,
               } else {
                 this.getBookAlign()
                   .then(() => {
-                    this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+                    if (!isSplitting) {
+                      this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+                    }
                     this.isSaving = false;
                   })
               }
@@ -4538,7 +4541,7 @@ Save text changes and realign the Block?`,
       },
       'block.content': {
         handler(val) {
-          if (this.isChanged && val !== this.$refs.blockContent.innerHTML) {
+          if (this.isChanged && this.$refs.blockContent && val !== this.$refs.blockContent.innerHTML) {
             this.block.content = this.$refs.blockContent.innerHTML;
           }
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
