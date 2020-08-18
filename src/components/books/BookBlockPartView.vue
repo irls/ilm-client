@@ -2450,6 +2450,7 @@ Save audio changes and realign the Block?`,
         this.reRecordPosition = false;
         if (this.isSplittedBlock) {
           this.isUpdating = true;
+          this.block.parts[this.blockPartIdx].isUpdating = true;
         }
         return this.stopRecording(this.blockPartIdx, this.reRecordPosition, start_next)
           .then(() => {
@@ -3109,7 +3110,7 @@ Save text changes and realign the Block?`,
             this.$root.$emit('for-audioeditor:flush');
             if (realign) {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
-            } else {
+            } else if (!isSplitting) {
               let part = response.data.parts[this.blockPartIdx];
               part._id = this.check_id;
               part.blockid = this.block.blockid;
@@ -3118,7 +3119,7 @@ Save text changes and realign the Block?`,
                 this.blockAudiosrc('m4a'),
                 this.block.getPartContent(this.blockPartIdx), false, part);
               }
-              if (this.hasChange('split_point')) {// block was split in audio saving
+              if (isSplitting) {// block was split in audio saving
                 this.unsetChange('split_point');
                 this.$refs.blockContent.innerHTML = this.block.getPartContent(this.blockPartIdx);
                 //this.$forceUpdate();
