@@ -3406,7 +3406,7 @@ Save audio changes and realign the Block?`,
                   });
                 }*/
               }
-              if (this.hasChange('split_point')) {// block was split in audio saving
+              if (isSplitting) {// block was split in audio saving
                 this.unsetChange('split_point');
                 this.$refs.blockContent.innerHTML = this.block.getPartContent(this.blockPartIdx);
                 //this.$forceUpdate();
