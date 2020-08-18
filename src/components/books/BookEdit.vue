@@ -2303,7 +2303,7 @@ Save text changes and realign the Block?`,
       },
       evFromAudioEditorRevert() {
         let block = this.audioTasksQueueBlock();// storeList block
-        let blk = this.audioTasksQueueBlockOrPart;// storeList block or it's part for splitted block
+        let blk = this.audioTasksQueueBlockOrPart();// storeList block or it's part for splitted block
         let queueBlock = this.audioTasksQueue.block;// short block info for audio tasks queue
         if (!block || !blk) {
           return Promise.resolve();
@@ -2346,7 +2346,7 @@ Save text changes and realign the Block?`,
             let block = this.audioTasksQueueBlock();
             if (response.status == 200 && response.data) {
               if (queueBlock.partIdx !== null) {
-                let part = this.audioTasksQueueBlockOrPart;
+                let part = this.audioTasksQueueBlockOrPart();
                 part._id = queueBlock.checkId;
                 part.blockid = block.blockid;
                 part.partIdx = queueBlock.partIdx;
@@ -2422,7 +2422,7 @@ Save text changes and realign the Block?`,
       evFromAudioeditorClosed(blockId) {
         let block = this.audioTasksQueueBlock();// block from storeList
         let queueBlock = this.audioTasksQueue.block;// queue block info
-        let part = this.audioTasksQueueBlockOrPart;
+        let part = this.audioTasksQueueBlockOrPart();
         if (!block) {
           return;
         }
@@ -2737,7 +2737,18 @@ Save text changes and realign the Block?`,
     'isAudioEditAligning': {
       handler(val) {
         //console.log(`isAudioEditAligning: ${val}`);
+        let block = this.audioTasksQueueBlock();// block from storeList
+        let queueBlock = this.audioTasksQueue.block;// queue block info
+        let part = this.audioTasksQueueBlockOrPart();
+        let refContainer = this._getRefContainer(block);
         this.$root.$emit('for-audioeditor:set-process-run', val, 'align');
+        if (!val && !refContainer && block) {// block is out of focus, need to reload audio editor
+          let loadBlock = Object.assign({}, part);
+          loadBlock._id = block.getIsSplittedBlock() ? block.blockid + '-part-' + queueBlock.partIdx : block.blockid;
+          loadBlock.blockid = block.blockid;
+          loadBlock.partIdx = queueBlock.partIdx;
+          this.$root.$emit('for-audioeditor:load-and-play', block.getPartAudiosrc(queueBlock.partIdx, 'm4a'), block.getPartContent(queueBlock.partIdx || 0), loadBlock);
+        }
       }
     }
   }
