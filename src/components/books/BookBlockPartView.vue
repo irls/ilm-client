@@ -2397,6 +2397,7 @@ Save audio changes and realign the Block?`,
         this.reRecordPosition = false;
         if (this.isSplittedBlock) {
           this.isUpdating = true;
+          this.block.parts[this.blockPartIdx].isUpdating = true;
         }
         return this.stopRecording(this.blockPartIdx, this.reRecordPosition, start_next)
           .then(() => {

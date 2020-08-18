@@ -350,6 +350,14 @@ export const store = new Vuex.Store({
       let part = state.aligningBlocks.find(b => {
         return b._id === id;
       });
+      if (!part) {
+        let block = state.storeList.get(id);
+        if (block) {
+          part = Array.isArray(block.parts) ? block.parts.find(p => {
+            return p.isUpdating;
+          }) : false;
+        }
+      }
       return part ? true : false;
     },
     blockLockType: state => (id) => {
