@@ -2358,6 +2358,7 @@ Save text changes and realign the Block?`,
             api_url+= '?realign=true';
           }*/
           //this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+          let isSplitting = this.hasChange('split_point');
           return this.saveBlockAudio([realign, preparedData])
             .then(response => {
               //this.isSaving = false;
@@ -2365,7 +2366,9 @@ Save text changes and realign the Block?`,
               if (realign) {
                 this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
               } else {
-                this.$root.$emit('for-audioeditor:load', this.block.getAudiosrc('m4a'), this.block.content, false, this.block);
+                if (!isSplitting) {
+                  this.$root.$emit('for-audioeditor:load', this.block.getAudiosrc('m4a'), this.block.content, false, this.block);
+                }
               }
               if (this.isCompleted) {
                 this.tc_loadBookTask();
