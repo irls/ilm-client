@@ -3680,7 +3680,10 @@ Join with next subblock?`;
             return b.isAudioEditing;
           }) : false;
           return this.mergeBlockParts([this.block.blockid, this.blockPartIdx, this.blockPartIdx + 1])
-            .then(() => {
+            .then((response) => {
+              if (this._isDestroyed) {
+                this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
+              }
               this.$parent.isSaving = false;
               /*if (this.isCompleted) {
                 this.tc_loadBookTask(this.block.bookid);
