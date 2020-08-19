@@ -308,10 +308,11 @@ export default {
       }
     },
 
-    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo'])
+    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo', 'stopWatchLiveQueries'])
   },
 
   destroyed: function () {
+    this.stopWatchLiveQueries();// close tab, or switch to other menu (e.g. "Users") - unsubscribe from blockV, metaV and job live queries
     this.$root.$off('from-bookedit:set-selection', this.listenRangeSelection);
     this.$root.$off('book-reimport-modal', this.evOnReimportModal);
     this.$root.$off('set-error-alert', this.setErrorAlert);
