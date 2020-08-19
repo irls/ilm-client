@@ -3861,7 +3861,7 @@ Save text changes and realign the Block?`,
               checkRange.setStart(container, this.range.startOffset - 1);
             }
             if (!isMac) {
-              let wordString = `a-zA-Zа-яА-Я0-9À-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ’"\\?\\!\\:\\;\\.\\\\,\\/\\<\\>\\'\\*\\‒\\|“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…`;
+              let wordString = `a-zA-Zа-яА-Я0-9À-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ\\ufdfa\\’"\\?\\!\\:\\;\\.\\\\,\\/\\<\\>\\'\\*\\‒\\|“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…`;
               regexp = skipLengthCheck ? /^(\S+)|(\s+)$/i : new RegExp(`^([${wordString}]+[^${wordString}]+[${wordString}]*)|([^${wordString}]+[${wordString}]+)|(\\s+)$`, 'i');
               checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
               let checkString = checkRange.toString();
@@ -3894,6 +3894,7 @@ Save text changes and realign the Block?`,
               _checkRange.setEnd( container, this.range.endOffset+1 );
               console.log(_checkRange.toString());
             }*/
+        //regexp = skipLengthCheck ? /^(\S+)|(\s+)$/i : /^(\S+\s+)|(\s+\S+)|(\s+)$/;
             if (isMac) {
               console.log('IS ALLOWED', `"${checkRange.toString()}"`, regexp.test(checkRange.toString()), regexp, checkRange, this.range);
             }
