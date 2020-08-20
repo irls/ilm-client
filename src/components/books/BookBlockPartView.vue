@@ -1515,7 +1515,9 @@ Save audio changes and realign the Block?`,
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
-        this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+        if (this.$refs.blockContent) {// if splitting and audio changes saving - content was rebuilt
+          this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+        }
         
         let splitPoints = this.blockPart.content ? this.blockPart.content.match(/<i class="pin"><\/i>/img) : [];
         splitPoints = splitPoints ? splitPoints.length : 0;
