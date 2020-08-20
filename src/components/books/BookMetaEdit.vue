@@ -421,7 +421,7 @@
                       Hide from display
                     </label>
                   </fieldset> -->
-                  <fieldset v-if="pausesBeforeProps.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                  <fieldset v-if="pausesBeforeProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset">
                     <legend>Pause before block (sec.)</legend>
                     <block-style-labels
                       :blockType="blockType"
@@ -1508,7 +1508,23 @@ export default {
     },
     selectPauseBefore(blockType, styleKey, styleVal) {
       console.log(blockType, styleKey, styleVal);
-      return this.setPauseBefore([blockType, styleVal]);
+      if (this.blockSelection.start._id && this.blockSelection.end._id) {
+        if (this.storeList.has(this.blockSelection.start._id)) {
+          let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
+          idsArrayRange.forEach((blockRid)=>{
+            let oBlock = this.storeListO.get(blockRid);
+            if (oBlock) {
+              let pBlock = this.storeList.get(oBlock.blockid);
+              pBlock.pause_before = styleVal;
+            }
+          })
+          this.updateBookVersion({major: true});
+        }
+        return this.setPauseBefore([blockType, styleVal])
+          .then(() => {
+            this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+          });
+      }
     },
 
     listenSetStyle () {

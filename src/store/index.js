@@ -3528,7 +3528,7 @@ export const store = new Vuex.Store({
           start_id: state.blockSelection.start._id,
           end_id: state.blockSelection.end._id,
           block_type: blockType,
-          value: value
+          value: value === 'none' ? null : value
         })
           .then((response) => {
             
