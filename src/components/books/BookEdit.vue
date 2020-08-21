@@ -2415,6 +2415,9 @@ Save text changes and realign the Block?`,
         }
       },
       _getRefContainer(block) {
+        if (!block) {
+          return null;
+        }
         let audioQueueBlock = this.audioTasksQueue.block;
         let isBlockPart = audioQueueBlock.partIdx !== null && block.getIsSplittedBlock();
         let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
