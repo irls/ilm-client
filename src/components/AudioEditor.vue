@@ -1190,7 +1190,7 @@
         save() {
           if (this.mode == 'block') {
             if (this.isModified) {
-              this.$root.$emit('from-audioeditor:save', this.blockId);
+              this.$root.$emit('from-audioeditor:save');
               //this.addTaskQueue('save', []);
               //this.isModified = false;
             }
@@ -1215,7 +1215,7 @@
         saveAndRealign() {
           if (this.isModified) {
             //this.history = [];
-            this.$root.$emit('from-audioeditor:save-and-realign', this.blockId);
+            this.$root.$emit('from-audioeditor:save', true);
             //this.isModified = false;
           }
         },
@@ -2412,7 +2412,7 @@ Discard unsaved audio changes?`,
           shiftedWords.forEach(sw => {
             shiftedOldMap.push(oldMap[sw.index]);
           })
-          let queueBlock = this.audioTasksQueueBlock;
+          let queueBlock = this.audioTasksQueueBlock();
           this._addHistoryLocal('manual_boundaries', null, null, null, {
             shifted: shiftedWords,
             oldMap: shiftedOldMap,
