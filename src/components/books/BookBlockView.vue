@@ -193,7 +193,7 @@
             <!-- <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
-            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + block.type + '-' + blockPartIdx + (isSplittedBlock ? '-split' : '')" ref="blocks"
+            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + block.type + '-' + (blockPart.inid ? blockPart.inid : blockPartIdx) + (isSplittedBlock ? '-split' : '')" ref="blocks"
               :block="storeListById(block.blockid)"
               :blockO="blockO"
               :blockId = "blockId"
@@ -229,6 +229,7 @@
               :isCompleted="isCompleted"
               :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
               :addToQueueBlockAudioEdit="addToQueueBlockAudioEdit"
+              :splitPointAdded="splitPointAdded"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -956,6 +957,9 @@ export default {
       },
       saveBlockLabel: {
         get() {
+          if (this.changes.indexOf('split_point') !== -1) {
+            return 'Save & Split';
+          }
           return this.needsRealignment ? 'Save & Re-align' : 'Save';
         }
       },
@@ -1789,13 +1793,21 @@ Save audio changes and realign the Block?`,
           return Promise.resolve();
         }
         if (this.isSplittedBlock && this.$refs.blocks) {
-          this.$refs.blocks.forEach((blk, blkIdx) => {
-            this.block.setPartContent(blkIdx, blk.clearBlockContent());
+          this.block.parts.forEach((blk, blkIdx) => {
+            let ref = this.$refs.blocks.find(rb => {
+              return rb.blockPartIdx === blkIdx;
+            });
+            if (ref) {
+              this.block.setPartContent(blkIdx, ref.clearBlockContent());
+            }
           });
           this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
         }
         if (this.hasChange('flags')) {
           this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
+        }
+        if (this.hasChange('split_point')) {
+          this.$root.$emit('for-audioeditor:force-close');
         }
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
@@ -1916,11 +1928,17 @@ Save audio changes and realign the Block?`,
                     this.checkBlockContentFlags();
                     this.updateFlagStatus(this.block._id);
                     partUpdate['flags'] = this.block.flags;
-                    partUpdate['content'] = this.block.content;
+                    if (!this.isSplittedBlock) {
+                      partUpdate['content'] = this.block.content;// updating content only for not splitted block, ILM-3287
+                    }
                     partUpdate['parts'] = this.block.parts;
                     break;
                   case 'manual_boundaries':
                     partUpdate['content'] = this.block.content;
+                    break;
+                  case 'split_point':
+                    partUpdate['content'] = this.block.content;
+                    partUpdate['manual_boundaries'] = this.block.manual_boundaries ? this.block.manual_boundaries : [];
                     break;
                   default:
                     partUpdate[c] = this.block[c];
@@ -1941,8 +1959,12 @@ Save audio changes and realign the Block?`,
             } else {
               updateTask = this.assembleBlockPart(partUpdate, realign);
             }
+            let reloadParent = this.hasChange('split_point');
             return updateTask
               .then(() => {
+                if (reloadParent) {
+                  this.$parent.refreshTmpl();
+                }
                 return Promise.resolve();
               });
           }
@@ -2043,6 +2065,7 @@ Save audio changes and realign the Block?`,
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         }
+        let isSplitting = this.hasChange('split_point');
         return this.putBlockPart(update, realign)
           .then(() => {
             if (realign) {
@@ -2052,10 +2075,14 @@ Save audio changes and realign the Block?`,
                   if (this.isLocked && this.isAudioEditing) {
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                   }
+                  if (isSplitting) {
+                    //this.$parent.refreshTmpl();
+                    this.$root.$emit('for-audioeditor:force-close');
+                  }
                 });
             } else {
               this.block.isSaving = false;
-              if (this.isAudioEditing) {
+              if (this.isAudioEditing && !isSplitting) {
                 this.$root.$emit('for-audioeditor:set-process-run', false);
               }
             }
@@ -2121,12 +2148,12 @@ Save audio changes and realign the Block?`,
           updateTask = this.updateBlockPart([this.block._rid, update, blockPartIdx, realign]);
         }
         return updateTask
-          .then(() => {
+          .then((response) => {
             this.isChanged = false;
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
               this.$refs.blocks[blockPartIdx].isSaving = false;
             }
-            return Promise.resolve();
+            return Promise.resolve(response);
           })
           .catch(err => {
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
@@ -2173,6 +2200,7 @@ Save audio changes and realign the Block?`,
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         }
         let refreshTasks = this.isCompleted;
+        let reloadParent = this.hasChange('split_point');
         return this.putBlockNarrate([upd_block, realign])
           .then(() => {
             if (realign) {
@@ -2181,6 +2209,10 @@ Save audio changes and realign the Block?`,
                   this.block.isSaving = false;
                   if (this.isLocked && this.isAudioEditing) {
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+                  }
+                  if (reloadParent) {
+                    //this.$parent.refreshTmpl();
+                    this.$root.$emit('for-audioeditor:force-close');
                   }
                 });
             } else {
@@ -2193,6 +2225,10 @@ Save audio changes and realign the Block?`,
             if (refreshTasks) {
               this.getCurrentJobInfo();
               this.tc_loadBookTask(this.block.bookid);
+            }
+            if (reloadParent) {
+              this.$parent.refreshTmpl();
+              this.$root.$emit('for-audioeditor:force-close');
             }
             return Promise.resolve();
           })
@@ -2322,6 +2358,7 @@ Save text changes and realign the Block?`,
             api_url+= '?realign=true';
           }*/
           //this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+          let isSplitting = this.hasChange('split_point');
           return this.saveBlockAudio([realign, preparedData])
             .then(response => {
               //this.isSaving = false;
@@ -2329,13 +2366,14 @@ Save text changes and realign the Block?`,
               if (realign) {
                 this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
               } else {
-                this.$root.$emit('for-audioeditor:load', this.block.getAudiosrc('m4a'), this.block.content, false, this.block);
+                if (!isSplitting) {
+                  this.$root.$emit('for-audioeditor:load', this.block.getAudiosrc('m4a'), this.block.content, false, this.block);
+                }
               }
               if (this.isCompleted) {
                 this.tc_loadBookTask();
               }
               /*this.getCurrentJobInfo();
-
               if (this.block.status.marked != response.data.status.marked) {
                 this.block.status.marked = response.data.status.marked;
               }
@@ -4312,6 +4350,10 @@ Save text changes and realign the Block?`,
           //this.voiceworkChange = false;
           this.voiceworkUpdateType = 'single';
         }
+      },
+      
+      splitPointAdded() {
+        this.pushChange('split_point');
       }
   },
   watch: {
@@ -4459,11 +4501,13 @@ Save text changes and realign the Block?`,
         handler(val) {
           if (val === false) {
             this.flushChanges();
-            if (this.$refs.blocks) {
-              this.blockParts.forEach((part, partIdx) => {
-                this.$refs.blocks[partIdx].isChanged = false;
-              });
-            }
+            Vue.nextTick(() => {
+              if (this.$refs.blocks) {
+                this.blockParts.forEach((part, partIdx) => {
+                  this.$refs.blocks[partIdx].isChanged = false;
+                });
+              }
+            });
             this.recountVoicedBlocks();
           }
           this.block.isChanged = val;
