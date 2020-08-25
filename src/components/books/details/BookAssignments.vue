@@ -352,17 +352,21 @@
                   } else {
                     return this.reloadBook()
                       .then(() => {
-                        this.$root.$emit('book-reimported');
-                        if (this.currentBookCounters.not_marked_blocks === 0){
-                          if (this.adminOrLibrarian){
-                            this.finishTextCleanup();
-                          }
-                          this.textCleanupProcess = false;
-
-                        } else {
-                          this.isBatchProgress = false;
-                          this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id);
-                        }
+                        this.$root.$emit('book-reloaded');
+                        this.getCurrentJobInfo()
+                          .then(() => {
+                            if (this.currentBookCounters.not_marked_blocks === 0){
+                              if (this.adminOrLibrarian){
+                                this.finishTextCleanup();
+                              }
+                              this.textCleanupProcess = false;
+                            } else {
+                              this.isBatchProgress = false;
+                              this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id);
+                            }
+                            
+                          })
+                          .catch(console.error)
                       })
                       .catch(console.error)
                   }
