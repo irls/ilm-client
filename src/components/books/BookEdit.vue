@@ -2583,7 +2583,7 @@ Save text changes and realign the Block?`,
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
       this.$root.$on('from-toolbar:toggle-meta', this.correctEditWrapper);
-      this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosedIndicator);
+      //this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosedIndicator);
 
       this.$root.$on('from-audioeditor:save', this.saveBlockAudioChanges);
       this.$root.$on('from-audioeditor:revert', this.evFromAudioEditorRevert);
