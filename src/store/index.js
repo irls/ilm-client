@@ -1284,7 +1284,7 @@ export const store = new Vuex.Store({
       });
       return state.partOfBookBlocksXHR;
     },
-
+    
     loadBook ({commit, state, dispatch}, book_id) {
       if (state.loadBookWait) {
         return state.loadBookWait
@@ -2143,6 +2143,7 @@ export const store = new Vuex.Store({
               dispatch('tc_loadBookTask', task.bookid);
             //}
             //dispatch('getCurrentJobInfo');
+            dispatch('getCurrentJobInfo');
             return Promise.resolve(list);
           })
       })
@@ -2608,9 +2609,10 @@ export const store = new Vuex.Store({
         })
       } return {};
     },
-
+    
     startJobInfoTimer({state, dispatch}) {
-      let interval = 60000;
+      let interval = 10000;
+      //let interval = 60000;
       //console.log('startJobInfoTimer', state.jobInfoTimer);
       setTimeout(() => {
         if (!state.jobInfoTimer || Date.now() - state.jobInfoTimer >= interval) {
