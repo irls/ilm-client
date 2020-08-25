@@ -351,10 +351,24 @@ export const store = new Vuex.Store({
         locked = l ? true : false;
       }
       if (!locked && state.aligningBlocks.length > 0) {
-        let l = state.aligningBlocks.find(_l => _l._id === id && (_l.partIdx === partIdx));
+        let l = state.aligningBlocks.find(_l => _l._id === id && ((_l.partIdx === partIdx && !(partIdx !== null && _l.split_pending)) || (partIdx === null && _l.split_pending)));
         locked = l ? true : false;
       }
       return locked;
+    },
+    isBlockOrPartLocked: state => id => {
+      let part = state.aligningBlocks.find(b => {
+        return b._id === id;
+      });
+      if (!part) {
+        let block = state.storeList.get(id);
+        if (block) {
+          part = Array.isArray(block.parts) ? block.parts.find(p => {
+            return p.isUpdating;
+          }) : false;
+        }
+      }
+      return part ? true : false;
     },
     blockLockType: state => (id) => {
       if (state.aligningBlocks.length > 0) {
@@ -451,12 +465,34 @@ export const store = new Vuex.Store({
       }
       return true;
     },
-    audioTasksQueueBlock: state => {
+    audioTasksQueueBlock: state => () => {
       if (state.audioTasksQueue.block.blockId) {
         return state.storeList.get(state.audioTasksQueue.block.blockId);
       } else {
         return null;
       }
+    },
+    audioTasksQueueBlockOrPart: state => () => {
+      if (state.audioTasksQueue.block.blockId) {
+        let block = state.storeList.get(state.audioTasksQueue.block.blockId);
+        if (block) {
+          if (block.getIsSplittedBlock() && state.audioTasksQueue.block.partIdx !== null) {
+            return block.parts[state.audioTasksQueue.block.partIdx];
+          } else {
+            return block;
+          }
+        }
+      }
+      return null;
+    },
+    isAudioEditAligning: state => {
+      if (state.audioTasksQueue.block.blockId && state.aligningBlocks.length > 0) {
+        let blk = state.aligningBlocks.find(b => {
+          return b._id === state.audioTasksQueue.block.blockId && (state.audioTasksQueue.block.partIdx === null || state.audioTasksQueue.block.partIdx === b.partIdx);
+        });
+        return blk ? true : false;
+      }
+      return false;
     }
   },
 
@@ -901,11 +937,11 @@ export const store = new Vuex.Store({
     set_aligning_blocks(state, blocks) {
       state.aligningBlocks = [];
       if (blocks.length) blocks.forEach(b => {
-        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx});
+        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx, split_pending: b.split_pending ? true : false});
       });
     },
     add_aligning_block(state, block) {
-      state.aligningBlocks.push({_id: block.blockid ? block.blockid : block._id, partIdx: block.partIdx});
+      state.aligningBlocks.push({_id: block.blockid ? block.blockid : block._id, partIdx: block.partIdx, split_pending: block.split_pending ? true : false});
     },
     set_storeList (state, blockObj) {
       //console.log('set_storeList', Date.now());
@@ -1206,7 +1242,7 @@ export const store = new Vuex.Store({
             //state.storeListO.delBlock(data.block);
             if (state.audioTasksQueue.block.blockId && state.audioTasksQueue.block.blockId === data.block.blockid && state.audioTasksQueue.block.partIdx !== null) {
               let blockStore = state.storeList.get(data.block.blockid);
-              if (Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
+              if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
                 blockStore.parts.forEach((p, i) => {
                   if (p.isAudioChanged) {
                     data.block.parts[i] = p;
@@ -1227,6 +1263,16 @@ export const store = new Vuex.Store({
                 state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
               }
             } else if (data.action === 'change' && data.block) {
+              let blockStore = state.storeList.get(data.block.blockid);
+              if (blockStore) {
+                let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
+                  return p.isChanged;
+                }) : false;
+                if (blockStore.isSaving || hasChangedPart) {
+                  //console.log('isSaving hasChangedPart');
+                  return;
+                }
+              }
               state.storeListO.updBlockByRid(data.block.id, data.block);
             } else if (data.action === 'delete') {
 
@@ -1234,6 +1280,13 @@ export const store = new Vuex.Store({
 
             if (data.block && state.storeList.has(data.block.blockid)) {
               let block = state.storeList.get(data.block.blockid);
+              if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
+                block.parts.forEach((p, i) => {
+                  if (p.inid) {
+                    data.block.parts[i].inid = p.inid;
+                  }
+                });
+              }
               if (block.isChanged) {
                 if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
                     if (block.voicework != data.block.voicework) {
@@ -1911,8 +1964,63 @@ export const store = new Vuex.Store({
       if (Array.isArray(block.manual_boundaries)) {
         update.block.manual_boundaries = block.manual_boundaries;
       }
+      if (block.audiosrc) {
+        update.block.audiosrc = block.audiosrc;
+        update.block.audiosrc_ver = block.audiosrc_ver;
+      }
+      let isSplitting = update.block.content ? update.block.content.match(/<i class="pin"><\/i>/img) : [];
+      isSplitting = isSplitting ? isSplitting.length : 0;
+      
+      let checkSplit = new Promise((resolve, reject) => {// temporary solution, not allow split if any aligning task is running. Correct solution in develop in branch ilm-server 0.133-ILM-3110-align-part ; saving part id in block parts array
+        if (isSplitting) {
+          if (this.getters.isBlockOrPartLocked(block.blockid)) {
+            let checkAlign = setInterval(() => {
+              if (!this.getters.isBlockOrPartLocked(block.blockid)) {
+                clearInterval(checkAlign);
+                return resolve();
+              }
+            }, 1000);
+          } else {
+            return resolve();
+          }
+        } else {
+          return resolve();
+        }
+      });
+      return checkSplit
+        .then(() => {
       return axios.put(url, update)
         .then((response) => {
+          
+          let storeBlock = state.storeList.get(response.data.blockid);
+          if (isSplitting && storeBlock.parts.length !== response.data.parts.length) {
+            /*response.data.parts.forEach((p, pIdx) => {
+              if (pIdx < blockIdx || pIdx > blockIdx + isSplitting) {
+                response.data.parts[pIdx] = storeBlock.parts[pIdx - isSplitting];
+              }
+            });*/
+            storeBlock.parts.forEach((p, pIdx) => {
+              if (pIdx < partIdx && (p.isChanged || p.isAudioChanged)) {
+                response.data.parts[pIdx] = p;
+              } else if (pIdx > partIdx && (p.isChanged || p.isAudioChanged)) {
+                response.data.parts[pIdx + isSplitting] = Object.assign(response.data.parts[pIdx + isSplitting], {
+                  content: p.content,
+                  inid: p.inid,
+                  isAudioChanged: p.isAudioChanged,
+                  isChanged: p.isChanged,
+                  manual_boundaries: p.manual_boundaries,
+                  _id: p._id
+                });
+              }
+            });
+          } else if (Array.isArray(storeBlock.parts)) {
+            storeBlock.parts.forEach((p, pIdx) => {
+              if ((p.isChanged || p.isAudioChanged) && pIdx !== partIdx) {
+                response.data.parts[pIdx] = p;
+              }
+            });
+          }
+          commit('set_storeList', new BookBlock(response.data));
           return dispatch('getBookAlign')
             .then(() => {
               commit('clear_blocker', 'putBlock');
@@ -1924,6 +2032,7 @@ export const store = new Vuex.Store({
           dispatch('checkError', err);
           return Promise.reject(err);
         });
+      });
     },
 
     putNumBlock ({commit, state, dispatch}, block) {
@@ -2502,6 +2611,23 @@ export const store = new Vuex.Store({
                       //blockStore.content+=' realigned';
                       checks.push(dispatch('getBlock', b._id)
                         .then(block => {
+                          if (Array.isArray(blockStore.parts) && blockStore.parts.length !== block.parts.length && b.partIdx !== null) {
+                            let addedSubblocks = block.parts.length - blockStore.parts.length;
+                            blockStore.parts.forEach((p, pIdx) => {
+                              if (pIdx < b.partIdx && (p.isChanged || p.isAudioChanged)) {
+                                block.parts[pIdx] = p;
+                              } else if (pIdx > b.partIdx && (p.isChanged || p.isAudioChanged)) {
+                                block.parts[pIdx + addedSubblocks] = p;
+                              }
+                            });
+                          }
+                          if (Array.isArray(block.parts) && Array.isArray(blockStore.parts) && block.parts.length === blockStore.parts.length) {
+                            blockStore.parts.forEach((p, i) => {
+                              if (p.inid) {
+                                block.parts[i].inid = p.inid;
+                              }
+                            });
+                          }
                           if (state.audioTasksQueue.block.blockId && state.audioTasksQueue.block.blockId === block.blockid && state.audioTasksQueue.block.partIdx !== null) {
                             blockStore = state.storeList.get(b._id);
                             if (Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(block.parts) && block.parts.length === blockStore.parts.length) {
@@ -2511,10 +2637,8 @@ export const store = new Vuex.Store({
                                 }
                               });
                             }
-                            store.commit('set_storeList', new BookBlock(block));
-                          } else {
-                            store.commit('set_storeList', new BookBlock(block));
                           }
+                          store.commit('set_storeList', new BookBlock(block));
                           return Promise.resolve();
                         })
                         .catch(err => {
@@ -2555,7 +2679,10 @@ export const store = new Vuex.Store({
             }
             return Promise.resolve();
           })
-          .catch(err => Promise.reject(err));
+          .catch(err => {
+            console.log(err);
+            return Promise.resolve(err);
+          });
       }
     },
 
@@ -3035,17 +3162,70 @@ export const store = new Vuex.Store({
           return Promise.reject();
         });
     },
-    updateBlockPart({state, dispatch}, [id, update, blockIdx, realign]) {
+    updateBlockPart({state, dispatch, commit}, [id, update, blockIdx, realign]) {
       let url = `books/blocks/${encodeURIComponent(id)}/part/${blockIdx}`;
       if (realign) {
         url+= '?realign=true';
       }
+      let isSplitting = update.content ? update.content.match(/<i class="pin"><\/i>/img) : [];
+      isSplitting = isSplitting ? isSplitting.length : 0;
+      
+      let checkSplit = new Promise((resolve, reject) => {// temporary solution, not allow split if any aligning task is running. Correct solution in develop in branch ilm-server 0.133-ILM-3110-align-part ; saving part id in block parts array
+        if (isSplitting) {
+          let blk = state.storeListO.getBlockByRid(id);
+          if (this.getters.isBlockOrPartLocked(blk.blockid)) {
+            let checkAlign = setInterval(() => {
+              if (!this.getters.isBlockOrPartLocked(blk.blockid)) {
+                clearInterval(checkAlign);
+                return resolve();
+              }
+            }, 1000);
+          } else {
+            return resolve();
+          }
+        } else {
+          return resolve();
+        }
+      });
+      return checkSplit
+        .then(() => {
       return axios.put(state.API_URL + url, update)
         .then((response) => {
+          let storeBlock = state.storeList.get(response.data.blockid);
+          if (isSplitting && storeBlock.parts.length !== response.data.parts.length) {
+            /*response.data.parts.forEach((p, pIdx) => {
+              if (pIdx < blockIdx || pIdx > blockIdx + isSplitting) {
+                response.data.parts[pIdx] = storeBlock.parts[pIdx - isSplitting];
+              }
+            });*/
+            storeBlock.parts.forEach((p, pIdx) => {
+              if (pIdx < blockIdx && (p.isChanged || p.isAudioChanged)) {
+                response.data.parts[pIdx] = p;
+              } else if (pIdx > blockIdx && (p.isChanged || p.isAudioChanged)) {
+                //response.data.parts[pIdx + isSplitting] = p;
+                response.data.parts[pIdx + isSplitting] = Object.assign(response.data.parts[pIdx + isSplitting], {
+                  content: p.content,
+                  inid: p.inid,
+                  isAudioChanged: p.isAudioChanged,
+                  isChanged: p.isChanged,
+                  manual_boundaries: p.manual_boundaries,
+                  _id: p._id
+                });
+              }
+            });
+          } else if (Array.isArray(storeBlock.parts)) {
+            storeBlock.parts.forEach((p, pIdx) => {
+              if ((p.isChanged || p.isAudioChanged) && pIdx !== blockIdx) {
+                response.data.parts[pIdx] = p;
+              }
+            });
+          }
+          commit('set_storeList', new BookBlock(response.data));
           return Promise.all([dispatch('getBookAlign'), dispatch('getCurrentJobInfo')])
             .then(() => {
-              return Promise.resolve(response);
+              return Promise.resolve(response.data);
             });
+        });
         });
     },
     getProcessQueue({state, dispatch, commit}) {
@@ -3471,6 +3651,9 @@ export const store = new Vuex.Store({
               block.isAudioChanged = false;
               //this.isChanged = false;
               block.parts[alignBlock.partIdx].isAudioChanged = false;
+              if (Array.isArray(response.data.parts) && response.data.parts.length !== block.parts.length) {
+                block.parts = response.data.parts;
+              }
               return Promise.resolve(response);
             } else {
               //if (this.isCompleted) {
@@ -3489,6 +3672,9 @@ export const store = new Vuex.Store({
               //block.isSaving = false;
               block.manual_boundaries = response.data.manual_boundaries || [];
               block.audiosrc_original = response.data.audiosrc_original;
+              if (Array.isArray(response.data.parts)) {
+                block.parts = response.data.parts;
+              }
               /*Vue.nextTick(() => {
                 if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
                   this.block.flags.forEach(f => {
@@ -3523,6 +3709,54 @@ export const store = new Vuex.Store({
           block.flags.push(updated);
         }
       }
+    },
+    discardAudioChanges({state}) {
+      let block = state.storeList.get(state.audioTasksQueue.block.blockId);
+      let queueBlock = state.audioTasksQueue.block;
+      let api_url = `${state.API_URL}book/block/${block.blockid}/audio_edit`;
+      if (queueBlock.partIdx !== null) {
+        api_url+= '/part/' + queueBlock.partIdx;
+      }
+      return axios.delete(api_url, {}, {})
+        .then(response => {
+          if (response.status == 200 && response.data) {
+            let part = queueBlock.partIdx !== null ? response.data.parts[queueBlock.partIdx] : response.data;
+            block.setPartContent(queueBlock.partIdx || 0, part.content);
+            block.setPartAudiosrc(queueBlock.partIdx || 0, part.audiosrc, part.audiosrc_ver);
+            block.setPartManualBoundaries(queueBlock.partIdx || 0, part.manual_boundaries || []);
+            if (queueBlock.partIdx !== null) {
+              block.parts[queueBlock.partIdx].isAudioChanged = false;
+            } else {
+              block.isAudioChanged = false;
+            }
+          }
+          return Promise.resolve(response);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    mergeBlockParts({state, commit}, [blockid, partFrom, partTo]) {
+      return axios.post(`${state.API_URL}books/blocks/${blockid}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
+        .then((response) => {
+          let storeBlock = state.storeList.get(blockid);
+          if (storeBlock && Array.isArray(storeBlock.parts) && storeBlock.parts.length > 2) {
+            storeBlock.parts.forEach((p, pIdx) => {
+              if (p.isChanged || p.isAudioChanged) {
+                if (pIdx < partFrom) {
+                  response.data.parts[pIdx] = p;
+                } else if (pIdx > partTo) {
+                  response.data.parts[pIdx - 1] = p;
+                }
+              }
+            });
+          }
+          commit('set_storeList', new BookBlock(response.data));
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })

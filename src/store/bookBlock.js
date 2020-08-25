@@ -317,6 +317,11 @@ class BookBlock {
     } else {
       this.parts = parts;
     }
+    this.parts.forEach((p, pIdx) => {
+      if (typeof p.inid === 'undefined') {
+        p.inid = Date.now() + `-${pIdx}`;// set temporary internal id for templates updates
+      }
+    });
 
     this.updated = init.updated || null;
     if (this.updated) {
