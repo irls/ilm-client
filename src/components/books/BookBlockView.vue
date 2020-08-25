@@ -3157,32 +3157,31 @@ Save text changes and realign the Block?`,
         });
       },
       stopRecording(partIdx, reRecordPosition, start_next = false) {
-        let self = this;
         this.isRecording = false;
         if (!this.isSplittedBlock) {
           partIdx = null;
           this.isUpdating = true;
         }
         return new Promise((resolve, reject) => {
-          this.recorder.stopRecording(function(audioUrl) {
-            this.getDataURL(function(dataURL) {
+          this.recorder.stopRecording((audioUrl) => {
+            this.recorder.getDataURL((dataURL) => {
               if (start_next) {
-                self.stopRecordingAndNext(partIdx);
+                this.stopRecordingAndNext(partIdx);
               }
-              self.saveNarrated({
+              this.saveNarrated({
                 'audio': dataURL.split(',').pop(),
                 'position': reRecordPosition,
                 'isTemp': false,
-                'blockid': self.block.blockid,
+                'blockid': this.block.blockid,
                 'partIdx': partIdx
               })
                 .then(response => {
-                  self.isUpdating = false;
+                  this.isUpdating = false;
                   if (response.status == 200) {
                     //self.blockAudio.map = response.data.content;
-                    self.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
-                    self.$store.commit('add_aligning_block', {
-                      _id: self.block.blockid, partIdx: partIdx
+                    //this.$root.$emit('bookBlocksUpdates', {blocks: [response.data]});
+                    this.$store.commit('add_aligning_block', {
+                      _id: this.block.blockid, partIdx: partIdx
                     });
                     //self.block.setContent(response.data.content);
                     //self.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
@@ -3190,13 +3189,13 @@ Save text changes and realign the Block?`,
                     //self.blockAudio.map = self.block.content;
                     //self.isAudioChanged = true;
                   }
-                  self.reRecordPosition = false;
-                  resolve();
+                  this.reRecordPosition = false;
+                  return resolve();
                 })
                 .catch(err => {
-                  self.reRecordPosition = false;
-                  self.isUpdating = false;
-                  reject(err);
+                  this.reRecordPosition = false;
+                  this.isUpdating = false;
+                  return reject(err);
                 });
             });
           });
