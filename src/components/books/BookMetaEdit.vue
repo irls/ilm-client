@@ -651,6 +651,7 @@ export default {
       adminOrLibrarian: 'adminOrLibrarian',
       allowBookSplitPreview: 'allowBookSplitPreview',
       mode: 'bookMode',
+      aligningBlocks: 'aligningBlocks'
     }),
       proofreadModeReadOnly: {
         get() {
@@ -856,6 +857,14 @@ export default {
           this.$refs.panelTabs.findTabAndActivate(newIndex);
         }
         this.$forceUpdate();
+      }
+    },
+    'aligningBlocks.length': {
+      handler(val, oldVal) {
+        if (val < oldVal && this.blockSelection.start._id) {// e.g. pause_before can be changed after realignment
+          //console.log('ALIGNING', val);
+          this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+        }
       }
     }
 
@@ -1507,7 +1516,7 @@ export default {
       }
     },
     selectPauseBefore(blockType, styleKey, styleVal) {
-      console.log(blockType, styleKey, styleVal);
+      //console.log(blockType, styleKey, styleVal);
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
