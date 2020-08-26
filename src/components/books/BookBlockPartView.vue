@@ -3607,6 +3607,12 @@ Save text changes and realign the Block?`,
           this.pushChange('split_point');
           this.isChanged = true;
         }
+        let isMac = navigator && navigator.platform === 'MacIntel';
+        if (isMac) {
+          console.log(this.$refs.blockContent.innerHTML);
+          this.$refs.blockContent.innerHTML = this.$refs.blockContent.innerHTML.replace(/(<\/w><w[^>]*?>)(<i class="pin"><\/i>)/img, '$2$1');
+          console.log(this.$refs.blockContent.innerHTML);
+        }
       },
       handlePinClick(e) {
         if (this.$refs.splitPinCntx && e.target) {
