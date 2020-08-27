@@ -3892,6 +3892,7 @@ Save text changes and realign the Block?`,
                   this.getCurrentJobInfo();
                   this.getAlignCount();
                   this.$root.$emit('bookBlocksUpdates', response.data);
+                  this.$root.$emit('from-block-edit:set-style');// voicework update may cause style settings
                   this.setCurrentBookBlocksLeft(this.block.bookid);
                 }
               }
