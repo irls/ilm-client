@@ -1155,7 +1155,8 @@ export default {
                 blockLang: blockLang,
                 extensions: extensions,
                 disableEditing: !this.allowEditing,
-              imageDragging: false
+                imageDragging: false,
+                spellcheck: false
             });
           } else if (this.tc_isNarrationEnabled(this.block._id) && this.mode === 'narrate') {
             extensions = {
