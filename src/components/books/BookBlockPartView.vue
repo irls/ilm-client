@@ -1158,6 +1158,12 @@ export default {
                 imageDragging: false,
                 spellcheck: false
             });
+            this.editor.subscribe('editableInput', (event, target) => {
+              //console.log(event, target);
+              if (event.inputType === 'formatItalic') {
+                this.$refs.blockContent.innerHTML = this.$refs.blockContent.innerHTML.replace(/<span class="pin"><\/span>/img, '<i class="pin"></i>');// adding italic replaces split positions
+              }
+            });
           } else if (this.tc_isNarrationEnabled(this.block._id) && this.mode === 'narrate') {
             extensions = {
                 'suggestButton': new SuggestButton(),
