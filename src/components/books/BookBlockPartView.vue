@@ -3517,13 +3517,13 @@ Save text changes and realign the Block?`,
             if (this.range.startOffset > 0) {
               checkRange.setStart(container, this.range.startOffset - 1);
               //let checkString = checkRange.toString();
-              if (checkRange.startOffset > 0) {//  && checkString.substring(checkString.length - 1, checkString.length) === ' '
+              if (checkRange.startOffset > 0 && checkRange.toString() === ' ') {//  && checkString.substring(checkString.length - 1, checkString.length) === ' ' container.data.substring(checkRange.endOffset, checkRange.endOffset + 1) === ' '
                 while (checkRange.startOffset > 0 && container.data.substring(checkRange.startOffset, checkRange.startOffset - 1) === ' ') {// add all speces till container beginning to range
                   checkRange.setStart( container, checkRange.startOffset-1 );
                 }
               }
             }
-            if (checkRange.startOffset === 0 && /^\s/.test(checkRange.toString())) {// click at the beginning of the block
+            if (checkRange.startOffset === 0 && /^[\s]*$/.test(checkRange.toString())) {// click at the beginning of the block
               if (!(container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.previousSibling)) {
                 return false;
               }
