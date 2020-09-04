@@ -2018,6 +2018,9 @@ export const store = new Vuex.Store({
               if ((p.isChanged || p.isAudioChanged) && pIdx !== partIdx) {
                 response.data.parts[pIdx] = p;
               }
+              if (p.inid) {
+                response.data.parts[pIdx].inid = p.inid;
+              }
             });
           }
           commit('set_storeList', new BookBlock(response.data));
