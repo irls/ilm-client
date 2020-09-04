@@ -391,6 +391,47 @@
                     </label>
                   </fieldset>
                   <i>Please keep defaults unless you have a compelling reason to change them</i>
+                  <!-- <fieldset class="block-style-fieldset block-num-fieldset"
+                  v-if="true">
+                    <legend>Pause before block (sec.)</legend>
+                    <label class="block-style-label"
+                      >
+                      <template v-if="numProps.get(blockType).get('secNum') == 'mixed'">
+                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                      </template>
+                      <template v-else>
+                        <i v-if="numProps.get(blockType).get('secNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                      </template>
+                      Numbered section
+                    </label>
+                    <label v-if="numProps.get(blockType).get('secNum') === false" class="block-style-label">
+                      <i class="fa fa-square-o"></i>
+                      Hide from display
+                    </label>
+                    <label v-else class="block-style-label"
+                      @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
+                      <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
+                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                      </template>
+                      <template v-else>
+                        <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                      </template>
+                      Hide from display
+                    </label>
+                  </fieldset> -->
+                  <fieldset v-if="pausesBeforeProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset">
+                    <legend>Pause before block (sec.)</legend>
+                    <block-style-labels
+                      :blockType="blockType"
+                      :styleArr="['none', '0.6', '1', '2', '4']"
+                      :styleKey="'pause_before'"
+                      :styleTabs="pausesBeforeProps"
+                      :styleValue="styleValue"
+                      @selectStyleEv="selectPauseBefore"
+                    ></block-style-labels>
+                  </fieldset>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
                     <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && styleKey !== 'table of contents' && !(styleKey == 'level' && blockType == 'header') && !(styleKey == 'style' && blockType == 'title')" :key="styleKey" class="block-style-fieldset">
@@ -570,7 +611,8 @@ export default {
        'ali':      'علی',
        'tradition': 'حدیث',
        'husayn':   'حسین'
-      }
+      },
+      pausesBeforeProps: new Map()
 
 
     }
@@ -609,6 +651,7 @@ export default {
       adminOrLibrarian: 'adminOrLibrarian',
       allowBookSplitPreview: 'allowBookSplitPreview',
       mode: 'bookMode',
+      aligningBlocks: 'aligningBlocks'
     }),
       proofreadModeReadOnly: {
         get() {
@@ -814,6 +857,14 @@ export default {
           this.$refs.panelTabs.findTabAndActivate(newIndex);
         }
         this.$forceUpdate();
+      }
+    },
+    'aligningBlocks.length': {
+      handler(val, oldVal) {
+        if (val < oldVal && this.blockSelection.start._id) {// e.g. pause_before can be changed after realignment
+          //console.log('ALIGNING', val);
+          this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+        }
       }
     }
 
@@ -1188,6 +1239,7 @@ export default {
       let result = new Map();
       let nums = new Map();
       let lang = 'en'; // for transfer to block styles panel;
+      let pausesBefore = new Map();
 
       //console.log('collectCheckedStyles', startId, endId);
 
@@ -1277,6 +1329,19 @@ export default {
                   nums.get(oBlock.type).set('parNum', false);
                 }
               }
+              if (!pausesBefore.has(oBlock.type)) {
+                pausesBefore.set(oBlock.type, new Map());
+                pausesBefore.get(oBlock.type).set('pause_before', new Map());
+                /*pausesBefore.get(oBlock.type).get('pauses_before').set(new Map([
+                  ['none', !pBlock.pause_before],
+                  [0.6, pBlock.pause_before == 0.6],
+                  [1, pBlock.pause_before == 1],
+                  [2, pBlock.pause_before == 2],
+                  [4, pBlock.pause_before == 4]
+                ]));*/
+              }
+              pausesBefore.get(oBlock.type).get('pause_before').set(pBlock.pause_before ? `${pBlock.pause_before}` : 'none', true);
+              //pausesBefore.get(oBlock.type).get('pause_before').set(pBlock.pause_before ? pBlock.pause_before : '0.6', true);
             }
           }
 
@@ -1289,6 +1354,7 @@ export default {
 
       this.styleTabs = result;
       this.numProps = nums;
+      this.pausesBeforeProps = pausesBefore;
 
       //console.log('result', result);
       //console.log('nums', nums);
@@ -1447,6 +1513,26 @@ export default {
               this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
             }
           })
+      }
+    },
+    selectPauseBefore(blockType, styleKey, styleVal) {
+      //console.log(blockType, styleKey, styleVal);
+      if (this.blockSelection.start._id && this.blockSelection.end._id) {
+        if (this.storeList.has(this.blockSelection.start._id)) {
+          let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
+          idsArrayRange.forEach((blockRid)=>{
+            let oBlock = this.storeListO.get(blockRid);
+            if (oBlock) {
+              let pBlock = this.storeList.get(oBlock.blockid);
+              pBlock.pause_before = styleVal;
+            }
+          })
+          this.updateBookVersion({major: true});
+        }
+        return this.setPauseBefore([blockType, styleVal])
+          .then(() => {
+            this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+          });
       }
     },
 
@@ -1680,7 +1766,7 @@ export default {
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseBefore'])
   }
 }
 

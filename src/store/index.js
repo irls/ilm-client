@@ -3760,6 +3760,22 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    setPauseBefore({state}, [blockType, value]) {
+      if (state.blockSelection.start._id && state.blockSelection.end._id) {
+        return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/pause_before`, {
+          start_id: state.blockSelection.start._id,
+          end_id: state.blockSelection.end._id,
+          block_type: blockType,
+          value: value === 'none' ? null : value
+        })
+          .then((response) => {
+            
+          })
+          .catch(err => {
+            
+          });
+      }
     }
   }
 })

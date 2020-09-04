@@ -933,6 +933,7 @@ export default {
         newBlock.status['not_process'] = true;
         newBlock.status['marked'] = false;
       }
+      newBlock.trimmed_silence = false;
 
       return new BookBlock(newBlock);
     },
