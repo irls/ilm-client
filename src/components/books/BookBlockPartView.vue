@@ -1155,7 +1155,14 @@ export default {
                 blockLang: blockLang,
                 extensions: extensions,
                 disableEditing: !this.allowEditing,
-              imageDragging: false
+                imageDragging: false,
+                spellcheck: false
+            });
+            this.editor.subscribe('editableInput', (event, target) => {
+              //console.log(event, target);
+              if (event.inputType === 'formatItalic') {
+                this.$refs.blockContent.innerHTML = this.$refs.blockContent.innerHTML.replace(/<span class="pin"><\/span>/img, '<i class="pin"></i>');// adding italic replaces split positions
+              }
             });
           } else if (this.tc_isNarrationEnabled(this.block._id) && this.mode === 'narrate') {
             extensions = {
@@ -3503,7 +3510,18 @@ Save text changes and realign the Block?`,
             if (typeof container.length == 'undefined') {
               return false;
             }
-            if (this.range.startOffset === 0) {
+            let checkRange = document.createRange();
+            checkRange.setStart( container, this.range.startOffset );
+            if (this.range.startOffset > 0) {
+              checkRange.setStart(container, this.range.startOffset - 1);
+              //let checkString = checkRange.toString();
+              if (checkRange.startOffset > 0 && checkRange.toString() === ' ') {//  && checkString.substring(checkString.length - 1, checkString.length) === ' ' container.data.substring(checkRange.endOffset, checkRange.endOffset + 1) === ' '
+                while (checkRange.startOffset > 0 && container.data.substring(checkRange.startOffset, checkRange.startOffset - 1) === ' ') {// add all speces till container beginning to range
+                  checkRange.setStart( container, checkRange.startOffset-1 );
+                }
+              }
+            }
+            if (checkRange.startOffset === 0 && /^[\s]*$/.test(checkRange.toString())) {// click at the beginning of the block
               if (!(container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.previousSibling)) {
                 return false;
               }
@@ -3543,13 +3561,8 @@ Save text changes and realign the Block?`,
               }
             }
             //console.log(container.previousElementSibling, container.previousSibling, this.range);
-            let checkRange = document.createRange();
             let regexp = null;
             //console.log(container, container.length, this.range.endOffset);
-            checkRange.setStart( container, this.range.startOffset );
-            if (this.range.startOffset > 0) {
-              checkRange.setStart(container, this.range.startOffset - 1);
-            }
             if (!isMac) {
               let wordString = `a-zA-Zа-яА-Я0-9À-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ\\ufdfa\\’"\\?\\!\\:\\;\\.\\\\,\\/\\<\\>\\'\\*\\‒\\|“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…`;
               regexp = skipLengthCheck ? /^(\S+)|(\s+)$/i : new RegExp(`^([${wordString}]+[^${wordString}]+[${wordString}]*)|([^${wordString}]+[${wordString}]+)|(\\s+)$`, 'i');

@@ -3434,6 +3434,9 @@ Save text changes and realign the Block?`,
           //}
           this.$root.$emit('from-block-edit:set-style');
           if (['type'].indexOf(type) !== -1) {
+            if (!this.block.getIsSplittedBlock()) {
+              this.block.content = this.$refs.blocks[0].clearBlockContent();
+            }
             this.$forceUpdate();
           }
           if (type === 'type' && event && event.target) {
