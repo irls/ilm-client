@@ -3517,8 +3517,8 @@ Save text changes and realign the Block?`,
             if (this.range.startOffset > 0) {
               checkRange.setStart(container, this.range.startOffset - 1);
               //let checkString = checkRange.toString();
-              if (checkRange.startOffset > 0 && checkRange.toString() === ' ') {//  && checkString.substring(checkString.length - 1, checkString.length) === ' ' container.data.substring(checkRange.endOffset, checkRange.endOffset + 1) === ' '
-                while (checkRange.startOffset > 0 && container.data.substring(checkRange.startOffset, checkRange.startOffset - 1) === ' ') {// add all speces till container beginning to range
+              if (checkRange.startOffset > 0 && /^\s$/.test(checkRange.toString())) {//  && checkString.substring(checkString.length - 1, checkString.length) === ' ' container.data.substring(checkRange.endOffset, checkRange.endOffset + 1) === ' '
+                while (checkRange.startOffset > 0 && /^\s$/.test(container.data.substring(checkRange.startOffset, checkRange.startOffset - 1))) {// add all speces till container beginning to range
                   checkRange.setStart( container, checkRange.startOffset-1 );
                 }
               }
@@ -3570,8 +3570,8 @@ Save text changes and realign the Block?`,
               regexp = skipLengthCheck ? /^(\S+)|(\s+)$/i : new RegExp(`^([${wordString}]+[^${wordString}]+[${wordString}]*)|([^${wordString}]+[${wordString}]+)|(\\s+)$`, 'i');
               checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
               let checkString = checkRange.toString();
-              if (checkString.substring(checkString.length - 1, checkString.length) === ' ') {
-                while (checkRange.endOffset < container.length && container.data.substring(checkRange.endOffset, checkRange.endOffset + 1) === ' ') {// add all speces till container end to range
+              if (/^\s$/.test(checkString.substring(checkString.length - 1, checkString.length))) {
+                while (checkRange.endOffset < container.length && /^\s$/.test(container.data.substring(checkRange.endOffset, checkRange.endOffset + 1))) {// add all speces till container end to range
                   checkRange.setEnd( container, checkRange.endOffset+1 );
                 }
               }
