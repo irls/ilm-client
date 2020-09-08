@@ -2359,6 +2359,9 @@ Save text changes and realign the Block?`,
           }*/
           //this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
           let isSplitting = this.hasChange('split_point');
+          if (isSplitting && this.needsRealignment) {
+            preparedData.content = (preparedData.content ? preparedData.content : this.block.content).replace(/<i class="pin"><\/i>/img, '');
+          }
           return this.saveBlockAudio([realign, preparedData])
             .then(response => {
               //this.isSaving = false;

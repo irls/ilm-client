@@ -1471,13 +1471,18 @@ Save audio changes and realign the Block?`,
                 handler: () => {
                   this.$root.$emit('hide-modal');
                   //let preparedData = {audiosrc: this.block.getPartAudiosrc(this.blockPartIdx, null, false), content: this.clearBlockContent()};
-                  this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+                  let oldContent = this.clearBlockContent();
+                  this.block.setPartContent(this.blockPartIdx, oldContent);
                   let isSplitting = this.hasChange('split_point');
                   let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
                     return b.isAudioEditing;
                   }) : false;
                   return this.assembleBlockPartAudioEdit(false, {})
                     .then(() => {
+                      if (isSplitting) {
+                        this.block.setPartContent(this.blockPartIdx, oldContent);
+                        this.$refs.blockContent.innerHTML = oldContent;
+                      }
                       return this.assembleBlockProxy(false, true, false)
                       .then(() => {
                         if (isSplitting && isAudioEditorOpened) {
@@ -3108,6 +3113,9 @@ Save text changes and realign the Block?`,
         this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         return this.applyTasksQueue([null])
           .then(() => {
+            if (isSplitting && this.needsRealignment) {
+              preparedData.content = (preparedData.content ? preparedData.content : this.block.getPartContent(this.blockPartIdx)).replace(/<i class="pin"><\/i>/img, '');
+            }
             return this.saveBlockAudio([realign, preparedData])
           })
           .then((response) => {
