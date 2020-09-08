@@ -1531,6 +1531,8 @@ export default {
         }
         return this.setPauseBefore([blockType, styleVal])
           .then(() => {
+            this.tc_loadBookTask(this.currentBookMeta._id);
+            this.getCurrentJobInfo();
             this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
           });
       }
