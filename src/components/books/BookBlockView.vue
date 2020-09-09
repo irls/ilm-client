@@ -108,7 +108,8 @@
                       <template v-if="block.type != 'illustration' && block.type != 'hr' && !proofreadModeReadOnly">
                       <li @click="showModal('block-html')">
                         <i class="fa fa-code" aria-hidden="true"></i>
-                        Display block HTML</li>
+                        {{editBlockHTMLLabel}}
+                      </li>
                       <li class="separator"></li>
                       </template>
                     </template>
@@ -529,7 +530,13 @@
         <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
       </div>
       <div class="modal-body">
-        <textarea :ref="'block-html' + block.blockid" disabled class="block-html"></textarea>
+        <vue-tabs>
+          <vue-tab title="parnumComp">
+            <template v-if="!block.getIsSplittedBlock()">
+              <textarea :ref="'block-html' + block.blockid" disabled class="block-html"></textarea>
+            </template>
+          </vue-tab>
+        </vue-tabs>
       </div>
       <div class="modal-footer">
           <button class="btn btn-default" v-on:click="hideModal('block-html')">Close</button>
@@ -559,6 +566,7 @@ import access             from '../../mixins/access.js';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
 import BookBlockPartView from './BookBlockPartView';
+import { VueTabs, VTab } from 'vue-nav-tabs'
 var BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
 
@@ -631,7 +639,9 @@ export default {
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
       //'modal': modal,
-      BookBlockPartView: BookBlockPartView
+      BookBlockPartView: BookBlockPartView,
+      'vue-tabs': VueTabs,
+      'vue-tab': VTab
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
   mixins: [taskControls, apiConfig, access],
@@ -1137,6 +1147,11 @@ export default {
           this.block.isAudioChanged = val;
         },
         cache: false
+      },
+      editBlockHTMLLabel: {
+        get() {
+          return this.adminOrLibrarian ? 'Edit block HTML' : 'Display block HTML';
+        }
       }
   },
   mounted: function() {
