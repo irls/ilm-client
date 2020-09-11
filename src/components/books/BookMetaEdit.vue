@@ -391,36 +391,6 @@
                     </label>
                   </fieldset>
                   <i>Please keep defaults unless you have a compelling reason to change them</i>
-                  <!-- <fieldset class="block-style-fieldset block-num-fieldset"
-                  v-if="true">
-                    <legend>Pause before block (sec.)</legend>
-                    <label class="block-style-label"
-                      >
-                      <template v-if="numProps.get(blockType).get('secNum') == 'mixed'">
-                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
-                      </template>
-                      <template v-else>
-                        <i v-if="numProps.get(blockType).get('secNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
-                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
-                      </template>
-                      Numbered section
-                    </label>
-                    <label v-if="numProps.get(blockType).get('secNum') === false" class="block-style-label">
-                      <i class="fa fa-square-o"></i>
-                      Hide from display
-                    </label>
-                    <label v-else class="block-style-label"
-                      @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
-                      <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
-                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
-                      </template>
-                      <template v-else>
-                        <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
-                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
-                      </template>
-                      Hide from display
-                    </label>
-                  </fieldset> -->
                   <fieldset v-if="pausesBeforeProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset">
                     <legend>Pause before block (sec.)</legend>
                     <block-style-labels
@@ -1522,7 +1492,7 @@ export default {
           let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
           idsArrayRange.forEach((blockRid)=>{
             let oBlock = this.storeListO.get(blockRid);
-            if (oBlock) {
+            if (oBlock && oBlock.type === blockType) {
               let pBlock = this.storeList.get(oBlock.blockid);
               pBlock.pause_before = styleVal;
             }

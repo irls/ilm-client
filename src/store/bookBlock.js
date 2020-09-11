@@ -979,6 +979,14 @@ class BookBlock {
     }
     return false;
   }
+  
+  setUpdated(val) {
+    this.updated = val;
+  }
+  
+  setPauseBefore(val) {
+    this.pause_before = val;
+  }
 }
 
 class FlagPart {

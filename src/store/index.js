@@ -3770,7 +3770,16 @@ export const store = new Vuex.Store({
           value: value === 'none' ? null : value
         })
           .then((response) => {
-            
+            if (Array.isArray(response.data)) {
+              response.data.forEach(b => {
+                let block = state.storeList.get(b.blockid);
+                if (block) {
+                  block.setUpdated(b.updated);
+                  block.setPauseBefore(b.pause_before);
+                }
+              });
+            }
+            return Promise.resolve();
           })
           .catch(err => {
             
