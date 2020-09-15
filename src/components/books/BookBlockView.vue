@@ -532,13 +532,22 @@
       <div class="modal-body">
         <tabs ref="htmlContentTabs">
           <tab :header="parnumComp">
-            <textarea :ref="'block-html' + block.blockid" disabled class="block-html"></textarea>
+            <div >{{blockHtmlHeader}}</div>
+            <textarea :ref="'block-html' + block.blockid" :disabled="!adminOrLibrarian || isSplittedBlock" class="block-html"></textarea>
+            <div>&lt;/div&gt;</div>
           </tab>
-          <template v-if="!block.getIsSplittedBlock()"></template>
+          <template v-if="block.getIsSplittedBlock()">
+            <tab v-for="(blockPart, blockPartIdx) in blockParts" :header="(subBlockParnumComp ? subBlockParnumComp + '_' : '') + (blockPartIdx + 1)" v-bind:key="'part-' + blockPartIdx + '-html-content'">
+              <textarea :ref="'block-part-' + blockPartIdx + '-html'" :disabled="!adminOrLibrarian" class="block-html"></textarea>
+            </tab>
+          </template>
+          <!-- <highlightjs language="html" :code="block.content" /> -->
+          <!-- <pre v-highlightjs="block.content"><code class="html agate" style="agate"></code></pre> -->
         </tabs>
       </div>
       <div class="modal-footer">
           <button class="btn btn-default" v-on:click="hideModal('block-html')">Close</button>
+          <button class="btn btn-primary" v-on:click="setPartsHtml()">Save</button>
       </div>
     </div>
     </modal>
@@ -568,8 +577,12 @@ import BookBlockPartView from './BookBlockPartView';
 import { tabs, tab } from 'vue-strap';
 import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
 import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
+//import hljs from 'highlight.js';
+//import VueHighlightJS from 'vue-highlightjs';
 var BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
+//Vue.use(hljs.vuePlugin);
+//Vue.use(VueHighlightJS);
 
 export default {
   data () {
@@ -642,7 +655,10 @@ export default {
       //'modal': modal,
       BookBlockPartView: BookBlockPartView,
       'tabs': tabs,// vue-strap
-      'tab': tab// vue-strap
+      'tab': tab,// vue-strap,
+      //'highlightjs': highlightjs
+      //'highlightjs': hljs
+      //'VueHighlightJS': VueHighlightJS
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
   mixins: [taskControls, apiConfig, access],
@@ -1152,6 +1168,19 @@ export default {
       editBlockHTMLLabel: {
         get() {
           return this.adminOrLibrarian ? 'Edit block HTML' : 'Display block HTML';
+        }
+      },
+      blockHtmlHeader: {
+        get() {
+          let audiosrc = this.block.getAudiosrc('m4a', true) || '';
+          if (audiosrc) {
+            audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
+          }
+          let blockData = `data-audiosrc="${audiosrc}"`;
+          if (this.block.updated) blockData += ` data-last_modified="${this.block.updated}"`;
+          if (audiosrc) blockData += ` data-audiohash="${this.block.audioHash || ''}"`;
+          let header = `<div id="${this.shortBlockid}" ${blockData}>`;
+          return header;
         }
       }
   },
@@ -4024,25 +4053,14 @@ Save text changes and realign the Block?`,
         }
       },
       setHtml() {
-        let content = '';
-        if (this.isSplittedBlock) {
-          content = this.block.content;
-        } else {
-          if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
-            content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
-          }
+        let content = this.block.content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
+        
+        this.$refs['block-html' + this.block.blockid].value = content;
+        if (this.block.getIsSplittedBlock()) {
+          this.block.parts.forEach((p, pIdx) => {
+            this.$refs[`block-part-${pIdx}-html`][0].value = p.content;
+          });
         }
-        content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
-        let audiosrc = this.block.getAudiosrc('m4a', true) || '';
-        if (audiosrc) {
-          audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
-        }
-        let blockData = `data-audiosrc="${audiosrc}"`;
-        if (this.block.updated) blockData += ` data-last_modified="${this.block.updated}"`;
-        if (audiosrc) blockData += ` data-audiohash="${this.block.audioHash || ''}"`;
-        this.$refs['block-html' + this.block.blockid].value = `<div id="${this.shortBlockid}" ${blockData}>
-  ${content}
-</div>`;
         $(`#${this.block.blockid} .nav-tabs`).scrollingTabs({
         })
         .on('ready.scrtabs', () => {
@@ -4385,6 +4403,28 @@ Save text changes and realign the Block?`,
       
       splitPointAdded() {
         this.pushChange('split_point');
+      },
+      setPartsHtml() {
+        if (!this.block.getIsSplittedBlock()) {
+          if (this.$refs.blocks[0].innerHTML !== this.$refs[`block-html${this.block.blockid}`].value) {
+            this.block.content = this.$refs[`block-html${this.block.blockid}`].value;
+            this.$refs.blocks[0].innerHTML = this.block.content;
+            this.pushChange('content');
+          }
+        } else {
+          this.block.parts.forEach((p, pIdx) => {
+            let ref = this.$refs.blocks.find(rb => {
+              return rb.blockPartIdx === pIdx;
+            });
+            if (ref && ref.$refs.blockContent.innerHTML !== this.$refs[`block-part-${pIdx}-html`][0].value) {
+              p.content = this.$refs[`block-part-${pIdx}-html`][0].value;
+              ref.$refs.blockContent.innerHTML = p.content;
+              ref.pushChange('content');
+              ref.isChanged = true;
+            }
+          });
+        }
+        this.hideModal('block-html');
       }
   },
   watch: {

@@ -48,6 +48,7 @@
     "v-hotkey": "^0.2.3",
     "vue": "^2.1.10",
     "vue-carousel-3d": "^0.1.8",
+    "vue-highlightjs": "^1.3.3",
     "vue-infinite-loading": "^2.2.1",
     "vue-js-modal": "1.3.13",
     "vue-my-dropdown": "^2.0.2",
