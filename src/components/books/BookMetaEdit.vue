@@ -391,7 +391,7 @@
                     </label>
                   </fieldset>
                   <i>Please keep defaults unless you have a compelling reason to change them</i>
-                  <fieldset v-if="pausesBeforeProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset">
+                  <fieldset v-if="pausesBeforeProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset block-pause-fieldset">
                     <legend>Pause before block (sec.)</legend>
                     <block-style-labels
                       :blockType="blockType"
