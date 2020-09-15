@@ -1204,8 +1204,8 @@ export const store = new Vuex.Store({
         state.liveDB.startWatch(bookid, 'blockV', {bookid: bookid}, (data) => {
           if (data && data.block) {
             //state.storeListO.delBlock(data.block);
+            let blockStore = state.storeList.get(data.block.blockid);
             if (state.audioTasksQueue.block.blockId && state.audioTasksQueue.block.blockId === data.block.blockid && state.audioTasksQueue.block.partIdx !== null) {
-              let blockStore = state.storeList.get(data.block.blockid);
               if (Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
                 blockStore.parts.forEach((p, i) => {
                   if (p.isAudioChanged) {
@@ -1227,6 +1227,15 @@ export const store = new Vuex.Store({
                 state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
               }
             } else if (data.action === 'change' && data.block) {
+              if (blockStore) {
+                let changes = [];// collect changes
+                ['classes', 'pause_before']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
+                  if (blockStore.hasOwnProperty(k) && !_.isEqual(blockStore[k], data.block[k])) {
+                    changes.push(k);
+                  }
+                });
+                data.block.sync_changes = changes;
+              }
               state.storeListO.updBlockByRid(data.block.id, data.block);
             } else if (data.action === 'delete') {
 
