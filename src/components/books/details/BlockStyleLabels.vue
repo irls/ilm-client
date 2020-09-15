@@ -110,6 +110,14 @@
           }
         }
       }
+      &.block-pause-fieldset {
+        .block-style-label {
+          width: 22%;
+          &:last-child {
+            width: auto;
+          }
+        }
+      }
     }
 
     .tab-container {

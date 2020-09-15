@@ -335,6 +335,7 @@ class BookBlock {
     
     this.trimmed_silence = init.trimmed_silence;
     this.pause_before = init.pause_before;
+    this.sync_changes = init.sync_changes || [];// changes from synschronization
   }
 
   clean() {
