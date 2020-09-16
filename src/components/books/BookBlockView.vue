@@ -4058,7 +4058,11 @@ Save text changes and realign the Block?`,
         }
       },
       setHtml() {
-        let content = this.block.content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
+        let content = this.block.content;
+        if (!this.block.getIsSplittedBlock()) {
+          content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
+        }
+        content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
         
         this.$refs['block-html' + this.block.blockid].value = content;
         if (this.block.getIsSplittedBlock()) {
