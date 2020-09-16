@@ -1487,6 +1487,9 @@ export default {
     },
     selectPauseBefore(blockType, styleKey, styleVal) {
       //console.log(blockType, styleKey, styleVal);
+      if (this.proofreadModeReadOnly) {
+        return;
+      }
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
