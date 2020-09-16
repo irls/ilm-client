@@ -1242,7 +1242,7 @@ export const store = new Vuex.Store({
             //state.storeListO.delBlock(data.block);
 
             let blockStore = null;
-            if (data.block.blockid)
+            if (data.block.blockid) {
               blockStore = state.storeList.get(data.block.blockid);
             }
             if (data.block.blockid &&
