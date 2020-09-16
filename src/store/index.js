@@ -1240,7 +1240,7 @@ export const store = new Vuex.Store({
         state.liveDB.startWatch(bookid, 'blockV', {bookid: bookid}, (data) => {
           if (data && data.block) {
             //state.storeListO.delBlock(data.block);
-            if (state.audioTasksQueue.block.blockId && state.audioTasksQueue.block.blockId === data.block.blockid && state.audioTasksQueue.block.partIdx !== null) {
+            if (data.block.blockid && state.audioTasksQueue.block.blockId && state.audioTasksQueue.block.blockId === data.block.blockid && state.audioTasksQueue.block.partIdx !== null) {
               let blockStore = state.storeList.get(data.block.blockid);
               if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
                 blockStore.parts.forEach((p, i) => {
@@ -1275,10 +1275,10 @@ export const store = new Vuex.Store({
               }
               state.storeListO.updBlockByRid(data.block.id, data.block);
             } else if (data.action === 'delete') {
-
+              state.storeListO.delExistsBlock(data.block['@rid'])
             }
 
-            if (data.block && state.storeList.has(data.block.blockid)) {
+            if (data.block && data.block.blockid && state.storeList.has(data.block.blockid)) {
               let block = state.storeList.get(data.block.blockid);
               if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
                 block.parts.forEach((p, i) => {
@@ -1301,7 +1301,7 @@ export const store = new Vuex.Store({
               } else {
                 store.commit('set_storeList', new BookBlock(data.block));
               }
-            } else if (data.block) {
+            } else if (data.block && data.block.blockid) {
               store.commit('set_storeList', new BookBlock(data.block));
             }
             state.storeListO.refresh();
@@ -1337,7 +1337,7 @@ export const store = new Vuex.Store({
       });
       return state.partOfBookBlocksXHR;
     },
-    
+
     loadBook ({commit, state, dispatch}, book_id) {
       if (state.loadBookWait) {
         return state.loadBookWait
@@ -1970,7 +1970,7 @@ export const store = new Vuex.Store({
       }
       let isSplitting = update.block.content ? update.block.content.match(/<i class="pin"><\/i>/img) : [];
       isSplitting = isSplitting ? isSplitting.length : 0;
-      
+
       let checkSplit = new Promise((resolve, reject) => {// temporary solution, not allow split if any aligning task is running. Correct solution in develop in branch ilm-server 0.133-ILM-3110-align-part ; saving part id in block parts array
         if (isSplitting) {
           if (this.getters.isBlockOrPartLocked(block.blockid)) {
@@ -1991,7 +1991,7 @@ export const store = new Vuex.Store({
         .then(() => {
       return axios.put(url, update)
         .then((response) => {
-          
+
           let storeBlock = state.storeList.get(response.data.blockid);
           if (isSplitting && storeBlock.parts.length !== response.data.parts.length) {
             /*response.data.parts.forEach((p, pIdx) => {
@@ -2736,7 +2736,7 @@ export const store = new Vuex.Store({
         })
       } return {};
     },
-    
+
     startJobInfoTimer({state, dispatch}) {
       let interval = 10000;
       //let interval = 60000;
@@ -3169,7 +3169,7 @@ export const store = new Vuex.Store({
       }
       let isSplitting = update.content ? update.content.match(/<i class="pin"><\/i>/img) : [];
       isSplitting = isSplitting ? isSplitting.length : 0;
-      
+
       let checkSplit = new Promise((resolve, reject) => {// temporary solution, not allow split if any aligning task is running. Correct solution in develop in branch ilm-server 0.133-ILM-3110-align-part ; saving part id in block parts array
         if (isSplitting) {
           let blk = state.storeListO.getBlockByRid(id);
