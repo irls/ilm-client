@@ -536,12 +536,21 @@
               </h4>
             </div>
             <div >{{blockHtmlHeader}}</div>
-            <textarea :ref="'block-html' + block.blockid" :disabled="!adminOrLibrarian || isSplittedBlock" class="block-html"></textarea>
+            <!-- <textarea :ref="'block-html' + block.blockid" :disabled="!adminOrLibrarian || isSplittedBlock" class="block-html"></textarea> -->
+            <codemirror
+              :ref="'block-html' + block.blockid" 
+              :options="getCodeMirrorOptions()"
+            />
             <div>&lt;/div&gt;</div>
           </tab>
           <template v-if="block.getIsSplittedBlock()">
             <tab v-for="(blockPart, blockPartIdx) in blockParts" :header="(subBlockParnumComp ? subBlockParnumComp + '_' : '') + (blockPartIdx + 1)" v-bind:key="'part-' + blockPartIdx + '-html-content'">
-              <textarea :ref="'block-part-' + blockPartIdx + '-html'" :disabled="!adminOrLibrarian" class="block-html"></textarea>
+              <!-- <textarea :ref="'block-part-' + blockPartIdx + '-html'" :disabled="!adminOrLibrarian" class="block-html"></textarea> -->
+              <codemirror
+                :ref="'block-part-' + blockPartIdx + '-html'" 
+                :disabled="!adminOrLibrarian || isSplittedBlock"
+                :options="getCodeMirrorOptions(blockPartIdx)"
+              />
             </tab>
           </template>
           <!-- <highlightjs language="html" :code="block.content" /> -->
@@ -584,6 +593,10 @@ import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
 import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
 //import hljs from 'highlight.js';
 //import VueHighlightJS from 'vue-highlightjs';
+import { codemirror } from 'vue-codemirror';
+import('codemirror/lib/codemirror.css');
+import('codemirror/mode/xml/xml.js');
+import('codemirror/theme/base16-light.css');//paraiso-light
 var BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
 //Vue.use(hljs.vuePlugin);
@@ -664,6 +677,7 @@ export default {
       //'highlightjs': highlightjs
       //'highlightjs': hljs
       //'VueHighlightJS': VueHighlightJS
+      'codemirror': codemirror
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
   mixins: [taskControls, apiConfig, access],
@@ -4064,14 +4078,15 @@ Save text changes and realign the Block?`,
         }
         content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
         
-        this.$refs['block-html' + this.block.blockid].value = content;
+        this.$refs['block-html' + this.block.blockid].codemirror.doc.setValue(content);
         if (this.block.getIsSplittedBlock()) {
           this.block.parts.forEach((p, pIdx) => {
             let ref = this.$refs.blocks.find(r => {
               return r.blockPartIdx === pIdx;
             });
             if (ref) {
-              this.$refs[`block-part-${pIdx}-html`][0].value = ref.clearBlockContent();
+              content = ref.$refs.blockContent.innerHTML;
+              this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.setValue(content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1'));
             }
           });
         }
@@ -4092,6 +4107,18 @@ Save text changes and realign the Block?`,
             this.$refs.htmlContentTabs.select(this.$refs.htmlContentTabs.$children[index]);
             $(`#${this.block.blockid} .nav-tabs li`).removeClass('active');
             $(e.target).parent().addClass('active');
+            if (index === 0) {
+              $(`#${this.block.blockid} .copy-block-html`).show();
+            } else {
+              $(`#${this.block.blockid} .copy-block-html`).hide();
+            }
+            Vue.nextTick(() => {
+              //this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.doc.setValue('<span>go-Doc-Start</span>');
+              //this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.doc.changeGeneration(true);
+              this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.focus();
+              this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.execCommand('goDocStart');
+              //console.log(this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror);
+            });
           })
         });
       },
@@ -4423,8 +4450,9 @@ Save text changes and realign the Block?`,
       },
       setPartsHtml() {
         if (!this.block.getIsSplittedBlock()) {
-          if (this.$refs.blocks[0].innerHTML !== this.$refs[`block-html${this.block.blockid}`].value) {
-            this.block.content = this.$refs[`block-html${this.block.blockid}`].value;
+          let blockValue = this.$refs[`block-html${this.block.blockid}`].codemirror.doc.getValue();
+          if (this.$refs.blocks[0].innerHTML !== blockValue) {
+            this.block.content = blockValue;
             this.$refs.blocks[0].innerHTML = this.block.content;
             this.pushChange('content');
           }
@@ -4433,8 +4461,9 @@ Save text changes and realign the Block?`,
             let ref = this.$refs.blocks.find(rb => {
               return rb.blockPartIdx === pIdx;
             });
-            if (ref && ref.$refs.blockContent.innerHTML !== this.$refs[`block-part-${pIdx}-html`][0].value) {
-              p.content = this.$refs[`block-part-${pIdx}-html`][0].value;
+            let partValue = this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.getValue();
+            if (ref && ref.$refs.blockContent.innerHTML !== partValue) {
+              p.content = partValue;
               ref.$refs.blockContent.innerHTML = p.content;
               ref.pushChange('content');
               ref.isChanged = true;
@@ -4451,6 +4480,18 @@ Save text changes and realign the Block?`,
         document.execCommand('copy');
         el.innerText = '';
         return;
+      },
+      getCodeMirrorOptions(partIdx = null) {
+        let cmOptions = {
+          mode: 'text/html',
+          theme: 'base16-light',
+          lineWrapping: true,
+          readOnly: !this.adminOrLibrarian || (this.block.getIsSplittedBlock() && partIdx === null),
+          direction: ['ar', 'fa'].indexOf(this.getBlockLang) === -1 ? 'ltr' : 'rtl',
+          pollInterval: 100000
+        };
+        //cmOptions.rtlMoveVisually = cmOptions.direction === 'rtl';
+        return cmOptions;
       }
   },
   watch: {
@@ -5637,6 +5678,9 @@ Save text changes and realign the Block?`,
     }
     .modal-body {
       overflow: visible;
+      .CodeMirror-rtl, .CodeMirror-rtl * {
+        direction: rtl; 
+      }
     }
     .modal-footer {
       .copy-block-html {
@@ -5686,9 +5730,9 @@ Save text changes and realign the Block?`,
       }
     }
     .tab-pane {
-      div {
+      /*div {
         margin: 15px 0px 5px 0px;
-      }
+      }*/
       &:first-child {
         textarea {
           height: 210px;
