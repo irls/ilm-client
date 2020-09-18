@@ -1746,12 +1746,19 @@ Save audio changes and realign the Block?`,
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
-        if (/\r\n|\r|\n/.test(content) && this.block && this.block.classes.whitespace && ['verse', 'pre', 'list'].indexOf(this.block.classes.whitespace) !== -1) {
-          content = content.replace(/<p><br[\/]?><\/p>/gm, '\n');
-          content = content.replace(/<p[^>]*>([\s\S]+?)<\/p>([\s\S]+?)/gm, `$1\n$2`)// remove Editor's p instead of line breaks
-          content = content.replace(/<\/div><div>/gm, '')
-          content = content.replace(/<div>/gm, '')
-          content = content.replace(/<\/div>/gm, '\n')
+        if (this.block && this.block.classes.whitespace && ['verse', 'pre', 'list'].indexOf(this.block.classes.whitespace) !== -1) {
+          content = content.replace(/<br\/?>/img, `\n`);
+          if (/\r\n|\r|\n/.test(content)) {
+            content = content.replace(/<p><br[\/]?><\/p>/gm, '\n');
+            content = content.replace(/<\/p><p[^>]*>/img, '\n');
+            content = content.replace(/([\r\n]+)<p[^>]*>([\s\S]+?)<\/p>$/img, '$1$2');// remove p at the end preceeded with line break
+            content = content.replace(/([\s\S]+)<p[^>]*>([\s\S]+?)<\/p>$/img, '$1\n$2');// remove p at the end with line break
+            content = content.replace(/<p[^>]*>([\s\S]+?)<\/p>/gm, `$1\n`);// remove Editor's p instead of line breaks
+            content = content.replace(/<\/div><div>/gm, '')
+            content = content.replace(/<div[^>]*>([\s\S]+)<\/div>/img, '\n$1');// remove Editor's div instead of line breaks
+            content = content.replace(/<div>/gm, '')
+            content = content.replace(/<\/div>/gm, '\n')
+          }
         }
         content = content.replace(/<p[^>]*>([\s\S]*?)<br[^>]*><\/p>/gm, '<p>$1</p>');
         try {
