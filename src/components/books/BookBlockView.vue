@@ -2244,6 +2244,7 @@ Save audio changes and realign the Block?`,
             content+= cnt;
             this.block.setPartContent(idx, cnt);
           });
+          return content;
         }
         //console.log(content)
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
