@@ -2255,6 +2255,7 @@ Save audio changes and realign the Block?`,
               content = this.$refs.blocks[0].clearBlockContent();
             }
           }
+          return content;
         }
         //console.log(content)
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
