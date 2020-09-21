@@ -1759,6 +1759,7 @@ Save audio changes and realign the Block?`,
           content = content.replace(/<br\/?>/img, `\n`);
           if (/\r\n|\r|\n|<p[^>]*>|<div[^>]*>/.test(content)) {
             content = content.replace(/<p><br[\/]?><\/p>/gm, '\n');
+            content = content.replace(/<p>([\r\n]+)<\/p>/gm, '$1');
             content = content.replace(/<\/p><p[^>]*>/img, '\n');
             content = content.replace(/([\r\n]+)<p[^>]*>([\s\S]+?)<\/p>$/img, '$1$2');// remove p at the end preceeded with line break
             content = content.replace(/([\s\S]+)<p[^>]*>([\s\S]+?)<\/p>$/img, '$1\n$2');// remove p at the end with line break
