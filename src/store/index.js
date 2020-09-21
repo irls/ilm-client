@@ -1247,7 +1247,7 @@ export const store = new Vuex.Store({
             }
             if (data.block.blockid &&
                 state.audioTasksQueue.block.blockId &&
-                tate.audioTasksQueue.block.blockId === data.block.blockid &&
+                state.audioTasksQueue.block.blockId === data.block.blockid &&
                 state.audioTasksQueue.block.partIdx !== null) {
 
               if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
