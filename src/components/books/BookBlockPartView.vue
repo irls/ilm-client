@@ -1771,6 +1771,7 @@ Save audio changes and realign the Block?`,
           content = content.replace(/<div[^>]*>([\s\S]*?)<\/div>/img, '<br>$1');
         }
         try {
+          content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>$', 'gm'), '<br/>$1')//paragrapth not preceeded by list
           content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1<br>')//paragrapth not preceeded by list
           content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         } catch (e) {// Firefox does not support negative lookbehind
