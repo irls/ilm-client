@@ -1267,7 +1267,7 @@ export const store = new Vuex.Store({
                 }
               }
             }
-            if (data.action === 'insert' && data.block) {
+            if (data.action === 'create' && data.block) {
               if (!state.storeListO.get(data.block.id)) {
                 state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
               }
