@@ -1305,7 +1305,7 @@ export const store = new Vuex.Store({
               store.commit('set_storeList', new BookBlock(data.block));
             }
             state.storeListO.refresh();
-            //dispatch('tc_loadBookTask', state.currentBookid);
+            dispatch('tc_loadBookTask', state.currentBookid);
           }
         });
         state.liveDB.startWatch(bookid + '-task', 'task', {bookid: bookid}, (data) => {
@@ -2092,7 +2092,7 @@ export const store = new Vuex.Store({
           .then(response => {
             commit('clear_blocker', 'putBlock');
             dispatch('getCurrentJobInfo');
-            //dispatch('tc_loadBookTask', response.data.bookid);
+            dispatch('tc_loadBookTask', response.data.bookid);
             state.storeListO.updBlockByRid(response.data.id, {
               status: response.data.status
             });
