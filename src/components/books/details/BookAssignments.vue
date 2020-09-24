@@ -355,7 +355,7 @@
                         this.$root.$emit('book-reloaded');
                         this.getCurrentJobInfo()
                           .then(() => {
-                            console.log('this.currentBookCounters.not_marked_blocks,' this.currentBookCounters.not_marked_blocks);
+                            console.log('this.currentBookCounters.not_marked_blocks', this.currentBookCounters.not_marked_blocks);
                             if (this.currentBookCounters.not_marked_blocks === 0){
                               if (this.adminOrLibrarian){
                                 this.finishTextCleanup();
