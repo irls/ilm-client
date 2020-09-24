@@ -1951,7 +1951,7 @@ export const store = new Vuex.Store({
       return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', update)
         .then((response) => {
           commit('clear_blocker', 'putBlock');
-          //dispatch('tc_loadBookTask', block.bookid);
+          dispatch('tc_loadBookTask', block.bookid);
           dispatch('getCurrentJobInfo');
           return Promise.resolve(response.data);
         })
@@ -2075,7 +2075,7 @@ export const store = new Vuex.Store({
           .then(response => {
             commit('clear_blocker', 'putNumBlock');
             block._rev = response.data.rev;
-            //dispatch('tc_loadBookTask', block.bookid);
+            dispatch('tc_loadBookTask', block.bookid);
             dispatch('getCurrentJobInfo')
               .then(() => {
                 if (state.currentJobInfo && state.currentJobInfo.published) {
@@ -2111,7 +2111,7 @@ export const store = new Vuex.Store({
           .then(response => {
             commit('clear_blocker', 'putBlock');
             dispatch('getCurrentJobInfo');
-            //dispatch('tc_loadBookTask', response.data.bookid);
+            dispatch('tc_loadBookTask', response.data.bookid);
             state.storeListO.updBlockByRid(response.data.id, {
               status: response.data.status
             });
@@ -2273,7 +2273,7 @@ export const store = new Vuex.Store({
             }
             //state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": []};
             //if (state.replicatingDB.ilm_tasks !== true) {
-              //dispatch('tc_loadBookTask', task.bookid);
+              dispatch('tc_loadBookTask', task.bookid);
             //}
             //dispatch('getCurrentJobInfo');
             dispatch('getCurrentJobInfo');
