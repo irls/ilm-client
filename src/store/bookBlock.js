@@ -974,6 +974,12 @@ class BookBlock {
     }
     return false;
   }
+  
+  setPartContentChanged(partIdx, value) {
+    if (Array.isArray(this.parts) && this.parts[partIdx]) {
+      this.parts[partIdx].content_changed = value;
+    }
+  }
 }
 
 class FlagPart {

@@ -1955,6 +1955,9 @@ export const store = new Vuex.Store({
       };
       if (typeof partIdx !== 'undefined') {
         update.block.partIdx = partIdx;
+        if (typeof block.content_changed !== 'undefined') {
+          update.block.content_changed = block.content_changed;
+        }
       } else {
         update.block.parts = block.parts;
       }
@@ -3648,6 +3651,7 @@ export const store = new Vuex.Store({
               block.setPartAudiosrc(alignBlock.partIdx, part.audiosrc, part.audiosrc_ver);
               block.setPartManualBoundaries(alignBlock.partIdx, part.manual_boundaries || []);
               block.setPartAudiosrcOriginal(alignBlock.partIdx, part.audiosrc_original || null);
+              block.setPartContentChanged(alignBlock.partIdx, part.content_changed || false);
               block.isAudioChanged = false;
               //this.isChanged = false;
               block.parts[alignBlock.partIdx].isAudioChanged = false;

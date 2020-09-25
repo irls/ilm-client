@@ -535,11 +535,15 @@
                 <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Block audio URL</a>
               </h4>
             </div>
+            <div class="block-content-update-pending">
+              <span v-if="hasPendingContentChanges" class="block-content-update-pending">Block has not been updated yet with pending approval sub-block changes.</span>
+            </div>
             <div >{{blockHtmlHeader}}</div>
             <!-- <textarea :ref="'block-html' + block.blockid" :disabled="!adminOrLibrarian || isSplittedBlock" class="block-html"></textarea> -->
             <codemirror
               :ref="'block-html' + block.blockid" 
               :options="getCodeMirrorOptions()"
+              :class="[{'-disabled': !adminOrLibrarian || isSplittedBlock}]"
             />
             <div>&lt;/div&gt;</div>
           </tab>
@@ -548,8 +552,8 @@
               <!-- <textarea :ref="'block-part-' + blockPartIdx + '-html'" :disabled="!adminOrLibrarian" class="block-html"></textarea> -->
               <codemirror
                 :ref="'block-part-' + blockPartIdx + '-html'" 
-                :disabled="!adminOrLibrarian || isSplittedBlock"
                 :options="getCodeMirrorOptions(blockPartIdx)"
+                :class="[{'-disabled': !adminOrLibrarian}]"
               />
             </tab>
           </template>
@@ -560,7 +564,10 @@
       <div class="modal-footer">
         <textarea class="copy-block-html-content" ref="copy-block-html-content"></textarea>
         <button class="btn btn-primary copy-block-html" v-on:click="copyBlockHtml()">Copy</button>
-        <button class="btn btn-default" v-on:click="hideModal('block-html')">Close</button>
+        <button class="btn btn-default" v-on:click="hideModal('block-html')">
+          <template v-if="adminOrLibrarian">Cancel</template>
+          <template v-else>Close</template>
+        </button>
         <button class="btn btn-primary" v-on:click="setPartsHtml()" v-if="adminOrLibrarian">Save</button>
       </div>
     </div>
@@ -1201,6 +1208,15 @@ export default {
           let header = `<div id="${this.shortBlockid}" ${blockData}>`;
           return header;
         }
+      },
+      hasPendingContentChanges: {
+        get() {
+          let p = this.block.parts.find(bp => {
+            return bp.content_changed === true;
+          });
+          return p ? true : false;
+        },
+        cache: false
       }
   },
   mounted: function() {
@@ -1965,6 +1981,14 @@ Save audio changes and realign the Block?`,
                     fullUpdate = true;
                     partUpdate.footnotes = this.block.footnotes;
                     partUpdate.content = this.block.content;
+                    if (this.block.getIsSplittedBlock()) {
+                      this.block.parts.forEach(p => {
+                        if (p.footnote_added) {
+                          delete p.footnote_added;
+                          p.content_changed = true;
+                        }
+                      });
+                    }
                     break;
                   case 'footnotes_language':
                     fullUpdate = true;
@@ -2881,10 +2905,15 @@ Save text changes and realign the Block?`,
       delFootnote: function(pos, checkText = true) {
         if (checkText) {
           pos.forEach(p => {
-            let footnote = document.getElementById(this.block.blockid).querySelector(`[data-idx='${p+1}']`);
-            if (footnote) {
-              footnote.remove();
-            }
+            this.$refs.blocks.forEach(blk => {
+              let footnote = blk.$refs.blockContent.querySelector(`[data-idx='${p+1}']`);
+              if (footnote) {
+                footnote.remove();
+                if (this.isSplittedBlock) {
+                  this.block.parts[blk.blockPartIdx].footnote_added = true;
+                }
+              }
+            });
           })
         }
         this.updFootnotes();
@@ -2908,9 +2937,12 @@ Save text changes and realign the Block?`,
         let pos = 0;
         let idx = 0;
         this.$refs.blocks.forEach((blk) => {
-          blk.$refs.blockContent.querySelectorAll('[data-idx]').forEach(function(el) {
+          blk.$refs.blockContent.querySelectorAll('[data-idx]').forEach((el) => {
             if (el.getAttribute('data-idx') == c_pos) pos = idx;
             el.textContent = idx+1;
+            if (this.isSplittedBlock && parseInt(el.getAttribute('data-idx')) !== idx + 1) {
+              this.block.parts[blk.blockPartIdx].footnote_added = true;
+            }
             el.setAttribute('data-idx', idx+1);
             ++idx;
           });
@@ -4112,13 +4144,15 @@ Save text changes and realign the Block?`,
             } else {
               $(`#${this.block.blockid} .copy-block-html`).hide();
             }
-            Vue.nextTick(() => {
-              //this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.doc.setValue('<span>go-Doc-Start</span>');
-              //this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.doc.changeGeneration(true);
-              this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.focus();
-              this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.execCommand('goDocStart');
-              //console.log(this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror);
-            });
+            if (index > 0) {
+              Vue.nextTick(() => {
+                //this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.doc.setValue('<span>go-Doc-Start</span>');
+                //this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.doc.changeGeneration(true);
+                this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.focus();
+                this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.execCommand('goDocStart');
+                //console.log(this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror);
+              });
+            }
           })
         });
       },
@@ -4473,7 +4507,7 @@ Save text changes and realign the Block?`,
         this.hideModal('block-html');
       },
       copyBlockHtml() {
-        let content = this.$refs['block-html' + this.block.blockid].value;
+        let content = this.$refs['block-html' + this.block.blockid].codemirror.doc.getValue();
         let el = this.$refs['copy-block-html-content'];
         el.innerText = this.blockHtmlHeader + content + '</div>';
         el.select();
@@ -4488,7 +4522,7 @@ Save text changes and realign the Block?`,
           lineWrapping: true,
           readOnly: !this.adminOrLibrarian || (this.block.getIsSplittedBlock() && partIdx === null),
           direction: ['ar', 'fa'].indexOf(this.getBlockLang) === -1 ? 'ltr' : 'rtl',
-          pollInterval: 100000
+          //pollInterval: 50
         };
         //cmOptions.rtlMoveVisually = cmOptions.direction === 'rtl';
         return cmOptions;
@@ -5679,7 +5713,31 @@ Save text changes and realign the Block?`,
     .modal-body {
       overflow: visible;
       .CodeMirror-rtl, .CodeMirror-rtl * {
-        direction: rtl; 
+        /*direction: rtl; */
+        text-align: right;
+      }
+      .block-content-update-pending {
+        display: block;
+        color: red;
+        font-weight: bold;
+        float: left;
+        width: 100%;
+      }
+      /*.cm-tag, .cm-attribute, .cm-string, .cm-operator {
+        color: #dfdfdf;
+      }*/
+      .vue-codemirror {
+        &.-disabled {
+          .CodeMirror-wrap {
+            background-color: #f5f5f5;
+          }
+        }
+        .CodeMirror-wrap {
+          background-color: white;
+        }
+        /** {
+          color: #dfdfdf;
+        }*/
       }
     }
     .modal-footer {
