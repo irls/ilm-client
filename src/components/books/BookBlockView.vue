@@ -2239,11 +2239,23 @@ Save audio changes and realign the Block?`,
       clearBlockContent: function(content = false) {
         if (content === false) {
           content = '';
-          this.$refs.blocks.forEach((blk, idx) => {
-            let cnt = blk.clearBlockContent();
-            content+= cnt;
-            this.block.setPartContent(idx, cnt);
-          });
+          if (this.block.getIsSplittedBlock()) {
+            this.block.parts.forEach((bp, idx) => {
+              let ref = this.$refs.blocks.find((blk) => {
+                return blk.blockPartIdx === idx;
+              });
+              if (ref) {
+                let cnt = ref.clearBlockContent();
+                content+= cnt;
+                this.block.setPartContent(idx, cnt);
+              }
+            });
+          } else {
+            if (this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
+              content = this.$refs.blocks[0].clearBlockContent();
+              this.storeListById(this.block.blockid).setContent(content);
+            }
+          }
           return content;
         }
         //console.log(content)
