@@ -346,6 +346,22 @@ class BookBlocks {
     return false;
   }
 
+  has(blockId){
+    if (blockId && blockId.charAt) {
+      let rid;
+      if (blockId.charAt(0) == '#') { // Orient RID
+        rid = blockId;
+      } else {
+        rid = this.getRIdById(blockId);
+      }
+      if (rid && this.lookupList.hasOwnProperty(rid)) {
+        return true;
+      }
+    }
+    console.log('has not', blockId);
+    return false;
+  }
+
   getBlockByIdx(listIdx){
     let rId = this.listRIds[listIdx];
     return this.lookupList[rId];

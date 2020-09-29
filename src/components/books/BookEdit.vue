@@ -36,7 +36,7 @@
         v-for="(viewObj, blockIdx) in parlistO.idsViewArray()"
         v-bind:id="'s-'+ viewObj.blockId"
         v-bind:key="viewObj.blockId"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
-        <div class='col' v-if="parlist.has(viewObj.blockId)">
+        <div class='col' v-if="parlist.has(viewObj.blockId) && parlistO.has(viewObj.blockRid)">
           <BookBlockView ref="blocks"
               :block="parlist.get(viewObj.blockId)"
               :blockO="parlistO.get(viewObj.blockRid)"
