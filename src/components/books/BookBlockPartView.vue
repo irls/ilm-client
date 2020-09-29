@@ -715,6 +715,7 @@ export default {
           }
           let regExLetters = new RegExp(`[${lettersPattern}]`);
           let regExNewline = new RegExp(`[^\.\!\?\…\؟]<br[^>]*>[^${lettersPattern}]*$`);
+          let regExNewlineSpace = new RegExp(`[^\.\!\?\…\؟]\s+<br[^>]*>[^${lettersPattern}]*$`);
           //var regExLower = new RegExp('$([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])')
           let match;
           let shift = 0;
@@ -725,7 +726,7 @@ export default {
             //var substrLower = str.substring(match.index);
             //console.log(`CHECK "${substr}"`);
             //console.log('MATCH: ', substr.match(regExAbbr))
-            if (!substr.match(regExAbbr) && substr.match(regExLetters) && !substr.match(regExNewline)) {
+            if (!substr.match(regExAbbr) && substr.match(regExLetters) && (!substr.match(regExNewline) || !substr.match(regExNewlineSpace))) {
               parts.push(substr);
               shift = pos;
             }
