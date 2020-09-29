@@ -355,17 +355,17 @@
                         this.$root.$emit('book-reloaded');
                         this.getCurrentJobInfo()
                           .then(() => {
-                            console.log('this.currentBookCounters.not_marked_blocks', this.currentBookCounters.not_marked_blocks);
-                            if (this.currentBookCounters.not_marked_blocks === 0){
-                              if (this.adminOrLibrarian){
-                                this.finishTextCleanup();
+                            setTimeout(()=>{
+                              if (this.currentBookCounters.not_marked_blocks === 0){
+                                if (this.adminOrLibrarian){
+                                  this.finishTextCleanup();
+                                }
+                                this.textCleanupProcess = false;
+                              } else {
+                                this.isBatchProgress = false;
+                                this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id);
                               }
-                              this.textCleanupProcess = false;
-                            } else {
-                              this.isBatchProgress = false;
-                              this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id);
-                            }
-                            
+                            }, 3000);
                           })
                           .catch(console.error)
                       })
