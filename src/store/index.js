@@ -142,6 +142,7 @@ export const store = new Vuex.Store({
     blockSelection: {
       start: {},//block
       end: {},//block
+      refresh: false//for liveDB
     },
     alignCounter: {
       count: 0,
@@ -1305,6 +1306,7 @@ export const store = new Vuex.Store({
               store.commit('set_storeList', new BookBlock(data.block));
             }
             state.storeListO.refresh();
+            state.blockSelection.refresh = !state.blockSelection.refresh;
             //dispatch('tc_loadBookTask', state.currentBookid);
           }
         });
