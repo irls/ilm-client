@@ -1759,6 +1759,8 @@ Save audio changes and realign the Block?`,
         if (this.block && this.block.classes.whitespace && ['verse', 'pre', 'list'].indexOf(this.block.classes.whitespace) !== -1) {
           content = content.replace(/<br\/?>/img, `\n`);
           if (/\r\n|\r|\n|<p[^>]*>|<div[^>]*>/.test(content)) {
+            content = content.replace(/<p[^>]*><[^>]+>[\n]<\/[^>]+><\/p>/img, '<p>\n</p>');
+            content = content.replace(/[\r\n]<p[^>]*>[\n]<\/p>$/, '\n\n').replace(/<p[^>]*>[\n]<\/p>$/, '\n\n');// line break at the end of text
             content = content.replace(/<p><br[\/]?><\/p>/gm, '\n');
             content = content.replace(/<p>([\r\n]+)<\/p>/gm, '$1');
             content = content.replace(/<\/p><p[^>]*>/img, '\n');
@@ -1774,8 +1776,12 @@ Save audio changes and realign the Block?`,
           }
         }
         if (/<(p|div)[^>]*>/.test(content)) {
+          content = content.replace(/<p[^>]*><[^>]+><br\/?><\/[^>]+><\/p>/img, '<p><br></p>');
           content = content.replace(/<br\/?><p[^>]*><\/p>/gm, '<br>');
+          content = content.replace(/<br\/?><p[^>]*><br\/?><\/p>$/, '<br><br>');// end of block, after line break
+          content = content.replace(/<p[^>]*><br\/?><\/p>$/, '<br><br>');// end of block, need empty line after text
           content = content.replace(/<p[^>]*>([\s\S]*?)<br[^>]*><\/p>/gm, '<p>$1</p>').replace(/<div[^>]*>([\s\S]*?)<br\/?><\/div>/img, '<div>$1<\/div>');
+          content = content.replace(/<p[^>]*><\/p>/img, '<br>');
           content = content.replace(/<\/p><p[^>]*>/img, '<br>')/*.replace(/(<div[^>]*>)<p[^>]*><br\/?><\/p>/img, '$1')*/;
           content = content.replace(/<div[^>]*><w[^>]*><\/w><\/div>/mg, ''); // for aligned blocks editor creates empty <w></w> tags on line break adding
           content = content.replace(/<w[^>]*><\/w>/mg, '');
