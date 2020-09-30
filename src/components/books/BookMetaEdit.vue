@@ -800,6 +800,14 @@ export default {
         }
       }
     },
+    'blockSelection.refresh': {
+      handler(val, oldVal) {
+        if (val) {
+          //console.log('WATCH blockSelection.refresh', val, oldVal);
+          this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
+        }
+      }
+    },
     '$route': {
       handler(val) {
         //console.log('ROUTE CHANGE')
