@@ -543,6 +543,13 @@ export const store = new Vuex.Store({
         if (meta.publishedVersion === 'false') {
           meta.publishedVersion = false;
         }
+        if (meta.voices instanceof Object) {
+          Object.keys(meta.voices).forEach(k => {
+            if (k.indexOf('@') === 0) {// remove service parameters from voices object
+              delete meta.voices[k];
+            }
+          });
+        }
         if (!meta.voices || (meta.voices && Object.keys(meta.voices).length === 0)) {
           meta.voices = {
             'title': false,
