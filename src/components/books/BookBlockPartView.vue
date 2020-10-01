@@ -1756,6 +1756,7 @@ Save audio changes and realign the Block?`,
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
+        content = content.replace(/ style="[^"]*?"/img, '');// in some cases redactor adds styles
         if (this.block && this.block.classes.whitespace && ['verse', 'pre', 'list'].indexOf(this.block.classes.whitespace) !== -1) {
           content = content.replace(/<br\/?>/img, `\n`);
           if (/\r\n|\r|\n|<p[^>]*>|<div[^>]*>/.test(content)) {
