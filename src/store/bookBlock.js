@@ -35,7 +35,9 @@ let defBlock = [
   'blockid',
   'manual_boundaries',
   'parts',
-  'audiosrc_original'
+  'audiosrc_original',
+  'trimmed_silence',
+  'pause_before'
 ];
 
 let BlockTypes = {
@@ -330,6 +332,10 @@ class BookBlock {
     }
 
     this.audioHash = init.audioHash || null;
+    
+    this.trimmed_silence = init.trimmed_silence;
+    this.pause_before = init.pause_before;
+    this.sync_changes = init.sync_changes || [];// changes from synschronization
   }
 
   clean() {
@@ -973,6 +979,14 @@ class BookBlock {
       return true;
     }
     return false;
+  }
+  
+  setUpdated(val) {
+    this.updated = val;
+  }
+  
+  setPauseBefore(val) {
+    this.pause_before = val;
   }
 }
 

@@ -3929,6 +3929,9 @@ Save text changes and realign the Block?`,
                   this.getCurrentJobInfo();
                   this.getAlignCount();
                   this.$root.$emit('bookBlocksUpdates', response.data);
+                  if (this.isChecked) {
+                    this.$root.$emit('from-block-edit:set-style');// voicework update may cause style settings
+                  }
                   this.setCurrentBookBlocksLeft(this.block.bookid);
                 }
               }
@@ -4650,6 +4653,21 @@ Save text changes and realign the Block?`,
             })
           }
         }
+      },
+      'block.sync_changes': {// changes from syncronization
+        handler(val) {
+          //console.log(val); 
+          if (Array.isArray(val) && val.length > 0 && this.isChecked) {
+            let recollect = val.some((el) => {
+              return ['pause_before', 'classes'].indexOf(el) !== -1;
+            });
+            if (recollect) {
+              this.$root.$emit('from-block-edit:set-style');
+            }
+          }
+          this.block.sync_changes = [];
+        },
+        deep: true
       }
 
   }

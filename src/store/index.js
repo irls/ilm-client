@@ -1240,8 +1240,8 @@ export const store = new Vuex.Store({
         state.liveDB.startWatch(bookid, 'blockV', {bookid: bookid}, (data) => {
           if (data && data.block) {
             //state.storeListO.delBlock(data.block);
+            let blockStore = state.storeList.get(data.block.blockid);
             if (state.audioTasksQueue.block.blockId && state.audioTasksQueue.block.blockId === data.block.blockid && state.audioTasksQueue.block.partIdx !== null) {
-              let blockStore = state.storeList.get(data.block.blockid);
               if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
                 blockStore.parts.forEach((p, i) => {
                   if (p.isAudioChanged) {
@@ -1263,7 +1263,6 @@ export const store = new Vuex.Store({
                 state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
               }
             } else if (data.action === 'change' && data.block) {
-              let blockStore = state.storeList.get(data.block.blockid);
               if (blockStore) {
                 let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
                   return p.isChanged;
@@ -1272,6 +1271,13 @@ export const store = new Vuex.Store({
                   //console.log('isSaving hasChangedPart');
                   return;
                 }
+                let changes = [];// collect changes
+                ['classes', 'pause_before']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
+                  if (blockStore.hasOwnProperty(k) && !_.isEqual(blockStore[k], data.block[k])) {
+                    changes.push(k);
+                  }
+                });
+                data.block.sync_changes = changes;
               }
               state.storeListO.updBlockByRid(data.block.id, data.block);
             } else if (data.action === 'delete') {
@@ -3757,6 +3763,31 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    setPauseBefore({state}, [blockType, value]) {
+      if (state.blockSelection.start._id && state.blockSelection.end._id) {
+        return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/pause_before`, {
+          start_id: state.blockSelection.start._id,
+          end_id: state.blockSelection.end._id,
+          block_type: blockType,
+          value: value === 'none' ? null : value
+        })
+          .then((response) => {
+            if (Array.isArray(response.data)) {
+              response.data.forEach(b => {
+                let block = state.storeList.get(b.blockid);
+                if (block) {
+                  block.setUpdated(b.updated);
+                  block.setPauseBefore(b.pause_before);
+                }
+              });
+            }
+            return Promise.resolve();
+          })
+          .catch(err => {
+            
+          });
+      }
     }
   }
 })
