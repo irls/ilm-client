@@ -1,6 +1,11 @@
 import io from 'socket.io-client';
 
-const socket = io(process.env.LIVE_QUERY_URL);
+const socket = io(
+  process.env.LIVE_QUERY_URL,
+  {
+    timeout: 50000
+  });
+
 let connection_attempts = 0;
 let max_connection_attempts = 5;
 socket.on('reconnect_error', () => {
