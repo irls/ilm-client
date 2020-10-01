@@ -1155,7 +1155,14 @@ export default {
                 blockLang: blockLang,
                 extensions: extensions,
                 disableEditing: !this.allowEditing,
-              imageDragging: false
+                imageDragging: false,
+                spellcheck: false
+            });
+            this.editor.subscribe('editableInput', (event, target) => {
+              //console.log(event, target);
+              if (event.inputType === 'formatItalic') {
+                this.$refs.blockContent.innerHTML = this.$refs.blockContent.innerHTML.replace(/<span class="pin"><\/span>/img, '<i class="pin"></i>');// adding italic replaces split positions
+              }
             });
           } else if (this.tc_isNarrationEnabled(this.block._id) && this.mode === 'narrate') {
             extensions = {
@@ -1464,13 +1471,18 @@ Save audio changes and realign the Block?`,
                 handler: () => {
                   this.$root.$emit('hide-modal');
                   //let preparedData = {audiosrc: this.block.getPartAudiosrc(this.blockPartIdx, null, false), content: this.clearBlockContent()};
-                  this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+                  let oldContent = this.clearBlockContent();
+                  this.block.setPartContent(this.blockPartIdx, oldContent);
                   let isSplitting = this.hasChange('split_point');
                   let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
                     return b.isAudioEditing;
                   }) : false;
                   return this.assembleBlockPartAudioEdit(false, {})
                     .then(() => {
+                      if (isSplitting) {
+                        this.block.setPartContent(this.blockPartIdx, oldContent);
+                        this.$refs.blockContent.innerHTML = oldContent;
+                      }
                       return this.assembleBlockProxy(false, true, false)
                       .then(() => {
                         if (isSplitting && isAudioEditorOpened) {
@@ -3101,6 +3113,9 @@ Save text changes and realign the Block?`,
         this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         return this.applyTasksQueue([null])
           .then(() => {
+            if (isSplitting && this.needsRealignment) {
+              preparedData.content = (preparedData.content ? preparedData.content : this.block.getPartContent(this.blockPartIdx)).replace(/<i class="pin"><\/i>/img, '');
+            }
             return this.saveBlockAudio([realign, preparedData])
           })
           .then((response) => {
@@ -3505,7 +3520,18 @@ Save text changes and realign the Block?`,
             if (typeof container.length == 'undefined') {
               return false;
             }
-            if (this.range.startOffset === 0) {
+            let checkRange = document.createRange();
+            checkRange.setStart( container, this.range.startOffset );
+            if (this.range.startOffset > 0) {
+              checkRange.setStart(container, this.range.startOffset - 1);
+              //let checkString = checkRange.toString();
+              if (checkRange.startOffset > 0 && /^\s$/.test(checkRange.toString())) {//  && checkString.substring(checkString.length - 1, checkString.length) === ' ' container.data.substring(checkRange.endOffset, checkRange.endOffset + 1) === ' '
+                while (checkRange.startOffset > 0 && /^\s$/.test(container.data.substring(checkRange.startOffset, checkRange.startOffset - 1))) {// add all speces till container beginning to range
+                  checkRange.setStart( container, checkRange.startOffset-1 );
+                }
+              }
+            }
+            if (checkRange.startOffset === 0 && /^[\s]*$/.test(checkRange.toString())) {// click at the beginning of the block
               if (!(container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.previousSibling)) {
                 return false;
               }
@@ -3545,20 +3571,15 @@ Save text changes and realign the Block?`,
               }
             }
             //console.log(container.previousElementSibling, container.previousSibling, this.range);
-            let checkRange = document.createRange();
             let regexp = null;
             //console.log(container, container.length, this.range.endOffset);
-            checkRange.setStart( container, this.range.startOffset );
-            if (this.range.startOffset > 0) {
-              checkRange.setStart(container, this.range.startOffset - 1);
-            }
             if (!isMac) {
               let wordString = `a-zA-Zа-яА-Я0-9À-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ\\ufdfa\\’"\\?\\!\\:\\;\\.\\\\,\\/\\<\\>\\'\\*\\‒\\|“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…`;
               regexp = skipLengthCheck ? /^(\S+)|(\s+)$/i : new RegExp(`^([${wordString}]+[^${wordString}]+[${wordString}]*)|([^${wordString}]+[${wordString}]+)|(\\s+)$`, 'i');
               checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
               let checkString = checkRange.toString();
-              if (checkString.substring(checkString.length - 1, checkString.length) === ' ') {
-                while (checkRange.endOffset < container.length && container.data.substring(checkRange.endOffset, checkRange.endOffset + 1) === ' ') {// add all speces till container end to range
+              if (/^\s$/.test(checkString.substring(checkString.length - 1, checkString.length))) {
+                while (checkRange.endOffset < container.length && /^\s$/.test(container.data.substring(checkRange.endOffset, checkRange.endOffset + 1))) {// add all speces till container end to range
                   checkRange.setEnd( container, checkRange.endOffset+1 );
                 }
               }

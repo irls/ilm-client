@@ -2359,6 +2359,9 @@ Save text changes and realign the Block?`,
           }*/
           //this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
           let isSplitting = this.hasChange('split_point');
+          if (isSplitting && this.needsRealignment) {
+            preparedData.content = (preparedData.content ? preparedData.content : this.block.content).replace(/<i class="pin"><\/i>/img, '');
+          }
           return this.saveBlockAudio([realign, preparedData])
             .then(response => {
               //this.isSaving = false;
@@ -3422,6 +3425,9 @@ Save text changes and realign the Block?`,
           //}
           this.$root.$emit('from-block-edit:set-style');
           if (['type'].indexOf(type) !== -1) {
+            if (!this.block.getIsSplittedBlock()) {
+              this.block.content = this.$refs.blocks[0].clearBlockContent();
+            }
             this.$forceUpdate();
           }
           if (type === 'type' && event && event.target) {

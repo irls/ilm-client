@@ -1929,7 +1929,11 @@ Save text changes and realign the Block?`,
                     return Promise.resolve();
                   }
                   if (blk.isChanged) {
-                    return this.saveBlockAudioChanges(false, {content: refContainer.clearBlockContent()})
+                    let preparedContent = refContainer.clearBlockContent();
+                    if (refContainer.$parent.hasChange('split_point') && refContainer.needsRealignment) {
+                      preparedContent = preparedContent.replace(/<i class="pin"><\/i>/img, '');
+                    }
+                    return this.saveBlockAudioChanges(false, {content: preparedContent})
                       .then((part) => {
                         refContainer.reloadBlockPart();
                         if (part) {
@@ -1945,10 +1949,20 @@ Save text changes and realign the Block?`,
                         }
                       });
                   } else {
-                    let preparedData = {content: refContainer.clearBlockContent()}
-                    return this.saveBlockAudioChanges(false, {})
+                    //let preparedData = {content: refContainer.clearBlockContent()}
+                    let preparedContent = {};
+                    let oldContent = '';
+                    if (refContainer.hasChange('split_point') && refContainer.needsRealignment) {
+                      oldContent = refContainer.clearBlockContent();
+                      preparedContent.content = oldContent.replace(/<i class="pin"><\/i>/img, '');
+                    }
+                    return this.saveBlockAudioChanges(false, preparedContent)
                       .then(() => {
                         refContainer.reloadBlockPart();
+                        if (oldContent) {
+                          blk.setPartContent(this.audioTasksQueue.block.partIdx, oldContent);
+                          refContainer.$refs.blockContent.innerHTML = oldContent;
+                        }
                         return refContainer.assembleBlockProxy(false, true, false);
                       });
                   }
@@ -1979,7 +1993,7 @@ Save text changes and realign the Block?`,
               return Promise.resolve(true);
             } else {
               let part = isSplitted ? response.data.parts[this.audioTasksQueue.block.partIdx] : response.data;
-              if (part && (!refContainer || !refContainer.hasChange('split_point'))) {
+              if (part && !((refContainer && refContainer.hasChange('split_point')) || (refContainer && refContainer.$parent.hasChange && refContainer.$parent.hasChange('split_point')))) {
                 part._id = this.audioTasksQueue.block.checkId;
                 part.blockid = this.audioTasksQueue.block.blockId;
                 part.partIdx = this.audioTasksQueue.block.partIdx;
