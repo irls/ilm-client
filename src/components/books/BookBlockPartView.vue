@@ -715,6 +715,7 @@ export default {
           }
           let regExLetters = new RegExp(`[${lettersPattern}]`);
           let regExNewline = new RegExp(`[^\.\!\?\…\؟]<br[^>]*>[^${lettersPattern}]*$`);
+          let regExNewlineSpace = new RegExp(`[^\.\!\?\…\؟]\s+<br[^>]*>[^${lettersPattern}]*$`);
           //var regExLower = new RegExp('$([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])')
           let match;
           let shift = 0;
@@ -725,7 +726,7 @@ export default {
             //var substrLower = str.substring(match.index);
             //console.log(`CHECK "${substr}"`);
             //console.log('MATCH: ', substr.match(regExAbbr))
-            if (!substr.match(regExAbbr) && substr.match(regExLetters) && !substr.match(regExNewline)) {
+            if (!substr.match(regExAbbr) && substr.match(regExLetters) && (!substr.match(regExNewline) || !substr.match(regExNewlineSpace))) {
               parts.push(substr);
               shift = pos;
             }
@@ -1758,16 +1759,44 @@ Save audio changes and realign the Block?`,
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
-        if (/\r\n|\r|\n/.test(content) && this.block && this.block.classes.whitespace && ['verse', 'pre', 'list'].indexOf(this.block.classes.whitespace) !== -1) {
-          content = content.replace(/<p><br[\/]?><\/p>/gm, '\n');
-          content = content.replace(/<p[^>]*>([\s\S]+?)<\/p>([\s\S]+?)/gm, `$1\n$2`)// remove Editor's p instead of line breaks
-          content = content.replace(/<\/div><div>/gm, '')
-          content = content.replace(/<div>/gm, '')
-          content = content.replace(/<\/div>/gm, '\n')
+        content = content.replace(/ style="[^"]*?"/img, '');// in some cases redactor adds styles
+        if (this.block && this.block.classes.whitespace && ['verse', 'pre', 'list'].indexOf(this.block.classes.whitespace) !== -1) {
+          content = content.replace(/<br\/?>/img, `\n`);
+          if (/\r\n|\r|\n|<p[^>]*>|<div[^>]*>/.test(content)) {
+            content = content.replace(/<p[^>]*><[^>]+>[\n]<\/[^>]+><\/p>/img, '<p>\n</p>');
+            content = content.replace(/[\r\n]<p[^>]*>[\n]<\/p>$/, '\n\n').replace(/<p[^>]*>[\n]<\/p>$/, '\n\n');// line break at the end of text
+            content = content.replace(/<p><br[\/]?><\/p>/gm, '\n');
+            content = content.replace(/<p>([\r\n]+)<\/p>/gm, '$1');
+            content = content.replace(/<\/p><p[^>]*>/img, '\n');
+            content = content.replace(/([\r\n]+)<p[^>]*>([\s\S]+?)<\/p>$/img, '$1$2');// remove p at the end preceeded with line break
+            content = content.replace(/([\s\S]+)<p[^>]*>([\s\S]+?)<\/p>$/img, '$1\n$2');// remove p at the end with line break
+            content = content.replace(/^<p[^>]*>([\s\S]+?)<\/p>$/, '$1');// content wrapped with p
+            content = content.replace(/<p[^>]*>([\s\S]+?)<\/p>/gm, `$1\n`);// remove Editor's p instead of line breaks
+            content = content.replace(/<\/div><div>/gm, '\n');
+            content = content.replace(/^<div[^>]*>([\s\S]+?)<\/div>$/, '$1');// content wrapped with div
+            content = content.replace(/<div[^>]*>([\s\S]+)<\/div>/img, '\n$1');// remove Editor's div instead of line breaks
+            content = content.replace(/<div>/gm, '')
+            content = content.replace(/<\/div>/gm, '\n')
+          }
         }
-        content = content.replace(/<p[^>]*>([\s\S]*?)<br[^>]*><\/p>/gm, '<p>$1</p>');
+        if (/<(p|div)[^>]*>/.test(content)) {
+          content = content.replace(/<p[^>]*><[^>]+><br\/?><\/[^>]+><\/p>/img, '<p><br></p>');
+          content = content.replace(/<br\/?><p[^>]*><\/p>/gm, '<br>');
+          content = content.replace(/<br\/?><p[^>]*><br\/?><\/p>$/, '<br><br>');// end of block, after line break
+          content = content.replace(/<p[^>]*><br\/?><\/p>$/, '<br><br>');// end of block, need empty line after text
+          content = content.replace(/<p[^>]*>([\s\S]*?)<br[^>]*><\/p>/gm, '<p>$1</p>').replace(/<div[^>]*>([\s\S]*?)<br\/?><\/div>/img, '<div>$1<\/div>');
+          content = content.replace(/<p[^>]*><\/p>/img, '<br>');
+          content = content.replace(/<\/p><p[^>]*>/img, '<br>')/*.replace(/(<div[^>]*>)<p[^>]*><br\/?><\/p>/img, '$1')*/;
+          content = content.replace(/<div[^>]*><w[^>]*><\/w><\/div>/mg, ''); // for aligned blocks editor creates empty <w></w> tags on line break adding
+          content = content.replace(/<w[^>]*><\/w>/mg, '');
+          content = content.replace(/(<br\/?>)<div[^>]*><p[^>]*>([\s\S]*?)<\/p>([\s\S]*?)<\/div>/img, '$1$2<br>$3');
+          content = content.replace(/<div[^>]*><p[^>]*>([\s\S]*?)<\/p><\/div>$/img, '<br>$1');
+          content = content.replace(/<div[^>]*><p[^>]*>([\s\S]*?)<\/p>([\s\S]*?)<\/div>/img, '<br>$1<br>$2');
+          content = content.replace(/<div[^>]*>([\s\S]*?)<\/div>/img, '<br>$1');
+        }
         try {
-          content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
+          content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>([\\s\\S]+?)', 'gm'), '<br/>$1<br>$2')//paragrapth not preceeded by list
+          content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>(<\\/div>)?$', 'gm'), '<br/>$1')//paragrapth not preceeded by list, at the end of the block
           content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         } catch (e) {// Firefox does not support negative lookbehind
 
@@ -1775,8 +1804,9 @@ Save audio changes and realign the Block?`,
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
         content = content.replace(/<span[^>]*>([\s\S]*?)<\/span>/gm, '$1')
-        content = content.replace(/<br[\/]?><br[\/]?>/gm, '<br>');
-        content = content.replace(/^<br[\/]?>/, '');
+        //content = content.replace(/<br[\/]?><br[\/]?>/gm, '<br>');
+        //content = content.replace(/^<br[\/]?>/, '');
+        //console.log(content);
         return content;
       },
 
