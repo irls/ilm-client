@@ -309,7 +309,7 @@ import Vue from 'vue'
 import moment from 'moment'
 import { mapGetters, mapActions, mapMutations }    from 'vuex'
 import {  QuoteButton, QuotePreview,
-          SuggestButton, SuggestPreview
+          SuggestButton, SuggestPreview, MediumEditor
         } from '../generic/ExtMediumEditor';
 import _                  from 'lodash'
 import ReadAlong          from 'readalong'
