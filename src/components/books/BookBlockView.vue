@@ -4109,7 +4109,7 @@ Save text changes and realign the Block?`,
           content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
         }
         content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
-        
+       
         this.$refs['block-html' + this.block.blockid].codemirror.doc.setValue(content);
         if (this.block.getIsSplittedBlock()) {
           this.block.parts.forEach((p, pIdx) => {
@@ -4518,11 +4518,22 @@ Save text changes and realign the Block?`,
       getCodeMirrorOptions(partIdx = null) {
         let cmOptions = {
           mode: 'text/html',
+          //mode: 'text/x-ceylon',
           theme: 'base16-light',
           lineWrapping: true,
           readOnly: !this.adminOrLibrarian || (this.block.getIsSplittedBlock() && partIdx === null),
           direction: ['ar', 'fa'].indexOf(this.getBlockLang) === -1 ? 'ltr' : 'rtl',
           //pollInterval: 50
+          //htmlMode: true,
+          specialChars: /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\ufeff\ufff9-\ufffc\=]/,
+          specialCharPlaceholder: (char) => {
+            let el = document.createElement('span');
+            el.classList.add('cm-operator');
+            if (char === '=') {
+              el.innerHTML = `=`;
+            }
+            return el;
+          }
         };
         //cmOptions.rtlMoveVisually = cmOptions.direction === 'rtl';
         return cmOptions;
@@ -5723,9 +5734,9 @@ Save text changes and realign the Block?`,
         float: left;
         width: 100%;
       }
-      /*.cm-tag, .cm-attribute, .cm-string, .cm-operator {
-        color: #dfdfdf;
-      }*/
+      .cm-tag, .cm-attribute, .cm-string, .cm-operator {
+        color: #bfbfbf;
+      }
       .vue-codemirror {
         &.-disabled {
           .CodeMirror-wrap {
@@ -5737,6 +5748,11 @@ Save text changes and realign the Block?`,
         }
         /** {
           color: #dfdfdf;
+        }*/
+        /*.CodeMirror-code {
+          * {
+            color: gray;
+          }
         }*/
       }
     }
