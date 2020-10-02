@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 const socket = io(
   process.env.LIVE_QUERY_URL,
   {
-    timeout: 50000
+    timeout: 100000
   });
 
 let connection_attempts = 0;
