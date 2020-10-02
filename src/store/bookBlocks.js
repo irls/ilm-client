@@ -346,6 +346,22 @@ class BookBlocks {
     return false;
   }
 
+  has(blockId){
+    if (blockId && blockId.charAt) {
+      let rid;
+      if (blockId.charAt(0) == '#') { // Orient RID
+        rid = blockId;
+      } else {
+        rid = this.getRIdById(blockId);
+      }
+      if (rid && this.lookupList.hasOwnProperty(rid)) {
+        return true;
+      }
+    }
+    console.log('has not', blockId);
+    return false;
+  }
+
   getBlockByIdx(listIdx){
     let rId = this.listRIds[listIdx];
     return this.lookupList[rId];
@@ -501,9 +517,10 @@ class BookBlocks {
   }
 
   delBlock(block) {
-    block.rid = block['@rid'];
-    block.in = block.in[0];
-    block.out = block.out[0];
+    console.log('delBlock', block);
+    block.rid = block.rid || block['@rid'];
+    block.in = block.in || block.in[0];
+    block.out = block.out || block.out[0];
     if (this.lookupList.hasOwnProperty(block.rid)) {
       let listIdsIdx = this.listIds.indexOf(block.blockid);
       let listRIdsIdx = this.listRIds.indexOf(block.rid);
@@ -536,6 +553,14 @@ class BookBlocks {
       }
     }
     return this.startId;
+  }
+
+  delExistsBlock(rid) {
+    if (this.lookupList.hasOwnProperty(rid)) {
+      console.log('delExistsBlock', this.lookupList[rid]);
+      let block = this.lookupList[rid];
+      this.delBlock(block);
+    }
   }
 
   addBlock(block) {

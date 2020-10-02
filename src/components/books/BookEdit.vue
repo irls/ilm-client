@@ -36,7 +36,7 @@
         v-for="(viewObj, blockIdx) in parlistO.idsViewArray()"
         v-bind:id="'s-'+ viewObj.blockId"
         v-bind:key="viewObj.blockId"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
-        <div class='col' v-if="parlist.has(viewObj.blockId)">
+        <div class='col' v-if="parlist.has(viewObj.blockId) && parlistO.has(viewObj.blockRid)">
           <BookBlockView ref="blocks"
               :block="parlist.get(viewObj.blockId)"
               :blockO="parlistO.get(viewObj.blockRid)"
@@ -261,6 +261,7 @@ export default {
       this.$store.state.liveDB.stopWatch('metaV');
       this.$store.state.liveDB.stopWatch('job');
       this.$store.state.liveDB.stopWatch('blockV');
+      this.$store.state.liveDB.stopWatch('task');
     },
     refreshTmpl() {
       // a hack to update template
@@ -2082,8 +2083,8 @@ Save text changes and realign the Block?`,
               }
               manual_boundaries = null;
               block.setPartContent(this.audioTasksQueue.block.partIdx || 0, contentContainer.innerHTML);
-              block.setPartAudiosrc(this.audioTasksQueue.block.partIdx || 0, 
-                this.audioTasksQueue.block.partIdx === null ? block.getAudiosrc(null, false) : block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, null, false), 
+              block.setPartAudiosrc(this.audioTasksQueue.block.partIdx || 0,
+                this.audioTasksQueue.block.partIdx === null ? block.getAudiosrc(null, false) : block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, null, false),
                 {m4a: this.audioTasksQueue.block.partIdx === null ? block.getAudiosrc('m4a', false) : block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a', false)});
               if (refContainer) {
                 refContainer.blockPart.content = contentContainer.innerHTML;
@@ -2254,8 +2255,8 @@ Save text changes and realign the Block?`,
           }
           manual_boundaries = null;
           block.setPartContent(isBlockPart ? audioQueueBlock.partIdx : 0, contentContainer.innerHTML);
-          block.setPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 
-            isBlockPart ? block.getPartAudiosrc(audioQueueBlock.partIdx, null, false) : block.getAudiosrc(null, false), 
+          block.setPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0,
+            isBlockPart ? block.getPartAudiosrc(audioQueueBlock.partIdx, null, false) : block.getAudiosrc(null, false),
             {m4a: isBlockPart ? block.getPartAudiosrc(audioQueueBlock.partIdx, 'm4a', false) : block.getAudiosrc('m4a', false)});
           if (refContainer) {
             refContainer.blockPart.content = contentContainer.innerHTML;
@@ -2312,8 +2313,8 @@ Save text changes and realign the Block?`,
           //this.blockPart.content = this.$refs.blockContent.innerHTML;
           //this.blockAudio.map = this.blockPart.content;
           block.setPartContent(isBlockPart ? audioQueueBlock.partIdx : 0, blockPart.content);
-          block.setPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 
-            block.getPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, null, false), 
+          block.setPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0,
+            block.getPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, null, false),
             {m4a: block.getPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 'm4a', false)});
           let changed = oldBoundaries.length > blockPart.manual_boundaries.length ? true : false;
           if (changed) {
@@ -3233,12 +3234,12 @@ i.pin {
 }
 div.merge-subblocks {
    /*background-image: url(/static/merge-blocks.svg); */
-   width: 20px; 
-   height: 24px; 
+   width: 20px;
+   height: 24px;
    /*background-size: 20px; */
-   background-repeat: no-repeat; 
-   background-color: gray; 
-   -webkit-mask-image: url(/static/merge-blocks.svg); 
+   background-repeat: no-repeat;
+   background-color: gray;
+   -webkit-mask-image: url(/static/merge-blocks.svg);
    mask-image: url(/static/merge-blocks.svg);
    cursor: pointer;
 }
