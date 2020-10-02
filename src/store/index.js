@@ -3801,6 +3801,7 @@ export const store = new Vuex.Store({
                 if (block) {
                   block.setUpdated(b.updated);
                   block.setPauseBefore(b.pause_before);
+                  block.status.marked = b.status.marked;
                 }
               });
             }
