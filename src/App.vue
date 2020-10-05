@@ -61,6 +61,7 @@ export default {
       this.$store.state.liveDB.stopWatch('metaV');
       this.$store.state.liveDB.stopWatch('job');
       this.$store.state.liveDB.stopWatch('blockV');
+      this.$store.state.liveDB.stopWatch('task');
     },
   },
   beforeDestroy () {

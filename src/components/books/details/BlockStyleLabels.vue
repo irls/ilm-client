@@ -39,7 +39,7 @@
     methods: {
       selectStyle(blockType, styleKey, sVal) {
         //console.log('selectStyle', blockType, styleKey, sVal);
-        if (!this.parseStyle(this.styleTabs.get(blockType), styleKey).has(sVal.length?sVal:'none')) {
+        if (!this.parseStyle(this.styleTabs.get(blockType), styleKey).has(sVal.length?sVal:'none') || this.parseStyle(this.styleTabs.get(blockType), styleKey).size > 1) {
           this.$emit('selectStyleEv', blockType, styleKey, sVal);
         }
       },
@@ -106,6 +106,14 @@
           margin-inline-end: 20px;
           .block-style-label {
             float: none;
+            width: auto;
+          }
+        }
+      }
+      &.block-pause-fieldset {
+        .block-style-label {
+          width: 22%;
+          &:last-child {
             width: auto;
           }
         }

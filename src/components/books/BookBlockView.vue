@@ -2239,11 +2239,24 @@ Save audio changes and realign the Block?`,
       clearBlockContent: function(content = false) {
         if (content === false) {
           content = '';
-          this.$refs.blocks.forEach((blk, idx) => {
-            let cnt = blk.clearBlockContent();
-            content+= cnt;
-            this.block.setPartContent(idx, cnt);
-          });
+          if (this.block.getIsSplittedBlock()) {
+            this.block.parts.forEach((bp, idx) => {
+              let ref = this.$refs.blocks.find((blk) => {
+                return blk.blockPartIdx === idx;
+              });
+              if (ref) {
+                let cnt = ref.clearBlockContent();
+                content+= cnt;
+                this.block.setPartContent(idx, cnt);
+              }
+            });
+          } else {
+            if (this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
+              content = this.$refs.blocks[0].clearBlockContent();
+              this.storeListById(this.block.blockid).setContent(content);
+            }
+          }
+          return content;
         }
         //console.log(content)
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
@@ -2252,16 +2265,38 @@ Save audio changes and realign the Block?`,
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
-        if (/\r\n|\r|\n/.test(content) && this.block && this.block.classes.whitespace && ['verse', 'pre', 'list'].indexOf(this.block.classes.whitespace) !== -1) {
-          content = content.replace(/<p><br[\/]?><\/p>/gm, '\n');
-          content = content.replace(/<p[^>]*>([\s\S]+?)<\/p>([\s\S]+?)/gm, `$1\n$2`)// remove Editor's p instead of line breaks
-          content = content.replace(/<\/div><div>/gm, '')
-          content = content.replace(/<div>/gm, '')
-          content = content.replace(/<\/div>/gm, '\n')
+        content = content.replace(/<\!\-\-[\s\S]+?\-\-\>/mg, '');
+        if (this.block && this.block.classes.whitespace && ['verse', 'pre', 'list'].indexOf(this.block.classes.whitespace) !== -1) {
+          content = content.replace(/<br\/?>/img, `\n`);
+          if (/\r\n|\r|\n|<p[^>]*>|<div[^>]*>/.test(content)) {
+            content = content.replace(/<p><br[\/]?><\/p>/gm, '\n');
+            content = content.replace(/<p>([\r\n]+)<\/p>/gm, '$1');
+            content = content.replace(/<\/p><p[^>]*>/img, '\n');
+            content = content.replace(/([\r\n]+)<p[^>]*>([\s\S]+?)<\/p>$/img, '$1$2');// remove p at the end preceeded with line break
+            content = content.replace(/([\s\S]+)<p[^>]*>([\s\S]+?)<\/p>$/img, '$1\n$2');// remove p at the end with line break
+            content = content.replace(/^<p[^>]*>([\s\S]+?)<\/p>$/, '$1');// content wrapped with p
+            content = content.replace(/<p[^>]*>([\s\S]+?)<\/p>/gm, `$1\n`);// remove Editor's p instead of line breaks
+            content = content.replace(/<\/div><div>/gm, '\n');
+            content = content.replace(/^<div[^>]*>([\s\S]+?)<\/div>$/, '$1');// content wrapped with div
+            content = content.replace(/<div[^>]*>([\s\S]+)<\/div>/img, '\n$1');// remove Editor's div instead of line breaks
+            content = content.replace(/<div>/gm, '')
+            content = content.replace(/<\/div>/gm, '\n')
+          }
         }
-        content = content.replace(/<p[^>]*>([\s\S]*?)<br[^>]*><\/p>/, '<p>$1</p>');
+        if (/<(p|div)[^>]*>/.test(content)) {
+          content = content.replace(/[\r\n]/mg, '');
+          content = content.replace(/<br\/?><p[^>]*><\/p>/gm, '<br>');
+          content = content.replace(/<br\/?>(<p[^>]*>[\s\S]*?<\/p>)/gm, '$1');
+          content = content.replace(/<p[^>]*>([\s\S]*?)<br[^>]*><\/p>/gm, '<p>$1</p>').replace(/<div[^>]*>([\s\S]*?)<br\/?><\/div>/img, '<div>$1<\/div>');
+          content = content.replace(/<\/p><p[^>]*>/img, '<br>')/*.replace(/(<div[^>]*>)<p[^>]*><br\/?><\/p>/img, '$1')*/;
+          content = content.replace(/(<br\/?>)<div[^>]*><p[^>]*>([\s\S]*?)<\/p>([\s\S]*?)<\/div>/img, '$1$2<br>$3');
+          content = content.replace(/<div[^>]*><p[^>]*>([\s\S]*?)<\/p><\/div>$/img, '<br>$1');
+          content = content.replace(/<div[^>]*><p[^>]*>([\s\S]*?)<\/p>([\s\S]*?)<\/div>/img, '<br>$1<br>$2');
+          content = content.replace(/<div[^>]*>([\s\S]*?)<\/div>/img, '<br>$1');
+        }
         try {
-          content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
+          content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>([\\s\\S]+?)', 'gm'), '<br/>$1<br>$2')//paragrapth not preceeded by list
+          content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>(<\\/div>)?$', 'gm'), '<br/>$1')//paragrapth not preceeded by list, at the end of the block
           content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         } catch (e) {// Firefox does not support negative lookbehind
 
@@ -2269,8 +2304,6 @@ Save audio changes and realign the Block?`,
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
         content = content.replace(/<span[^>]*>([\s\S]*?)<\/span>/gm, '$1')
-        content = content.replace(/<br[\/]?><br[\/]?>/gm, '<br>');
-        content = content.replace(/^<br[\/]?>/, '');
         return content;
       },
 
@@ -2359,6 +2392,9 @@ Save text changes and realign the Block?`,
           }*/
           //this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
           let isSplitting = this.hasChange('split_point');
+          if (isSplitting && this.needsRealignment) {
+            preparedData.content = (preparedData.content ? preparedData.content : this.block.content).replace(/<i class="pin"><\/i>/img, '');
+          }
           return this.saveBlockAudio([realign, preparedData])
             .then(response => {
               //this.isSaving = false;
@@ -3422,6 +3458,9 @@ Save text changes and realign the Block?`,
           //}
           this.$root.$emit('from-block-edit:set-style');
           if (['type'].indexOf(type) !== -1) {
+            if (!this.block.getIsSplittedBlock()) {
+              this.block.content = this.$refs.blocks[0].clearBlockContent();
+            }
             this.$forceUpdate();
           }
           if (type === 'type' && event && event.target) {
@@ -3929,6 +3968,9 @@ Save text changes and realign the Block?`,
                   this.getCurrentJobInfo();
                   this.getAlignCount();
                   this.$root.$emit('bookBlocksUpdates', response.data);
+                  if (this.isChecked) {
+                    this.$root.$emit('from-block-edit:set-style');// voicework update may cause style settings
+                  }
                   this.setCurrentBookBlocksLeft(this.block.bookid);
                 }
               }
@@ -4650,6 +4692,21 @@ Save text changes and realign the Block?`,
             })
           }
         }
+      },
+      'block.sync_changes': {// changes from syncronization
+        handler(val) {
+          //console.log(val); 
+          if (Array.isArray(val) && val.length > 0 && this.isChecked) {
+            let recollect = val.some((el) => {
+              return ['pause_before', 'classes'].indexOf(el) !== -1;
+            });
+            if (recollect) {
+              this.$root.$emit('from-block-edit:set-style');
+            }
+          }
+          this.block.sync_changes = [];
+        },
+        deep: true
       }
 
   }
