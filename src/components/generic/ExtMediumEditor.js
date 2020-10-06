@@ -1,4 +1,4 @@
-import MediumEditor from './medium-editor';
+import MediumEditor from './medium-editor/js/medium-editor.js';
 require ('medium-editor-css')
 require ('medium-editor-theme')
 
