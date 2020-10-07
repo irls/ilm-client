@@ -2879,9 +2879,11 @@ Save text changes and realign the Block?`,
         let idx = 0;
         this.$refs.blocks.forEach((blk) => {
           blk.$refs.blockContent.querySelectorAll('[data-idx]').forEach(function(el) {
+            //console.log('iter start:', idx, el.getAttribute('data-idx'));
             if (el.getAttribute('data-idx') == c_pos) pos = idx;
             el.textContent = idx+1;
             el.setAttribute('data-idx', idx+1);
+            //console.log('iter end:', idx, el.getAttribute('data-idx'));
             ++idx;
           });
         })
