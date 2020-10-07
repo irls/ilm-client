@@ -1758,7 +1758,7 @@ export default {
      } else this.onScrollEv = false;
       this.parlistO.idsViewArray().forEach(l => {
         let blockRef = this.$refs.viewBlocks.find(v => v.blockId === l.blockId);
-        if (this.parlist.has(l.blockId)) {
+        if (this.parlistO.has(l.blockRid) && this.parlist.has(l.blockId)) {
           this.parlistO.setLoaded(l.blockRid);
           if (blockRef) {
             blockRef.$forceUpdate();
