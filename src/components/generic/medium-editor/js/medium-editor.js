@@ -1079,19 +1079,90 @@ MediumEditor.extensions = {};
             return false;
         },
 
-        cleanListDOM: function (ownerDocument, element) {
-            if (element.nodeName.toLowerCase() !== 'li') {
-                return;
+        findFirstTextNodeInSelection: function (selection) {
+            if (selection.anchorNode.nodeType === 3) {
+                return selection.anchorNode;
             }
 
-            var list = element.parentElement;
+            var node = selection.anchorNode.firstChild;
 
-            if (list.parentElement.nodeName.toLowerCase() === 'p') { // yes we need to clean up
-                Util.unwrap(list.parentElement, ownerDocument);
+            while (node) {
+                if (selection.containsNode(node, true)) {
+                    if (node.nodeType === 3) {
+                        return node;
+                    } else {
+                        node = node.firstChild;
+                    }
+                } else {
+                    node = node.nextSibling;
+                }
+            }
 
-                // move cursor at the end of the text inside the list
-                // for some unknown reason, the cursor is moved to end of the "visual" line
-                MediumEditor.selection.moveCursor(ownerDocument, element.firstChild, element.firstChild.textContent.length);
+            return null;
+        },
+
+        cleanListDOM: function (ownerDocument, element) {
+            if (element.nodeName.toLowerCase() !== 'li') {
+                if (this.isIE || this.isEdge) {
+                    return;
+                }
+
+                var selection = ownerDocument.getSelection(),
+                    newRange = ownerDocument.createRange(),
+                    oldRange = selection.getRangeAt(0),
+                    startContainer = oldRange.startContainer,
+                    startOffset = oldRange.startOffset,
+                    endContainer = oldRange.endContainer,
+                    endOffset = oldRange.endOffset,
+                    node, newNode, nextNode, moveEndOffset;
+
+                if (element.nodeName.toLowerCase() === 'span') {
+                    // Chrome & Safari unwraps removed li elements into a span
+                    node = element;
+                    moveEndOffset = false;
+                } else {
+                    // FF leaves them as text nodes
+                    node = this.findFirstTextNodeInSelection(selection);
+                    moveEndOffset = startContainer.nodeType !== 3;
+                }
+
+                while (node) {
+                    if (node.nodeName.toLowerCase() !== 'span' && node.nodeType !== 3) {
+                        break;
+                    }
+
+                    if (node.nextSibling && node.nextSibling.nodeName.toLowerCase() === 'br') {
+                        node.nextSibling.remove();
+
+                        if (moveEndOffset) {
+                            endOffset--;
+                        }
+                    }
+
+                    nextNode = node.nextSibling;
+
+                    newNode = ownerDocument.createElement('p');
+                    node.parentNode.replaceChild(newNode, node);
+                    newNode.appendChild(node);
+
+                    node = nextNode;
+                }
+
+                // Restore selection
+                newRange.setStart(startContainer, startOffset);
+                newRange.setEnd(endContainer, endOffset);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+            } else {
+                var list = element.parentElement;
+
+                if (list.parentElement.nodeName.toLowerCase() === 'p') { // yes we need to clean up
+                    Util.unwrap(list.parentElement, ownerDocument);
+
+                    // move cursor at the end of the text inside the list
+                    // for some unknown reason, the cursor is moved to end of the "visual" line
+                    MediumEditor.selection.moveCursor(ownerDocument, element.firstChild, element.firstChild.textContent.length);
+                }
             }
         },
 
@@ -1491,6 +1562,19 @@ MediumEditor.extensions = {};
             }
 
             return _s4() + _s4() + '-' + _s4() + '-' + _s4() + '-' + _s4() + '-' + _s4() + _s4() + _s4();
+        },
+
+        copyAttributes: function (element, sourceNode) {
+            let attr, attributes = Array.prototype.slice.call(sourceNode.attributes);
+            while ((attr = attributes.pop())) {
+                element.setAttribute(attr.nodeName, attr.nodeValue);
+            }
+        },
+
+        isElementWhitespaceStyle: function (element) {
+            let style = window.getComputedStyle(element),
+            isList = style && style.whiteSpace && ['pre-line', 'pre-wrap', 'pre'].indexOf(style.whiteSpace) !== -1;
+            return isList;
         }
     };
 
@@ -3593,7 +3677,7 @@ MediumEditor.extensions = {};
             return false;
         },
 
-        /* hideForm: [function ()]
+        /* showForm: [function ()]
          *
          * This function should show the form element inside
          * the toolbar container
@@ -3788,8 +3872,8 @@ MediumEditor.extensions = {};
                 // and provide similar access to a `fa-` icon default.
                 template.push(
                     '<div class="medium-editor-toolbar-form-row">',
-                    '<input type="checkbox" class="medium-editor-toolbar-anchor-button">',
-                    '<label>',
+                    '<input type="checkbox" class="medium-editor-toolbar-anchor-button" id="medium-editor-toolbar-anchor-button-field-' + this.getEditorId() + '">',
+                    '<label for="medium-editor-toolbar-anchor-button-field-' + this.getEditorId() + '">',
                     this.customClassOptionText,
                     '</label>',
                     '</div>'
@@ -5155,7 +5239,7 @@ MediumEditor.extensions = {};
         };
 
     /*jslint regexp: true*/
-    /*
+    /**
         jslint does not allow character negation, because the negation
         will not match any unicode characters. In the regexes in this
         block, negation is used specifically to match the end of an html
@@ -6563,6 +6647,8 @@ MediumEditor.extensions = {};
 (function () {
     'use strict';
 
+    var initialContent = {};
+
     // Event handlers that shouldn't be exposed externally
 
     function handleDisableExtraSpaces(event) {
@@ -6584,7 +6670,7 @@ MediumEditor.extensions = {};
             // if current text selection is empty OR previous sibling text is empty OR it is not a list
             if ((node && node.textContent.trim() === '' && node.nodeName.toLowerCase() !== 'li') ||
                 (node.previousElementSibling && node.previousElementSibling.nodeName.toLowerCase() !== 'br' &&
-                 node.previousElementSibling.textContent.trim() === '')) {
+                    node.previousElementSibling.textContent.trim() === '')) {
                 event.preventDefault();
             }
         }
@@ -6620,12 +6706,12 @@ MediumEditor.extensions = {};
             isHeader = /h\d/i;
 
         if (MediumEditor.util.isKey(event, [MediumEditor.util.keyCode.BACKSPACE, MediumEditor.util.keyCode.ENTER]) &&
-                // has a preceeding sibling
-                node.previousElementSibling &&
-                // in a header
-                isHeader.test(tagName) &&
-                // at the very end of the block
-                MediumEditor.selection.getCaretOffsets(node).left === 0) {
+            // has a preceeding sibling
+            node.previousElementSibling &&
+            // in a header
+            isHeader.test(tagName) &&
+            // at the very end of the block
+            MediumEditor.selection.getCaretOffsets(node).left === 0) {
             if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.BACKSPACE) && isEmpty.test(node.previousElementSibling.innerHTML)) {
                 // backspacing the begining of a header into an empty previous element will
                 // change the tagName of the current node to prevent one
@@ -6641,15 +6727,15 @@ MediumEditor.extensions = {};
                 event.preventDefault();
             }
         } else if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.DELETE) &&
-                    // between two sibling elements
-                    node.nextElementSibling &&
-                    node.previousElementSibling &&
-                    // not in a header
-                    !isHeader.test(tagName) &&
-                    // in an empty tag
-                    isEmpty.test(node.innerHTML) &&
-                    // when the next tag *is* a header
-                    isHeader.test(node.nextElementSibling.nodeName.toLowerCase())) {
+            // between two sibling elements
+            node.nextElementSibling &&
+            node.previousElementSibling &&
+            // not in a header
+            !isHeader.test(tagName) &&
+            // in an empty tag
+            isEmpty.test(node.innerHTML) &&
+            // when the next tag *is* a header
+            isHeader.test(node.nextElementSibling.nodeName.toLowerCase())) {
             // hitting delete in an empty element preceding a header, ex:
             //  <p>[CURSOR]</p><h1>Header</h1>
             // Will cause the h1 to become a paragraph.
@@ -6662,16 +6748,16 @@ MediumEditor.extensions = {};
 
             event.preventDefault();
         } else if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.BACKSPACE) &&
-                tagName === 'li' &&
-                // hitting backspace inside an empty li
-                isEmpty.test(node.innerHTML) &&
-                // is first element (no preceeding siblings)
-                !node.previousElementSibling &&
-                // parent also does not have a sibling
-                !node.parentElement.previousElementSibling &&
-                // is not the only li in a list
-                node.nextElementSibling &&
-                node.nextElementSibling.nodeName.toLowerCase() === 'li') {
+            tagName === 'li' &&
+            // hitting backspace inside an empty li
+            isEmpty.test(node.innerHTML) &&
+            // is first element (no preceeding siblings)
+            !node.previousElementSibling &&
+            // parent also does not have a sibling
+            !node.parentElement.previousElementSibling &&
+            // is not the only li in a list
+            node.nextElementSibling &&
+            node.nextElementSibling.nodeName.toLowerCase() === 'li') {
             // backspacing in an empty first list element in the first list (with more elements) ex:
             //  <ul><li>[CURSOR]</li><li>List Item 2</li></ul>
             // will remove the first <li> but add some extra element before (varies based on browser)
@@ -6693,16 +6779,16 @@ MediumEditor.extensions = {};
 
             event.preventDefault();
         } else if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.BACKSPACE) &&
-                (MediumEditor.util.getClosestTag(node, 'blockquote') !== false) &&
-                MediumEditor.selection.getCaretOffsets(node).left === 0) {
+            (MediumEditor.util.getClosestTag(node, 'blockquote') !== false) &&
+            MediumEditor.selection.getCaretOffsets(node).left === 0) {
 
             // when cursor is at the begining of the element and the element is <blockquote>
             // then pressing backspace key should change the <blockquote> to a <p> tag
             event.preventDefault();
             MediumEditor.util.execFormatBlock(this.options.ownerDocument, 'p');
         } else if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.ENTER) &&
-                (MediumEditor.util.getClosestTag(node, 'blockquote') !== false) &&
-                MediumEditor.selection.getCaretOffsets(node).right === 0) {
+            (MediumEditor.util.getClosestTag(node, 'blockquote') !== false) &&
+            MediumEditor.selection.getCaretOffsets(node).right === 0) {
 
             // when cursor is at the end of <blockquote>,
             // then pressing enter key should create <p> tag, not <blockquote>
@@ -6715,10 +6801,10 @@ MediumEditor.extensions = {};
 
             event.preventDefault();
         } else if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.BACKSPACE) &&
-                MediumEditor.util.isMediumEditorElement(node.parentElement) &&
-                !node.previousElementSibling &&
-                node.nextElementSibling &&
-                isEmpty.test(node.innerHTML)) {
+            MediumEditor.util.isMediumEditorElement(node.parentElement) &&
+            !node.previousElementSibling &&
+            node.nextElementSibling &&
+            isEmpty.test(node.innerHTML)) {
 
             // when cursor is in the first element, it's empty and user presses backspace,
             // do delete action instead to get rid of the first element and move caret to 2nd
@@ -6729,6 +6815,36 @@ MediumEditor.extensions = {};
     }
 
     function handleKeyup(event) {
+        if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.ENTER)) {// custom line breaks handling in handleKeypress
+            let element = document.getSelection().anchorNode,
+            rootNode = element.parentNode,
+            isLiElement = element.nodeName === 'LI';
+            while (rootNode.nodeName !== 'DIV') {
+                if (!isLiElement) {
+                    isLiElement = rootNode.nodeName === 'LI';
+                }
+                rootNode = rootNode.parentNode;
+            }
+            let isList = MediumEditor.util.isElementWhitespaceStyle(rootNode),
+            mediumEditorElement = this.elements[0];
+            if (mediumEditorElement) {
+                mediumEditorElement.querySelectorAll('div, p').forEach(el => {// replace all div an p with their child nodes
+                    let replaceNodes = Array.from(el.childNodes).reverse(),
+                    firstNode = replaceNodes.shift(),
+                    parentNode = el.parentNode;
+                    parentNode.replaceChild(firstNode, el);
+                    replaceNodes.forEach(node => {
+                        parentNode.insertBefore(node, firstNode);
+                    });
+                });
+                if (isList) {
+                    mediumEditorElement.querySelectorAll('br').forEach(br => {
+                        br.parentNode.replaceChild(document.createTextNode('\n'), br);
+                    });
+                }
+            }
+            return false;
+        }
         var node = MediumEditor.selection.getSelectionStart(this.options.ownerDocument),
             tagName;
 
@@ -6740,6 +6856,12 @@ MediumEditor.extensions = {};
         // Firefox thrown an error when calling `formatBlock` on an empty editable blockContainer that's not a <div>
         if (MediumEditor.util.isMediumEditorElement(node) && node.children.length === 0 && !MediumEditor.util.isBlockContainer(node)) {
             this.options.ownerDocument.execCommand('formatBlock', false, 'p');
+        }
+
+        // https://github.com/yabwe/medium-editor/issues/1455
+        // if somehow we have the BR as the selected element, typing does nothing, so move the cursor
+        if (node.nodeName === 'BR') {
+            MediumEditor.selection.moveCursor(this.options.ownerDocument, node.parentElement);
         }
 
         // https://github.com/yabwe/medium-editor/issues/834
@@ -6755,6 +6877,14 @@ MediumEditor.extensions = {};
                 this.options.ownerDocument.execCommand('unlink', false, null);
             } else if (!event.shiftKey && !event.ctrlKey) {
                 this.options.ownerDocument.execCommand('formatBlock', false, 'p');
+                // https://github.com/yabwe/medium-editor/issues/1455
+                // firefox puts the focus on the br - so we need to move the cursor to the newly created p
+                if (MediumEditor.util.isFF) {
+                    var newParagraph = node.querySelector('p');
+                    if (newParagraph) {
+                        MediumEditor.selection.moveCursor(this.options.ownerDocument, newParagraph);
+                    }
+                }
             }
         }
     }
@@ -6763,6 +6893,125 @@ MediumEditor.extensions = {};
         var textarea = editable.parentNode.querySelector('textarea[medium-editor-textarea-id="' + editable.getAttribute('medium-editor-textarea-id') + '"]');
         if (textarea) {
             textarea.value = editable.innerHTML.trim();
+        }
+    }
+
+    function handleKeypress(event) {
+        if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.ENTER)) {
+            let element = document.getSelection().anchorNode,
+            rootNode = element.parentNode,
+            isLiElement = element.nodeName === 'LI';
+            while (rootNode.nodeName !== 'DIV') {
+                if (!isLiElement) {
+                    isLiElement = rootNode.nodeName === 'LI';
+                }
+                rootNode = rootNode.parentNode;
+            }
+            let isList = MediumEditor.util.isElementWhitespaceStyle(rootNode),
+            br = isList ? '\n' : '<br>',
+            parentNode = element.parentNode,
+            offset = document.getSelection().anchorOffset,
+            length = element.nodeValue ? element.nodeValue.length : 0,
+            selection = length ? element.nodeValue.substring(0, offset) : '',
+            afterSelection = length && offset < length ? element.nodeValue.substring(offset, length) : '',
+            mediumEditorElement = this.elements[0];
+            if (isLiElement) {
+                return true;// keep default user agent's behaviour for lists
+            } else if (element.nodeName === 'W') {
+                let partOne;
+                if (isList) {
+                    partOne = document.createTextNode('\n');
+                } else {
+                    partOne = document.createElement('br');
+                }
+                element.parentNode.insertBefore(partOne, element);
+            } else if (element === mediumEditorElement) {
+                //console.log(document.getSelection());
+                let target = element.childNodes[document.getSelection().anchorOffset];
+                if (target) {
+                    let partOne = document.createElement('br');
+                    element.insertBefore(partOne, target.nextSibling);
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, partOne, 0);
+                    //console.log('HERE7');
+                }
+            } else if (element.parentNode.nodeName === 'DIV') {// click inside usual text node
+                if (isList) {
+                    element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling ? afterSelection : br);
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 ? selection.length + 1 : selection.length + 1);
+                } else {
+                    if (element.nodeName === 'BR') {
+                        //console.log('HERE1');
+                        let partOne = document.createElement('br');
+                        parentNode.insertBefore(partOne, element);
+                    } else {
+                        let partOne = document.createTextNode(selection),
+                        partTwo = document.createElement('br'),
+                        partThree = document.createTextNode(afterSelection);
+                        parentNode.replaceChild(partThree, element);
+                        parentNode.insertBefore(partOne, partThree);
+                        parentNode.insertBefore(partTwo, partThree);
+                        MediumEditor.selection.moveCursor(this.options.ownerDocument, partThree, 0);
+                        //console.log('HERE2');
+                        if (afterSelection.length === 0 && !partThree.nextSibling) {
+                            let partFour = document.createElement('br');
+                            parentNode.insertBefore(partFour, partThree);
+                            //console.log('HERE3');
+                        }
+                    }
+                }
+            } else {
+                //console.log(element.parentNode.nodeName);
+                let baseNode = parentNode.parentNode,
+                partOne = document.createElement(element.parentNode.nodeName);
+                MediumEditor.util.copyAttributes(partOne, element.parentNode);
+                //console.log(element.parentNode);
+                //return false;
+                let partOneContent = document.createTextNode(selection);
+                partOne.appendChild(partOneContent);
+                let partTwo;
+                if (['LI'].indexOf(parentNode.nodeName) !== -1) {
+                    partTwo = document.createElement('li');
+                } else {
+                    if (!isList) {
+                        partTwo = document.createElement('br');
+                    } else {
+                        partTwo = document.createTextNode('\n');
+                    }
+                }
+                if (afterSelection.length > 0) {
+                    let partThreeContent = document.createTextNode(afterSelection),
+                    partThree = document.createElement(element.parentNode.nodeName);
+                    MediumEditor.util.copyAttributes(partThree, element.parentNode);
+                    partThree.appendChild(partThreeContent);
+                    baseNode.replaceChild(partThree, parentNode);
+                    baseNode.insertBefore(partOne, partThree);
+                    if (['LI'].indexOf(parentNode.nodeName) === -1) {
+                        baseNode.insertBefore(partTwo, partThree);
+                    }
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, partThree, 0);
+                    //console.log('HERE4');
+                } else {
+                    baseNode.replaceChild(partTwo, parentNode);
+                    baseNode.insertBefore(partOne, partTwo);
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, partTwo.nextSibling ? partTwo.nextSibling : partTwo, 0);
+                    //console.log('HERE5');// end of block + <br><br> - cursor not moved
+                    //console.log(partOne, partTwo);
+                    if (!partTwo.nextSibling) {
+                        let partThree = partTwo.cloneNode();
+                        baseNode.insertBefore(partThree, partTwo);
+                        //console.log('HERE6');
+                    }
+                }
+            }
+            //return false;
+
+            event.preventDefault();
+            var eventInput = new Event('input', {
+                bubbles: true,
+                cancelable: true
+            });
+
+            rootNode.dispatchEvent(eventInput);// run event for the element events handling
         }
     }
 
@@ -6880,8 +7129,8 @@ MediumEditor.extensions = {};
         // If any of the elements don't have the toolbar disabled
         // We need a toolbar
         if (this.elements.every(function (element) {
-                return !!element.getAttribute('data-disable-toolbar');
-            })) {
+            return !!element.getAttribute('data-disable-toolbar');
+        })) {
             return false;
         }
 
@@ -6995,6 +7244,7 @@ MediumEditor.extensions = {};
             // for certain cases when enter is pressed
             if (!this.options.disableReturn && !element.getAttribute('data-disable-return')) {
                 this.on(element, 'keyup', handleKeyup.bind(this));
+                element.onkeypress = handleKeypress.bind(this);// cancel all events, including user agent's default behaviour
             }
 
             var elementId = MediumEditor.util.guid();
@@ -7231,8 +7481,6 @@ MediumEditor.extensions = {};
             this.restoreSelection();
         }
     }
-
-    var initialContent = {};
 
     MediumEditor.prototype = {
         // NOT DOCUMENTED - exposed for backwards compatability
@@ -7504,13 +7752,23 @@ MediumEditor.extensions = {};
                 MediumEditor.util.cleanListDOM(this.options.ownerDocument, this.getSelectedParentElement());
             }
 
+            // https://github.com/yabwe/medium-editor/issues/1496
+            // But only if something is selected i.e, getSelectedParentElement !== {}
+            if (this.getSelectedParentElement().length > 0 && MediumEditor.util.isFF) {
+                MediumEditor.util.getContainerEditorElement(this.getSelectedParentElement()).focus();
+            }
+
             this.checkSelection();
             return result;
         },
 
         getSelectedParentElement: function (range) {
             if (range === undefined) {
-                range = this.options.contentWindow.getSelection().getRangeAt(0);
+                try {
+                    range = this.options.contentWindow.getSelection().getRangeAt(0);
+                } catch (err) {
+                    return {};
+                }
             }
             return MediumEditor.selection.getSelectedParentElement(range);
         },
@@ -7665,7 +7923,7 @@ MediumEditor.extensions = {};
                                     0,
                                     parentElement.lastChild,
                                     parentElement.lastChild.nodeType === 3 ?
-                                    parentElement.lastChild.nodeValue.length : parentElement.lastChild.childNodes.length
+                                        parentElement.lastChild.nodeValue.length : parentElement.lastChild.childNodes.length
                                 );
                             } else {
                                 MediumEditor.selection.select(
