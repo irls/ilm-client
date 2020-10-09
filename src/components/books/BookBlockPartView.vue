@@ -1557,6 +1557,10 @@ Save audio changes and realign the Block?`,
         if (this.isAudioEditing && !isSplitting) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
+        if ((this.hasChange('content') || this.hasChange('suggestion')) && this.isSplittedBlock) {
+          this.block.parts[this.blockPartIdx].content_changed = true;
+          this.blockPart.content_changed = true;
+        }
         let saveBlockPromise;
         if (this.mode === 'proofread') {
           saveBlockPromise = this.assembleBlockProofread();
@@ -1956,6 +1960,9 @@ Save audio changes and realign the Block?`,
           //this.destroyEditor();
           this.initFtnEditor(true);
         });*/
+        if (this.block.getIsSplittedBlock()) {
+          this.block.parts[this.blockPartIdx].footnote_added = true;// temporary flag
+        }
         this.$emit('addFootnote');
         return;
       },

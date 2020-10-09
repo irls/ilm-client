@@ -108,7 +108,8 @@
                       <template v-if="block.type != 'illustration' && block.type != 'hr' && !proofreadModeReadOnly">
                       <li @click="showModal('block-html')">
                         <i class="fa fa-code" aria-hidden="true"></i>
-                        Display block HTML</li>
+                        {{editBlockHTMLLabel}}
+                      </li>
                       <li class="separator"></li>
                       </template>
                     </template>
@@ -519,20 +520,55 @@
     <div v-on:wheel.stop="" :class="['-langblock-' + getBlockLang]">
       <div class="modal-header">
         <div>
-          <h4 class="modal-title">Block: {{shortBlockid}}</h4>
-        </div>
-        <div>
-          <h4 class="modal-title">
-            <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Block audio URL</a>
-          </h4>
+          <h4 class="modal-title">{{adminOrLibrarian ? 'Edit block HTML' : 'View block HTML'}}</h4>
         </div>
         <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
       </div>
       <div class="modal-body">
-        <textarea :ref="'block-html' + block.blockid" disabled class="block-html"></textarea>
+        <tabs ref="htmlContentTabs">
+          <tab :header="parnumComp || '0'">
+            <div class="modal-title-wrapper">
+              <h4 class="modal-title">Block ID: {{shortBlockid}}</h4>
+            </div>
+            <div class="modal-title-wrapper">
+              <h4 class="modal-title">
+                <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Block audio URL</a>
+              </h4>
+            </div>
+            <div class="block-content-update-pending">
+              <span v-if="hasPendingContentChanges" class="block-content-update-pending">Block has not been updated yet with pending approval sub-block changes.</span>
+            </div>
+            <div >{{blockHtmlHeader}}</div>
+            <!-- <textarea :ref="'block-html' + block.blockid" :disabled="!adminOrLibrarian || isSplittedBlock" class="block-html"></textarea> -->
+            <codemirror
+              :ref="'block-html' + block.blockid" 
+              :options="getCodeMirrorOptions()"
+              :class="[{'-disabled': !adminOrLibrarian || isSplittedBlock}]"
+            />
+            <div>&lt;/div&gt;</div>
+          </tab>
+          <template v-if="block.getIsSplittedBlock()">
+            <tab v-for="(blockPart, blockPartIdx) in blockParts" :header="(subBlockParnumComp ? subBlockParnumComp + '_' : '') + (blockPartIdx + 1)" v-bind:key="'part-' + blockPartIdx + '-html-content'">
+              <!-- <textarea :ref="'block-part-' + blockPartIdx + '-html'" :disabled="!adminOrLibrarian" class="block-html"></textarea> -->
+              <codemirror
+                :ref="'block-part-' + blockPartIdx + '-html'" 
+                :options="getCodeMirrorOptions(blockPartIdx)"
+                :class="[{'-disabled': !adminOrLibrarian}]"
+              />
+            </tab>
+          </template>
+          <!-- <highlightjs language="html" :code="block.content" /> -->
+          <!-- <pre v-highlightjs="block.content"><code class="html agate" style="agate"></code></pre> -->
+        </tabs>
       </div>
       <div class="modal-footer">
-          <button class="btn btn-default" v-on:click="hideModal('block-html')">Close</button>
+        <textarea class="copy-block-html-content" ref="copy-block-html-content"></textarea>
+        <button class="btn btn-primary copy-block-html" v-on:click="copyBlockHtml()">Copy</button>
+        <button class="btn btn-default" v-on:click="hideModal('block-html')">
+          <template v-if="adminOrLibrarian">Cancel</template>
+          <template v-else>Close</template>
+        </button>
+        <button class="btn btn-primary" v-on:click="setPartsHtml()" v-if="adminOrLibrarian">Save</button>
       </div>
     </div>
     </modal>
@@ -559,8 +595,19 @@ import access             from '../../mixins/access.js';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
 import BookBlockPartView from './BookBlockPartView';
+import { tabs, tab } from 'vue-strap';
+import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
+import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
+//import hljs from 'highlight.js';
+//import VueHighlightJS from 'vue-highlightjs';
+import { codemirror } from 'vue-codemirror';
+import('codemirror/lib/codemirror.css');
+import('codemirror/mode/xml/xml.js');
+import('codemirror/theme/base16-light.css');//paraiso-light
 var BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
+//Vue.use(hljs.vuePlugin);
+//Vue.use(VueHighlightJS);
 
 export default {
   data () {
@@ -631,7 +678,13 @@ export default {
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
       //'modal': modal,
-      BookBlockPartView: BookBlockPartView
+      BookBlockPartView: BookBlockPartView,
+      'tabs': tabs,// vue-strap
+      'tab': tab,// vue-strap,
+      //'highlightjs': highlightjs
+      //'highlightjs': hljs
+      //'VueHighlightJS': VueHighlightJS
+      'codemirror': codemirror
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
   mixins: [taskControls, apiConfig, access],
@@ -1135,6 +1188,33 @@ export default {
         },
         set(val) {
           this.block.isAudioChanged = val;
+        },
+        cache: false
+      },
+      editBlockHTMLLabel: {
+        get() {
+          return this.adminOrLibrarian ? 'Edit block HTML' : 'Display block HTML';
+        }
+      },
+      blockHtmlHeader: {
+        get() {
+          let audiosrc = this.block.getAudiosrc('m4a', true) || '';
+          if (audiosrc) {
+            audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
+          }
+          let blockData = `data-audiosrc="${audiosrc}"`;
+          if (this.block.updated) blockData += ` data-last_modified="${this.block.updated}"`;
+          if (audiosrc) blockData += ` data-audiohash="${this.block.audioHash || ''}"`;
+          let header = `<div id="${this.shortBlockid}" ${blockData}>`;
+          return header;
+        }
+      },
+      hasPendingContentChanges: {
+        get() {
+          let p = this.block.parts.find(bp => {
+            return bp.content_changed === true;
+          });
+          return p ? true : false;
         },
         cache: false
       }
@@ -1901,6 +1981,14 @@ Save audio changes and realign the Block?`,
                     fullUpdate = true;
                     partUpdate.footnotes = this.block.footnotes;
                     partUpdate.content = this.block.content;
+                    if (this.block.getIsSplittedBlock()) {
+                      this.block.parts.forEach(p => {
+                        if (p.footnote_added) {
+                          delete p.footnote_added;
+                          p.content_changed = true;
+                        }
+                      });
+                    }
                     break;
                   case 'footnotes_language':
                     fullUpdate = true;
@@ -2851,10 +2939,15 @@ Save text changes and realign the Block?`,
       delFootnote: function(pos, checkText = true) {
         if (checkText) {
           pos.forEach(p => {
-            let footnote = document.getElementById(this.block.blockid).querySelector(`[data-idx='${p+1}']`);
-            if (footnote) {
-              footnote.remove();
-            }
+            this.$refs.blocks.forEach(blk => {
+              let footnote = blk.$refs.blockContent.querySelector(`[data-idx='${p+1}']`);
+              if (footnote) {
+                footnote.remove();
+                if (this.isSplittedBlock) {
+                  this.block.parts[blk.blockPartIdx].footnote_added = true;
+                }
+              }
+            });
           })
         }
         this.updFootnotes();
@@ -2878,10 +2971,12 @@ Save text changes and realign the Block?`,
         let pos = 0;
         let idx = 0;
         this.$refs.blocks.forEach((blk) => {
-          blk.$refs.blockContent.querySelectorAll('[data-idx]').forEach(function(el) {
-            //console.log('iter start:', idx, el.getAttribute('data-idx'));
+          blk.$refs.blockContent.querySelectorAll('[data-idx]').forEach((el) => {
             if (el.getAttribute('data-idx') == c_pos) pos = idx;
             el.textContent = idx+1;
+            if (this.isSplittedBlock && parseInt(el.getAttribute('data-idx')) !== idx + 1) {
+              this.block.parts[blk.blockPartIdx].footnote_added = true;
+            }
             el.setAttribute('data-idx', idx+1);
             //console.log('iter end:', idx, el.getAttribute('data-idx'));
             ++idx;
@@ -4050,25 +4145,57 @@ Save text changes and realign the Block?`,
         }
       },
       setHtml() {
-        let content = '';
-        if (this.isSplittedBlock) {
-          content = this.block.content;
-        } else {
-          if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
-            content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
-          }
+        let content = this.block.content;
+        if (!this.block.getIsSplittedBlock()) {
+          content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
         }
         content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
-        let audiosrc = this.block.getAudiosrc('m4a', true) || '';
-        if (audiosrc) {
-          audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
+       
+        this.$refs['block-html' + this.block.blockid].codemirror.doc.setValue(content);
+        if (this.block.getIsSplittedBlock()) {
+          this.block.parts.forEach((p, pIdx) => {
+            let ref = this.$refs.blocks.find(r => {
+              return r.blockPartIdx === pIdx;
+            });
+            if (ref) {
+              content = ref.$refs.blockContent.innerHTML;
+              this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.setValue(content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1'));
+            }
+          });
         }
-        let blockData = `data-audiosrc="${audiosrc}"`;
-        if (this.block.updated) blockData += ` data-last_modified="${this.block.updated}"`;
-        if (audiosrc) blockData += ` data-audiohash="${this.block.audioHash || ''}"`;
-        this.$refs['block-html' + this.block.blockid].value = `<div id="${this.shortBlockid}" ${blockData}>
-  ${content}
-</div>`;
+        $(`#${this.block.blockid} .nav-tabs`).scrollingTabs({
+        })
+        .on('ready.scrtabs', () => {
+          if (!this.block.getIsSplittedBlock()) {
+            $(`#${this.block.blockid} .scrtabs-tab-container`).hide();
+          }
+
+          $(`#${this.block.blockid} .nav-tabs li a`).click((e) => {// , .nav-tabs a
+            e.preventDefault();
+            //console.log('HERE prevent');
+            //console.log(this.$refs.htmlContentTabs);
+            let index = $(`#${this.block.blockid} .nav-tabs`).find('a').index(e.target);
+            //console.log($('.nav-tabs').find('a').index(e.target))
+            //this.$refs.htmlContentTabs.index = index;
+            this.$refs.htmlContentTabs.select(this.$refs.htmlContentTabs.$children[index]);
+            $(`#${this.block.blockid} .nav-tabs li`).removeClass('active');
+            $(e.target).parent().addClass('active');
+            if (index === 0) {
+              $(`#${this.block.blockid} .copy-block-html`).show();
+            } else {
+              $(`#${this.block.blockid} .copy-block-html`).hide();
+            }
+            if (index > 0) {
+              Vue.nextTick(() => {
+                //this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.doc.setValue('<span>go-Doc-Start</span>');
+                //this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.doc.changeGeneration(true);
+                this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.focus();
+                this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.execCommand('goDocStart');
+                //console.log(this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror);
+              });
+            }
+          })
+        });
       },
       setContent() {
         //console.log('value', this.$refs['block-html' + this.block._id].value)
@@ -4395,6 +4522,62 @@ Save text changes and realign the Block?`,
       
       splitPointAdded() {
         this.pushChange('split_point');
+      },
+      setPartsHtml() {
+        if (!this.block.getIsSplittedBlock()) {
+          let blockValue = this.$refs[`block-html${this.block.blockid}`].codemirror.doc.getValue();
+          if (this.$refs.blocks[0].innerHTML !== blockValue) {
+            this.block.content = blockValue;
+            this.$refs.blocks[0].innerHTML = this.block.content;
+            this.pushChange('content');
+          }
+        } else {
+          this.block.parts.forEach((p, pIdx) => {
+            let ref = this.$refs.blocks.find(rb => {
+              return rb.blockPartIdx === pIdx;
+            });
+            let partValue = this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.getValue();
+            if (ref && ref.$refs.blockContent.innerHTML !== partValue) {
+              p.content = partValue;
+              ref.$refs.blockContent.innerHTML = p.content;
+              ref.pushChange('content');
+              ref.isChanged = true;
+            }
+          });
+        }
+        this.hideModal('block-html');
+      },
+      copyBlockHtml() {
+        let content = this.$refs['block-html' + this.block.blockid].codemirror.doc.getValue();
+        let el = this.$refs['copy-block-html-content'];
+        el.innerText = this.blockHtmlHeader + content + '</div>';
+        el.select();
+        document.execCommand('copy');
+        el.innerText = '';
+        return;
+      },
+      getCodeMirrorOptions(partIdx = null) {
+        let cmOptions = {
+          mode: 'text/html',
+          //mode: 'text/x-ceylon',
+          theme: 'base16-light',
+          lineWrapping: true,
+          readOnly: !this.adminOrLibrarian || (this.block.getIsSplittedBlock() && partIdx === null),
+          direction: ['ar', 'fa'].indexOf(this.getBlockLang) === -1 ? 'ltr' : 'rtl',
+          //pollInterval: 50
+          //htmlMode: true,
+          specialChars: /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\ufeff\ufff9-\ufffc\=]/,
+          specialCharPlaceholder: (char) => {
+            let el = document.createElement('span');
+            el.classList.add('cm-operator');
+            if (char === '=') {
+              el.innerHTML = `=`;
+            }
+            return el;
+          }
+        };
+        //cmOptions.rtlMoveVisually = cmOptions.direction === 'rtl';
+        return cmOptions;
       }
   },
   watch: {
@@ -5589,29 +5772,111 @@ Save text changes and realign the Block?`,
   .block-html-modal {
     .modal-header {
       width: 100%;
-      .modal-title {
-        float: left;
-        margin-left: 15px;
-        width: 80%;
-      }
       .modal-close-button {
         float: right;
         width: 5%;
       }
-      div {
-        display: inline-block;
-        width: auto;
-        white-space: nowrap;
-        margin: 0px 10px;
-      }
     }
     .modal-body {
       overflow: visible;
+      .CodeMirror-rtl, .CodeMirror-rtl * {
+        /*direction: rtl; */
+        text-align: right;
+      }
+      .block-content-update-pending {
+        display: block;
+        color: red;
+        font-weight: bold;
+        float: left;
+        width: 100%;
+      }
+      .cm-tag, .cm-attribute, .cm-string, .cm-operator {
+        color: #bfbfbf;
+      }
+      .vue-codemirror {
+        &.-disabled {
+          .CodeMirror-wrap {
+            background-color: #f5f5f5;
+          }
+        }
+        .CodeMirror-wrap {
+          background-color: white;
+        }
+        /** {
+          color: #dfdfdf;
+        }*/
+        /*.CodeMirror-code {
+          * {
+            color: gray;
+          }
+        }*/
+      }
+    }
+    .modal-footer {
+      .copy-block-html {
+        float: left;
+      }
+      .copy-block-html-content {
+        /*display: none;*/
+        height: 0px;
+        width: 0px;
+        resize: none;
+        padding: 0px;
+        border-color: transparent;
+        float: left;
+      }
     }
     textarea.block-html {
       width: 100%;
-      height: 250px;
-      resize: vertical;
+      height: 330px;
+      resize: none;/*vertical*/
+      direction: ltr;
+    }
+    .modal-title {
+      float: left;
+      margin-left: 15px;
+      width: 80%;
+    }
+    div.modal-title-wrapper {
+      display: inline-block;
+      width: auto;
+      white-space: nowrap;
+      margin: 0px 10px;
+    }
+    .nav.nav-tabs {
+      li {
+        a {
+          font-size: 1.5em;
+          /*&:first-child {
+            font-weight: bolder;
+          }*/
+        }
+        &:first-child {
+
+          a {
+            font-weight: bolder;
+          }
+        }
+      }
+    }
+    .tab-pane {
+      /*div {
+        margin: 15px 0px 5px 0px;
+      }*/
+      &:first-child {
+        textarea {
+          height: 210px;
+        }
+      }
+    }
+  }
+/*ilm-block
+.block-html-modal {
+}*/
+  .-langblock-ar,
+  .-langblock-fa {
+    textarea.block-html, {
+      direction: rtl;
     }
   }
   .voicework-preloader {
