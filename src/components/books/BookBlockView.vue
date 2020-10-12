@@ -4108,7 +4108,7 @@ Save text changes and realign the Block?`,
         if (!this.block.getIsSplittedBlock()) {
           content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
         }
-        content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
+        //content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
        
         this.$refs['block-html' + this.block.blockid].codemirror.doc.setValue(content);
         if (this.block.getIsSplittedBlock()) {
@@ -4118,7 +4118,7 @@ Save text changes and realign the Block?`,
             });
             if (ref) {
               content = ref.$refs.blockContent.innerHTML;
-              this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.setValue(content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1'));
+              this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.setValue(content/*.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1')*/);
             }
           });
         }
