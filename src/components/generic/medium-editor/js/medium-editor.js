@@ -1565,10 +1565,9 @@ MediumEditor.extensions = {};
         },
 
         copyAttributes: function (element, sourceNode) {
-            let attr, attributes = Array.prototype.slice.call(sourceNode.attributes);
-            while ((attr = attributes.pop())) {
-                element.setAttribute(attr.nodeName, attr.nodeValue);
-            }
+            [...sourceNode.attributes].forEach(attr => {
+                element.setAttribute(attr.nodeName === 'id' ? 'data-id' : attr.nodeName, attr.nodeValue);
+            });
         },
 
         isElementWhitespaceStyle: function (element) {
