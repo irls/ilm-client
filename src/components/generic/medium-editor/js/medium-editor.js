@@ -7028,6 +7028,7 @@ MediumEditor.extensions = {};
                 if (['LI'].indexOf(parentNode.nodeName) === -1) {
                     baseNode.insertBefore(partTwo, containerTwo);
                 }
+                MediumEditor.selection.moveCursor(this.options.ownerDocument, containerTwo, 0);
             }
             //return false;
 
