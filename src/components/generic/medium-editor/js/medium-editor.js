@@ -6826,7 +6826,7 @@ MediumEditor.extensions = {};
             }
             let isList = MediumEditor.util.isElementWhitespaceStyle(rootNode),
             mediumEditorElement = this.elements[0];
-            if (mediumEditorElement) {
+            if (mediumEditorElement && isLiElement) {
                 mediumEditorElement.querySelectorAll('div, p').forEach(el => {// replace all div an p with their child nodes
                     let replaceNodes = Array.from(el.childNodes),
                     firstNode = replaceNodes.pop(),
