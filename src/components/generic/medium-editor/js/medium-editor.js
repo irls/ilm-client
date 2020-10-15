@@ -6828,8 +6828,8 @@ MediumEditor.extensions = {};
             mediumEditorElement = this.elements[0];
             if (mediumEditorElement) {
                 mediumEditorElement.querySelectorAll('div, p').forEach(el => {// replace all div an p with their child nodes
-                    let replaceNodes = Array.from(el.childNodes).reverse(),
-                    firstNode = replaceNodes.shift(),
+                    let replaceNodes = Array.from(el.childNodes),
+                    firstNode = replaceNodes.pop(),
                     parentNode = el.parentNode;
                     parentNode.replaceChild(firstNode, el);
                     replaceNodes.forEach(node => {
@@ -6958,15 +6958,16 @@ MediumEditor.extensions = {};
                         }
                     }
                 }
-            } else {
+            } else {// click inside text node, which parent is not main div and not <w>, e.g. <i>Some text f<u>o<ENTER_HERE>r</u> line <ENTER_HERE>br<u>e</u>ak testing.</i>
                 //console.log(element.parentNode.nodeName);
                 let baseNode = parentNode.parentNode,
-                partOne = document.createElement(element.parentNode.nodeName);
-                MediumEditor.util.copyAttributes(partOne, element.parentNode);
+                partOne = document.createTextNode(selection),
+                containerOne = document.createElement(parentNode.nodeName),
+                containerTwo = document.createElement(parentNode.nodeName);
+                MediumEditor.util.copyAttributes(containerOne, parentNode);
+                MediumEditor.util.copyAttributes(containerTwo, parentNode);
                 //console.log(element.parentNode);
                 //return false;
-                let partOneContent = document.createTextNode(selection);
-                partOne.appendChild(partOneContent);
                 let partTwo;
                 if (['LI'].indexOf(parentNode.nodeName) !== -1) {
                     partTwo = document.createElement('li');
@@ -6977,19 +6978,33 @@ MediumEditor.extensions = {};
                         partTwo = document.createTextNode('\n');
                     }
                 }
+                let allChildNodes = Array.from(parentNode.childNodes),
+                currentIndex = allChildNodes.indexOf(element),
+                lastNode = null;
+                for (let i = allChildNodes.length - 1; i > currentIndex; --i) {
+                    let currentNode = allChildNodes[i];
+                    if (!lastNode) {
+                        containerTwo.appendChild(currentNode);
+                    } else {
+                        containerTwo.insertBefore(currentNode, lastNode);
+                    }
+                    lastNode = currentNode;
+                }
                 if (afterSelection.length > 0) {
-                    let partThreeContent = document.createTextNode(afterSelection),
-                    partThree = document.createElement(element.parentNode.nodeName);
-                    MediumEditor.util.copyAttributes(partThree, element.parentNode);
-                    partThree.appendChild(partThreeContent);
-                    baseNode.replaceChild(partThree, parentNode);
+                    let partThree = document.createTextNode(afterSelection);
+                    /*baseNode.replaceChild(partThree, parentNode);
                     baseNode.insertBefore(partOne, partThree);
                     if (['LI'].indexOf(parentNode.nodeName) === -1) {
                         baseNode.insertBefore(partTwo, partThree);
                     }
-                    MediumEditor.selection.moveCursor(this.options.ownerDocument, partThree, 0);
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, partThree, 0);*/
+                    if (lastNode) {
+                        containerTwo.insertBefore(partThree, lastNode);
+                    } else {
+                        containerTwo.appendChild(partThree);
+                    }
                     //console.log('HERE4');
-                } else {
+                }/* else {
                     baseNode.replaceChild(partTwo, parentNode);
                     baseNode.insertBefore(partOne, partTwo);
                     MediumEditor.selection.moveCursor(this.options.ownerDocument, partTwo.nextSibling ? partTwo.nextSibling : partTwo, 0);
@@ -7000,6 +7015,18 @@ MediumEditor.extensions = {};
                         baseNode.insertBefore(partThree, partTwo);
                         //console.log('HERE6');
                     }
+                }*/
+                baseNode.replaceChild(containerTwo, parentNode);
+                lastNode = partOne;
+                containerOne.appendChild(partOne);
+                for (let i = currentIndex - 1; i >=0; --i) {
+                    let currentNode = allChildNodes[i];
+                    containerOne.insertBefore(currentNode, lastNode);
+                    lastNode = currentNode;
+                }
+                baseNode.insertBefore(containerOne, containerTwo);
+                if (['LI'].indexOf(parentNode.nodeName) === -1) {
+                    baseNode.insertBefore(partTwo, containerTwo);
                 }
             }
             //return false;
