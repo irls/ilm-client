@@ -371,7 +371,7 @@
             }
           })
         }
-        let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/audiobooks/' + this.audiobook._id;
+        let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/audiobooks/' + encodeURIComponent(this.audiobook.id);
         let formData = new FormData();
         //let save_data = this.audiobook;
         //if (save_data.importFiles) {

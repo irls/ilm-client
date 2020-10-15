@@ -407,7 +407,7 @@ export default {
         //vm.audiobook.importFiles = [];
         //this.formData.append('audiobook', JSON.stringify(vm.audiobook));
         toUpload.autoAlign = this.autoAlign;
-        api.post(api_url + '/' + this.audiobook._id, toUpload, {}).then((response) => {
+        api.post(api_url + '/' + encodeURIComponent(this.audiobook.id), toUpload, {}).then((response) => {
           if (response.status===200) {
             // hide modal after one second
             this.uploadFinished = true
