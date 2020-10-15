@@ -6826,11 +6826,22 @@ MediumEditor.extensions = {};
             }
             let isList = MediumEditor.util.isElementWhitespaceStyle(rootNode),
             mediumEditorElement = this.elements[0];
-            if (mediumEditorElement) {
+            if (mediumEditorElement && isLiElement) {
                 mediumEditorElement.querySelectorAll('div, p').forEach(el => {// replace all div an p with their child nodes
                     let replaceNodes = Array.from(el.childNodes),
                     firstNode = replaceNodes.pop(),
                     parentNode = el.parentNode;
+                    if (el.nextSibling) {
+                        if (!isList) {
+                            //if (el.nextSibling.nodeValue.indexOf('\n') === -1) {
+                            //el.parentNode.insertBefore(document.createTextNode('\n'), el.nextSibling);
+                            //}
+                            if (el.nextSibling.nodeName !== 'BR') {
+                                let lineBreak = document.createElement('br');
+                                el.parentNode.insertBefore(lineBreak, el.nextSibling);
+                            }
+                        }
+                    }
                     parentNode.replaceChild(firstNode, el);
                     replaceNodes.forEach(node => {
                         parentNode.insertBefore(node, firstNode);
@@ -7028,7 +7039,7 @@ MediumEditor.extensions = {};
                 if (['LI'].indexOf(parentNode.nodeName) === -1) {
                     baseNode.insertBefore(partTwo, containerTwo);
                 }
-                MediumEditor.selection.moveCursor(this.options.ownerDocument, containerTwo, 0);
+                MediumEditor.selection.moveCursor(this.options.ownerDocument, containerTwo.firstChild ? containerTwo.firstChild : containerTwo, 0);
             }
             //return false;
 
