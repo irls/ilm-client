@@ -6982,7 +6982,7 @@ MediumEditor.extensions = {};
                 let partTwo;
                 if (['LI'].indexOf(parentNode.nodeName) !== -1) {
                     partTwo = document.createElement('li');
-                } else {
+                } else if (['P', 'DIV'].indexOf(parentNode.nodeName) === -1) {
                     if (!isList) {
                         partTwo = document.createElement('br');
                     } else {
@@ -7036,7 +7036,7 @@ MediumEditor.extensions = {};
                     lastNode = currentNode;
                 }
                 baseNode.insertBefore(containerOne, containerTwo);
-                if (['LI'].indexOf(parentNode.nodeName) === -1) {
+                if (['LI'].indexOf(parentNode.nodeName) === -1 && partTwo) {
                     baseNode.insertBefore(partTwo, containerTwo);
                 }
                 MediumEditor.selection.moveCursor(this.options.ownerDocument, containerTwo.firstChild ? containerTwo.firstChild : containerTwo, 0);
