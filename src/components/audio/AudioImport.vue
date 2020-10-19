@@ -24,66 +24,57 @@
 
 
             <slot name="body">
-
-            <img class="bookcover" :src="book.coverimg" />
-            <h3 class="booktitle"> For: <i>{{book.title}}</i></h3>
-            <h4 class="bookauthor"> by {{book.author.join(',')}} </h4>
-
-                
-                <div v-if="audiobook._id && allowDownload" class="col-sm-12">
-                  <h3>
-                  Original audio
-                  </h3>
-                  <div class="col-sm-12">
-                    <h4>Uploaded by {{audiobook.creator}} at {{dateFormated(audiobook.createdAt, 'd F')}}</h4>
-                  </div>
-                  <div class="col-sm-8">
-                    <h5>{{audiobook.importFiles.length}} files total</h5>
-                  </div>
-                  <div class="col-sm-4">
-                    <!-- <a class="download-audio-link" :href="SERVER_URL + audiobook.url"><i class="fa fa-download"></i>Download</a> -->
-                    <a class="download-audio-link" :href="API_URL + 'books/' + book.bookid + '/audiobooks/' + audiobook._id + '/download'" target="blank"><i class="fa fa-download"></i>Download</a>
+              <div class="col-sm-12">
+                <h5>Browse for audio files, ZIP files or type a playlist URL</h5>
+              </div>
+              <div class="col-sm-12 upload-files">
+                <div class="col-sm-9">
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                    <input type="text" class="form-control" placeholder="URL" v-model="audioURL" />
                   </div>
                 </div>
-                
-                <br><br><br>
-
-                <h4> Book Audio File </h4>
-
-                <div class="col-sm-12">
-                  <div class="col-sm-7">
-                    <div class="input-group">
-                      <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                      <input type="text" class="form-control" placeholder="URL" v-model="audioURL" />
-                    </div>
-                  </div>
-                  <div class="col-sm-5">
-                    or &nbsp;&nbsp;&nbsp;
-                    <dropzone id="audio-dropzone" ref="uploadDropzone" 
-                      :options="dropzoneOptions" 
-                      @vdropzone-file-added="onAudioFileChange"
-                      @vdropzone-total-upload-progress="onUploadProgress"
-                      @vdropzone-success="onUploadSuccess"
-                      @vdropzone-complete="onUploadComplete"
-                      @vdropzone-error="onUploadError"
-                      @vdropzone-queue-complete="onUploadFinished">
-                      Browse
-                  </dropzone>
-                  </div>
-                  <span class="help-block"> &nbsp; &nbsp; Audio file, ZIP files or playlist </span>
-                  <span v-if="$refs.upload">
-                  {{$refs.upload.uploaded}}
-                  </span>
-                  <span><input type="checkbox" id="checkbox" v-model="autoAlign"> Align automatically </span>
+                <div class="col-sm-3">
+                  <dropzone id="audio-dropzone" ref="uploadDropzone" 
+                    :options="dropzoneOptions" 
+                    @vdropzone-file-added="onAudioFileChange"
+                    @vdropzone-total-upload-progress="onUploadProgress"
+                    @vdropzone-success="onUploadSuccess"
+                    @vdropzone-complete="onUploadComplete"
+                    @vdropzone-error="onUploadError"
+                    @vdropzone-queue-complete="onUploadFinished">
+                    Browse
+                </dropzone>
                 </div>
-
-                <br><br><br><br>
-                
+                <span v-if="$refs.upload">
+                {{$refs.upload.uploaded}}
+                </span>
+                <!-- <span><input type="checkbox" id="checkbox" v-model="autoAlign"> Align automatically </span> -->
+              </div>
+              <div class="col-sm-12">
                 <ul id="audioFiles">
                   <li v-for="file in audioFiles">
                     {{ file.name }} - {{ humanFileSize(file.size, true) }}
                   </li>
                </ul>
+              </div>
+              <div class="col-sm-12 audio-import-options">
+                <div class="col-sm-6">
+                  <fieldset class="audio-import-options-fieldset">
+                    <legend>Import type</legend>
+                    <label><input type="radio" name="import-audio-type" v-model="audioImportType" value="copy" />Copy to the catalog</label>
+                    <label><input type="radio" name="import-audio-type" v-model="audioImportType" value="replace" />Replace block audio</label>
+                  </fieldset>
+                </div>
+                <div class="col-sm-6">
+                  <fieldset class="audio-import-options-fieldset">
+                    <legend>Audio quality</legend>
+                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="raw" /><i class="fa fa-microphone"></i>Raw</label>
+                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="improved" /><i class="fa fa-signal"></i>Improved</label>
+                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="mastered" /><i class="fa fa-check"></i>Mastered</label>
+                  </fieldset>
+                </div>
+              </div>
                 <button class="btn btn-primary modal-default-button" @click="onFormSubmit"
                 :class="{disabled : saveDisabled}">
                   <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Audio
@@ -167,7 +158,9 @@ export default {
         forceChunking: true,
         maxFilesize: 1024 * 1024 * 10
       },
-      choosingFile: false
+      choosingFile: false,
+      audioImportType: "copy",
+      audioImportQuality: "raw"
     }
   },
   mounted: function () {
@@ -362,6 +355,8 @@ export default {
       let api_url = this.API_URL + 'books/' + this.book.bookid + '/audiobooks/chunks';
       let api = this.$store.state.auth.getHttp()
       if (this.audioURL.length) toUpload.url = this.audioURL;
+      toUpload.audioImportType = this.audioImportType;
+      toUpload.audioImportQuality = this.audioImportQuality;
 
       //this.isUploading = true
       if (!this.audiobook._id) {
@@ -634,8 +629,10 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
     color: white;
 }
 #audioFiles {
-  max-height: 80px;
+  max-height: 75px;
   overflow-y: scroll;
+  padding: 0px 0px 0px 20px;
+  margin: 10px 0px;
 }
 
 .upload-error {
@@ -644,11 +641,49 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
 }
 
 </style>
-<style>
+<style lang="less">
 .dz-preview.dz-file-preview {
   display: none;
 }
 .vue-dropzone.dropzone.dz-clickable {
     display: inline-block;
+}
+.audio-import-options {
+  fieldset.audio-import-options-fieldset {
+    border: solid 1px black;
+    padding: 4px 15px;
+    height: 150px;
+    margin: 15px 0px;
+    legend {
+      padding: 2px 4px;
+      font-size: 14px;
+    }
+    label {
+      display: block;
+      cursor: pointer;
+      input {
+        margin: 0px 4px;
+      }
+      i.fa {
+        width: 30px;
+        text-align: center;
+        &.fa-signal, &.fa-check {
+          color: green;
+        }
+      }
+    }
+  }
+  .col-sm-6 {
+    padding: 0px;
+  }
+}
+.upload-files {
+  div {
+    text-align: right;
+    &:first-child {
+      text-align: left;
+      padding-left: 0px;
+    }
+  }
 }
 </style>

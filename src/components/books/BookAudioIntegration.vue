@@ -78,7 +78,7 @@
                         <span v-if="audiofile.duplicate " @click="duplicateAudiofileClick(audiofile.id, audiofile.duplicate, $event)" :title="audiofile.title ? audiofile.title : audiofile.name"><i>Duplicate: {{audiofile.title ? audiofile.title : audiofile.name}}</i></span>
                         <span v-if="renaming !== audiofile.id && !audiofile.duplicate"
                               :class="['audiofile-name-edit', audiofile.id.replace(/\./g, '')]"
-                              @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.title ? audiofile.title : audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
+                              @click="audiofileClick(audiofile.id, false, $event)"  :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
                         <input id="rename-input" type="text" v-model="audiofile.title" 
                              class="audiofile-name-edit"
                              @focusout="saveAudiobook()"
@@ -1112,6 +1112,10 @@
         } else {
           return false;
         }
+      },
+      
+      capitalizeFirst(text) {
+        return _.upperFirst(text);
       },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
