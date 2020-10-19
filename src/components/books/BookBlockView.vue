@@ -2381,6 +2381,8 @@ Save audio changes and realign the Block?`,
           content = content.replace(/<div[^>]*><p[^>]*>([\s\S]*?)<\/p><\/div>$/img, '<br>$1');
           content = content.replace(/<div[^>]*><p[^>]*>([\s\S]*?)<\/p>([\s\S]*?)<\/div>/img, '<br>$1<br>$2');
           content = content.replace(/<div[^>]*>([\s\S]*?)<\/div>/img, '<br>$1');
+          content = content.replace(/^<p[^>]*>([\s\S]*?)<\/p>$/img, '$1');
+          content = content.replace(/^<p[^>]*>([\s\S]*?)<\/p>/img, '$1<br>');
         }
         try {
           content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>([\\s\\S]+?)', 'gm'), '<br/>$1<br>$2')//paragrapth not preceeded by list
