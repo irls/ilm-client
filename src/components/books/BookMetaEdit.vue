@@ -84,7 +84,12 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' @input="update('title', $event)" :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit"></td>
+                </tr>
+
+                <tr class='title' v-if="currentBook.language !== 'en'">
+                  <td>Title EN</td>
+                  <td><input v-model='currentBook.title_en' @input="update('title_en', $event); " :disabled="!allowMetadataEdit"></td>
                 </tr>
 
                 <tr class='subtitle'>
@@ -96,13 +101,24 @@
                   <td>Author</td>
                   <td>
                     <template v-for="(author, i) in currentBook.author" >
-                      <input v-model='currentBook.author[i]' @input="update('author', $event)" :disabled="!allowMetadataEdit"><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
+                      <input v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit"><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
                     </template>
                     <button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button>
                   </td>
                 </tr>
 
-                <tr >
+                <tr class='author_en' v-if="currentBook.language !== 'en'">
+                  <td>Author EN</td>
+                  <td><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit"></td>
+                </tr>
+
+                <tr><td colspan="2"><hr /></td></tr>
+                <tr class='slug'>
+                  <td colspan="2">Slug</br><input v-model='currentBook.slug' @change="" :disabled="!allowMetadataEdit"> <button v-on:click="createSlug()"> # </button></td>
+                </tr>
+                <tr><td colspan="2"><hr /></td></tr>
+
+                <tr class='size'>
                   <td>Size</td>
                   <td class="pull-left">{{ Math.round(currentBook.wordcount / 300) }} pages</td>
                 </tr>
@@ -947,6 +963,12 @@ export default {
 
     update: _.debounce(function (key, event) {
       let val = typeof event === 'string' ? event : event.target.value;
+
+      if (key == 'title' || key == 'author' || key == 'title_en' || key == 'author_en' || key == 'language' ){
+        this.createSlug();
+      }
+
+
       this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
     }, 1500, {
       'leading': false,
@@ -1150,6 +1172,30 @@ export default {
     },
     publishContent() {
       return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
+    },
+    createSlug($event) {
+      let title = '';
+      let author = '';
+      let language = '';
+
+      if (this.currentBook.language === 'en'){
+        title  = this.currentBook.title;
+        author = this.currentBook.author;
+      } else {
+        title  = this.currentBook.title_en;
+        author = this.currentBook.author_en;
+      } 
+
+      return axios.get(this.API_URL + 'slug/'+ title +'/'+ author +'/'+ this.currentBook.language)
+       .then((result) => {
+         //console.log('result', result.data);
+         this.currentBook.slug = result.data;
+         this.liveUpdate('slug', result.data);
+         return result.data;
+       })
+       .catch((err, test) => {
+         console.log(err);
+       })
     },
     goToUnresolved(with_task = false) {
 
