@@ -951,7 +951,7 @@ export default {
       //if changed language let's refresh the page for update default block & footnote language.
 
       if (key == 'language'){
-        this.createSlug();
+        //this.createSlug();
         /*this.reloadBook()
         .then(() => {
           this.$root.$emit('book-reimported');
@@ -964,12 +964,6 @@ export default {
 
     update: _.debounce(function (key, event) {
       let val = typeof event === 'string' ? event : event.target.value;
-
-      if (key == 'title' || key == 'author' || key == 'title_en' || key == 'author_en' || key == 'language' ){
-        this.createSlug();
-      }
-
-
       this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
     }, 1500, {
       'leading': false,
