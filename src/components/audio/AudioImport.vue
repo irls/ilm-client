@@ -6,8 +6,8 @@
 
             <slot name="header">
               <div class="header-title">
-                <label class="header-h"><img src='/static/audiostack.png' class='audio-logo'></label>
-                <h3 class="header-h">Import New Audiobook</h3></div>
+                <h4 class="header-h">Import audio</h4>
+              </div>
 
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close')" v-if="!isUploading">
                 <i class="fa fa-times-circle-o" aria-hidden="true"></i>
@@ -75,11 +75,11 @@
                   </fieldset>
                 </div>
               </div>
-                <button class="btn btn-primary modal-default-button" @click="onFormSubmit"
-                :class="{disabled : saveDisabled}">
-                  <i class="fa fa-plus" aria-hidden="true"></i> &nbsp;  Import Audio
-                </button>
-
+              <div class="col-sm-12">
+                
+                <button class="btn btn-primary modal-default-button" @click="onFormSubmit" :class="{disabled : saveDisabled}">Import Audio</button>
+                <button class="btn btn-default modal-default-button" @click="$emit('close')">Cancel</button>
+              </div>
             </slot>
 
           </div>
@@ -538,10 +538,6 @@ div.coverimg {
 
 }
 
-.modal-default-button {
-  float: right;
-}
-
 .import-title {
   padding-left: 10px;
   padding-right:10px;
@@ -684,6 +680,13 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
       text-align: left;
       padding-left: 0px;
     }
+  }
+}
+
+.modal-default-button {
+  float: right;
+  &.btn-default {
+    margin: 0px 5px;
   }
 }
 </style>
