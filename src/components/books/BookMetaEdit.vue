@@ -951,11 +951,12 @@ export default {
       //if changed language let's refresh the page for update default block & footnote language.
 
       if (key == 'language'){
-        this.reloadBook()
+        this.createSlug();
+        /*this.reloadBook()
         .then(() => {
           this.$root.$emit('book-reimported');
           this.isBatchProgress = false;
-        })
+        })*/
       }
 
 
