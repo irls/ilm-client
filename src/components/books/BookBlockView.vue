@@ -528,24 +528,22 @@
         <tabs ref="htmlContentTabs">
           <tab :header="parnumComp || '0'">
             <div class="modal-title-wrapper">
-              <h4 class="modal-title">Block ID: {{shortBlockid}}</h4>
-            </div>
-            <div class="modal-title-wrapper">
-              <h4 class="modal-title">
-                <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Block audio URL</a>
+              <h4>Block ID:&nbsp;{{shortBlockid}}</h4>
+              <h4>
+                <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Audio URL</a>
               </h4>
             </div>
             <div class="block-content-update-pending">
               <span v-if="hasPendingContentChanges" class="block-content-update-pending">Block has not been updated yet with pending approval sub-block changes.</span>
             </div>
-            <div >{{blockHtmlHeader}}</div>
+            <div class="block-html-header">{{blockHtmlHeader}}</div>
             <!-- <textarea :ref="'block-html' + block.blockid" :disabled="!adminOrLibrarian || isSplittedBlock" class="block-html"></textarea> -->
             <codemirror
               :ref="'block-html' + block.blockid" 
               :options="getCodeMirrorOptions()"
               :class="[{'-disabled': !adminOrLibrarian || isSplittedBlock}]"
             />
-            <div>&lt;/div&gt;</div>
+            <div class="block-html-header">&lt;/div&gt;</div>
           </tab>
           <template v-if="block.getIsSplittedBlock()">
             <tab v-for="(blockPart, blockPartIdx) in blockParts" :header="(subBlockParnumComp ? subBlockParnumComp + '_' : '') + (blockPartIdx + 1)" v-bind:key="'part-' + blockPartIdx + '-html-content'">
@@ -5791,6 +5789,7 @@ Save text changes and realign the Block?`,
         font-weight: bold;
         float: left;
         width: 100%;
+        margin: 5px 0px;
       }
       .cm-tag, .cm-attribute, .cm-string, .cm-operator {
         color: #bfbfbf;
@@ -5803,6 +5802,7 @@ Save text changes and realign the Block?`,
         }
         .CodeMirror-wrap {
           background-color: white;
+          border: 1px solid gray;
         }
         /** {
           color: #dfdfdf;
@@ -5843,12 +5843,16 @@ Save text changes and realign the Block?`,
       display: inline-block;
       width: auto;
       white-space: nowrap;
-      margin: 0px 10px;
+      h4, span {
+        display: inline-block;
+        font-size: 15px;
+        margin-right: 10px;
+      }
     }
     .nav.nav-tabs {
       li {
         a {
-          font-size: 1.5em;
+          font-size: 1.2em;
           /*&:first-child {
             font-weight: bolder;
           }*/
@@ -5857,6 +5861,7 @@ Save text changes and realign the Block?`,
 
           a {
             font-weight: bolder;
+            font-size: 1.5em;
           }
         }
       }
@@ -5865,11 +5870,23 @@ Save text changes and realign the Block?`,
       /*div {
         margin: 15px 0px 5px 0px;
       }*/
+      .CodeMirror-wrap {
+        height: 430px;
+      }
       &:first-child {
         textarea {
-          height: 210px;
+          height: 350px;
+        }
+        .CodeMirror-wrap {
+          height: 350px;
         }
       }
+    }
+    .block-html-header {
+      margin: 10px 0px;
+    }
+    .scrtabs-tab-scroll-arrow {
+      border: none;
     }
   }
 /*ilm-block
