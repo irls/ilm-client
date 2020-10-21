@@ -1174,7 +1174,7 @@ export default {
     publishContent() {
       return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
     },
-    createSlug($event) {
+    createSlug() {
       let title = '';
       let author = '';
       let language = '';
@@ -1187,12 +1187,12 @@ export default {
         author = this.currentBook.author_en;
       } 
 
-      return axios.get(this.API_URL + 'slug/'+ title +'/'+ author +'/'+ this.currentBook.language)
+      return axios.get(this.API_URL + 'slug/'+ this.currentBook.bookid)
        .then((result) => {
          //console.log('result', result.data);
-         this.currentBook.slug = result.data;
-         this.liveUpdate('slug', result.data);
-         return result.data;
+         //this.currentBook.slug = result.data;
+         //this.liveUpdate('slug', result.data);
+         //return result.data;
        })
        .catch((err, test) => {
          console.log(err);
