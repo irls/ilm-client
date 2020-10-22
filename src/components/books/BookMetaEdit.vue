@@ -114,7 +114,7 @@
 
                 <tr><td colspan="2"><hr /></td></tr>
                 <tr class='slug'>
-                  <td colspan="2">Slug</br><input v-model='currentBook.slug' @change="" :disabled="!allowMetadataEdit"> <button v-on:click="createSlug()"> # </button></td>
+                  <td colspan="2">Slug</br><input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit" :style="[currentBook.slug_status === 1 ? {'background': '#eee'} : {'background': '#FFF'}]"></td>
                 </tr>
                 <tr><td colspan="2"><hr /></td></tr>
 
@@ -952,11 +952,11 @@ export default {
 
       if (key == 'language'){
         //this.createSlug();
-        /*this.reloadBook()
+        this.reloadBook()
         .then(() => {
           this.$root.$emit('book-reimported');
           this.isBatchProgress = false;
-        })*/
+        })
       }
 
 
@@ -964,6 +964,8 @@ export default {
 
     update: _.debounce(function (key, event) {
       let val = typeof event === 'string' ? event : event.target.value;
+      if (key == 'slug')
+        this.liveUpdate('slug_status', 0)
       this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
     }, 1500, {
       'leading': false,
@@ -1167,30 +1169,6 @@ export default {
     },
     publishContent() {
       return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
-    },
-    createSlug() {
-      let title = '';
-      let author = '';
-      let language = '';
-
-      if (this.currentBook.language === 'en'){
-        title  = this.currentBook.title;
-        author = this.currentBook.author;
-      } else {
-        title  = this.currentBook.title_en;
-        author = this.currentBook.author_en;
-      } 
-
-      return axios.get(this.API_URL + 'slug/'+ this.currentBook.bookid)
-       .then((result) => {
-         //console.log('result', result.data);
-         //this.currentBook.slug = result.data;
-         //this.liveUpdate('slug', result.data);
-         //return result.data;
-       })
-       .catch((err, test) => {
-         console.log(err);
-       })
     },
     goToUnresolved(with_task = false) {
 
