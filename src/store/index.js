@@ -194,11 +194,11 @@ export const store = new Vuex.Store({
       }
     ],
     bookDifficulties: [
-      'Primary',
-      'Beginner',
-      'Elementary',
-      'Intermediate',
-      'Advanced'
+      '1',
+      '2',
+      '4',
+      '6',
+      '11'
     ],
     loadBookWait: null,
     loadBookTaskWait: null,
