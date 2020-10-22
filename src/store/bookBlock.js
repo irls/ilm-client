@@ -988,6 +988,12 @@ class BookBlock {
   setPauseBefore(val) {
     this.pause_before = val;
   }
+
+  setPartContentChanged(partIdx, value) {
+    if (Array.isArray(this.parts) && this.parts[partIdx]) {
+      this.parts[partIdx].content_changed = value;
+    }
+  }
 }
 
 class FlagPart {

@@ -142,6 +142,7 @@ export const store = new Vuex.Store({
     blockSelection: {
       start: {},//block
       end: {},//block
+      refresh: false//for liveDB
     },
     alignCounter: {
       count: 0,
@@ -541,6 +542,13 @@ export const store = new Vuex.Store({
       if (meta) {
         if (meta.publishedVersion === 'false') {
           meta.publishedVersion = false;
+        }
+        if (meta.voices instanceof Object) {
+          Object.keys(meta.voices).forEach(k => {
+            if (k.indexOf('@') === 0) {// remove service parameters from voices object
+              delete meta.voices[k];
+            }
+          });
         }
         if (!meta.voices || (meta.voices && Object.keys(meta.voices).length === 0)) {
           meta.voices = {
@@ -1180,6 +1188,7 @@ export const store = new Vuex.Store({
       state.liveDB.stopWatch('metaV');
       state.liveDB.stopWatch('job');
       state.liveDB.stopWatch('blockV');
+      state.liveDB.stopWatch('task');
     },
     // logout event
     disconnectDB ({ state, commit }) {
@@ -1237,7 +1246,7 @@ export const store = new Vuex.Store({
         bookid = state.currentBookid
       }
       if (bookid) {
-        state.liveDB.startWatch(bookid, 'blockV', {bookid: bookid}, (data) => {
+        state.liveDB.startWatch(bookid + '-blockV', 'blockV', {bookid: bookid}, (data) => {
           if (data && data.block) {
             //state.storeListO.delBlock(data.block);
 
@@ -1247,7 +1256,7 @@ export const store = new Vuex.Store({
             }
             if (data.block.blockid &&
                 state.audioTasksQueue.block.blockId &&
-                tate.audioTasksQueue.block.blockId === data.block.blockid &&
+                state.audioTasksQueue.block.blockId === data.block.blockid &&
                 state.audioTasksQueue.block.partIdx !== null) {
 
               if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
@@ -1266,7 +1275,7 @@ export const store = new Vuex.Store({
                 }
               }
             }
-            if (data.action === 'insert' && data.block) {
+            if (data.action === 'create' && data.block) {
               if (!state.storeListO.get(data.block.id)) {
                 state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
               }
@@ -1320,6 +1329,13 @@ export const store = new Vuex.Store({
               store.commit('set_storeList', new BookBlock(data.block));
             }
             state.storeListO.refresh();
+            state.blockSelection.refresh = !state.blockSelection.refresh;
+            //dispatch('tc_loadBookTask', state.currentBookid);
+          }
+        });
+        state.liveDB.startWatch(bookid + '-task', 'task', {bookid: bookid}, (data) => {
+          //console.log('task', data);
+          if (data.task && (data.action == 'change' || data.action == 'delete')) {
             dispatch('tc_loadBookTask', state.currentBookid);
           }
         });
@@ -1970,6 +1986,9 @@ export const store = new Vuex.Store({
       };
       if (typeof partIdx !== 'undefined') {
         update.block.partIdx = partIdx;
+        if (typeof block.content_changed !== 'undefined') {
+          update.block.content_changed = block.content_changed;
+        }
       } else {
         update.block.parts = block.parts;
       }
@@ -2196,7 +2215,6 @@ export const store = new Vuex.Store({
       state.loadBookTaskWait = axios.get(address)
       return state.loadBookTaskWait
         .then((list) => {
-          //console.log('a2');
           state.loadBookTaskWait = null;
           state.tc_tasksByBlock = {}
           if (!bookid || !state.tc_userTasks.list) {
@@ -3688,6 +3706,7 @@ export const store = new Vuex.Store({
               block.setPartAudiosrc(alignBlock.partIdx, part.audiosrc, part.audiosrc_ver);
               block.setPartManualBoundaries(alignBlock.partIdx, part.manual_boundaries || []);
               block.setPartAudiosrcOriginal(alignBlock.partIdx, part.audiosrc_original || null);
+              block.setPartContentChanged(alignBlock.partIdx, part.content_changed || false);
               block.isAudioChanged = false;
               //this.isChanged = false;
               block.parts[alignBlock.partIdx].isAudioChanged = false;
@@ -3791,6 +3810,7 @@ export const store = new Vuex.Store({
                 if (block) {
                   block.setUpdated(b.updated);
                   block.setPauseBefore(b.pause_before);
+                  block.status.marked = b.status.marked;
                 }
               });
             }
