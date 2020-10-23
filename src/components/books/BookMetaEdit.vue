@@ -76,15 +76,20 @@
 
                 <tr class="extid">
                   <td>External Book Id</td>
-                  <td>
-                    <input v-model="currentBook.extid" @input="updateExtid($event)" :disabled="!allowMetadataEdit" :class="[{'has-error': validationErrors['extid'].length}]"/>
-                           <span class="validation-error" v-for="err in validationErrors['extid']">{{err}}</span>
+                  <td class='disabled'>{{currentBook.extid}}
+                    <!-- <input v-model="currentBook.extid" @input="updateExtid($event)" :disabled="!allowMetadataEdit" :class="[{'has-error': validationErrors['extid'].length}]"/>
+                           <span class="validation-error" v-for="err in validationErrors['extid']">{{err}}</span> -->
                   </td>
                 </tr>
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' @input="update('title', $event)" :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit"></td>
+                </tr>
+
+                <tr class='title' v-if="currentBook.language !== 'en'">
+                  <td>Title EN</td>
+                  <td><input v-model='currentBook.title_en' @input="update('title_en', $event); " :disabled="!allowMetadataEdit"></td>
                 </tr>
 
                 <tr class='subtitle'>
@@ -94,15 +99,25 @@
 
                 <tr class='author'>
                   <td>Author</td>
-                  <td>
-                    <template v-for="(author, i) in currentBook.author" >
-                      <input v-model='currentBook.author[i]' @input="update('author', $event)" :disabled="!allowMetadataEdit"><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
+                  <td >
+                    <template v-for="(author, i) in currentBook.author" ><input style="width: 70%;" v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit"><button v-on:click="currentBook.author[i] = 'Unknown';"><i class="fa fa-question"></i></button><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
                     </template>
                     <button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button>
                   </td>
                 </tr>
 
-                <tr >
+                <tr class='author_en' v-if="currentBook.language !== 'en'">
+                  <td>Author EN</td>
+                  <td><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit"><button v-on:click="currentBook.author_en = 'Unknown';"><i class="fa fa-question"></i></button></td>
+                </tr>
+
+                <tr><td colspan="2"><hr /></td></tr>
+                <tr class='slug'>
+                  <td colspan="2">Slug</br><input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit" :style="[currentBook.slug_status === 1 ? {'background': '#eee'} : {'background': '#FFF'}]" maxlength="100"></td>
+                </tr>
+                <tr><td colspan="2"><hr /></td></tr>
+
+                <tr class='size'>
                   <td>Size</td>
                   <td class="pull-left">{{ Math.round(currentBook.wordcount / 300) }} pages</td>
                 </tr>
@@ -935,11 +950,13 @@ export default {
       //if changed language let's refresh the page for update default block & footnote language.
 
       if (key == 'language'){
-        this.reloadBook()
-        .then(() => {
-          this.$root.$emit('book-reimported');
-          this.isBatchProgress = false;
-        })
+        setTimeout(() => {
+          this.reloadBook()
+          .then(() => {
+            this.$root.$emit('book-reimported');
+            this.isBatchProgress = false;
+          })
+        }, 1500)
       }
 
 
@@ -947,6 +964,8 @@ export default {
 
     update: _.debounce(function (key, event) {
       let val = typeof event === 'string' ? event : event.target.value;
+      if (key == 'slug')
+        this.liveUpdate('slug_status', 0)
       this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
     }, 1500, {
       'leading': false,
