@@ -76,9 +76,9 @@
 
                 <tr class="extid">
                   <td>External Book Id</td>
-                  <td>
-                    <input v-model="currentBook.extid" @input="updateExtid($event)" :disabled="!allowMetadataEdit" :class="[{'has-error': validationErrors['extid'].length}]"/>
-                           <span class="validation-error" v-for="err in validationErrors['extid']">{{err}}</span>
+                  <td class='disabled'>{{currentBook.extid}}
+                    <!-- <input v-model="currentBook.extid" @input="updateExtid($event)" :disabled="!allowMetadataEdit" :class="[{'has-error': validationErrors['extid'].length}]"/>
+                           <span class="validation-error" v-for="err in validationErrors['extid']">{{err}}</span> -->
                   </td>
                 </tr>
 
