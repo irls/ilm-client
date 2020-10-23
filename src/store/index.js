@@ -2662,6 +2662,9 @@ export const store = new Vuex.Store({
                               if (p.inid) {
                                 block.parts[i].inid = p.inid;
                               }
+                              if (p.isChanged || p.isAudioChanged) {
+                                block.parts[i] = p;
+                              }
                             });
                           }
                           if (state.audioTasksQueue.block.blockId && state.audioTasksQueue.block.blockId === block.blockid && state.audioTasksQueue.block.partIdx !== null) {
