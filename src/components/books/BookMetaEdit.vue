@@ -99,9 +99,8 @@
 
                 <tr class='author'>
                   <td>Author</td>
-                  <td>
-                    <template v-for="(author, i) in currentBook.author" >
-                      <input v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit"><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
+                  <td >
+                    <template v-for="(author, i) in currentBook.author" ><input style="width: 70%;" v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit"><button v-on:click="currentBook.author[i] = 'Unknown';"><i class="fa fa-question"></i></button><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
                     </template>
                     <button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button>
                   </td>
@@ -109,12 +108,12 @@
 
                 <tr class='author_en' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit"><button v-on:click="currentBook.author_en = 'Unknown';"><i class="fa fa-question"></i></button></td>
                 </tr>
 
                 <tr><td colspan="2"><hr /></td></tr>
                 <tr class='slug'>
-                  <td colspan="2">Slug</br><input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit" :style="[currentBook.slug_status === 1 ? {'background': '#eee'} : {'background': '#FFF'}]"></td>
+                  <td colspan="2">Slug</br><input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit" :style="[currentBook.slug_status === 1 ? {'background': '#eee'} : {'background': '#FFF'}]" maxlength="100"></td>
                 </tr>
                 <tr><td colspan="2"><hr /></td></tr>
 
