@@ -526,7 +526,7 @@
       </div>
       <div class="modal-body">
         <tabs ref="htmlContentTabs">
-          <tab :header="parnumComp || '0'">
+          <tab :header="parnumCompNotHidden || '0'">
             <div class="modal-title-wrapper">
               <h4>Block ID:&nbsp;{{shortBlockid}}</h4>
               <h4>
@@ -738,6 +738,16 @@ export default {
             return this.blockO.secnum;
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber && !this.blockO.isHidden) {
+            return this.blockO.parnum;
+          }
+          return '';
+      }},
+      parnumCompNotHidden: { cache: false,
+      get: function () {
+          if (this.blockO.type == 'header' && this.blockO.isNumber) {
+            return this.blockO.secnum;
+          }
+          if (this.blockO.type == 'par' && this.blockO.isNumber) {
             return this.blockO.parnum;
           }
           return '';
