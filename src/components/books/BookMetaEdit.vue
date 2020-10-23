@@ -99,23 +99,41 @@
 
                 <tr class='author'>
                   <td>Author</td>
-                  <td >
-                    <template v-for="(author, i) in currentBook.author" ><input style="width: 70%;" v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit"><button v-on:click="currentBook.author[i] = 'Unknown';"><i class="fa fa-question"></i></button><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
+                  <td style="text-align: left;">
+                    <template v-for="(author, i) in currentBook.author" ><input style="width: 70%;" v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit"><button :class="{'disabled': i > 0}"  :disabled="!allowMetadataEdit" v-on:click="currentBook.author[i] = 'Unknown';"><i class="fa fa-question"></i></button><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
                     </template>
-                    <button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button>
+                    <p style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button></p>
                   </td>
                 </tr>
 
                 <tr class='author_en' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit"><button v-on:click="currentBook.author_en = 'Unknown';"><i class="fa fa-question"></i></button></td>
+                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 70%;"> <button v-on:click="currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="border: 0;"><i class="fa fa-question"></i></button></td>
                 </tr>
 
-                <tr><td colspan="2"><hr /></td></tr>
-                <tr class='slug'>
-                  <td colspan="2">Slug</br><input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit" :style="[currentBook.slug_status === 1 ? {'background': '#eee'} : {'background': '#FFF'}]" maxlength="100"></td>
+                <tr class='language'>
+                  <td>Language</td>
+                  <td>
+                    <select class="form-control" v-model='currentBook.language' @change="change('language')" :key="currentBookid" :disabled="!allowMetadataEdit || currentBookMeta.collection_id">
+                      <option v-if="!languages.hasOwnProperty(currentBook.language)" :value="currentBook.language">{{ currentBook.language }}</option>
+                      <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
+                    </select>
+                  </td>
                 </tr>
-                <tr><td colspan="2"><hr /></td></tr>
+
+
+              </table>
+            </fieldset>
+
+              <table class='properties'>
+                <tr class='slug'>
+                  <td>Slug</br><input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit" :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="border-width: 1px;"></td>
+                </tr>
+              </table>
+
+            <fieldset>
+
+              <table class='properties'>
 
                 <tr class='size'>
                   <td>Size</td>
@@ -142,16 +160,6 @@
                       <option v-for="(value, ind) in subjectDifficulties" :value="value">{{ value }}</option>
                     </select>
                     <span v-if="requiredFields && requiredFields.difficulty" class="validation-error">Please define a Difficulty</span>
-                  </td>
-                </tr>
-
-                <tr class='language'>
-                  <td>Language</td>
-                  <td>
-                    <select class="form-control" v-model='currentBook.language' @change="change('language')" :key="currentBookid" :disabled="!allowMetadataEdit || currentBookMeta.collection_id">
-                      <option v-if="!languages.hasOwnProperty(currentBook.language)" :value="currentBook.language">{{ currentBook.language }}</option>
-                      <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
-                    </select>
                   </td>
                 </tr>
 
