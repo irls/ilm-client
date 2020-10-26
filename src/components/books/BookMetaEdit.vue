@@ -124,17 +124,13 @@
 
               </table>
             </fieldset>
-
-              <table class='properties'>
-                <tr class='slug'>
-                  <td>Slug</br><input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit || !adminOrLibrarian" :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="border: 1px solid rgb(118, 118, 118);"></td>
-                </tr>
-              </table>
+            <fieldset class='description brief'>
+              <legend>URL Slug </legend>
+                  <input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit || !adminOrLibrarian" :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;">
+            </fieldset>
 
             <fieldset>
-
               <table class='properties'>
-
                 <tr class='size'>
                   <td>Size</td>
                   <td class="pull-left">{{ Math.round(currentBook.wordcount / 300) }} pages</td>
