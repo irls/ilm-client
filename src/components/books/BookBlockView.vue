@@ -520,7 +520,7 @@
     <div v-on:wheel.stop="" :class="['-langblock-' + getBlockLang]">
       <div class="modal-header">
         <div>
-          <h4 class="modal-title">{{adminOrLibrarian ? 'Edit block HTML' : 'View block HTML'}}</h4>
+          <h4 class="modal-title">{{editBlockHTMLLabel}}</h4>
         </div>
         <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
       </div>
