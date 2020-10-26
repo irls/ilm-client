@@ -100,7 +100,12 @@
                 <tr class='author'>
                   <td>Author</td>
                   <td style="text-align: left;">
-                    <template v-for="(author, i) in currentBook.author" ><input style="width: 70%;" v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit"><button :class="{'disabled': i > 0}"  :disabled="!allowMetadataEdit" v-on:click="currentBook.author[i] = 'Unknown';"><i class="fa fa-question"></i></button><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
+                    <template v-for="(author, i) in currentBook.author" ><input style="width: 65%;" v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
+                    <button v-if="i == 0" v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" style="border: 1px solid #000; width: 30px;"><i class="fa fa-angle-down" :disabled="!allowMetadataEdit"></i></button>
+                    <button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit">
+                    <i class="fa fa-minus-circle" ></i></button>
+                    <div v-if="i == 0 && showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', 'Unknown');" style="width: 70px; position: relative; right: -170px; border: 1px solid #000; background-color: #fff; text-align: center; padding: 3px; cursor: default;">Unknown</div>
+                    <br/>
                     </template>
                     <p style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button></p>
                   </td>
@@ -108,7 +113,10 @@
 
                 <tr class='author_en' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 70%;"> <button v-on:click="currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="border: 0;"><i class="fa fa-question"></i></button></td>
+                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 65%;"> 
+                                                <button v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" style="border: 1px solid #000; width: 30px;"><i class="fa fa-angle-down"></i></button>
+                                                <div v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="width: 70px; position: relative; right: -170px; border: 1px solid #000; background-color: #fff; text-align: center; padding: 3px; cursor: default;">Unknown</div>
+                  </td>
                 </tr>
 
                 <tr class='language'>
@@ -601,9 +609,9 @@ export default {
        'tradition': 'حدیث',
        'husayn':   'حسین'
       },
-      pausesBeforeProps: new Map()
-
-
+      pausesBeforeProps: new Map(),
+      showUnknownAuthor:   -1,
+      showUnknownAuthorEn: -1
     }
   },
 
