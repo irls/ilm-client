@@ -100,7 +100,13 @@
                 <tr class='author'>
                   <td>Author</td>
                   <td style="text-align: left;">
-                    <template v-for="(author, i) in currentBook.author" ><input style="width: 70%;" v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit"><button :class="{'disabled': i > 0}"  :disabled="!allowMetadataEdit" v-on:click="currentBook.author[i] = 'Unknown';"><i class="fa fa-question"></i></button><button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
+                    <template v-for="(author, i) in currentBook.author" ><input style="width: 65%;" v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
+                                                <div class="dropdown" v-if="i === 0">
+                                                  <span v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></span>
+                                                  <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" style="margin-right: -75px;">Unknown</div>
+                                                </div>
+                                                <button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
+                    <br/>
                     </template>
                     <p style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button></p>
                   </td>
@@ -108,7 +114,13 @@
 
                 <tr class='author_en' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 70%;"> <button v-on:click="currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="border: 0;"><i class="fa fa-question"></i></button></td>
+                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 65%;"> 
+                                                <div class="dropdown">
+                                                  <span v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></span>
+                                                  <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="margin-right: -75px;">Unknown</div>
+                                                </div>
+                                                
+                  </td>
                 </tr>
 
                 <tr class='language'>
@@ -601,9 +613,9 @@ export default {
        'tradition': 'حدیث',
        'husayn':   'حسین'
       },
-      pausesBeforeProps: new Map()
-
-
+      pausesBeforeProps: new Map(),
+      showUnknownAuthor:   -1,
+      showUnknownAuthorEn: -1
     }
   },
 
@@ -2258,5 +2270,23 @@ Vue.filter('prettyBytes', function (num) {
   .meta-edit-tabs.vue-tabs .disabled i.fa-square-o{
     font-size: 18px;
   }
+
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-content {
+    top: 30px;
+    left:-84px;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 80px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    padding: 5px;
+    z-index: 1;
+    border: 1px solid #aaa;
+  }
+
 
 </style>
