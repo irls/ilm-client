@@ -101,10 +101,11 @@
                   <td>Author</td>
                   <td style="text-align: left;">
                     <template v-for="(author, i) in currentBook.author" ><input style="width: 65%;" v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
-                    <button v-if="i == 0" v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" style="border: 1px solid #000; width: 30px;"><i class="fa fa-angle-down" :disabled="!allowMetadataEdit"></i></button>
-                    <button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit">
-                    <i class="fa fa-minus-circle" ></i></button>
-                    <div v-if="i == 0 && showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', 'Unknown');" style="width: 70px; position: relative; right: -170px; border: 1px solid #000; background-color: #fff; text-align: center; padding: 3px; cursor: default;">Unknown</div>
+                                                <div class="dropdown" v-if="i === 0">
+                                                  <span v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></span>
+                                                  <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" style="margin-right: -75px;">Unknown</div>
+                                                </div>
+                                                <button v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit"><i class="fa fa-minus-circle" ></i></button>
                     <br/>
                     </template>
                     <p style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button></p>
