@@ -114,8 +114,11 @@
                 <tr class='author_en' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
                   <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 65%;"> 
-                                                <button v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" style="border: 1px solid #000; width: 30px;"><i class="fa fa-angle-down"></i></button>
-                                                <div v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="width: 70px; position: relative; right: -170px; border: 1px solid #000; background-color: #fff; text-align: center; padding: 3px; cursor: default;">Unknown</div>
+                                                <div class="dropdown">
+                                                  <span v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></span>
+                                                  <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="margin-right: -75px;">Unknown</div>
+                                                </div>
+                                                
                   </td>
                 </tr>
 
@@ -2266,5 +2269,23 @@ Vue.filter('prettyBytes', function (num) {
   .meta-edit-tabs.vue-tabs .disabled i.fa-square-o{
     font-size: 18px;
   }
+
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-content {
+    top: 30px;
+    left:-84px;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 80px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    padding: 5px;
+    z-index: 1;
+    border: 1px solid #aaa;
+  }
+
 
 </style>
