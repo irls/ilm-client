@@ -6864,7 +6864,7 @@ MediumEditor.extensions = {};
 
         // https://github.com/yabwe/medium-editor/issues/994
         // Firefox thrown an error when calling `formatBlock` on an empty editable blockContainer that's not a <div>
-        if (MediumEditor.util.isMediumEditorElement(node) && node.children.length === 0 && !MediumEditor.util.isBlockContainer(node)) {
+        if (MediumEditor.util.isMediumEditorElement(node) && node.children.length === 0 && !MediumEditor.util.isBlockContainer(node)) {// duplicate on backspace HERE
             this.options.ownerDocument.execCommand('formatBlock', false, 'p');
         }
 
@@ -7786,9 +7786,9 @@ MediumEditor.extensions = {};
             }
 
             // do some DOM clean-up for known browser issues after the action
-            if (action === 'insertunorderedlist' || action === 'insertorderedlist') {
-                MediumEditor.util.cleanListDOM(this.options.ownerDocument, this.getSelectedParentElement());
-            }
+            //if (action === 'insertunorderedlist' || action === 'insertorderedlist') {
+            //    MediumEditor.util.cleanListDOM(this.options.ownerDocument, this.getSelectedParentElement());
+            //}
 
             // https://github.com/yabwe/medium-editor/issues/1496
             // But only if something is selected i.e, getSelectedParentElement !== {}

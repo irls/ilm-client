@@ -1,6 +1,6 @@
 import MediumEditor from './medium-editor/js/medium-editor.js';
-require ('medium-editor-css')
-require ('medium-editor-theme')
+require('./medium-editor/css/medium-editor.min.css');
+require('./medium-editor/css/themes/flat.min.css');
 
 let QuoteButton = MediumEditor.Extension.extend({
   name: 'quoteButton',
