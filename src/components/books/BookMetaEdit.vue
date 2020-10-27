@@ -100,7 +100,7 @@
                 <tr class='author'>
                   <td>Author</td>
                   <td style="text-align: left;">
-                    <template v-for="(author, i) in currentBook.author" ><input style="width: 65%;" v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
+                    <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
                                                 <div class="dropdown" v-if="i === 0">
                                                   <span v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></span>
                                                   <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" style="margin-right: -75px;">Unknown</div>
@@ -112,9 +112,9 @@
                   </td>
                 </tr>
 
-                <tr class='author_en' v-if="currentBook.language !== 'en'">
+                <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 65%;"> 
+                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit"> 
                                                 <div class="dropdown">
                                                   <span v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></span>
                                                   <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="margin-right: -75px;">Unknown</div>
