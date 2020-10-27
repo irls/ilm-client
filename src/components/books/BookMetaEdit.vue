@@ -2286,6 +2286,7 @@ Vue.filter('prettyBytes', function (num) {
     padding: 5px;
     z-index: 1;
     border: 1px solid #aaa;
+    cursor: default;
   }
 
 
