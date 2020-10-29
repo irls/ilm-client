@@ -102,16 +102,9 @@
                   <td style="text-align: left;">
 
                     <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0">
-                    <div class="dropdown" v-if="currentBook.author.length === 0">
-                      <span v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></span>
-                      <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" style="margin-right: -75px;">Unknown</div>
-                    </div>
                     <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
-                                                <div class="dropdown" v-if="i === 0">
-                                                  <span v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></span>
-                                                  <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" style="margin-right: -75px;">Unknown</div>
-                                                </div>
-                                                <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
+                                               <select v-if="i == 0"  style="width:20px; min-width:20px;" @change="currentBook.author[0] = Unknown"><option value="Unknown">Unknown</option></select>
+                                               <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
                     <br/>
                     </template>
                     <p style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button></p>
@@ -120,12 +113,7 @@
 
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit"> 
-                                                <div class="dropdown">
-                                                  <span v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></span>
-                                                  <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="margin-right: -75px;">Unknown</div>
-                                                </div>
-                                                
+                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit"><select style="width:20px; min-width:20px;" ><option value="Unknown" v-on:click="currentBookMeta.author_en = '1111'">Unknown</option></select> 
                   </td>
                 </tr>
 
@@ -619,9 +607,7 @@ export default {
        'tradition': 'حدیث',
        'husayn':   'حسین'
       },
-      pausesBeforeProps: new Map(),
-      showUnknownAuthor:   -1,
-      showUnknownAuthorEn: -1
+      pausesBeforeProps: new Map()
     }
   },
 
@@ -995,6 +981,7 @@ export default {
     }),
 
     liveUpdate (key, value) {
+
         if(this.proofreadModeReadOnly)
             return ;
         if( typeof this.requiredFields[key] ) {
