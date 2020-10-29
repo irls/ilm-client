@@ -113,7 +113,11 @@
 
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit"><select style="width:20px; min-width:20px;" ><option value="Unknown" v-on:click="currentBookMeta.author_en = '1111'">Unknown</option></select> 
+                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit">
+                    <div class="dropdown">
+                      <span v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></span>
+                      <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="margin-right: -75px;">Unknown</div>
+                    </div>                  
                   </td>
                 </tr>
 
@@ -569,6 +573,8 @@ export default {
       blockTypes: BlockTypes,
       generatingAudiofile: false,
       audiobookChecker: false,
+      showUnknownAuthor: -1,
+      showUnknownAuthorEn: -1,
 
       // set blocks properties
       styleTabs: new Map(),
@@ -730,6 +736,8 @@ export default {
     this.setCurrentBookCounters();
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
     this.$root.$on('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
+    document.addEventListener("click", this.onClickOutside);
+
 
     if (this.selectionStart && this.selectionEnd) {
       this.collectCheckedStyles(this.selectionStart, this.selectionEnd)
@@ -907,6 +915,12 @@ export default {
         .then(() => {
 
         });*/
+    },
+    onClickOutside(event) {
+      console.log('here', event);
+      /*if (i.fa.fa-angle-down)
+      this.showUnknownAuthor = -1;
+      this.showUnknownAuthorEn = -1;*/
     },
     checkPublish(){
         this.requiredFields = [];
