@@ -48,9 +48,46 @@
         let popUpReady = false;
         let defaultCategory = ['story', 'Stories']; // means there is no category assigned
 
+
+        let canPublish = true;
+        let mandatoryFields = [];
+
+        //Book meta is incomplete. Define Title, Author, Title EN (title English translation), Author EN (author English translation) Category, and URL Slug before publishing
+
+        if (this.currentBookMeta.title == ''){
+            canPublish = false;
+            mandatoryFields.push('Title');
+        }
+
+        if (this.currentBookMeta.author.length == 0){
+            canPublish = false;
+            mandatoryFields.push('Author');
+        }
+
+        if (this.currentBookMeta.title_en == ''){
+            canPublish = false;
+            mandatoryFields.push('Title EN (title English translation)');
+        }
+
+        if (this.currentBookMeta.author_en == ''){
+            canPublish = false;
+            mandatoryFields.push('Author EN (author English translation)');
+        }
+
         if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
+            canPublish = false;
+            mandatoryFields.push('Category');
+        }
+
+        if (this.currentBookMeta.slug == ''){
+            canPublish = false;
+            mandatoryFields.push('URL slug');
+        }
+
+
+        if(!canPublish){
           title = 'Publication failed';
-          text = 'The Book has no Category. Please define it in Book Meta and try again';
+          text = 'Book meta is incomplete. Define ' + mandatoryFields.join(", ") + ' before publishing';
 
           buttons = [
               {
