@@ -103,7 +103,7 @@
 
                     <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0">
                     <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
-                                               <select v-if="i == 0"  style="width:20px; min-width:20px;" @change="currentBook.author[0] = Unknown"><option value="Unknown">Unknown</option></select>
+                                               <select v-if="i == 0"  style="width:20px; min-width:20px;" @change="currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" ><option value ="0" hidden>---</option><option value="Unknown" >Unknown</option></select>
                                                <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
                     <br/>
                     </template>
@@ -114,10 +114,7 @@
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
                   <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit">
-                    <div class="dropdown">
-                      <span v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></span>
-                      <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="margin-right: -75px;">Unknown</div>
-                    </div>                  
+                                                <select   style="width:20px; min-width:20px;" @change="currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" ><option value ="0" hidden>---</option><option value="1" >Unknown</option></select>
                   </td>
                 </tr>
 
@@ -736,9 +733,7 @@ export default {
     this.setCurrentBookCounters();
     this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
     this.$root.$on('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
-    document.addEventListener("click", this.onClickOutside);
-
-
+    /*document.addEventListener("click", this.onClickOutside);*/
     if (this.selectionStart && this.selectionEnd) {
       this.collectCheckedStyles(this.selectionStart, this.selectionEnd)
     }
@@ -916,12 +911,13 @@ export default {
 
         });*/
     },
+    /*
+    //close unknown author if clicked outside
     onClickOutside(event) {
-      console.log('here', event);
-      /*if (i.fa.fa-angle-down)
+      console.log('event', event);
       this.showUnknownAuthor = -1;
-      this.showUnknownAuthorEn = -1;*/
-    },
+      this.showUnknownAuthorEn = -1;
+    },*/
     checkPublish(){
         this.requiredFields = [];
 
@@ -2278,6 +2274,7 @@ Vue.filter('prettyBytes', function (num) {
     font-size: 18px;
   }
 
+  /*
   .dropdown {
     position: relative;
     display: inline-block;
@@ -2295,6 +2292,7 @@ Vue.filter('prettyBytes', function (num) {
     border: 1px solid #aaa;
     cursor: default;
   }
+  */
 
 
 </style>
