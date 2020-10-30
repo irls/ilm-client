@@ -103,7 +103,7 @@
 
                     <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0">
                     <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
-                                               <select v-if="i == 0"  style="width:20px; min-width:20px;" @change="currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" ><option value ="0" hidden>---</option><option value="Unknown" >Unknown</option></select>
+                                               <select v-if="i == 0"  style="width:20px; min-width:20px;" @change="currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author); showUnknownAuthor = -1;" v-model="showUnknownAuthor"><option value ="-1" hidden>---</option><option value="1" > Unknown&nbsp;&nbsp; </option></select>
                                                <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
                     <br/>
                     </template>
@@ -114,7 +114,7 @@
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
                   <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit">
-                                                <select   style="width:20px; min-width:20px;" @change="currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" ><option value ="0" hidden>---</option><option value="1" >Unknown</option></select>
+                                                <select style="width:20px; min-width:20px;" @change="currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown'); showUnknownAuthorEn = -1;" v-model="showUnknownAuthorEn"><option value ="-1" hidden>---</option><option value="1"> Unknown&nbsp;&nbsp; </option></select>
                   </td>
                 </tr>
 
@@ -2274,25 +2274,10 @@ Vue.filter('prettyBytes', function (num) {
     font-size: 18px;
   }
 
-  /*
-  .dropdown {
-    position: relative;
-    display: inline-block;
-  }
-
-  .dropdown-content {
-    top: 30px;
-    left:-84px;
-    position: absolute;
-    background-color: #f9f9f9;
-    min-width: 80px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  .author select * {
     padding: 5px;
-    z-index: 1;
-    border: 1px solid #aaa;
-    cursor: default;
+    margin: 5px;
+    font-size: 110%;
   }
-  */
-
 
 </style>
