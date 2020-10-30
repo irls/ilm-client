@@ -54,6 +54,8 @@
 
         //Book meta is incomplete. Define Title, Author, Title EN (title English translation), Author EN (author English translation) Category, and URL Slug before publishing
 
+        console.log('meta', this.currentBookMeta);
+
         if (this.currentBookMeta.title == ''){
             canPublish = false;
             mandatoryFields.push('Title');
@@ -64,12 +66,12 @@
             mandatoryFields.push('Author');
         }
 
-        if (this.currentBookMeta.title_en == ''){
+        if (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en')){
             canPublish = false;
             mandatoryFields.push('Title EN (title English translation)');
         }
 
-        if (this.currentBookMeta.author_en == ''){
+        if (this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en')){
             canPublish = false;
             mandatoryFields.push('Author EN (author English translation)');
         }
@@ -79,7 +81,7 @@
             mandatoryFields.push('Category');
         }
 
-        if (this.currentBookMeta.slug == ''){
+        if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
             canPublish = false;
             mandatoryFields.push('URL slug');
         }
