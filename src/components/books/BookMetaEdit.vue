@@ -107,7 +107,10 @@
 
                     <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" >
                     <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
-                                               <select v-if="i == 0"  style="width:20px; min-width:20px;" @change="currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author); showUnknownAuthor = -1;" v-model="showUnknownAuthor"><option value ="-1" hidden>---</option><option value="1" > Unknown&nbsp;&nbsp; </option></select>
+                                                <div class="dropdown" v-if="i == 0">
+                                                  <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
+                                                  <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', author);" >Unknown</div>
+                                                </div>
                                                <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
                     <br/>
                     </template>
@@ -120,8 +123,8 @@
                   <td>Author EN</td>
                   <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 90%;">
                                                 <div class="dropdown">
-                                                  <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></div>
-                                                  <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="margin-right: -75px;">Unknown</div>
+                                                  <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
+                                                  <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" >Unknown</div>
                                                 </div>
                     <br><span v-if="requiredFields && requiredFields.author_en" class="validation-error">Define Author EN</span>
 
@@ -492,6 +495,7 @@
       </div>
     </modal>
 
+    <div v-if="showUnknownAuthor == 1" class="outside" v-on:click="showUnknownAuthor = -1"></div>
     <div v-if="showUnknownAuthorEn == 1" class="outside" v-on:click="showUnknownAuthorEn = -1"></div>
   </div>
 
@@ -2015,8 +2019,8 @@ Vue.filter('prettyBytes', function (num) {
   table tr input {font-size: 1em; width: 100%}
   tr.subtitle input {font-size: .85em; width: 100%; line-height: 1.85em;}
   tr.author input {width: 90%;}
-  tr.author button {border: none; background-color: inherit; padding: 0}
-  tr.author button.disabled i {display: none;}
+  tr.author button {border: none !important; background-color: inherit; padding: 0}
+  tr.author button.disabled i {display: none; border: none;}
   .disabled {font-style: italic; color: gray; font-size: .85em;}
 
   /* publication info */
@@ -2313,21 +2317,28 @@ Vue.filter('prettyBytes', function (num) {
     font-size: 18px;
   }
 
-  .author select * {
+  /*.author select * {
     padding: 5px;
     margin: 5px;
     font-size: 110%;
-  }
+  } */
 
   .dropdown {
     position: relative;
     display: inline-block;
   }
 
+  .dropdown-button {
+    border: 1px solid #444;
+    border-radius: 2px;
+    padding: 4px;
+    height: 30px
+  }
+
   .dropdown-content {
     cursor: default;
-    top: 25px;
-    left:-84px;
+    top: 30px;
+    left:-59px;
     position: absolute;
     background-color: #f9f9f9;
     min-width: 80px;
