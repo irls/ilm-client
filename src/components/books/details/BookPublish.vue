@@ -66,12 +66,12 @@
             mandatoryFields.push('Author');
         }
 
-        if (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en')){
+        if (this.currentBookMeta.language != 'en' && this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en')){
             canPublish = false;
             mandatoryFields.push('Title EN (title English translation)');
         }
 
-        if (this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en')){
+        if (this.currentBookMeta.language != 'en' && this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en')){
             canPublish = false;
             mandatoryFields.push('Author EN (author English translation)');
         }
