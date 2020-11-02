@@ -84,12 +84,16 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit">
+                      <br><span v-if="requiredFields && requiredFields.title" class="validation-error">Define Title</span>
+                  </td>
                 </tr>
 
                 <tr class='title' v-if="currentBook.language !== 'en'">
                   <td>Title EN</td>
-                  <td><input v-model='currentBook.title_en' @input="update('title_en', $event); " :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model='currentBook.title_en' @input="update('title_en', $event); " :disabled="!allowMetadataEdit">
+                      <br><span v-if="requiredFields && requiredFields.title_en" class="validation-error">Define Title EN</span>
+                  </td>
                 </tr>
 
                 <tr class='subtitle'>
@@ -101,20 +105,23 @@
                   <td>Author</td>
                   <td style="text-align: left;">
 
-                    <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0">
+                    <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" >
                     <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
                                                <select v-if="i == 0"  style="width:20px; min-width:20px;" @change="currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author); showUnknownAuthor = -1;" v-model="showUnknownAuthor"><option value ="-1" hidden>---</option><option value="1" > Unknown&nbsp;&nbsp; </option></select>
                                                <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
                     <br/>
                     </template>
-                    <p style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button></p>
+                    <p style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit" style="margin-right: 6px;"><i class="fa fa-plus-circle"></i></button></p>
+                    <br><span v-if="requiredFields && requiredFields.author" class="validation-error">Define Author</span>
                   </td>
                 </tr>
 
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit">
+                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 90%;">
                                                 <select style="width:20px; min-width:20px;" @change="currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown'); showUnknownAuthorEn = -1;" v-model="showUnknownAuthorEn"><option value ="-1" hidden>---</option><option value="1"> Unknown&nbsp;&nbsp; </option></select>
+                    <br><span v-if="requiredFields && requiredFields.author_en" class="validation-error">Define Author EN</span>
+
                   </td>
                 </tr>
 
@@ -134,6 +141,7 @@
             <fieldset class='description brief'>
               <legend>URL Slug </legend>
                   <input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit || !adminOrLibrarian" :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;">
+                  <br><span v-if="requiredFields && requiredFields.slug" class="validation-error">Define URL Slug</span>
             </fieldset>
 
             <fieldset>
@@ -153,7 +161,7 @@
                         </optgroup>
                       </template>
                     </select>
-                    <span v-if="requiredFields && requiredFields.category" class="validation-error">Please define a Category</span>
+                    <span v-if="requiredFields && requiredFields.category" class="validation-error">Define Category</span>
                   </td>
                        </tr>
                 <tr class='difficulty'>
@@ -924,8 +932,29 @@ export default {
         let defaultCategory = ['story', 'Stories']; // means there is no category assigned
 
         if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
-            this.requiredFields.category = true;
+          this.requiredFields.category = true;
         }
+
+        if (this.currentBookMeta.title == ''){
+          this.requiredFields.title = true;
+        }
+
+        if (this.currentBookMeta.author[0] == ''){
+          this.requiredFields.author = true;
+        }
+
+        if (this.currentBookMeta.language != 'en' && this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en')){
+          this.requiredFields.title_en = true;
+        }
+
+        if (this.currentBookMeta.language != 'en' && this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en')){
+          this.requiredFields.author_en = true;
+        }
+
+        if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
+          this.requiredFields.slug = true;
+        }
+
 
     },
 
@@ -1743,11 +1772,15 @@ export default {
       let errors = [];
       if (Number(value) == value && value % 1 !== 0) {
         if (value > maxValue || value < minValue || (value.split('.')[1]).toString().length > 2) {
-          errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
+          //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
+          //ILM-3622:
+          errors.push('Allowed range ' + minValue + ' - ' + maxValue );
         }
       } else {
         if (value !== '' && (Number(value) != value || (value > maxValue || value < minValue))) {
-          errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
+          //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');  
+          //ILM-3622:
+          errors.push('Allowed range ' + minValue + ' - ' + maxValue );
         }
       }
 
@@ -1977,8 +2010,8 @@ Vue.filter('prettyBytes', function (num) {
   table tr.changed {border: 2px solid wheat}
   table tr input {font-size: 1em; width: 100%}
   tr.subtitle input {font-size: .85em; width: 100%; line-height: 1.85em;}
-  tr.author input {width: 80%;}
-  tr.author button {width: 15%; border: none; background-color: inherit;}
+  tr.author input {width: 90%;}
+  tr.author button {border: none; background-color: inherit; padding: 0}
   tr.author button.disabled i {display: none;}
   .disabled {font-style: italic; color: gray; font-size: .85em;}
 
@@ -2201,11 +2234,13 @@ Vue.filter('prettyBytes', function (num) {
     .has-error {
         border: 1px solid red;
     }
-    .validation-error {
-        width: 100%;
-        color: red;
-    }
   }
+  fieldset  .validation-error {
+    width: 100% !important;
+    color: red;
+    float: left !important;
+  }
+
 </style>
 
 <style lang="less">
