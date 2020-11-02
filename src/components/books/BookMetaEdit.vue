@@ -153,7 +153,7 @@
                         </optgroup>
                       </template>
                     </select>
-                    <span v-if="requiredFields && requiredFields.category" class="validation-error">Please define a Category</span>
+                    <span v-if="requiredFields && requiredFields.category" class="validation-error">Define Category</span>
                   </td>
                        </tr>
                 <tr class='difficulty'>
@@ -1743,11 +1743,15 @@ export default {
       let errors = [];
       if (Number(value) == value && value % 1 !== 0) {
         if (value > maxValue || value < minValue || (value.split('.')[1]).toString().length > 2) {
-          errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
+          //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
+          //ILM-3622:
+          errors.push('Allowed range ' + minValue + ' - ' + maxValue );
         }
       } else {
         if (value !== '' && (Number(value) != value || (value > maxValue || value < minValue))) {
-          errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
+          //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');  
+          //ILM-3622:
+          errors.push('Allowed range ' + minValue + ' - ' + maxValue );
         }
       }
 
