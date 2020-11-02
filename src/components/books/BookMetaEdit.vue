@@ -119,7 +119,10 @@
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
                   <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 90%;">
-                                                <select style="width:20px; min-width:20px;" @change="currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown'); showUnknownAuthorEn = -1;" v-model="showUnknownAuthorEn"><option value ="-1" hidden>---</option><option value="1"> Unknown&nbsp;&nbsp; </option></select>
+                                                <div class="dropdown">
+                                                  <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" ><i class="fa fa-angle-down" style="margin-left: -25px;"></i></div>
+                                                  <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" style="margin-right: -75px;">Unknown</div>
+                                                </div>
                     <br><span v-if="requiredFields && requiredFields.author_en" class="validation-error">Define Author EN</span>
 
                   </td>
@@ -489,6 +492,7 @@
       </div>
     </modal>
 
+    <div v-if="showUnknownAuthorEn == 1" class="outside" v-on:click="showUnknownAuthorEn = -1"></div>
   </div>
 
 </template>
@@ -2313,6 +2317,37 @@ Vue.filter('prettyBytes', function (num) {
     padding: 5px;
     margin: 5px;
     font-size: 110%;
+  }
+
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-content {
+    cursor: default;
+    top: 25px;
+    left:-84px;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 80px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    padding: 5px;
+    z-index: 1;
+    border: 1px solid #aaa;
+  }
+
+  .dropdown-content:hover {
+    background: #1e90ff;
+    color: #fff;
+  }
+
+  .outside {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0px;
+    left: 0px;
   }
 
 </style>
