@@ -101,19 +101,19 @@
                   <td>Author</td>
                   <td style="text-align: left;">
 
-                    <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0">
+                    <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" >
                     <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
                                                <select v-if="i == 0"  style="width:20px; min-width:20px;" @change="currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author); showUnknownAuthor = -1;" v-model="showUnknownAuthor"><option value ="-1" hidden>---</option><option value="1" > Unknown&nbsp;&nbsp; </option></select>
                                                <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
                     <br/>
                     </template>
-                    <p style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit"><i class="fa fa-plus-circle"></i></button></p>
+                    <p style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit" style="margin-right: 6px;"><i class="fa fa-plus-circle"></i></button></p>
                   </td>
                 </tr>
 
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit">
+                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 90%;">
                                                 <select style="width:20px; min-width:20px;" @change="currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown'); showUnknownAuthorEn = -1;" v-model="showUnknownAuthorEn"><option value ="-1" hidden>---</option><option value="1"> Unknown&nbsp;&nbsp; </option></select>
                   </td>
                 </tr>
@@ -1981,8 +1981,8 @@ Vue.filter('prettyBytes', function (num) {
   table tr.changed {border: 2px solid wheat}
   table tr input {font-size: 1em; width: 100%}
   tr.subtitle input {font-size: .85em; width: 100%; line-height: 1.85em;}
-  tr.author input {width: 80%;}
-  tr.author button {width: 15%; border: none; background-color: inherit;}
+  tr.author input {width: 90%;}
+  tr.author button {border: none; background-color: inherit; padding: 0}
   tr.author button.disabled i {display: none;}
   .disabled {font-style: italic; color: gray; font-size: .85em;}
 
