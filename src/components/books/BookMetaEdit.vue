@@ -85,14 +85,14 @@
                 <tr class='title'>
                   <td>Title</td>
                   <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit">
-                      <br><span v-if="requiredFields && requiredFields.title" class="validation-error">Define Title</span>
+                      <span v-if="requiredFields && requiredFields.title" class="validation-error">Define Title</span>
                   </td>
                 </tr>
 
                 <tr class='title' v-if="currentBook.language !== 'en'">
                   <td>Title EN</td>
                   <td><input v-model='currentBook.title_en' @input="update('title_en', $event); " :disabled="!allowMetadataEdit">
-                      <br><span v-if="requiredFields && requiredFields.title_en" class="validation-error">Define Title EN</span>
+                      <span v-if="requiredFields && requiredFields.title_en" class="validation-error">Define Title EN</span>
                   </td>
                 </tr>
 
@@ -109,13 +109,13 @@
                     <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
                                                 <div class="dropdown" v-if="i == 0">
                                                   <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
-                                                  <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; " >Unknown</div>
+                                                  <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
                                                 </div>
                                                <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
                     <br/>
                     </template>
                     <p style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit" style="margin-right: 6px;"><i class="fa fa-plus-circle"></i></button></p>
-                    <br><span v-if="requiredFields && requiredFields.author" class="validation-error">Define Author</span>
+                    <span v-if="requiredFields && requiredFields.author" class="validation-error">Define Author</span>
                   </td>
                 </tr>
 
@@ -126,7 +126,7 @@
                                                   <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
                                                   <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" >Unknown</div>
                                                 </div>
-                    <br><span v-if="requiredFields && requiredFields.author_en" class="validation-error">Define Author EN</span>
+                    <span v-if="requiredFields && requiredFields.author_en" class="validation-error">Define Author EN</span>
 
                   </td>
                 </tr>
