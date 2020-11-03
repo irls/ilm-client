@@ -103,7 +103,7 @@
 
                 <tr class='author'>
                   <td>Author</td>
-                  <td style="text-align: left;">
+                  <td style="text-align: left !important;">
 
                     <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields && requiredFields.author }">
                                                 <div class="dropdown" v-if="currentBook.author.length === 0">
@@ -120,7 +120,7 @@
                     <br/>
                     </template>
                     <p style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit" style="margin-right: 6px;"><i class="fa fa-plus-circle"></i></button></p>
-                    <span v-if="requiredFields && requiredFields.author" class="validation-error">Define Author</span>
+                    <span v-if="requiredFields && requiredFields.author" class="validation-error" style="text-align: right !important;">Define Author</span>
                   </td>
                 </tr>
 
