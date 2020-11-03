@@ -948,12 +948,11 @@ export default {
           this.requiredFields.category = true;
         }
 
-        //console.log('title', this.currentBookMeta.title);
         if (this.currentBookMeta.title == ''){
           this.requiredFields.title = true;
         }
 
-        if (this.currentBookMeta.author[0] == ''){
+        if (this.currentBookMeta.author.join("").length == 0){
           this.requiredFields.author = true;
         }
 
@@ -1034,7 +1033,6 @@ export default {
     }),
 
     liveUpdate (key, value) {
-
         if(this.proofreadModeReadOnly)
             return ;
         if( typeof this.requiredFields[key] ) {
@@ -1044,14 +1042,14 @@ export default {
         if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
         {
             try {
-              delete this.requiredFields[slug];
+              delete this.requiredFields['slug'];
             } catch (err){
             }
         }
         if (this.currentBook.author != 'en' && (key == 'title_en' || key == 'author_en'))
         {
             try {
-              delete this.requiredFields[slug];
+              delete this.requiredFields['slug'];
             } catch (err){
             }
         }

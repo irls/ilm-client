@@ -61,7 +61,7 @@
             mandatoryFields.push('Title');
         }
 
-        if (this.currentBookMeta.author.length == 0){
+        if (this.currentBookMeta.author.join("").length == 0){
             canPublish = false;
             mandatoryFields.push('Author');
         }
