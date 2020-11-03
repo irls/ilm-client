@@ -84,14 +84,14 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit">
+                  <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields && requiredFields.title }">
                       <span v-if="requiredFields && requiredFields.title" class="validation-error">Define Title</span>
                   </td>
                 </tr>
 
                 <tr class='title' v-if="currentBook.language !== 'en'">
                   <td>Title EN</td>
-                  <td><input v-model='currentBook.title_en' @input="update('title_en', $event); " :disabled="!allowMetadataEdit">
+                  <td><input v-model='currentBook.title_en' @input="update('title_en', $event); " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields && requiredFields.title_en }">
                       <span v-if="requiredFields && requiredFields.title_en" class="validation-error">Define Title EN</span>
                   </td>
                 </tr>
@@ -105,7 +105,7 @@
                   <td>Author</td>
                   <td style="text-align: left;">
 
-                    <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0">
+                    <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields && requiredFields.author }">
                                                 <div class="dropdown" v-if="currentBook.author.length === 0">
                                                   <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
                                                   <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
@@ -126,7 +126,7 @@
 
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 90%;">
+                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 90%;" v-bind:class="{ 'text-danger': requiredFields && requiredFields.author_en }">
                                                 <div class="dropdown">
                                                   <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
                                                   <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" >Unknown</div>
@@ -149,9 +149,9 @@
 
               </table>
             </fieldset>
-            <fieldset class='description brief'>
+            <fieldset class='description brief' style="text-align: right;">
               <legend>URL Slug </legend>
-                  <input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit || !adminOrLibrarian" :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug">
+                  <input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit || !adminOrLibrarian" :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug" v-bind:class="{ 'text-danger': requiredFields && requiredFields.slug }">
                   <br><span v-if="requiredFields && requiredFields.slug" class="validation-error">Define URL Slug</span>
             </fieldset>
 
@@ -1909,7 +1909,7 @@ Vue.filter('prettyBytes', function (num) {
 });
 </script>
 <style>
-  select.text-danger#categorySelection{
+  select.text-danger#categorySelection, input.text-danger{
     border: 1px solid red!important;
     border-radius: 0px;
   }
@@ -2033,7 +2033,7 @@ Vue.filter('prettyBytes', function (num) {
     border-collapse: separate; border-spacing: 3px;
   }
   table.properties td:nth-child(1) {width: 30%; padding: 3px; margin:0}
-  table.properties td:nth-child(2) {width: auto; text-align: right}
+  table.properties td:nth-child(2) {width: auto; text-align: right !important;}
   table.properties tr:nth-child(odd) {background-color: #F0F0F0}
   table tr {border: 2px solid white}
   table tr.changed {border: 2px solid wheat}
