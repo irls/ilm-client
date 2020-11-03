@@ -948,6 +948,7 @@ export default {
           this.requiredFields.category = true;
         }
 
+        //console.log('title', this.currentBookMeta.title);
         if (this.currentBookMeta.title == ''){
           this.requiredFields.title = true;
         }
@@ -1039,6 +1040,23 @@ export default {
         if( typeof this.requiredFields[key] ) {
             delete this.requiredFields[key];
         }
+
+        if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
+        {
+            try {
+              delete this.requiredFields[slug];
+            } catch (err){
+            }
+        }
+        if (this.currentBook.author != 'en' && (key == 'title_en' || key == 'author_en'))
+        {
+            try {
+              delete this.requiredFields[slug];
+            } catch (err){
+            }
+        }
+
+
       //if (!this.updateAllowed) {
         //return Promise.resolve();
       //}
