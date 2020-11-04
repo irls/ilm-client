@@ -1024,8 +1024,6 @@ export default {
 
     update: _.debounce(function (key, event) {
       let val = typeof event === 'string' ? event : event.target.value;
-      if (key == 'slug')
-        this.liveUpdate('slug_status', 0)
       this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
     }, 1500, {
       'leading': false,
