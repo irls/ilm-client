@@ -150,7 +150,7 @@
               </table>
             </fieldset>
             <fieldset class='description brief' style="text-align: right;">
-              <legend>URL Slug </legend>
+              <legend style="text-align: left;">URL Slug </legend>
                   <input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit || !adminOrLibrarian || currentBook.slug_status == -1" :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug" v-bind:class="{ 'text-danger': requiredFields && requiredFields.slug }">
                   <br><span v-if="requiredFields && requiredFields.slug" class="validation-error">Define URL Slug</span>
             </fieldset>
