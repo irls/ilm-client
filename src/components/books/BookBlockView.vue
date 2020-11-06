@@ -4536,9 +4536,9 @@ Save text changes and realign the Block?`,
       setPartsHtml() {
         if (!this.block.getIsSplittedBlock()) {
           let blockValue = this.$refs[`block-html${this.block.blockid}`].codemirror.doc.getValue();
-          if (this.$refs.blocks[0].innerHTML !== blockValue) {
+          if (this.$refs.blocks[0].$refs.blockContent.innerHTML !== blockValue) {
             this.block.content = blockValue;
-            this.$refs.blocks[0].innerHTML = this.block.content;
+            this.$refs.blocks[0].$refs.blockContent.innerHTML = this.block.content;
             this.pushChange('content');
           }
         } else {
@@ -4573,7 +4573,7 @@ Save text changes and realign the Block?`,
           theme: 'base16-light',
           lineWrapping: true,
           readOnly: !this.adminOrLibrarian || (this.block.getIsSplittedBlock() && partIdx === null),
-          direction: ['ar', 'fa'].indexOf(this.getBlockLang) === -1 ? 'ltr' : 'rtl',
+          //direction: ['ar', 'fa'].indexOf(this.getBlockLang) === -1 ? 'ltr' : 'rtl',
           //pollInterval: 50
           //htmlMode: true,
           specialChars: /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\ufeff\ufff9-\ufffc\=]/,
