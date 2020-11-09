@@ -151,7 +151,7 @@
             </fieldset>
             <fieldset class='description brief' style="text-align: right;">
               <legend style="text-align: left;">URL Slug </legend>
-                  <input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit || !adminOrLibrarian || currentBook.slug_status == -1" :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug" v-bind:class="{ 'text-danger': requiredFields && requiredFields.slug }">
+                  <input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit || !adminOrLibrarian || currentBook.slug_status == -1 || currentBook.published === true" :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug" v-bind:class="{ 'text-danger': requiredFields && requiredFields.slug }">
                   <br><span v-if="requiredFields && requiredFields.slug" class="validation-error">Define URL Slug</span>
             </fieldset>
 
@@ -788,16 +788,16 @@ export default {
       handler (val) {
         this.init()
 
-        //this.requiredFields = [];
-
         //let's force to generate slug if slug is absent in meta
-        /*if (!this.currentBook.hasOwnProperty('slug')){
-          if (this.currentBook.hasOwnProperty('published') && this.currentBook.published == true)
-            this.liveUpdate('slug_status', -1)
-          else
-            this.liveUpdate('slug_status', 1)
-          this.liveUpdate('title', this.currentBook.title)
-        }*/
+        if (this.currentBook.slug_status === undefined){
+          try{
+            this.liveUpdate('title', this.currentBook.title)
+            if (this.currentBook.hasOwnProperty('published') && this.currentBook.published == true)
+              this.liveUpdate('slug_status', -1)
+          } catch (e){
+            //console.log('error update');
+          }
+        }
       },
       deep: true
     },
