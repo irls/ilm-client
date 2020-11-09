@@ -788,6 +788,8 @@ export default {
       handler (val) {
         this.init()
 
+        this.requiredFields = [];
+
         //let's force to generate slug if slug is absent in meta
         /*if (!this.currentBook.hasOwnProperty('slug')){
           if (this.currentBook.hasOwnProperty('published') && this.currentBook.published == true)
