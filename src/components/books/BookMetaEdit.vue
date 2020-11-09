@@ -1920,6 +1920,7 @@ Vue.filter('prettyBytes', function (num) {
 </script>
 <style>
   select.text-danger#categorySelection, input.text-danger{
+    color: #000;
     border: 1px solid red!important;
     border-radius: 0px;
   }
