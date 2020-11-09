@@ -788,7 +788,7 @@ export default {
       handler (val) {
         this.init()
 
-        this.requiredFields = [];
+        //this.requiredFields = [];
 
         //let's force to generate slug if slug is absent in meta
         /*if (!this.currentBook.hasOwnProperty('slug')){
@@ -1046,7 +1046,13 @@ export default {
         if(this.proofreadModeReadOnly)
             return ;
         if( typeof this.requiredFields[key] ) {
+          if (key != 'author'){
             delete this.requiredFields[key];
+          } else {
+            if (this.currentBookMeta.author.join("").length !== 0){
+              delete this.requiredFields[key];
+            }
+          }
         }
 
         if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
