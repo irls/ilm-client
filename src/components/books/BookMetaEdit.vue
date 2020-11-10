@@ -789,7 +789,7 @@ export default {
         this.init()
 
         //let's force to generate slug if slug is absent in meta
-        if (!this.currentBook.hasOwnProperty('slug_status') || this.currentBook.slug_status === undefined){
+        /*if (!this.currentBook.hasOwnProperty('slug_status') || this.currentBook.slug_status === undefined){
           try{
             this.liveUpdate('title', this.currentBook.title)
             //if (this.currentBook.hasOwnProperty('published') && this.currentBook.published == true)
@@ -797,7 +797,7 @@ export default {
           } catch (e){
             //console.log('error update');
           }
-        }
+        }*/
       },
       deep: true
     },
