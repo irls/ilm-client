@@ -792,8 +792,8 @@ export default {
         if (!this.currentBook.hasOwnProperty('slug_status') || this.currentBook.slug_status === undefined){
           try{
             this.liveUpdate('title', this.currentBook.title)
-            if (this.currentBook.hasOwnProperty('published') && this.currentBook.published == true)
-              this.liveUpdate('slug_status', -1)
+            //if (this.currentBook.hasOwnProperty('published') && this.currentBook.published == true)
+            //  this.liveUpdate('slug_status', -1)
           } catch (e){
             //console.log('error update');
           }
