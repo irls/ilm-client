@@ -155,6 +155,16 @@
                       </select>
                     </label>
                   </template>
+                  <template v-if="block.voicework === 'tts'">
+                    <div class="par-ctrl-divider"></div>
+                    <i class="fa fa-volume-up"></i>
+                  </template>
+                  <template v-else-if="block.audio_quality">
+                    <div class="par-ctrl-divider"></div>
+                    <label :title="audioQualityTitle">
+                      <img :src="'/static/audio_quality/' + block.audio_quality + '-20.png'" />
+                    </label>
+                  </template>
 <!--                  <template v-else>-->
 <!--                    <i class="fa fa-volume-off"></i>-->
 <!--                    <div class="par-ctrl-divider"></div>-->
@@ -1135,6 +1145,23 @@ export default {
         },
         set(val) {
           this.block.isAudioChanged = val;
+        },
+        cache: false
+      },
+      audioQualityTitle: {
+        get() {
+          switch (this.block.audio_quality) {
+            case 'raw':
+              return "Raw";
+              break;
+            case 'improved':
+              return "Improved";
+              break;
+            case 'mastered':
+              return "Mastered";
+              break;
+          }
+          return "";
         },
         cache: false
       }
@@ -5247,7 +5274,7 @@ Save text changes and realign the Block?`,
             font-size: 18px;
         }
     }
-    i.fa-volume-off {
+    i.fa-volume-off, i.fa-volume-up {
         font-size: 27px;
         /*margin-right: 5px;*/
     }

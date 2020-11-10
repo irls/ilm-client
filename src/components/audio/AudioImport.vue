@@ -59,19 +59,19 @@
                </ul>
               </div>
               <div class="col-sm-12 audio-import-options">
-                <div class="col-sm-6">
+                <div class="col-sm-7">
                   <fieldset class="audio-import-options-fieldset">
                     <legend>Import type</legend>
                     <label><input type="radio" name="import-audio-type" v-model="audioImportType" value="copy" />Copy to the catalog</label>
                     <label><input type="radio" name="import-audio-type" v-model="audioImportType" value="replace" />Replace block audio</label>
                   </fieldset>
                 </div>
-                <div class="col-sm-6">
+                <div class="col-sm-5">
                   <fieldset class="audio-import-options-fieldset">
                     <legend>Audio quality</legend>
-                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="raw" /><i class="fa fa-microphone"></i>Raw</label>
-                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="improved" /><i class="fa fa-signal"></i>Improved</label>
-                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="mastered" /><i class="fa fa-check"></i>Mastered</label>
+                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="raw" /><div><img src="/static/audio_quality/raw-16.png" /></div>Raw</label>
+                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="improved" /><div><img src="/static/audio_quality/improved-16.png" /></div>Improved</label>
+                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="mastered" /><div><img src="/static/audio_quality/mastered-16.png" /></div>Mastered</label>
                   </fieldset>
                 </div>
               </div>
@@ -667,9 +667,14 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
           color: green;
         }
       }
+      div {
+        width: 30px;
+        text-align: center;
+        display: inline-block;
+      }
     }
   }
-  .col-sm-6 {
+  .col-sm-6, .col-sm-7, .col-sm-5 {
     padding: 0px;
   }
 }
