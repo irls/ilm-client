@@ -961,12 +961,10 @@ export default {
 
         if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en'))){
           this.requiredFields.title_en = true;
-          console.log('here', this.currentBookMeta.language);
         }
 
         if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en'))){
           this.requiredFields.author_en = true;
-          console.log('here');
         }
 
         if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
