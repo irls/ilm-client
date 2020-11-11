@@ -139,7 +139,7 @@
                 <tr class='language'>
                   <td>Language</td>
                   <td>
-                    <select class="form-control" v-model='currentBook.language' @change="change('language')" :key="currentBookid" :disabled="!allowMetadataEdit || currentBookMeta.collection_id">
+                    <select class="form-control" v-model='currentBook.language' @change="change('language')" :key="currentBookid" :disabled="!allowMetadataEdit || currentBookMeta.collection_id || lockLanguage">
                       <option v-if="!languages.hasOwnProperty(currentBook.language)" :value="currentBook.language">{{ currentBook.language }}</option>
                       <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
                     </select>
@@ -151,7 +151,7 @@
             </fieldset>
             <fieldset class='description brief' style="text-align: right;">
               <legend style="text-align: left;">URL Slug</legend>
-                  <input v-model='currentBook.slug' @input="update('slug', $event); " :disabled="!allowMetadataEdit || !adminOrLibrarian || currentBook.slug_status == -1 " :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug" v-bind:class="{ 'text-danger': requiredFields && requiredFields.slug }">
+                  <input v-model='currentBook.slug' @input="update('slug', $event); " @change="lockLanguage = true;" :disabled="!allowMetadataEdit || !adminOrLibrarian || currentBook.slug_status == -1 " :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug" v-bind:class="{ 'text-danger': requiredFields && requiredFields.slug }">
                   <br><span v-if="requiredFields && requiredFields.slug" class="validation-error">Define URL Slug</span>
             </fieldset>
 
@@ -593,6 +593,7 @@ export default {
       audiobookChecker: false,
       showUnknownAuthor: -1,
       showUnknownAuthorEn: -1,
+      lockLanguage: false,
 
       // set blocks properties
       styleTabs: new Map(),
@@ -788,16 +789,6 @@ export default {
       handler (val) {
         this.init()
 
-        //let's force to generate slug if slug is absent in meta
-        /*if (!this.currentBook.hasOwnProperty('slug_status') || this.currentBook.slug_status === undefined){
-          try{
-            this.liveUpdate('title', this.currentBook.title)
-            //if (this.currentBook.hasOwnProperty('published') && this.currentBook.published == true)
-            //  this.liveUpdate('slug_status', -1)
-          } catch (e){
-            //console.log('error update');
-          }
-        }*/
       },
       deep: true
     },
@@ -1092,9 +1083,9 @@ export default {
         update.voices = {};
       }
 
-      //console.log('update', update);
       return this.updateBookMeta(update)
       .then((response)=>{
+        this.lockLanguage = false;
         if (key == 'numbering') {
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
           //this.$root.$emit('from-book-meta:upd-toc', true);
