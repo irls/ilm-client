@@ -84,15 +84,15 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields && requiredFields.title }">
-                      <span v-if="requiredFields && requiredFields.title" class="validation-error">Define Title</span>
+                  <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
+                      <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title']" class="validation-error">Define Title</span>
                   </td>
                 </tr>
 
                 <tr class='title' v-if="currentBook.language !== 'en'">
                   <td>Title EN</td>
-                  <td><input v-model='currentBook.title_en' @input="update('title_en', $event); " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields && requiredFields.title_en }">
-                      <span v-if="requiredFields && requiredFields.title_en" class="validation-error">Define Title EN</span>
+                  <td><input v-model='currentBook.title_en' @input="update('title_en', $event); " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en'] }">
+                      <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en']" class="validation-error">Define Title EN</span>
                   </td>
                 </tr>
 
@@ -105,7 +105,7 @@
                   <td>Author</td>
                   <td style="text-align: left !important;">
 
-                    <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields && requiredFields.author }">
+                    <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
                                                 <div class="dropdown" v-if="currentBook.author.length === 0 && allowMetadataEdit">
                                                   <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button" ><i class="fa fa-angle-down" ></i></div>
                                                   <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
@@ -120,18 +120,18 @@
                     <br/>
                     </template>
                     <p style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit" style="margin-right: 6px;"><i class="fa fa-plus-circle"></i></button></p>
-                    <span v-if="requiredFields && requiredFields.author" class="validation-error" style="text-align: right !important;">Define Author</span>
+                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author']" class="validation-error" style="text-align: right !important;">Define Author</span>
                   </td>
                 </tr>
 
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 90%;" v-bind:class="{ 'text-danger': requiredFields && requiredFields.author_en }">
+                  <td style="text-align: left;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 90%;" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en'] }">
                                                 <div class="dropdown">
                                                   <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
                                                   <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" >Unknown</div>
                                                 </div>
-                    <span v-if="requiredFields && requiredFields.author_en" class="validation-error">Define Author EN</span>
+                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en']" class="validation-error">Define Author EN</span>
 
                   </td>
                 </tr>
@@ -151,8 +151,8 @@
             </fieldset>
             <fieldset class='description brief' style="text-align: right;">
               <legend style="text-align: left;">URL Slug</legend>
-                  <input v-model='currentBook.slug' @input="lockLanguage = true; update('slug', $event); "  :disabled="!allowMetadataEdit || !adminOrLibrarian || currentBook.slug_status == -1 " :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug" v-bind:class="{ 'text-danger': requiredFields && requiredFields.slug }">
-                  <br><span v-if="requiredFields && requiredFields.slug" class="validation-error">Define URL Slug</span>
+                  <input v-model='currentBook.slug' @input="lockLanguage = true; update('slug', $event); "  :disabled="!allowMetadataEdit || !adminOrLibrarian || currentBook.slug_status == -1 " :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug'] }">
+                  <br><span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug']" class="validation-error">Define URL Slug</span>
             </fieldset>
 
             <fieldset>
@@ -165,23 +165,23 @@
                 <tr class='category'>
                   <td>Category</td>
                   <td>
-                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields && requiredFields.category }" class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
                       <template v-for="(data, index) in subjectCategories">
                         <optgroup :label="data.group">
                           <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
                         </optgroup>
                       </template>
                     </select>
-                    <span v-if="requiredFields && requiredFields.category" class="validation-error">Define Category</span>
+                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category']" class="validation-error">Define Category</span>
                   </td>
                        </tr>
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
-                    <select id="difficultySelection" :class="{ 'text-danger': requiredFields && requiredFields.difficulty }" class="form-control" v-model='currentBook.difficulty' @change="change('difficulty')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                    <select id="difficultySelection" :class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }" class="form-control" v-model='currentBook.difficulty' @change="change('difficulty')" :key="currentBookid" :disabled="!allowMetadataEdit">
                       <option v-for="(value, ind) in subjectDifficulties" :value="value">{{ value }}</option>
                     </select>
-                    <span v-if="requiredFields && requiredFields.difficulty" class="validation-error">Please define a Difficulty</span>
+                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty']" class="validation-error">Please define a Difficulty</span>
                   </td>
                 </tr>
 
@@ -943,32 +943,33 @@ export default {
       this.showUnknownAuthorEn = -1;
     },*/
     checkPublish(){
-        this.requiredFields = [];
+        this.requiredFields[this.currentBookMeta.bookid] = [];
 
         let defaultCategory = ['story', 'Stories']; // means there is no category assigned
 
         if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
-          this.requiredFields.category = true;
+          this.requiredFields[this.currentBookMeta.bookid]['category'] = true;
         }
 
         if (this.currentBookMeta.title == ''){
-          this.requiredFields.title = true;
+          console.log('bookid', this.currentBookMeta.bookid);
+          this.requiredFields[this.currentBookMeta.bookid]['title'] = true;
         }
 
         if (this.currentBookMeta.author.join("").length == 0){
-          this.requiredFields.author = true;
+          this.requiredFields[this.currentBookMeta.bookid]['author'] = true;
         }
 
         if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en'))){
-          this.requiredFields.title_en = true;
+          this.requiredFields[this.currentBookMeta.bookid]['title_en'] = true;
         }
 
         if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en'))){
-          this.requiredFields.author_en = true;
+          this.requiredFields[this.currentBookMeta.bookid]['author_en'] = true;
         }
 
         if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
-          this.requiredFields.slug = true;
+          this.requiredFields[this.currentBookMeta.bookid]['slug'] = true;
         }
 
 
