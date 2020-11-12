@@ -1037,12 +1037,13 @@ export default {
     liveUpdate (key, value) {
         if(this.proofreadModeReadOnly)
             return ;
-        if( typeof this.requiredFields[key] ) {
+
+        if( this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][key] ) {
           if (key != 'author'){
-            delete this.requiredFields[key];
+            delete this.requiredFields[this.currentBook.bookid][key];
           } else {
             if (this.currentBookMeta.author.join("").length !== 0){
-              delete this.requiredFields[key];
+              delete this.requiredFields[this.currentBook.bookid][key];
             }
           }
         }
@@ -1050,14 +1051,14 @@ export default {
         if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
         {
             try {
-              delete this.requiredFields['slug'];
+              delete this.requiredFields[this.currentBook.bookid]['slug'];
             } catch (err){
             }
         }
         if (this.currentBook.author != 'en' && (key == 'title_en' || key == 'author_en'))
         {
             try {
-              delete this.requiredFields['slug'];
+              delete this.requiredFields[this.currentBook.bookid]['slug'];
             } catch (err){
             }
         }
