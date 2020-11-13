@@ -1244,7 +1244,7 @@ export default {
             this._saveContent();
             break;
         }
-        if (this.isSplittedBlock) {
+        if (this.isSplittedBlock && this.blockParts) {
           this.blockParts.forEach((part, partIdx) => {
             if (!this.$refs.blocks[partIdx].isChanged && this.$refs.blocks[partIdx].$refs.blockContent) {
               this.block.setPartContent(partIdx, this.$refs.blocks[partIdx].clearBlockContent());
