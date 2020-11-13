@@ -209,8 +209,8 @@
                   <td>Weight:</td>
                   <td>
                     <input v-model='currentBook.weight' @input="updateWeigth($event)" :disabled="!allowMetadataEdit"
-                           :class="[{'has-error': validationErrors['weight'].length}]"/>
-                    <span class="validation-error" v-for="error in validationErrors['weight']">{{error}}</span>
+                           :class="[{'has-error': (validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'].length) }]"/>
+                    <div v-if="validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'].length > 0"><span class="validation-error" v-for="error in validationErrors[currentBook.bookid]['weight']">{{error}}</span></div>
                   </td>
                 </tr>
               </table>
@@ -603,7 +603,8 @@ export default {
       isPublishingQueue: false,
       publicationStatus: false,
       isExporting:false,
-      validationErrors: {extid: [], weight: []},
+      //validationErrors: {extid: [], weight: []},
+      validationErrors: {},
       updateAllowed: false,
       TAB_ASSIGNMENT_INDEX: 0,
       TAB_META_INDEX: 1,
@@ -1794,11 +1795,11 @@ export default {
 
     updateExtid: _.debounce(function(event) {
       if (event.target.value && event.target.value.length != 32) {
-        this.validationErrors['extid'] = ['Length must be equal to 32 symbols.']
+        this.validationErrors[this.currentBook.bookid]['extid'] = ['Length must be equal to 32 symbols.']
       } else if (/[^a-z\d]+/.test(event.target.value) || /\d+\.$/.test(event.target.value)) {
-        this.validationErrors['extid'] = ['Only lowercase letters (a-z) and numbers.']
+        this.validationErrors[this.currentBook.bookid]['extid'] = ['Only lowercase letters (a-z) and numbers.']
       } else {
-        this.validationErrors['extid'] = [];
+        this.validationErrors[this.currentBook.bookid]['extid'] = [];
         this.liveUpdate('extid', event.target.value);
       }
     }, 500),
@@ -1823,10 +1824,13 @@ export default {
         }
       }
 
-      this.validationErrors[key] = errors;
+      
+      if (!this.validationErrors[this.currentBook.bookid]) {Vue.set(this.validationErrors, this.currentBook.bookid, {key: []})} //this.validationErrors[this.currentBook.bookid] = []};
+      this.validationErrors[this.currentBook.bookid][key] = errors;
       if (!errors.length) {
         this.liveUpdate(key, value === '' ? '' : value);
       }
+      console.log('HERE', this.validationErrors);
 
     }, 500),
 
