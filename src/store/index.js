@@ -1247,90 +1247,8 @@ export const store = new Vuex.Store({
       }
       if (bookid) {
         state.liveDB.startWatch(bookid + '-blockV', 'blockV', {bookid: bookid}, (data) => {
-          if (data && data.block) {
-            //state.storeListO.delBlock(data.block);
-
-            let blockStore = null;
-            if (data.block.blockid) {
-              blockStore = state.storeList.get(data.block.blockid);
-            }
-            if (data.block.blockid &&
-                state.audioTasksQueue.block.blockId &&
-                state.audioTasksQueue.block.blockId === data.block.blockid &&
-                state.audioTasksQueue.block.partIdx !== null) {
-
-              if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
-                blockStore.parts.forEach((p, i) => {
-                  if (p.isAudioChanged) {
-                    data.block.parts[i] = p;
-                  }
-                });
-                let hasChanges = blockStore.parts.find(p => {
-                  return p.isChanged;
-                });
-                if (hasChanges) {
-                  if (Array.isArray(blockStore.flags)) {
-                    data.block.flags = blockStore.flags;// do not update flags for edited block
-                  }
-                }
-              }
-            }
-            if (data.action === 'create' && data.block) {
-              if (!state.storeListO.get(data.block.id)) {
-                state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
-              }
-            } else if (data.action === 'change' && data.block) {
-              //blockStore = state.storeList.get(data.block.blockid);
-              if (blockStore) {
-                let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
-                  return p.isChanged;
-                }) : false;
-                if (blockStore.isSaving || hasChangedPart) {
-                  //console.log('isSaving hasChangedPart');
-                  return;
-                }
-                let changes = [];// collect changes
-                ['classes', 'pause_before']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
-                  if (blockStore.hasOwnProperty(k) && !_.isEqual(blockStore[k], data.block[k])) {
-                    changes.push(k);
-                  }
-                });
-                data.block.sync_changes = changes;
-              }
-              state.storeListO.updBlockByRid(data.block.id, data.block);
-            } else if (data.action === 'delete') {
-              state.storeListO.delExistsBlock(data.block['@rid'])
-            }
-
-            if (data.block && data.block.blockid && state.storeList.has(data.block.blockid)) {
-              let block = state.storeList.get(data.block.blockid);
-              if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
-                block.parts.forEach((p, i) => {
-                  if (p.inid) {
-                    data.block.parts[i].inid = p.inid;
-                  }
-                });
-              }
-              if (block.isChanged) {
-                if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
-                    if (block.voicework != data.block.voicework) {
-                      block.voicework = data.block.voicework;
-                      block.audiosrc = data.block.audiosrc;
-                      block.audiosrc_ver = data.block.audiosrc_ver;
-                      store.commit('set_storeList', new BookBlock(block));
-                    }
-                  } else {
-                    store.commit('set_storeList', new BookBlock(data.block));
-                  }
-              } else {
-                store.commit('set_storeList', new BookBlock(data.block));
-              }
-            } else if (data.block && data.block.blockid) {
-              store.commit('set_storeList', new BookBlock(data.block));
-            }
-            state.storeListO.refresh();
-            state.blockSelection.refresh = !state.blockSelection.refresh;
-            //dispatch('tc_loadBookTask', state.currentBookid);
+          if (data) {
+            dispatch('updateBlocksByLiveDB', data);
           }
         });
         state.liveDB.startWatch(bookid + '-task', 'task', {bookid: bookid}, (data) => {
@@ -1340,6 +1258,100 @@ export const store = new Vuex.Store({
           }
         });
       }
+    },
+
+    updateBlocksByLiveDB({commit, state, dispatch}, blocksArr) {
+      if (!Array.isArray(blocksArr)) {
+        blocksArr = [blocksArr];
+      }
+
+      blocksArr.forEach((data, idx)=>{
+        //console.log('blockV', data);
+        if (data && data.block) {
+            //state.storeListO.delBlock(data.block);
+          let blockStore = null;
+          if (data.block.blockid) {
+            blockStore = state.storeList.get(data.block.blockid);
+          }
+          if (data.block.blockid &&
+              state.audioTasksQueue.block.blockId &&
+              state.audioTasksQueue.block.blockId === data.block.blockid &&
+              state.audioTasksQueue.block.partIdx !== null) {
+
+            if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
+              blockStore.parts.forEach((p, i) => {
+                if (p.isAudioChanged) {
+                  data.block.parts[i] = p;
+                }
+              });
+              let hasChanges = blockStore.parts.find(p => {
+                return p.isChanged;
+              });
+              if (hasChanges) {
+                if (Array.isArray(blockStore.flags)) {
+                  data.block.flags = blockStore.flags;// do not update flags for edited block
+                }
+              }
+            }
+          }
+          if (data.action === 'create' && data.block) {
+            if (!state.storeListO.get(data.block.id)) {
+              state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
+            }
+          } else if (data.action === 'change' && data.block) {
+            //blockStore = state.storeList.get(data.block.blockid);
+            if (blockStore) {
+              let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
+                return p.isChanged;
+              }) : false;
+              if (blockStore.isSaving || hasChangedPart) {
+                //console.log('isSaving hasChangedPart');
+                return;
+              }
+              let changes = [];// collect changes
+              ['classes', 'pause_before']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
+                if (blockStore.hasOwnProperty(k) && !_.isEqual(blockStore[k], data.block[k])) {
+                  changes.push(k);
+                }
+              });
+              data.block.sync_changes = changes;
+            }
+            state.storeListO.updBlockByRid(data.block.id, data.block);
+          } else if (data.action === 'delete') {
+            state.storeListO.delExistsBlock(data.block['@rid'])
+          }
+
+          if (data.block && data.block.blockid && state.storeList.has(data.block.blockid)) {
+            let block = state.storeList.get(data.block.blockid);
+            if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
+              block.parts.forEach((p, i) => {
+                if (p.inid) {
+                  data.block.parts[i].inid = p.inid;
+                }
+              });
+            }
+            if (block.isChanged) {
+              if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
+                  if (block.voicework != data.block.voicework) {
+                    block.voicework = data.block.voicework;
+                    block.audiosrc = data.block.audiosrc;
+                    block.audiosrc_ver = data.block.audiosrc_ver;
+                    store.commit('set_storeList', new BookBlock(block));
+                  }
+                } else {
+                  store.commit('set_storeList', new BookBlock(data.block));
+                }
+            } else {
+              store.commit('set_storeList', new BookBlock(data.block));
+            }
+          } else if (data.block && data.block.blockid) {
+            store.commit('set_storeList', new BookBlock(data.block));
+          }
+          state.storeListO.refresh();
+          state.blockSelection.refresh = !state.blockSelection.refresh;
+          //dispatch('tc_loadBookTask', state.currentBookid);
+        }
+      })
     },
 
     loadPartOfBookBlocks({commit, state, dispatch}, params) {
