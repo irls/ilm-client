@@ -1,12 +1,12 @@
 <template>
   <div>
-  <modal name="import-audio" :resizeable="false" :clickToClose="false" height="auto">
+  <modal name="import-audio" :resizeable="false" :clickToClose="false" height="auto" width="700px">
     
           <div class="modal-header">
 
             <slot name="header">
               <div class="header-title">
-                <h4 class="header-h">Import audio</h4>
+                <h4 class="header-h">{{importTitle}}</h4>
               </div>
 
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close')" v-if="!isUploading">
@@ -52,7 +52,7 @@
                 <!-- <span><input type="checkbox" id="checkbox" v-model="autoAlign"> Align automatically </span> -->
               </div>
               <div class="col-sm-12">
-                <ul id="audioFiles">
+                <ul class="audiofiles-list">
                   <li v-for="file in audioFiles">
                     {{ file.name }} - {{ humanFileSize(file.size, true) }}
                   </li>
@@ -76,9 +76,6 @@
                 </div>
               </div>
               <div class="col-sm-12">
-                
-                <button class="btn btn-primary modal-default-button" @click="onFormSubmit" :class="{disabled : saveDisabled}">Import Audio</button>
-                <button class="btn btn-default modal-default-button" @click="$emit('close')">Cancel</button>
               </div>
             </slot>
 
@@ -86,18 +83,36 @@
 
           </form>
           <div id='uploadingMsg' v-show='isUploading'>
-             <h2>{{uploadProgress}}&nbsp;<i v-if='!uploadFinished' class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i></h2>
-             <ul id="audioFiles" v-if="!uploadFinished">
+            <template v-if="!audiobookReport">
+             <h2>{{uploadProgress}}&nbsp;<i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i></h2>
+             <ul class="audiofiles-list">
                 <li v-for="file in audioFiles">
                   {{ file.name }} - {{ file.progress ? file.progress : 0 }}%
                 </li>
              </ul>
+            </template>
+            <template v-else>
+              <div v-html="audiobookReport"></div>
+              <template v-if="uploadFinished">
+                <div class="copy-report">
+                  <textarea class="copy-report-content" ref="copy-report-content" ></textarea>
+                  <button class="btn btn-primary" v-if="allowCopyReport" v-on:click="copyReport">Copy Report</button>
+                </div>
+                <div v-html="reportFooter" class="copy-report"></div>
+              </template>
+            </template>
             <div v-for="err in uploadErrors" class="upload-error">{{err.error}}</div>
-            <div v-if="uploadFinished">
-              <button class="btn btn-default" v-on:click="$emit('closeOk')">OK</button>
-            </div>
           </div>
           </div>
+    <div class="modal-footer">
+      <template v-if="audiobookReport && uploadFinished">
+        <button class="btn btn-default" v-on:click="$emit('closeOk')">Ok, got it</button>
+      </template>
+      <template v-else-if="!isUploading">
+        <button class="btn btn-primary modal-default-button" @click="onFormSubmit" :class="{disabled : saveDisabled}">Import Audio</button>
+        <button class="btn btn-default modal-default-button" @click="$emit('close')">Cancel</button>
+      </template>
+    </div>
   </modal>
     <modal name="duplicate-files-warning" :resizeable="false" :clickToClose="false" height="auto">
         <div class="modal-header"></div>
@@ -197,6 +212,81 @@ export default {
     saveDisabled: function() {
       return (this.uploadFiles === 0 && this.audioURL.length == 0)
     },
+    audiobookReport: {
+      get() {
+        if (this.audiobook.report) {
+          if (this.uploadFinished) {
+            let report = this.getParsedReport();
+            if (report instanceof Object) {
+              let reportHtml = '<ul class="import-audio-report">';
+              if (report.replaced && Array.isArray(report.replaced.files) && report.replaced.files.length > 0) {
+                reportHtml+= `<li>${report.replaced.files.length} audio file(s) replaced on the matching blocks. No follow-up required</li>`;
+              }
+              if (report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) {
+                reportHtml+= `<li>${report.aligned.files.length} audio file(s) realigned with the matching blocks. Word positioning need to be verified<ul class="audiofiles-list">`;
+                report.aligned.files.forEach(filename => {
+                  reportHtml+= `<li>${filename}</li>`;
+                })
+                reportHtml+= `</ul></li>`;
+              }
+              if (report.not_matched && Array.isArray(report.not_matched.files) && report.not_matched.files.length > 0) {
+                reportHtml+= `<li>${report.not_matched.files.length} audio file(s) could not be replaced because no matching blocks found<ul class="audiofiles-list">`;
+                report.not_matched.files.forEach(filename => {
+                  reportHtml+= `<li>${filename}</li>`;
+                });
+                reportHtml+= `</ul></li>`;
+              }
+              if (report.not_replaced && Array.isArray(report.not_replaced.files) && report.not_replaced.files.length > 0) {
+                reportHtml+= `<li>${report.not_replaced.files.length} audio file(s) could not be replaced because of pending tasks<ul class="audiofiles-list">`;
+                report.not_replaced.files.forEach(filename => {
+                  reportHtml+= `<li>${filename}</li>`;
+                });
+                reportHtml+= `</ul></li>`;
+              }
+              reportHtml+='</ul>';
+              return reportHtml;
+            }
+          } else {
+            return '';
+          }
+        }
+        return this.audiobook.report;
+      },
+      cache: false
+    },
+    allowCopyReport: {
+      get() {
+        if (this.audiobook.report && this.uploadFinished && this.audiobook.report.length > 0) {
+          let report = this.getParsedReport();
+          if (report instanceof Object) {
+            return (report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) || (report.not_replaced && Array.isArray(report.not_replaced.files) && report.not_replaced.files.length > 0);
+          }
+          return false;
+        }
+        return false;
+      },
+      cache: false
+    },
+    reportFooter: {
+      get() {
+        if (this.audiobook.report && this.uploadFinished && this.audiobook.report.length > 0) {
+          let report = this.getParsedReport();
+          if (report instanceof Object) {
+            if  ((report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) || (report.not_replaced && Array.isArray(report.not_replaced.files) && report.not_replaced.files.length > 0) || (report.not_matched && Array.isArray(report.not_matched.files) && report.not_matched.files.length > 0)) {
+              return "The above listed audio file(s) copied to the catalog and will be available shortly after processing";
+            }
+          }
+        }
+        return "";
+      },
+      cache: false
+    },
+    importTitle: {
+      get() {
+        return this.audiobookReport ? 'Import Audio Report' : 'Import Audio';
+      },
+      cache: false
+    },
     ...mapGetters({
       audiobook: 'currentAudiobook'
     })
@@ -260,6 +350,7 @@ export default {
       if (this.saveDisabled) {
         return '';
       }
+      this.audiobook.report = "";
       this.uploadFinished = false;
       this.isUploading = true;
       if (this.audioFiles.length === 0 && this.audioURL) {
@@ -453,7 +544,75 @@ export default {
     onUploadError() {
       console.log(arguments);
     },
-    ...mapActions(['getAudioBook', 'tc_loadBookTask'])
+    copyReport() {
+      let content = this.convertTime(new Date(), true) + '\n\n';
+      let el = this.$refs['copy-report-content'];
+      let report = this.getParsedReport();
+      if (report instanceof Object) {
+        let reportHtml = '';
+        if (report.replaced && Array.isArray(report.replaced.files) && report.replaced.files.length > 0) {
+          reportHtml+= `${report.replaced.files.length} audio file(s) replaced on the matching blocks. No follow-up required` + '\n\n';
+        }
+        if (report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) {
+          reportHtml+= `${report.aligned.files.length} audio file(s) realigned with the matching blocks. Word positioning need to be verified\n`;
+          report.aligned.files.forEach(filename => {
+            reportHtml+= ` - ${filename}\n`;
+          })
+          reportHtml+= `\n`;
+        }
+        if (report.not_matched && Array.isArray(report.not_matched.files) && report.not_matched.files.length > 0) {
+          reportHtml+= `${report.not_matched.files.length} audio file(s) could not be replaced because no matching blocks found\n`;
+          report.not_matched.files.forEach(filename => {
+            reportHtml+= ` - ${filename}\n`;
+          });
+          reportHtml+= `\n`;
+        }
+        reportHtml+='';
+        content+= reportHtml;
+        el.innerHTML = content;
+        el.select();
+        document.execCommand('copy');
+        el.innerText = '';
+      }
+      return;
+    },
+    
+    convertTime(dt, time = false) {
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+      var date = new Date(dt);
+      var toutc = date.toUTCString();
+      var locdate = new Date(toutc + " UTC");
+
+      var year = locdate.getFullYear(),
+      month = locdate.getMonth() + 1, // months are zero indexed
+      day = locdate.getDate(),
+      hour = locdate.getHours(),
+      minute = locdate.getMinutes(),
+      second = locdate.getSeconds(),
+      hourFormatted = hour < 10 ? `0${hour}` : hour, // hour returned in 24 hour format
+      minuteFormatted = minute < 10 ? "0" + minute : minute
+
+      //console.log(toutc, locdate);
+      let result = day + " " + monthNames[month - 1] + " " + year ;
+      if (time) {
+        result += " " + hourFormatted + ":" + minuteFormatted;
+      }
+      return result;
+
+    },
+    getParsedReport() {
+      if (this.audiobook.report) {
+        try {
+          return JSON.parse(this.audiobook.report);
+          
+        } catch (e) {
+          return this.audiobook.report;
+        }
+      }
+      return "";
+    },
+    ...mapActions(['getAudioBook', 'tc_loadBookTask', 'getBlocks', 'getBookAlign'])
 
   },
   watch: {
@@ -463,6 +622,22 @@ export default {
           this.showModal('duplicate-files-warning');
         } else if (val === 0 && oldVal !== 0) {
           this.hideModal('duplicate-files-warning');
+        }
+      }
+    },
+    'audiobook.report.length': {
+      handler(val, oldVal) {
+        if (!oldVal && val) {
+          let report = this.getParsedReport();
+          if (report instanceof Object && report.replaced && Array.isArray(report.replaced.blocks) && report.replaced.blocks.length > 0) {
+            this.getBlocks(report.replaced.blocks)
+              .then(blocks => {
+                this.$root.$emit('bookBlocksUpdates', {blocks: blocks});
+              });
+          }
+          if (report instanceof Object && report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) {
+            this.getBookAlign();
+          }
         }
       }
     }
@@ -624,12 +799,6 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
     padding: 10px;
     color: white;
 }
-#audioFiles {
-  max-height: 75px;
-  overflow-y: scroll;
-  padding: 0px 0px 0px 20px;
-  margin: 10px 0px;
-}
 
 .upload-error {
     font-size: 20px;
@@ -638,6 +807,15 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
 
 </style>
 <style lang="less">
+.audiofiles-list {
+  max-height: 75px;
+  overflow-y: scroll;
+  padding: 0px 0px 0px 20px;
+  margin: 10px 0px;
+  li {
+    font-size: 14px;
+  }
+}
 .dz-preview.dz-file-preview {
   display: none;
 }
@@ -693,5 +871,24 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
   &.btn-default {
     margin: 0px 5px;
   }
+}
+.import-audio-report {
+  list-style-type: disc;
+  &>li {
+    font-size: 16px;
+    text-align: left;
+  }
+}
+.copy-report-content {
+  height: 0px;
+  width: 0px;
+  resize: none;
+  padding: 0px;
+  border-color: transparent;
+  float: left;
+}
+.copy-report {
+  text-align: left;
+  padding: 5px;
 }
 </style>
