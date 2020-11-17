@@ -302,7 +302,13 @@ export default {
       if (state) {
         this.preloader = true;
         this.preloaderType = type;
+        if (type == 'align') {
+          //this.tc_loadBookTask(this.currentBookMeta.bookid);
+        }
       } else {
+        if (this.preloaderType == 'save') {
+          this.tc_loadBookTask(this.currentBookMeta.bookid);
+        }
         this.preloader = false;
         this.preloaderType = '';
       }
