@@ -309,7 +309,7 @@ import Vue from 'vue'
 import moment from 'moment'
 import { mapGetters, mapActions, mapMutations }    from 'vuex'
 import {  QuoteButton, QuotePreview,
-          SuggestButton, SuggestPreview
+          SuggestButton, SuggestPreview, MediumEditor
         } from '../generic/ExtMediumEditor';
 import _                  from 'lodash'
 import ReadAlong          from 'readalong'
@@ -1797,6 +1797,8 @@ Save audio changes and realign the Block?`,
           content = content.replace(/<div[^>]*><p[^>]*>([\s\S]*?)<\/p><\/div>$/img, '<br>$1');
           content = content.replace(/<div[^>]*><p[^>]*>([\s\S]*?)<\/p>([\s\S]*?)<\/div>/img, '<br>$1<br>$2');
           content = content.replace(/<div[^>]*>([\s\S]*?)<\/div>/img, '<br>$1');
+          content = content.replace(/^<p[^>]*>([\s\S]*?)<\/p>$/img, '$1');
+          content = content.replace(/^<p[^>]*>([\s\S]*?)<\/p>/img, '$1<br>');
         }
         try {
           content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>([\\s\\S]+?)', 'gm'), '<br/>$1<br>$2')//paragrapth not preceeded by list
@@ -1806,7 +1808,7 @@ Save audio changes and realign the Block?`,
 
         }
         content = content.replace(/<p[^>]*><\/p>/gm, '')
-        content = content.replace(/^<br[\/]?>/gm, '')
+        //content = content.replace(/^<br[\/]?>/gm, '')
         content = content.replace(/<span[^>]*>([\s\S]*?)<\/span>/gm, '$1')
         //content = content.replace(/<br[\/]?><br[\/]?>/gm, '<br>');
         //content = content.replace(/^<br[\/]?>/, '');
