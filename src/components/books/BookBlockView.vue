@@ -157,9 +157,9 @@
                   </template>
                   <template v-if="block.voicework === 'tts'">
                     <div class="par-ctrl-divider"></div>
-                    <i class="fa fa-volume-up"></i>
+                    <i class="fa fa-volume-up" title="Text to Speech"></i>
                   </template>
-                  <template v-else-if="block.audio_quality">
+                  <template v-else-if="block.audio_quality && !['illustration', 'hr'].includes(block.type)">
                     <div class="par-ctrl-divider"></div>
                     <label :title="audioQualityTitle">
                       <img :src="'/static/audio_quality/' + block.audio_quality + '-20.png'" />

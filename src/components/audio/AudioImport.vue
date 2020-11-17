@@ -25,7 +25,7 @@
 
             <slot name="body">
               <div class="col-sm-12">
-                <h5>Browse for audio files, ZIP files or type a playlist URL</h5>
+                <h5>Browse for audio files or type a playlist URL</h5>
               </div>
               <div class="col-sm-12 upload-files">
                 <div class="col-sm-9">
@@ -560,9 +560,9 @@ export default {
           })
           reportHtml+= `\n`;
         }
-        if (report.not_matched && Array.isArray(report.not_matched.files) && report.not_matched.files.length > 0) {
-          reportHtml+= `${report.not_matched.files.length} audio file(s) could not be replaced because no matching blocks found\n`;
-          report.not_matched.files.forEach(filename => {
+        if (report.not_replaced && Array.isArray(report.not_replaced.files) && report.not_replaced.files.length > 0) {
+          reportHtml+= `${report.not_replaced.files.length} audio file(s) could not be replaced because of pending tasks\n`;
+          report.not_replaced.files.forEach(filename => {
             reportHtml+= ` - ${filename}\n`;
           });
           reportHtml+= `\n`;
