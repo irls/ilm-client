@@ -131,7 +131,7 @@
                                                   <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
                                                   <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" >Unknown</div>
                                                 </div>
-                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en']" class="validation-error">Define Author EN</span>
+                    <span style="text-align: right !important;" v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en']" class="validation-error">Define Author EN</span>
 
                   </td>
                 </tr>
