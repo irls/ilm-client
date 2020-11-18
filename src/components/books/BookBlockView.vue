@@ -4584,7 +4584,8 @@ Save text changes and realign the Block?`,
               el.innerHTML = `=`;
             }
             return el;
-          }
+          },
+          maxHighlightLength: Infinity
         };
         //cmOptions.rtlMoveVisually = cmOptions.direction === 'rtl';
         return cmOptions;
