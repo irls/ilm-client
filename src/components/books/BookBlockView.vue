@@ -4113,7 +4113,7 @@ Save text changes and realign the Block?`,
       },
       setHtml() {
         let content = this.block.content;
-        if (!this.block.getIsSplittedBlock()) {
+        if (!this.block.getIsSplittedBlock() && this.isChanged) {
           content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
         }
         //content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
@@ -4125,7 +4125,7 @@ Save text changes and realign the Block?`,
               return r.blockPartIdx === pIdx;
             });
             if (ref) {
-              content = ref.$refs.blockContent.innerHTML;
+              content = p.isChanged ? ref.$refs.blockContent.innerHTML : p.content;
               this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.setValue(content/*.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1')*/);
             }
           });
