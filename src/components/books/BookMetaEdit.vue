@@ -665,6 +665,7 @@ export default {
       audiobook: 'currentAudiobook',
       subjectCategories: 'bookCategories',
       subjectDifficulties: 'bookDifficulties',
+      bookDifficultyDefault: 'bookDifficultyDefault',
       tasks_counter: 'tasks_counter',
       taskTypes: 'taskTypes',
       adminOrLibrarian: 'adminOrLibrarian',
@@ -928,7 +929,7 @@ export default {
         this.currentBook.author = [this.currentBook.author];
       }
       if(!this.currentBook.difficulty){
-        this.currentBook.difficulty = this.subjectDifficulties[3]
+        this.currentBook.difficulty = this.bookDifficultyDefault
       }
       //this.loadAudiobook();
       /*this.setCurrentBookBlocksLeft(this.currentBook._id)
