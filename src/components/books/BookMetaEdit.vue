@@ -151,7 +151,7 @@
             </fieldset>
             <fieldset class='description brief' style="text-align: right;">
               <legend style="text-align: left;">URL Slug</legend>
-                  <input v-model='currentBook.slug' @input="lockLanguage = true; update('slug', $event); "  :disabled="!allowMetadataEdit || !adminOrLibrarian || currentBook.slug_status == -1 " :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug'] }">
+                  <input v-model='currentBook.slug' @input="lockLanguage = true; update('slug', $event); "  :disabled="!allowMetadataEdit || currentBook.slug_status == -1 " :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug'] }">
                   <br><span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug']" class="validation-error">Define URL Slug</span>
             </fieldset>
 
