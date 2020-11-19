@@ -207,6 +207,7 @@ export const store = new Vuex.Store({
       '11',
       '12'
     ],
+    bookDifficultyDefault:6,
     loadBookWait: null,
     loadBookTaskWait: null,
     jobInfoRequest: null,
@@ -423,6 +424,7 @@ export const store = new Vuex.Store({
     liveDB: state => state.liveDB,
     bookCategories: state => state.bookCategories,
     bookDifficulties: state => state.bookDifficulties,
+    bookDifficultyDefault: state => state.bookDifficultyDefault,
     tasks_counter: state => state.currentJobInfo.tasks_counter,
     jobStatusError: state => state.jobStatusError,
     activeTasksCount: state => {
