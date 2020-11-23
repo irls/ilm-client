@@ -157,7 +157,9 @@
         for (let pair of entries) {
           this.formData.delete(pair[0])
         }
-        this.$refs.book_select.reset();
+        if (this.$refs && this.$refs.book_select) {
+          this.$refs.book_select.reset();
+        }
         this.uploadFile = false;
       },
       closeAlert() {
