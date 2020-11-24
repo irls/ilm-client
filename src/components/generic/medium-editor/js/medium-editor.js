@@ -1570,9 +1570,9 @@ MediumEditor.extensions = {};
             });
         },
 
-        isElementWhitespaceStyle: function (element) {
+        isElementWhitespaceStyle: function (element, checkStyle = ['pre-line', 'pre-wrap', 'pre']) {
             let style = window.getComputedStyle(element),
-            isList = style && style.whiteSpace && ['pre-line', 'pre-wrap', 'pre'].indexOf(style.whiteSpace) !== -1;
+            isList = style && style.whiteSpace && checkStyle.indexOf(style.whiteSpace) !== -1;
             return isList;
         }
     };
@@ -4831,6 +4831,50 @@ MediumEditor.extensions = {};
 
         handleKeydown: function (event) {
             var keyCode = MediumEditor.util.getKeyCode(event);
+            if (keyCode === MediumEditor.util.keyCode.DELETE) {
+                let selection = document.getSelection(),
+                element = selection.anchorNode,
+                rootNode = element.parentNode,
+                parentNode = element.parentNode;
+                while (rootNode.nodeName !== 'DIV') {
+                    rootNode = rootNode.parentNode;
+                }
+                if (MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-line'])) {
+                    if (element.parentNode.nodeName === 'DIV') {
+                        if (element.nodeValue.length > selection.anchorOffset) {
+                            let checkValue = element.nodeValue.substring(selection.anchorOffset > 0 ? selection.anchorOffset - 1 : 0, element.nodeValue.length > selection.anchorOffset + 2 ? selection.anchorOffset + 2 : element.nodeValue.length);
+                            //console.log('"', document.getSelection().anchorNode.nodeValue.substring(document.getSelection().anchorOffset, document.getSelection().anchorOffset + 1).charCodeAt(0), '"');
+                            if (checkValue.match(/\n/)) {
+                                let partOne = document.createTextNode(element.nodeValue.substring(0, selection.anchorOffset)),
+                                partTwo = document.createTextNode(element.nodeValue.substring(selection.anchorOffset + 1));
+                                element.parentNode.replaceChild(partTwo, element);
+                                parentNode.insertBefore(partOne, partTwo);
+                                MediumEditor.selection.moveCursor(this.base.options.ownerDocument, partTwo, 0);
+                                event.preventDefault();
+                                let eventInput = new Event('input', {
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+
+                                rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                                return;
+                            }
+                        }
+                    } else if (element.parentNode.nodeName === 'W') {
+                        if (element.parentNode.nextSibling && element.parentNode.nextSibling.nodeValue && element.parentNode.nextSibling.nodeValue.charCodeAt(0) === 10) {
+                            element.parentNode.nextSibling.nodeValue = element.parentNode.nextSibling.nodeValue.substring(1);
+                            event.preventDefault();
+                            let eventInput = new Event('input', {
+                                bubbles: true,
+                                cancelable: true
+                            });
+
+                            rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                            return;
+                        }
+                    }
+                }
+            }
             if (!this.keys[keyCode]) {
                 return;
             }
@@ -6864,9 +6908,9 @@ MediumEditor.extensions = {};
 
         // https://github.com/yabwe/medium-editor/issues/994
         // Firefox thrown an error when calling `formatBlock` on an empty editable blockContainer that's not a <div>
-        if (MediumEditor.util.isMediumEditorElement(node) && node.children.length === 0 && !MediumEditor.util.isBlockContainer(node)) {// duplicate on backspace HERE
+        /*if (MediumEditor.util.isMediumEditorElement(node) && node.children.length === 0 && !MediumEditor.util.isBlockContainer(node)) {// duplicate on backspace HERE
             this.options.ownerDocument.execCommand('formatBlock', false, 'p');
-        }
+        }*/
 
         // https://github.com/yabwe/medium-editor/issues/1455
         // if somehow we have the BR as the selected element, typing does nothing, so move the cursor
