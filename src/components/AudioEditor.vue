@@ -58,26 +58,31 @@
           <template v-if="mode == 'block'">
             <div>
               <button class="btn btn-default" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection">Clear</button>
-              <!-- <button class="btn btn-primary" v-on:click="cut()"  :disabled="!hasSelection || isSinglePointSelection">Cut</button> -->
-              <button class="btn btn-primary" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection">Cut</button>
-              <!-- <button class="btn btn-primary" v-on:click="erase()"  :disabled="!hasSelection || isSinglePointSelection">Erase</button> -->
-              <button class="btn btn-primary" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection">Erase</button>
+              <template v-if="!isBlocked">
+                <!-- <button class="btn btn-primary" v-on:click="cut()"  :disabled="!hasSelection || isSinglePointSelection">Cut</button> -->
+                <button class="btn btn-primary" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection">Cut</button>
+                <!-- <button class="btn btn-primary" v-on:click="erase()"  :disabled="!hasSelection || isSinglePointSelection">Erase</button> -->
+                <button class="btn btn-primary" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection">Erase</button>
+              </template>
             </div>
           </template>
         </div>
-        <div class="selection-controls" v-if="mode == 'block'">
+        <div class="selection-controls" v-if="mode == 'block' && !isBlocked">
           <input type="number" step="0.1" v-model="silenceLength" />
           <!-- <button class="btn btn-primary" v-on:click="addSilence()" :disabled="cursorPosition === false">Add Silence</button> -->
           <button class="btn btn-primary" v-on:click="addSilenceLocal()" :disabled="cursorPosition === false">Add Silence</button>
         </div>
-        <template v-if="mode == 'block' && !isFootnote">
+        <template v-if="mode == 'block' && !isFootnote && !isBlocked">
           <label v-if="isRevertDisabled" class="btn btn-default disabled">Revert</label>
           <button v-else class="btn btn-default" v-on:click="revert(true)">Revert</button>
         </template>
-        <div class="audio-controls" v-if="isModifiedComputed && mode == 'block'">
+        <div class="audio-controls" v-if="isModifiedComputed && mode == 'block' && !isBlocked">
           <button class="btn btn-default" v-if="actionsLog.length" v-on:click="undo()">Undo {{lastActionName}}</button>
           <button class="btn btn-primary" v-on:click="save()"  :disabled="isSaveDisabled">Save</button>
           <button class="btn btn-primary" v-on:click="saveAndRealign()" :disabled="isSaveDisabled">Save & Re-align</button>
+        </div>
+        <div v-if="isBlocked" class="audio-controls blocked-message">
+          Save or discard text modifications before editing the audio
         </div>
         <div class="audio-controls" v-if="mode == 'file'">
           <button class="btn btn-default" :disabled="!isModifiedComputed" v-on:click="undo()">Undo</button>
@@ -190,7 +195,9 @@
           selectionBordersVisible: false,
           audioDuration: 0,
           isFootnote: false,
-          wordRepositioning: false
+          wordRepositioning: false,
+          isBlocked: false,
+          blockedReason: ''
         }
       },
       mounted() {
@@ -209,6 +216,7 @@
         })
         this.$root.$on('for-audioeditor:set-process-run', this.setProcessRun);
         this.$root.$on('for-audioeditor:flush', this.flush);
+        this.$root.$on('for-audioeditor:block', this.setBlocked);
       },
       beforeDestroy() {
         if (this.audioContext) {
@@ -225,6 +233,7 @@
         this.$root.$off('for-audioeditor:select', this.select);
         this.$root.$off('for-audioeditor:set-process-run', this.setProcessRun);
         this.$root.$off('for-audioeditor:flush', this.flush);
+        this.$root.$off('for-audioeditor:block', this.setBlocked);
       },
       methods: {
         select (block_id, start, end, selectElement = false) {
@@ -2552,6 +2561,14 @@ Revert to original block audio?`,
             this.$root.$emit('from-audioeditor:select', this.blockId, list);
           }
         },
+        setBlocked(isBlocked, reason = '') {
+          this.isBlocked = isBlocked;
+          if (isBlocked) {
+            this.blockedReason = reason;
+          } else {
+            this.blockedReason = '';
+          }
+        },
         ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId'])
 
       },
@@ -3089,6 +3106,10 @@ Revert to original block audio?`,
     }
     .audio-controls {
       display: inline-block;
+      &.blocked-message {
+        color: gray;
+        padding: 0px 15px;
+      }
     }
     >div:not(.audio-controls) {
       border-right: solid 2px #b1b1b1;

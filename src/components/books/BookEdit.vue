@@ -1906,75 +1906,6 @@ export default {
       if (blk) {
         //console.log(`saveBlockAudioChanges: `, this.audioTasksQueueBlock)
         //console.log(blk.isChanged);
-        if ((blk.isChanged || (this.audioTasksQueue.block.partIdx !== null && blk.parts[this.audioTasksQueue.block.partIdx].isChanged)) && preparedData === false) {
-          this.scrollToBlock(this.audioTasksQueue.block.blockId, this.audioTasksQueue.block.partIdx);
-          this.$root.$emit('closeFlagPopup', true);
-          this.$root.$emit('show-modal', {
-            title: 'Unsaved Changes',
-            text: `Block text has been modified and not saved.<br>
-Save text changes and realign the Block?`,
-            buttons: [
-              {
-                title: 'Cancel',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                },
-                class: ['btn btn-default']
-              },
-              {
-                title: 'Save & Realign',
-                handler: () => {
-                  let refContainer = this._getRefContainer(blk);
-                  this.$root.$emit('hide-modal');
-                  if (!refContainer) {
-                    return Promise.resolve();
-                  }
-                  if (blk.isChanged) {
-                    let preparedContent = refContainer.clearBlockContent();
-                    if (refContainer.$parent.hasChange('split_point') && refContainer.needsRealignment) {
-                      preparedContent = preparedContent.replace(/<i class="pin"><\/i>/img, '');
-                    }
-                    return this.saveBlockAudioChanges(false, {content: preparedContent})
-                      .then((part) => {
-                        refContainer.reloadBlockPart();
-                        if (part) {
-                          return refContainer.assembleBlockProxy(false, true, [], false);
-                        } else {
-                          //console.log(refContainer);
-                          if (refContainer.$parent) {
-                            if (refContainer.$parent.isChanged) {
-                              refContainer.$parent.isChanged = false;
-                            }
-                          }
-                          return Promise.resolve();
-                        }
-                      });
-                  } else {
-                    //let preparedData = {content: refContainer.clearBlockContent()}
-                    let preparedContent = {};
-                    let oldContent = '';
-                    if (refContainer.hasChange('split_point') && refContainer.needsRealignment) {
-                      oldContent = refContainer.clearBlockContent();
-                      preparedContent.content = oldContent.replace(/<i class="pin"><\/i>/img, '');
-                    }
-                    return this.saveBlockAudioChanges(false, preparedContent)
-                      .then(() => {
-                        refContainer.reloadBlockPart();
-                        if (oldContent) {
-                          blk.setPartContent(this.audioTasksQueue.block.partIdx, oldContent);
-                          refContainer.$refs.blockContent.innerHTML = oldContent;
-                        }
-                        return refContainer.assembleBlockProxy(false, true, false);
-                      });
-                  }
-                },
-                class: ['btn btn-primary']
-              }
-            ],
-            class: ['align-modal']
-          });
-          return Promise.resolve();
-        }
         this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         return this.applyTasksQueue([null])
           .then(() => {
@@ -2157,15 +2088,15 @@ Save text changes and realign the Block?`,
             console.log('Not implemented type', record.type, record);
             break;
         }
+        if (block.getIsSplittedBlock()) {
+          block.parts[this.audioTasksQueue.block.partIdx].isAudioChanged = true;
+        } else {
+          block.isAudioChanged = true;
+        }
         if (refContainer) {
           refContainer.audStop();
-          refContainer.isAudioChanged = true;
-        } else {
-          if (block.getIsSplittedBlock()) {
-            block.parts[this.audioTasksQueue.block.partIdx].isAudioChanged = true;
-          } else {
-            block.isAudioChanged = true;
-          }
+          //refContainer.isAudioChanged = true;
+          refContainer.$parent.$forceUpdate();
         }
         return task
           .then((response) => {
