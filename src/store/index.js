@@ -503,6 +503,12 @@ export const store = new Vuex.Store({
         return blk ? true : false;
       }
       return false;
+    },
+    audioEditorLockedSimultaneous: state => {
+      return 'Save or discard text modifications before editing the audio';
+    },
+    blockLockedSimultaneous: state => {
+      return 'Save or discard audio modifications before editing the block';
     }
   },
 

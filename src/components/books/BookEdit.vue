@@ -2095,7 +2095,7 @@ export default {
         }
         if (refContainer) {
           refContainer.audStop();
-          //refContainer.isAudioChanged = true;
+          refContainer.isAudioChanged = true;
           refContainer.$parent.$forceUpdate();
         }
         return task
@@ -2358,12 +2358,18 @@ export default {
         }
         if (refContainer) {
           refContainer.blockAudio.map = block.getIsSplittedBlock() ? block.parts[queueBlock.partIdx].content : block.content;
-          refContainer.$parent.$forceUpdate();
           if (!isModified) {
             refContainer.unsetChange('audio');
             refContainer.unsetChange('content');
             refContainer.unsetChange('manual_boundaries');
+            refContainer.$parent.isAudioChanged = false;
+            /*if (block.getIsSplittedBlock()) {
+              refContainer.isAudioChanged = false;
+            } else {
+              refContainer.$parent.isAudioChanged = false;
+            }*/
           }
+          refContainer.$parent.$forceUpdate();
         }
       },
       _getRefContainer(block) {
@@ -2430,8 +2436,10 @@ export default {
                   if (refContainer) {
                     if (block.getIsSplittedBlock()) {
                       refContainer.isUpdating = false;
+                      refContainer.isAudioChanged = false;
                     } else {
                       refContainer.$parent.isUpdating = false;
+                      refContainer.$parent.isAudioChanged = false;
                     }
                   }
                   this.clearAudioTasks(false);

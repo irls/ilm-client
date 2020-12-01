@@ -40,7 +40,7 @@
                 <!--<i class="fa fa-hashtag"></i>-->
                 <label ref="parnumRef" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
               </div>
-              <div :class="['par-ctrl -hidden', {'-additional-info': disabledSimultaneousEditing}]">
+              <div :class="['par-ctrl -hidden', {'-additional-info': editingLocked}]">
                 <div class="block-menu" v-if="mode !== 'narrate'">
 
                   <i class="glyphicon glyphicon-menu-hamburger"
@@ -140,7 +140,7 @@
 
                   <!-- Block Type selector -->
                   <label>
-                    <select :disabled="!allowEditing || proofreadModeReadOnly || disabledSimultaneousEditing ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)">
+                    <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)">
                       <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                     </select>
                   </label>
@@ -151,7 +151,7 @@
                     <i class="fa fa-volume-off"></i>
                     <div class="par-ctrl-divider"></div>
                     <label>
-                      <select :disabled="!allowEditing || proofreadModeReadOnly || !allowVoiceworkChange() || disabledSimultaneousEditing? 'disabled' : false" v-model='voiceworkSel'>
+                      <select :disabled="!allowEditing || proofreadModeReadOnly || !allowVoiceworkChange() || editingLocked ? 'disabled' : false" v-model='voiceworkSel'>
                         <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
                     </label>
@@ -167,9 +167,9 @@
                 <template v-else >
 
                 </template>
-                <template v-if="disabledSimultaneousEditing">
+                <template v-if="editingLocked">
                   <div class="par-ctrl-divider"></div>
-                  <label class="disabled-simultaneous-editing">Save or discard audio modifications before editing the block</label>
+                  <label class="blocked-editing">{{editingLockedReason}}</label>
                 </template>
               </div>
               <!--<div class="par-ctrl -hidden">-->
@@ -673,6 +673,8 @@ export default {
         end: Number
       },
       //isSaving: false
+      editingLocked: false,
+      editingLockedReason: ''
     }
   },
   components: {
@@ -1095,7 +1097,9 @@ export default {
           blockLockType: 'blockLockType',
           storeListById: 'storeListById',
           currentBookCounters: 'currentBookCounters',
-          audioTasksQueue: 'audioTasksQueue'
+          audioTasksQueue: 'audioTasksQueue',
+          audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous',
+          blockLockedSimultaneous: 'blockLockedSimultaneous'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -1200,6 +1204,7 @@ export default {
         },
         set(val) {
           this.block.isAudioChanged = val;
+          this.editingLocked = val;
         },
         cache: false
       },
@@ -1398,6 +1403,9 @@ export default {
         if (flagType === 'narrator' && this.block.voicework !== 'narration') {
           return false;
         }
+        if (this.editingLocked) {
+          return false;
+        }
         if (this.isProofreadUnassigned()) {
           return true;
         }
@@ -1522,94 +1530,9 @@ export default {
       },
 
       initEditor(force) {
-        force = force || false;
-
-        if ((!this.editor || force === true) && this.block.needsText()) {
-          let extensions = {};
-          let toolbar = {buttons: []};
-          if (this.allowEditing && this.mode === 'edit') {
-            extensions = {
-                'quoteButton': new QuoteButton(),
-                'quotePreview': new QuotePreview(),
-                'suggestButton': new SuggestButton(),
-                'suggestPreview': new SuggestPreview()
-              };
-            toolbar = {
-                buttons: [
-                  'bold', 'italic', 'underline',
-                  //'superscript', 'subscript',
-                  'unorderedlist',
-                  //'html', 'anchor',
-                  'quoteButton', 'suggestButton'
-                ]
-              };
-            this.editor = new MediumEditor('#content-' + this.block._id, {
-                toolbar: toolbar,
-                buttonLabels: 'fontawesome',
-                quotesList: this.authors,
-                onQuoteSave: this.onQuoteSave,
-                suggestEl: this.suggestEl,
-                extensions: extensions,
-                disableEditing: !this.allowEditing,
-              imageDragging: false
-            });
-          } else if (this.tc_showBlockNarrate(this.block._id) && this.mode === 'narrate') {
-            extensions = {
-                'suggestButton': new SuggestButton(),
-                'suggestPreview': new SuggestPreview()
-              };
-            toolbar = {
-                buttons: ['suggestButton']
-              };
-            this.editor = new MediumEditor('#content-' + this.block._id, {
-                toolbar: toolbar,
-                buttonLabels: 'fontawesome',
-                quotesList: [],
-                onQuoteSave: this.onQuoteSave,
-                suggestEl: this.suggestEl,
-                extensions: extensions,
-                disableEditing: true,
-              imageDragging: false
-            });
-          }
-    //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
-    //       this.editor.subscribe('positionToolbar', ()=>{})
-        }  else if (this.editor) {
-          this.editor.setup();
-        }
-
-        /*if ((!this.editorDescr || force === true) && this.block.type == 'illustration' && this.mode === 'edit') {
-          let extensions = {};
-          let toolbar = {buttons: []};
-          if (this.allowEditing) {
-            extensions = {
-                'quoteButton': new QuoteButton(),
-                'quotePreview': new QuotePreview()
-              };
-            toolbar = {
-                buttons: [
-                  'bold', 'italic', 'underline',
-                  'superscript', 'subscript',
-                  'unorderedlist',
-                  'quoteButton', 'suggestButton'
-                ]
-              };
-          }
-          this.editorDescr = new MediumEditor(this.$refs.blockDescription, {
-              toolbar: toolbar,
-              buttonLabels: 'fontawesome',
-              quotesList: this.authors,
-              onQuoteSave: this.onQuoteSave,
-              extensions: extensions,
-              disableEditing: !this.allowEditing
-          });
-        } else if (this.editorDescr) {
-          this.editorDescr.setup();
-        }*/
-
         this.initFtnEditor(force)
 
-        $('.medium-editor-toolbar.medium-editor-stalker-toolbar').css('display', '');
+        //$('.medium-editor-toolbar.medium-editor-stalker-toolbar').css('display', '');
       },
       initFtnEditor(force) {
         if ((!this.editorFootn || force === true) && this.block.needsText()) {
@@ -2956,13 +2879,16 @@ Save text changes and realign the Block?`,
       },
 
       canResolveFlagPart: function (flagPart) {
-          return this.tc_canResolveFlagPart(flagPart, this.block);
+          return !this.editingLocked && this.tc_canResolveFlagPart(flagPart, this.block);
       },
       canCommentFlagPart: function(flagPart) {
         return this.canResolveFlagPart(flagPart) && flagPart.status == 'open' && !flagPart.collapsed/* && (!this.isCompleted || this.isProofreadUnassigned())*/;
       },
 
       canDeleteFlagPart: function (flagPart) {
+          if (this.editingLocked) {
+            return false;
+          }
           if (this.tc_allowNarrateUnassigned(this.block) && flagPart.creator === this.auth.getSession().user_id && this.block.voicework === 'narration') {
             return true;
           }
@@ -4248,7 +4174,7 @@ Save text changes and realign the Block?`,
         return cmOptions;
       },
       openBurgerMenu(e) {
-        if (this.disabledSimultaneousEditing) {
+        if (this.editingLocked) {
           return false
         } else {
           this.$refs.blockMenu.open(e, this.block.blockid);
@@ -4412,7 +4338,7 @@ Save text changes and realign the Block?`,
           this.block.isChanged = val;
           this.recountApprovedInRange();
           if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx === null) {
-            this.$root.$emit('for-audioeditor:block', val, 'Save or discard text modifications before editing the audio');
+            this.$root.$emit('for-audioeditor:lock-editing', val, this.audioEditorLockedSimultaneous);
           }
         }
       },
@@ -4425,6 +4351,10 @@ Save text changes and realign the Block?`,
             this.unsetChange('audio');
           }*/
           this.block.isAudioChanged = val;
+          this.editingLocked = val;
+          if (this.editingLocked) {
+            this.editingLockedReason = this.blockLockedSimultaneous;
+          }
         }
       },
       'isIllustrationChanged': {
@@ -4568,6 +4498,30 @@ Save text changes and realign the Block?`,
           this.block.sync_changes = [];
         },
         deep: true
+      },
+      'editingLocked': {
+        handler(val) {
+          let partContainer;
+          let searchIdx = null;
+          if (this.block.getIsSplittedBlock()) {
+            searchIdx = this.audioTasksQueue.block.partIdx;
+          } else {
+            searchIdx = 0;
+          }
+          if (searchIdx !== null) {
+            let partContainer = this.$refs.blocks.find(p => {
+              return p.blockPartIdx === searchIdx;
+            });
+            if (partContainer) {
+              partContainer.editingLocked = val;
+            }
+          }
+          if (val) {
+            this.editingLockedReason = this.blockLockedSimultaneous;
+          } else {
+            this.editingLockedReason = '';
+          }
+        }
       }
 
   }
@@ -5674,7 +5628,7 @@ div.-content.editing  div.content-wrap {
   background: #ffffe1 !important;
 }
 
-.disabled-simultaneous-editing {
+.blocked-editing {
   color: gray;
 }
 

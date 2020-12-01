@@ -387,7 +387,8 @@ export default {
       check_id: null,
       footnoteIdx: null,
       //isSaving: false,
-      splitPinSelection: null
+      splitPinSelection: null,
+      editingLocked: false
     }
   },
   components: {
@@ -795,7 +796,8 @@ export default {
           mode: 'bookMode',
           blockLockType: 'blockLockType',
           audioTasksQueue: 'audioTasksQueue',
-          checkRunningAudioTask: 'checkRunningAudioTask'
+          checkRunningAudioTask: 'checkRunningAudioTask',
+          audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -861,9 +863,12 @@ export default {
         set(val) {
           if (!this.block.getIsSplittedBlock()) {
             this.block.isAudioChanged = val;
+            this.$parent.isAudioChanged = val;
           } else {
             this.block.parts[this.blockPartIdx].isAudioChanged = val;
           }
+          this.editingLocked = val;
+          this.$parent.editingLocked = val;
         },
         cache: false
       },
@@ -1034,6 +1039,9 @@ export default {
         if (flagType === 'narrator' && this.block.voicework !== 'narration') {
           return false;
         }
+        if (this.editingLocked) {
+          return false;
+        }
         if (this.isProofreadUnassigned()) {
           return true;
         }
@@ -1119,6 +1127,9 @@ export default {
 
       initEditor(force) {
         force = force || false;
+        if (this.editingLocked) {
+          return false;
+        }
 
         if ((!this.editor || force === true) && this.block.needsText()) {
           let extensions = {};
@@ -1155,7 +1166,7 @@ export default {
                 suggestEl: this.suggestEl,
                 blockLang: blockLang,
                 extensions: extensions,
-                disableEditing: !this.allowEditing,
+                disableEditing: !this.allowEditing || this.editingLocked,
                 imageDragging: false,
                 spellcheck: false
             });
@@ -1885,6 +1896,7 @@ export default {
         if (!this.allowEditing) return false;
         if (this.block.type == 'illustration') return false;
         if (!this.range) return false;
+        if (this.editingLocked) return false;
         let container = this.range.commonAncestorContainer;
         if (typeof container.length == 'undefined') return false;
         if (this.range.endOffset >= container.length) return true;
@@ -2307,13 +2319,16 @@ export default {
       },
 
       canResolveFlagPart: function (flagPart) {
-          return this.tc_canResolveFlagPart(flagPart, this.block);
+          return !this.editingLocked && this.tc_canResolveFlagPart(flagPart, this.block);
       },
       canCommentFlagPart: function(flagPart) {
         return this.canResolveFlagPart(flagPart) && flagPart.status == 'open' && !flagPart.collapsed/* && (!this.isCompleted || this.isProofreadUnassigned())*/;
       },
 
       canDeleteFlagPart: function (flagPart) {
+          if (this.editingLocked) {
+            return false;
+          }
           if (this.tc_allowNarrateUnassigned(this.block) && flagPart.creator === this.auth.getSession().user_id && this.block.voicework === 'narration') {
             return true;
           }
@@ -2665,6 +2680,7 @@ export default {
         this.footnoteIdx = footnoteIdx;
         this.check_id = this.generateAudioCheckId();
         this.audioEditorEventsOff();
+        this.$root.$emit('for-audioeditor:lock-editing', this.isChanged, this.audioEditorLockedSimultaneous);
 
 
         Vue.nextTick(() => {
@@ -3281,6 +3297,9 @@ Save text changes and realign the Block?`,
         if (this.block.voicework !== 'narration') {
           return false;
         }
+        if (this.editingLocked) {
+          return false;
+        }
         /*if (this._is('narrator', true) && this.mode === 'narrate') {
           console.log(this.range, `${this.range.startOffset}:${this.range.endOffset}`);
         } else */if (((this._is('editor', true) || this.adminOrLibrarian) && this.mode === 'edit') || (this._is('narrator', true) && this.mode === 'narrate')) {
@@ -3599,6 +3618,9 @@ Join with next subblock?`;
             }
           }
           this.recountApprovedInRange();
+          if (this.audioTasksQueue.block.blockId === this.block.blockid && this.blockPartIdx !== null && this.blockPartIdx === this.audioTasksQueue.block.partIdx) {
+            this.$root.$emit('for-audioeditor:lock-editing', val, this.audioEditorLockedSimultaneous);
+          }
         }
       },
       'isAudioChanged': {
@@ -3704,6 +3726,12 @@ Join with next subblock?`;
           }
         },
         deep: true
+      },
+      'editingLocked': {
+        handler(val) {
+          this.destroyEditor();
+          this.initEditor(true);
+        }
       }/*,
       'audioTasksQueue.running': {
         handler(val) {
