@@ -1562,7 +1562,7 @@ export default {
                     bookid: pBlock.bookid,
                     classes: pBlock.classes//,
                     //status: pBlock.status
-                  }]));
+                  }, false, pBlock.isChanged || pBlock.hasChangedPart()]));
                 }
               }
             }

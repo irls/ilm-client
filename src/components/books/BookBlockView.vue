@@ -426,7 +426,7 @@
                 </div>
                 <div class="par-ctrl -hidden -right">
                     <div class="save-block -right" @click="discardBlock"
-                        v-bind:class="{'-disabled': !hasChanges || isAudioEditing}">
+                        v-bind:class="{'-disabled': !hasChanges}">
                       Discard
                     </div>
                     <div class="save-block -right"
@@ -5027,6 +5027,11 @@ Save text changes and realign the Block?`,
         }
       }
     }
+}
+.-mode-narrate {
+  .-additional-info {
+    width: 50% !important;
+  }
 }
 
 .fa, .glyphicon {

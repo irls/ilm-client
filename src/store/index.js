@@ -2113,7 +2113,7 @@ export const store = new Vuex.Store({
           });
     },
 
-    putBlockPart ({commit, state, dispatch}, [update, realign]) {
+    putBlockPart ({commit, state, dispatch}, [update, realign, keep_block = false]) {
       let cleanBlock = Object.assign({}, update);
       delete cleanBlock.parnum;
       delete cleanBlock.secnum;
@@ -2137,7 +2137,9 @@ export const store = new Vuex.Store({
             state.storeListO.updBlockByRid(response.data.id, {
               status: response.data.status
             });
-            commit('set_storeList', new BookBlock(response.data));
+            if (!keep_block) {
+              commit('set_storeList', new BookBlock(response.data));
+            }
             return Promise.resolve(response.data);
           })
           .catch(err => {

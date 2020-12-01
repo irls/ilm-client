@@ -769,6 +769,12 @@ export default {
         if (Array.isArray(block.parts) && Array.isArray(oldBlock.parts) && block.parts.length === oldBlock.parts.length) {
           oldBlock.parts.forEach((p, pIdx) => {
             block.parts[pIdx].inid = p.inid;
+            if (p.isChanged) {
+              block.parts[pIdx].isChanged = p.isChanged;
+            }
+            if (p.isAudioChanged) {
+              block.parts[pIdx].isAudioChanged = p.isAudioChanged;
+            }
           });
         }
         this.$store.commit('set_storeList', block);
@@ -2324,6 +2330,7 @@ export default {
             if (refContainer) {
               refContainer.isUpdating = false;
               refContainer.blockAudio.map = block.getIsSplittedBlock() ? block.parts[queueBlock.partIdx].content : block.content;
+              refContainer.isAudioChanged = false;
               refContainer.$parent.$forceUpdate();
             }
             return Promise.resolve();

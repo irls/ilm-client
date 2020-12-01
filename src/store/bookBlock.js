@@ -993,6 +993,16 @@ class BookBlock {
       this.parts[partIdx].content_changed = value;
     }
   }
+  
+  hasChangedPart() {
+    if (Array.isArray(this.parts) && this.parts.length > 0) {
+      let p = this.parts.find(p => {
+        return p.isChanged || p.isAudioChanged;
+      });
+      return p ? true : false;
+    }
+    return false;
+  }
 }
 
 class FlagPart {
