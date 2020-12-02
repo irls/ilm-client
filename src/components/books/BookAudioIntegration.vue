@@ -32,7 +32,7 @@
             </dropdown>
             <div class="upload-audio left-divider">
               <button id="show-modal" type="button" @click="uploadAudio" class="btn btn-default btn_audio_upload btn-small" >
-                <i class="fa" ></i>Import
+                <i class="fa fa-download" ></i>
               </button>
             </div>
             <div class="delete-audio">
@@ -75,10 +75,10 @@
                         <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
                       </div>
                       <div class="audiofile-name">
-                        <span v-if="audiofile.duplicate " @click="duplicateAudiofileClick(audiofile.id, audiofile.duplicate, $event)" :title="audiofile.title ? audiofile.title : audiofile.name"><i>Duplicate: {{audiofile.title ? audiofile.title : audiofile.name}}</i></span>
+                        <span v-if="audiofile.duplicate " @click="duplicateAudiofileClick(audiofile.id, audiofile.duplicate, $event)" :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)"><img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" /><i>Duplicate: {{audiofile.title ? audiofile.title : audiofile.name}}</i></span>
                         <span v-if="renaming !== audiofile.id && !audiofile.duplicate"
                               :class="['audiofile-name-edit', audiofile.id.replace(/\./g, '')]"
-                              @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.title ? audiofile.title : audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
+                              @click="audiofileClick(audiofile.id, false, $event)"  :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)" v-on:dblclick="renaming = audiofile.id"><img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" />{{audiofile.title ? audiofile.title : audiofile.name}}</span>
                         <input id="rename-input" type="text" v-model="audiofile.title" 
                              class="audiofile-name-edit"
                              @focusout="saveAudiobook()"
@@ -371,7 +371,7 @@
             }
           })
         }
-        let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/audiobooks/' + this.audiobook._id;
+        let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/audiobooks/' + encodeURIComponent(this.audiobook.id);
         let formData = new FormData();
         //let save_data = this.audiobook;
         //if (save_data.importFiles) {
@@ -1112,6 +1112,10 @@
         } else {
           return false;
         }
+      },
+      
+      capitalizeFirst(text) {
+        return _.upperFirst(text);
       },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
