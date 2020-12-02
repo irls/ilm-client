@@ -545,7 +545,7 @@ export default {
       console.log(arguments);
     },
     copyReport() {
-      let content = this.convertTime(new Date(), true) + '\n\n';
+      let content = 'Import Audio Report\n\n' + this.convertTime(new Date(), true) + '\n\n';
       let el = this.$refs['copy-report-content'];
       let report = this.getParsedReport();
       if (report instanceof Object) {
@@ -594,7 +594,7 @@ export default {
       minuteFormatted = minute < 10 ? "0" + minute : minute
 
       //console.log(toutc, locdate);
-      let result = day + " " + monthNames[month - 1] + " " + year ;
+      let result = (day.length > 1 ? day : `0${day}`) + " " + monthNames[month - 1] + " " + year ;
       if (time) {
         result += " " + hourFormatted + ":" + minuteFormatted;
       }
