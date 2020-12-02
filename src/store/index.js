@@ -2678,7 +2678,21 @@ export const store = new Vuex.Store({
                               }
                             });
                           }
+                          if (blockStore.isChanged) {
+
+                            if (Array.isArray(blockStore.footnotes) && Array.isArray(block.footnotes) && blockStore.footnotes.length !== block.footnotes.length) {
+                              block.footnotes = blockStore.footnotes;
+                            }
+                          }
                           if (Array.isArray(block.parts) && Array.isArray(blockStore.parts) && block.parts.length === blockStore.parts.length) {
+                            let hasChangedPart = blockStore.parts.find(p => {
+                              return p.isChanged;
+                            });
+                            if (hasChangedPart) {
+                              if (Array.isArray(blockStore.flags) && Array.isArray(block.flags) && blockStore.flags.length !== block.flags.length) {
+                                block.flags = blockStore.flags;
+                              }
+                            }
                             blockStore.parts.forEach((p, i) => {
                               if (p.inid) {
                                 block.parts[i].inid = p.inid;

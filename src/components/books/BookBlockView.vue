@@ -2276,6 +2276,9 @@ Save audio changes and realign the Block?`,
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
               this.$refs.blocks[blockPartIdx].isSaving = false;
             }
+            if (this.block.parts[blockPartIdx]) {
+              this.block.parts[blockPartIdx].isSaving = false;
+            }
             return Promise.resolve(response);
           })
           .catch(err => {
@@ -2960,7 +2963,7 @@ Save text changes and realign the Block?`,
           }
         });
         let pos = this.updFootnotes(this.block.footnotes.length + 1);
-        this.block.footnotes.splice(pos, 0, new FootNote({}));
+        this.block.addFootnote(pos);
         this.$forceUpdate();
         this.isChanged = true;
         let ref = this.$refs['footnoteContent_' + pos];
@@ -2972,6 +2975,7 @@ Save text changes and realign the Block?`,
           //this.destroyEditor();
           this.initFtnEditor(true);
         });
+        this.$store.commit('set_storeList', this.block);
       },
       delFootnote: function(pos, checkText = true) {
         if (checkText) {
@@ -4772,7 +4776,7 @@ Save text changes and realign the Block?`,
             });
             this.recountVoicedBlocks();
           }
-          this.block.isChanged = val;
+          this.block.setChanged(val);
           this.recountApprovedInRange();
         }
       },

@@ -996,6 +996,13 @@ class BookBlock {
       this.parts[partIdx].content_changed = value;
     }
   }
+  addFootnote(pos) {
+    this.footnotes.splice(pos, 0, new FootNote({}));
+    this.setChanged(true);
+  }
+  setChanged(val) {
+    this.isChanged = val;
+  }
 }
 
 class FlagPart {
