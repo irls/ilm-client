@@ -31,7 +31,7 @@
                 <div class="col-sm-9">
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                    <input type="text" class="form-control" placeholder="URL" v-model="audioURL" />
+                    <input type="text" class="form-control" placeholder="Playlist URL" v-model="audioURL" />
                   </div>
                 </div>
                 <div class="col-sm-3">
@@ -109,7 +109,7 @@
         <button class="btn btn-default" v-on:click="$emit('closeOk')">Ok, got it</button>
       </template>
       <template v-else-if="!isUploading">
-        <button class="btn btn-primary modal-default-button" @click="onFormSubmit" :class="{disabled : saveDisabled}">Import Audio</button>
+        <button class="btn btn-primary modal-default-button" @click="onFormSubmit" :class="{disabled : saveDisabled}">Import</button>
         <button class="btn btn-default modal-default-button" @click="$emit('close')">Cancel</button>
       </template>
     </div>
