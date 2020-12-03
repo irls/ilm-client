@@ -867,8 +867,12 @@ export default {
           } else {
             this.block.parts[this.blockPartIdx].isAudioChanged = val;
           }
-          this.editingLocked = val;
-          this.$parent.editingLocked = val;
+          if (typeof val !== 'undefined') {
+            this.editingLocked = val;
+            Vue.nextTick(() => {// wait for parent to be mounted
+              this.$parent.editingLocked = val;
+            });
+          }
         },
         cache: false
       },
@@ -3450,6 +3454,9 @@ Save text changes and realign the Block?`,
         let partFrom = this.blockPart;
         let partTo = this.block.parts[this.blockPartIdx + 1];
         if (partFrom && partTo) {
+          if (this.isAudioChanged || partTo.isAudioChanged) {
+            return false;
+          }
           if (this.isChanged || this.isAudioChanged || partTo.isChanged || partTo.isAudioChanged) {
             
             this.$root.$emit('show-modal', {

@@ -1925,6 +1925,8 @@ export default {
             if (refContainer) {
               //refContainer.showPinnedInText();
               refContainer.reloadBlockPart();
+              refContainer.isAudioChanged = false;
+              refContainer.$parent.$forceUpdate();
             }
             if (realign) {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
@@ -2283,6 +2285,10 @@ export default {
           return this.revertAudio([block.blockid, queueBlock.partIdx])
             .then((res) => {
               block.isSaving = false;
+              block.isAudioChanged = false;
+              if (block.getIsSplittedBlock() && block.parts[queueBlock.partIdx]) {
+                block.parts[queueBlock.partIdx].isAudioChanged = false;
+              }
               //console.log(res.data);
               block.setPartAudiosrc(queueBlock.partIdx || 0, res.data.audiosrc, res.data.audiosrc_ver);
               block.setPartManualBoundaries(queueBlock.partIdx, res.data.manual_boundaries);
@@ -2296,6 +2302,8 @@ export default {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
               if (refContainer) {
                 refContainer.showPinnedInText();
+                refContainer.isAudioChanged = false;
+                refContainer.$parent.$forceUpdate();
               }
               return Promise.resolve();
             });
