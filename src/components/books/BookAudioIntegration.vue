@@ -32,7 +32,7 @@
             </dropdown>
             <div class="upload-audio left-divider">
               <button id="show-modal" type="button" @click="uploadAudio" class="btn btn-default btn_audio_upload btn-small" >
-                <i class="fa fa-download" ></i>
+                
               </button>
             </div>
             <div class="delete-audio">
@@ -1688,5 +1688,11 @@
 
   .inputField {
       flex: 1;
+  }
+  .btn_audio_upload {
+    background-image: url("/static/import-audio-23.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 43px;
   }
 </style>
