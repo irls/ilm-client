@@ -426,7 +426,7 @@
                 </div>
                 <div class="par-ctrl -hidden -right">
                     <div class="save-block -right" @click="discardBlock"
-                        v-bind:class="{'-disabled': !hasChanges}">
+                        v-bind:class="{'-disabled': !isChanged && !isIllustrationChanged}">
                       Discard
                     </div>
                     <div class="save-block -right"

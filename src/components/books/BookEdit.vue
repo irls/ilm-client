@@ -2312,7 +2312,7 @@ export default {
         return this.discardAudioChanges()
           .then(response => {
             let block = this.audioTasksQueueBlock();
-            if (response.status == 200 && response.data) {
+            if (block && response.status === 200 && response.data) {
               if (queueBlock.partIdx !== null) {
                 let part = this.audioTasksQueueBlockOrPart();
                 part._id = queueBlock.checkId;
@@ -2399,7 +2399,7 @@ export default {
       },
       evFromAudioeditorClosed(blockId) {
         let block = this.audioTasksQueueBlock();// block from storeList
-        let queueBlock = this.audioTasksQueue.block;// queue block info
+        let queueBlock = Object.assign({}, this.audioTasksQueue.block);// queue block info
         let part = this.audioTasksQueueBlockOrPart();
         if (!block) {
           return;
@@ -2449,7 +2449,9 @@ export default {
                       refContainer.$parent.isAudioChanged = false;
                     }
                   }
-                  this.clearAudioTasks(false);
+                  if (queueBlock.blockId === this.audioTasksQueue.block.blockId && queueBlock.partIdx === this.audioTasksQueue.block.partIdx) {
+                    this.clearAudioTasks(false);
+                  }
                 });
               });
         } else {

@@ -3476,7 +3476,7 @@ export const store = new Vuex.Store({
         });
     },
     setAudioTasksBlockId({state, dispatch}, [blockId, checkId, partIdx]) {
-      if (blockId !== state.audioTasksQueue.block.blockId) {
+      if (blockId !== state.audioTasksQueue.block.blockId || partIdx !== state.audioTasksQueue.block.partIdx) {
         dispatch('clearAudioTasks', true);
         state.audioTasksQueue.running = null;
         state.audioTasksQueue.block.blockId = blockId;
