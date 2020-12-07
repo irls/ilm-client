@@ -3543,9 +3543,9 @@ export const store = new Vuex.Store({
           if (state.audioTasksQueue.log.length > 1) {
             //block.undoPartAudiosrc(queueBlock.blockPartIdx);
             let log = state.audioTasksQueue.log[state.audioTasksQueue.log.length - 2];
-            if (log.audiosrc && log.audiosrc_ver) {
+            if (log.audiosrc) {
               block.parts[queueBlock.partIdx].audiosrc = log.audiosrc;
-              block.parts[queueBlock.partIdx].audiosrc_ver = log.audiosrc_ver;
+              block.parts[queueBlock.partIdx].audiosrc_ver = log.audiosrc_ver || null;
             }
           }
           //this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), false, this.blockPart);
@@ -3556,9 +3556,9 @@ export const store = new Vuex.Store({
           //block.undoAudiosrc();
           if (state.audioTasksQueue.log.length > 1) {
             let log = state.audioTasksQueue.log[state.audioTasksQueue.log.length - 2];
-            if (log.audiosrc && log.audiosrc_ver) {
+            if (log.audiosrc) {
               block.audiosrc = log.audiosrc;
-              block.audiosrc_ver = log.audiosrc_ver;
+              block.audiosrc_ver = log.audiosrc_ver || null;
             }
           }
         }
@@ -3611,12 +3611,12 @@ export const store = new Vuex.Store({
               });
               if (l) {
                 l.audiosrc = r.audiosrc;
-                l.audiosrc_ver = r.audiosrc_ver;
+                //l.audiosrc_ver = r.audiosrc_ver;
               }
             });
           }
           if (data.length > 0) {
-            block.setPartAudiosrc(state.audioTasksQueue.block.partIdx || 0, data[data.length - 1].audiosrc, data[data.length - 1].audiosrc_ver);
+            block.setPartAudiosrc(state.audioTasksQueue.block.partIdx || 0, data[data.length - 1].audiosrc, null);
             let historyKey = queueBlock.partIdx === null ? '' : `parts.${queueBlock.partIdx}.`;
             //let j = block.history[historyKey + 'audiosrc'].length;
             if (Array.isArray(block.history[historyKey + 'audiosrc'])) {
@@ -3770,8 +3770,10 @@ export const store = new Vuex.Store({
             block.setPartManualBoundaries(queueBlock.partIdx || 0, part.manual_boundaries || []);
             if (queueBlock.partIdx !== null) {
               block.parts[queueBlock.partIdx].isAudioChanged = false;
+              block.clearPartHistory(queueBlock.partIdx);
             } else {
               block.isAudioChanged = false;
+              block.clearHistory();
             }
           }
           return Promise.resolve(response);

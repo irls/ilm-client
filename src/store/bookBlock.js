@@ -993,6 +993,16 @@ class BookBlock {
       this.parts[partIdx].content_changed = value;
     }
   }
+  clearHistory() {
+    this.history = {};
+  }
+  clearPartHistory(partIdx) {
+    Object.keys(this.history).forEach(k => {
+      if (k.indexOf(`parts.${partIdx}`) === 0) {
+        delete this.history[k];
+      }
+    });
+  }
 }
 
 class FlagPart {
