@@ -630,13 +630,15 @@ class BookBlock {
   }
 
   getAudiosrc(ver = false, full = true) {
+    let path;
     if (!ver || !this.audiosrc_ver) {
-      return this.audiosrc;
+      path = this.audiosrc;
+    } else  {
+      path =
+        typeof this.audiosrc_ver[ver] === 'undefined'
+          ? this.audiosrc
+          : this.audiosrc_ver[ver];
     }
-    let path =
-      typeof this.audiosrc_ver[ver] === 'undefined'
-        ? this.audiosrc
-        : this.audiosrc_ver[ver];
     if (!path) {
       return false;
     }
