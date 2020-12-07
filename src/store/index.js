@@ -47,7 +47,7 @@ const authorsLangFarsi =
  husayn:   'حسین'
 };
 
-const audioTasksQueueRunSize = 5;
+const audioTasksQueueRunSize = 10;
 const localAudioTasks = ['manual_boundaries', 'unpin_right'];
 
 // const API_ALLBOOKS = '/static/books.json'
