@@ -7089,7 +7089,7 @@ MediumEditor.extensions = {};
                         parentNode.insertBefore(partTwo, partThree);
                         MediumEditor.selection.moveCursor(this.options.ownerDocument, partThree, 0);
                         //console.log('HERE2');
-                        if (afterSelection.length === 0 && !partThree.nextSibling) {
+                        if (afterSelection.trim().length === 0 && !partThree.nextSibling) {
                             let partFour = document.createElement('br');
                             parentNode.insertBefore(partFour, partThree);
                             //console.log('HERE3');
