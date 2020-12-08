@@ -7084,16 +7084,21 @@ MediumEditor.extensions = {};
                         let partOne = document.createTextNode(selection),
                         partTwo = document.createElement('br'),
                         partThree = document.createTextNode(afterSelection);
-                        parentNode.replaceChild(partThree, element);
-                        parentNode.insertBefore(partOne, partThree);
-                        parentNode.insertBefore(partTwo, partThree);
-                        MediumEditor.selection.moveCursor(this.options.ownerDocument, partThree, 0);
-                        //console.log('HERE2');
-                        if (afterSelection.trim().length === 0 && !partThree.nextSibling) {
+                        if (afterSelection.trim().length === 0 && !element.nextSibling) {
                             let partFour = document.createElement('br');
-                            parentNode.insertBefore(partFour, partThree);
+                            parentNode.replaceChild(partFour, element);
+                            parentNode.insertBefore(partTwo, partFour);
+                            parentNode.insertBefore(partThree, partTwo);
+                            parentNode.insertBefore(partOne, partThree);
+                            MediumEditor.selection.moveCursor(this.options.ownerDocument, partFour, 0);
                             //console.log('HERE3');
+                        } else {
+                            parentNode.replaceChild(partThree, element);
+                            parentNode.insertBefore(partOne, partThree);
+                            parentNode.insertBefore(partTwo, partThree);
+                            MediumEditor.selection.moveCursor(this.options.ownerDocument, partThree, 0);
                         }
+                        //console.log('HERE2');
                     }
                 }
             } else {// click inside text node, which parent is not main div and not <w>, e.g. <i>Some text f<u>o<ENTER_HERE>r</u> line <ENTER_HERE>br<u>e</u>ak testing.</i>
