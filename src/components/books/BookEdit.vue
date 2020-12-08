@@ -2085,7 +2085,7 @@ Save text changes and realign the Block?`,
               block.setPartContent(this.audioTasksQueue.block.partIdx || 0, contentContainer.innerHTML);
               block.setPartAudiosrc(this.audioTasksQueue.block.partIdx || 0,
                 this.audioTasksQueue.block.partIdx === null ? block.getAudiosrc(null, false) : block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, null, false),
-                null);
+                {});
               if (refContainer) {
                 refContainer.blockPart.content = contentContainer.innerHTML;
                 refContainer.blockAudio.map = blockPart.content;
