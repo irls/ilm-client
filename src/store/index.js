@@ -3584,7 +3584,7 @@ export const store = new Vuex.Store({
             let log = state.audioTasksQueue.log[state.audioTasksQueue.log.length - 2];
             if (log.audiosrc) {
               block.parts[queueBlock.partIdx].audiosrc = log.audiosrc;
-              block.parts[queueBlock.partIdx].audiosrc_ver = log.audiosrc_ver || null;
+              block.parts[queueBlock.partIdx].audiosrc_ver = log.audiosrc_ver || {};
             }
           }
           //this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), false, this.blockPart);
@@ -3597,7 +3597,7 @@ export const store = new Vuex.Store({
             let log = state.audioTasksQueue.log[state.audioTasksQueue.log.length - 2];
             if (log.audiosrc) {
               block.audiosrc = log.audiosrc;
-              block.audiosrc_ver = log.audiosrc_ver || null;
+              block.audiosrc_ver = log.audiosrc_ver || {};
             }
           }
         }
@@ -3655,7 +3655,7 @@ export const store = new Vuex.Store({
             });
           }
           if (data.length > 0) {
-            block.setPartAudiosrc(state.audioTasksQueue.block.partIdx || 0, data[data.length - 1].audiosrc, null);
+            block.setPartAudiosrc(state.audioTasksQueue.block.partIdx || 0, data[data.length - 1].audiosrc, {});
             let historyKey = queueBlock.partIdx === null ? '' : `parts.${queueBlock.partIdx}.`;
             //let j = block.history[historyKey + 'audiosrc'].length;
             if (Array.isArray(block.history[historyKey + 'audiosrc'])) {
