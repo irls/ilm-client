@@ -450,70 +450,14 @@ export default {
       toUpload.audioImportQuality = this.audioImportQuality;
 
       //this.isUploading = true
-      if (!this.audiobook._id) {
-        // first upload by editor
-        toUpload.autoAlign = this.autoAlign;
-        api.post(api_url, toUpload, {}).then((response) => {
+      return this.updateAudiobook([this.audiobook.id ? this.audiobook.id : null, toUpload])
+        .then(response => {
           if (response.status===200) {
             this.uploadFinished = true
             this.uploadProgress = ''
             this.uploadErrors = [];
             if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
               this.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
-              this.$emit('audiofilesUploaded');
-            }
-            if (response.data.errors) {
-              if (Array.isArray(response.data.errors)) {
-                this.uploadErrors = response.data.errors;
-              }
-            }
-            if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
-              api.put(this.API_URL + 'task/' + this.book.bookid + '/audio_imported', {})
-                .then((link_response) => {
-                  //vm.closeForm(response)
-                  this.tc_loadBookTask(this.book.bookid);
-                })
-                .catch((err) => {
-                  //vm.closeForm(response)
-                })
-            } else {
-              //vm.closeForm(response)
-            }
-          } else {
-            // not sure what we should be doing here
-            this.formReset()
-          }
-        }).catch((err) => {
-          console.log('error: '+ err)
-          this.formReset()
-          setTimeout(() => { this.$emit('close') }, 1000)
-        });
-      } else {
-        // upload updated file by engineer or another file by editor
-        //vm.audiobook.importFiles = [];
-        //this.formData.append('audiobook', JSON.stringify(vm.audiobook));
-        toUpload.autoAlign = this.autoAlign;
-        api.post(api_url + '/' + encodeURIComponent(this.audiobook.id), toUpload, {}).then((response) => {
-          if (response.status===200) {
-            // hide modal after one second
-            this.uploadFinished = true
-            this.uploadProgress = ''
-            this.uploadErrors = []
-            if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
-              this.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
-              //this.$emit('audiofilesUploaded', response.data.audio);
-              this.getAudioBook();
-              if (this.importTask._id) {
-                api.put(this.API_URL + 'task/' + this.importTask._id + '/audio_imported', {})
-                  .then((link_response) => {
-
-                  })
-                  .catch((err) => {
-
-                  })
-              } else {
-
-              }
             }
             if (response.data.errors) {
               if (Array.isArray(response.data.errors)) {
@@ -524,12 +468,11 @@ export default {
             // not sure what we should be doing here
             this.formReset()
           }
-        }).catch((err) => {
-          console.log('error: '+ err)
-          this.formReset()
-          setTimeout(() => { this.$emit('close') }, 1000)
+        })
+        .catch(err => {
+          this.formReset();
+          setTimeout(() => { this.$emit('close') }, 1000);
         });
-      }
     },
     onUploadSuccess() {
     },
@@ -619,7 +562,7 @@ export default {
       }
       return "";
     },
-    ...mapActions(['getAudioBook', 'tc_loadBookTask', 'getBlocks', 'getBookAlign'])
+    ...mapActions(['updateAudiobook', 'tc_loadBookTask', 'getBlocks', 'getBookAlign'])
 
   },
   watch: {

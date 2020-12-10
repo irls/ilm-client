@@ -15,7 +15,6 @@
 
       <BookDownload v-if="showModal" @close="showModal = false" />
       <AudioImport v-if="showModal_audio"
-        @audiofilesUploaded="getAudioBook"
         @close="showModal_audio = false"
         @closeOk="checkAfterAudioImport"
         :book="currentBook"
