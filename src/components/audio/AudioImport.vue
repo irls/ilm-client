@@ -259,7 +259,7 @@ export default {
         if (this.audiobook.report && this.uploadFinished && this.audiobook.report.length > 0) {
           let report = this.getParsedReport();
           if (report instanceof Object) {
-            return (report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) || (report.not_replaced && Array.isArray(report.not_replaced.files) && report.not_replaced.files.length > 0);
+            return (report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) || (report.not_replaced && Array.isArray(report.not_replaced.files) && report.not_replaced.files.length > 0) || (report.not_matched && Array.isArray(report.not_matched.files) && report.not_matched.files.length > 0);
           }
           return false;
         }
@@ -556,6 +556,13 @@ export default {
         if (report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) {
           reportHtml+= `${report.aligned.files.length} audio file(s) realigned with the matching blocks. Word positioning need to be verified\n`;
           report.aligned.files.forEach(filename => {
+            reportHtml+= ` - ${filename}\n`;
+          })
+          reportHtml+= `\n`;
+        }
+        if (report.not_matched && Array.isArray(report.not_matched.files) && report.not_matched.files.length > 0) {
+          reportHtml+= `${report.not_matched.files.length} audio file(s) could not be replaced because no matching blocks found\n`;
+          report.not_matched.files.forEach(filename => {
             reportHtml+= ` - ${filename}\n`;
           })
           reportHtml+= `\n`;
