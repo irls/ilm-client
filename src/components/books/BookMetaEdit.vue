@@ -178,10 +178,12 @@
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
-                    <select id="difficultySelection" :class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }" class="form-control" v-model='currentBook.difficulty' @change="change('difficulty')" :key="currentBookid" :disabled="!allowMetadataEdit">
-                      <option v-for="(value, ind) in subjectDifficulties" :value="value">{{ value }}</option>
-                    </select>
-                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty']" class="validation-error">Please define a Difficulty</span>
+                    <input v-model="currentBook.difficulty" :disabled="!allowMetadataEdit"  @change="change('difficulty')"  class="form-control" id="difficultySelection" :class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
+
+<!--                    <select id="difficultySelection" :class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }" class="form-control" v-model='currentBook.difficulty' @change="change('difficulty')" :key="currentBookid" :disabled="!allowMetadataEdit">-->
+<!--                      <option v-for="(value, ind) in subjectDifficulties" :value="value">{{ value }}</option>-->
+<!--                    </select>-->
+<!--                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty']" class="validation-error">Please define a Difficulty</span>-->
                   </td>
                 </tr>
 
@@ -664,7 +666,7 @@ export default {
       alignCounter: 'alignCounter',
       audiobook: 'currentAudiobook',
       subjectCategories: 'bookCategories',
-      subjectDifficulties: 'bookDifficulties',
+      // subjectDifficulties: 'bookDifficulties',
       bookDifficultyDefault: 'bookDifficultyDefault',
       tasks_counter: 'tasks_counter',
       taskTypes: 'taskTypes',
@@ -1819,13 +1821,13 @@ export default {
         }
       } else {
         if (value !== '' && (Number(value) != value || (value > maxValue || value < minValue))) {
-          //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');  
+          //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
           //ILM-3622:
           errors.push('Allowed range ' + minValue + ' - ' + maxValue );
         }
       }
 
-      
+
       if (!this.validationErrors[this.currentBook.bookid]) {Vue.set(this.validationErrors, this.currentBook.bookid, {key: []})} //this.validationErrors[this.currentBook.bookid] = []};
       this.validationErrors[this.currentBook.bookid][key] = errors;
       if (!errors.length) {
