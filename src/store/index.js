@@ -227,7 +227,8 @@ export const store = new Vuex.Store({
         partIdx: null,
         checkId: null
       }
-    }
+    },
+    updateAudiobookProgress: false
   },
 
   getters: {
@@ -2721,6 +2722,9 @@ export const store = new Vuex.Store({
     },
 
     getAudioBook ({state, commit, dispatch}, {bookid = false, watchId = false, repeat = false}={}) {
+      if (state.updateAudiobookProgress) {
+        return Promise.resolve();
+      }
       //console.log('getAudioBook', bookid, state.currentBookid, watchId);
       if (!bookid) {
         bookid = state.currentBookid;
@@ -3811,6 +3815,33 @@ export const store = new Vuex.Store({
 
           });
       }
+    },
+    updateAudiobook({state, commit, dispatch}, [id, data]) {
+      let url = `${state.API_URL}books/${state.currentBookid}/audiobooks/chunks`;
+      if (id) {
+        url+= `/${encodeURIComponent(id)}`;
+      }
+      state.updateAudiobookProgress = true;
+      return axios.post(url, data, {})
+        .then(response => {
+          state.updateAudiobookProgress = false;
+          if (response && response.data && response.data.audio && response.data.audio.id) {
+            commit('set_currentAudiobook', response.data.audio);
+            axios.put(`${state.API_URL}task/${state.currentBookid}/audio_imported`, {})
+              .then((link_response) => {
+                //vm.closeForm(response)
+                dispatch('tc_loadBookTask', state.currentBookid);
+              })
+              .catch((err) => {
+                //vm.closeForm(response)
+              })
+          }
+          
+          return Promise.resolve(response);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })
