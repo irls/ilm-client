@@ -353,6 +353,7 @@ export default {
       this.audiobook.report = "";
       this.uploadFinished = false;
       this.isUploading = true;
+      this.$store.commit('set_updateAudiobookProgress', true);
       if (this.audioFiles.length === 0 && this.audioURL) {
         this.onUploadFinished();
       } else {
