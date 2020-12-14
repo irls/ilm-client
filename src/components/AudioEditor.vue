@@ -311,6 +311,7 @@
             //this.audioHistory = [];
             //this.close();
           }
+          this.cursorPosition = false;
           this.setProcessRun(true, 'loading');
           this.pendingLoad = null;
           this.isPlaying = false;
@@ -549,6 +550,10 @@
                     this.cursorPosition = cp;
                   });
                 }
+                Vue.nextTick(() => {
+                  $('[id="resize-selection-left"]').hide();
+                  $('[id="resize-selection-right"]').hide();
+                });
                 self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
 
                   limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
@@ -2824,7 +2829,7 @@ Revert to original block audio?`,
                 }
               }
               if ($('[id="resize-selection-left"]').css('display') === 'none' && $('.playlist-overlay:hover').length === 0) {
-                this.cursorPosition = typeof this.selection.start === 'number' && !isNaN(this.selection.start) ? this.selection.start : false;
+                this.cursorPosition = typeof this.selection.start === 'number' && !isNaN(this.selection.start) ? this.selection.start : this.cursorPosition;
                 this._showSelectionBorders();
               }
             })
