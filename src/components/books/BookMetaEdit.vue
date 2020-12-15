@@ -788,6 +788,8 @@ export default {
       handler (val) {
         this.init();
         this.lockLanguage = false;
+        this.currentBookMeta.difficulty = this.currentBookMeta.difficulty? parseFloat(currentBookMeta.difficulty).toFixed(2): this.currentBookMeta.difficulty;
+
       },
       deep: true
     },
