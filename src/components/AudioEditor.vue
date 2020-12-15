@@ -502,6 +502,9 @@
               self._clearWordSelection();
               self.isPlaying = false;
               self.isPaused = false;
+              if (self.selection.start && !isNaN(self.selection.start)) {
+                self.cursorPosition = self.selection.start;
+              }
             });
             this.plEventEmitter.on('select', function(r_start, r_end) {
               let start = self._round(r_start, 2);
