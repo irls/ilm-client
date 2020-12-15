@@ -953,6 +953,9 @@ export default {
         this.check_id = this.generateAudioCheckId();
         this.audioEditorEventsOn();// was scrolled out of visible, and scrolled back, with audio editor opened
       }
+      Vue.nextTick(() => {
+        this.showPinnedInText();
+      })
   },
   beforeDestroy: function () {
 //     console.log('beforeDestroy', this.block._id);
@@ -1002,6 +1005,9 @@ export default {
     this.$root.$off('prepare-alignment', this._saveContent);
     this.$root.$off('from-styles:styles-change-' + this.block.blockid, this.setClasses);
     this.$root.$off('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
+  },
+  updated: function() {
+    this.showPinnedInText();
   },
   methods: {
       ...mapActions([
@@ -3282,7 +3288,7 @@ Save text changes and realign the Block?`,
             //if (this.block.blockid === '1306_s_0005_en-bl37') {
               //console.time('showPinnedInText');
             //}
-            if (!this.$refs.blockContent) {
+            if (!this.$refs.blockContent || this.blockPart.manual_boundaries.length === this.$refs.blockContent.querySelectorAll('.pinned-word').length) {
               return;
             }
             this.$refs.blockContent.querySelectorAll('.pinned-word').forEach(el => {
@@ -3537,7 +3543,7 @@ Save text changes and realign the Block?`,
         this.blockPart.audiosrc_ver['m4a'] = this.blockAudiosrc('m4a', false);
         this.blockAudio.map = this.blockContent();
         this.blockAudio.src = this.blockAudiosrc('m4a');
-        this.showPinnedInText();
+        //this.showPinnedInText();
       },
       isSplitPointAllowed() {
         /*if (this.isSplittedBlock) {
@@ -3840,9 +3846,6 @@ Join with next subblock?`;
               this.infoMessage = 'Audio updated';
             }*/
           }
-          Vue.nextTick(() => {
-            this.showPinnedInText();
-          });
         }
       },
       'blockPart.audiosrc': {
