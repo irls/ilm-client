@@ -925,7 +925,8 @@ export default {
       if (this.currentBook.author && !Array.isArray(this.currentBook.author)) {
         this.currentBook.author = [this.currentBook.author];
       }
-      if(!this.currentBook.difficulty){
+
+      if(this.currentBook.difficulty){
         this.currentBook.difficulty = this.currentBook.difficulty.toFixed(2);
       }
       //this.loadAudiobook();
