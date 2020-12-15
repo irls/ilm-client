@@ -2428,6 +2428,9 @@ Save text changes and realign the Block?`,
         if (refContainer) {
           refContainer.blockAudio.map = block.getIsSplittedBlock() ? block.parts[queueBlock.partIdx].content : block.content;
           refContainer.$parent.$forceUpdate();
+          Vue.nextTick(() => {
+            refContainer.showPinnedInText();
+          });
           if (!isModified) {
             refContainer.unsetChange('audio');
             refContainer.unsetChange('content');

@@ -3840,7 +3840,9 @@ Join with next subblock?`;
               this.infoMessage = 'Audio updated';
             }*/
           }
-          this.showPinnedInText();
+          Vue.nextTick(() => {
+            this.showPinnedInText();
+          });
         }
       },
       'blockPart.audiosrc': {
