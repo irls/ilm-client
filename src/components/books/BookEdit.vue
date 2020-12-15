@@ -2419,7 +2419,7 @@ Save text changes and realign the Block?`,
           block.parts[queueBlock.partIdx].isAudioChanged = isModified;
         }
         if (refContainer) {
-          if (isSplitted) {1
+          if (isSplitted) {
             refContainer.blockAudio.map = block.parts[queueBlock.partIdx].content;
             //console.log(block.parts[queueBlock.partIdx].manual_boundaries.slice());
             refContainer.blockPart.manual_boundaries = block.parts[queueBlock.partIdx].manual_boundaries.slice();
