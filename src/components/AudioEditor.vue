@@ -896,6 +896,8 @@
           }
           this.isPlaying = true;
           this.$root.$emit('from-audioeditor:play');
+          $('.selection.point').hide();
+          $('.context-position').hide();
         },
         stop(go_to_start = true) {
           if (this.isPlaying || this.isPaused) {
