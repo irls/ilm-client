@@ -2368,6 +2368,9 @@ export default {
         }
         if (refContainer) {
           refContainer.blockAudio.map = block.getIsSplittedBlock() ? block.parts[queueBlock.partIdx].content : block.content;
+          Vue.nextTick(() => {
+            refContainer.showPinnedInText();
+          });
           if (!isModified) {
             refContainer.unsetChange('audio');
             refContainer.unsetChange('content');
