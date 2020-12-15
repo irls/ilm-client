@@ -927,7 +927,7 @@ export default {
       }
 
       if(this.currentBook.difficulty){
-        this.currentBook.difficulty = this.currentBook.difficulty.toFixed(2);
+        this.currentBook.difficulty = parseFloat(this.currentBook.difficulty).toFixed(2);
       }
       //this.loadAudiobook();
       /*this.setCurrentBookBlocksLeft(this.currentBook._id)
