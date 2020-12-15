@@ -2023,7 +2023,7 @@ export default {
               if (refContainer) {
                 refContainer.blockPart.content = contentContainer.innerHTML;
                 refContainer.blockAudio.map = blockPart.content;
-                refContainer.showPinnedInText();
+                //refContainer.showPinnedInText();
               }
               this.$root.$emit('for-audioeditor:reload-text', contentContainer.innerHTML, blockPart);
             }
@@ -2205,11 +2205,6 @@ export default {
               response_params = [block.getAudiosrc(null), block.content, true, block];
             }
           }
-          if (refContainer) {
-            Vue.nextTick(() => {
-              refContainer.showPinnedInText();
-            });
-          }
           //this.pushChange('content');
 
 
@@ -2259,7 +2254,7 @@ export default {
             }
           }
           if (refContainer) {
-            refContainer.showPinnedInText();
+            refContainer.$parent.$forceUpdate();
           }
           //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
           response = [block.getPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 'm4a', true), blockPart.content, true, blockPart];
@@ -2296,7 +2291,6 @@ export default {
               //this.$root.$emit('for-audioeditor:load', block.getPartAudiosrc(queueBlock.partIdx || 0, 'm4a'), text, false, loadBlock);
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
               if (refContainer) {
-                refContainer.showPinnedInText();
                 refContainer.isAudioChanged = false;
                 refContainer.$parent.$forceUpdate();
               }
@@ -2346,6 +2340,7 @@ export default {
         let block = this.audioTasksQueueBlock();// block from storeList
         let queueBlock = this.audioTasksQueue.block;// queue block info
         let refContainer = this._getRefContainer(block);
+        let isSplitted = block.getIsSplittedBlock();
         if (refContainer) {
           refContainer.audStop();
         }
@@ -2361,16 +2356,23 @@ export default {
         }*/
         //this.blockAudio.map = this.blockContent();
         //this.blockAudio.src = this.blockAudiosrc('m4a');
-        if (!block.getIsSplittedBlock()) {
+        if (!isSplitted) {
           block.isAudioChanged = isModified;
         } else {
           block.parts[queueBlock.partIdx].isAudioChanged = isModified;
         }
         if (refContainer) {
-          refContainer.blockAudio.map = block.getIsSplittedBlock() ? block.parts[queueBlock.partIdx].content : block.content;
-          Vue.nextTick(() => {
-            refContainer.showPinnedInText();
-          });
+          if (isSplitted) {
+            refContainer.blockAudio.map = block.parts[queueBlock.partIdx].content;
+            //console.log(block.parts[queueBlock.partIdx].manual_boundaries.slice());
+            refContainer.blockPart.manual_boundaries = block.parts[queueBlock.partIdx].manual_boundaries.slice();
+            refContainer.$forceUpdate();
+          } else {
+            refContainer.blockAudio.map = block.content;
+            //console.log(block.parts[queueBlock.partIdx].manual_boundaries.slice());
+            refContainer.blockPart.manual_boundaries = block.manual_boundaries.slice();
+            refContainer.$parent.$forceUpdate();
+          }
           if (!isModified) {
             refContainer.unsetChange('audio');
             refContainer.unsetChange('content');
