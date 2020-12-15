@@ -86,6 +86,19 @@
             mandatoryFields.push('URL slug');
         }
 
+        if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
+          canPublish = false;
+          mandatoryFields.push('difficulty');
+        }
+        if ( this.currentBookMeta.difficulty !='' && parseFloat(this.currentBookMeta.difficulty) < 1){
+          canPublish = false;
+          mandatoryFields.push('difficulty');
+        }
+        if( this.currentBookMeta.difficulty && isNaN(parseFloat(this.currentBookMeta.difficulty)) ){
+          canPublish = false;
+          mandatoryFields.push('difficulty');
+        }
+
 
         if(!canPublish){
           title = 'Publication failed';
