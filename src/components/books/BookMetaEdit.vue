@@ -788,7 +788,6 @@ export default {
       handler (val) {
         this.init();
         this.lockLanguage = false;
-        this.currentBookMeta.difficulty = this.currentBookMeta.difficulty? parseFloat(this.currentBookMeta.difficulty).toFixed(2): this.currentBookMeta.difficulty;
 
       },
       deep: true
@@ -928,8 +927,8 @@ export default {
         this.currentBook.author = [this.currentBook.author];
       }
 
-      if(this.currentBook.difficulty){
-        this.currentBook.difficulty = parseFloat(this.currentBook.difficulty).toFixed(2);
+      if(this.currentBookMeta.difficulty){
+        this.currentBookMeta.difficulty = this.currentBookMeta.difficulty? parseFloat(this.currentBookMeta.difficulty).toFixed(2): this.currentBookMeta.difficulty;
       }
       //this.loadAudiobook();
       /*this.setCurrentBookBlocksLeft(this.currentBook._id)
