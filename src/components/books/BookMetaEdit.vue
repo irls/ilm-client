@@ -177,12 +177,8 @@
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
-                    <input v-model="currentBook.difficulty" :disabled="!allowMetadataEdit"  @change="change('difficulty')"  class="form-control" id="difficultySelection" :class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
-
-<!--                    <select id="difficultySelection" :class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }" class="form-control" v-model='currentBook.difficulty' @change="change('difficulty')" :key="currentBookid" :disabled="!allowMetadataEdit">-->
-<!--                      <option v-for="(value, ind) in subjectDifficulties" :value="value">{{ value }}</option>-->
-<!--                    </select>-->
-<!--                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty']" class="validation-error">Please define a Difficulty</span>-->
+                    <input :placeholder="bookDifficultyDefault" v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit"  @change="change('difficulty')"  class="form-control" id="difficultySelection" :class="{ 'has-error': validationErrors['difficulty'] , 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
+                    <span class="validation-error" >{{ validationErrors['difficulty'] }}</span>
                   </td>
                 </tr>
 
@@ -929,9 +925,9 @@ export default {
       if (this.currentBook.author && !Array.isArray(this.currentBook.author)) {
         this.currentBook.author = [this.currentBook.author];
       }
-      if(!this.currentBook.difficulty){
-        this.currentBook.difficulty = this.bookDifficultyDefault
-      }
+      // if(!this.currentBook.difficulty){
+      //   this.currentBook.difficulty = this.bookDifficultyDefault
+      // }
       //this.loadAudiobook();
       /*this.setCurrentBookBlocksLeft(this.currentBook._id)
         .then(() => {
@@ -974,6 +970,7 @@ export default {
         if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
           this.requiredFields[this.currentBookMeta.bookid]['slug'] = true;
         }
+
 
 
     },
@@ -1025,8 +1022,6 @@ export default {
           })
         }, 1500)
       }
-
-
     },
 
     update: _.debounce(function (key, event) {
@@ -1066,6 +1061,21 @@ export default {
             }
         }
 
+      if (key == 'difficulty'){
+        this.validationErrors['difficulty'] = '';
+        if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
+          this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
+          return;
+        }
+        if ( parseFloat(this.currentBookMeta.difficulty) < 1){
+          this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
+          return;
+        }
+        if( this.currentBookMeta.difficulty !='' && isNaN(parseFloat(this.currentBookMeta.difficulty)) ){
+          this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
+          return;
+        }
+      }
 
       //if (!this.updateAllowed) {
         //return Promise.resolve();
