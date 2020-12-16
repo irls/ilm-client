@@ -1035,8 +1035,9 @@ export default {
     }),
 
     liveUpdate (key, value) {
-        if(this.proofreadModeReadOnly)
-            return ;
+        // Removed regards with ILM-3683
+        //if(this.proofreadModeReadOnly)
+        //    return ;
 
         if( this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][key] ) {
           if (key != 'author'){
