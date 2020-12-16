@@ -692,7 +692,7 @@ export default {
           while (content.match(replaceHTMLRg)) {
             content = content.replace(replaceHTMLRg, '$1');
           }*/
-          content = content.replace(/<br[^>]*>\s*$/, '').replace(/[\r\n]\s*$/);//remove <br> at the end of the block
+          content = content.replace(/<br[^>]*>\s*$/, '').replace(/[\r\n]\s*$/, '');//remove <br> at the end of the block
           content = content.replace(/(<\/?(?:ol|ul|li|u|br)[^>]*>)|<[^>]+>/img, '$1');
           content = content.replace(/(<\/li>[^<]*?<li[^>]*>)/img, '<br>$1');
           let is_list = this.block.content.match(/<br[^>]*>/m) || content.match(/<br[^>]*>/m) || this.block.content.match(/<li[^>]*>/m) || content.match(/<li[^>]*>/m);
