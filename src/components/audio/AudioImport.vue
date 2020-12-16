@@ -9,7 +9,7 @@
                 <h4 class="header-h">{{importTitle}}</h4>
               </div>
 
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close')" v-if="!isUploading">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close')" v-if="!isUploading || uploadErrors.length || audiobookReport">
                 <i class="fa fa-times-circle-o" aria-hidden="true"></i>
                 </button>
 
@@ -83,7 +83,7 @@
 
           </form>
           <div id='uploadingMsg' v-show='isUploading'>
-            <template v-if="!audiobookReport">
+            <template v-if="!audiobookReport && !uploadErrors.length">
              <h2>{{uploadProgress}}&nbsp;<i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i></h2>
              <ul class="audiofiles-list">
                 <li v-for="file in audioFiles">
@@ -105,7 +105,7 @@
           </div>
           </div>
     <div class="modal-footer">
-      <template v-if="audiobookReport && uploadFinished">
+      <template v-if="(audiobookReport && uploadFinished) || uploadErrors.length">
         <button class="btn btn-default" v-on:click="$emit('closeOk')">Ok, got it</button>
       </template>
       <template v-else-if="!isUploading">
