@@ -208,7 +208,7 @@ export const store = new Vuex.Store({
     //   '11',
     //   '12'
     // ],
-    bookDifficultyDefault:6.0,
+    bookDifficultyDefault:'6',
     loadBookWait: null,
     loadBookTaskWait: null,
     jobInfoRequest: null,
