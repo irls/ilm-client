@@ -928,9 +928,6 @@ export default {
         this.currentBook.author = [this.currentBook.author];
       }
 
-      if(this.currentBookMeta.difficulty){
-        this.currentBookMeta.difficulty = this.currentBookMeta.difficulty? parseFloat(this.currentBookMeta.difficulty).toFixed(2): this.currentBookMeta.difficulty;
-      }
       //this.loadAudiobook();
       /*this.setCurrentBookBlocksLeft(this.currentBook._id)
         .then(() => {
