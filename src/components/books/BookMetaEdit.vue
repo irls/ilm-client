@@ -83,7 +83,7 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' @input="update('title', $event); " @keyup="keyup('difficulty',$event)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
+                  <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title']" class="validation-error">Define Title</span>
                   </td>
                 </tr>
@@ -177,7 +177,7 @@
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
-                    <input :placeholder="bookDifficultyDefault" v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit" @keyup="keyup('difficulty',$event)" @change="update('difficulty',$event)"  id="difficultySelection" :class="{ 'has-error': validationErrors['difficulty'] , 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
+                    <input :placeholder="bookDifficultyDefault" v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit" @change="update('difficulty',$event)"  id="difficultySelection" :class="{ 'has-error': validationErrors['difficulty'] , 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
                     <span class="validation-error" >{{ validationErrors['difficulty'] }}</span>
                   </td>
                 </tr>
@@ -1022,9 +1022,9 @@ export default {
         }, 1500)
       }
     },
-    keyup(key, event){
+    update(key, event){
 
-      event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
+
       if(key =='difficulty'){
 
         let validationErrors = '';
@@ -1048,22 +1048,48 @@ export default {
           this.validationErrors['difficulty'] = validationErrors;
         }
         if(validationErrors){
+          event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
           return;
         }
 
       }
+
       event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "bold";
 
-    },
+        let debounceCalculate = _.debounce((key,event)=>{
+            event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
+            // event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
+            let val = typeof event === 'string' ? event : event.target.value;
+            this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
 
-    update: _.debounce(function (key, event) {
-      event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
-      let val = typeof event === 'string' ? event : event.target.value;
-      this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
-    }, 1500, {
-      'leading': false,
-      'trailing': true
-    }),
+        },  1500, {
+              'leading': false,
+              'trailing': true
+            });
+        debounceCalculate(key,event);
+
+        // _.debounce(function (key, event) {
+        //   console.log(key);
+        //   console.log(event);
+        // })();
+
+      // });
+
+      // _.debounce((mergedUser)=>{
+      //   console.log(mergedUser);
+      // })();
+
+    },
+    // update:_.debounce(function (key, event) {
+    //   return {key,event}
+    // }).debounce(function (key, event) {
+    //     // event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
+    //     let val = typeof event === 'string' ? event : event.target.value;
+    //     this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
+    //   }, 1500, {
+    //     'leading': false,
+    //     'trailing': true
+    //   }),
 
     liveUpdate (key, value) {
         // Removed regards with ILM-3683
@@ -1095,29 +1121,30 @@ export default {
             }
         }
 
-      if (key == 'difficulty'){
-        // this.validationErrors['difficulty'] = '';
+      if(key =='difficulty'){
+
+        let validationErrors = '';
 
         if(this.currentBookMeta.difficulty)
           if ( parseFloat(this.currentBookMeta.difficulty).toString() !== this.currentBookMeta.difficulty ){
-            // this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
-            return;
+            return ;
           }
 
-
         if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
-          // this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
-          return;
+          return ;
         }
         if ( parseFloat(this.currentBookMeta.difficulty) < 1){
-          // this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
-          return;
+          return ;
         }
         if( this.currentBookMeta.difficulty !='' && isNaN(parseFloat(this.currentBookMeta.difficulty)) ){
-          // this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
+          return ;
+        }
+        if(validationErrors){
           return;
         }
+
       }
+
 
       //if (!this.updateAllowed) {
         //return Promise.resolve();
@@ -2390,54 +2417,4 @@ Vue.filter('prettyBytes', function (num) {
     font-size: 18px;
   }
   .meta-edit-tabs.vue-tabs .disabled i.fa-check-square-o{
-    font-size: 18px;
-  }
-  .meta-edit-tabs.vue-tabs .disabled i.fa-square-o{
-    font-size: 18px;
-  }
-
-  /*.author select * {
-    padding: 5px;
-    margin: 5px;
-    font-size: 110%;
-  } */
-
-  .dropdown {
-    position: relative;
-    display: inline-block;
-  }
-
-  .dropdown-button {
-    border: 1px solid #444;
-    border-radius: 2px;
-    padding: 4px;
-    height: 30px
-  }
-
-  .dropdown-content {
-    cursor: default;
-    top: 30px;
-    left:-59px;
-    position: absolute;
-    background-color: #f9f9f9;
-    min-width: 80px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    padding: 5px;
-    z-index: 1;
-    border: 1px solid #aaa;
-  }
-
-  .dropdown-content:hover {
-    background: #1e90ff;
-    color: #fff;
-  }
-
-  .outside {
-    width: 100vw;
-    height: 100vh;
-    position: fixed;
-    top: 0px;
-    left: 0px;
-  }
-
-</style>
+    font-size
