@@ -84,7 +84,7 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
+                  <td><input v-model='currentBook.title' @input="update('title', $event); " @keyup="keyup('difficulty',$event)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title']" class="validation-error">Define Title</span>
                   </td>
                 </tr>
@@ -178,7 +178,7 @@
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
-                    <input :placeholder="bookDifficultyDefault" v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit"  @change="change('difficulty')"  id="difficultySelection" :class="{ 'has-error': validationErrors['difficulty'] , 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
+                    <input :placeholder="bookDifficultyDefault" v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit" @keyup="keyup('difficulty',$event)" @change="update('difficulty',$event)"  id="difficultySelection" :class="{ 'has-error': validationErrors['difficulty'] , 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
                     <span class="validation-error" >{{ validationErrors['difficulty'] }}</span>
                   </td>
                 </tr>
@@ -1023,8 +1023,42 @@ export default {
         }, 1500)
       }
     },
+    keyup(key, event){
+
+      event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
+      if(key =='difficulty'){
+
+        let validationErrors = '';
+
+        if(this.currentBookMeta.difficulty)
+          if ( parseFloat(this.currentBookMeta.difficulty).toString() !== this.currentBookMeta.difficulty ){
+            validationErrors = 'Allowed range 1 - 14.99';
+          }
+
+        if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
+          validationErrors = 'Allowed range 1 - 14.99';
+        }
+        if ( parseFloat(this.currentBookMeta.difficulty) < 1){
+          validationErrors = 'Allowed range 1 - 14.99';
+        }
+        if( this.currentBookMeta.difficulty !='' && isNaN(parseFloat(this.currentBookMeta.difficulty)) ){
+          validationErrors = 'Allowed range 1 - 14.99';
+        }
+
+        if(validationErrors !=this.validationErrors['difficulty'] ){
+          this.validationErrors['difficulty'] = validationErrors;
+        }
+        if(validationErrors){
+          return;
+        }
+
+      }
+      event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "bold";
+
+    },
 
     update: _.debounce(function (key, event) {
+      event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
       let val = typeof event === 'string' ? event : event.target.value;
       this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
     }, 1500, {
@@ -1062,17 +1096,25 @@ export default {
         }
 
       if (key == 'difficulty'){
-        this.validationErrors['difficulty'] = '';
+        // this.validationErrors['difficulty'] = '';
+
+        if(this.currentBookMeta.difficulty)
+          if ( parseFloat(this.currentBookMeta.difficulty).toString() !== this.currentBookMeta.difficulty ){
+            // this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
+            return;
+          }
+
+
         if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
-          this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
+          // this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
           return;
         }
         if ( parseFloat(this.currentBookMeta.difficulty) < 1){
-          this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
+          // this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
           return;
         }
         if( this.currentBookMeta.difficulty !='' && isNaN(parseFloat(this.currentBookMeta.difficulty)) ){
-          this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
+          // this.validationErrors['difficulty'] = 'Allowed range 1 - 14.99';
           return;
         }
       }
