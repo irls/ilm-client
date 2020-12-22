@@ -178,7 +178,7 @@
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
-                    <input :placeholder="bookDifficultyDefault" v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit"  @change="change('difficulty')"  class="form-control" id="difficultySelection" :class="{ 'has-error': validationErrors['difficulty'] , 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
+                    <input :placeholder="bookDifficultyDefault" v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit"  @change="change('difficulty')"  id="difficultySelection" :class="{ 'has-error': validationErrors['difficulty'] , 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
                     <span class="validation-error" >{{ validationErrors['difficulty'] }}</span>
                   </td>
                 </tr>
