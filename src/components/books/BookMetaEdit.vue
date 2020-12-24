@@ -84,7 +84,7 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
+                  <td><input v-model='currentBook.title' v-on:change="update('title',$event,400)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title']" class="validation-error">Define Title</span>
                   </td>
                 </tr>
@@ -178,7 +178,7 @@
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
-                    <input :placeholder="bookDifficultyDefault" v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit" @change="update('difficulty',$event)"  id="difficultySelection" :class="{ 'has-error': validationErrors['difficulty'] , 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
+                    <input :placeholder="bookDifficultyDefault" v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit" v-on:change="update('difficulty',$event,400)"  id="difficultySelection" :class="{ 'has-error': validationErrors['difficulty'] , 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
                     <span class="validation-error" >{{ validationErrors['difficulty'] }}</span>
                   </td>
                 </tr>
@@ -206,7 +206,7 @@
                 <tr class='weight'>
                   <td>Weight:</td>
                   <td>
-                    <input v-model='currentBook.weight' @input="updateWeigth($event)" :disabled="!allowMetadataEdit"
+                    <input v-model='currentBook.weight' v-on:change="updateWeigth($event, 400)" :disabled="!allowMetadataEdit"
                            :class="[{'has-error': (validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'].length) }]"/>
                     <div v-if="validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'].length > 0"><span class="validation-error" v-for="error in validationErrors[currentBook.bookid]['weight']">{{error}}</span></div>
                   </td>
@@ -1023,7 +1023,9 @@ export default {
         }, 1500)
       }
     },
-    update(key, event){
+    update(key, event, debounceTime){
+      if(!debounceTime)
+        debounceTime = 1500;
 
 
       if(key =='difficulty'){
@@ -1047,50 +1049,26 @@ export default {
           this.validationErrors['difficulty'] = validationErrors;
         }
         if(validationErrors){
-          event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
+          event.target.toggleAttribute('disable');
           return;
         }
 
       }
 
-      event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "bold";
+      event.target.disabled  = true ;
 
-        let debounceCalculate = _.debounce((key,event)=>{
-            event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
-            // event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
+        let debouncedFunction = _.debounce((key,event)=>{
             let val = typeof event === 'string' ? event : event.target.value;
-            this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
+            this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
 
-        },  1500, {
+        },  debounceTime, {
               'leading': false,
               'trailing': true
             });
-        debounceCalculate(key,event);
-
-        // _.debounce(function (key, event) {
-        //   console.log(key);
-        //   console.log(event);
-        // })();
-
-      // });
-
-      // _.debounce((mergedUser)=>{
-      //   console.log(mergedUser);
-      // })();
-
+       debouncedFunction(key,event);
     },
-    // update:_.debounce(function (key, event) {
-    //   return {key,event}
-    // }).debounce(function (key, event) {
-    //     // event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
-    //     let val = typeof event === 'string' ? event : event.target.value;
-    //     this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
-    //   }, 1500, {
-    //     'leading': false,
-    //     'trailing': true
-    //   }),
 
-    liveUpdate (key, value) {
+    liveUpdate (key, value, event) {
         if(this.proofreadModeReadOnly)
             return ;
 
@@ -1119,37 +1097,6 @@ export default {
             }
         }
 
-      if(key =='difficulty'){
-
-        let validationErrors = '';
-
-        if(this.currentBookMeta.difficulty) {
-
-          let re = /^\d+(.\d+)*$/i;
-
-          if (!this.currentBookMeta.difficulty.match(re)) {
-            return;
-          }
-
-          if (parseFloat(this.currentBookMeta.difficulty) > 14.99) {
-            return;
-          }
-          if (parseFloat(this.currentBookMeta.difficulty) < 1) {
-            return;
-          }
-
-          if (validationErrors) {
-            return;
-          }
-
-
-        }}
-
-
-      //if (!this.updateAllowed) {
-        //return Promise.resolve();
-      //}
-      //console.log('liveUpdate', key, value);
 
       var keys = key.split('.');
       key = keys[0];
@@ -1170,24 +1117,17 @@ export default {
       return this.updateBookMeta(update)
       .then((response)=>{
         console.log('response', response);
+        console.log('event', event);
+        if(event)
+          event.target.disabled  = false ;
+
         this.lockLanguage = false;
         if (key == 'numbering') {
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
-          //this.$root.$emit('from-book-meta:upd-toc', true);
         }
-//         let updateVersion = {minor: true};
-//         switch(key) {
-//           case 'styles':
-//           case 'numbering':
-//             updateVersion = {major: true};
-//             break;
-//         }
-//         return this.updateBookVersion(updateVersion)
-//         .then(() => {
+
           return response;
-//         })
-//         .catch(err => err);
-        //return BPromise.resolve(response);
+
       })
       .catch(err => {
         console.log(err);
@@ -1885,7 +1825,7 @@ export default {
       }
     }, 500),
 
-    updateWeigth: _.debounce(function (event) {
+    updateWeigth (event,debounceTime) {
       const value = event.target.value.replace(/ /g, '');
       const key = 'weight';
       const maxValue = 10.99;
@@ -1909,11 +1849,22 @@ export default {
       if (!this.validationErrors[this.currentBook.bookid]) {Vue.set(this.validationErrors, this.currentBook.bookid, {key: []})} //this.validationErrors[this.currentBook.bookid] = []};
       this.validationErrors[this.currentBook.bookid][key] = errors;
       if (!errors.length) {
-        this.liveUpdate(key, value === '' ? '' : value);
+
+        event.target.disabled  = true ;
+
+        let debouncedFunction = _.debounce((key,event)=>{
+          let val = typeof event === 'string' ? event : event.target.value;
+          this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
+
+        },  debounceTime, {
+          'leading': false,
+          'trailing': true
+        });
+        debouncedFunction(key,event);
       }
       console.log('HERE', this.validationErrors);
 
-    }, 500),
+    },
 
     getTaskType(typeId) {
       let t = this.taskTypes.tasks.find(_t => {
