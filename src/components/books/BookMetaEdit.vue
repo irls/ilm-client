@@ -1066,17 +1066,6 @@ export default {
             });
        debouncedFunction(key,event);
     },
-<<<<<<< HEAD
-    // update:_.debounce(function (key, event) {
-    //   return {key,event}
-    // }).debounce(function (key, event) {
-    //     // event.target.parentElement.parentElement.querySelector('td').style.fontWeight = "normal";
-    //     let val = typeof event === 'string' ? event : event.target.value;
-    //     this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
-    //   }, 1500, {
-    //     'leading': false,
-    //     'trailing': true
-    //   }),
 
   liveUpdate (key, value, event) {
         // Removed regards with ILM-3683
