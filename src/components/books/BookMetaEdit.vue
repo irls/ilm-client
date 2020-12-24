@@ -1027,10 +1027,11 @@ export default {
 
       if(key =='difficulty'){
 
-        let validationErrors = '';
+          let validationErrors = '';
 
-        if(this.currentBookMeta.difficulty)
-          if ( parseFloat(this.currentBookMeta.difficulty).toString() !== this.currentBookMeta.difficulty ){
+          let re = /^\d+(.\d+)*$/i;
+
+          if ( !this.currentBookMeta.difficulty.match(re) ){
             validationErrors = 'Allowed range 1 - 14.99';
           }
 
@@ -1038,9 +1039,6 @@ export default {
           validationErrors = 'Allowed range 1 - 14.99';
         }
         if ( parseFloat(this.currentBookMeta.difficulty) < 1){
-          validationErrors = 'Allowed range 1 - 14.99';
-        }
-        if( this.currentBookMeta.difficulty !='' && isNaN(parseFloat(this.currentBookMeta.difficulty)) ){
           validationErrors = 'Allowed range 1 - 14.99';
         }
 
@@ -1125,25 +1123,27 @@ export default {
 
         let validationErrors = '';
 
-        if(this.currentBookMeta.difficulty)
-          if ( parseFloat(this.currentBookMeta.difficulty).toString() !== this.currentBookMeta.difficulty ){
-            return ;
+        if(this.currentBookMeta.difficulty) {
+
+          let re = /^\d+(.\d+)*$/i;
+
+          if (!this.currentBookMeta.difficulty.match(re)) {
+            return;
           }
 
-        if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
-          return ;
-        }
-        if ( parseFloat(this.currentBookMeta.difficulty) < 1){
-          return ;
-        }
-        if( this.currentBookMeta.difficulty !='' && isNaN(parseFloat(this.currentBookMeta.difficulty)) ){
-          return ;
-        }
-        if(validationErrors){
-          return;
-        }
+          if (parseFloat(this.currentBookMeta.difficulty) > 14.99) {
+            return;
+          }
+          if (parseFloat(this.currentBookMeta.difficulty) < 1) {
+            return;
+          }
 
-      }
+          if (validationErrors) {
+            return;
+          }
+
+
+        }}
 
 
       //if (!this.updateAllowed) {
