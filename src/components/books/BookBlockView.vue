@@ -2412,7 +2412,9 @@ Save audio changes and realign the Block?`,
         if (this.block.flags) this.block.flags.forEach((flag, flagIdx)=>{
           if (flag._id !== this.block._id) {
             let node = this.$refs.blocks.find(blk => {
-              return blk.$refs.blockContent.querySelector(`[data-flag="${flag._id}"]`);
+              if (blk.$refs.blockContent) {
+                return blk.$refs.blockContent.querySelector(`[data-flag="${flag._id}"]`);
+              }
             });
             if (!node) this.block.mergeFlags(flagIdx);
           }
