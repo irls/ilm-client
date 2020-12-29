@@ -283,10 +283,17 @@
           }
           let changeZoomLevel = mode != this.mode;
           if ((this.blockId && this.blockId != blockId) || (mode == 'file' && reloadOnChange) || mode != this.mode) {
-            if (this.isModifiedComputed && this.mode === 'block') {
-              this.pendingLoad = arguments;
-              this.showOnExitMessage();
-              return;
+            if (this.mode === 'block') {
+              let block = this.audioTasksQueueBlockOrPart();
+              if (block && !block.isAudioChanged && this.isModified) {// button save was pressed
+                this.pendingLoad = arguments;
+                this.setProcessRun(true, 'loading');
+                return;
+              } else if (this.isModified) {
+                this.pendingLoad = arguments;
+                this.showOnExitMessage();
+                return;
+              }
             }
             if (this.isModifiedComputed && this.mode === 'file') {
               this.$root.$emit('from-audioeditor:save-positions', closingId, this.selection);
@@ -2450,13 +2457,17 @@ Discard unsaved audio changes?`,
             }
             this.$root.$emit('preloader-toggle', true, type);
           } else {
-            this.$root.$emit('preloader-toggle', false, '');
+            if (this.pendingLoad) {
+              this.load(...this.pendingLoad);
+            } else {
+              this.$root.$emit('preloader-toggle', false, '');
+            }
           }
         },
 
         flush() {
-          this.setProcessRun(false);
           this.isModified = false;
+          this.setProcessRun(false);
         },
 
         unpinRight(event) {
@@ -2739,7 +2750,8 @@ Revert to original block audio?`,
           currentAudiobook: 'currentAudiobook', 
           storeListO: 'storeListO',
           audioTasksQueue: 'audioTasksQueue', 
-          audioTasksQueueBlock: 'audioTasksQueueBlock'})
+          audioTasksQueueBlock: 'audioTasksQueueBlock',
+          audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart'})
       },
       watch: {
         'cursorPosition': {

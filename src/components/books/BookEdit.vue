@@ -1975,6 +1975,10 @@ Save text changes and realign the Block?`,
           });
           return Promise.resolve();
         }
+        let blkOrPart = this.audioTasksQueueBlockOrPart();
+        if (blkOrPart) {
+          blkOrPart.isAudioChanged = false;
+        }
         this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         return this.applyTasksQueue([null])
           .then(() => {
@@ -2392,7 +2396,9 @@ Save text changes and realign the Block?`,
             }
             if (refContainer) {
               refContainer.isUpdating = false;
-              refContainer.blockAudio.map = block.getIsSplittedBlock() ? block.parts[queueBlock.partIdx].content : block.content;
+              if (block) {
+                refContainer.blockAudio.map = block.getIsSplittedBlock() ? block.parts[queueBlock.partIdx].content : block.content;
+              }
               refContainer.$parent.$forceUpdate();
             }
             return Promise.resolve();
