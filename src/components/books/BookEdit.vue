@@ -675,6 +675,9 @@ export default {
       //console.log('putBlockProxy', block);
       return this.putBlock([block, realign])
       .then((updated)=>{
+        if (updated && ['hr', 'illustration'].includes(updated.type) && this.audioTasksQueue.block.blockId === updated.blockid) {
+          this.$root.$emit('for-audioeditor:force-close');
+        }
         return this._refreshAfterUpdate(updated);
       })
       .catch((err)=>{})
