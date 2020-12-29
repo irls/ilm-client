@@ -1917,9 +1917,11 @@ Save audio changes and realign the Block?`,
           case 'hr':
             this.block.content = '';
             this.block.voicework = 'no_audio';
+            this.block.illustration = null;
             break;
           default:
             this.block.content = this.clearBlockContent();
+            this.block.illustration = null;
             if (this.mode !== 'narrate') {
               if (this.block.footnotes && this.block.footnotes.length && this.$refs.blocks) {
                 let footnotesInText = [];
@@ -2005,6 +2007,7 @@ Save audio changes and realign the Block?`,
                   case 'type':
                     fullUpdate = true;
                     partUpdate.type = this.block.type;
+                    partUpdate.content = this.block.content;
                     break;
                   case 'language':
                     fullUpdate = true;
@@ -3570,7 +3573,6 @@ Save text changes and realign the Block?`,
             this.$forceUpdate();
           }
           if (type === 'type' && event && event.target) {
-            this.block.type = event.target.value;
             if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {
               this.block.voicework = 'no_audio';
               this.block.setAudiosrc('');
@@ -3580,7 +3582,10 @@ Save text changes and realign the Block?`,
               this.pushChange('content');
               this.pushChange('audiosrc');
               this.pushChange('audiosrc_ver');
+            } else if (['hr', 'illustration'].indexOf(this.block.type) !== -1) {
+              this.block.setContent('');
             }
+            this.block.type = event.target.value;
             Vue.nextTick(() => {
               if (event.target.value !== 'hr') {
                 this.$refs.blocks[0].initEditor(true);
@@ -3941,13 +3946,17 @@ Save text changes and realign the Block?`,
 
         let formData = new FormData();
         formData.append('illustration', image, image.name);
-        formData.append('block', JSON.stringify({'description': this.$refs.blocks[0].$refs.blockDescription.innerHTML, flags: this.block.flags || []}));
+        formData.append('block', JSON.stringify({'description': this.$refs.blocks[0].$refs.blockDescription.innerHTML, flags: this.block.flags || [], audiosrc: '', audiosrc_ver: {}, content: ''}));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
         this.block.isSaving = true;
         api.post(api_url, formData, {}).then((response) => {
           this.block.isSaving = false;
+          if (this.audioTasksQueue.block.blockId === this.block.blockid) {
+            this.$root.$emit('for-audioeditor:force-close');
+          }
+          
           if (response.status===200) {
             this.removeTempImg(this.block._id)
 
