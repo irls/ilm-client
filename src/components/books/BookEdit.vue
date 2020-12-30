@@ -2108,6 +2108,9 @@ export default {
           refContainer.isAudioChanged = true;
           refContainer.$parent.$forceUpdate();
         }
+        if (this.parlistO.getIsChecked(block._rid)) {
+          this.recountApprovedInRange();
+        }
         return task
           .then((response) => {
             //this.audioTasksQueue.running = null;
