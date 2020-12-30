@@ -2167,6 +2167,9 @@ Save text changes and realign the Block?`,
             block.isAudioChanged = true;
           }
         }
+        if (this.parlistO.getIsChecked(block._rid)) {
+          this.recountApprovedInRange();
+        }
         return task
           .then((response) => {
             //this.audioTasksQueue.running = null;

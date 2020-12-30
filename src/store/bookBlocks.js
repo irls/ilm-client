@@ -640,6 +640,20 @@ class BookBlocks {
     } while (crossId);
     return list;
   }
+  getIsChecked(rId) {
+    if (rId.charAt(0) !== '#' && Array.isArray(this.listObjs)) {
+      let obj = this.listObjs.find(l => {
+        return l.blockId === rId;
+      });
+      if (obj && obj.blockRid) {
+        rId = obj.blockRid;
+      }
+    }
+    if (this.lookupList && this.lookupList[rId]) {
+      return this.lookupList[rId].checked === true;
+    }
+    return false;
+  }
 
 }
 

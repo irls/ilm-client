@@ -729,6 +729,18 @@
                         })
                         Promise.all(wait)
                           .then(() => {
+                            wait = [];
+                            let isAudioEdit = ids.includes(this.audioTasksQueue.block.blockId);
+                            if (isAudioEdit) {
+                              wait.push(this.discardAudioChanges()
+                                .then(() => {
+                                  this.$root.$emit('for-audioeditor:flush');
+                                  return Promise.resolve();
+                                }));
+                            }
+                            return Promise.all(wait);
+                          })
+                          .then(() => {
                             this.$root.$emit('hide-modal');
                             let i = setInterval(() => {
                               if ($('.align-modal').length == 0) {
@@ -1114,7 +1126,7 @@
         }
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook', 'discardAudioChanges'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
@@ -1174,7 +1186,8 @@
         lockedBlocks: 'lockedBlocks',
         audiobook: 'currentAudiobook',
         currentJobInfo: 'currentJobInfo',
-        adminOrLibrarian: 'adminOrLibrarian'})
+        adminOrLibrarian: 'adminOrLibrarian',
+        audioTasksQueue: 'audioTasksQueue'})
     },
     watch: {
       'audiobook': {
