@@ -3642,7 +3642,7 @@ export const store = new Vuex.Store({
       }
       let block = state.storeList.get(blockid);
       let content = block.getPartContent(partIdx || 0);
-      let queue = state.audioTasksQueue.queue.splice(0, runSize);
+      let queue = state.audioTasksQueue.queue.slice(0, runSize);
       let queueBlock = state.audioTasksQueue.block;
       queue.forEach((q, i) => {
         if (i < queue.length - 1) {
@@ -3659,6 +3659,7 @@ export const store = new Vuex.Store({
         }
       })
         .then((res) => {
+          state.audioTasksQueue.queue.splice(0, runSize);
           state.audioTasksQueue.running = null;
           //return dispatch('getBookAlign')
             //.then(() => {
@@ -3727,6 +3728,7 @@ export const store = new Vuex.Store({
           return Promise.resolve(response.data);
         })
         .catch(err => {
+          state.audioTasksQueue.running = null;
           return Promise.reject(err);
         });
     },
