@@ -7038,6 +7038,10 @@ MediumEditor.extensions = {};
                 baseNode.insertBefore(containerOne, containerTwo);
                 if (['LI'].indexOf(parentNode.nodeName) === -1 && partTwo) {
                     baseNode.insertBefore(partTwo, containerTwo);
+                    if (afterSelection.trim().length === 0 && !containerTwo.nextSibling) {
+                        let partThree = partTwo.cloneNode();
+                        baseNode.insertBefore(partThree, partTwo);
+                    }
                 }
                 MediumEditor.selection.moveCursor(this.options.ownerDocument, containerTwo.firstChild ? containerTwo.firstChild : containerTwo, 0);
             }
