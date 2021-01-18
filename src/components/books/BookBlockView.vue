@@ -1886,7 +1886,7 @@ Save audio changes and realign the Block?`,
               return rb.blockPartIdx === blkIdx;
             });
             if (ref) {
-              this.block.setPartContent(blkIdx, ref.clearBlockContent());
+              this.block.setPartContent(blkIdx, ref.clearBlockContent().replace(/<i class="pin"><\/i>/mg, ''));
             }
           });
           this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
@@ -2280,7 +2280,9 @@ Save audio changes and realign the Block?`,
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
-        this.block.content = this.clearBlockContent();
+        if (!this.block.getIsSplittedBlock()) {
+          this.block.content = this.clearBlockContent();
+        }
         let upd_block = Object.assign({}, this.block.clean());
         if (update_fields.length > 0) {
           Object.keys(upd_block).forEach(f => {
@@ -4736,13 +4738,13 @@ Save text changes and realign the Block?`,
         handler(val) {
           if (val === false) {
             this.flushChanges();
-            Vue.nextTick(() => {
+            /*Vue.nextTick(() => {
               if (this.$refs.blocks) {
                 this.blockParts.forEach((part, partIdx) => {
                   this.$refs.blocks[partIdx].isChanged = false;
                 });
               }
-            });
+            });*/
             this.recountVoicedBlocks();
           }
           this.block.isChanged = val;

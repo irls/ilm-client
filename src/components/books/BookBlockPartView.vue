@@ -1548,12 +1548,11 @@ Save audio changes and realign the Block?`,
             }
           }
         });
+        this.isSaving = true;
         if (splitPoints) {
           this.$parent.isSaving = true;
           this.block.isSaving = true;
           this.$parent.$forceUpdate();
-        } else {
-          this.isSaving = true;
         }
         this.$forceUpdate();
         let reloadParent = this.hasChange('split_point');
