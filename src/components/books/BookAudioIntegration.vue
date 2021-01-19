@@ -1400,6 +1400,12 @@
             overflow: hidden;
             vertical-align: sub;
           }
+          .audiofile-name-edit {
+            img {
+              padding: 0px 3px 0px 0px;
+              vertical-align: text-bottom;
+            }
+          }
           /*&.playing {
             color: maroon;
             i.fa {
