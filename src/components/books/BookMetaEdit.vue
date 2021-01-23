@@ -195,7 +195,6 @@
                   <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
                   <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
                 </tr>
-                
 
                 <tr class='collection'>
                   <td>Collection</td>
