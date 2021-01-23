@@ -178,8 +178,10 @@
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
-                    <input :placeholder="bookDifficultyDefault" v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit" v-on:change="update('difficulty',$event,400)"  id="difficultySelection" :class="{ 'has-error': validationErrors['difficulty'] , 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
-                    <span class="validation-error" >{{ validationErrors['difficulty'] }}</span>
+                    <input :placeholder="bookDifficultyDefault" v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit"
+                           v-on:change="update('difficulty',$event,400)"  id="difficultySelection" :class="{ 'has-error': (validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid] ['difficulty']) ,
+                            'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
+                    <span class="validation-error" >{{(validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid] ['difficulty'] )}}</span>
                   </td>
                 </tr>
 
@@ -193,6 +195,7 @@
                   <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
                   <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
                 </tr>
+                
 
                 <tr class='collection'>
                   <td>Collection</td>
@@ -1046,7 +1049,7 @@ export default {
         }
 
         if(validationErrors !=this.validationErrors['difficulty'] ){
-          this.validationErrors['difficulty'] = validationErrors;
+          this.validationErrors[this.currentBook.bookid]['difficulty'] = validationErrors;
         }
         if(validationErrors){
           event.target.toggleAttribute('disable');
