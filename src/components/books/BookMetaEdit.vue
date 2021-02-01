@@ -1045,13 +1045,14 @@ export default {
     },
     updateWithDisabling(key, event, debounceTime){
       if(!debounceTime)
-        debounceTime = 1500;
+        debounceTime = false;
 
       return this.update(key, event, debounceTime,true);
     },
+
     update(key, event, debounceTime,disable){
       if(!debounceTime)
-        debounceTime = 1500;
+        debounceTime = false;
       if(!disable)
         disable = false;
 
@@ -1087,15 +1088,20 @@ export default {
       if(disable && event) {
         event.target.disabled = true;
       }
+      if(debounceTime){
         let debouncedFunction = _.debounce((key,event)=>{
-            let val = typeof event === 'string' ? event : event.target.value;
-            this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
+          let val = typeof event === 'string' ? event : event.target.value;
+          this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
 
         },  debounceTime, {
-              'leading': false,
-              'trailing': true
-            });
-       debouncedFunction(key,event);
+          'leading': false,
+          'trailing': true
+        });
+        debouncedFunction(key,event);
+      }else{
+        let val = typeof event === 'string' ? event : event.target.value;
+        this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
+      }
     },
 
     liveUpdate (key, value, event) {
