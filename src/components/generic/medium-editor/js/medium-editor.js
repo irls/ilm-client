@@ -1574,6 +1574,18 @@ MediumEditor.extensions = {};
             let style = window.getComputedStyle(element),
             isList = style && style.whiteSpace && ['pre-line', 'pre-wrap', 'pre'].indexOf(style.whiteSpace) !== -1;
             return isList;
+        },
+
+        insertTextAtCursor: function (text) {
+            let selection = window.getSelection(),
+            range = selection.getRangeAt(0),
+            node = document.createTextNode(text);
+            range.deleteContents();
+            range.insertNode(node);
+
+            for (let position = 0; position !== text.length; position++) {
+                selection.modify('move', 'right', 'character');
+            }
         }
     };
 
@@ -6854,6 +6866,16 @@ MediumEditor.extensions = {};
                 }
             }
             return false;
+        } else {
+            let element = document.getSelection().anchorNode,
+            rootNode = element.parentNode;
+            while (rootNode.nodeName !== 'DIV') {
+                rootNode = rootNode.parentNode;
+            }
+            let isList = MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-line']);
+            if (isList) {// when adding content to contenteditable element with style whitespace: pre-line, browser removes line breaks
+                return false;
+            }
         }
         var node = MediumEditor.selection.getSelectionStart(this.options.ownerDocument),
             tagName;
@@ -7050,6 +7072,18 @@ MediumEditor.extensions = {};
             });
 
             rootNode.dispatchEvent(eventInput);// run event for the element events handling
+        } else {
+            let element = document.getSelection().anchorNode,
+            rootNode = element.parentNode;
+            while (rootNode.nodeName !== 'DIV') {
+                rootNode = rootNode.parentNode;
+            }
+            let isList = MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-line']);
+            if (isList) {// when adding content to conteneditable element with style whitespace: pre-line browser replaces line breaks
+                //console.log(MediumEditor.util.getKeyCode(event));
+                MediumEditor.util.insertTextAtCursor(String.fromCharCode(MediumEditor.util.getKeyCode(event)));
+                return false;
+            }
         }
     }
 
