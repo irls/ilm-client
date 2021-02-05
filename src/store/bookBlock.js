@@ -37,7 +37,8 @@ let defBlock = [
   'parts',
   'audiosrc_original',
   'trimmed_silence',
-  'pause_before'
+  'pause_before',
+  'audio_quality'
 ];
 
 let BlockTypes = {
@@ -336,6 +337,7 @@ class BookBlock {
     this.trimmed_silence = init.trimmed_silence;
     this.pause_before = init.pause_before;
     this.sync_changes = init.sync_changes || [];// changes from synschronization
+    this.audio_quality = init.audio_quality || '';
   }
 
   clean() {

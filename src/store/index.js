@@ -235,7 +235,8 @@ export const store = new Vuex.Store({
         partIdx: null,
         checkId: null
       }
-    }
+    },
+    updateAudiobookProgress: false
   },
 
   getters: {
@@ -1039,6 +1040,9 @@ export const store = new Vuex.Store({
 
     set_taskBlockMapAllowNext(state, allow) {
       state.taskBlockMap.allowNext = allow;
+    },
+    set_updateAudiobookProgress(state, val) {
+      state.updateAudiobookProgress = val ? true : false;
     }
   },
 
@@ -2736,6 +2740,14 @@ export const store = new Vuex.Store({
     },
 
     getAudioBook ({state, commit, dispatch}, {bookid = false, watchId = false, repeat = false}={}) {
+      if (state.updateAudiobookProgress) {
+        if (repeat && watchId === state.currentBookid) {
+            setTimeout(() => {
+              dispatch('getAudioBook', {bookid: bookid, watchId: watchId, repeat: repeat})
+            }, repeat);
+        }
+        return Promise.resolve();
+      }
       //console.log('getAudioBook', bookid, state.currentBookid, watchId);
       if (!bookid) {
         bookid = state.currentBookid;
@@ -2748,35 +2760,36 @@ export const store = new Vuex.Store({
         let request = axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
           .then(audio => {
             if (audio.data) {
-              if (set) {
+              if (set && !state.updateAudiobookProgress) {
                 commit('set_currentAudiobook', audio.data);
               }
-              return audio.data;
+              return Promise.resolve(audio.data);
             } else {
-              if (set) {
-                commit('set_currentAudiobook', {});
-              }
-              return {};
+              return Promise.resolve({});
             }
           })
           .catch(error => {
-            if (set) {
-              commit('set_currentAudiobook', {});
-            }
-            return {};
+            return Promise.resolve({});
           });
         return Promise.all([request, counters])
         .then((answer)=>{
-          //console.log('answer', answer);
-          if (repeat) {
-            if (watchId === state.currentBookid) {
-              setTimeout(function() {
-                dispatch('getAudioBook', {bookid: bookid, watchId: watchId, repeat: repeat})
-              }, repeat)
+            //console.log('answer', answer);
+            if (repeat) {
+              if (watchId === state.currentBookid) {
+                setTimeout(() => {
+                  dispatch('getAudioBook', {bookid: bookid, watchId: watchId, repeat: repeat})
+                }, repeat)
+              }
             }
-          }
-          return answer[0]
+            return Promise.resolve(answer[0]);
         })
+        .catch(err => {
+          if (repeat && watchId === state.currentBookid) {
+            setTimeout(() => {
+              dispatch('getAudioBook', {bookid: bookid, watchId: watchId, repeat: repeat})
+            }, repeat)
+          }
+        });
       } return {};
     },
 
@@ -3827,6 +3840,33 @@ export const store = new Vuex.Store({
 
           });
       }
+    },
+    updateAudiobook({state, commit, dispatch}, [id, data]) {
+      let url = `${state.API_URL}books/${state.currentBookid}/audiobooks/chunks`;
+      if (id) {
+        url+= `/${encodeURIComponent(id)}`;
+      }
+      commit('set_updateAudiobookProgress', true);
+      return axios.post(url, data, {})
+        .then(response => {
+          commit('set_updateAudiobookProgress', false);
+          if (response && response.data && response.data.audio && response.data.audio.id) {
+            commit('set_currentAudiobook', response.data.audio);
+            axios.put(`${state.API_URL}task/${state.currentBookid}/audio_imported`, {})
+              .then((link_response) => {
+                //vm.closeForm(response)
+                dispatch('tc_loadBookTask', state.currentBookid);
+              })
+              .catch((err) => {
+                //vm.closeForm(response)
+              })
+          }
+          
+          return Promise.resolve(response);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })
