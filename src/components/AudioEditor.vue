@@ -311,6 +311,7 @@
             //this.audioHistory = [];
             //this.close();
           }
+          this.cursorPosition = false;
           this.setProcessRun(true, 'loading');
           this.pendingLoad = null;
           this.isPlaying = false;
@@ -501,6 +502,9 @@
               self._clearWordSelection();
               self.isPlaying = false;
               self.isPaused = false;
+              if (self.selection.start && !isNaN(self.selection.start)) {
+                self.cursorPosition = self.selection.start;
+              }
             });
             this.plEventEmitter.on('select', function(r_start, r_end) {
               let start = self._round(r_start, 2);
@@ -549,6 +553,10 @@
                     this.cursorPosition = cp;
                   });
                 }
+                Vue.nextTick(() => {
+                  $('[id="resize-selection-left"]').hide();
+                  $('[id="resize-selection-right"]').hide();
+                });
                 self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
 
                   limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
@@ -708,7 +716,7 @@
                         this.setSelectionEnd(pos);
                       }
                     } else {
-                      if (typeof this.selection.start !== 'undefined') {
+                      if (typeof this.selection.start !== 'undefined' && !isNaN(this.selection.start)) {
                         this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
                       }
                       this.cursorPosition = pos;
@@ -760,7 +768,7 @@
                 $('#cursor-position').hide();
                 if (typeof this.audiosourceEditor.samplesPerPixel !== 'undefined') {
                   let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
-                  if (typeof this.selection.start !== 'undefined') {
+                  if (typeof this.selection.start !== 'undefined' && !isNaN(this.selection.start)) {
                     this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
                   }
                   this.mouseSelection = {start: this._round(pos, 1), end: null};
@@ -891,6 +899,8 @@
           }
           this.isPlaying = true;
           this.$root.$emit('from-audioeditor:play');
+          $('.selection.point').hide();
+          $('.context-position').hide();
         },
         stop(go_to_start = true) {
           if (this.isPlaying || this.isPaused) {
@@ -1904,7 +1914,7 @@ Discard unsaved audio changes?`,
           return record;
         },
         _setSelectionOnWaveform() {
-          if (this.selection && typeof this.selection.start != 'undefined' && typeof this.selection.end != 'undefined' && this.plEventEmitter) {
+          if (this.selection && typeof this.selection.start != 'undefined' && typeof this.selection.end != 'undefined' && this.plEventEmitter && !isNaN(this.selection.start)) {
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
             this._showSelectionBorders();
           }
@@ -2824,7 +2834,7 @@ Revert to original block audio?`,
                 }
               }
               if ($('[id="resize-selection-left"]').css('display') === 'none' && $('.playlist-overlay:hover').length === 0) {
-                this.cursorPosition = typeof this.selection.start === 'number' && !isNaN(this.selection.start) ? this.selection.start : false;
+                this.cursorPosition = typeof this.selection.start === 'number' && !isNaN(this.selection.start) ? this.selection.start : this.cursorPosition;
                 this._showSelectionBorders();
               }
             })
