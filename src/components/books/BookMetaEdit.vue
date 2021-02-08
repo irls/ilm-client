@@ -1535,9 +1535,9 @@ export default {
                     if (styleKeyArr.length) {
                       if (typeof pBlock.classes[styleKey] !== 'object') {
                         pBlock.classes[styleKey] = {};
-                        pBlock.classes[styleKey][styleKeyArr.shift()] = styleVal;
+                        pBlock.classes[styleKey][styleKeyArr.slice().shift()] = styleVal;
                       } else {
-                        pBlock.classes[styleKey][styleKeyArr.shift()] = styleVal;
+                        pBlock.classes[styleKey][styleKeyArr.slice().shift()] = styleVal;
                       }
                     }
                     else pBlock.classes[styleKey] = styleVal;
