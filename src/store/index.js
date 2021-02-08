@@ -2642,7 +2642,7 @@ export const store = new Vuex.Store({
                       //blockStore.content+=' realigned';
                       checks.push(dispatch('getBlock', b._id)
                         .then(block => {
-                          if (Array.isArray(blockStore.parts) && blockStore.parts.length !== block.parts.length && b.partIdx !== null) {
+                          if (Array.isArray(blockStore.parts) && block && Array.isArray(block.parts) && blockStore.parts.length !== block.parts.length && b.partIdx !== null) {
                             let addedSubblocks = block.parts.length - blockStore.parts.length;
                             blockStore.parts.forEach((p, pIdx) => {
                               if (pIdx < b.partIdx && (p.isChanged || p.isAudioChanged)) {
