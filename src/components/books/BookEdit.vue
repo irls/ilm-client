@@ -1976,6 +1976,11 @@ Save text changes and realign the Block?`,
           return Promise.resolve();
         }
         this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+        if (blk.getIsSplittedBlock()) {
+          blk.parts[this.audioTasksQueue.block.partIdx].isSaving = true;
+        } else {
+          blk.isSaving = true;
+        }
         return this.applyTasksQueue([null])
           .then(() => {
             return this.saveBlockAudio([realign, preparedData])
@@ -1985,6 +1990,15 @@ Save text changes and realign the Block?`,
             let block = this.audioTasksQueueBlock();
             let isSplitted = block.getIsSplittedBlock();
             let refContainer = this._getRefContainer(block);
+            if (isSplitted) {
+              block.parts[this.audioTasksQueue.block.partIdx].isSaving = false;
+              if (!realign) {
+                block.isSaving = false;
+              }
+            } else {
+              block.isSaving = false;
+            }
+            //this.$store.commit('set_storeList', block);
             if (refContainer) {
               //refContainer.showPinnedInText();
               refContainer.reloadBlockPart();
