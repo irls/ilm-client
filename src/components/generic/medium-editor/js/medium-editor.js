@@ -1570,10 +1570,14 @@ MediumEditor.extensions = {};
             });
         },
 
-        isElementWhitespaceStyle: function (element) {
+        isElementWhitespaceStyle: function (element, checkStyle = ['pre-line', 'pre-wrap', 'pre']) {
             let style = window.getComputedStyle(element),
-            isList = style && style.whiteSpace && ['pre-line', 'pre-wrap', 'pre'].indexOf(style.whiteSpace) !== -1;
+            isList = style && style.whiteSpace && checkStyle.indexOf(style.whiteSpace) !== -1;
             return isList;
+        },
+
+        replaceStringAt: function (input, position, replace) {
+            return input.substring(0, position) + replace + (position >= input.length ? '' : input.substring(position + 1));
         }
     };
 
@@ -4831,6 +4835,129 @@ MediumEditor.extensions = {};
 
         handleKeydown: function (event) {
             var keyCode = MediumEditor.util.getKeyCode(event);
+            if (keyCode === MediumEditor.util.keyCode.DELETE) {
+                let selection = document.getSelection(),
+                element = selection.anchorNode,
+                rootNode = element.parentNode,
+                parentNode = element.parentNode;
+                while (rootNode.nodeName !== 'DIV') {
+                    rootNode = rootNode.parentNode;
+                }
+                if (MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-line'])) {
+                    if (element.parentNode.nodeName === 'DIV') {
+                        if (element.nodeValue.length > selection.anchorOffset) {
+                            let checkValue = element.nodeValue.substring(selection.anchorOffset > 0 ? selection.anchorOffset - 1 : 0, element.nodeValue.length > selection.anchorOffset + 2 ? selection.anchorOffset + 2 : element.nodeValue.length);
+                            //console.log('"', document.getSelection().anchorNode.nodeValue.substring(document.getSelection().anchorOffset, document.getSelection().anchorOffset + 1).charCodeAt(0), '"');
+                            if (checkValue.match(/\n/)) {
+                                let partOne = document.createTextNode(element.nodeValue.substring(0, selection.anchorOffset)),
+                                partTwo = document.createTextNode(element.nodeValue.substring(selection.anchorOffset + 1));
+                                element.parentNode.replaceChild(partTwo, element);
+                                parentNode.insertBefore(partOne, partTwo);
+                                MediumEditor.selection.moveCursor(this.base.options.ownerDocument, partTwo, 0);
+                                event.preventDefault();
+                                let eventInput = new Event('input', {
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+
+                                rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                                return;
+                            }
+                        }
+                    } else if (element.parentNode.nodeName === 'W') {
+                        if ((!element.nodeValue || element.nodeValue.length === selection.anchorOffset) && element.parentNode.nextSibling && element.parentNode.nextSibling.nodeValue && element.parentNode.nextSibling.nodeValue.charCodeAt(0) === 10) {
+                            element.parentNode.nextSibling.nodeValue = element.parentNode.nextSibling.nodeValue.substring(1);
+                            event.preventDefault();
+                            let eventInput = new Event('input', {
+                                bubbles: true,
+                                cancelable: true
+                            });
+
+                            rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                            return;
+                        } else if (element.nodeValue && element.nodeValue.length > selection.anchorOffset) {
+                            let checkValue = element.nodeValue.substring(selection.anchorOffset > 0 ? selection.anchorOffset - 1 : 0, element.nodeValue.length > selection.anchorOffset ? selection.anchorOffset + 1 : selection.anchorOffset);
+                            if (checkValue.match(/\n/)) {
+                                /*let partOne = document.createTextNode(element.nodeValue.substring(0, selection.anchorOffset)),
+                                partTwo = document.createTextNode(element.nodeValue.substring(selection.anchorOffset + 1));
+                                element.parentNode.replaceChild(partTwo, element);
+                                parentNode.insertBefore(partOne, partTwo);
+                                MediumEditor.selection.moveCursor(this.base.options.ownerDocument, partTwo, 0);*/
+                                let moveTo = selection.anchorOffset;
+                                element.nodeValue = MediumEditor.util.replaceStringAt(element.nodeValue, selection.anchorOffset, '');
+                                MediumEditor.selection.moveCursor(this.base.options.ownerDocument, element, moveTo);
+                                event.preventDefault();
+                                let eventInput = new Event('input', {
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+
+                                rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                                return;
+                            }
+                        }
+                    }
+                }
+            } else if (keyCode === MediumEditor.util.keyCode.BACKSPACE) {
+                let selection = document.getSelection(),
+                element = selection.anchorNode,
+                rootNode = element.parentNode,
+                parentNode = element.parentNode;
+                while (rootNode.nodeName !== 'DIV') {
+                    rootNode = rootNode.parentNode;
+                }
+                if (MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-line'])) {
+                    if (element.parentNode.nodeName === 'DIV') {
+                        if (element.nodeValue.length > selection.anchorOffset && selection.anchorOffset > 0) {
+                            let checkValue = element.nodeValue.substring(selection.anchorOffset > 1 ? selection.anchorOffset - 2 : 0, element.nodeValue.length > selection.anchorOffset ? selection.anchorOffset + 1 : selection.anchorOffset);
+                            //console.log('"', document.getSelection().anchorNode.nodeValue.substring(document.getSelection().anchorOffset, document.getSelection().anchorOffset + 1).charCodeAt(0), '"');
+                            if (checkValue.match(/\n/)) {
+                                let partOne = document.createTextNode(element.nodeValue.substring(0, selection.anchorOffset - 1)),
+                                partTwo = document.createTextNode(element.nodeValue.substring(selection.anchorOffset));
+                                element.parentNode.replaceChild(partTwo, element);
+                                parentNode.insertBefore(partOne, partTwo);
+                                MediumEditor.selection.moveCursor(this.base.options.ownerDocument, partTwo, 0);
+                                event.preventDefault();
+                                let eventInput = new Event('input', {
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+
+                                rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                                return;
+                            }
+                        }
+                    } else if (element.parentNode.nodeName === 'W') {
+                        /*let previous = element.parentNode.previousSibling;
+                        if ((!element.nodeValue || element.nodeValue.length === selection.anchorOffset) && element.parentNode.nextSibling && element.parentNode.nextSibling.nodeValue && element.parentNode.nextSibling.nodeValue.charCodeAt(0) === 10) {
+                            element.parentNode.nextSibling.nodeValue = element.parentNode.nextSibling.nodeValue.substring(1);
+                            event.preventDefault();
+                            let eventInput = new Event('input', {
+                                bubbles: true,
+                                cancelable: true
+                            });
+
+                            rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                            return;
+                        } else */if (element.nodeValue && element.nodeValue.length > selection.anchorOffset) {
+                            let checkValue = element.nodeValue.substring(selection.anchorOffset > 1 ? selection.anchorOffset - 2 : 0, element.nodeValue.length > selection.anchorOffset ? selection.anchorOffset + 1 : selection.anchorOffset);
+                            if (checkValue.match(/\n/)) {
+                                let moveTo = selection.anchorOffset > 0 ? selection.anchorOffset - 1 : selection.anchorOffset;
+                                element.nodeValue = MediumEditor.util.replaceStringAt(element.nodeValue, selection.anchorOffset - 1, '');
+                                MediumEditor.selection.moveCursor(this.base.options.ownerDocument, element, moveTo);
+                                event.preventDefault();
+                                let eventInput = new Event('input', {
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+
+                                rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
             if (!this.keys[keyCode]) {
                 return;
             }
@@ -6920,16 +7047,21 @@ MediumEditor.extensions = {};
                         let partOne = document.createTextNode(selection),
                         partTwo = document.createElement('br'),
                         partThree = document.createTextNode(afterSelection);
-                        parentNode.replaceChild(partThree, element);
-                        parentNode.insertBefore(partOne, partThree);
-                        parentNode.insertBefore(partTwo, partThree);
-                        MediumEditor.selection.moveCursor(this.options.ownerDocument, partThree, 0);
-                        //console.log('HERE2');
-                        if (afterSelection.length === 0 && !partThree.nextSibling) {
+                        if (afterSelection.trim().length === 0 && !element.nextSibling) {
                             let partFour = document.createElement('br');
-                            parentNode.insertBefore(partFour, partThree);
+                            parentNode.replaceChild(partFour, element);
+                            parentNode.insertBefore(partTwo, partFour);
+                            parentNode.insertBefore(partThree, partTwo);
+                            parentNode.insertBefore(partOne, partThree);
+                            MediumEditor.selection.moveCursor(this.options.ownerDocument, partFour, 0);
                             //console.log('HERE3');
+                        } else {
+                            parentNode.replaceChild(partThree, element);
+                            parentNode.insertBefore(partOne, partThree);
+                            parentNode.insertBefore(partTwo, partThree);
+                            MediumEditor.selection.moveCursor(this.options.ownerDocument, partThree, 0);
                         }
+                        //console.log('HERE2');
                     }
                 }
             } else {// click inside text node, which parent is not main div and not <w>, e.g. <i>Some text f<u>o<ENTER_HERE>r</u> line <ENTER_HERE>br<u>e</u>ak testing.</i>
