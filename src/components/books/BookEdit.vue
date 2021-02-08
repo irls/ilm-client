@@ -2110,7 +2110,7 @@ Save text changes and realign the Block?`,
               if (refContainer) {
                 refContainer.blockPart.content = contentContainer.innerHTML;
                 refContainer.blockAudio.map = blockPart.content;
-                refContainer.showPinnedInText();
+                //refContainer.showPinnedInText();
               }
               this.$root.$emit('for-audioeditor:reload-text', contentContainer.innerHTML, blockPart);
             }
@@ -2292,11 +2292,6 @@ Save text changes and realign the Block?`,
               response_params = [block.getAudiosrc(null), block.content, true, block];
             }
           }
-          if (refContainer) {
-            Vue.nextTick(() => {
-              refContainer.showPinnedInText();
-            });
-          }
           //this.pushChange('content');
 
 
@@ -2346,7 +2341,7 @@ Save text changes and realign the Block?`,
             }
           }
           if (refContainer) {
-            refContainer.showPinnedInText();
+            refContainer.$parent.$forceUpdate();
           }
           //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
           response = [block.getPartAudiosrc(isBlockPart ? audioQueueBlock.partIdx : 0, 'm4a', true), blockPart.content, true, blockPart];
@@ -2378,9 +2373,6 @@ Save text changes and realign the Block?`,
               loadBlock.partIdx = queueBlock.partIdx;
               //this.$root.$emit('for-audioeditor:load', block.getPartAudiosrc(queueBlock.partIdx || 0, 'm4a'), text, false, loadBlock);
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
-              if (refContainer) {
-                refContainer.showPinnedInText();
-              }
               return Promise.resolve();
             });
         } else {
@@ -2426,6 +2418,7 @@ Save text changes and realign the Block?`,
         let block = this.audioTasksQueueBlock();// block from storeList
         let queueBlock = this.audioTasksQueue.block;// queue block info
         let refContainer = this._getRefContainer(block);
+        let isSplitted = block.getIsSplittedBlock();
         if (refContainer) {
           refContainer.audStop();
         }
@@ -2441,14 +2434,23 @@ Save text changes and realign the Block?`,
         }*/
         //this.blockAudio.map = this.blockContent();
         //this.blockAudio.src = this.blockAudiosrc('m4a');
-        if (!block.getIsSplittedBlock()) {
+        if (!isSplitted) {
           block.isAudioChanged = isModified;
         } else {
           block.parts[queueBlock.partIdx].isAudioChanged = isModified;
         }
         if (refContainer) {
-          refContainer.blockAudio.map = block.getIsSplittedBlock() ? block.parts[queueBlock.partIdx].content : block.content;
-          refContainer.$parent.$forceUpdate();
+          if (isSplitted) {
+            refContainer.blockAudio.map = block.parts[queueBlock.partIdx].content;
+            //console.log(block.parts[queueBlock.partIdx].manual_boundaries.slice());
+            refContainer.blockPart.manual_boundaries = block.parts[queueBlock.partIdx].manual_boundaries.slice();
+            refContainer.$forceUpdate();
+          } else {
+            refContainer.blockAudio.map = block.content;
+            //console.log(block.parts[queueBlock.partIdx].manual_boundaries.slice());
+            refContainer.blockPart.manual_boundaries = block.manual_boundaries.slice();
+            refContainer.$parent.$forceUpdate();
+          }
           if (!isModified) {
             refContainer.unsetChange('audio');
             refContainer.unsetChange('content');

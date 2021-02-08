@@ -2414,7 +2414,7 @@ Discard unsaved audio changes?`,
           shiftedWords.forEach(sw => {
             shiftedOldMap.push(oldMap[sw.index]);
           })
-          let queueBlock = this.audioTasksQueueBlock();
+          let queueBlock = this.audioTasksQueueBlockOrPart();
           this._addHistoryLocal('manual_boundaries', null, null, null, {
             shifted: shiftedWords,
             oldMap: shiftedOldMap,
@@ -2739,7 +2739,7 @@ Revert to original block audio?`,
           currentAudiobook: 'currentAudiobook', 
           storeListO: 'storeListO',
           audioTasksQueue: 'audioTasksQueue', 
-          audioTasksQueueBlock: 'audioTasksQueueBlock'})
+          audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart'})
       },
       watch: {
         'cursorPosition': {
