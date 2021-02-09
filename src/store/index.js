@@ -194,21 +194,21 @@ export const store = new Vuex.Store({
         ]
       }
     ],
-    bookDifficulties: [
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-      '7',
-      '8',
-      '9',
-      '10',
-      '11',
-      '12'
-    ],
-    bookDifficultyDefault:6,
+    // bookDifficulties: [
+    //   '1',
+    //   '2',
+    //   '3',
+    //   '4',
+    //   '5',
+    //   '6',
+    //   '7',
+    //   '8',
+    //   '9',
+    //   '10',
+    //   '11',
+    //   '12'
+    // ],
+    bookDifficultyDefault:'6',
     loadBookWait: null,
     loadBookTaskWait: null,
     jobInfoRequest: null,
