@@ -548,7 +548,7 @@
             <div class="block-html-header">{{blockHtmlHeader}}</div>
             <!-- <textarea :ref="'block-html' + block.blockid" :disabled="!adminOrLibrarian || isSplittedBlock" class="block-html"></textarea> -->
             <codemirror
-              :ref="'block-html' + block.blockid" 
+              :ref="'block-html' + block.blockid"
               :options="getCodeMirrorOptions()"
               :class="[{'-disabled': !adminOrLibrarian || isSplittedBlock}]"
             />
@@ -558,7 +558,7 @@
             <tab v-for="(blockPart, blockPartIdx) in blockParts" :header="(subBlockParnumComp ? subBlockParnumComp + '_' : '') + (blockPartIdx + 1)" v-bind:key="'part-' + blockPartIdx + '-html-content'">
               <!-- <textarea :ref="'block-part-' + blockPartIdx + '-html'" :disabled="!adminOrLibrarian" class="block-html"></textarea> -->
               <codemirror
-                :ref="'block-part-' + blockPartIdx + '-html'" 
+                :ref="'block-part-' + blockPartIdx + '-html'"
                 :options="getCodeMirrorOptions(blockPartIdx)"
                 :class="[{'-disabled': !adminOrLibrarian}]"
               />
@@ -744,30 +744,30 @@ export default {
       parnumComp: { cache: false,
       get: function () {
           if (this.blockO.type == 'header' && this.blockO.isNumber && !this.blockO.isHidden) {
-            return this.blockO.secnum;
+            return this.blockO.secnum.toString();
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber && !this.blockO.isHidden) {
-            return this.blockO.parnum;
+            return this.blockO.parnum.toString();
           }
           return '';
       }},
       parnumCompNotHidden: { cache: false,
       get: function () {
           if (this.blockO.type == 'header' && this.blockO.isNumber) {
-            return this.blockO.secnum;
+            return this.blockO.secnum.toString();
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber) {
-            return this.blockO.parnum;
+            return this.blockO.parnum.toString();
           }
           return '';
       }},
       subBlockParnumComp: {
         get: function() {
           if (this.blockO.type == 'header' && this.blockO.isNumber) {
-            return this.blockO.secnum;
+            return this.blockO.secnum.toString();
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber) {
-            return this.blockO.parnum;
+            return this.blockO.parnum.toString();
           }
           return '';
         },
@@ -4193,7 +4193,7 @@ Save text changes and realign the Block?`,
           content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
         }
         //content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
-       
+
         this.$refs['block-html' + this.block.blockid].codemirror.doc.setValue(content);
         if (this.block.getIsSplittedBlock()) {
           this.block.parts.forEach((p, pIdx) => {
@@ -4562,7 +4562,7 @@ Save text changes and realign the Block?`,
           this.voiceworkUpdateType = 'single';
         }
       },
-      
+
       splitPointAdded() {
         this.pushChange('split_point');
       },
@@ -4922,7 +4922,7 @@ Save text changes and realign the Block?`,
       },
       'block.sync_changes': {// changes from syncronization
         handler(val) {
-          //console.log(val); 
+          //console.log(val);
           if (Array.isArray(val) && val.length > 0 && this.isChecked) {
             let recollect = val.some((el) => {
               return ['pause_before', 'classes'].indexOf(el) !== -1;
