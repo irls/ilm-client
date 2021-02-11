@@ -1103,7 +1103,7 @@ export default {
     },
 
 
-      liveUpdate (key, value) {
+      liveUpdate (key, value, event) {
         // Removed regards with ILM-3683
         //if(this.proofreadModeReadOnly)
         //    return ;
