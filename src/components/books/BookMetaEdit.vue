@@ -1104,8 +1104,10 @@ export default {
     },
 
     liveUpdate (key, value, event) {
+      //bad conflict fix
         if(this.proofreadModeReadOnly)
             return ;
+      //bad conflict fix
 
         if( this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][key] ) {
           if (key != 'author'){
