@@ -139,6 +139,7 @@ import {dateFormat} from '../../filters';
 import v_modal from 'vue-js-modal';
 import dropzone from 'vue2-dropzone';
 import {mapGetters, mapActions} from 'vuex';
+import { BookBlock }     from '../../store/bookBlock'
 Vue.use(v_modal, { dialog: true, dynamic: true });
 
 export default {
@@ -288,7 +289,8 @@ export default {
       cache: false
     },
     ...mapGetters({
-      audiobook: 'currentAudiobook'
+      audiobook: 'currentAudiobook',
+      aligningBlocks: 'aligningBlocks'
     })
   },
   methods: {
@@ -587,7 +589,24 @@ export default {
               });
           }
           if (report instanceof Object && report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) {
-            this.getBookAlign();
+            this.getBookAlign()
+              .then((res) => {
+                let getIds = [];
+                report.aligned.blocks.forEach(blk => {
+                  if (!this.aligningBlocks.includes(blk)) {
+                    getIds.push(blk);
+                  }
+                });
+                if (getIds.length > 0) {
+                  this.getBlocks(getIds)
+                    .then(blocks => {
+                      blocks.forEach(blk => {
+                        this.$store.commit('set_storeList', new BookBlock(blk));
+                        this.$root.$emit(`reload-audio-editor:${blk.blockid}`);
+                      });
+                    })
+                }
+              });
           }
         }
       }
