@@ -1307,34 +1307,38 @@ export const store = new Vuex.Store({
                   }
                 });
                 data.block.sync_changes = changes;
+                if (new Date(blockStore.updated) < new Date(data.block.updated)) {
+                  state.storeListO.updBlockByRid(data.block.id, data.block);
+                }
               }
-              state.storeListO.updBlockByRid(data.block.id, data.block);
             } else if (data.action === 'delete') {
               state.storeListO.delExistsBlock(data.block['@rid'])
             }
 
             if (data.block && data.block.blockid && state.storeList.has(data.block.blockid)) {
-              let block = state.storeList.get(data.block.blockid);
-              if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
-                block.parts.forEach((p, i) => {
-                  if (p.inid) {
-                    data.block.parts[i].inid = p.inid;
-                  }
-                });
-              }
-              if (block.isChanged) {
-                if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
-                    if (block.voicework != data.block.voicework) {
-                      block.voicework = data.block.voicework;
-                      block.audiosrc = data.block.audiosrc;
-                      block.audiosrc_ver = data.block.audiosrc_ver;
-                      store.commit('set_storeList', new BookBlock(block));
+              if (new Date(blockStore.updated) < new Date(data.block.updated)) {
+                let block = state.storeList.get(data.block.blockid);
+                if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
+                  block.parts.forEach((p, i) => {
+                    if (p.inid) {
+                      data.block.parts[i].inid = p.inid;
                     }
-                  } else {
-                    store.commit('set_storeList', new BookBlock(data.block));
-                  }
-              } else {
-                store.commit('set_storeList', new BookBlock(data.block));
+                  });
+                }
+                if (block.isChanged) {
+                  if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
+                      if (block.voicework != data.block.voicework) {
+                        block.voicework = data.block.voicework;
+                        block.audiosrc = data.block.audiosrc;
+                        block.audiosrc_ver = data.block.audiosrc_ver;
+                        store.commit('set_storeList', new BookBlock(block));
+                      }
+                    } else {
+                      store.commit('set_storeList', new BookBlock(data.block));
+                    }
+                } else {
+                  store.commit('set_storeList', new BookBlock(data.block));
+                }
               }
             } else if (data.block && data.block.blockid) {
               store.commit('set_storeList', new BookBlock(data.block));
