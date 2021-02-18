@@ -15,7 +15,6 @@
 
       <BookDownload v-if="showModal" @close="showModal = false" />
       <AudioImport v-if="showModal_audio"
-        @audiofilesUploaded="getAudioBook"
         @close="showModal_audio = false"
         @closeOk="checkAfterAudioImport"
         :book="currentBook"
@@ -84,34 +83,33 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' @input="update('title', $event); " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
+                  <td><input v-model='currentBook.title' v-on:change="updateWithDisabling('title',$event,400)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title']" class="validation-error">Define Title</span>
                   </td>
                 </tr>
 
                 <tr class='title' v-if="currentBook.language !== 'en'">
                   <td>Title EN</td>
-                  <td><input v-model='currentBook.title_en' @input="update('title_en', $event); " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en'] }">
+                  <td><input v-model='currentBook.title_en' v-on:change="updateWithDisabling('title_en', $event) " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en']" class="validation-error">Define Title EN</span>
                   </td>
                 </tr>
 
                 <tr class='subtitle'>
                   <td>Subtitle</td>
-                  <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)" :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model='currentBook.subtitle' v-on:change="updateWithDisabling('subtitle', $event)" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
                 <tr class='author'>
                   <td>Author</td>
                   <td style="text-align: left !important;">
 
-                    <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
+                    <input v-model='currentBook.author[0]'  v-on:change="update('author', $event) " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
                                                 <div class="dropdown" v-if="currentBook.author.length === 0 && allowMetadataEdit">
                                                   <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button" ><i class="fa fa-angle-down" ></i></div>
                                                   <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
                                                 </div>
-
-                    <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' @input="update('author', $event); " :disabled="!allowMetadataEdit">
+                    <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' v-on:change="update('author', $event); " :disabled="!allowMetadataEdit">
                                                 <div class="dropdown" v-if=" i == 0 && allowMetadataEdit">
                                                   <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
                                                   <div class="dropdown-content" v-if="showUnknownAuthor == 1 && allowMetadataEdit" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
@@ -126,7 +124,7 @@
 
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td style="text-align: left !important;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 90%;" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en'] }">
+                  <td style="text-align: left !important;"><input v-model='currentBook.author_en' v-on:change="update('author_en', $event) " :disabled="!allowMetadataEdit" style="width: 90%;" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en'] }">
                                                 <div class="dropdown" v-if="allowMetadataEdit">
                                                   <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
                                                   <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" >Unknown</div>
@@ -151,7 +149,7 @@
             </fieldset>
             <fieldset class='description brief' style="text-align: right;">
               <legend style="text-align: left;">URL Slug</legend>
-                  <input v-model='currentBook.slug' @input="lockLanguage = true; update('slug', $event); "  :disabled="!allowMetadataEdit || currentBook.slug_status == -1 " :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug'] }">
+                  <input v-model='currentBook.slug' v-on:change="lockLanguage = true; update('slug', $event); "  :disabled="!allowMetadataEdit || currentBook.slug_status == -1 " :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug'] }">
                   <br><span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug']" class="validation-error">Define URL Slug</span>
             </fieldset>
 
@@ -178,22 +176,23 @@
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
-                    <select id="difficultySelection" :class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }" class="form-control" v-model='currentBook.difficulty' @change="change('difficulty')" :key="currentBookid" :disabled="!allowMetadataEdit">
-                      <option v-for="(value, ind) in subjectDifficulties" :value="value">{{ value }}</option>
-                    </select>
-                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty']" class="validation-error">Please define a Difficulty</span>
+                    <input v-model="currentBook.difficulty" :disabled="!allowMetadataEdit"
+                           v-on:change="updateWithDisabling('difficulty',$event,100)"  id="difficultySelection" :class="{ 'has-error': (this.validationErrorDifficulty) ,
+                            'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
+                    <span class="validation-error" >{{(this.validationErrorDifficulty )}}</span>
+<!--                    <span class="validation-error" >{{(validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'])}}</span>-->
                   </td>
                 </tr>
 
                 <tr class='trans'>
                   <td>Translator</td>
-                  <td><input v-model='currentBook.translator' @input="update('translator', $event)" :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model='currentBook.translator'  v-on:change="updateWithDisabling('translator', $event)" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
                 <tr class='transfrom'>
                   <td>Tr From</td>
                   <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
-                  <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model="currentBook.transfrom" v-on:change="updateWithDisabling('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
                 <tr class='collection'>
@@ -208,9 +207,12 @@
                 <tr class='weight'>
                   <td>Weight:</td>
                   <td>
-                    <input v-model='currentBook.weight' @input="updateWeigth($event)" :disabled="!allowMetadataEdit"
-                           :class="[{'has-error': (validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'].length) }]"/>
-                    <div v-if="validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'].length > 0"><span class="validation-error" v-for="error in validationErrors[currentBook.bookid]['weight']">{{error}}</span></div>
+                    <input v-model='currentBook.weight' v-on:change="updateWeigth($event, 100)" :disabled="!allowMetadataEdit"
+                           :class="[{'has-error': this.validationErrorWeight }]"/>
+<!--                    <div v-if="validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'].length > 0">-->
+<!--                      <span class="validation-error" v-for="error in validationErrors[currentBook.bookid]['weight']">{{error}}</span>-->
+                      <span class="validation-error" >{{validationErrorWeight}}</span>
+<!--                    </div>-->
                   </td>
                 </tr>
               </table>
@@ -234,12 +236,12 @@
 
           <fieldset class='description brief'>
             <legend>Brief Description </legend>
-            <resizable-textarea ref="descriptionShort"><textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full"></textarea></resizable-textarea>
+            <resizable-textarea ref="descriptionShort"><textarea v-model='currentBook.description_short' v-on:change="update('description_short', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full"></textarea></resizable-textarea>
           </fieldset>
 
           <fieldset class='description long'>
             <legend>Long Description </legend>
-            <resizable-textarea ref="descriptionLong"><textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full" ></textarea></resizable-textarea>
+            <resizable-textarea ref="descriptionLong"><textarea v-model='currentBook.description' v-on:change="update('description', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full" ></textarea></resizable-textarea>
           </fieldset>
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
@@ -605,6 +607,8 @@ export default {
       isExporting:false,
       //validationErrors: {extid: [], weight: []},
       validationErrors: {},
+      validationErrorDifficulty: '',
+      validationErrorWeight: '',
       updateAllowed: false,
       TAB_ASSIGNMENT_INDEX: 0,
       TAB_META_INDEX: 1,
@@ -664,7 +668,7 @@ export default {
       alignCounter: 'alignCounter',
       audiobook: 'currentAudiobook',
       subjectCategories: 'bookCategories',
-      subjectDifficulties: 'bookDifficulties',
+      // subjectDifficulties: 'bookDifficulties',
       bookDifficultyDefault: 'bookDifficultyDefault',
       tasks_counter: 'tasks_counter',
       taskTypes: 'taskTypes',
@@ -791,6 +795,7 @@ export default {
       handler (val) {
         this.init();
         this.lockLanguage = false;
+
       },
       deep: true
     },
@@ -907,6 +912,18 @@ export default {
   methods: {
 
     init () {
+      // if( !this.validationErrors[this.currentBook.bookid])
+      //   this.validationErrors[this.currentBook.bookid] = {};
+      // if( !this.validationErrors[this.currentBook.bookid]['difficulty'])
+      //   this.validationErrors[this.currentBook.bookid]['difficulty'] = '';
+      // if( !this.validationErrors[this.currentBook.bookid]['weight'])
+      //   this.validationErrors[this.currentBook.bookid]['weight'] = '';
+      //
+      // this.validationErrorDifficulty = (this.validationErrors[this.currentBook.bookid] && this.validationErrors[this.currentBook.bookid]['difficulty']) ? this.validationErrors[this.currentBook.bookid]['difficulty'] : '';
+      // this.validationErrorWeight = (this.validationErrors[this.currentBook.bookid] && this.validationErrors[this.currentBook.bookid]['weight']) ? this.validationErrors[this.currentBook.bookid]['weight'] : '';
+      this.validationErrorDifficulty ='';
+      this.validationErrorWeight = '';
+
       let checkId = this.currentBook.bookid;
       this.updateAllowed = false;
       setTimeout(() => {
@@ -928,9 +945,7 @@ export default {
       if (this.currentBook.author && !Array.isArray(this.currentBook.author)) {
         this.currentBook.author = [this.currentBook.author];
       }
-      if(!this.currentBook.difficulty){
-        this.currentBook.difficulty = this.bookDifficultyDefault
-      }
+
       //this.loadAudiobook();
       /*this.setCurrentBookBlocksLeft(this.currentBook._id)
         .then(() => {
@@ -973,6 +988,7 @@ export default {
         if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
           this.requiredFields[this.currentBookMeta.bookid]['slug'] = true;
         }
+
 
 
     },
@@ -1024,21 +1040,74 @@ export default {
           })
         }, 1500)
       }
+    },
+    updateWithDisabling(key, event, debounceTime){
+      if(!debounceTime)
+        debounceTime = false;
 
-
+      return this.update(key, event, debounceTime,true);
     },
 
-    update: _.debounce(function (key, event) {
-      let val = typeof event === 'string' ? event : event.target.value;
-      this.liveUpdate(key, key == 'author' ? this.currentBook.author : val)
-    }, 1500, {
-      'leading': false,
-      'trailing': true
-    }),
+    update(key, event, debounceTime,disable){
+      if(!debounceTime)
+        debounceTime = false;
+      if(!disable)
+        disable = false;
 
-    liveUpdate (key, value) {
-        if(this.proofreadModeReadOnly)
-            return ;
+
+      if(key =='difficulty'){
+
+          let validationErrors = '';
+
+          let re = /^\d+(\.\d+)*$/i;
+
+          if ( !this.currentBook.difficulty.match(re) ){
+            validationErrors = 'Allowed range 1 - 14.99';
+          }
+
+        if ( parseFloat(this.currentBook.difficulty) > 14.99 ){
+          validationErrors = 'Allowed range 1 - 14.99';
+        }
+        if ( parseFloat(this.currentBook.difficulty) < 1){
+          validationErrors = 'Allowed range 1 - 14.99';
+        }
+
+        if(validationErrors !=this.validationErrors['difficulty'] ){
+          // this.validationErrors[this.currentBook.bookid]['difficulty'] = validationErrors;
+          this.validationErrorDifficulty = validationErrors;
+        }
+        if(validationErrors && event && disable){
+          event.target.toggleAttribute('disable');
+          return;
+        }
+
+      }
+
+      if(disable && event) {
+        event.target.disabled = true;
+      }
+      if(debounceTime){
+        let debouncedFunction = _.debounce((key,event)=>{
+          let val = typeof event === 'string' ? event : event.target.value;
+          this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
+
+        },  debounceTime, {
+          'leading': false,
+          'trailing': true
+        });
+        debouncedFunction(key,event);
+      }else{
+        let val = typeof event === 'string' ? event : event.target.value;
+        this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
+      }
+    },
+
+
+      liveUpdate (key, value, event) {
+        // Removed regards with ILM-3683
+        //if(this.proofreadModeReadOnly)
+        //    return ;
+
 
         if( this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][key] ) {
           if (key != 'author'){
@@ -1066,11 +1135,6 @@ export default {
         }
 
 
-      //if (!this.updateAllowed) {
-        //return Promise.resolve();
-      //}
-      //console.log('liveUpdate', key, value);
-
       var keys = key.split('.');
       key = keys[0];
       if (keys.length > 1) {
@@ -1090,24 +1154,17 @@ export default {
       return this.updateBookMeta(update)
       .then((response)=>{
         console.log('response', response);
+        console.log('event', event);
+        if(event)
+          event.target.disabled  = false ;
+
         this.lockLanguage = false;
         if (key == 'numbering') {
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
-          //this.$root.$emit('from-book-meta:upd-toc', true);
         }
-//         let updateVersion = {minor: true};
-//         switch(key) {
-//           case 'styles':
-//           case 'numbering':
-//             updateVersion = {major: true};
-//             break;
-//         }
-//         return this.updateBookVersion(updateVersion)
-//         .then(() => {
+
           return response;
-//         })
-//         .catch(err => err);
-        //return BPromise.resolve(response);
+
       })
       .catch(err => {
         console.log(err);
@@ -1535,9 +1592,9 @@ export default {
                     if (styleKeyArr.length) {
                       if (typeof pBlock.classes[styleKey] !== 'object') {
                         pBlock.classes[styleKey] = {};
-                        pBlock.classes[styleKey][styleKeyArr.shift()] = styleVal;
+                        pBlock.classes[styleKey][styleKeyArr.slice().shift()] = styleVal;
                       } else {
-                        pBlock.classes[styleKey][styleKeyArr.shift()] = styleVal;
+                        pBlock.classes[styleKey][styleKeyArr.slice().shift()] = styleVal;
                       }
                     }
                     else pBlock.classes[styleKey] = styleVal;
@@ -1805,35 +1862,47 @@ export default {
       }
     }, 500),
 
-    updateWeigth: _.debounce(function (event) {
+    updateWeigth (event,debounceTime) {
       const value = event.target.value.replace(/ /g, '');
       const key = 'weight';
       const maxValue = 10.99;
       const minValue = 1.00;
-      let errors = [];
+      let error = '';
       if (Number(value) == value && value % 1 !== 0) {
         if (value > maxValue || value < minValue || (value.split('.')[1]).toString().length > 2) {
           //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
           //ILM-3622:
-          errors.push('Allowed range ' + minValue + ' - ' + maxValue );
+          error = 'Allowed range ' + minValue + ' - ' + maxValue ;
         }
       } else {
         if (value !== '' && (Number(value) != value || (value > maxValue || value < minValue))) {
-          //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');  
+          //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
           //ILM-3622:
-          errors.push('Allowed range ' + minValue + ' - ' + maxValue );
+          error = 'Allowed range ' + minValue + ' - ' + maxValue ;
         }
       }
 
-      
-      if (!this.validationErrors[this.currentBook.bookid]) {Vue.set(this.validationErrors, this.currentBook.bookid, {key: []})} //this.validationErrors[this.currentBook.bookid] = []};
-      this.validationErrors[this.currentBook.bookid][key] = errors;
-      if (!errors.length) {
-        this.liveUpdate(key, value === '' ? '' : value);
+
+      // if (!this.validationErrors[this.currentBook.bookid]) {Vue.set(this.validationErrors, this.currentBook.bookid, {key: []})} //this.validationErrors[this.currentBook.bookid] = []};
+      // this.validationErrors[this.currentBook.bookid][key] = error;
+      this.validationErrorWeight = error;
+      if (!error) {
+
+        event.target.disabled  = true ;
+
+        let debouncedFunction = _.debounce((key,event)=>{
+          let val = typeof event === 'string' ? event : event.target.value;
+          this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
+
+        },  debounceTime, {
+          'leading': false,
+          'trailing': true
+        });
+        debouncedFunction(key,event);
       }
       console.log('HERE', this.validationErrors);
 
-    }, 500),
+    },
 
     getTaskType(typeId) {
       let t = this.taskTypes.tasks.find(_t => {
@@ -2396,6 +2465,6 @@ Vue.filter('prettyBytes', function (num) {
     position: fixed;
     top: 0px;
     left: 0px;
-  }
+}
 
 </style>

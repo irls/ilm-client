@@ -86,6 +86,19 @@
             mandatoryFields.push('URL slug');
         }
 
+        if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
+          canPublish = false;
+          mandatoryFields.push('difficulty');
+        }
+        if ( this.currentBookMeta.difficulty !='' && parseFloat(this.currentBookMeta.difficulty) < 1){
+          canPublish = false;
+          mandatoryFields.push('difficulty');
+        }
+        if( this.currentBookMeta.difficulty && isNaN(parseFloat(this.currentBookMeta.difficulty)) ){
+          canPublish = false;
+          mandatoryFields.push('difficulty');
+        }
+
 
         if(!canPublish){
           title = 'Publication failed';
@@ -114,10 +127,41 @@
                   }
               });
           }
-          if (count === 0) {
+          let byAudioQuality = Array.from(this.storeList).reduce((acc, block) => {
+            if (block[1] && block[1].audio_quality) {
+              if (!acc[block[1].audio_quality]) {
+                acc[block[1].audio_quality] = 0;
+              }
+              ++acc[block[1].audio_quality];
+            }
+            return acc;
+          }, {});
+          let quality_count = Object.keys(byAudioQuality).length;
+          if (count === 0 && quality_count < 2) {
               title = 'Publish the Book?';
           } else {
-              title = 'The Book has incomplete Tasks. Publish anyway?';
+              if (count > 0) {
+                title = 'The Book has incomplete Tasks.';
+              }
+              if (quality_count > 1) {
+                title+= `<br><br>Audio quality varying: `;
+                Object.keys(byAudioQuality).forEach(q => {
+                  title+= ` ${byAudioQuality[q]} `;
+                  switch (q) {
+                    case 'raw':
+                      title+= 'Raw,';
+                      break;
+                    case 'improved':
+                      title+= 'Refined,';
+                      break;
+                    case 'mastered':
+                      title+= 'Mastered,';
+                      break;
+                  }
+                });
+                title = title.replace(/,$/, '') + ' Blocks';
+              }
+              title+= `<br><br> Publish anyway?`;
           }
           buttons = [
               {
@@ -191,7 +235,7 @@
         },
         cache: false
       },
-      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo'])
+      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList'])
     },
     mounted() {
       if (this.currentBookMeta && this.currentBookMeta.isInTheQueueOfPublication) {

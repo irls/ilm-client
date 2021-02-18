@@ -283,10 +283,17 @@
           }
           let changeZoomLevel = mode != this.mode;
           if ((this.blockId && this.blockId != blockId) || (mode == 'file' && reloadOnChange) || mode != this.mode) {
-            if (this.isModifiedComputed && this.mode === 'block') {
-              this.pendingLoad = arguments;
-              this.showOnExitMessage();
-              return;
+            if (this.mode === 'block') {
+              let block = this.audioTasksQueueBlockOrPart();
+              if (block && !block.isAudioChanged && this.isModified) {// button save was pressed
+                this.pendingLoad = arguments;
+                this.setProcessRun(true, 'loading');
+                return;
+              } else if (this.isModified) {
+                this.pendingLoad = arguments;
+                this.showOnExitMessage();
+                return;
+              }
             }
             if (this.isModifiedComputed && this.mode === 'file') {
               this.$root.$emit('from-audioeditor:save-positions', closingId, this.selection);
@@ -311,6 +318,7 @@
             //this.audioHistory = [];
             //this.close();
           }
+          this.cursorPosition = false;
           this.setProcessRun(true, 'loading');
           this.pendingLoad = null;
           this.isPlaying = false;
@@ -501,6 +509,9 @@
               self._clearWordSelection();
               self.isPlaying = false;
               self.isPaused = false;
+              if (self.selection.start && !isNaN(self.selection.start)) {
+                self.cursorPosition = self.selection.start;
+              }
             });
             this.plEventEmitter.on('select', function(r_start, r_end) {
               let start = self._round(r_start, 2);
@@ -549,6 +560,10 @@
                     this.cursorPosition = cp;
                   });
                 }
+                Vue.nextTick(() => {
+                  $('[id="resize-selection-left"]').hide();
+                  $('[id="resize-selection-right"]').hide();
+                });
                 self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
 
                   limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
@@ -708,7 +723,7 @@
                         this.setSelectionEnd(pos);
                       }
                     } else {
-                      if (typeof this.selection.start !== 'undefined') {
+                      if (typeof this.selection.start !== 'undefined' && !isNaN(this.selection.start)) {
                         this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
                       }
                       this.cursorPosition = pos;
@@ -760,7 +775,7 @@
                 $('#cursor-position').hide();
                 if (typeof this.audiosourceEditor.samplesPerPixel !== 'undefined') {
                   let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
-                  if (typeof this.selection.start !== 'undefined') {
+                  if (typeof this.selection.start !== 'undefined' && !isNaN(this.selection.start)) {
                     this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
                   }
                   this.mouseSelection = {start: this._round(pos, 1), end: null};
@@ -891,6 +906,8 @@
           }
           this.isPlaying = true;
           this.$root.$emit('from-audioeditor:play');
+          $('.selection.point').hide();
+          $('.context-position').hide();
         },
         stop(go_to_start = true) {
           if (this.isPlaying || this.isPaused) {
@@ -1904,7 +1921,7 @@ Discard unsaved audio changes?`,
           return record;
         },
         _setSelectionOnWaveform() {
-          if (this.selection && typeof this.selection.start != 'undefined' && typeof this.selection.end != 'undefined' && this.plEventEmitter) {
+          if (this.selection && typeof this.selection.start != 'undefined' && typeof this.selection.end != 'undefined' && this.plEventEmitter && !isNaN(this.selection.start)) {
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
             this._showSelectionBorders();
           }
@@ -2414,7 +2431,7 @@ Discard unsaved audio changes?`,
           shiftedWords.forEach(sw => {
             shiftedOldMap.push(oldMap[sw.index]);
           })
-          let queueBlock = this.audioTasksQueueBlock();
+          let queueBlock = this.audioTasksQueueBlockOrPart();
           this._addHistoryLocal('manual_boundaries', null, null, null, {
             shifted: shiftedWords,
             oldMap: shiftedOldMap,
@@ -2450,13 +2467,17 @@ Discard unsaved audio changes?`,
             }
             this.$root.$emit('preloader-toggle', true, type);
           } else {
-            this.$root.$emit('preloader-toggle', false, '');
+            if (this.pendingLoad) {
+              this.load(...this.pendingLoad);
+            } else {
+              this.$root.$emit('preloader-toggle', false, '');
+            }
           }
         },
 
         flush() {
-          this.setProcessRun(false);
           this.isModified = false;
+          this.setProcessRun(false);
         },
 
         unpinRight(event) {
@@ -2739,7 +2760,8 @@ Revert to original block audio?`,
           currentAudiobook: 'currentAudiobook', 
           storeListO: 'storeListO',
           audioTasksQueue: 'audioTasksQueue', 
-          audioTasksQueueBlock: 'audioTasksQueueBlock'})
+          audioTasksQueueBlock: 'audioTasksQueueBlock',
+          audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart'})
       },
       watch: {
         'cursorPosition': {
@@ -2824,7 +2846,7 @@ Revert to original block audio?`,
                 }
               }
               if ($('[id="resize-selection-left"]').css('display') === 'none' && $('.playlist-overlay:hover').length === 0) {
-                this.cursorPosition = typeof this.selection.start === 'number' && !isNaN(this.selection.start) ? this.selection.start : false;
+                this.cursorPosition = typeof this.selection.start === 'number' && !isNaN(this.selection.start) ? this.selection.start : this.cursorPosition;
                 this._showSelectionBorders();
               }
             })

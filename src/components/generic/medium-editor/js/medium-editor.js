@@ -1570,10 +1570,14 @@ MediumEditor.extensions = {};
             });
         },
 
-        isElementWhitespaceStyle: function (element) {
+        isElementWhitespaceStyle: function (element, checkStyle = ['pre-line', 'pre-wrap', 'pre']) {
             let style = window.getComputedStyle(element),
-            isList = style && style.whiteSpace && ['pre-line', 'pre-wrap', 'pre'].indexOf(style.whiteSpace) !== -1;
+            isList = style && style.whiteSpace && checkStyle.indexOf(style.whiteSpace) !== -1;
             return isList;
+        },
+
+        replaceStringAt: function (input, position, replace) {
+            return input.substring(0, position) + replace + (position >= input.length ? '' : input.substring(position + 1));
         }
     };
 
@@ -4831,6 +4835,129 @@ MediumEditor.extensions = {};
 
         handleKeydown: function (event) {
             var keyCode = MediumEditor.util.getKeyCode(event);
+            if (keyCode === MediumEditor.util.keyCode.DELETE) {
+                let selection = document.getSelection(),
+                element = selection.anchorNode,
+                rootNode = element.parentNode,
+                parentNode = element.parentNode;
+                while (rootNode.nodeName !== 'DIV') {
+                    rootNode = rootNode.parentNode;
+                }
+                if (MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-line'])) {
+                    if (element.parentNode.nodeName === 'DIV') {
+                        if (element.nodeValue.length > selection.anchorOffset) {
+                            let checkValue = element.nodeValue.substring(selection.anchorOffset > 0 ? selection.anchorOffset - 1 : 0, element.nodeValue.length > selection.anchorOffset + 2 ? selection.anchorOffset + 2 : element.nodeValue.length);
+                            //console.log('"', document.getSelection().anchorNode.nodeValue.substring(document.getSelection().anchorOffset, document.getSelection().anchorOffset + 1).charCodeAt(0), '"');
+                            if (checkValue.match(/\n/)) {
+                                let partOne = document.createTextNode(element.nodeValue.substring(0, selection.anchorOffset)),
+                                partTwo = document.createTextNode(element.nodeValue.substring(selection.anchorOffset + 1));
+                                element.parentNode.replaceChild(partTwo, element);
+                                parentNode.insertBefore(partOne, partTwo);
+                                MediumEditor.selection.moveCursor(this.base.options.ownerDocument, partTwo, 0);
+                                event.preventDefault();
+                                let eventInput = new Event('input', {
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+
+                                rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                                return;
+                            }
+                        }
+                    } else if (element.parentNode.nodeName === 'W') {
+                        if ((!element.nodeValue || element.nodeValue.length === selection.anchorOffset) && element.parentNode.nextSibling && element.parentNode.nextSibling.nodeValue && element.parentNode.nextSibling.nodeValue.charCodeAt(0) === 10) {
+                            element.parentNode.nextSibling.nodeValue = element.parentNode.nextSibling.nodeValue.substring(1);
+                            event.preventDefault();
+                            let eventInput = new Event('input', {
+                                bubbles: true,
+                                cancelable: true
+                            });
+
+                            rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                            return;
+                        } else if (element.nodeValue && element.nodeValue.length > selection.anchorOffset) {
+                            let checkValue = element.nodeValue.substring(selection.anchorOffset > 0 ? selection.anchorOffset - 1 : 0, element.nodeValue.length > selection.anchorOffset ? selection.anchorOffset + 1 : selection.anchorOffset);
+                            if (checkValue.match(/\n/)) {
+                                /*let partOne = document.createTextNode(element.nodeValue.substring(0, selection.anchorOffset)),
+                                partTwo = document.createTextNode(element.nodeValue.substring(selection.anchorOffset + 1));
+                                element.parentNode.replaceChild(partTwo, element);
+                                parentNode.insertBefore(partOne, partTwo);
+                                MediumEditor.selection.moveCursor(this.base.options.ownerDocument, partTwo, 0);*/
+                                let moveTo = selection.anchorOffset;
+                                element.nodeValue = MediumEditor.util.replaceStringAt(element.nodeValue, selection.anchorOffset, '');
+                                MediumEditor.selection.moveCursor(this.base.options.ownerDocument, element, moveTo);
+                                event.preventDefault();
+                                let eventInput = new Event('input', {
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+
+                                rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                                return;
+                            }
+                        }
+                    }
+                }
+            } else if (keyCode === MediumEditor.util.keyCode.BACKSPACE) {
+                let selection = document.getSelection(),
+                element = selection.anchorNode,
+                rootNode = element.parentNode,
+                parentNode = element.parentNode;
+                while (rootNode.nodeName !== 'DIV') {
+                    rootNode = rootNode.parentNode;
+                }
+                if (MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-line'])) {
+                    if (element.parentNode.nodeName === 'DIV') {
+                        if (element.nodeValue.length > selection.anchorOffset && selection.anchorOffset > 0) {
+                            let checkValue = element.nodeValue.substring(selection.anchorOffset > 1 ? selection.anchorOffset - 2 : 0, element.nodeValue.length > selection.anchorOffset ? selection.anchorOffset + 1 : selection.anchorOffset);
+                            //console.log('"', document.getSelection().anchorNode.nodeValue.substring(document.getSelection().anchorOffset, document.getSelection().anchorOffset + 1).charCodeAt(0), '"');
+                            if (checkValue.match(/\n/)) {
+                                let partOne = document.createTextNode(element.nodeValue.substring(0, selection.anchorOffset - 1)),
+                                partTwo = document.createTextNode(element.nodeValue.substring(selection.anchorOffset));
+                                element.parentNode.replaceChild(partTwo, element);
+                                parentNode.insertBefore(partOne, partTwo);
+                                MediumEditor.selection.moveCursor(this.base.options.ownerDocument, partTwo, 0);
+                                event.preventDefault();
+                                let eventInput = new Event('input', {
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+
+                                rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                                return;
+                            }
+                        }
+                    } else if (element.parentNode.nodeName === 'W') {
+                        /*let previous = element.parentNode.previousSibling;
+                        if ((!element.nodeValue || element.nodeValue.length === selection.anchorOffset) && element.parentNode.nextSibling && element.parentNode.nextSibling.nodeValue && element.parentNode.nextSibling.nodeValue.charCodeAt(0) === 10) {
+                            element.parentNode.nextSibling.nodeValue = element.parentNode.nextSibling.nodeValue.substring(1);
+                            event.preventDefault();
+                            let eventInput = new Event('input', {
+                                bubbles: true,
+                                cancelable: true
+                            });
+
+                            rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                            return;
+                        } else */if (element.nodeValue && element.nodeValue.length > selection.anchorOffset) {
+                            let checkValue = element.nodeValue.substring(selection.anchorOffset > 1 ? selection.anchorOffset - 2 : 0, element.nodeValue.length > selection.anchorOffset ? selection.anchorOffset + 1 : selection.anchorOffset);
+                            if (checkValue.match(/\n/)) {
+                                let moveTo = selection.anchorOffset > 0 ? selection.anchorOffset - 1 : selection.anchorOffset;
+                                element.nodeValue = MediumEditor.util.replaceStringAt(element.nodeValue, selection.anchorOffset - 1, '');
+                                MediumEditor.selection.moveCursor(this.base.options.ownerDocument, element, moveTo);
+                                event.preventDefault();
+                                let eventInput = new Event('input', {
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+
+                                rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
             if (!this.keys[keyCode]) {
                 return;
             }
@@ -6855,48 +6982,7 @@ MediumEditor.extensions = {};
             }
             return false;
         }
-        var node = MediumEditor.selection.getSelectionStart(this.options.ownerDocument),
-            tagName;
-
-        if (!node) {
-            return;
-        }
-
-        // https://github.com/yabwe/medium-editor/issues/994
-        // Firefox thrown an error when calling `formatBlock` on an empty editable blockContainer that's not a <div>
-        if (MediumEditor.util.isMediumEditorElement(node) && node.children.length === 0 && !MediumEditor.util.isBlockContainer(node)) {// duplicate on backspace HERE
-            this.options.ownerDocument.execCommand('formatBlock', false, 'p');
-        }
-
-        // https://github.com/yabwe/medium-editor/issues/1455
-        // if somehow we have the BR as the selected element, typing does nothing, so move the cursor
-        if (node.nodeName === 'BR') {
-            MediumEditor.selection.moveCursor(this.options.ownerDocument, node.parentElement);
-        }
-
-        // https://github.com/yabwe/medium-editor/issues/834
-        // https://github.com/yabwe/medium-editor/pull/382
-        // Don't call format block if this is a block element (ie h1, figCaption, etc.)
-        if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.ENTER) &&
-            !MediumEditor.util.isListItem(node) &&
-            !MediumEditor.util.isBlockContainer(node)) {
-
-            tagName = node.nodeName.toLowerCase();
-            // For anchor tags, unlink
-            if (tagName === 'a') {
-                this.options.ownerDocument.execCommand('unlink', false, null);
-            } else if (!event.shiftKey && !event.ctrlKey) {
-                this.options.ownerDocument.execCommand('formatBlock', false, 'p');
-                // https://github.com/yabwe/medium-editor/issues/1455
-                // firefox puts the focus on the br - so we need to move the cursor to the newly created p
-                if (MediumEditor.util.isFF) {
-                    var newParagraph = node.querySelector('p');
-                    if (newParagraph) {
-                        MediumEditor.selection.moveCursor(this.options.ownerDocument, newParagraph);
-                    }
-                }
-            }
-        }
+        return false;
     }
 
     function handleEditableInput(event, editable) {
@@ -6925,6 +7011,10 @@ MediumEditor.extensions = {};
             selection = length ? element.nodeValue.substring(0, offset) : '',
             afterSelection = length && offset < length ? element.nodeValue.substring(offset, length) : '',
             mediumEditorElement = this.elements[0];
+            if (afterSelection.trim().length === 0) {
+                selection+= afterSelection;
+                afterSelection = '';
+            }
             if (isLiElement) {
                 return true;// keep default user agent's behaviour for lists
             } else if (element.nodeName === 'W') {
@@ -6946,7 +7036,7 @@ MediumEditor.extensions = {};
                 }
             } else if (element.parentNode.nodeName === 'DIV') {// click inside usual text node
                 if (isList) {
-                    element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling ? afterSelection : br);
+                    element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling || selection.match(new RegExp(`${br}$`)) ? afterSelection : br);
                     MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 ? selection.length + 1 : selection.length + 1);
                 } else {
                     if (element.nodeName === 'BR') {
@@ -6957,16 +7047,21 @@ MediumEditor.extensions = {};
                         let partOne = document.createTextNode(selection),
                         partTwo = document.createElement('br'),
                         partThree = document.createTextNode(afterSelection);
-                        parentNode.replaceChild(partThree, element);
-                        parentNode.insertBefore(partOne, partThree);
-                        parentNode.insertBefore(partTwo, partThree);
-                        MediumEditor.selection.moveCursor(this.options.ownerDocument, partThree, 0);
-                        //console.log('HERE2');
-                        if (afterSelection.length === 0 && !partThree.nextSibling) {
+                        if (afterSelection.trim().length === 0 && !element.nextSibling) {
                             let partFour = document.createElement('br');
-                            parentNode.insertBefore(partFour, partThree);
+                            parentNode.replaceChild(partFour, element);
+                            parentNode.insertBefore(partTwo, partFour);
+                            parentNode.insertBefore(partThree, partTwo);
+                            parentNode.insertBefore(partOne, partThree);
+                            MediumEditor.selection.moveCursor(this.options.ownerDocument, partFour, 0);
                             //console.log('HERE3');
+                        } else {
+                            parentNode.replaceChild(partThree, element);
+                            parentNode.insertBefore(partOne, partThree);
+                            parentNode.insertBefore(partTwo, partThree);
+                            MediumEditor.selection.moveCursor(this.options.ownerDocument, partThree, 0);
                         }
+                        //console.log('HERE2');
                     }
                 }
             } else {// click inside text node, which parent is not main div and not <w>, e.g. <i>Some text f<u>o<ENTER_HERE>r</u> line <ENTER_HERE>br<u>e</u>ak testing.</i>
@@ -7015,9 +7110,23 @@ MediumEditor.extensions = {};
                         containerTwo.appendChild(partThree);
                     }
                     //console.log('HERE4');
-                }/* else {
+                    baseNode.replaceChild(containerTwo, parentNode);
+                    lastNode = partOne;
+                    containerOne.appendChild(partOne);
+                    for (let i = currentIndex - 1; i >=0; --i) {
+                        let currentNode = allChildNodes[i];
+                        containerOne.insertBefore(currentNode, lastNode);
+                        lastNode = currentNode;
+                    }
+                    baseNode.insertBefore(containerOne, containerTwo);
+                    if (['LI'].indexOf(parentNode.nodeName) === -1 && partTwo) {
+                        baseNode.insertBefore(partTwo, containerTwo);
+                    }
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, containerTwo.firstChild ? containerTwo.firstChild : containerTwo, 0);
+                } else {
                     baseNode.replaceChild(partTwo, parentNode);
-                    baseNode.insertBefore(partOne, partTwo);
+                    containerOne.appendChild(partOne);
+                    baseNode.insertBefore(containerOne, partTwo);
                     MediumEditor.selection.moveCursor(this.options.ownerDocument, partTwo.nextSibling ? partTwo.nextSibling : partTwo, 0);
                     //console.log('HERE5');// end of block + <br><br> - cursor not moved
                     //console.log(partOne, partTwo);
@@ -7026,20 +7135,7 @@ MediumEditor.extensions = {};
                         baseNode.insertBefore(partThree, partTwo);
                         //console.log('HERE6');
                     }
-                }*/
-                baseNode.replaceChild(containerTwo, parentNode);
-                lastNode = partOne;
-                containerOne.appendChild(partOne);
-                for (let i = currentIndex - 1; i >=0; --i) {
-                    let currentNode = allChildNodes[i];
-                    containerOne.insertBefore(currentNode, lastNode);
-                    lastNode = currentNode;
                 }
-                baseNode.insertBefore(containerOne, containerTwo);
-                if (['LI'].indexOf(parentNode.nodeName) === -1 && partTwo) {
-                    baseNode.insertBefore(partTwo, containerTwo);
-                }
-                MediumEditor.selection.moveCursor(this.options.ownerDocument, containerTwo.firstChild ? containerTwo.firstChild : containerTwo, 0);
             }
             //return false;
 

@@ -148,12 +148,21 @@
                   <div class="par-ctrl-divider"></div>
 
                   <template v-if="allowVoiceworkShow()">
-                    <i class="fa fa-volume-off"></i>
                     <div class="par-ctrl-divider"></div>
                     <label>
                       <select :disabled="!allowEditing || proofreadModeReadOnly || !allowVoiceworkChange()? 'disabled' : false" v-model='voiceworkSel'>
                         <option v-for="(val, key) in blockVoiceworksSel" :value="key">{{ val }}</option>
                       </select>
+                    </label>
+                  </template>
+                  <template v-if="block.voicework === 'tts'">
+                    <div class="par-ctrl-divider"></div>
+                    <i class="fa fa-volume-up" title="Text to Speech"></i>
+                  </template>
+                  <template v-else-if="block.audio_quality && !['illustration', 'hr'].includes(block.type)">
+                    <div class="par-ctrl-divider"></div>
+                    <label :title="audioQualityTitle">
+                      <img :src="'/static/audio_quality/' + block.audio_quality + '-20.png'" />
                     </label>
                   </template>
 <!--                  <template v-else>-->
@@ -539,7 +548,7 @@
             <div class="block-html-header">{{blockHtmlHeader}}</div>
             <!-- <textarea :ref="'block-html' + block.blockid" :disabled="!adminOrLibrarian || isSplittedBlock" class="block-html"></textarea> -->
             <codemirror
-              :ref="'block-html' + block.blockid" 
+              :ref="'block-html' + block.blockid"
               :options="getCodeMirrorOptions()"
               :class="[{'-disabled': !adminOrLibrarian || isSplittedBlock}]"
             />
@@ -549,7 +558,7 @@
             <tab v-for="(blockPart, blockPartIdx) in blockParts" :header="(subBlockParnumComp ? subBlockParnumComp + '_' : '') + (blockPartIdx + 1)" v-bind:key="'part-' + blockPartIdx + '-html-content'">
               <!-- <textarea :ref="'block-part-' + blockPartIdx + '-html'" :disabled="!adminOrLibrarian" class="block-html"></textarea> -->
               <codemirror
-                :ref="'block-part-' + blockPartIdx + '-html'" 
+                :ref="'block-part-' + blockPartIdx + '-html'"
                 :options="getCodeMirrorOptions(blockPartIdx)"
                 :class="[{'-disabled': !adminOrLibrarian}]"
               />
@@ -735,30 +744,30 @@ export default {
       parnumComp: { cache: false,
       get: function () {
           if (this.blockO.type == 'header' && this.blockO.isNumber && !this.blockO.isHidden) {
-            return this.blockO.secnum;
+            return this.blockO.secnum.toString();
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber && !this.blockO.isHidden) {
-            return this.blockO.parnum;
+            return this.blockO.parnum.toString();
           }
           return '';
       }},
       parnumCompNotHidden: { cache: false,
       get: function () {
           if (this.blockO.type == 'header' && this.blockO.isNumber) {
-            return this.blockO.secnum;
+            return this.blockO.secnum.toString();
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber) {
-            return this.blockO.parnum;
+            return this.blockO.parnum.toString();
           }
           return '';
       }},
       subBlockParnumComp: {
         get: function() {
           if (this.blockO.type == 'header' && this.blockO.isNumber) {
-            return this.blockO.secnum;
+            return this.blockO.secnum.toString();
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber) {
-            return this.blockO.parnum;
+            return this.blockO.parnum.toString();
           }
           return '';
         },
@@ -918,7 +927,7 @@ export default {
             return true;
           }
           if (this.block && this.block.voicework === 'no_audio') {
-            return this.block.status.marked ? true : false;
+            return this.blockO.status.marked ? true : false;
           }
           let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
           return this.block.status.marked ||
@@ -1225,6 +1234,23 @@ export default {
           return p ? true : false;
         },
         cache: false
+      },
+      audioQualityTitle: {
+        get() {
+          switch (this.block.audio_quality) {
+            case 'raw':
+              return "Raw";
+              break;
+            case 'improved':
+              return "Improved";
+              break;
+            case 'mastered':
+              return "Mastered";
+              break;
+          }
+          return "";
+        },
+        cache: false
       }
   },
   mounted: function() {
@@ -1298,6 +1324,7 @@ export default {
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
 
       if (!this.block.language) this.block.language = this.meta.language;
+      this.$root.$on(`reload-audio-editor:${this.block.blockid}`, this.reloadAudioEditor);
 
 //       Vue.nextTick(() => {
 //
@@ -1357,6 +1384,7 @@ export default {
     this.destroyEditor();
     this.$root.$off('prepare-alignment', this._saveContent);
     this.$root.$off('from-styles:styles-change-' + this.block.blockid, this.setClasses);
+    this.$root.$off(`reload-audio-editor:${this.block.blockid}`, this.reloadAudioEditor);
   },
   methods: {
       ...mapActions([
@@ -1886,7 +1914,7 @@ Save audio changes and realign the Block?`,
               return rb.blockPartIdx === blkIdx;
             });
             if (ref) {
-              this.block.setPartContent(blkIdx, ref.clearBlockContent());
+              this.block.setPartContent(blkIdx, ref.clearBlockContent().replace(/<i class="pin"><\/i>/mg, ''));
             }
           });
           this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
@@ -2249,6 +2277,9 @@ Save audio changes and realign the Block?`,
             if (this.$refs && this.$refs.blocks[blockPartIdx]) {
               this.$refs.blocks[blockPartIdx].isSaving = false;
             }
+            if (this.block.parts[blockPartIdx]) {
+              this.block.parts[blockPartIdx].isSaving = false;
+            }
             return Promise.resolve(response);
           })
           .catch(err => {
@@ -2280,7 +2311,9 @@ Save audio changes and realign the Block?`,
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
-        this.block.content = this.clearBlockContent();
+        if (!this.block.getIsSplittedBlock()) {
+          this.block.content = this.clearBlockContent();
+        }
         let upd_block = Object.assign({}, this.block.clean());
         if (update_fields.length > 0) {
           Object.keys(upd_block).forEach(f => {
@@ -2935,7 +2968,7 @@ Save text changes and realign the Block?`,
           }
         });
         let pos = this.updFootnotes(this.block.footnotes.length + 1);
-        this.block.footnotes.splice(pos, 0, new FootNote({}));
+        this.block.addFootnote(pos);
         this.$forceUpdate();
         this.isChanged = true;
         let ref = this.$refs['footnoteContent_' + pos];
@@ -2947,6 +2980,7 @@ Save text changes and realign the Block?`,
           //this.destroyEditor();
           this.initFtnEditor(true);
         });
+        this.$store.commit('set_storeList', this.block);
       },
       delFootnote: function(pos, checkText = true) {
         if (checkText) {
@@ -4157,11 +4191,11 @@ Save text changes and realign the Block?`,
       },
       setHtml() {
         let content = this.block.content;
-        if (!this.block.getIsSplittedBlock()) {
+        if (!this.block.getIsSplittedBlock() && this.isChanged) {
           content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
         }
         //content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
-       
+
         this.$refs['block-html' + this.block.blockid].codemirror.doc.setValue(content);
         if (this.block.getIsSplittedBlock()) {
           this.block.parts.forEach((p, pIdx) => {
@@ -4169,7 +4203,7 @@ Save text changes and realign the Block?`,
               return r.blockPartIdx === pIdx;
             });
             if (ref) {
-              content = ref.$refs.blockContent.innerHTML;
+              content = p.isChanged ? ref.$refs.blockContent.innerHTML : p.content;
               this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.setValue(content/*.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1')*/);
             }
           });
@@ -4351,6 +4385,9 @@ Save text changes and realign the Block?`,
           }
           if (src) {
             this.blockAudio.src = this.block.getAudiosrc('m4a');
+            let storeBlock = this.storeListById(this.block.blockid);
+            this.block.audiosrc_original = storeBlock.audiosrc_original;
+            this.block.audio_quality = storeBlock.audio_quality;
           }
         }
       },
@@ -4530,7 +4567,7 @@ Save text changes and realign the Block?`,
           this.voiceworkUpdateType = 'single';
         }
       },
-      
+
       splitPointAdded() {
         this.pushChange('split_point');
       },
@@ -4585,10 +4622,18 @@ Save text changes and realign the Block?`,
               el.innerHTML = `=`;
             }
             return el;
-          }
+          },
+          maxHighlightLength: Infinity
         };
         //cmOptions.rtlMoveVisually = cmOptions.direction === 'rtl';
         return cmOptions;
+      },
+      reloadAudioEditor() {
+        if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx === null) {
+          this.refreshBlockAudio(!this.isChanged);
+          this.showAudioEditor();
+          this.$forceUpdate();
+        }
       }
   },
   watch: {
@@ -4737,7 +4782,7 @@ Save text changes and realign the Block?`,
           if (val === false) {
             this.flushChanges();
             Vue.nextTick(() => {
-              if (this.$refs.blocks) {
+              if (!this.isSplittedBlock && this.$refs.blocks) {
                 this.blockParts.forEach((part, partIdx) => {
                   this.$refs.blocks[partIdx].isChanged = false;
                 });
@@ -4745,7 +4790,7 @@ Save text changes and realign the Block?`,
             });
             this.recountVoicedBlocks();
           }
-          this.block.isChanged = val;
+          this.block.setChanged(val);
           this.recountApprovedInRange();
         }
       },
@@ -4889,7 +4934,7 @@ Save text changes and realign the Block?`,
       },
       'block.sync_changes': {// changes from syncronization
         handler(val) {
-          //console.log(val); 
+          //console.log(val);
           if (Array.isArray(val) && val.length > 0 && this.isChecked) {
             let recollect = val.some((el) => {
               return ['pause_before', 'classes'].indexOf(el) !== -1;
@@ -5441,7 +5486,7 @@ Save text changes and realign the Block?`,
             font-size: 18px;
         }
     }
-    i.fa-volume-off {
+    i.fa-volume-off, i.fa-volume-up {
         font-size: 27px;
         /*margin-right: 5px;*/
     }

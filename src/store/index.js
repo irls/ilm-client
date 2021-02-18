@@ -47,7 +47,7 @@ const authorsLangFarsi =
  husayn:   'حسین'
 };
 
-const audioTasksQueueRunSize = 5;
+const audioTasksQueueRunSize = 10;
 const localAudioTasks = ['manual_boundaries', 'unpin_right'];
 
 // const API_ALLBOOKS = '/static/books.json'
@@ -194,21 +194,21 @@ export const store = new Vuex.Store({
         ]
       }
     ],
-    bookDifficulties: [
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-      '7',
-      '8',
-      '9',
-      '10',
-      '11',
-      '12'
-    ],
-    bookDifficultyDefault:6,
+    // bookDifficulties: [
+    //   '1',
+    //   '2',
+    //   '3',
+    //   '4',
+    //   '5',
+    //   '6',
+    //   '7',
+    //   '8',
+    //   '9',
+    //   '10',
+    //   '11',
+    //   '12'
+    // ],
+    bookDifficultyDefault:'6',
     loadBookWait: null,
     loadBookTaskWait: null,
     jobInfoRequest: null,
@@ -235,7 +235,8 @@ export const store = new Vuex.Store({
         partIdx: null,
         checkId: null
       }
-    }
+    },
+    updateAudiobookProgress: false
   },
 
   getters: {
@@ -372,9 +373,12 @@ export const store = new Vuex.Store({
       if (!part) {
         let block = state.storeList.get(id);
         if (block) {
-          part = Array.isArray(block.parts) ? block.parts.find(p => {
-            return p.isUpdating;
-          }) : false;
+          part = block.isSaving || block.isUpdating;
+          if (!part) {
+            part = Array.isArray(block.parts) ? block.parts.find(p => {
+              return p.isUpdating || p.isSaving;
+            }) : false;
+          }
         }
       }
       return part ? true : false;
@@ -1039,6 +1043,9 @@ export const store = new Vuex.Store({
 
     set_taskBlockMapAllowNext(state, allow) {
       state.taskBlockMap.allowNext = allow;
+    },
+    set_updateAudiobookProgress(state, val) {
+      state.updateAudiobookProgress = val ? true : false;
     }
   },
 
@@ -1624,22 +1631,26 @@ export const store = new Vuex.Store({
         .then(response => {
           if (response.data["@class"] && response.status == 200) {
             //console.log('updateBookMeta @version', response.data['@version'], update);
-            state.currentBookMeta['@version'] = response.data['@version'];
             let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==update.bookid);
             if (bookMetaIdx > -1) {
               update['@version'] = response.data['@version'];
               state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], update);
             }
+            
+            let checkBookid = state.route.params.hasOwnProperty('bookid') ? state.route.params.bookid : state.currentBookid;
+            if (response.data.bookid === checkBookid) {// ILM-3773 very quickly switch-over to another book, check bookid in URL or in state property currentBookid
+              state.currentBookMeta['@version'] = response.data['@version'];
 
-            if (update['version'] && response.data.collection_id) {
-              dispatch('updateCollectionVersion', Object.assign({id: response.data.collection_id}, update));
+              if (update['version'] && response.data.collection_id) {
+                dispatch('updateCollectionVersion', Object.assign({id: response.data.collection_id}, update));
+              }
+
+              let allowPublish = state.adminOrLibrarian && state.currentJobInfo.workflow.status !== 'archived';
+              commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
+              commit('SET_CURRENTBOOK_META', response.data);
+              let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+              commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
             }
-
-            let allowPublish = state.adminOrLibrarian && state.currentJobInfo.workflow.status !== 'archived';
-            commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
-            commit('SET_CURRENTBOOK_META', response.data);
-            let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
-            commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
 
             return Promise.resolve(response.data);
           } else {
@@ -2008,25 +2019,6 @@ export const store = new Vuex.Store({
       }
       let isSplitting = update.block.content ? update.block.content.match(/<i class="pin"><\/i>/img) : [];
       isSplitting = isSplitting ? isSplitting.length : 0;
-
-      let checkSplit = new Promise((resolve, reject) => {// temporary solution, not allow split if any aligning task is running. Correct solution in develop in branch ilm-server 0.133-ILM-3110-align-part ; saving part id in block parts array
-        if (isSplitting) {
-          if (this.getters.isBlockOrPartLocked(block.blockid)) {
-            let checkAlign = setInterval(() => {
-              if (!this.getters.isBlockOrPartLocked(block.blockid)) {
-                clearInterval(checkAlign);
-                return resolve();
-              }
-            }, 1000);
-          } else {
-            return resolve();
-          }
-        } else {
-          return resolve();
-        }
-      });
-      return checkSplit
-        .then(() => {
       return axios.put(url, update)
         .then((response) => {
 
@@ -2073,7 +2065,6 @@ export const store = new Vuex.Store({
           dispatch('checkError', err);
           return Promise.reject(err);
         });
-      });
     },
 
     putNumBlock ({commit, state, dispatch}, block) {
@@ -2651,7 +2642,7 @@ export const store = new Vuex.Store({
                       //blockStore.content+=' realigned';
                       checks.push(dispatch('getBlock', b._id)
                         .then(block => {
-                          if (Array.isArray(blockStore.parts) && blockStore.parts.length !== block.parts.length && b.partIdx !== null) {
+                          if (Array.isArray(blockStore.parts) && block && Array.isArray(block.parts) && blockStore.parts.length !== block.parts.length && b.partIdx !== null) {
                             let addedSubblocks = block.parts.length - blockStore.parts.length;
                             blockStore.parts.forEach((p, pIdx) => {
                               if (pIdx < b.partIdx && (p.isChanged || p.isAudioChanged)) {
@@ -2661,7 +2652,21 @@ export const store = new Vuex.Store({
                               }
                             });
                           }
+                          if (blockStore.isChanged) {
+
+                            if (Array.isArray(blockStore.footnotes) && Array.isArray(block.footnotes) && blockStore.footnotes.length !== block.footnotes.length) {
+                              block.footnotes = blockStore.footnotes;
+                            }
+                          }
                           if (Array.isArray(block.parts) && Array.isArray(blockStore.parts) && block.parts.length === blockStore.parts.length) {
+                            let hasChangedPart = blockStore.parts.find(p => {
+                              return p.isChanged;
+                            });
+                            if (hasChangedPart) {
+                              if (Array.isArray(blockStore.flags) && Array.isArray(block.flags) && blockStore.flags.length !== block.flags.length) {
+                                block.flags = blockStore.flags;
+                              }
+                            }
                             blockStore.parts.forEach((p, i) => {
                               if (p.inid) {
                                 block.parts[i].inid = p.inid;
@@ -2736,6 +2741,14 @@ export const store = new Vuex.Store({
     },
 
     getAudioBook ({state, commit, dispatch}, {bookid = false, watchId = false, repeat = false}={}) {
+      if (state.updateAudiobookProgress) {
+        if (repeat && watchId === state.currentBookid) {
+            setTimeout(() => {
+              dispatch('getAudioBook', {bookid: bookid, watchId: watchId, repeat: repeat})
+            }, repeat);
+        }
+        return Promise.resolve();
+      }
       //console.log('getAudioBook', bookid, state.currentBookid, watchId);
       if (!bookid) {
         bookid = state.currentBookid;
@@ -2748,35 +2761,36 @@ export const store = new Vuex.Store({
         let request = axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
           .then(audio => {
             if (audio.data) {
-              if (set) {
+              if (set && !state.updateAudiobookProgress) {
                 commit('set_currentAudiobook', audio.data);
               }
-              return audio.data;
+              return Promise.resolve(audio.data);
             } else {
-              if (set) {
-                commit('set_currentAudiobook', {});
-              }
-              return {};
+              return Promise.resolve({});
             }
           })
           .catch(error => {
-            if (set) {
-              commit('set_currentAudiobook', {});
-            }
-            return {};
+            return Promise.resolve({});
           });
         return Promise.all([request, counters])
         .then((answer)=>{
-          //console.log('answer', answer);
-          if (repeat) {
-            if (watchId === state.currentBookid) {
-              setTimeout(function() {
-                dispatch('getAudioBook', {bookid: bookid, watchId: watchId, repeat: repeat})
-              }, repeat)
+            //console.log('answer', answer);
+            if (repeat) {
+              if (watchId === state.currentBookid) {
+                setTimeout(() => {
+                  dispatch('getAudioBook', {bookid: bookid, watchId: watchId, repeat: repeat})
+                }, repeat)
+              }
             }
-          }
-          return answer[0]
+            return Promise.resolve(answer[0]);
         })
+        .catch(err => {
+          if (repeat && watchId === state.currentBookid) {
+            setTimeout(() => {
+              dispatch('getAudioBook', {bookid: bookid, watchId: watchId, repeat: repeat})
+            }, repeat)
+          }
+        });
       } return {};
     },
 
@@ -3213,25 +3227,6 @@ export const store = new Vuex.Store({
       let isSplitting = update.content ? update.content.match(/<i class="pin"><\/i>/img) : [];
       isSplitting = isSplitting ? isSplitting.length : 0;
 
-      let checkSplit = new Promise((resolve, reject) => {// temporary solution, not allow split if any aligning task is running. Correct solution in develop in branch ilm-server 0.133-ILM-3110-align-part ; saving part id in block parts array
-        if (isSplitting) {
-          let blk = state.storeListO.getBlockByRid(id);
-          if (this.getters.isBlockOrPartLocked(blk.blockid)) {
-            let checkAlign = setInterval(() => {
-              if (!this.getters.isBlockOrPartLocked(blk.blockid)) {
-                clearInterval(checkAlign);
-                return resolve();
-              }
-            }, 1000);
-          } else {
-            return resolve();
-          }
-        } else {
-          return resolve();
-        }
-      });
-      return checkSplit
-        .then(() => {
       return axios.put(state.API_URL + url, update)
         .then((response) => {
           let storeBlock = state.storeList.get(response.data.blockid);
@@ -3268,7 +3263,6 @@ export const store = new Vuex.Store({
             .then(() => {
               return Promise.resolve(response.data);
             });
-        });
         });
     },
     getProcessQueue({state, dispatch, commit}) {
@@ -3666,23 +3660,19 @@ export const store = new Vuex.Store({
       }
       return axios.post(api_url, data, {})
         .then(response => {
-          //return Promise.resolve(response);
-          if (realign) {
-            dispatch('getBookAlign')
-              .then(() => {
-                if (block.getIsSplittedBlock()) {
-                  block.parts[alignBlock.partIdx].isSaving = false;
-                } else {
-                  block.isSaving = false;
-                }
-              });
-          } else {
-            if (block.getIsSplittedBlock()) {
-              block.parts[alignBlock.partIdx].isSaving = false;
+          return new Promise((resolve, reject) => {
+            if (realign) {
+              return dispatch('getBookAlign')
+                .then(() => {
+                  return resolve(response);
+                });
             } else {
-              block.isSaving = false;
+              return resolve(response);
             }
-          }
+          });
+        })
+        .then(response => {
+          //return Promise.resolve(response);
           dispatch('getCurrentJobInfo');
           if (response.status == 200) {
             if (block.getIsSplittedBlock()) {
@@ -3827,6 +3817,33 @@ export const store = new Vuex.Store({
 
           });
       }
+    },
+    updateAudiobook({state, commit, dispatch}, [id, data]) {
+      let url = `${state.API_URL}books/${state.currentBookid}/audiobooks/chunks`;
+      if (id) {
+        url+= `/${encodeURIComponent(id)}`;
+      }
+      commit('set_updateAudiobookProgress', true);
+      return axios.post(url, data, {})
+        .then(response => {
+          commit('set_updateAudiobookProgress', false);
+          if (response && response.data && response.data.audio && response.data.audio.id) {
+            commit('set_currentAudiobook', response.data.audio);
+            axios.put(`${state.API_URL}task/${state.currentBookid}/audio_imported`, {})
+              .then((link_response) => {
+                //vm.closeForm(response)
+                dispatch('tc_loadBookTask', state.currentBookid);
+              })
+              .catch((err) => {
+                //vm.closeForm(response)
+              })
+          }
+          
+          return Promise.resolve(response);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })
