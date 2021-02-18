@@ -927,7 +927,7 @@ export default {
             return true;
           }
           if (this.block && this.block.voicework === 'no_audio') {
-            return this.block.status.marked ? true : false;
+            return this.blockO.status.marked ? true : false;
           }
           let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
           return this.block.status.marked ||
@@ -1324,6 +1324,7 @@ export default {
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
 
       if (!this.block.language) this.block.language = this.meta.language;
+      this.$root.$on(`reload-audio-editor:${this.block.blockid}`, this.reloadAudioEditor);
 
 //       Vue.nextTick(() => {
 //
@@ -1383,6 +1384,7 @@ export default {
     this.destroyEditor();
     this.$root.$off('prepare-alignment', this._saveContent);
     this.$root.$off('from-styles:styles-change-' + this.block.blockid, this.setClasses);
+    this.$root.$off(`reload-audio-editor:${this.block.blockid}`, this.reloadAudioEditor);
   },
   methods: {
       ...mapActions([
@@ -4383,6 +4385,9 @@ Save text changes and realign the Block?`,
           }
           if (src) {
             this.blockAudio.src = this.block.getAudiosrc('m4a');
+            let storeBlock = this.storeListById(this.block.blockid);
+            this.block.audiosrc_original = storeBlock.audiosrc_original;
+            this.block.audio_quality = storeBlock.audio_quality;
           }
         }
       },
@@ -4622,6 +4627,13 @@ Save text changes and realign the Block?`,
         };
         //cmOptions.rtlMoveVisually = cmOptions.direction === 'rtl';
         return cmOptions;
+      },
+      reloadAudioEditor() {
+        if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx === null) {
+          this.refreshBlockAudio(!this.isChanged);
+          this.showAudioEditor();
+          this.$forceUpdate();
+        }
       }
   },
   watch: {
