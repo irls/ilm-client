@@ -236,7 +236,8 @@ export const store = new Vuex.Store({
         checkId: null
       }
     },
-    updateAudiobookProgress: false
+    updateAudiobookProgress: false,
+    coupletSeparator: '',
   },
 
   getters: {
@@ -507,6 +508,9 @@ export const store = new Vuex.Store({
         return blk ? true : false;
       }
       return false;
+    },
+    coupletSeparator: state => {
+      return state.coupletSeparator;
     }
   },
 
@@ -1046,6 +1050,9 @@ export const store = new Vuex.Store({
     },
     set_updateAudiobookProgress(state, val) {
       state.updateAudiobookProgress = val ? true : false;
+    },
+    set_couplet_separator(state, val) {
+      state.coupletSeparator = val;
     }
   },
 
@@ -1166,6 +1173,7 @@ export const store = new Vuex.Store({
           dispatch('getConfig', 'custom')
             .then(config => {
               state.allowBookSplitPreview = config && config.book_split_preview_users && config.book_split_preview_users.indexOf(state.auth.getSession().user_id) !== -1;
+              commit('set_couplet_separator', config.couplet_separator);
             })
     },
 

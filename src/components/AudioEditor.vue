@@ -1951,7 +1951,7 @@ Discard unsaved audio changes?`,
             if (currentLength < match.index) {
               word = text.substr(currentLength, match.index - currentLength) + word;
             }
-            word = unescape(word.replace(/<[^>]+?>/img, ''));
+            word = unescape(word.replace(/<[^>]+?>/img, '')).replace(this.coupletSeparator, '');
             currentLength = match.index + match[0].length;
             let map = match[1] && match[1].indexOf(',') !== -1 ? match[1].split(',') : [0, 0]
             map[0] = this._round(parseInt(map[0]) / 1000, 2);
@@ -2761,7 +2761,8 @@ Revert to original block audio?`,
           storeListO: 'storeListO',
           audioTasksQueue: 'audioTasksQueue', 
           audioTasksQueueBlock: 'audioTasksQueueBlock',
-          audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart'})
+          audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
+          coupletSeparator: 'coupletSeparator'})
       },
       watch: {
         'cursorPosition': {
