@@ -507,6 +507,12 @@ export const store = new Vuex.Store({
         return blk ? true : false;
       }
       return false;
+    },
+    audioEditorLockedSimultaneous: state => {
+      return 'Save or discard text modifications before editing the audio';
+    },
+    blockLockedSimultaneous: state => {
+      return 'Save or discard audio modifications before editing the block';
     }
   },
 
@@ -2098,7 +2104,7 @@ export const store = new Vuex.Store({
           });
     },
 
-    putBlockPart ({commit, state, dispatch}, [update, realign]) {
+    putBlockPart ({commit, state, dispatch}, [update, realign, keep_block = false]) {
       let cleanBlock = Object.assign({}, update);
       delete cleanBlock.parnum;
       delete cleanBlock.secnum;
@@ -2122,7 +2128,9 @@ export const store = new Vuex.Store({
             state.storeListO.updBlockByRid(response.data.id, {
               status: response.data.status
             });
-            commit('set_storeList', new BookBlock(response.data));
+            if (!keep_block) {
+              commit('set_storeList', new BookBlock(response.data));
+            }
             return Promise.resolve(response.data);
           })
           .catch(err => {
@@ -3462,7 +3470,7 @@ export const store = new Vuex.Store({
         });
     },
     setAudioTasksBlockId({state, dispatch}, [blockId, checkId, partIdx]) {
-      if (blockId !== state.audioTasksQueue.block.blockId) {
+      if (blockId !== state.audioTasksQueue.block.blockId || partIdx !== state.audioTasksQueue.block.partIdx) {
         dispatch('clearAudioTasks', true);
         state.audioTasksQueue.running = null;
         state.audioTasksQueue.block.blockId = blockId;
