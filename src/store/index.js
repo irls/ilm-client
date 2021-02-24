@@ -1268,8 +1268,28 @@ export const store = new Vuex.Store({
       }
       if (bookid) {
         state.liveDB.startWatch(bookid + '-blockV', 'blockV', {bookid: bookid}, (data) => {
-          if (data && data.block) {
-            //state.storeListO.delBlock(data.block);
+          if (data) {
+            dispatch('updateBlocksByLiveDB', data);
+          }
+        });
+        state.liveDB.startWatch(bookid + '-task', 'task', {bookid: bookid}, (data) => {
+          //console.log('task', data);
+          if (data.task && (data.action == 'change' || data.action == 'delete')) {
+            dispatch('tc_loadBookTask', state.currentBookid);
+          }
+        });
+      }
+    },
+
+    updateBlocksByLiveDB({commit, state, dispatch}, blocksArr) {
+      if (!Array.isArray(blocksArr)) {
+        blocksArr = [blocksArr];
+      }
+
+      blocksArr.forEach((data, idx)=>{
+        //console.log('blockV', data);
+        if (data && data.block) {
+          //state.storeListO.delBlock(data.block);
 
             let blockStore = state.storeList.get(data.block.blockid);
             if (data.block.blockid
@@ -1277,35 +1297,36 @@ export const store = new Vuex.Store({
               && state.audioTasksQueue.block.blockId === data.block.blockid
               && state.audioTasksQueue.block.partIdx !== null) {
 
-              if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
-                blockStore.parts.forEach((p, i) => {
-                  if (p.isAudioChanged) {
-                    data.block.parts[i] = p;
-                  }
-                });
-                let hasChanges = blockStore.parts.find(p => {
-                  return p.isChanged;
-                });
-                if (hasChanges) {
-                  if (Array.isArray(blockStore.flags)) {
-                    data.block.flags = blockStore.flags;// do not update flags for edited block
-                  }
+            if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
+              blockStore.parts.forEach((p, i) => {
+                if (p.isAudioChanged) {
+                  data.block.parts[i] = p;
+                }
+              });
+              let hasChanges = blockStore.parts.find(p => {
+                return p.isChanged;
+              });
+              if (hasChanges) {
+                if (Array.isArray(blockStore.flags)) {
+                  data.block.flags = blockStore.flags;// do not update flags for edited block
                 }
               }
             }
-            if (data.action === 'create' && data.block) {
-              if (!state.storeListO.get(data.block.id)) {
-                state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
+          }
+          if (data.action === 'create' && data.block) {
+            if (!state.storeListO.get(data.block.id)) {
+              state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
+            }
+          } else if (data.action === 'change' && data.block) {
+            let blockStore = state.storeList.get(data.block.blockid);
+            if (blockStore) {
+              let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
+                return p.isChanged;
+              }) : false;
+              if (blockStore.isSaving || hasChangedPart) {
+                //console.log('isSaving hasChangedPart');
+                return;
               }
-            } else if (data.action === 'change' && data.block) {
-              if (blockStore) {
-                let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
-                  return p.isChanged;
-                }) : false;
-                if (blockStore.isSaving || hasChangedPart) {
-                  //console.log('isSaving hasChangedPart');
-                  return;
-                }
                 let changes = [];// collect changes
                 ['classes', 'pause_before']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
                   if (blockStore.hasOwnProperty(k) && !_.isEqual(blockStore[k], data.block[k])) {
@@ -1317,11 +1338,11 @@ export const store = new Vuex.Store({
                   state.storeListO.updBlockByRid(data.block.id, data.block);
                 }
               }
-            } else if (data.action === 'delete') {
-              state.storeListO.delExistsBlock(data.block['@rid'])
-            }
+          } else if (data.action === 'delete') {
+            state.storeListO.delExistsBlock(data.block['@rid'])
+          }
 
-            if (data.block && data.block.blockid && state.storeList.has(data.block.blockid)) {
+          if (data.block && data.block.blockid && state.storeList.has(data.block.blockid)) {
               if (new Date(blockStore.updated) < new Date(data.block.updated)) {
                 let block = state.storeList.get(data.block.blockid);
                 if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
@@ -1346,21 +1367,14 @@ export const store = new Vuex.Store({
                   store.commit('set_storeList', new BookBlock(data.block));
                 }
               }
-            } else if (data.block && data.block.blockid) {
-              store.commit('set_storeList', new BookBlock(data.block));
-            }
-            state.storeListO.refresh();
-            state.blockSelection.refresh = !state.blockSelection.refresh;
-            //dispatch('tc_loadBookTask', state.currentBookid);
+          } else if (data.block && data.block.blockid) {
+            store.commit('set_storeList', new BookBlock(data.block));
           }
-        });
-        state.liveDB.startWatch(bookid + '-task', 'task', {bookid: bookid}, (data) => {
-          //console.log('task', data);
-          if (data.task && (data.action == 'change' || data.action == 'delete')) {
-            dispatch('tc_loadBookTask', state.currentBookid);
+          state.storeListO.refresh();
+          state.blockSelection.refresh = !state.blockSelection.refresh;
+          //dispatch('tc_loadBookTask', state.currentBookid);
           }
-        });
-      }
+      })
     },
 
     loadPartOfBookBlocks({commit, state, dispatch}, params) {
