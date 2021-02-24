@@ -1305,7 +1305,7 @@ export default {
       this.initEditor();
       this.addContentListeners();
 
-      this.$root.$on('block-state-refresh-' + this.block._id, this.$forceUpdate);
+      this.$root.$on(`block-state-refresh-${this.block.blockid}`, this.blockStateRefresh);
       this.$root.$on('saved-block:' + this.block._id, () => {
         this.isChanged = false;
         this.isAudioChanged = false;
@@ -1335,7 +1335,7 @@ export default {
 //     console.log('this.isChanged', this.isChanged);
     this.audioEditorEventsOff();
 
-    this.$root.$off('block-state-refresh-' + this.block._id, this.$forceUpdate);
+    this.$root.$off(`block-state-refresh-${this.block.blockid}`, this.blockStateRefresh);
 
     if (this.check_id) {
       this.block.check_id = this.check_id;
@@ -2012,6 +2012,9 @@ Save audio changes and realign the Block?`,
                     fullUpdate = true;
                     partUpdate.content = this.block.content;
                     partUpdate.manual_boundaries = this.block.manual_boundaries || [];
+                    if (this.block.hasClass('whitespace', 'couplet')) {
+                      partUpdate.classes = this.block.classes;
+                    }
                     break;
                   case 'footnotes':
                     fullUpdate = true;
@@ -2131,6 +2134,7 @@ Save audio changes and realign the Block?`,
             this.getCurrentJobInfo();
           }
           this.isChanged = false;
+          this.block.setContent(this.storeListById(this.block.blockid).getContent());// content not reloaded automatically, but reload can be necessary because it was modified on server
           if (this.blockAudio.map) {
             this.blockAudio.map = this.block.content;
           }
@@ -4634,6 +4638,12 @@ Save text changes and realign the Block?`,
           this.showAudioEditor();
           this.$forceUpdate();
         }
+      },
+      blockStateRefresh() {
+        if (!this.isChanged && !this.hasChangedPart) {
+          this.block.setContent(this.storeListById(this.block.blockid).getContent());
+        }
+        this.$forceUpdate();
       }
   },
   watch: {

@@ -902,6 +902,10 @@ class BookBlock {
     if (typeof val !== 'undefined') this.classes[classVal] = val;
     if (val === '') delete this.classes[classVal];
   }
+  
+  hasClass(type, val) {
+    return this.classes instanceof Object && this.classes[type] && this.classes[type] === val;
+  }
 
   set(field, value) {
     if (!this.history[field]) {
@@ -1001,6 +1005,9 @@ class BookBlock {
   }
   setChanged(val) {
     this.isChanged = val;
+  }
+  getContent() {
+    return this.content;
   }
 }
 
