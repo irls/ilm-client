@@ -1325,11 +1325,12 @@ export const store = new Vuex.Store({
           } else if (data.block && data.block.blockid) {
             store.commit('set_storeList', new BookBlock(data.block));
           }
-          state.storeListO.refresh();
-          state.blockSelection.refresh = !state.blockSelection.refresh;
           //dispatch('tc_loadBookTask', state.currentBookid);
-          }
+        }
       })
+
+      state.storeListO.refresh();
+      state.blockSelection.refresh = !state.blockSelection.refresh;
     },
 
     loadPartOfBookBlocks({commit, state, dispatch}, params) {

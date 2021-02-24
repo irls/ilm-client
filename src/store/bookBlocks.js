@@ -537,6 +537,9 @@ class BookBlocks {
       this.listIdsCache.rid = false;
     }
     if (block.in == this.meta.rid) {
+      if (!this.lookupList[block.out]) {
+        return false;
+      }
       return this.lookupList[block.out].blockid;
     }
 //     if (block.out == this.meta.rid) {
@@ -557,7 +560,7 @@ class BookBlocks {
 
   delExistsBlock(rid) {
     if (this.lookupList.hasOwnProperty(rid)) {
-      console.log('delExistsBlock', this.lookupList[rid]);
+      //console.log('delExistsBlock', this.lookupList[rid]);
       let block = this.lookupList[rid];
       this.delBlock(block);
     }
