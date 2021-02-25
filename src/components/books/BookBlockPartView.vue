@@ -2684,7 +2684,15 @@ export default {
         this.footnoteIdx = footnoteIdx;
         this.check_id = this.generateAudioCheckId();
         this.audioEditorEventsOff();
-        this.$root.$emit('for-audioeditor:lock-editing', this.isChanged, this.audioEditorLockedSimultaneous);
+        let isChanged = this.isChanged;
+        if (!isChanged) {
+          if (this.block.getIsSplittedBlock()) {
+            isChanged = this.block.parts[this.blockPartIdx] ? this.block.parts[this.blockPartIdx].footnote_added : false;
+          } else {
+            isChanged = this.$parent.isChanged;
+          }
+        }
+        this.$root.$emit('for-audioeditor:lock-editing', isChanged, this.audioEditorLockedSimultaneous);
 
 
         Vue.nextTick(() => {

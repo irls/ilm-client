@@ -140,7 +140,7 @@
 
                   <!-- Block Type selector -->
                   <label>
-                    <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)">
+                    <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)" class="block-type-select">
                       <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
                     </select>
                   </label>
@@ -4339,6 +4339,14 @@ Save text changes and realign the Block?`,
           this.recountApprovedInRange();
           if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx === null) {
             this.$root.$emit('for-audioeditor:lock-editing', val, this.audioEditorLockedSimultaneous);
+          } else if (this.audioTasksQueue.block.blockId === this.block.blockid && this.blockPartIdx !== null) {
+            if (val) {
+              if (this.block.parts[this.audioTasksQueue.block.partIdx] && this.block.parts[this.audioTasksQueue.block.partIdx].footnote_added) {
+                this.$root.$emit('for-audioeditor:lock-editing', val, this.audioEditorLockedSimultaneous);
+              }
+            } else {
+              this.$root.$emit('for-audioeditor:lock-editing', this.block.parts[this.audioTasksQueue.block.partIdx].isChanged, this.audioEditorLockedSimultaneous);
+            }
           }
         }
       },
