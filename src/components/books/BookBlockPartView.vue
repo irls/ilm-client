@@ -924,7 +924,7 @@ export default {
 
       //this.voiceworkSel = this.block.voicework;
       if (Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
-        this.isChanged = this.block.parts[this.blockPartIdx].isChanged;
+        this.isChanged = this.block.parts[this.blockPartIdx].isChanged || false;
         this.isAudioChanged = this.block.parts[this.blockPartIdx].isAudioChanged;
         this.isIllustrationChanged = this.block.parts[this.blockPartIdx].isIllustrationChanged;
         if (this.block.parts[this.blockPartIdx].changes) {
@@ -2684,14 +2684,7 @@ export default {
         this.footnoteIdx = footnoteIdx;
         this.check_id = this.generateAudioCheckId();
         this.audioEditorEventsOff();
-        let isChanged = this.isChanged;
-        if (!isChanged) {
-          if (this.block.getIsSplittedBlock()) {
-            isChanged = this.block.parts[this.blockPartIdx] ? this.block.parts[this.blockPartIdx].footnote_added : false;
-          } else {
-            isChanged = this.$parent.isChanged;
-          }
-        }
+        let isChanged = this.isChanged || this.$parent.isChanged;
         this.$root.$emit('for-audioeditor:lock-editing', isChanged, this.audioEditorLockedSimultaneous);
 
 

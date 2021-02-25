@@ -4337,7 +4337,7 @@ Save text changes and realign the Block?`,
           }
           this.block.isChanged = val;
           this.recountApprovedInRange();
-          if (this.audioTasksQueue.block.blockId === this.block.blockid && this.audioTasksQueue.block.partIdx === null) {
+          if (this.audioTasksQueue.block.blockId === this.block.blockid && (this.audioTasksQueue.block.partIdx === null || val)) {
             this.$root.$emit('for-audioeditor:lock-editing', val, this.audioEditorLockedSimultaneous);
           } else if (this.audioTasksQueue.block.blockId === this.block.blockid && this.blockPartIdx !== null) {
             if (val) {
