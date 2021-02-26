@@ -796,7 +796,8 @@ export default {
           blockLockType: 'blockLockType',
           audioTasksQueue: 'audioTasksQueue',
           checkRunningAudioTask: 'checkRunningAudioTask',
-          isBlockOrPartLocked: 'isBlockOrPartLocked'
+          isBlockOrPartLocked: 'isBlockOrPartLocked',
+          storeListById: 'storeListById'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -1607,6 +1608,15 @@ Save audio changes and realign the Block?`,
             return saveBlockPromise
               .then((response) => {
                 this.isChanged = false;
+                if (response && Array.isArray(response.parts)) {
+                  let storeBlock = this.storeListById(this.block.blockid);
+                  response.parts.forEach((part, pIdx) => {
+                    this.block.setPartContent(pIdx, storeBlock.getPartContent(pIdx));// content not reloaded automatically, but reload can be necessary because it was modified on server
+                    if (pIdx === this.blockPartIdx) {
+                      this.blockPart.content = storeBlock.getPartContent(pIdx);
+                    }
+                  });
+                }
                 if (this.blockAudio.map) {
                   this.blockAudio.map = this.blockPart.content;
                 }
@@ -3655,8 +3665,16 @@ Save text changes and realign the Block?`,
               checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
               let checkString = checkRange.toString();
               if (/^\s$/.test(checkString.substring(checkString.length - 1, checkString.length))) {
-                while (checkRange.endOffset < container.length && /^\s$/.test(container.data.substring(checkRange.endOffset, checkRange.endOffset + 1))) {// add all speces till container end to range
+                while (checkRange.endOffset < container.length && /^\s$/.test(container.data.substring(checkRange.endOffset, checkRange.endOffset + 1))) {// add all spaces till container end to range
                   checkRange.setEnd( container, checkRange.endOffset+1 );
+                }
+              }
+              if (this.block.hasClass('whitespace', ['verse', 'list', 'couplet'])) {
+                regexp = /[\r\n]$/;// check for line end with line break
+                if (container.parentElement && container.parentElement.nodeName === 'W' && container.length === checkRange.endOffset && !regexp.test(checkRange.toString())) {// for wrapped word check that next element is line break
+                  if (container.parentElement.nextSibling && container.parentElement.nextSibling.nodeType === 3 && regexp.test(container.parentElement.nextSibling.nodeValue) && container.parentElement.nextElementSibling) {
+                    regexp = /.*$/;
+                  }
                 }
               }
             } else {// Mac OS right mouse click selects psrt of the text

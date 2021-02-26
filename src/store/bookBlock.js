@@ -904,7 +904,11 @@ class BookBlock {
   }
   
   hasClass(type, val) {
-    return this.classes instanceof Object && this.classes[type] && this.classes[type] === val;
+    if (!Array.isArray(val)) {
+      return this.classes instanceof Object && this.classes[type] && this.classes[type] === val;
+    } else {
+      return this.classes instanceof Object && val.includes(this.classes[type]);
+    }
   }
 
   set(field, value) {
