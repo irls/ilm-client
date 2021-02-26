@@ -1320,10 +1320,10 @@ export const store = new Vuex.Store({
           } else if (data.action === 'change' && data.block) {
             let blockStore = state.storeList.get(data.block.blockid);
             if (blockStore) {
-              let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
+              /*let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
                 return p.isChanged;
-              }) : false;
-              if (blockStore.isSaving || hasChangedPart) {
+              }) : false;*/
+              if (blockStore.isSaving || blockStore.getIsChanged() || blockStore.getIsAudioChanged()) {
                 //console.log('isSaving hasChangedPart');
                 return;
               }
