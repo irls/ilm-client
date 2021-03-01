@@ -175,12 +175,12 @@
 
 
                     <a href="#" class="flag-control -right -top"
-                      v-if="_is('proofer', true) && part.status == 'resolved' && !isCompleted"
+                      v-if="_is('proofer', true) && part.status == 'resolved' && !isCompleted && !editingLocked"
                       @click.prevent="hideFlagPart($event, partIdx)">
                       Archive flag</a>
 
                     <a href="#" class="flag-control -right -top"
-                      v-if="_is('proofer', true) && part.status == 'hidden' && (!isCompleted || isProofreadUnassigned())"
+                      v-if="_is('proofer', true) && part.status == 'hidden' && (!isCompleted || isProofreadUnassigned()) && !editingLocked"
                       @click.prevent="unHideFlagPart($event, partIdx)">
                       Unarchive flag</a>
 
