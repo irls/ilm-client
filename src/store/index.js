@@ -1961,6 +1961,7 @@ export const store = new Vuex.Store({
           'block': cleanBlock,
         })
           .then(response => {
+            console.log('putBlock', response);
             commit('clear_blocker', 'putBlock');
             block._rev = response.data.rev;
             dispatch('tc_loadBookTask', block.bookid);
@@ -1970,9 +1971,17 @@ export const store = new Vuex.Store({
                   dispatch('updateBookVersion', {major: true});
                 }
               });
-            state.storeListO.updBlockByRid(response.data.id, {
-              status: response.data.status
-            });
+
+            //TODO in future call common method from live_db update
+            if (response.data && response.data.blockid && state.storeList.has(response.data.blockid)) {
+              let oldBlock = state.storeList.get(response.data.blockid);
+              oldBlock.content = response.data.content;
+              store.commit('set_storeList', oldBlock);
+            } else {
+              state.storeListO.updBlockByRid(response.data.id, {
+                status: response.data.status
+              });
+            }
             return Promise.resolve(response.data);
           })
           .catch(err => {
@@ -2140,6 +2149,7 @@ export const store = new Vuex.Store({
           'block': cleanBlock,
         })
           .then(response => {
+            console.log('putBlockPart', response);
             commit('clear_blocker', 'putBlock');
             dispatch('getCurrentJobInfo');
             dispatch('tc_loadBookTask', response.data.bookid);
