@@ -3669,7 +3669,7 @@ Save text changes and realign the Block?`,
                   checkRange.setEnd( container, checkRange.endOffset+1 );
                 }
               }
-              if (this.block.hasClass('whitespace', ['verse', 'list', 'couplet'])) {
+              if (this.block.hasClass('whitespace', ['couplet'])) {
                 regexp = /[\r\n]$/;// check for line end with line break
                 if (container.parentElement && container.parentElement.nodeName === 'W' && container.length === checkRange.endOffset && !regexp.test(checkRange.toString())) {// for wrapped word check that next element is line break
                   if (container.parentElement.nextSibling && container.parentElement.nextSibling.nodeType === 3 && regexp.test(container.parentElement.nextSibling.nodeValue) && container.parentElement.nextElementSibling) {
