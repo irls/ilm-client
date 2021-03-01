@@ -284,12 +284,12 @@
 
 
                 <a href="#" class="flag-control -right -top"
-                  v-if="_is('proofer', true) && part.status == 'resolved' && !isCompleted"
+                  v-if="_is('proofer', true) && part.status == 'resolved' && !isCompleted && !editingLocked"
                   @click.prevent="hideFlagPart($event, partIdx)">
                   Archive flag</a>
 
                 <a href="#" class="flag-control -right -top"
-                  v-if="_is('proofer', true) && part.status == 'hidden' && (!isCompleted || isProofreadUnassigned())"
+                  v-if="_is('proofer', true) && part.status == 'hidden' && (!isCompleted || isProofreadUnassigned()) && !editingLocked"
                   @click.prevent="unHideFlagPart($event, partIdx)">
                   Unarchive flag</a>
 
@@ -1444,6 +1444,9 @@ export default {
         return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
       },
       isCanReopen(flag, partIdx) {
+        if (this.editingLocked) {
+          return false;
+        }
         if (typeof flag !== 'undefined' && typeof partIdx !== 'undefined') {
           let part = flag.parts && flag.parts[partIdx] ? flag.parts[partIdx] : false;
           if (part) {
