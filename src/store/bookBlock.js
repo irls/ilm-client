@@ -134,7 +134,7 @@ let BlockTypes = {
       'underline' /*, 'rulebelow', 'bookgraphic'*/
     ],
     align: ['', 'left', 'center', 'right', 'justify'],
-    whitespace: ['', 'list', 'verse', 'pre', 'couplet'],
+    whitespace: ['', 'list', 'verse', 'couplet'],
     author: [
       '',
       'bab',
