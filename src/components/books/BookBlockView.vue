@@ -528,7 +528,7 @@
         <tabs ref="htmlContentTabs">
           <tab :header="parnumCompNotHidden || '0'">
             <div class="modal-title-wrapper">
-              <h4>Block ID:&nbsp;{{shortBlockid}}</h4>
+              <h4>Block ID:&nbsp;{{shortBlockid}}; &nbsp;&nbsp;&nbsp;wordsRange:&nbsp;{{wordsRange}};</h4>
               <h4>
                 <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Audio URL</a>
               </h4>
@@ -1070,6 +1070,12 @@ export default {
         get() {
           let split = (this.block.blockid).split(/-|_/);
           return (split.length > 1) ? split.pop() : this.block.blockid;
+        }
+      },
+      wordsRange: {
+        cache: true,
+        get() {
+          return JSON.stringify(this.block.wordsRange);
         }
       },
       ...mapGetters({
