@@ -3274,10 +3274,15 @@ export const store = new Vuex.Store({
             });
           }
           commit('set_storeList', new BookBlock(response.data));
-          return Promise.all([dispatch('getBookAlign'), dispatch('getCurrentJobInfo')])
-            .then(() => {
-              return Promise.resolve(response.data);
-            });
+          state.storeListO.refresh();
+          return Promise.all([
+            dispatch('getBookAlign'),
+            dispatch('getCurrentJobInfo'),
+            dispatch('tc_loadBookTask', state.currentBookMeta.bookid)
+          ])
+          .then(() => {
+            return Promise.resolve(response.data);
+          });
         });
         });
     },
