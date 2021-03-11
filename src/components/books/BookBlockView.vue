@@ -1406,7 +1406,8 @@ export default {
         'addAudioTask',
         'applyTasksQueue',
         'saveBlockAudio',
-        'updateStoreFlag'
+        'updateStoreFlag',
+        'changeBlocksVoicework'
       ]),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
@@ -4069,12 +4070,8 @@ Save text changes and realign the Block?`,
 
         this.voiceworkUpdating = true;
 
-        let api_url = `${this.API_URL}book/block/${this.meta.bookid}/${this.block._uRid}/set_voicework`;
-        let api = this.$store.state.auth.getHttp();
-        return api.post(api_url, {
-          voicework: this.voiceworkChange,
-          updateType: this.voiceworkUpdateType
-        }, {})
+        
+        return this.changeBlocksVoicework([this.block, this.voiceworkChange, this.voiceworkUpdateType])
           .then(response => {
             this.voiceworkUpdating = false;
             if (response.status == 200) {
@@ -4105,8 +4102,6 @@ Save text changes and realign the Block?`,
                   //if (this.currentJobInfo && this.currentJobInfo.published) {
                     //this.updateBookVersion({major: true});
                   //}
-                  this.getCurrentJobInfo();
-                  this.getAlignCount();
                   this.$root.$emit('bookBlocksUpdates', response.data);
                   if (this.isChecked) {
                     this.$root.$emit('from-block-edit:set-style');// voicework update may cause style settings
@@ -4115,7 +4110,6 @@ Save text changes and realign the Block?`,
                 }
               }
             }
-            this.currentBookCounters.voiceworks_for_remove = 0;
             //this.voiceworkChange = false;
           })
           .catch(err => {
