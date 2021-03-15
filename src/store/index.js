@@ -22,7 +22,6 @@ const ILM_CONTENT = 'ilm_content';
 const ILM_CONTENT_META = 'ilm_content_meta';
 const ILM_CONTENT_FILES = 'ilm_library_files';
 const ILM_TASKS = 'ilm_tasks';
-const ILM_COLLECTIONS = 'ilm_collections';
 const ILM_LIBRARIES = 'ilm_libraries';
 const POUCH_CFG = {
     ajax: {
@@ -88,12 +87,10 @@ export const store = new Vuex.Store({
     metaDB: false,
     metaDBcomplete: false,
     tasksDB: false,
-    collectionsDB: false,
     librariesDB: false,
 
     metaRemoteDB: false,
     tasksRemoteDB: false,
-    collectionsRemoteDB: false,
     librariesRemoteDB: false,
 
     books_meta: [],
@@ -1079,24 +1076,22 @@ export const store = new Vuex.Store({
         //commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         //commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
         //commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
-        commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
         commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
 
         //commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         //commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
         commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
         //commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
-        commit('set_remoteDB', { dbProp: 'collectionsRemoteDB', dbName: ILM_COLLECTIONS });
         commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
 
-        state.collectionsDB.replicate.from(state.collectionsRemoteDB)
+        /*state.collectionsDB.replicate.from(state.collectionsRemoteDB)
         .on('complete', (info) => {
           dispatch('updateCollectionsList');
           state.collectionsDB.sync(state.collectionsRemoteDB, {live: true, retry: true})
           .on('change', (change) => {
             dispatch('updateCollectionsList');
           })
-        });
+        });*/
 
         state.librariesDB.replicate.from(state.librariesRemoteDB)
           .on('complete', () => {
@@ -1177,14 +1172,12 @@ export const store = new Vuex.Store({
         commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         //commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
         //commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
-        commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
         commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
         state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false};
 
         if (state.metaDB) state.metaDB.destroy()
         //if (state.contentDB) state.contentDB.destroy()
         //if (state.tasksDB) state.tasksDB.destroy()
-        if (state.collectionsDB) state.collectionsDB.destroy()
         if (state.librariesDB) state.librariesDB.destroy()
 
         console.log('destroyDB');
@@ -1213,7 +1206,6 @@ export const store = new Vuex.Store({
           //if (state.metaDB) state.metaDB.destroy()
           //if (state.contentDB) state.contentDB.destroy()
           //if (state.tasksDB) state.tasksDB.destroy()
-          if (state.collectionsDB) state.collectionsDB.destroy()
           if (state.librariesDB) state.librariesDB.destroy()
           commit('RESET_LOGIN_STATE');
       //}, 500)
@@ -3843,6 +3835,20 @@ export const store = new Vuex.Store({
         })
         .catch(err => {
           return Promise.reject(err);
+        });
+    },
+    
+    getCollections({state}) {
+      return axios.get(`${state.API_URL}collections`)
+        .then(response => {
+          if (response && response.data) {
+            state.bookCollectionsAll = response.data;
+            commit('PREPARE_BOOK_COLLECTIONS');
+            dispatch('reloadCollection');
+          }
+        })
+        .catch(err => {
+          
         });
     }
   }
