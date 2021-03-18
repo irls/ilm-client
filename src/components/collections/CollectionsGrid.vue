@@ -13,7 +13,7 @@
       <div class="collection-title" :class="['collection-row', {'selected': currentCollection._id == collection._id}]" v-on:click="rowClick(collection, $event)">
         <span slot="header" class="collection-title" @click.prevent.self>
           <i class="fa fa-book"></i>&nbsp;
-          {{collection.title + ' ' + collection.books.length + ' Books, ' + collection.pages + ' pages'}}
+          {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
         </span>
       </div>
       <Grid id='books_grid'
@@ -73,7 +73,7 @@
           if (this.currentCollection._id) {
             return this.currentCollection._id === collection._id;
           }
-          return collection.book_match || collection.books.indexOf(this.currentBookMeta.bookid) !== -1;
+          return collection.book_match || collection.bookids.indexOf(this.currentBookMeta.bookid) !== -1;
         },
         moveBook(collection, data) {
           if (this.allowCollectionsEdit &&
@@ -134,7 +134,7 @@
             collections.forEach(c => {
 
               let books = [];
-              c.books.forEach(b => {
+              c.bookids.forEach(b => {
                 let book = this.allBooks.find(_b => {
                   return _b.bookid === b;
                 });

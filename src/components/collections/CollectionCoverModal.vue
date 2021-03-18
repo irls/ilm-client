@@ -91,9 +91,10 @@
 
         createImage (file) {
           // console.log('*** Creating new image', file)
+          this.uploadImage = file;
           var reader = new FileReader();
           var vm = this;
-          reader.onload = e => { vm.uploadImage = e.target.result };
+          //reader.onload = e => { vm.uploadImage = e.target.result };
           reader.readAsDataURL(file);
         },
         save() {
@@ -107,6 +108,12 @@
           if (urlData.length < 1) {
             return;
           }
+          
+          let formData = new FormData();
+          formData.append('coverimg', this.uploadImage, 'coverimg');
+          formData.append('coverimgURL', this.uploadURL);
+          
+          return this.updateCollectionCoverimg(formData)
           
           let collection_id = this.currentCollection._id;
           let ilm_library_files = this.$store.state.filesRemoteDB;
@@ -154,7 +161,7 @@
             image.src = vm.uploadURL;
           })
         },
-        ...mapActions(['reloadCollection', 'updateCollectionVersion'])
+        ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollectionCoverimg'])
       },
       computed: {
         ...mapGetters(['currentCollection'])
