@@ -2,7 +2,7 @@
   <div class="collection-meta col-sm-12">
     <div class="col-sm-12">
       <div class="coverimg" @click="changeCoverModal()">
-        <img height="80" v-if="currentCollection.coverimgURL" v-bind:src="currentCollection.coverimgURL" />
+        <img height="80" v-if="collectionImage" v-bind:src="collectionImage" />
         <div v-else class="coverimg-wrap"></div>
       </div>
     </div>
@@ -71,7 +71,7 @@
         Remove {{collection.title}} Collection <template v-if="collection.books && collection.books.length">and unlink {{collection.books.length}} Books</template>?
       </p>
     </modal>
-    <CollectionCoverModal ref="collectionCoverModal"></CollectionCoverModal>
+    <CollectionCoverModal ref="collectionCoverModal" @closed="resetCollectionImage"></CollectionCoverModal>
   </div>
 </template>
 <script>
@@ -91,7 +91,8 @@
           'collection': {},
           linkBookModal: false,
           onRemoveMessage: false,
-          showCollectionCoverModal: false
+          showCollectionCoverModal: false,
+          collectionImage: ''
         }
       },
       components: {
@@ -110,6 +111,7 @@
           } else {
             this.collection = {};
           }
+          this.resetCollectionImage();
         },
         update: _.debounce(function (key, event) {
           this.liveUpdate(key, event.target.value)
@@ -154,6 +156,12 @@
         },
         changeCoverModal() {
           this.$refs.collectionCoverModal.show();
+        },
+        resetCollectionImage() {
+          this.collectionImage = '';
+          if (this.currentCollection.coverimgURL) {
+            this.collectionImage = this.currentCollection.coverimgURL + '?' + Date.now();
+          }
         },
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollection', 'removeCollection'])
       },

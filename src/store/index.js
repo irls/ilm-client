@@ -625,10 +625,18 @@ export const store = new Vuex.Store({
       } else state.currentBookFiles[fileObj.fileName] = false;
     },
 
-    SET_CURRENT_COLLECTION (state, collection) {
-      state.currentCollection = collection;
-      console.log(state.currentCollection);
-      state.currentCollectionId = collection._id ? collection._id : false;
+    SET_CURRENT_COLLECTION (state, _id) {
+      if (_id) {
+        let collection = state.bookCollections.find(c => {
+          return c._id === _id;
+        });
+        if (collection) {
+          state.currentCollection = collection;
+        }
+      } else {
+        state.currentCollection = {};
+      }
+      state.currentCollectionId = _id;
     },
 
     SET_COLLECTIONS_FILTER (state, filter) {
@@ -748,7 +756,7 @@ export const store = new Vuex.Store({
         }
         state.bookCollections = collections;
       }
-      state.bookCollections.forEach(c => {
+      state.bookCollections.forEach((c, idx) => {
         let pages = 0;
         c.bookids.forEach(b => {
           let book = state.books_meta.find(_b => _b.bookid === b);
@@ -758,11 +766,14 @@ export const store = new Vuex.Store({
         });
 
         c.pages = pages;
-        if (c.coverimgURL) {
+        if (c.coverimgURL && c.coverimgURL.indexOf('http') !== 0) {
           c.coverimgURL = process.env.ILM_API + c.coverimgURL;
         }
+        state.bookCollections[idx] = c;
       });
-      console.log(`state.bookCollections: ${state.bookCollections.length}`);
+      if (state.currentCollectionId && !state.currentCollection._id) {
+        this.commit('SET_CURRENT_COLLECTION', state.currentCollectionId);
+      }
     },
     SET_ALLOW_BOOK_PUBLISH(state, allow) {
       state.allowPublishCurrentBook = allow;
@@ -1650,7 +1661,7 @@ export const store = new Vuex.Store({
     },
 
     loadCollection({commit, state, dispatch}, id) {
-      if (id) {
+      /*if (id) {
         let collection = state.bookCollections.find(c => {
           return c._id === id;
         });
@@ -1669,23 +1680,14 @@ export const store = new Vuex.Store({
       } else {
         commit('SET_CURRENT_COLLECTION', {});
         commit('SET_ALLOW_COLLECTION_PUBLISH', false);
-      }
+      }*/
+      commit('SET_CURRENT_COLLECTION', id);
     },
 
     reloadCollection({state, commit, dispatch}) {
       if (state.currentCollectionId) {
-        state.collectionsDB.get(state.currentCollectionId).then(collection => {
-          commit('SET_CURRENT_COLLECTION', collection);
+          commit('SET_CURRENT_COLLECTION', state.currentCollectionId);
           dispatch('allowCollectionPublish');
-          state.filesRemoteDB.getAttachment(state.currentCollectionId, 'coverimg')
-          .then(fileBlob => {
-            commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
-          }).catch((err)=>{
-            commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: false});
-          })
-        }).catch((err)=>{
-          console.log(err);
-        })
       }
     },
 
