@@ -1560,31 +1560,43 @@ export default {
                 ]
               };
           }
-          if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor(`[id="${this.block.blockid}"] .-langftn-fa.content-wrap-footn, [id="${this.block.blockid}"] .-langftn-ar.content-wrap-footn` , {
-                toolbar: toolbar,
-                buttonLabels: 'fontawesome',
-                quotesList: this.authors,
-                blockLang: 'fa',
-                onQuoteSave: this.onQuoteSave,
-                suggestEl: this.suggestEl,
-                extensions: extensions,
-                disableEditing: !this.allowEditing || this.editingLocked,
-              imageDragging: false
-            });
+          if(!this.proofreadModeReadOnly) {
+            let footnote = Array.isArray(this.block.footnotes) ? this.block.footnotes.find(f => {
+              return ['ar', 'fa'].indexOf(f.language) !== -1;
+            }) : false;
+            if (footnote) {
+              this.editorFootn = new MediumEditor(`[id="${this.block.blockid}"] .-langftn-fa.content-wrap-footn, [id="${this.block.blockid}"] .-langftn-ar.content-wrap-footn` , {
+                  toolbar: toolbar,
+                  buttonLabels: 'fontawesome',
+                  quotesList: this.authors,
+                  blockLang: 'fa',
+                  onQuoteSave: this.onQuoteSave,
+                  suggestEl: this.suggestEl,
+                  extensions: extensions,
+                  disableEditing: !this.allowEditing || this.editingLocked,
+                imageDragging: false
+              });
+            }
+          }
 
-          if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor(`[id="${this.block.blockid}"] :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
-                toolbar: toolbar,
-                buttonLabels: 'fontawesome',
-                quotesList: this.authors,
-                blockLang: 'en',
-                onQuoteSave: this.onQuoteSave,
-                suggestEl: this.suggestEl,
-                extensions: extensions,
-                disableEditing: !this.allowEditing || this.editingLocked,
-              imageDragging: false
-            });
+          if(!this.proofreadModeReadOnly) {
+            let footnote = Array.isArray(this.block.footnotes) ? this.block.footnotes.find(f => {
+              return ['ar', 'fa'].indexOf(f.language) === -1;
+            }) : false;
+            if (footnote) {
+              this.editorFootn = new MediumEditor(`[id="${this.block.blockid}"] :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
+                  toolbar: toolbar,
+                  buttonLabels: 'fontawesome',
+                  quotesList: this.authors,
+                  blockLang: 'en',
+                  onQuoteSave: this.onQuoteSave,
+                  suggestEl: this.suggestEl,
+                  extensions: extensions,
+                  disableEditing: !this.allowEditing || this.editingLocked,
+                imageDragging: false
+              });
+            }
+          }
 
         } else if (this.editorFootn) this.editorFootn.setup();
       },
