@@ -1561,7 +1561,7 @@ export default {
               };
           }
           if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor(`#${this.block.blockid} .-langftn-fa.content-wrap-footn, #content-${this.block.blockid} .-langftn-ar.content-wrap-footn` , {
+            this.editorFootn = new MediumEditor(`[id="${this.block.blockid}"] .-langftn-fa.content-wrap-footn, [id="${this.block.blockid}"] .-langftn-ar.content-wrap-footn` , {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
@@ -1574,7 +1574,7 @@ export default {
             });
 
           if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor(`#${this.block.blockid} :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
+            this.editorFootn = new MediumEditor(`[id="${this.block.blockid}"] :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
