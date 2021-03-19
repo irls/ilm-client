@@ -1961,7 +1961,7 @@ export const store = new Vuex.Store({
           'block': cleanBlock,
         })
           .then(response => {
-            console.log('putBlock', response);
+            //console.log('putBlock', response);
             commit('clear_blocker', 'putBlock');
             block._rev = response.data.rev;
             dispatch('tc_loadBookTask', block.bookid);
@@ -1976,7 +1976,10 @@ export const store = new Vuex.Store({
             if (response.data && response.data.blockid && state.storeList.has(response.data.blockid)) {
               let oldBlock = state.storeList.get(response.data.blockid);
               oldBlock.content = response.data.content;
+              oldBlock.parts = response.data.parts;
+              oldBlock.footnotes = response.data.footnotes;
               store.commit('set_storeList', oldBlock);
+              state.storeListO.refresh();
             } else {
               state.storeListO.updBlockByRid(response.data.id, {
                 status: response.data.status
