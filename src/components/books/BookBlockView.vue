@@ -2702,7 +2702,7 @@ Save text changes and realign the Block?`,
         }
         this.pushChange('footnotes');
         Vue.nextTick(() => {
-          //this.destroyEditor();
+          this.destroyEditor();
           this.initFtnEditor(true);
         });
       },
