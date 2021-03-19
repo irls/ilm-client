@@ -1247,53 +1247,7 @@ export default {
         $('.medium-editor-toolbar.medium-editor-stalker-toolbar').css('display', '');
       },
       initFtnEditor(force) {
-        if ((!this.editorFootn || force === true) && this.block.needsText()) {
-          let extensions = {};
-          let toolbar = {buttons: []};
-          if (this.allowEditing) {
-            extensions = {
-                'quoteButton': new QuoteButton(),
-                'quotePreview': new QuotePreview(),
-                'suggestButton': new SuggestButton(),
-                'suggestPreview': new SuggestPreview()
-              };
-            toolbar = {
-                buttons: [
-                  'bold', 'italic', 'underline',
-                  'superscript', 'subscript',
-                  'unorderedlist',
-                  'quoteButton', 'suggestButton'
-                ]
-              };
-          }
-/*
-          if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor('.-langftn-fa.content-wrap-footn' , {
-              toolbar: toolbar,
-              buttonLabels: 'fontawesome',
-              quotesList: this.authors,
-              blockLang: 'fa',
-              onQuoteSave: this.onQuoteSave,
-              suggestEl: this.suggestEl,
-              extensions: extensions,
-              disableEditing: !this.allowEditing
-          });*/
-
-          
-          if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor(':not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn' , {
-                toolbar: toolbar,
-                buttonLabels: 'fontawesome',
-                quotesList: this.authors,
-                onQuoteSave: this.onQuoteSave,
-                blockLang: 'en',
-                suggestEl: this.suggestEl,
-                extensions: extensions,
-                disableEditing: !this.allowEditing,
-              imageDragging: false
-            });
-
-        } else if (this.editorFootn) this.editorFootn.setup();
+        return false;
       },
       onQuoteSave: function() {
         this.putMetaAuthors(this.authors).then(()=>{
