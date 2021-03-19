@@ -362,12 +362,12 @@
                       <template v-if="allowVoiceworkChange">
                         <label>
                           <i class="fa fa-volume-off"></i>
-                          <select  :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
+                          <select  :disabled="(!allowEditing && proofreadModeReadOnly) || editingLocked ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                             <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                           </select>
                         </label>
                         <label><i class="fa fa-language" aria-hidden="true"></i>
-                        <select :disabled="!allowEditing ||  proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
+                        <select :disabled="!allowEditing ||  proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
                           <option v-if="!footnLanguages.hasOwnProperty(footnote.language)" :value="footnote.language">{{ footnote.language }}</option>
                           <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
                         </select>
@@ -408,7 +408,7 @@
                     :ref="'footnoteContent_' + ftnIdx">
                   </div>
 
-                  <div class="table-cell -control" v-if="allowEditing && !proofreadModeReadOnly">
+                  <div class="table-cell -control" v-if="allowEditing && !proofreadModeReadOnly && !editingLocked">
                     <span @click="delFootnote([ftnIdx])"><i class="fa fa-trash"></i></span>
                   </div>
                 </div>
@@ -1538,6 +1538,9 @@ export default {
         //$('.medium-editor-toolbar.medium-editor-stalker-toolbar').css('display', '');
       },
       initFtnEditor(force) {
+        if (this.editingLocked) {
+          return false;
+        }
         if ((!this.editorFootn || force === true) && this.block.needsText()) {
           let extensions = {};
           let toolbar = {buttons: []};
@@ -1558,7 +1561,7 @@ export default {
               };
           }
           if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor('.-langftn-fa.content-wrap-footn, .-langftn-ar.content-wrap-footn' , {
+            this.editorFootn = new MediumEditor(`#${this.block.blockid} .-langftn-fa.content-wrap-footn, #content-${this.block.blockid} .-langftn-ar.content-wrap-footn` , {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
@@ -1566,12 +1569,12 @@ export default {
                 onQuoteSave: this.onQuoteSave,
                 suggestEl: this.suggestEl,
                 extensions: extensions,
-                disableEditing: !this.allowEditing,
+                disableEditing: !this.allowEditing || this.editingLocked,
               imageDragging: false
             });
 
           if(!this.proofreadModeReadOnly)
-            this.editorFootn = new MediumEditor(':not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn' , {
+            this.editorFootn = new MediumEditor(`#${this.block.blockid} :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
                 quotesList: this.authors,
@@ -1579,7 +1582,7 @@ export default {
                 onQuoteSave: this.onQuoteSave,
                 suggestEl: this.suggestEl,
                 extensions: extensions,
-                disableEditing: !this.allowEditing,
+                disableEditing: !this.allowEditing || this.editingLocked,
               imageDragging: false
             });
 
@@ -1696,6 +1699,7 @@ export default {
             }
           });
           if (this.block.footnotes.length > 0) {
+            this.destroyEditor();
             this.initFtnEditor(true);
           }
           this.block.setAudiosrc(block.audiosrc, block.audiosrc_ver);
@@ -4512,25 +4516,17 @@ Save text changes and realign the Block?`,
       },
       'editingLocked': {
         handler(val) {
-          let partContainer;
-          let searchIdx = null;
-          if (this.block.getIsSplittedBlock()) {
-            searchIdx = this.audioTasksQueue.block.partIdx;
-          } else {
-            searchIdx = 0;
-          }
-          if (searchIdx !== null) {
-            let partContainer = this.$refs.blocks.find(p => {
-              return p.blockPartIdx === searchIdx;
-            });
-            if (partContainer) {
-              partContainer.editingLocked = val;
-            }
-          }
+          this.$refs.blocks.forEach(p => {
+            p.editingLocked = val;
+          });
           if (val) {
             this.editingLockedReason = this.blockLockedSimultaneous;
           } else {
             this.editingLockedReason = '';
+          }
+          this.destroyEditor();
+          if (!this.editingLocked) {
+            this.initEditor(true);
           }
         }
       }
