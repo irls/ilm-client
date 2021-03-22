@@ -998,8 +998,8 @@ class BookBlock {
       this.parts[partIdx].content_changed = value;
     }
   }
-  addFootnote(pos) {
-    this.footnotes.splice(pos, 0, new FootNote({}));
+  addFootnote(pos, data = {}) {
+    this.footnotes.splice(pos, 0, new FootNote(data));
     this.setChanged(true);
   }
   setChanged(val) {
@@ -1046,6 +1046,7 @@ class FootNote {
   constructor(init) {
     this.content = init.content || '<p></p>';
     this.voicework = init.voicework || 'no_audio';
+    this.language = init.language || '';
   }
 }
 
