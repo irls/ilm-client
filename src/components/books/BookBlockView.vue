@@ -2705,7 +2705,13 @@ Save text changes and realign the Block?`,
           }
         });
         let pos = this.updFootnotes(this.block.footnotes.length + 1);
-        this.block.footnotes.splice(pos, 0, new FootNote({}));
+        let data = {};
+        if (this.block.language) {
+          data.language = this.block.language;
+        } else if (this.meta.language) {
+          data.language = this.meta.language;
+        }
+        this.block.addFootnote(pos, data);
         this.$forceUpdate();
         this.isChanged = true;
         let ref = this.$refs['footnoteContent_' + pos];
@@ -2717,6 +2723,7 @@ Save text changes and realign the Block?`,
           this.destroyEditor();
           this.initFtnEditor(true);
         });
+        this.$store.commit('set_storeList', this.block);
       },
       delFootnote: function(pos, checkText = true) {
         if (checkText) {
