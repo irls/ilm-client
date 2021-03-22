@@ -738,6 +738,7 @@ export const store = new Vuex.Store({
       this.commit('set_taskBlockMap');
     },
     PREPARE_BOOK_COLLECTIONS(state) {
+      state.bookCollections = [];
       if (state.isAdmin || state.isLibrarian) {
         state.bookCollections = state.bookCollectionsAll;
       } else if (state.tc_userTasks) {
@@ -1085,18 +1086,9 @@ export const store = new Vuex.Store({
 
         //commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         //commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
-        commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
+        //commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
         //commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
         commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
-
-        /*state.collectionsDB.replicate.from(state.collectionsRemoteDB)
-        .on('complete', (info) => {
-          dispatch('updateCollectionsList');
-          state.collectionsDB.sync(state.collectionsRemoteDB, {live: true, retry: true})
-          .on('change', (change) => {
-            dispatch('updateCollectionsList');
-          })
-        });*/
 
         state.librariesDB.replicate.from(state.librariesRemoteDB)
           .on('complete', () => {
@@ -1168,6 +1160,43 @@ export const store = new Vuex.Store({
               state.allowBookSplitPreview = config && config.book_split_preview_users && config.book_split_preview_users.indexOf(state.auth.getSession().user_id) !== -1;
             });
           dispatch('getCollections');
+          state.liveDB.startWatch('collection', 'collection', {}, (data) => {
+            console.log(data);
+            if (data.action) {
+              switch (data.action) {
+                case 'change':
+                  if (data.collection) {
+                    let collection = state.bookCollectionsAll.find(c => {
+                      return c.id === data.collection.id;
+                    });
+                    if (collection) {
+                      state.bookCollectionsAll[state.bookCollectionsAll.indexOf(collection)] = data.collection;
+                      commit('PREPARE_BOOK_COLLECTIONS');
+                    }
+                  }
+                  break;
+                case 'create':
+                  if (data.collection && data.collection._id !== state.currentCollectionId) {
+                    dispatch('getCollections');
+                  }
+                  break;
+                case 'delete':
+                  if (data.collection) {
+                    let collection = state.bookCollectionsAll.find(c => {
+                      return c._id === data.collection._id;
+                    });
+                    if (collection) {
+                      if (data.collection._id === state.currentCollectionId) {
+                        commit('SET_CURRENT_COLLECTION', false);
+                      }
+                      state.bookCollectionsAll.splice(state.bookCollectionsAll.indexOf(collection), 1);
+                      commit('PREPARE_BOOK_COLLECTIONS');
+                    }
+                  }
+                  break;
+              }
+            }
+          });
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -1203,6 +1232,7 @@ export const store = new Vuex.Store({
       state.liveDB.stopWatch('metaV');
       state.liveDB.stopWatch('job');
       state.liveDB.stopWatch('blockV');
+      state.liveDB.stopWatch('collection');
     },
     // logout event
     disconnectDB ({ state, commit }) {
@@ -1223,16 +1253,6 @@ export const store = new Vuex.Store({
           commit('SET_BOOKLIST', answer.data.books)
           //dispatch('tc_loadBookTask')
           return Promise.resolve();
-        })
-    },
-
-    updateCollectionsList({state, commit, dispatch}) {
-      let connection = state.collectionsDB.hoodieApi()
-      connection.findAll()
-        .then(collections => {
-          state.bookCollectionsAll = collections
-          commit('PREPARE_BOOK_COLLECTIONS');
-          dispatch('reloadCollection');
         })
     },
 
@@ -1692,7 +1712,7 @@ export const store = new Vuex.Store({
     },
 
     updateCollectionVersion({state, dispatch}, update) {
-      let id = update.id || state.currentCollection._id;
+      /*let id = update.id || state.currentCollection._id;
       if (id) {
         state.collectionsRemoteDB.get(state.currentCollection._id)
           .then(collection => {
@@ -1719,7 +1739,7 @@ export const store = new Vuex.Store({
             }
 
           });
-      }
+      }*/
     },
 
     allowCollectionPublish({state, commit}) {
@@ -1727,7 +1747,7 @@ export const store = new Vuex.Store({
       if (allow_by_role && state.currentCollection && state.currentCollection.books && state.currentCollection.books.length > 0 && state.books_meta) {
         let allow = typeof state.currentCollection.version === 'undefined' || state.currentCollection.version !== state.currentCollection.publishedVersion;
         if (allow) {
-          state.currentCollection.books.forEach(b => {
+          state.currentCollection.bookids.forEach(b => {
             if (allow) {
               let _b = state.books_meta.find(__b => __b._id === b);
               if (_b) {
@@ -3878,15 +3898,7 @@ export const store = new Vuex.Store({
             Object.keys(data).forEach(k => {
               state.currentCollection[k] = data[k];
             });
-            let c = state.bookCollectionsAll.find(_c => {
-              return _c._id === state.currentCollection._id;
-            });
-            if (c) {
-              let index = state.bookCollectionsAll.indexOf(c);
-              //state.bookCollectionsAll[index] = response.data;
-              commit('PREPARE_BOOK_COLLECTIONS');
-              //commit('SET_CURRENT_COLLECTION', state.bookCollectionsAll[index]);
-            }
+            commit('PREPARE_BOOK_COLLECTIONS');
           }
           return Promise.resolve();
         })
