@@ -1946,7 +1946,7 @@ export const store = new Vuex.Store({
               oldBlock.status = response.data.status;
               store.commit('set_storeList', oldBlock);
               state.storeListO.refresh();
-            } else {
+
               state.storeListO.updBlockByRid(response.data.id, {
                 status: response.data.status
               });
