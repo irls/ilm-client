@@ -3873,7 +3873,7 @@ Save text changes and realign the Block?`,
         }
       },
       setHtml() {
-        let content = this.block.content;
+        let content = this.block.content || "";
         if (!this.block.getIsSplittedBlock() && this.isChanged) {
           content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
         }
