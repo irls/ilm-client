@@ -2800,6 +2800,7 @@ Save text changes and realign the Block?`,
               this.block.parts[blk.blockPartIdx].footnote_added = true;
             }
             el.setAttribute('data-idx', idx+1);
+            //console.log('iter end:', idx, el.getAttribute('data-idx'));
             ++idx;
           });
         })
