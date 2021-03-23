@@ -1943,6 +1943,7 @@ export const store = new Vuex.Store({
               oldBlock.content = response.data.content;
               oldBlock.parts = response.data.parts;
               oldBlock.footnotes = response.data.footnotes;
+              oldBlock.status = response.data.status;
               store.commit('set_storeList', oldBlock);
               state.storeListO.refresh();
             } else {
