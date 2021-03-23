@@ -1161,7 +1161,7 @@ export const store = new Vuex.Store({
             });
           dispatch('getCollections');
           state.liveDB.startWatch('collection', 'collection', {}, (data) => {
-            console.log(data);
+            //console.log(data);
             if (data.action) {
               switch (data.action) {
                 case 'change':

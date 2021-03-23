@@ -201,7 +201,7 @@
           }
         },
         ...mapGetters([
-          'currentCollection', 'currentBookMeta', 'collectionsFilter', 'bookEditMode', 'currentBookCounters'
+          'currentCollection', 'currentBookMeta', 'collectionsFilter', 'bookEditMode', 'currentBookCounters', 'currentCollectionId'
         ])
       },
       watch: {
@@ -223,6 +223,13 @@
               this.collectionMetaVisible = false;
             }
             this.currentBook = Object.assign({}, val);
+          }
+        },
+        'currentCollectionId': {
+          handler(val, oldVal) {
+            if (oldVal && !val) {
+              this.$router.replace({name: 'CollectionsList'});
+            }
           }
         }
       }

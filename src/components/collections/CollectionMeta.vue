@@ -183,7 +183,7 @@
 
         },
 
-        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'allowPublishCurrentCollection', 'currentCollectionId'])
+        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'allowPublishCurrentCollection'])
       },
       watch: {
         'currentCollection': {
@@ -192,13 +192,6 @@
             this.init();
           },
           deep: true
-        },
-        'currentCollectionId': {
-          handler(val, oldVal) {
-            if (oldVal && !val) {
-              this.$router.push({name: 'Collections'});
-            }
-          }
         }
       }
   }
