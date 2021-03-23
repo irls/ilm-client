@@ -2045,7 +2045,7 @@ export default {
               block.setPartContent(this.audioTasksQueue.block.partIdx || 0, contentContainer.innerHTML);
               block.setPartAudiosrc(this.audioTasksQueue.block.partIdx || 0,
                 this.audioTasksQueue.block.partIdx === null ? block.getAudiosrc(null, false) : block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, null, false),
-                {m4a: this.audioTasksQueue.block.partIdx === null ? block.getAudiosrc('m4a', false) : block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a', false)});
+                {});
               if (refContainer) {
                 refContainer.blockPart.content = contentContainer.innerHTML;
                 refContainer.blockAudio.map = blockPart.content;
@@ -2730,7 +2730,7 @@ export default {
           if (log && this.audioTasksQueue.queue.length === 0 && block) {
             //console.log(log.time, this.audioTasksQueue.time, this.audioTasksQueue);
             if (this.audioTasksQueue.block.partIdx === null) {
-              this.$root.$emit('for-audioeditor:load-silent', log, block.getAudiosrc('m4a'), block.content, true, block);
+              //this.$root.$emit('for-audioeditor:load-silent', log, block.getAudiosrc('m4a'), block.content, true, block);
             } else {
               let _block = block.parts[this.audioTasksQueue.block.partIdx];
               if (_block) {
@@ -2738,7 +2738,7 @@ export default {
                 _block.blockid = block.blockid;
                 _block.partIdx = this.audioTasksQueue.block.partIdx;
               }
-              this.$root.$emit('for-audioeditor:load-silent', log, block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a'), block.getPartContent(this.audioTasksQueue.block.partIdx), true, _block);
+              //this.$root.$emit('for-audioeditor:load-silent', log, block.getPartAudiosrc(this.audioTasksQueue.block.partIdx, 'm4a'), block.getPartContent(this.audioTasksQueue.block.partIdx), true, _block);
             }
             //setAudioSilent(queue_record, audio, text, saveToHistory = true, block = null) {
           }
