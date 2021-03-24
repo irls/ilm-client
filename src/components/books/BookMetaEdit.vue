@@ -83,7 +83,7 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' v-on:change="updateWithDisabling('title',$event,400)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
+                  <td><input v-model='currentBook.title' v-on:change="updateWithDisabling('title',$event,)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title']" class="validation-error">Define Title</span>
                   </td>
                 </tr>
@@ -1102,12 +1102,11 @@ export default {
       }
     },
 
-
-      liveUpdate (key, value, event) {
-        // Removed regards with ILM-3683
-        //if(this.proofreadModeReadOnly)
-        //    return ;
-
+    liveUpdate (key, value, event) {
+      //bad conflict fix
+        if(this.proofreadModeReadOnly)
+            return ;
+      //bad conflict fix
 
         if( this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][key] ) {
           if (key != 'author'){
@@ -1133,7 +1132,6 @@ export default {
             } catch (err){
             }
         }
-
 
       var keys = key.split('.');
       key = keys[0];
