@@ -3860,6 +3860,32 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    changeBlocksVoicework({state, dispatch}, [block, voicework, updateType]) {
+      return axios.post(`${state.API_URL}book/block/${state.currentBookid}/${block._uRid}/set_voicework`, {
+        voicework: voicework,
+        updateType: updateType
+      })
+        .then(response => {
+          if (response.status === 200) {
+            if (response && response.data && response.data.blocks) {
+              if (response.data.blocks.length <= 300) {
+                response.data.blocks.forEach(block => {
+                  state.storeListO.updBlockByRid(block.rid, {
+                    status: block.status
+                  });
+                });
+                dispatch('getCurrentJobInfo');
+                dispatch('getAlignCount');
+              }
+            }
+          }
+          state.currentBookCounters.voiceworks_for_remove = 0;
+          return Promise.resolve(response);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })
