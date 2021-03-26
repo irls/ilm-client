@@ -333,11 +333,12 @@ class BookBlock {
     }
 
     this.audioHash = init.audioHash || null;
-    
+
     this.trimmed_silence = init.trimmed_silence;
     this.pause_before = init.pause_before;
     this.sync_changes = init.sync_changes || [];// changes from synschronization
     this.audio_quality = init.audio_quality || '';
+    this.wordsRange = init.wordsRange || {};
   }
 
   clean() {
@@ -976,7 +977,7 @@ class BookBlock {
     });
     return part ? true : false;
   }
-  
+
   getIsSplittedBlock() {
     //Vue.prototype.globalJobInfo.id
     if (this.voicework === 'narration' && !Vue.prototype.globalJobInfo.text_cleanup && Array.isArray(this.parts) && this.parts.length > 1 && !(Vue.prototype.globalJobInfo.mastering || Vue.prototype.globalJobInfo.mastering_complete)) {
@@ -984,11 +985,11 @@ class BookBlock {
     }
     return false;
   }
-  
+
   setUpdated(val) {
     this.updated = val;
   }
-  
+
   setPauseBefore(val) {
     this.pause_before = val;
   }
