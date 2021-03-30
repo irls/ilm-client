@@ -2065,7 +2065,7 @@ export const store = new Vuex.Store({
           }
           let updatedBlock = new BookBlock(response.data);
           commit('set_storeList', updatedBlock);
-          if (storeBlock.isChanged) {
+          if (storeBlock.getIsChanged()) {
             if (Array.isArray(storeBlock.flags) && storeBlock.flags.length > 0) {// if pending flag update present
               storeBlock.flags.forEach(f => {
                 dispatch('updateStoreFlag', [storeBlock.blockid, f._id, f]);

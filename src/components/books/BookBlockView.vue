@@ -2966,8 +2966,10 @@ Save text changes and realign the Block?`,
       delFlagPart: function(ev, partIdx, blockPartIdx = null) {
         let _this = null;
         if (blockPartIdx !== null) {
-          if (this.$refs.blocks && this.$refs.blocks[blockPartIdx]) {
-            _this = this.$refs.blocks[blockPartIdx];
+          if (this.$refs.blocks) {
+            _this = this.$refs.blocks.find(blk => {
+              return blk.blockPartIdx === blockPartIdx;
+            });
           }
         } else {
           _this = this;
