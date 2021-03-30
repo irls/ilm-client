@@ -2063,7 +2063,25 @@ export const store = new Vuex.Store({
               }
             });
           }
-          commit('set_storeList', new BookBlock(response.data));
+          let updatedBlock = new BookBlock(response.data);
+          commit('set_storeList', updatedBlock);
+          if (storeBlock.isChanged) {
+            if (Array.isArray(storeBlock.flags) && storeBlock.flags.length > 0) {// if pending flag update present
+              storeBlock.flags.forEach(f => {
+                dispatch('updateStoreFlag', [storeBlock.blockid, f._id, f]);
+              });
+            }
+            if (Array.isArray(storeBlock.flags) && storeBlock.flags.length < updatedBlock.flags.length) {// if pending flag remove present
+              updatedBlock.flags.forEach((f, fIdx) => {
+                let _f = storeBlock.flags.find(fl => {
+                  return fl._id === f._id;
+                });
+                if (!_f) {
+                  updatedBlock.flags.splice(fIdx, 1);
+                }
+              });
+            }
+          }
           return dispatch('getBookAlign')
             .then(() => {
               commit('clear_blocker', 'putBlock');
