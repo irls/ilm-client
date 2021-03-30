@@ -83,7 +83,7 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' v-on:change="updateWithDisabling('title',$event,400)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
+                  <td><input v-model='currentBook.title' v-on:change="updateWithDisabling('title',$event,)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title']" class="validation-error">Define Title</span>
                   </td>
                 </tr>
@@ -1102,12 +1102,11 @@ export default {
       }
     },
 
-
-      liveUpdate (key, value, event) {
-        // Removed regards with ILM-3683
-        //if(this.proofreadModeReadOnly)
-        //    return ;
-
+    liveUpdate (key, value, event) {
+      //bad conflict fix
+        if(this.proofreadModeReadOnly)
+            return ;
+      //bad conflict fix
 
         if( this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][key] ) {
           if (key != 'author'){
@@ -1133,7 +1132,6 @@ export default {
             } catch (err){
             }
         }
-
 
       var keys = key.split('.');
       key = keys[0];
@@ -1605,32 +1603,21 @@ export default {
                   }
                 else pBlock.classes[styleKey] = '';
                 //console.log(oBlock.blockid, 'isNumber', oBlock.isNumber,  'updateNum', updateNum);
-                if (pBlock.isChanged || pBlock.isAudioChanged) {
-                  pBlock.checked = false;
-                  pBlock.checked = true;
-                  if (oBlock.isNumber !== updateNum) {
-                    oBlock.isNumber = updateNum;
-                    updatePromises.push(this.putNumBlock({blockid: pBlock.blockid, isNumber: updateNum, classes: pBlock.classes}));
-                    updateNums.push(oBlock.rid)
-                  }
-                  this.$root.$emit('from-styles:styles-change-' + pBlock.blockid, pBlock.classes);
-                } else {
                   //pBlock.partUpdate = true;
-                  if (oBlock.isNumber !== updateNum) {
-                    updateNums.push(oBlock.rid);
-                    pBlock.isNumber = updateNum;
-                    oBlock.isNumber = updateNum;
-                    updatePromises.push(this.putNumBlock(pBlock));
-                  } else {
-                    //pBlock.status = pBlock.status || {};
-                    //pBlock.status.marked = false;
-                    updatePromises.push(this.putBlockPart([{
-                      blockid: pBlock.blockid,
-                      bookid: pBlock.bookid,
-                      classes: pBlock.classes//,
-                      //status: pBlock.status
-                    }]));
-                  }
+                if (oBlock.isNumber !== updateNum) {
+                  updateNums.push(oBlock.rid);
+                  pBlock.isNumber = updateNum;
+                  oBlock.isNumber = updateNum;
+                  updatePromises.push(this.putNumBlock(pBlock));
+                } else {
+                  //pBlock.status = pBlock.status || {};
+                  //pBlock.status.marked = false;
+                  updatePromises.push(this.putBlockPart([{
+                    blockid: pBlock.blockid,
+                    bookid: pBlock.bookid,
+                    classes: pBlock.classes//,
+                    //status: pBlock.status
+                  }, false, pBlock.getIsChanged() || pBlock.getIsAudioChanged()]));
                 }
               }
             }

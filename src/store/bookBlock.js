@@ -245,7 +245,7 @@ class BookBlock {
     this.index = typeof init.index !== 'undefined' ? init.index : '';
 
     this.tag = init.tag || '';
-    this.content = typeof init.content !== 'undefined' ? init.content : '';
+    this.content = typeof init.content !== 'undefined' && init.content ? init.content : '';
     this.type = init.type || 'par';
     this.classes = init.classes || {};
     if (Array.isArray(this.classes)) this.classes = {};
@@ -333,11 +333,12 @@ class BookBlock {
     }
 
     this.audioHash = init.audioHash || null;
-    
+
     this.trimmed_silence = init.trimmed_silence;
     this.pause_before = init.pause_before;
     this.sync_changes = init.sync_changes || [];// changes from synschronization
     this.audio_quality = init.audio_quality || '';
+    this.wordsRange = init.wordsRange || {};
   }
 
   clean() {
@@ -632,13 +633,15 @@ class BookBlock {
   }
 
   getAudiosrc(ver = false, full = true) {
+    let path;
     if (!ver || !this.audiosrc_ver) {
-      return this.audiosrc;
+      path = this.audiosrc;
+    } else  {
+      path =
+        typeof this.audiosrc_ver[ver] === 'undefined'
+          ? this.audiosrc
+          : this.audiosrc_ver[ver];
     }
-    let path =
-      typeof this.audiosrc_ver[ver] === 'undefined'
-        ? this.audiosrc
-        : this.audiosrc_ver[ver];
     if (!path) {
       return false;
     }
@@ -974,7 +977,7 @@ class BookBlock {
     });
     return part ? true : false;
   }
-  
+
   getIsSplittedBlock() {
     //Vue.prototype.globalJobInfo.id
     if (this.voicework === 'narration' && !Vue.prototype.globalJobInfo.text_cleanup && Array.isArray(this.parts) && this.parts.length > 1 && !(Vue.prototype.globalJobInfo.mastering || Vue.prototype.globalJobInfo.mastering_complete)) {
@@ -982,11 +985,11 @@ class BookBlock {
     }
     return false;
   }
-  
+
   setUpdated(val) {
     this.updated = val;
   }
-  
+
   setPauseBefore(val) {
     this.pause_before = val;
   }
@@ -995,12 +998,32 @@ class BookBlock {
       this.parts[partIdx].content_changed = value;
     }
   }
-  addFootnote(pos) {
-    this.footnotes.splice(pos, 0, new FootNote({}));
+  addFootnote(pos, data = {}) {
+    this.footnotes.splice(pos, 0, new FootNote(data));
     this.setChanged(true);
   }
   setChanged(val) {
     this.isChanged = val;
+  }
+  
+  hasChangedPart() {
+    if (Array.isArray(this.parts) && this.parts.length > 0) {
+      let p = this.parts.find(p => {
+        return p.isChanged || p.isAudioChanged;
+      });
+      return p ? true : false;
+    }
+    return false;
+  }
+  clearHistory() {
+    this.history = {};
+  }
+  clearPartHistory(partIdx) {
+    Object.keys(this.history).forEach(k => {
+      if (k.indexOf(`parts.${partIdx}`) === 0) {
+        delete this.history[k];
+      }
+    });
   }
 }
 
@@ -1023,6 +1046,7 @@ class FootNote {
   constructor(init) {
     this.content = init.content || '<p></p>';
     this.voicework = init.voicework || 'no_audio';
+    this.language = init.language || '';
   }
 }
 
