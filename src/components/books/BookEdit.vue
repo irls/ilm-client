@@ -952,11 +952,10 @@ export default {
 
     insertBlockBefore(block, block_Idx) {
       this.freeze('insertBlockBefore');
-      let newBlock = this.createEmptyBlock(block.bookid, block._id).clean();
       this.insertBlock({
         blockid: block.blockid,
         direction: 'before',
-        newBlock: newBlock
+        bookid: block.bookid
       })
         .then((response)=>{
           //this.setBlockSelection({start: {}, end: {}});
@@ -997,11 +996,10 @@ export default {
     insertBlockAfter(block, block_Idx) {
       //this.insertBlock(block_id, 'after');
       this.freeze('insertBlockAfter');
-      let newBlock = this.createEmptyBlock(block.bookid, block.chainid).clean();
       this.insertBlock({
         blockid: block.blockid,
         direction: 'after',
-        newBlock: newBlock
+        bookid: block.bookid
       })
         .then((response)=>{
           //this.setBlockSelection({start: {}, end: {}});
