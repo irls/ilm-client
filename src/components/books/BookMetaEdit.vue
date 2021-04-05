@@ -1607,7 +1607,6 @@ export default {
                   }
                 else pBlock.classes[styleKey] = '';
                 //console.log(oBlock.blockid, 'isNumber', oBlock.isNumber,  'updateNum', updateNum);
-                  //pBlock.partUpdate = true;
                 if (oBlock.isNumber !== updateNum) {
                   updateNums.push(oBlock.rid);
                   pBlock.isNumber = updateNum;
@@ -1616,12 +1615,24 @@ export default {
                 } else {
                   //pBlock.status = pBlock.status || {};
                   //pBlock.status.marked = false;
-                  updatePromises.push(this.putBlockPart([{
+                  console.log(styleKey, styleVal, pBlock.isChanged, pBlock.content);
+                  let updateBody = {
                     blockid: pBlock.blockid,
                     bookid: pBlock.bookid,
                     classes: pBlock.classes//,
                     //status: pBlock.status
-                  }, false, pBlock.getIsChanged() || pBlock.getIsAudioChanged()]));
+                  };
+                  let isCouplet = styleKey === "whitespace" && styleVal === "couplet";
+                  if (isCouplet) {// send content for update, to parse content for couplet
+                    updateBody['content'] = pBlock.content;
+                  }
+                  updatePromises.push(this.putBlockPart([updateBody, false, pBlock.getIsChanged() || pBlock.getIsAudioChanged()])
+                    .then(() => {
+                      if (isCouplet) {
+                        this.$root.$emit(`block-state-refresh-${pBlock.blockid}`);
+                      }
+                      return Promise.resolve();
+                    }));
                 }
               }
             }
