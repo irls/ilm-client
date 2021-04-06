@@ -3164,10 +3164,9 @@ export const store = new Vuex.Store({
         })
     },
     insertBlock({state, commit, dispatch}, data) {
-      return axios.post(state.API_URL + 'book/block', {
+      return axios.post(`${state.API_URL}books/${data.bookid}/block`, {
           block_id: data.blockid,
           direction: data.direction,
-          block: data.newBlock
         })
         .then(response => {
           if (response && response.data && response.data.block && response.data.block.job_status_error) {
