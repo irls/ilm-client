@@ -7061,7 +7061,7 @@ MediumEditor.extensions = {};
             } else if (element.parentNode.nodeName === 'DIV') {// click inside usual text node
                 if (isList) {
                     element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling || selection.match(new RegExp(`${br}$`)) ? afterSelection : br);
-                    MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 ? selection.length + 1 : selection.length + 1);
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 ? selection.length : selection.length);
                 } else {
                     if (element.nodeName === 'BR') {
                         //console.log('HERE1');
@@ -7158,6 +7158,7 @@ MediumEditor.extensions = {};
                         let partThree = partTwo.cloneNode();
                         baseNode.insertBefore(partThree, partTwo);
                         //console.log('HERE6');
+                        //MediumEditor.selection.moveCursor(this.options.ownerDocument, partTwo, 0);
                     }
                 }
             }
