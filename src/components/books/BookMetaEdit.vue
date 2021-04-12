@@ -743,7 +743,7 @@ export default {
     allowMetadataEdit: {
       get() {
         //do not allow to edit metadata while book is in Publish Queue:      
-        if (this.currentBookMeta.isInTheQueueOfPublication === true || isIntheProcessOfPublication === true)
+        if (this.currentBookMeta.isInTheQueueOfPublication === true || this.currentBookMeta.isIntheProcessOfPublication === true)
             return false;
 
         return this.tc_allowMetadataEdit();
