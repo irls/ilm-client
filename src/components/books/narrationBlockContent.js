@@ -1,7 +1,4 @@
 "use strict";
-const jsdom = require("jsdom");
-const {JSDOM} = jsdom;
-
 let content = '';
 let setContent = function (contentToWorkWith) {
   content = contentToWorkWith;
@@ -29,13 +26,13 @@ let removeInTextFormatting = function () {
     content = content.replace(regex, '$1');
 
 }
-let get = function ( blockContent, getBlockLang) {
+let prepare = function ( getBlockLang) {
 
   if(!content){
     return false;
   }
 
-  // let content = blockPartContent.content.replace(/<sup[^>]*>.*?<\/sup>/img, '');
+  // let content = blockPartcontent.replace(/<sup[^>]*>.*?<\/sup>/img, '');
   superScriptRemove();
 
   // content = content.replace(/<br[^>]*>\s*$/, '')
@@ -48,8 +45,8 @@ let get = function ( blockContent, getBlockLang) {
   removeInTextFormatting();
 
   content = content.replace(/(<\/li>[^<]*?<li[^>]*>)/img, '<br>$1');
-  let is_list = blockContent.content.match(/<br[^>]*>/m) || content.match(/<br[^>]*>/m) || blockContent.content.match(/<li[^>]*>/m) || content.match(/<li[^>]*>/m);
-  if (blockContent.classes && typeof blockContent.classes === 'object' && typeof blockContent.classes.whitespace !== 'undefined' && blockContent.classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
+  let is_list = content.match(/<br[^>]*>/m) || content.match(/<br[^>]*>/m) || content.match(/<li[^>]*>/m) || content.match(/<li[^>]*>/m);
+  if (content.classes && typeof content.classes === 'object' && typeof content.classes.whitespace !== 'undefined' && content.classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
     content = content.replace(/[\r\n]/mg, '<br>');
     is_list = true;
   }
@@ -126,11 +123,11 @@ let get = function ( blockContent, getBlockLang) {
   content = content.replace(/<br[^>]*><br[^>]*>/gm, '<br><div class="part-separator"></div>');
   //content = content.replace(, '$1<br>');
   // console.log(content);
-  return content;
+  // return content;
 }
 
 let narrationBlockContent = {
-  get :get,
+  prepare :prepare,
   setContent :setContent,
   getContent :getContent,
   _superScriptRemove :superScriptRemove,

@@ -1,6 +1,6 @@
 <template>
 <div>
-  
+
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block -subblock block-preview', blockOutPaddings]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
@@ -326,6 +326,8 @@ import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
 import RecordingBlock from './block/RecordingBlock';
 import UploadImage from './block/UploadImage'
 var BPromise = require('bluebird');
+import narrationBlockContent from './narrationBlockContent.js'
+
 Vue.use(v_modal, { dialog: true, dynamic: true });
 
 export default {
@@ -687,93 +689,96 @@ export default {
       },
       narrationBlockContent: {
         get() {
-          let content = this.blockPart.content.replace(/<sup[^>]*>.*?<\/sup>/img, '');
-          //content = $(`<div>${content}</div>`).text();
-          /*let replaceHTMLRg = new RegExp(`<(?!\/|ol|ul|li|u)[^>]*>([^<]+?)<\/[^>]+>`, 'mg');
-          while (content.match(replaceHTMLRg)) {
-            content = content.replace(replaceHTMLRg, '$1');
-          }*/
-          content = content.replace(/<br[^>]*>\s*$/, '').replace(/[\r\n]\s*$/, '');//remove <br> at the end of the block
-          content = content.replace(/(<\/?(?:ol|ul|li|u|br)[^>]*>)|<[^>]+>/img, '$1');
-          content = content.replace(/(<\/li>[^<]*?<li[^>]*>)/img, '<br>$1');
-          let is_list = this.block.content.match(/<br[^>]*>/m) || content.match(/<br[^>]*>/m) || this.block.content.match(/<li[^>]*>/m) || content.match(/<li[^>]*>/m);
-          if (this.block.classes && typeof this.block.classes === 'object' && typeof this.block.classes.whitespace !== 'undefined' && this.block.classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
-            content = content.replace(/[\r\n]/mg, '<br>');
-            is_list = true;
-          }
-          let separator = '<div class="part-separator"></div>'
-          let joinBy = is_list ? '<split/>' : `<split/><split/>`;
-          /*let rg = new RegExp('((?<!St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\\b)cf|(?=\\b)Cap|(?=\\b)ca|(?=\\b)cca|(?=\\b)fl|(?=\\b)gen|(?=\\b)gov|(?=\\b)vs|(?=\\b)v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|(?=\\b)scil|(?=\\b)ed|(?=\\b)p|(?=\\b)viz|\\W[A-Z]))([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])', 'img');
-          content = content.replace(rg, '$1$2<br><br>');*/
-          let parts = [];
-          let lettersPattern = 'a-zA-Zа-яА-Я\\u0600-\\u06FF';
-          let regEx = new RegExp(`[\.\!\?\…\؟]+[^${lettersPattern}]*?( |[\r\n]|<br[^>]*>|<\/[^>]+>)(?![\\W]*[a-z])`, 'mg')
-          let regExAbbr = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
-          let regExColon = new RegExp(`[\:\;\؛]\\W* `, 'mg');
-          if (this.getBlockLang !== 'en') {
-            regEx = new RegExp(`[\.\!\?\…\.\!\…\؟] `, 'mg');
-            regExColon = new RegExp(`[\:\;\؛] `, 'mg');
-          }
-          let regExLetters = new RegExp(`[${lettersPattern}]`);
-          let regExNewline = new RegExp(`[^\.\!\?\…\؟]<br[^>]*>[^${lettersPattern}]*$`);
-          let regExNewlineSpace = new RegExp(`[^\.\!\?\…\؟]\s+<br[^>]*>[^${lettersPattern}]*$`);
-          //var regExLower = new RegExp('$([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])')
-          let match;
-          let shift = 0;
-          while ((match = regEx.exec(content))) {
-            //console.log(match)
-            let pos = match.index + match[0].length;
-            let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
-            //var substrLower = str.substring(match.index);
-            //console.log(`CHECK "${substr}"`);
-            //console.log('MATCH: ', substr.match(regExAbbr))
-            if (!substr.match(regExAbbr) && substr.match(regExLetters) && (!substr.match(regExNewline) || !substr.match(regExNewlineSpace))) {
-              parts.push(substr);
-              shift = pos;
-            }
-          }
-          if (parts.length > 0) {
-            if (shift < content.length) {
-              let substr = content.substring(shift);
-              if (substr.match(regExLetters) && !substr.match(regExNewline)) {
-                parts.push(substr);
-              } else {
-                parts[parts.length - 1]+=substr;
-              }
-            }
-            content = parts.join(joinBy);
-          }
-          parts = [];
-          shift = 0;
-          while ((match = regExColon.exec(content))) {
-            let pos = match.index + match[0].length;
-            let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
-            if (substr.match(regExLetters)) {
-              parts.push(substr);
-              shift = pos;
-            }
-          }
-          if (parts.length > 0) {
-            if (shift < content.length) {
-              let substr = content.substring(shift);
-              if (substr.match(regExLetters)) {
-                parts.push(substr);
-              } else {
-                parts[parts.length - 1]+=substr;
-              }
-            }
-            content = parts.join('<split/>');
-          }
-          try {
-            content = content.replace(new RegExp('(?<!<split\\/>)<br[^>]*>(?!<split\\/>)', 'gm'), `<br>${separator}`);// lists with br should have empty line
-          } catch (e) {// Firefox does not support negative lookbehind
-
-          }
-          content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
-          content = content.replace(/<br><br><br>/gm, '<br><br>');
-          content = content.replace(/<br[^>]*><br[^>]*>/gm, '<br><div class="part-separator"></div>');
-          //content = content.replace(, '$1<br>');
-          return content;
+          narrationBlockContent.setContent( this.blockPart.content.content);
+          narrationBlockContent.prepare( this.getBlockLang);
+          return narrationBlockContent.getContent();
+          // let content = this.blockPart.content.replace(/<sup[^>]*>.*?<\/sup>/img, '');
+          // //content = $(`<div>${content}</div>`).text();
+          // /*let replaceHTMLRg = new RegExp(`<(?!\/|ol|ul|li|u)[^>]*>([^<]+?)<\/[^>]+>`, 'mg');
+          // while (content.match(replaceHTMLRg)) {
+          //   content = content.replace(replaceHTMLRg, '$1');
+          // }*/
+          // content = content.replace(/<br[^>]*>\s*$/, '').replace(/[\r\n]\s*$/, '');//remove <br> at the end of the block
+          // content = content.replace(/(<\/?(?:ol|ul|li|u|br)[^>]*>)|<[^>]+>/img, '$1');
+          // content = content.replace(/(<\/li>[^<]*?<li[^>]*>)/img, '<br>$1');
+          // let is_list = this.block.content.match(/<br[^>]*>/m) || content.match(/<br[^>]*>/m) || this.block.content.match(/<li[^>]*>/m) || content.match(/<li[^>]*>/m);
+          // if (this.block.classes && typeof this.block.classes === 'object' && typeof this.block.classes.whitespace !== 'undefined' && this.block.classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
+          //   content = content.replace(/[\r\n]/mg, '<br>');
+          //   is_list = true;
+          // }
+          // let separator = '<div class="part-separator"></div>'
+          // let joinBy = is_list ? '<split/>' : `<split/><split/>`;
+          // /*let rg = new RegExp('((?<!St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\\b)cf|(?=\\b)Cap|(?=\\b)ca|(?=\\b)cca|(?=\\b)fl|(?=\\b)gen|(?=\\b)gov|(?=\\b)vs|(?=\\b)v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|(?=\\b)scil|(?=\\b)ed|(?=\\b)p|(?=\\b)viz|\\W[A-Z]))([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])', 'img');
+          // content = content.replace(rg, '$1$2<br><br>');*/
+          // let parts = [];
+          // let lettersPattern = 'a-zA-Zа-яА-Я\\u0600-\\u06FF';
+          // let regEx = new RegExp(`[\.\!\?\…\؟]+[^${lettersPattern}]*?( |[\r\n]|<br[^>]*>|<\/[^>]+>)(?![\\W]*[a-z])`, 'mg')
+          // let regExAbbr = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
+          // let regExColon = new RegExp(`[\:\;\؛]\\W* `, 'mg');
+          // if (this.getBlockLang !== 'en') {
+          //   regEx = new RegExp(`[\.\!\?\…\.\!\…\؟] `, 'mg');
+          //   regExColon = new RegExp(`[\:\;\؛] `, 'mg');
+          // }
+          // let regExLetters = new RegExp(`[${lettersPattern}]`);
+          // let regExNewline = new RegExp(`[^\.\!\?\…\؟]<br[^>]*>[^${lettersPattern}]*$`);
+          // let regExNewlineSpace = new RegExp(`[^\.\!\?\…\؟]\s+<br[^>]*>[^${lettersPattern}]*$`);
+          // //var regExLower = new RegExp('$([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])')
+          // let match;
+          // let shift = 0;
+          // while ((match = regEx.exec(content))) {
+          //   //console.log(match)
+          //   let pos = match.index + match[0].length;
+          //   let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
+          //   //var substrLower = str.substring(match.index);
+          //   //console.log(`CHECK "${substr}"`);
+          //   //console.log('MATCH: ', substr.match(regExAbbr))
+          //   if (!substr.match(regExAbbr) && substr.match(regExLetters) && (!substr.match(regExNewline) || !substr.match(regExNewlineSpace))) {
+          //     parts.push(substr);
+          //     shift = pos;
+          //   }
+          // }
+          // if (parts.length > 0) {
+          //   if (shift < content.length) {
+          //     let substr = content.substring(shift);
+          //     if (substr.match(regExLetters) && !substr.match(regExNewline)) {
+          //       parts.push(substr);
+          //     } else {
+          //       parts[parts.length - 1]+=substr;
+          //     }
+          //   }
+          //   content = parts.join(joinBy);
+          // }
+          // parts = [];
+          // shift = 0;
+          // while ((match = regExColon.exec(content))) {
+          //   let pos = match.index + match[0].length;
+          //   let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
+          //   if (substr.match(regExLetters)) {
+          //     parts.push(substr);
+          //     shift = pos;
+          //   }
+          // }
+          // if (parts.length > 0) {
+          //   if (shift < content.length) {
+          //     let substr = content.substring(shift);
+          //     if (substr.match(regExLetters)) {
+          //       parts.push(substr);
+          //     } else {
+          //       parts[parts.length - 1]+=substr;
+          //     }
+          //   }
+          //   content = parts.join('<split/>');
+          // }
+          // try {
+          //   content = content.replace(new RegExp('(?<!<split\\/>)<br[^>]*>(?!<split\\/>)', 'gm'), `<br>${separator}`);// lists with br should have empty line
+          // } catch (e) {// Firefox does not support negative lookbehind
+          //
+          // }
+          // content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
+          // content = content.replace(/<br><br><br>/gm, '<br><br>');
+          // content = content.replace(/<br[^>]*><br[^>]*>/gm, '<br><div class="part-separator"></div>');
+          // //content = content.replace(, '$1<br>');
+          // return content;
         },
         cache: false
       },
@@ -1161,12 +1166,12 @@ export default {
                   'quoteButton', 'suggestButton'
                 ]
               };
-            
+
             let blockLang = this.getBlockLang;
             /*if (this.block.language === 'fa'){
-              blockLang = 'fa';    
+              blockLang = 'fa';
             } else {
-              blockLang = 'en';    
+              blockLang = 'en';
             }*/
 
             this.editor = new MediumEditor('#content-' + this.block.blockid + '-part-' + this.blockPartIdx, {
@@ -2774,7 +2779,7 @@ export default {
       evFromAudioeditorSelect (blockId, indexes) {
         if (blockId == this.check_id) {
           if (Array.isArray(indexes) && indexes.length > 0) {
-            
+
             if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
               this.$refs.blockContent.querySelectorAll('w.selected').forEach(el => {
                 el.classList.remove('selected');
@@ -3015,7 +3020,7 @@ export default {
           });
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', '[data-flag]', this.handleFlagClick);
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', '[data-flag]', this.handleFlagClick);
-          
+
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', 'i.pin', this.handlePinClick);
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', 'i.pin', this.handlePinClick);
         }
@@ -3082,7 +3087,7 @@ export default {
         return this.isSplittedBlock ? this.block.blockid + '-part-' + this.blockPartIdx : this.block.blockid;
       },
       assembleBlockPartAudioEdit(realign, preparedData = false) {
-        
+
         this.$root.$emit('closeFlagPopup', true);
         if (this.isChanged && preparedData === false) {
           this.$root.$emit('show-modal', {
@@ -3241,7 +3246,7 @@ Save text changes and realign the Block?`,
           return textRange;
         }
       },
-      
+
       showPinnedInText() {
         if (this.$refs.blockContent && Array.isArray(this.blockPart.manual_boundaries)) {
           Vue.nextTick(() => {
@@ -3450,7 +3455,7 @@ Save text changes and realign the Block?`,
             return false;
           }
           if (this.isChanged || this.isAudioChanged || partTo.isChanged || partTo.isAudioChanged) {
-            
+
             this.$root.$emit('show-modal', {
               title: `Unsaved Changes`,
               text: `Subblocks have unsaved changes.<br>
@@ -3772,5 +3777,5 @@ Join with next subblock?`;
          }
       }
    }
-   
+
 </style>
