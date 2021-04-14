@@ -76,7 +76,7 @@ test('all flow', () => {
   let getBlockLang ='en';
   let expectedResult = 'My father was a St. <u>Bernard</u>, my <i>mother </i>was a <b>collie, </b>but I am a \\nPresbyterian.<br><div class=\"part-separator\"></div>This is what my mother told me, I do not know these nice \\ndistinctions myself.<br><div class=\"part-separator\"></div>To me they are only fine large words meaning nothing. \\nMy mother had a fondness for such;<br>she liked to say them, and see other \\ndogs look surprised and envious, as wondering how she got so much \\neducation.<br><div class=\"part-separator\"></div>But, indeed, it was not real education;';
   narrationBlockContent.setContent(blockPartContent.content);
-  narrationBlockContent.get(blockContent, getBlockLang);
+  narrationBlockContent.prepare(getBlockLang);
   expect(narrationBlockContent.getContent()).toBe(expectedResult);
 
 });
