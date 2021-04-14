@@ -24,7 +24,7 @@ let removeNonHtmlSpaceMarkers = function () {
 
 let removeInTextFormatting = function () {
 
-    let InTextFormattingShouldBeVisible = ['ol','ul','li','u','br'].join('|');
+    let InTextFormattingShouldBeVisible = ['ol','ul','li','u','br','i','b'].join('|');
     const regex = new RegExp(`(<\/?(?:${InTextFormattingShouldBeVisible})[^>]*>)|<[^>]+>`,'img');
     content = content.replace(regex, '$1');
 
