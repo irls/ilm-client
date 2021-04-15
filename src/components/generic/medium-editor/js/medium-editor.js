@@ -1581,6 +1581,9 @@ MediumEditor.extensions = {};
         },
 
         insertTextAtCursor: function (text) {
+            if (text === ' ') {
+                text = '\u00A0';// insert &nbsp;, otherwise it can be ignored
+            }
             let selection = window.getSelection(),
             range = selection.getRangeAt(0),
             node = document.createTextNode(text);
