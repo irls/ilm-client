@@ -3938,6 +3938,7 @@ export const store = new Vuex.Store({
                     }
                   }
                 })
+                dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
               }
               return resolve();
             });
