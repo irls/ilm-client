@@ -690,7 +690,7 @@ export default {
       narrationBlockContent: {
         get() {
           narrationBlockContent.setContent( this.blockPart.content);
-          narrationBlockContent.setClasses( this.blockPart.classes);
+          narrationBlockContent.setClasses( this.block.classes);
           narrationBlockContent.prepare( this.getBlockLang);
           return narrationBlockContent.getContent();
           // let content = this.blockPart.content.replace(/<sup[^>]*>.*?<\/sup>/img, '');
