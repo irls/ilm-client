@@ -107,7 +107,7 @@ test('line break(non html)', () => {
 
 
 
-describe('inText formatting(regex)', () => {
+describe('inText formatting', () => {
 
   let inTextFormattingShouldBeVisible = {
     'doubleSidedTags':['ol','ul','li','u','b','i'],
@@ -133,4 +133,18 @@ describe('inText formatting(regex)', () => {
     })
   });
 
+});
+
+
+test(`verse couplet`, () => {
+  let content = `<w id="GqPle">one</w> <w id="GqPle">two</w>
+</w><w id="GUcms">three</w>`;
+  let classes = ['whitespace'];
+  let expectedResult = `one two
+three`;
+
+  narrationBlockContent.setContent(content);
+  narrationBlockContent.setClasses(classes);
+  narrationBlockContent.prepare();
+  expect(narrationBlockContent.getContent()).toBe(expectedResult);
 });

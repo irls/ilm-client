@@ -849,6 +849,7 @@ export default {
     },
     initRecorder() {
       return new Promise((resolve, reject) => {
+        // return resolve();
         if (this._is('narrator', true)) {
           navigator.mediaDevices.getUserMedia({
             audio: {

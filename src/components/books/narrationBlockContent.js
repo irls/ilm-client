@@ -1,5 +1,10 @@
 "use strict";
 let content = '';
+let classes = '';
+
+let setClasses = function (classesContentToWorkWith) {
+  classes = classesContentToWorkWith;
+}
 let setContent = function (contentToWorkWith) {
   content = contentToWorkWith;
 }
@@ -46,7 +51,7 @@ let prepare = function ( getBlockLang) {
 
   content = content.replace(/(<\/li>[^<]*?<li[^>]*>)/img, '<br>$1');
   let is_list = content.match(/<br[^>]*>/m) || content.match(/<br[^>]*>/m) || content.match(/<li[^>]*>/m) || content.match(/<li[^>]*>/m);
-  if (content.classes && typeof content.classes === 'object' && typeof content.classes.whitespace !== 'undefined' && content.classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
+  if (classes && typeof classes === 'object' && typeof classes.whitespace !== 'undefined' && classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
     content = content.replace(/[\r\n]/mg, '<br>');
     is_list = true;
   }
@@ -128,6 +133,7 @@ let prepare = function ( getBlockLang) {
 
 let narrationBlockContent = {
   prepare :prepare,
+  setClasses :setClasses,
   setContent :setContent,
   getContent :getContent,
   _superScriptRemove :superScriptRemove,
