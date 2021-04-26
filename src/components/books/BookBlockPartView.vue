@@ -388,7 +388,8 @@ export default {
       footnoteIdx: null,
       //isSaving: false,
       splitPinSelection: null,
-      editingLocked: false
+      editingLocked: false,
+      pinUpdated: null
     }
   },
   components: {
@@ -3248,6 +3249,9 @@ Save text changes and realign the Block?`,
             //if (this.block.blockid === '1306_s_0005_en-bl37') {
               //console.time('showPinnedInText');
             //}
+            if (Date.now() - this.pinUpdated < 2000) {
+              return;
+            }
             if (!this.$refs.blockContent || this.blockPart.manual_boundaries.length === this.$refs.blockContent.querySelectorAll('.pinned-word').length) {
               return;
             }
@@ -3276,6 +3280,7 @@ Save text changes and realign the Block?`,
               //var err = new Error();
               //console.log(err.stack);
             //}
+            this.pinUpdated = Date.now();
           });
         }
       },
