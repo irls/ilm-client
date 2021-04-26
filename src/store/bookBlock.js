@@ -134,7 +134,7 @@ let BlockTypes = {
       'underline' /*, 'rulebelow', 'bookgraphic'*/
     ],
     align: ['', 'left', 'center', 'right', 'justify'],
-    whitespace: ['', 'list', 'verse', 'pre'],
+    whitespace: ['', 'list', 'verse', 'couplet'],
     author: [
       '',
       'bab',
@@ -905,6 +905,14 @@ class BookBlock {
     if (typeof val !== 'undefined') this.classes[classVal] = val;
     if (val === '') delete this.classes[classVal];
   }
+  
+  hasClass(type, val) {
+    if (!Array.isArray(val)) {
+      return this.classes instanceof Object && this.classes[type] && this.classes[type] === val;
+    } else {
+      return this.classes instanceof Object && val.includes(this.classes[type]);
+    }
+  }
 
   set(field, value) {
     if (!this.history[field]) {
@@ -1024,6 +1032,9 @@ class BookBlock {
         delete this.history[k];
       }
     });
+  }
+  getContent() {
+    return this.content;
   }
 }
 
