@@ -236,7 +236,8 @@ export const store = new Vuex.Store({
         checkId: null
       }
     },
-    updateAudiobookProgress: false
+    updateAudiobookProgress: false,
+    coupletSeparator: '',
   },
 
   getters: {
@@ -513,6 +514,9 @@ export const store = new Vuex.Store({
     },
     blockLockedSimultaneous: state => {
       return 'Save or discard audio modifications before editing the block';
+    },
+    coupletSeparator: state => {
+      return state.coupletSeparator;
     }
   },
 
@@ -1052,6 +1056,9 @@ export const store = new Vuex.Store({
     },
     set_updateAudiobookProgress(state, val) {
       state.updateAudiobookProgress = val ? true : false;
+    },
+    set_couplet_separator(state, val) {
+      state.coupletSeparator = val;
     }
   },
 
@@ -1172,6 +1179,7 @@ export const store = new Vuex.Store({
           dispatch('getConfig', 'custom')
             .then(config => {
               state.allowBookSplitPreview = config && config.book_split_preview_users && config.book_split_preview_users.indexOf(state.auth.getSession().user_id) !== -1;
+              commit('set_couplet_separator', config.couplet_separator);
             })
     },
 
@@ -2076,7 +2084,25 @@ export const store = new Vuex.Store({
               }
             });
           }
-          commit('set_storeList', new BookBlock(response.data));
+          let updatedBlock = new BookBlock(response.data);
+          commit('set_storeList', updatedBlock);
+          if (storeBlock.getIsChanged()) {
+            if (Array.isArray(storeBlock.flags) && storeBlock.flags.length > 0) {// if pending flag update present
+              storeBlock.flags.forEach(f => {
+                dispatch('updateStoreFlag', [storeBlock.blockid, f._id, f]);
+              });
+            }
+            if (Array.isArray(storeBlock.flags) && storeBlock.flags.length < updatedBlock.flags.length) {// if pending flag remove present
+              updatedBlock.flags.forEach((f, fIdx) => {
+                let _f = storeBlock.flags.find(fl => {
+                  return fl._id === f._id;
+                });
+                if (!_f) {
+                  updatedBlock.flags.splice(fIdx, 1);
+                }
+              });
+            }
+          }
           return dispatch('getBookAlign')
             .then(() => {
               commit('clear_blocker', 'putBlock');
