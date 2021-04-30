@@ -3925,6 +3925,7 @@ export const store = new Vuex.Store({
     checkInsertedBlocks({state, dispatch, commit}, [old_out, new_out]) {
       return new Promise((resolve, reject) => {
         if (old_out !== new_out) {
+          dispatch('getAudioBook');
           dispatch('getBlocksInRange', [old_out, new_out])
             .then(blocks => {
               if (Array.isArray(blocks)) {
