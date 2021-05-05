@@ -1940,6 +1940,7 @@ export const store = new Vuex.Store({
       if (realign) {
         url+= '?realign=true';
       }
+      let currentBlockO = state.storeListO.get(cleanBlock.blockid);
       // let's update update time in meta:
       //dispatch('updateBookMeta', {})
       return axios.put(url,
@@ -1948,6 +1949,9 @@ export const store = new Vuex.Store({
         })
           .then(response => {
             //console.log('putBlock', response);
+            if (response.data) {
+              dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
+            }
             commit('clear_blocker', 'putBlock');
             block._rev = response.data.rev;
             dispatch('tc_loadBookTask', block.bookid);
