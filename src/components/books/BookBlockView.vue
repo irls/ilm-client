@@ -147,7 +147,7 @@
 
                     <label v-if="block.type === 'title'">
                       <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.style" @input="setChanged(true, 'classes', $event)" class="block-type-select">
-                        <option v-for="(value, key) in blockTypes['title']['style']" :value="value">{{ value }}</option>
+                        <option v-for="(value, key) in blockTypes['title']['style']" :value="value">{{ getClassValue('title', value) }}</option>
                       </select>
                     </label>
 
@@ -1449,6 +1449,7 @@ export default {
         let objValues = {};
         if (elType == 'title'){ 
             objValues = BlockTypesAlias.title.style.values
+            console.log('alias', objValues);
         } else if (elType == 'header') {
              objValues = BlockTypesAlias.header.level.values
         } else {

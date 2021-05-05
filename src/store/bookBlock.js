@@ -53,7 +53,7 @@ let BlockTypes = {
       isInToc: ['on', 'off']
     },
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
-    style: ['', 'subtitle', 'author', 'translator', 'copyright', 'allcaps'],
+    style: ['', 'subtitle', 'author', 'translator', 'copyright'],
     align: ['', 'left', 'center', 'right', 'justify'],
     padding: [
       '',
@@ -203,7 +203,12 @@ let BlockTypesAlias = {
     style: {
       title: 'type',
       values: {
-        'none': 'title'
+        'none': 'title',
+        '': 'title',
+        'subtitle': 'subtitle',
+        'author': 'author',
+        'translator': 'translator',
+        'copyright': 'copyright'
       }
     }
   },
