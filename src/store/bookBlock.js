@@ -194,6 +194,15 @@ let BlockTypes = {
   }
 };
 let BlockTypesAlias = {
+  type: {
+    values: {
+      'title': 'title',
+      'header': 'header',
+      'par': 'paragraph',
+      'illustration': 'illustration',
+      'hr': 'divider line'
+    }
+  },
   title: {
     'table of contents': {
       values: {
@@ -203,8 +212,8 @@ let BlockTypesAlias = {
     style: {
       title: 'type',
       values: {
-        'none': 'title',
-        '': 'title',
+        'none': 'book title',
+        '': ' book title',
         'subtitle': 'subtitle',
         'author': 'author',
         'translator': 'translator',
@@ -217,7 +226,7 @@ let BlockTypesAlias = {
     level: {
       title: 'type',
       values: {
-        h2: 'header',
+        h2: 'chapter header',
         h3: 'subheader',
         h4: 'sub subheader'
       }
