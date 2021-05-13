@@ -3415,6 +3415,16 @@ Save text changes and realign the Block?`,
         this.isChanged = val;
         if (val && type) {
           this.pushChange(type);
+          if (event.target.value == 'title'){
+            this.block.classes.style = '';
+            console.log('classes:', this.block.classes);
+            this.pushChange('classes');
+          }
+          if (event.target.value == 'header'){
+            this.block.classes.level = 'h2';
+            this.pushChange('classes');
+          }
+
           //if (this.block) {
             //this.block.classes = {};
             //this.block.secnum = false;
