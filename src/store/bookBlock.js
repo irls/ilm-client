@@ -212,7 +212,6 @@ let BlockTypesAlias = {
     style: {
       title: 'type',
       values: {
-        'none': 'book title',
         '': ' book title',
         'subtitle': 'subtitle',
         'author': 'author',
