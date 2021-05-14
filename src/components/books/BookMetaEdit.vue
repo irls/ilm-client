@@ -568,8 +568,8 @@ export default {
         'Public', 'Hidden', 'Encumbered', 'Research', 'Private'
       ],
       styleTitles: {
-        'title_style': 'type',
-        'header_level': 'type',
+        'title_style': 'Subtype',
+        'header_level': 'Subtype',
       },
       styleNotNumbered: ['sitalcent', 'editor-note', 'signature', 'reference'],
       languages: Languages,
