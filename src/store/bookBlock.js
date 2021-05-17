@@ -1036,6 +1036,28 @@ class BookBlock {
   getContent() {
     return this.content;
   }
+  allowNarrate(mode) {
+    if (mode !== 'narrate') {
+      return true;
+    }
+    if (!Vue.prototype.globalJobInfo.is_narrate_unassiged || this.voicework !== 'narration') {
+      return false;
+    }
+    //if (this.tc_getBlockTask(block.blockid, 'narrate')) {
+      //return true;
+    //}
+    let user_id = Vue.prototype.user_id;
+    let flags = Array.isArray(this.flags) ? this.flags.filter(flag => {
+      return Array.isArray(flag.parts) && !flag.isNew ? flag.parts.find(p => {
+        let isCreator = p.creator_role ? p.creator_role === 'narrator' : p.creator === user_id;
+        return !isCreator && p.status === 'open' && !p.isReopen;
+      }) : false;
+    }) : [];
+    if (flags.length > 0) {
+      return false;
+    }
+    return true;
+  }
 }
 
 class FlagPart {

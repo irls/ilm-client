@@ -267,10 +267,10 @@ export default {
       return false;
     },
     tc_displayStylesTab() {
-      if ( ['edit', 'proofread'].indexOf(this.bookMode) === -1 || ['BookEdit', 'CollectionBookEdit',"BookProofread"].indexOf(this.$route.name) === -1) {
+      if ( ['edit', 'proofread', 'narrate'].indexOf(this.bookMode) === -1 || ['BookEdit', 'CollectionBookEdit',"BookProofread", 'BookNarrate', 'CollectionBookNarrate'].indexOf(this.$route.name) === -1) {
         return false;
       }
-      if (this.adminOrLibrarian || this.adminOrProofer || this._is('editor', true)) {
+      if (this.adminOrLibrarian || this.adminOrProofer || this._is('editor', true) || (this._is('narrator', true) && this.bookMode === 'narrate')) {
         return true;
       }
       return false;
