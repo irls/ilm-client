@@ -1076,12 +1076,16 @@ export const store = new Vuex.Store({
         for (let idx = 0; idx < state.storeList.size; idx++) {
           let block = state.storeList.get(crossId);
           if (block) {
-            if (state.bookMode === 'edit') {
-              blockList.push(block);
-            } else if (state.bookMode === 'narrate') {
-              if (block.allowNarrate(state.bookMode)) {
+            switch (state.bookMode) {
+              case 'edit':
+              case 'proofread':
                 blockList.push(block);
-              }
+                break;
+              case 'narrate':
+                if (block.allowNarrate(state.bookMode)) {
+                  blockList.push(block);
+                }
+                break;
             }
             /*let hasAssignment = this.currentJobInfo.mastering  || this.currentJobInfo.text_cleanup;
             let hasTask = this.tc_currentBookTasks.tasks.find((t) => {

@@ -850,7 +850,9 @@ export default {
         let tab = document.querySelector(`[aria-controls="${container.$el.id}"]`);
         if (tab) {
           tab.classList.add('hidden');
+          tab.setAttribute('disabled', true);
           container.$el.classList.add('hidden');
+          container.$el.setAttribute('disabled', true);
           if (this.$refs.blockTypesTabs.activeTabIndex === index) {
             let activate = this.$refs.blockTypesTabs.tabs.find((t, i) => {
               return i !== index && t.disabled === false;
@@ -872,6 +874,9 @@ export default {
         let tab = document.querySelector(`[aria-controls="${container.$el.id}"]`);
         if (tab) {
           tab.classList.remove('hidden');
+          tab.removeAttribute('disabled');
+          container.$el.removeAttribute('disabled');
+          container.$el.classList.remove('hidden');
         }
       }
     }
@@ -1623,7 +1628,15 @@ export default {
           $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
         } else if (isSwitch) {
           //$(`a[aria-controls="#block-type-${result.keys().next().value}"]`).parent().trigger( "click" );
-          $(`li#t-block-type-${result.keys().next().value}`).trigger( "click" );
+          if (this.bookMode !== 'narrate') {
+            $(`li#t-block-type-${result.keys().next().value}`).trigger( "click" );
+          } else {
+            if (pausesBefore.size > 0) {
+              $(`li#t-block-type-${pausesBefore.keys().next().value}`).trigger( "click" );
+            } else {
+              $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
+            }
+          }
         }
 
       });
@@ -2590,6 +2603,18 @@ Vue.filter('prettyBytes', function (num) {
     position: fixed;
     top: 0px;
     left: 0px;
+}
+.block-style-tabs {
+  .nav-tabs-wrapper {
+    li:disabled, li[disabled="true"] {
+      display: none;
+    }
+  }
+  .tab-container {
+    &:disabled, &[disabled="true"] {
+      display: none;
+    }
+  }
 }
 
 </style>

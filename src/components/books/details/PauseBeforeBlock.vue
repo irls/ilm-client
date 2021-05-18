@@ -1,5 +1,13 @@
 <template>
-  <div v-bind:key="blockType + '_pause_before'" class="pause-before-container">
+  <div v-bind:key="blockType + '_pause_before'" :class="['pause-before-container', 'mode-' + bookMode]">
+    <template v-if="blockTypesInRange.length > 1">
+      <template v-if="range.length > 1">
+        From {{range[0]}} to {{range[range.length - 1]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+      </template>
+      <template v-else>
+        {{range[0]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+      </template>
+    </template>
     <vue-slider v-model="pause" 
         :min="min" 
         :max="max" 
@@ -7,29 +15,39 @@
         :width="'auto'" 
         tooltip="none"
         :lazy="true"
+        :silent="true"
+        :debug="false"
         ref="pause_before_slider"
         @input="pauseValueChange"
-        @drag-end="pauseValueChange"></vue-slider>
-    <div class="hidden">pause: "{{pause}}", range: {{range}}</div>
-    <div class="pause-before-input">
-      <button @click="decreasePause" :disabled="pause === min" class="minus"></button>
-      <input  class="pause-before" type="number" disabled
-        v-if="blockTypesInRange.length > 1"/>
-      <input  class="pause-before" type="number" v-model="pause"
-        :min="min"
-        :max="max"
-        :step="interval"
-        v-else/>
-      <button @click="increasePause" class="plus" :disabled="pause === max"></button>
+        @drag-end="pauseValueChange"
+        v-if="bookMode !== 'proofread'"></vue-slider>
+    <div class="hidden">pause: "{{pause}}", range: {{range}}</div><!-- class="hidden" -->
+    <div class="col-md-12">
+      <div class="pause-before-input col-md-8">
+        <template v-if="bookMode === 'proofread'">
+          <input  class="pause-before" type="number" disabled
+            v-if="range.length > 1"/>
+          <input type="number" class="pause-before" v-model="pause" disabled v-else />
+        </template>
+        <template v-else>
+          <button @click="decreasePause" :disabled="pause === min" class="minus"></button>
+          <input  class="pause-before" type="number" disabled
+            v-if="range.length > 1"/>
+          <input  class="pause-before" type="number" v-model="pause"
+            :min="min"
+            :max="max"
+            :step="interval"
+            v-else/>
+          <button @click="increasePause" class="plus" :disabled="pause === max"></button>
+        </template>
+      </div>
+      <div class="listen-block col-md-4">
+        <label>Listen</label>
+        <i class="fa fa-play-circle-o" disabled v-if="blockTypesInRange.length > 1 || nowPlaying"></i>
+        <i class="fa fa-play-circle-o" v-else @click="listenBlock"></i>
+        <div class="hidden">{{nowPlaying}}</div>
+      </div>
     </div>
-    <template v-if="blockSelection.start._id !== blockSelection.end._id">
-      <template v-if="blockTypesInRange.length > 1">
-        From {{range[0]}} to {{range[range.length - 1]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range {{blockSelection.start._id_short}} - {{blockSelection.end._id_short}}
-      </template>
-      <template v-else>
-        {{range[0]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range {{blockSelection.start._id_short}} - {{blockSelection.end._id_short}}
-      </template>
-    </template>
   </div>
 </template>
 <script>
@@ -48,7 +66,9 @@
         max: 4, 
         interval: 0.1,
         range: [],
-        blockList: []
+        blockList: [],
+        player: null,
+        nowPlaying: false
       }
     },
     mounted() {
@@ -65,30 +85,7 @@
         return a[1].index > b[1].index ? 1 : -1;
       }).map((a) => {
         return a[1];
-      });
-      let blockList = [];
-      if (this.blockSelection.start && this.blockSelection.start._id && this.blockSelection.end && this.blockSelection.end._id) {
-        let crossId = this.blockSelection.start._id;
-        for (let idx = 0; idx < this.storeList.size; idx++) {
-          let block = this.storeList.get(crossId);
-          if (block) {
-            if (this.bookMode === 'edit') {
-              blockList.push(block);
-            } else if (this.bookMode === 'narrate') {
-              if (block.voicework === 'narrate') {
-                blockList.push(block);
-              }
-            }
-            if (block.blockid == this.blockSelection.end._id) {
-              break;
-            }
-            crossId = this.storeListO.getOutId(block.blockid);
-            if (!crossId) {
-              break;
-            }
-          } else break;
-        }
-      }*/
+      });*/
       //this.blockList = blockList;
     },
     activated: function() {
@@ -234,6 +231,99 @@
           }
         }
         this.blockList = blockList;
+      },
+      listenBlock() {
+        let length = 3;
+        if (this.blockTypesInRange.length === 1) {
+          let selectedBlock = this.blockTypesInRange[0];
+          let previousBlock = this.storeList.get(this.storeListO.getInId(selectedBlock.blockid));
+          if (selectedBlock.audiosrc) {
+            if (!this.player) {
+              this.player = document.createElement('audio');
+            }
+            //this.audio_element.play();
+            if (this.player) {
+              let playPrevious = new Promise((resolve, reject) => {
+                if (previousBlock && previousBlock.audiosrc) {
+                  this.nowPlaying = previousBlock.blockid;
+                  let audio = previousBlock.getAudiosrc('m4a');
+                  this.player.onloadedmetadata = () => {
+                    console.log(this.player.duration);
+                    if (!isNaN(this.player.duration)) {
+                      if (this.player.duration > length) {
+                        this.player.currentTime = this.player.duration - length;
+                      }
+                      this.player.play();
+                    }
+                  };
+                  this.player.onerror = () => {
+                    return resolve();
+                  };
+                  this.player.onended = () => {
+                    return resolve();
+                  };
+                  this.player.src = audio;
+                } else {
+                  return resolve();
+                }
+              });
+              playPrevious
+                .then(() => {
+                  this.nowPlaying = 'pause';
+                  setTimeout(() => {
+                    this.player.ontimeupdate = () => {
+                      if (this.player.currentTime >= length) {
+                        this.stopAudio();
+                      }
+                    };
+                    this.player.onended = () => {
+                      //this.player.src = null;
+                      this.stopAudio();
+                    }
+                    this.player.onloadedmetadata = () => {
+                      this.player.play();
+                    };
+                    this.nowPlaying = selectedBlock.blockid;
+                    this.player.src = selectedBlock.getAudiosrc('m4a');
+                  }, this.pause * 1000);
+                });
+              /*if (map[0] + map[1] < (2 * length + 1) * 1000) {
+                this.player.playBlock('content-' + this.block._id + '-part-0');
+              } else {
+
+                this.player.audio_element.onpause = () => {
+                  //console.log('PAUSE')
+                  let delay = 1000;
+                  if (this.player.load_delay) {
+                    delay+=this.player.load_delay;
+                  }
+                  this.$root.$emit('for-bookedit:scroll-to-block-end', this.block._id);
+                  setTimeout(() => {
+                    this.player.playRange(`content-${this.block._id}-part-0`, map[0] + map[1] - length * 1000, map[0] + map[1]);
+                  }, delay);
+
+                  //console.log(this.player);
+                  this.player.audio_element.onpause = null;
+                };
+                this.player.playRange(`content-${this.block._id}-part-0`, 0, length * 1000);
+              }*/
+
+            }
+          }
+        }
+      },
+      stopAudio() {
+        if (this.player) {
+          this.nowPlaying = false;
+          this.player.pause();
+          this.player.onloadedmetadata = null;
+          this.player.onerror = null;
+          this.player.onended = null;
+          this.player.ontimeupdate = null;
+        }
+      },
+      goToBlock(blockId) {
+        this.$root.$emit('for-bookedit:scroll-to-block', blockId);
       }
     },
     computed: {
@@ -321,6 +411,8 @@
 <style lang="less">
   .pause-before-container {
     .pause-before-input {
+      text-align: left;
+      padding: 0px;
       input[type="number"] {
         -webkit-appearance: textfield;
         -moz-appearance: textfield;
@@ -389,6 +481,40 @@
         font-weight: bold;
         text-align: center;
         color:#3498db;
+        &:disabled {
+          font-style: normal;
+        }
+      }
+    }
+    .listen-block {
+      label {
+        display: inline-block;
+        font-weight: normal;
+        /*padding: 9px 8px;*/
+        vertical-align: sub;
+      }
+      i {
+        font-size: 25px !important;
+        vertical-align: text-top;
+        color: #3498db;
+        &[disabled="disabled"] {
+          color: gray;
+          background-color: inherit !important;
+          cursor: inherit;
+        }
+      }
+    }
+    a {
+      cursor: pointer;
+    }
+    .col-md-12 {
+      padding: 0px;
+    }
+    &.mode-proofread {
+      .listen-block {
+        i {
+          vertical-align: top;
+        }
       }
     }
   }
