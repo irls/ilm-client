@@ -679,7 +679,8 @@ export default {
     }),
       proofreadModeReadOnly: {
         get() {
-            return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
+            // ILM-3992 return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
+            return this.mode === 'proofread' || (this._is('proofer') ) ;
         }
     },
     collectionsList: {
