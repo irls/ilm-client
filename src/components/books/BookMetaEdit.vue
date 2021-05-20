@@ -684,7 +684,7 @@ export default {
       get() {
           // return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
           // ILM-3992:
-          return this.mode === 'proofread' ||  (this._is('proofer') && !this.adminOrLibrarian ) ;
+          return this.mode === 'proofread'  ;
       }
     },
     collectionsList: {
