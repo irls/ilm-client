@@ -1989,6 +1989,10 @@ export default {
                     fullUpdate = true;
                     partUpdate.type = this.block.type;
                     break;
+                  case 'classes':
+                    fullUpdate = true;
+                    partUpdate.classes = this.block.classes;
+                    break;
                   case 'language':
                     fullUpdate = true;
                     partUpdate.language = this.block.language;
