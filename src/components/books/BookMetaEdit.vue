@@ -273,7 +273,7 @@
                   <legend>Book styles</legend>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('styles.global', '')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('styles.global', '') } : {}">
                       <i v-if="!currentBook.styles || !currentBook.styles.global || currentBook.styles.global === ''"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -281,7 +281,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('styles.global', 'global-ocean')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('styles.global', 'global-ocean') } : {}">
                       <i v-if="currentBook.styles && currentBook.styles.global === 'global-ocean'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -289,7 +289,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('styles.global', 'global-ffa')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('styles.global', 'global-ffa') } : {}">
                       <i v-if="currentBook.styles && currentBook.styles.global === 'global-ffa'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -301,7 +301,7 @@
                   <legend>Automatic numeration</legend>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numbering', 'x')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('numbering', 'x') } : {}">
                       <i v-if="currentBook.numbering === 'x'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -309,7 +309,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numbering', 'x_x')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('numbering', 'x_x') } : {}">
                       <i v-if="currentBook.numbering === 'x_x'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -317,7 +317,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numbering', 'none')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('numbering', 'none') } : {}">
                       <i v-if="currentBook.numbering === 'none'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -677,11 +677,12 @@ export default {
       mode: 'bookMode',
       aligningBlocks: 'aligningBlocks'
     }),
-      proofreadModeReadOnly: {
-        get() {
-            // ILM-3992 return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
-            return this.mode === 'proofread' || (this._is('proofer') ) ;
-        }
+    proofreadModeReadOnly: {
+      get() {
+          // return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
+          // ILM-3992:
+          return this.mode === 'proofread' ||  !this.adminOrLibrarian ;
+      }
     },
     collectionsList: {
       get() {
