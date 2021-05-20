@@ -2,10 +2,10 @@
   <div v-bind:key="blockType + '_pause_before'" :class="['pause-before-container', 'mode-' + bookMode]">
     <template v-if="blockTypesInRange.length > 1">
       <template v-if="range.length > 1">
-        From {{range[0]}} to {{range[range.length - 1]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+        <div class="range-info">From {{range[0]}} to {{range[range.length - 1]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
       </template>
       <template v-else>
-        {{range[0]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+        <div class="range-info">{{range[0]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
       </template>
     </template>
     <vue-slider v-model="pause" 
@@ -33,10 +33,11 @@
           <button @click="decreasePause" :disabled="pause === min" class="minus"></button>
           <input  class="pause-before" type="number" disabled
             v-if="range.length > 1"/>
-          <input  class="pause-before" type="number" v-model="pause"
+          <input  class="pause-before" type="number" v-model="pauseInput"
             :min="min"
             :max="max"
             :step="interval"
+            v-on:change="onPauseInput"
             v-else/>
           <button @click="increasePause" class="plus" :disabled="pause === max"></button>
         </template>
@@ -45,7 +46,7 @@
         <label>Listen</label>
         <i class="fa fa-play-circle-o" disabled v-if="blockTypesInRange.length > 1 || nowPlaying"></i>
         <i class="fa fa-play-circle-o" v-else @click="listenBlock"></i>
-        <div class="hidden">{{nowPlaying}}</div>
+        <div class="hidden">{{nowPlaying}},{{pause}}</div>
       </div>
     </div>
   </div>
@@ -54,6 +55,7 @@
   import VueSlider from 'vue-slider-component';
   import { mapGetters, mapActions } from 'vuex';
   import Vue from 'vue';
+  //import _ from 'lodash'
   export default {
     name: "PauseBeforeBlock",
     components: {VueSlider},
@@ -324,6 +326,14 @@
       },
       goToBlock(blockId) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockId);
+      },
+      onPauseInput($ev) {
+        //console.log($ev.target.value);
+        let value = parseFloat($ev.target.value);
+        if (isNaN(value) || !value) {
+          value = 0;
+        }
+        this.pause = this.parseFloatToFixed(value);
       }
     },
     computed: {
@@ -369,6 +379,18 @@
             return blocks;
           }
           return [];
+        }
+      },
+      pauseInput: {
+        get() {
+          return this.pause;
+        },
+        set(val) {
+          /*console.log(arguments);
+          let wait = _.debounce((key,event) => {
+            console.log(key, event, val);
+          },  500);
+          wait();*/
         }
       },
       ...mapGetters({
