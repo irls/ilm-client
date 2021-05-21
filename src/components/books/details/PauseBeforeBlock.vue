@@ -44,7 +44,7 @@
       </div>
       <div class="listen-block col-md-4">
         <label>Listen</label>
-        <i class="fa fa-play-circle-o" disabled v-if="blockTypesInRange.length > 1 || nowPlaying"></i>
+        <i class="fa fa-play-circle-o" disabled v-if="blockTypesInRange.length > 1 || nowPlaying || !selectedBlock || !selectedBlock.audiosrc"></i>
         <i class="fa fa-play-circle-o" v-else @click="listenBlock"></i>
         <div class="hidden">{{nowPlaying}},{{pause}}</div>
       </div>
@@ -237,9 +237,8 @@
       listenBlock() {
         let length = 3;
         if (this.blockTypesInRange.length === 1) {
-          let selectedBlock = this.blockTypesInRange[0];
-          let previousBlock = this.storeList.get(this.storeListO.getInId(selectedBlock.blockid));
-          if (selectedBlock.audiosrc) {
+          let previousBlock = this.storeList.get(this.storeListO.getInId(this.selectedBlock.blockid));
+          if (this.selectedBlock.audiosrc) {
             if (!this.player) {
               this.player = document.createElement('audio');
             }
@@ -250,7 +249,7 @@
                   this.nowPlaying = previousBlock.blockid;
                   let audio = previousBlock.getAudiosrc('m4a');
                   this.player.onloadedmetadata = () => {
-                    console.log(this.player.duration);
+                    //console.log(this.player.duration);
                     if (!isNaN(this.player.duration)) {
                       if (this.player.duration > length) {
                         this.player.currentTime = this.player.duration - length;
@@ -285,8 +284,8 @@
                     this.player.onloadedmetadata = () => {
                       this.player.play();
                     };
-                    this.nowPlaying = selectedBlock.blockid;
-                    this.player.src = selectedBlock.getAudiosrc('m4a');
+                    this.nowPlaying = this.selectedBlock.blockid;
+                    this.player.src = this.selectedBlock.getAudiosrc('m4a');
                   }, this.pause * 1000);
                 });
               /*if (map[0] + map[1] < (2 * length + 1) * 1000) {
@@ -392,6 +391,12 @@
           },  500);
           wait();*/
         }
+      },
+      selectedBlock: {
+        get() {
+          return Array.isArray(this.blockTypesInRange) ? this.blockTypesInRange[0] : null;
+        },
+        cache: false
       },
       ...mapGetters({
         blockSelection: 'blockSelection',
