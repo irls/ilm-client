@@ -718,7 +718,7 @@ class BookBlock {
 
   setPartContent(partIdx, content) {
     let partCheck =
-      Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+      this.getIsSplittedBlock() && Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
     if (partCheck) {
       this.set(`parts.${partIdx}.content`, content);
     } else if (partIdx === 0) {
@@ -733,7 +733,7 @@ class BookBlock {
 
   setPartAudiosrc(partIdx, path, ver = {}) {
     let partCheck =
-      Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+      this.getIsSplittedBlock() && Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
     if (partCheck) {
       this.set(`parts.${partIdx}.audiosrc`, path);
       this.set(`parts.${partIdx}.audiosrc_ver`, ver);
@@ -748,7 +748,7 @@ class BookBlock {
 
   setPartManualBoundaries(partIdx, boundaries = []) {
     let partCheck =
-      Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+      this.getIsSplittedBlock() && Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
     if (partCheck) {
       this.set(`parts.${partIdx}.manual_boundaries`, boundaries);
     } else if (partIdx === 0) {
@@ -758,7 +758,7 @@ class BookBlock {
 
   setPartAudiosrcOriginal(partIdx, src) {
     let partCheck =
-      Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
+      this.getIsSplittedBlock() && Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
     if (partCheck) {
       this.set(`parts.${partIdx}.audiosrc_original`, src);
     } else if (partIdx === 0) {
@@ -1002,7 +1002,7 @@ class BookBlock {
     this.pause_before = val;
   }
   setPartContentChanged(partIdx, value) {
-    if (Array.isArray(this.parts) && this.parts[partIdx]) {
+    if (this.getIsSplittedBlock() && Array.isArray(this.parts) && this.parts[partIdx]) {
       this.parts[partIdx].content_changed = value;
     }
   }
