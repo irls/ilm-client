@@ -2372,6 +2372,9 @@ Vue.filter('prettyBytes', function (num) {
 </style>
 
 <style lang="less">
+  div.block-style-tabs .nav-tabs > li > a {
+    margin: 0 !important;
+  }
 
   .styles-catalogue {
     li.tab {
