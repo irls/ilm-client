@@ -1051,14 +1051,16 @@ export default {
       if(!debounceTime)
         debounceTime = false;
 
-      return this.update(key, event, debounceTime,true);
+      return this.update(key, event, debounceTime, true);
     },
 
-    update(key, event, debounceTime,disable){
+    update(key, event, debounceTime, disable){
       if(!debounceTime)
         debounceTime = false;
       if(!disable)
         disable = false;
+
+      console.log('here', debounceTime, disable);
 
 
       if(key =='difficulty'){
@@ -1109,9 +1111,10 @@ export default {
     },
 
     liveUpdate (key, value, event) {
+      // Removed regards with ILM-3683:
       //bad conflict fix
-        if(this.proofreadModeReadOnly)
-            return ;
+      //  if(this.proofreadModeReadOnly)
+      //      return ;
       //bad conflict fix
 
         if( this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][key] ) {
