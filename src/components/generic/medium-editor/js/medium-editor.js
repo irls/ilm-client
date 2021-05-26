@@ -7074,7 +7074,9 @@ MediumEditor.extensions = {};
                         let partOne = document.createTextNode(selection),
                         partTwo = document.createElement('br'),
                         partThree = document.createTextNode(afterSelection);
-                        if (afterSelection.trim().length === 0 && !element.nextSibling) {
+                        if (selection.trim().length === 0 && afterSelection.trim().length === 0 ) {
+                            parentNode.insertBefore(partTwo, element);
+                        } else if (afterSelection.trim().length === 0 && !element.nextSibling) {
                             let partFour = document.createElement('br');
                             parentNode.replaceChild(partFour, element);
                             parentNode.insertBefore(partTwo, partFour);
@@ -7093,6 +7095,9 @@ MediumEditor.extensions = {};
                 }
             } else {// click inside text node, which parent is not main div and not <w>, e.g. <i>Some text f<u>o<ENTER_HERE>r</u> line <ENTER_HERE>br<u>e</u>ak testing.</i>
                 //console.log(element.parentNode.nodeName);
+                if (parentNode.innerText && parentNode.innerText.length > 0 && selection.trim().length === 0 && afterSelection.trim().length === 0) {
+                    selection = parentNode.innerText;
+                }
                 let baseNode = parentNode.parentNode,
                 partOne = document.createTextNode(selection),
                 containerOne = document.createElement(parentNode.nodeName),
@@ -7154,10 +7159,21 @@ MediumEditor.extensions = {};
                     baseNode.replaceChild(partTwo, parentNode);
                     containerOne.appendChild(partOne);
                     baseNode.insertBefore(containerOne, partTwo);
-                    MediumEditor.selection.moveCursor(this.options.ownerDocument, partTwo.nextSibling ? partTwo.nextSibling : partTwo, 0);
+                    let nextSibling = partTwo.nextSibling;
+                    if (!nextSibling && partTwo.parentNode.nodeName !== 'DIV' && partTwo.parentNode.nextSibling) {
+                        nextSibling = partTwo.parentNode.nextSibling;
+                    }
+                    let moveTo;
+                    if (nextSibling) {
+                        moveTo = nextSibling.childNodes.length > 0 ? nextSibling.childNodes[0] : nextSibling;
+                    } else {
+                        moveTo = partTwo;
+                    }
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, moveTo, 0);
+                    //MediumEditor.selection.moveCursor(this.options.ownerDocument, partTwo.nextSibling ? partTwo.nextSibling : partTwo, 0);
                     //console.log('HERE5');// end of block + <br><br> - cursor not moved
                     //console.log(partOne, partTwo);
-                    if (!partTwo.nextSibling) {
+                    if (!nextSibling) {
                         let partThree = partTwo.cloneNode();
                         baseNode.insertBefore(partThree, partTwo);
                         //console.log('HERE6');
