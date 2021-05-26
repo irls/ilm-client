@@ -327,7 +327,7 @@
 
                 </vue-tab>
 
-                <vue-tab :title="blockType"
+                <vue-tab :title="prepareStyleTabLabel(blockType)"
                   :disabled="!(styleTabs.has(blockType))"
                   v-for="(val, blockType) in blockTypes"
                   :id="'block-type-'+blockType" :key="blockType">
@@ -568,8 +568,11 @@ export default {
         'Public', 'Hidden', 'Encumbered', 'Research', 'Private'
       ],
       styleTitles: {
-        'title_style': 'type',
-        'header_level': 'type',
+        'title_style': 'Subtype',
+        'header_level': 'Subtype',
+      },
+      styleTabLabels: {
+        'hr': 'line'
       },
       styleNotNumbered: ['sitalcent', 'editor-note', 'signature', 'reference'],
       languages: Languages,
@@ -1797,6 +1800,13 @@ export default {
     downloadExportFlac() {
         return this.API_URL + 'export/' + this.currentBook._id + '/exportFlac';
     },
+    prepareStyleTabLabel(title) {
+      if (this.styleTabLabels.hasOwnProperty(title)) {
+        let caption = this.styleTabLabels[title];
+        return caption; 
+      }
+      return title; 
+    },
     styleCaption(type, key) {
       if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {
         let caption = this.styleTitles[`${type}_${key}`];
@@ -2365,6 +2375,9 @@ Vue.filter('prettyBytes', function (num) {
 </style>
 
 <style lang="less">
+  div.block-style-tabs .nav-tabs > li > a {
+    margin: 0 !important;
+  }
 
   .styles-catalogue {
     li.tab {

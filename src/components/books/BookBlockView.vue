@@ -141,9 +141,21 @@
                   <!-- Block Type selector -->
                   <label>
                     <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)" class="block-type-select">
-                      <option v-for="(type, key) in blockTypes" :value="key">{{ key }}</option>
+                      <option v-for="(type, key) in blockTypes" :value="key">{{ getClassValue('type', key) }}</option>
                     </select>
                   </label>
+
+                    <label v-if="block.type === 'title'">
+                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.style" @input="setChanged(true, 'classes', $event)" class="block-type-select">
+                        <option v-for="(value, key) in blockTypes['title']['style']" :value="value">{{ getClassValue('title', value) }}</option>
+                      </select>
+                    </label>
+
+                    <label v-if="block.type === 'header'">
+                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.level" @input="setChanged(true, 'classes', $event)" class="block-type-select">
+                        <option v-for="(value, key) in blockTypes['header']['level']" :value="value">{{ getClassValue('header', value) }}</option>
+                      </select>
+                    </label>
 
                   <div class="par-ctrl-divider"></div>
 
@@ -604,7 +616,7 @@ import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
-import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
+import { BookBlock, BlockTypes, BlockTypesAlias, FootNote }     from '../../store/bookBlock'
 import BookBlockPartView from './BookBlockPartView';
 import { tabs, tab } from 'vue-strap';
 import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
@@ -1433,6 +1445,22 @@ export default {
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
     }),
+      getClassValue(elType,  elKey) {
+        let objValues = {};
+        if (elType == 'type'){ 
+            objValues = BlockTypesAlias.type.values
+        } else if (elType == 'title'){ 
+            objValues = BlockTypesAlias.title.style.values
+        } else if (elType == 'header') {
+             objValues = BlockTypesAlias.header.level.values
+        } else {
+            return false;
+        }
+
+        return objValues[elKey];
+
+      },
+
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
         if (flagType === 'narrator' && this.block.voicework !== 'narration') {
@@ -1962,6 +1990,10 @@ export default {
                     fullUpdate = true;
                     partUpdate.type = this.block.type;
                     break;
+                  case 'classes':
+                    fullUpdate = true;
+                    partUpdate.classes = this.block.classes;
+                    break;
                   case 'language':
                     fullUpdate = true;
                     partUpdate.language = this.block.language;
@@ -2026,7 +2058,9 @@ export default {
         }
         return BPromise.resolve();
       },
-
+      getBlockTypeValue: function () {
+        return '';
+      },
       assembleBlock: function(partUpdate = null, realign = false) {
         let update = partUpdate ? partUpdate : this.block;
         if (update.status && update.status.marked === true) {
@@ -3387,6 +3421,16 @@ Save text changes and realign the Block?`,
         this.isChanged = val;
         if (val && type) {
           this.pushChange(type);
+          if (event.target.value == 'title'){
+            this.block.classes.style = '';
+            console.log('classes:', this.block.classes);
+            this.pushChange('classes');
+          }
+          if (event.target.value == 'header'){
+            this.block.classes.level = 'h2';
+            this.pushChange('classes');
+          }
+
           //if (this.block) {
             //this.block.classes = {};
             //this.block.secnum = false;
