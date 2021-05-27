@@ -967,7 +967,9 @@ export default {
           if (!this.parlistO.get(blockO.blockid)) {
             this.parlistO.addBlock(blockO);
           }
-          this.$store.commit('set_storeList', new BookBlock(b_new));
+          if (!this.parlist.get(b_new.blockid)) {// can be already added by syncgronization
+            this.$store.commit('set_storeList', new BookBlock(b_new));
+          }
 
 //           if (b_old) {
 //             this.refreshBlock({doc: b_old, deleted: false});
@@ -1011,7 +1013,9 @@ export default {
           if (!this.parlistO.get(blockO.blockid)) {
             this.parlistO.addBlock(blockO);
           }
-          this.$store.commit('set_storeList', new BookBlock(b_new));
+          if (!this.parlist.get(b_new.blockid)) {// can be already set by synchronization
+            this.$store.commit('set_storeList', new BookBlock(b_new));
+          }
 
 //           if (b_old) {
 //             this.refreshBlock({doc: b_old, deleted: false});
