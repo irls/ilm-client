@@ -146,13 +146,13 @@
                   </label>
 
                     <label v-if="block.type === 'title'">
-                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.style" @input="setChanged(true, 'classes', $event)" class="block-type-select">
+                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.style" @input="setChanged(true, 'classes', $event)" class="block-class-select">
                         <option v-for="(value, key) in blockTypes['title']['style']" :value="value">{{ getClassValue('title', value) }}</option>
                       </select>
                     </label>
 
                     <label v-if="block.type === 'header'">
-                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.level" @input="setChanged(true, 'classes', $event)" class="block-type-select">
+                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.level" @input="setChanged(true, 'classes', $event)" class="block-class-select">
                         <option v-for="(value, key) in blockTypes['header']['level']" :value="value">{{ getClassValue('header', value) }}</option>
                       </select>
                     </label>
@@ -3437,18 +3437,16 @@ Save text changes and realign the Block?`,
             this.pushChange('classes');
           }
 
-          //if (this.block) {
-            //this.block.classes = {};
-            //this.block.secnum = false;
-            //this.block.parnum = false;
-          //}
-          this.$root.$emit('from-block-edit:set-style');
+          if (event.target.className !== 'block-class-select')
+            this.$root.$emit('from-block-edit:set-style');
+
           if (['type'].indexOf(type) !== -1) {
             if (!this.block.getIsSplittedBlock()) {
               this.block.content = this.$refs.blocks[0].clearBlockContent();
             }
             this.$forceUpdate();
-          }
+          } 
+
           if (type === 'type' && event && event.target) {
             this.block.type = event.target.value;
             if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {
