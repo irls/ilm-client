@@ -53,7 +53,7 @@ let BlockTypes = {
       isInToc: ['on', 'off']
     },
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
-    style: ['', 'subtitle', 'author', 'translator', 'copyright', 'allcaps'],
+    style: ['', 'subtitle', 'author', 'translator', 'copyright'],
     align: ['', 'left', 'center', 'right', 'justify'],
     padding: [
       '',
@@ -194,6 +194,15 @@ let BlockTypes = {
   }
 };
 let BlockTypesAlias = {
+  type: {
+    values: {
+      'title': 'title',
+      'header': 'header',
+      'par': 'paragraph',
+      'illustration': 'illustration',
+      'hr': 'divider line'
+    }
+  },
   title: {
     'table of contents': {
       values: {
@@ -203,7 +212,12 @@ let BlockTypesAlias = {
     style: {
       title: 'type',
       values: {
-        'none': 'title'
+        '': ' book title',
+        'none': ' book title',
+        'subtitle': 'subtitle',
+        'author': 'author',
+        'translator': 'translator',
+        'copyright': 'copyright'
       }
     }
   },
@@ -212,7 +226,7 @@ let BlockTypesAlias = {
     level: {
       title: 'type',
       values: {
-        h2: 'header',
+        h2: 'chapter header',
         h3: 'subheader',
         h4: 'sub subheader'
       }

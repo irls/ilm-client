@@ -273,7 +273,7 @@
                   <legend>Book styles</legend>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('styles.global', '')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('styles.global', '') } : {}">
                       <i v-if="!currentBook.styles || !currentBook.styles.global || currentBook.styles.global === ''"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -281,7 +281,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('styles.global', 'global-ocean')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('styles.global', 'global-ocean') } : {}">
                       <i v-if="currentBook.styles && currentBook.styles.global === 'global-ocean'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -289,7 +289,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('styles.global', 'global-ffa')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('styles.global', 'global-ffa') } : {}">
                       <i v-if="currentBook.styles && currentBook.styles.global === 'global-ffa'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -301,7 +301,7 @@
                   <legend>Automatic numeration</legend>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numbering', 'x')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('numbering', 'x') } : {}">
                       <i v-if="currentBook.numbering === 'x'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -309,7 +309,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numbering', 'x_x')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('numbering', 'x_x') } : {}">
                       <i v-if="currentBook.numbering === 'x_x'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -317,7 +317,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numbering', 'none')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('numbering', 'none') } : {}">
                       <i v-if="currentBook.numbering === 'none'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -327,7 +327,7 @@
 
                 </vue-tab>
 
-                <vue-tab :title="blockType"
+                <vue-tab :title="prepareStyleTabLabel(blockType)"
                   :disabled="!(styleTabs.has(blockType))"
                   v-for="(val, blockType) in blockTypes"
                   :id="'block-type-'+blockType" :key="blockType">
@@ -568,8 +568,11 @@ export default {
         'Public', 'Hidden', 'Encumbered', 'Research', 'Private'
       ],
       styleTitles: {
-        'title_style': 'type',
-        'header_level': 'type',
+        'title_style': 'Subtype',
+        'header_level': 'Subtype',
+      },
+      styleTabLabels: {
+        'hr': 'line'
       },
       styleNotNumbered: ['sitalcent', 'editor-note', 'signature', 'reference'],
       languages: Languages,
@@ -677,10 +680,12 @@ export default {
       mode: 'bookMode',
       aligningBlocks: 'aligningBlocks'
     }),
-      proofreadModeReadOnly: {
-        get() {
-            return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
-        }
+    proofreadModeReadOnly: {
+      get() {
+          // return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
+          // ILM-3992:
+          return this.mode === 'proofread'  ;
+      }
     },
     collectionsList: {
       get() {
@@ -1049,14 +1054,16 @@ export default {
       if(!debounceTime)
         debounceTime = false;
 
-      return this.update(key, event, debounceTime,true);
+      return this.update(key, event, debounceTime, true);
     },
 
-    update(key, event, debounceTime,disable){
+    update(key, event, debounceTime, disable){
       if(!debounceTime)
         debounceTime = false;
       if(!disable)
         disable = false;
+
+      console.log('here', debounceTime, disable);
 
 
       if(key =='difficulty'){
@@ -1107,9 +1114,10 @@ export default {
     },
 
     liveUpdate (key, value, event) {
+      // Removed regards with ILM-3683:
       //bad conflict fix
-        if(this.proofreadModeReadOnly)
-            return ;
+      //  if(this.proofreadModeReadOnly)
+      //      return ;
       //bad conflict fix
 
         if( this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][key] ) {
@@ -1792,6 +1800,13 @@ export default {
     downloadExportFlac() {
         return this.API_URL + 'export/' + this.currentBook._id + '/exportFlac';
     },
+    prepareStyleTabLabel(title) {
+      if (this.styleTabLabels.hasOwnProperty(title)) {
+        let caption = this.styleTabLabels[title];
+        return caption; 
+      }
+      return title; 
+    },
     styleCaption(type, key) {
       if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {
         let caption = this.styleTitles[`${type}_${key}`];
@@ -2360,6 +2375,9 @@ Vue.filter('prettyBytes', function (num) {
 </style>
 
 <style lang="less">
+  div.block-style-tabs .nav-tabs > li > a {
+    margin: 0 !important;
+  }
 
   .styles-catalogue {
     li.tab {
