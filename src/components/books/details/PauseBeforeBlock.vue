@@ -44,7 +44,7 @@
       </div>
       <div class="listen-block col-md-4">
         <label>Listen</label>
-        <i class="fa fa-play-circle-o" disabled v-if="blockTypesInRange.length > 1 || nowPlaying || !selectedBlock || !selectedBlock.audiosrc"></i>
+        <i class="fa fa-play-circle-o" disabled v-if="listenBlockDisabled"></i>
         <i class="fa fa-play-circle-o" v-else @click="listenBlock"></i>
         <div class="hidden">{{nowPlaying}},{{pause}}</div>
       </div>
@@ -395,6 +395,12 @@
       selectedBlock: {
         get() {
           return Array.isArray(this.blockTypesInRange) ? this.blockTypesInRange[0] : null;
+        },
+        cache: false
+      },
+      listenBlockDisabled: {
+        get() {
+          return this.blockTypesInRange.length > 1 || this.nowPlaying || !this.selectedBlock || !this.selectedBlock.audiosrc;
         },
         cache: false
       },
