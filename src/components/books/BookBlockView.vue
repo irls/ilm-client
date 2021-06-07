@@ -10,7 +10,7 @@
                 <i class="glyphicon glyphicon-volume-off"></i>
             </div>
         </div> -->
-        <div class="table-row check-row" v-if="allowEditing || proofreadModeReadOnly">
+        <div class="table-row check-row">
 
           <div class="set-range">
             <i class="fa fa-square-o -hidden" aria-hidden="true"

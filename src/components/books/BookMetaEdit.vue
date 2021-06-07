@@ -266,8 +266,7 @@
         <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
             <div class="styles-catalogue">
 
-              <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }">
-
+              <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }" @tab-change="styleTabChange">
                 <vue-tab title="Book" :id="'global-styles-switcher'">
                   <fieldset class="block-style-fieldset global-style">
                   <legend>Book styles</legend>
@@ -347,8 +346,8 @@
                 </vue-tab>
 
                 <vue-tab :title="prepareStyleTabLabel(blockType)"
-                  :disabled="!(styleTabs.has(blockType))"
-                  v-for="(val, blockType) in blockTypes"
+                  :disabled="!displayStyleTab(blockType)"
+                  v-for="(val, blockType) in blockTypesByMode"
                   :id="'block-type-'+blockType" :key="blockType">
 
                   <fieldset class="block-style-fieldset block-num-fieldset"
@@ -456,17 +455,24 @@
                       Hide from display
                     </label>
                   </fieldset>
-                  <i>Please keep defaults unless you have a compelling reason to change them</i>
+                  <i v-if="bookMode !== 'narrate'">Please keep defaults unless you have a compelling reason to change them {{blockType}}</i>
+                  <i v-else>Pause adjustment is only applicable to Narration blocks, which are not currently being edited</i>
                   <fieldset v-if="pausesBeforeProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset block-pause-fieldset">
                     <legend>Pause before block (sec.)</legend>
-                    <block-style-labels
+                    <!-- <block-style-labels
                       :blockType="blockType"
                       :styleArr="['none', '0.6', '1', '2', '4']"
                       :styleKey="'pause_before'"
                       :styleTabs="pausesBeforeProps"
                       :styleValue="styleValue"
                       @selectStyleEv="selectPauseBefore"
-                    ></block-style-labels>
+                    ></block-style-labels> -->
+                    <pause-before-block v-if="activeTabIndex === TAB_STYLE_INDEX && activeStyleTab === blockType"
+                      v-bind:key="blockType + 'pause_before_container'"
+                      :blockType="blockType"
+                      :styleValue="styleValue"
+                      :styleProps="pausesBeforeProps"
+                      @setPauseBefore="selectPauseBefore"></pause-before-block>
                   </fieldset>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
@@ -490,6 +496,27 @@
                 </vue-tab>
 
               </vue-tabs>
+              <!-- <vue-tabs ref="blockTypesTabsNarration" class="block-style-tabs-narrate" @tab-change="styleTabChange" v-else>
+
+                <vue-tab :title="blockType"
+                  :disabled="!displayStyleTab(blockType)"
+                  v-for="(val, blockType) in blockTypesByMode"
+                  :id="'block-type-'+blockType" :key="blockType">
+                  <i>Please keep defaults unless you have a compelling reason to change them {{blockType}}</i>
+                  <fieldset v-if="pausesBeforeProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset block-pause-fieldset">
+                    <legend>Pause before block (sec.)</legend>
+                    NARRATE
+                    <pause-before-block v-if="activeTabIndex === TAB_STYLE_INDEX && activeStyleTab === blockType"
+                      v-bind:key="blockType + 'pause_before_container'"
+                      :blockType="blockType"
+                      :styleValue="styleValue"
+                      :styleProps="pausesBeforeProps"
+                      @setPauseBefore="selectPauseBefore"></pause-before-block>
+                  </fieldset>
+
+                </vue-tab>
+
+              </vue-tabs> -->
 
             </div>
         </vue-tab>
@@ -553,6 +580,7 @@ import BookPublish from './details/BookPublish';
 import SplitPreview from './details/SplitPreview';
 import BlockStyleLabels from './details/BlockStyleLabels';
 import CompleteAudioExport from './details/CompleteAudioExport';
+import PauseBeforeBlock from './details/PauseBeforeBlock';
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -577,7 +605,8 @@ export default {
     BookPublish,
     SplitPreview,
     BlockStyleLabels,
-    CompleteAudioExport
+    CompleteAudioExport,
+    PauseBeforeBlock
   },
 
   data () {
@@ -659,7 +688,16 @@ export default {
        'tradition': 'حدیث',
        'husayn':   'حسین'
       },
-      pausesBeforeProps: new Map()
+      pausesBeforeProps: new Map(),
+      STYLE_TABS: {
+        0: 'book',
+        1: 'title',
+        2: 'header',
+        3: 'par',
+        4: 'illustration',
+        5: 'hr'
+      },
+      activeStyleTab: ''
     }
   },
 
@@ -784,6 +822,20 @@ export default {
         }
         return '';
       }
+    },
+    blockTypesByMode: {
+      get() {
+        let types = Object.assign({}, this.blockTypes);
+        //console.log(types);
+        if (this.bookMode === 'narrate') {
+          delete types['hr'];
+          delete types['illustration'];
+          Object.keys(types).forEach(k => {
+            types[k] = {};
+          });
+        }
+        return types;
+      }
     }
   },
 
@@ -818,7 +870,52 @@ export default {
           this.$refs.descriptionLong.initSize();
         });
       }
+      if (this.activeTabIndex === this.TAB_STYLE_INDEX) {
+        if (this.bookMode === 'narrate') {
+          Vue.nextTick(() => {
+            if ($(`.block-style-tabs.vue-tabs .nav.nav-tabs li.hidden`).length === 0) {
+              this.$refs.blockTypesTabs.hideTab(0);
+            }
+          });
+        }
+      }
     });
+    this.$refs.blockTypesTabs.hideTab = (index) => {
+      let container = this.$refs.blockTypesTabs.$children[index];
+      if (container && container.$el) {
+        let tab = document.querySelector(`[aria-controls="${container.$el.id}"]`);
+        if (tab) {
+          tab.classList.add('hidden');
+          tab.setAttribute('disabled', true);
+          container.$el.classList.add('hidden');
+          container.$el.setAttribute('disabled', true);
+          if (this.$refs.blockTypesTabs.activeTabIndex === index) {
+            let activate = this.$refs.blockTypesTabs.tabs.find((t, i) => {
+              return i !== index && t.disabled === false;
+            });
+            if (activate) {
+              //this.$refs.blockTypesTabs.activateTab(this.$refs.blockTypesTabs.tabs.indexOf(activate));
+              $($(`.block-style-tabs.vue-tabs .nav.nav-tabs li`)[this.$refs.blockTypesTabs.tabs.indexOf(activate)]).trigger('click');
+            } else {
+              //this.$refs.blockTypesTabs.activateTab(index === 0 ? 1 : 0);
+              //$($(`.block-style-tabs.vue-tabs .nav.nav-tabs li`)[index === 0 ? 1 : 0]).trigger('click');
+            }
+          }
+        }
+      }
+    }
+    this.$refs.blockTypesTabs.showTab = (index) => {
+      let container = this.$refs.blockTypesTabs.$children[index];
+      if (container && container.$el) {
+        let tab = document.querySelector(`[aria-controls="${container.$el.id}"]`);
+        if (tab) {
+          tab.classList.remove('hidden');
+          tab.removeAttribute('disabled');
+          container.$el.removeAttribute('disabled');
+          container.$el.classList.remove('hidden');
+        }
+      }
+    }
   },
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
@@ -939,6 +1036,19 @@ export default {
         if (val < oldVal && this.blockSelection.start._id) {// e.g. pause_before can be changed after realignment
           //console.log('ALIGNING', val);
           this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+        }
+      }
+    },
+    'bookMode': {
+      handler() {
+        if (this.bookMode === 'narrate') {
+          this.$refs.blockTypesTabs.hideTab(0);
+        } else {
+          this.$refs.blockTypesTabs.showTab(0);
+        }
+        if (this.blockSelection.start._id && this.blockSelection.end._id) {
+          //this.$refs.blockTypesTabs.render();
+          this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
         }
       }
     }
@@ -1510,19 +1620,21 @@ export default {
                   nums.get(oBlock.type).set('parNum', false);
                 }
               }
-              if (!pausesBefore.has(oBlock.type)) {
-                pausesBefore.set(oBlock.type, new Map());
-                pausesBefore.get(oBlock.type).set('pause_before', new Map());
-                /*pausesBefore.get(oBlock.type).get('pauses_before').set(new Map([
-                  ['none', !pBlock.pause_before],
-                  [0.6, pBlock.pause_before == 0.6],
-                  [1, pBlock.pause_before == 1],
-                  [2, pBlock.pause_before == 2],
-                  [4, pBlock.pause_before == 4]
-                ]));*/
+              if (this.bookMode !== 'narrate' || pBlock.allowNarrate(this.bookMode)) {
+                if (!pausesBefore.has(oBlock.type)) {
+                  pausesBefore.set(oBlock.type, new Map());
+                  pausesBefore.get(oBlock.type).set('pause_before', new Map());
+                  /*pausesBefore.get(oBlock.type).get('pauses_before').set(new Map([
+                    ['none', !pBlock.pause_before],
+                    [0.6, pBlock.pause_before == 0.6],
+                    [1, pBlock.pause_before == 1],
+                    [2, pBlock.pause_before == 2],
+                    [4, pBlock.pause_before == 4]
+                  ]));*/
+                }
+                pausesBefore.get(oBlock.type).get('pause_before').set(pBlock.pause_before ? `${pBlock.pause_before}` : 'none', true);
+                //pausesBefore.get(oBlock.type).get('pause_before').set(pBlock.pause_before ? pBlock.pause_before : '0.6', true);
               }
-              pausesBefore.get(oBlock.type).get('pause_before').set(pBlock.pause_before ? `${pBlock.pause_before}` : 'none', true);
-              //pausesBefore.get(oBlock.type).get('pause_before').set(pBlock.pause_before ? pBlock.pause_before : '0.6', true);
             }
           }
 
@@ -1532,9 +1644,15 @@ export default {
       if (lang != 'en'){
         result.lang = lang;
       }
+      
+      if (this.bookMode !== 'narrate') {
 
-      this.styleTabs = result;
-      this.numProps = nums;
+        this.styleTabs = result;
+        this.numProps = nums;
+      } else {
+        this.styleTabs = new Map();
+        this.numProps = new Map();
+      }
       this.pausesBeforeProps = pausesBefore;
 
       //console.log('result', result);
@@ -1546,7 +1664,15 @@ export default {
           $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
         } else if (isSwitch) {
           //$(`a[aria-controls="#block-type-${result.keys().next().value}"]`).parent().trigger( "click" );
-          $(`li#t-block-type-${result.keys().next().value}`).trigger( "click" );
+          if (this.bookMode !== 'narrate') {
+            $(`li#t-block-type-${result.keys().next().value}`).trigger( "click" );
+          } else {
+            if (pausesBefore.size > 0) {
+              $(`li#t-block-type-${pausesBefore.keys().next().value}`).trigger( "click" );
+            } else {
+              $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
+            }
+          }
         }
 
       });
@@ -1696,7 +1822,7 @@ export default {
           })
       }
     },
-    selectPauseBefore(blockType, styleKey, styleVal) {
+    selectPauseBefore(blockType, styleVal) {
       //console.log(blockType, styleKey, styleVal);
       if (this.proofreadModeReadOnly) {
         return;
@@ -1986,6 +2112,16 @@ export default {
           return this.liveUpdate('trim_silence_config', {audio_file: false, tts: true, narration: true}, ev);
           break;
       }
+    },
+    styleTabChange(index, component) {
+      //console.log('styleTabChange', index, component.id, component)
+      this.activeStyleTab = component.title;
+    },
+    displayStyleTab(blockType) {
+      if (this.bookMode !== 'narrate') {
+        return (this.styleTabs.has(blockType));
+      }
+      return this.pausesBeforeProps.has(blockType);
     },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseBefore'])
@@ -2532,6 +2668,18 @@ Vue.filter('prettyBytes', function (num) {
     position: fixed;
     top: 0px;
     left: 0px;
+}
+.block-style-tabs {
+  .nav-tabs-wrapper {
+    li:disabled, li[disabled="true"] {
+      display: none;
+    }
+  }
+  .tab-container {
+    &:disabled, &[disabled="true"] {
+      display: none;
+    }
+  }
 }
 
 </style>
