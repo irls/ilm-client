@@ -17,6 +17,7 @@
       <div class="player-controls">
 
         <div :class="['play-controls', '-' + mode]">
+          <div class="hidden">cursorPosition: {{cursorPosition}}</div>
           <i class="fa fa-play-circle-o" v-if="!isPlaying" v-on:click="play()"></i>
           <i class="fa fa-pause-circle-o" v-if="isPlaying" v-on:click="pause()"></i>
           <i class="fa fa-step-backward" v-on:click="goToStart()"></i>
@@ -1015,42 +1016,62 @@
         },
         goToStart() {
           if (this.mode == 'block') {
-            this.clearSelection();
-            this.plEventEmitter.emit('rewind');
+            this.pause()
+              .then(() => {
+                this.cursorPosition = 0;
+                this.clearSelection();
+                this._clearWordSelection();
+                this.scrollPlayerToAnnotation(0);
+              });
           } else if (this.mode == 'file') {
-            $('.playlist-tracks').animate({scrollLeft: 0},500);
+            //$('.playlist-tracks').animate({scrollLeft: 0},500);
+            this.pause()
+              .then(() => {
+                this.audiosourceEditor.rewind()
+                  .then(() => {
+                    //$('.playlist-tracks').scrollLeft(0);
+                    this.cursorPosition = 0;
+                    //this.playPosition = 0;
+                    //$('.playlist-tracks').animate({scrollLeft: 0},500);
+                  })
+              });
           }
-          this.playPosition = 0;
-          this.cursorPosition = 0;
-          this.isPlaying = false;
-          this.isPaused = false;
+          //this.playPosition = 0;
+          //this.cursorPosition = 0;
+          //this.isPlaying = false;
+          //this.isPaused = false;
         },
         goToEnd() {
           if (this.mode == 'block') {
-            this.clearSelection();
-            this.plEventEmitter.emit('fastforward');
+            this.pause()
+              .then(() => {
+                this.cursorPosition = 0;//this.audiosourceEditor.duration;
+                this.clearSelection();
+                this._clearWordSelection();
+                this.scrollPlayerToAnnotation(-1);
+              });
           } else if (this.mode == 'file') {
-            $('.playlist-tracks').animate({scrollLeft: $('.channel-0').width()},500);
+            this.pause()
+              .then(() => {
+                this.audiosourceEditor.fastForward();
+                this.cursorPosition = 0;
+              })
+            //$('.playlist-tracks').animate({scrollLeft: $('.channel-0').width()},500);
           }
-          if (this.audiosourceEditor) {
-            this.playPosition = this.audiosourceEditor.duration;
-            this.cursorPosition = this.audiosourceEditor.duration;
-          }
-          this.isPlaying = false;
-          this.isPaused = false;
         },
         scrollPlayerToAnnotation(index, position) {
           position = position || 'start'
           let annotations = $('.annotations-boxes .annotation-box');
+          if (index === -1) {
+            index = annotations.length - 1;
+          }
           if (annotations[index]) {
             let scrollPosition = $(annotations[index]).position().left + $('.playlist-tracks')[0].scrollLeft;
             if (position == 'middle') {
               scrollPosition-= $('.playlist-tracks').width()/ 2;
               scrollPosition+= $(annotations[index]).width() / 2;
             }
-            $('.playlist-tracks').animate({
-              scrollLeft: scrollPosition
-            }, 200);
+            $('.playlist-tracks').scrollLeft(scrollPosition);
           }
         },
         isAnnotationVisible(index) {
@@ -1216,7 +1237,13 @@
         save() {
           if (this.mode == 'block') {
             if (this.isModified) {
-              this.$root.$emit('from-audioeditor:save');
+              this.pause()
+                .then(() => {
+                  this._clearWordSelection();
+                  this.cursorPosition = 0;
+                  this.scrollPlayerToAnnotation(0);
+                  this.$root.$emit('from-audioeditor:save');
+                });
               //this.addTaskQueue('save', []);
               //this.isModified = false;
             }
@@ -1241,144 +1268,164 @@
         saveAndRealign() {
           if (this.isModified) {
             //this.history = [];
-            this.$root.$emit('from-audioeditor:save', true);
+            this.pause()
+              .then(() => {
+                this._clearWordSelection();
+                this.cursorPosition = 0;
+                this.scrollPlayerToAnnotation(0);
+                this.$root.$emit('from-audioeditor:save', true);
+              });
             //this.isModified = false;
           }
         },
         cutLocal() {
-          let cut_range = this.cutRangeAction(this.selection.start, this.selection.end);
-          this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
-          let diff = this._round(this.selection.end - this.selection.start, 2);
-          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
-            if (al.start <= this.selection.start && al.end >= this.selection.end) {// cut middle of the word
-              al.end-= diff;
-              this._changeWordPositions(al, i);
-            } else if (al.start >= this.selection.end) {// word after selection
-              al.start-= diff;
-              al.end-= diff;
-              this._changeWordPositions(al, i);
-            } else if (al.start >= this.selection.start && al.end <= this.selection.end) {// cut word
-              al.start = this.selection.start;
-              al.end = this.selection.start;
-              this._changeWordPositions(al, i);
-            } else if (al.end > this.selection.start && al.end < this.selection.end) {// cut end of the word
-              al.end = this.selection.start;
-              this._changeWordPositions(al, i);
-            } else if (al.start > this.selection.start && al.start < this.selection.end) {// cut end of the word
-              al.start = this.selection.start;
-              al.end-= diff;
-              this._changeWordPositions(al, i);
-            }
-          });
-          /*if (pos && pos.length == 2) {
-                let begin = parseInt(pos[0]);
-                let end = parseInt(pos[1]);
-                if (end < 0) {
-                  end = 0;
-                }
-                let mb_index = manual_boundaries.indexOf(begin);
-                //console.log(begin, end, $(item).text(), shift);
-                if (shift > 0) {
-                  if (end - shift > min) {
-                    begin+= shift;
-                    end-=shift;
-                    shift = 0;
-                    if (mb_index !== -1) {
-                      manual_boundaries.splice(mb_index, 1);
-                    }
-                    //console.log('SHIFT1', $(item).text(), shift)
-                  } else if (end > min && end - shift < min) {
-                    let delta = end - min;
-                    shift-=delta;
-                    begin+= delta;
-
-                    begin+= shift;
-                    end = min;
-                    if (mb_index !== -1) {
-                      manual_boundaries.splice(mb_index, 1);
-                    }
-                    //console.log('SHIFT2', $(item).text(), begin, end)
-                    //end+= shift;
-                  } else {
-                    begin+=shift;
-                    //console.log('SHIFT3', $(item).text(), shift)
-                    //end+=shift;
-                    //shift*=2;
-                    if (mb_index !== -1) {
-                      manual_boundaries.splice(mb_index, 1);
-                    }
-                  }
-                }
-                let dur = parseInt(end) || 0;
-                if (dur < min) {
-                  let delta = (min - dur);
-                  shift+= delta;
-                  end+=delta;
-                  //console.log('SHIFT4', $(item).text(), delta)
-                  //console.log('INCREASE', shift, end)
-                  //mapData[i].shift = delta;
-                }
-                //console.log(begin, end, $(this).text(), shift);
-                $(item).attr('data-map', begin + ',' + end);
-                lastMap = [begin, end];
-              }
-              if (shift > 0 && index === total - 1) {
-                addSilence = shift / 1000;
-              }
-            });*/
-          let shift = 0;
-          let min = 0.05;
-          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
-            let duration = al.end - al.start;
-            if (shift > 0) {
-              if (duration - shift > min) {
-                al.start+= shift;
-                //al.end-=shift;
-                shift = 0;
-                //if (mb_index !== -1) {
-                  //manual_boundaries.splice(mb_index, 1);
-                //}
-              } else if (duration > min && duration - shift < min) {
-                let delta = duration - min;
-                shift-=delta;
-                al.start+= delta;
-
-                al.start+= shift;
-                al.end = al.start + min;
-                //if (mb_index !== -1) {
-                  //manual_boundaries.splice(mb_index, 1);
-                //}
+          let playPosition = null;
+          return this.pause()
+            .then(() => {
+              let cut_range = this.cutRangeAction(this.selection.start, this.selection.end);
+              this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
+              let diff = this._round(this.selection.end - this.selection.start, 2);
+              if (this.cursorPosition >= this.selection.start && this.cursorPosition <= this.selection.end) {
+                playPosition = this.selection.start;
+              } else if (this.cursorPosition > this.selection.end) {
+                playPosition = this.cursorPosition - diff;
               } else {
-                al.start+=shift;
-                al.end+=shift;
-                //if (mb_index !== -1) {
-                  //manual_boundaries.splice(mb_index, 1);
-                //}
+                playPosition = this.cursorPosition;
               }
-              this._changeWordPositions(al, i);
-            }
-            if (al.end - al.start < min) {
-              let delta = this._round(min - (al.end - al.start), 2);
-              shift = this._round(shift + delta, 2);
-              al.end = this._round(al.end + delta, 2);
-              this._changeWordPositions(al, i);
-            }
-          });
-          if (shift > 0) {
-            shift = this._round(shift, 2);
-            this.insertRangeAction(this.audiosourceEditor.duration, new Float32Array(shift * this.audiosourceEditor.activeTrack.buffer.sampleRate), shift);
-          }
-          this.fixMap();
-          this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
-          this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000), shift]);
-          this.clearSelection();
-          this.isModified = true;
-          //this.audiosourceEditor.ee.emit('scroll');
-          //durationformat
-          //statechange + state
-          //trim + clear selection
-          //scroll
-          //playbackReset call
+              this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+                if (al.start <= this.selection.start && al.end >= this.selection.end) {// cut middle of the word
+                  al.end-= diff;
+                  this._changeWordPositions(al, i);
+                } else if (al.start >= this.selection.end) {// word after selection
+                  al.start-= diff;
+                  al.end-= diff;
+                  this._changeWordPositions(al, i);
+                } else if (al.start >= this.selection.start && al.end <= this.selection.end) {// cut word
+                  al.start = this.selection.start;
+                  al.end = this.selection.start;
+                  this._changeWordPositions(al, i);
+                } else if (al.end > this.selection.start && al.end < this.selection.end) {// cut end of the word
+                  al.end = this.selection.start;
+                  this._changeWordPositions(al, i);
+                } else if (al.start > this.selection.start && al.start < this.selection.end) {// cut end of the word
+                  al.start = this.selection.start;
+                  al.end-= diff;
+                  this._changeWordPositions(al, i);
+                }
+              });
+              /*if (pos && pos.length == 2) {
+                    let begin = parseInt(pos[0]);
+                    let end = parseInt(pos[1]);
+                    if (end < 0) {
+                      end = 0;
+                    }
+                    let mb_index = manual_boundaries.indexOf(begin);
+                    //console.log(begin, end, $(item).text(), shift);
+                    if (shift > 0) {
+                      if (end - shift > min) {
+                        begin+= shift;
+                        end-=shift;
+                        shift = 0;
+                        if (mb_index !== -1) {
+                          manual_boundaries.splice(mb_index, 1);
+                        }
+                        //console.log('SHIFT1', $(item).text(), shift)
+                      } else if (end > min && end - shift < min) {
+                        let delta = end - min;
+                        shift-=delta;
+                        begin+= delta;
+
+                        begin+= shift;
+                        end = min;
+                        if (mb_index !== -1) {
+                          manual_boundaries.splice(mb_index, 1);
+                        }
+                        //console.log('SHIFT2', $(item).text(), begin, end)
+                        //end+= shift;
+                      } else {
+                        begin+=shift;
+                        //console.log('SHIFT3', $(item).text(), shift)
+                        //end+=shift;
+                        //shift*=2;
+                        if (mb_index !== -1) {
+                          manual_boundaries.splice(mb_index, 1);
+                        }
+                      }
+                    }
+                    let dur = parseInt(end) || 0;
+                    if (dur < min) {
+                      let delta = (min - dur);
+                      shift+= delta;
+                      end+=delta;
+                      //console.log('SHIFT4', $(item).text(), delta)
+                      //console.log('INCREASE', shift, end)
+                      //mapData[i].shift = delta;
+                    }
+                    //console.log(begin, end, $(this).text(), shift);
+                    $(item).attr('data-map', begin + ',' + end);
+                    lastMap = [begin, end];
+                  }
+                  if (shift > 0 && index === total - 1) {
+                    addSilence = shift / 1000;
+                  }
+                });*/
+              let shift = 0;
+              let min = 0.05;
+              this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+                let duration = al.end - al.start;
+                if (shift > 0) {
+                  if (duration - shift > min) {
+                    al.start+= shift;
+                    //al.end-=shift;
+                    shift = 0;
+                    //if (mb_index !== -1) {
+                      //manual_boundaries.splice(mb_index, 1);
+                    //}
+                  } else if (duration > min && duration - shift < min) {
+                    let delta = duration - min;
+                    shift-=delta;
+                    al.start+= delta;
+
+                    al.start+= shift;
+                    al.end = al.start + min;
+                    //if (mb_index !== -1) {
+                      //manual_boundaries.splice(mb_index, 1);
+                    //}
+                  } else {
+                    al.start+=shift;
+                    al.end+=shift;
+                    //if (mb_index !== -1) {
+                      //manual_boundaries.splice(mb_index, 1);
+                    //}
+                  }
+                  this._changeWordPositions(al, i);
+                }
+                if (al.end - al.start < min) {
+                  let delta = this._round(min - (al.end - al.start), 2);
+                  shift = this._round(shift + delta, 2);
+                  al.end = this._round(al.end + delta, 2);
+                  this._changeWordPositions(al, i);
+                }
+              });
+              if (shift > 0) {
+                shift = this._round(shift, 2);
+                this.insertRangeAction(this.audiosourceEditor.duration, new Float32Array(shift * this.audiosourceEditor.activeTrack.buffer.sampleRate), shift);
+              }
+              this.fixMap();
+              this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
+              this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000), shift]);
+              this.clearSelection();
+              this.isModified = true;
+              if (playPosition) {
+                this.cursorPosition = playPosition;
+              }
+              //this.audiosourceEditor.ee.emit('scroll');
+              //durationformat
+              //statechange + state
+              //trim + clear selection
+              //scroll
+              //playbackReset call
+            });
         },
         cutRangeAction(start, end) {
           let original_buffer = this.audiosourceEditor.activeTrack.buffer;
@@ -1483,29 +1530,44 @@
           //this.undoLocal();
           //return;
           if (this.mode === 'block') {
-            let make_event = !this.audioTasksQueue.running;
-            this.popTaskQueue();
-            let record = this._popHistoryLocal(true);
-            //let record = this._popHistory();
-            if (this.actionsLog.length === 0 && this.isHistoryFull) {
-              this.isModified = false;
-            }
-            if (record) {
-              //this.block.manual_boundaries = record.manual_boundaries ? record.manual_boundaries.slice() : [];
-              //this.setAudio(record.audio, record.text, false);
-              this.$root.$emit('from-audioeditor:undo', this.blockId, record.audio, record.text, this.isModified);
-            }
+            return this.pause()
+              .then(() => {
+                let make_event = !this.audioTasksQueue.running;
+                this.popTaskQueue();
+                let record = this._popHistoryLocal(true);
+                //let record = this._popHistory();
+                if (record.type === "insert_silence") {
+                  if (record.selection) {
+                    if (this.cursorPosition >= record.selection.start && this.cursorPosition <= record.selection.end) {
+                      this.cursorPosition = record.selection.start;
+                    } else if (this.cursorPosition > record.selection.end) {
+                      this.cursorPosition -= record.selection.end - record.selection.start;
+                    }
+                  }
+                }
+                if (this.actionsLog.length === 0 && this.isHistoryFull) {
+                  this.isModified = false;
+                }
+                if (record) {
+                  //this.block.manual_boundaries = record.manual_boundaries ? record.manual_boundaries.slice() : [];
+                  //this.setAudio(record.audio, record.text, false);
+                  this.$root.$emit('from-audioeditor:undo', this.blockId, record.audio, record.text, this.isModified);
+                }
+              })
           } else if (this.mode === 'file') {
-            if (this.origFilePositions) {
-              //this.selection = this.origFilePositions;
-              //this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-              //this._showSelectionBorders();
-              if (this.origFilePositions.start == this.selection.end) {
-                this.setSelectionEnd(this.origFilePositions.end);
-              }
-              this.setSelectionStart(this.origFilePositions.start);
-              this.setSelectionEnd(this.origFilePositions.end);
-            }
+            return this.pause()
+              .then(() => {
+                if (this.origFilePositions) {
+                  //this.selection = this.origFilePositions;
+                  //this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                  //this._showSelectionBorders();
+                  if (this.origFilePositions.start == this.selection.end) {
+                    this.setSelectionEnd(this.origFilePositions.end);
+                  }
+                  this.setSelectionStart(this.origFilePositions.start);
+                  this.setSelectionEnd(this.origFilePositions.end);
+                }
+              });
           }
         },
         undoLocal() {
@@ -2529,9 +2591,8 @@ Revert to original block audio?`,
             } else {
               pause = new Promise((res, rej) => {res()});
             }
-            return pause
+            return this.pause()
               .then(() => {
-                this.$root.$emit('from-audioeditor:revert', this.blockId);
                 //this._setDefaults();
                 /*this.words = [];
                 this.currentWord = null;
@@ -2545,6 +2606,14 @@ Revert to original block audio?`,
                 this.history = [];
                 this.actionsLog = [];
                 this.cursorPosition = 0;
+                this._clearWordSelection();
+                this.scrollPlayerToAnnotation(0);
+                //$('.playlist-tracks').scrollLeft(0);
+                return Promise.resolve();
+              })
+              .then(() => {
+                
+                this.$root.$emit('from-audioeditor:revert', this.blockId);
               });
           }
         },
