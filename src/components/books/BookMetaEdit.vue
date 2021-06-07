@@ -269,7 +269,7 @@
               <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }">
 
                 <vue-tab title="Book" :id="'global-styles-switcher'">
-                  <fieldset class="block-style-fieldset">
+                  <fieldset class="block-style-fieldset global-style">
                   <legend>Book styles</legend>
                   <div>
                     <label class="style-label"
@@ -297,7 +297,7 @@
                   </div>
                   </fieldset>
 
-                  <fieldset class="block-style-fieldset">
+                  <fieldset class="block-style-fieldset automatic-numeration">
                   <legend>Automatic numeration</legend>
                   <div>
                     <label class="style-label"
@@ -323,6 +323,25 @@
                       <i v-else class="fa fa-circle-o"></i>
                       Off</label>
                   </div>
+                  </fieldset>
+                  <fieldset class="block-style-fieldset trim-silence-config">
+                    <legend>Trim silence</legend>
+                    <div>
+                      <label class="style-label"
+                        @click="setTrimSilenceConfig('audio_tts_narration')">
+                        <i v-if="trimSilenceConfigCalculated === 'audio_tts_narration'" class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                        Audio file, Narration, TTS
+                      </label>
+                    </div>
+                    <div>
+                      <label class="style-label"
+                        @click="setTrimSilenceConfig('tts_narration')">
+                        <i v-if="trimSilenceConfigCalculated === 'tts_narration'" class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                        Narration, TTS
+                      </label>
+                    </div>
                   </fieldset>
 
                 </vue-tab>
@@ -752,6 +771,18 @@ export default {
             return false;
 
         return this.tc_allowMetadataEdit();
+      }
+    },
+    trimSilenceConfigCalculated: {
+      get() {
+        if (this.currentBookMeta && this.currentBookMeta.trim_silence_config) {
+          if (this.currentBookMeta.trim_silence_config.audio_file && this.currentBookMeta.trim_silence_config.tts && this.currentBookMeta.trim_silence_config.narration) {
+            return 'audio_tts_narration';
+          } else if (this.currentBookMeta.trim_silence_config.tts && this.currentBookMeta.trim_silence_config.narration && !this.currentBookMeta.trim_silence_config.audio_file) {
+            return 'tts_narration';
+          }
+        }
+        return '';
       }
     }
   },
@@ -1946,6 +1977,16 @@ export default {
       this.$router.push({name: this.$route.name, params: {}});
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
     },
+    setTrimSilenceConfig(val, ev) {
+      switch (val) {
+        case 'audio_tts_narration':
+          return this.liveUpdate('trim_silence_config', {audio_file: true, tts: true, narration: true}, ev);
+          break;
+        case 'tts_narration':
+          return this.liveUpdate('trim_silence_config', {audio_file: false, tts: true, narration: true}, ev);
+          break;
+      }
+    },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseBefore'])
   }
@@ -2319,6 +2360,15 @@ Vue.filter('prettyBytes', function (num) {
             width: auto;
           }
         }
+      }
+      &.global-style {
+        width: 22%;
+      }
+      &.automatic-numeration {
+        width: 22%;
+      }
+      &.trim-silence-config {
+        width: 50%;
       }
     }
 
