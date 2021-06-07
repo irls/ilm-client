@@ -1564,9 +1564,9 @@ MediumEditor.extensions = {};
             return _s4() + _s4() + '-' + _s4() + '-' + _s4() + '-' + _s4() + '-' + _s4() + _s4() + _s4();
         },
 
-        copyAttributes: function (element, sourceNode) {
+        copyAttributes: function (element, sourceNode, toDataAttributes = ['id']) {
             [...sourceNode.attributes].forEach(attr => {
-                element.setAttribute(attr.nodeName === 'id' ? 'data-id' : attr.nodeName, attr.nodeValue);
+                element.setAttribute(Array.isArray(toDataAttributes) && toDataAttributes.includes(attr.nodeName) ? 'data-' + attr.nodeName : attr.nodeName, attr.nodeValue);
             });
         },
 
@@ -7102,8 +7102,8 @@ MediumEditor.extensions = {};
                 partOne = document.createTextNode(selection),
                 containerOne = document.createElement(parentNode.nodeName),
                 containerTwo = document.createElement(parentNode.nodeName);
-                MediumEditor.util.copyAttributes(containerOne, parentNode);
-                MediumEditor.util.copyAttributes(containerTwo, parentNode);
+                MediumEditor.util.copyAttributes(containerOne, parentNode, selection ? [] : ['id']);
+                MediumEditor.util.copyAttributes(containerTwo, parentNode, !selection && afterSelection ? [] : ['id']);
                 //console.log(element.parentNode);
                 //return false;
                 let partTwo;
@@ -7150,22 +7150,38 @@ MediumEditor.extensions = {};
                         containerOne.insertBefore(currentNode, lastNode);
                         lastNode = currentNode;
                     }
-                    baseNode.insertBefore(containerOne, containerTwo);
+                    if (containerOne.innerHTML) {
+                      baseNode.insertBefore(containerOne, containerTwo);
+                    }
                     if (['LI'].indexOf(parentNode.nodeName) === -1 && partTwo) {
                         baseNode.insertBefore(partTwo, containerTwo);
                     }
                     MediumEditor.selection.moveCursor(this.options.ownerDocument, containerTwo.firstChild ? containerTwo.firstChild : containerTwo, 0);
                 } else {
-                    baseNode.replaceChild(partTwo, parentNode);
-                    containerOne.appendChild(partOne);
-                    baseNode.insertBefore(containerOne, partTwo);
+                    if (containerTwo.childNodes.length === 0 || !containerTwo.innerHTML || !containerTwo.innerHTML.trim()) {
+                        //console.log('HERE1', containerTwo);
+                        baseNode.replaceChild(partTwo, parentNode);
+                        containerOne.appendChild(partOne);
+                        baseNode.insertBefore(containerOne, partTwo);
+                    } else {
+                        //console.log('HERE2', containerTwo.innerHTML)
+                        baseNode.replaceChild(containerTwo, parentNode);
+                        containerOne.appendChild(partOne);
+                        //console.log(containerOne, containerTwo, partTwo)
+                        baseNode.insertBefore(partTwo, containerTwo);
+                        baseNode.insertBefore(containerOne, partTwo);
+                    }
                     let nextSibling = partTwo.nextSibling;
-                    if (!nextSibling && partTwo.parentNode.nodeName !== 'DIV' && partTwo.parentNode.nextSibling) {
+                    //console.log(partTwo, nextSibling);
+                    if ((!nextSibling || nextSibling.nodeType === 3) && partTwo.parentNode.nodeName !== 'DIV' && partTwo.parentNode.nextSibling) {
                         nextSibling = partTwo.parentNode.nextSibling;
                     }
                     let moveTo;
                     if (nextSibling) {
-                        moveTo = nextSibling.childNodes.length > 0 ? nextSibling.childNodes[0] : nextSibling;
+                        moveTo = nextSibling;
+                        while (moveTo && moveTo.childNodes.length > 0) {
+                          moveTo = moveTo.childNodes[0];
+                        }
                     } else {
                         moveTo = partTwo;
                     }
