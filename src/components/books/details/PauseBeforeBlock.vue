@@ -149,12 +149,12 @@
           this.pauseValueChange(this.pause);
           this.resetPause();
         } else if (this.pause <= this.max - this.interval) {
-          this.pause = this.parseFloatToFixed(this.pause + this.interval);
+          this.pause = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) + this.interval);
         }
       },
       decreasePause() {
         if (this.pause >= this.min + this.interval) {
-          this.pause = this.parseFloatToFixed(this.pause - this.interval);
+          this.pause = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) - this.interval);
         }
       },
       parseFloatToFixed(val, precision = 1) {
@@ -238,32 +238,47 @@
         let length = 3;
         if (this.blockTypesInRange.length === 1) {
           let previousBlock = this.storeList.get(this.storeListO.getInId(this.selectedBlock.blockid));
-          if (this.selectedBlock.audiosrc) {
+          let selectedBlockAudiosrc;
+          if (!this.selectedBlock.getIsSplittedBlock()) {
+            selectedBlockAudiosrc = this.selectedBlock.getAudiosrc('m4a');
+          } else {
+            selectedBlockAudiosrc = this.selectedBlock.getPartAudiosrc(0, 'm4a');
+          }
+          if (selectedBlockAudiosrc) {
             if (!this.player) {
               this.player = document.createElement('audio');
             }
             //this.audio_element.play();
             if (this.player) {
               let playPrevious = new Promise((resolve, reject) => {
-                if (previousBlock && previousBlock.audiosrc) {
-                  this.nowPlaying = previousBlock.blockid;
-                  let audio = previousBlock.getAudiosrc('m4a');
-                  this.player.onloadedmetadata = () => {
-                    //console.log(this.player.duration);
-                    if (!isNaN(this.player.duration)) {
-                      if (this.player.duration > length) {
-                        this.player.currentTime = this.player.duration - length;
+                if (previousBlock) {
+                  let audiosrc;
+                  if (previousBlock.getIsSplittedBlock()) {
+                    audiosrc = previousBlock.getPartAudiosrc(previousBlock.parts.length - 1, 'm4a');
+                  } else {
+                    audiosrc = previousBlock.getAudiosrc('m4a');
+                  }
+                  if (audiosrc) {
+                    this.nowPlaying = previousBlock.blockid;
+                    this.player.onloadedmetadata = () => {
+                      //console.log(this.player.duration);
+                      if (!isNaN(this.player.duration)) {
+                        if (this.player.duration > length) {
+                          this.player.currentTime = this.player.duration - length;
+                        }
+                        this.player.play();
                       }
-                      this.player.play();
-                    }
-                  };
-                  this.player.onerror = () => {
+                    };
+                    this.player.onerror = () => {
+                      return resolve();
+                    };
+                    this.player.onended = () => {
+                      return resolve();
+                    };
+                    this.player.src = audiosrc;
+                  } else {
                     return resolve();
-                  };
-                  this.player.onended = () => {
-                    return resolve();
-                  };
-                  this.player.src = audio;
+                  }
                 } else {
                   return resolve();
                 }
@@ -285,7 +300,7 @@
                       this.player.play();
                     };
                     this.nowPlaying = this.selectedBlock.blockid;
-                    this.player.src = this.selectedBlock.getAudiosrc('m4a');
+                    this.player.src = selectedBlockAudiosrc;
                   }, this.pause * 1000);
                 });
               /*if (map[0] + map[1] < (2 * length + 1) * 1000) {
@@ -400,7 +415,15 @@
       },
       listenBlockDisabled: {
         get() {
-          return this.blockTypesInRange.length > 1 || this.nowPlaying || !this.selectedBlock || !this.selectedBlock.audiosrc;
+          let audiosrc;
+          if (this.selectedBlock) {
+            if (this.selectedBlock.getIsSplittedBlock()) {
+              audiosrc = this.selectedBlock.getPartAudiosrc(0, 'm4a');
+            } else {
+              audiosrc = this.selectedBlock.getAudiosrc('m4a');
+            }
+          }
+          return this.blockTypesInRange.length > 1 || this.nowPlaying || !this.selectedBlock || !audiosrc;
         },
         cache: false
       },
