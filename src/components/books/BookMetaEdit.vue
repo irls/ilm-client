@@ -2115,7 +2115,7 @@ export default {
     },
     styleTabChange(index, component) {
       //console.log('styleTabChange', index, component.id, component)
-      this.activeStyleTab = component.title;
+      this.activeStyleTab = component.title === 'line' ? 'hr' : component.title;
     },
     displayStyleTab(blockType) {
       if (this.bookMode !== 'narrate') {
