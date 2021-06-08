@@ -30,7 +30,7 @@
           <input type="number" class="pause-before" v-model="pause" disabled v-else />
         </template>
         <template v-else>
-          <button @click="decreasePause" :disabled="pause === min" class="minus"></button>
+          <button @click="decreasePause" :disabled="parseFloatToFixed(pause) === min" class="minus"></button>
           <input  class="pause-before" type="number" disabled
             v-if="range.length > 1"/>
           <input  class="pause-before" type="number" v-model="pauseInput"
@@ -38,11 +38,12 @@
             :max="max"
             :step="interval"
             v-on:change="onPauseInput"
+            v-on:focusout="onFocusout"
             v-else/>
-          <button @click="increasePause" class="plus" :disabled="pause === max"></button>
+          <button @click="increasePause" class="plus" :disabled="parseFloatToFixed(pause) === max"></button>
         </template>
       </div>
-      <div class="listen-block col-md-4">
+      <div class="listen-block col-md-4" v-if="listenBlockDisplay">
         <label>Listen</label>
         <i class="fa fa-play-circle-o" disabled v-if="listenBlockDisabled"></i>
         <i class="fa fa-play-circle-o" v-else @click="listenBlock"></i>
@@ -348,6 +349,11 @@
           value = 0;
         }
         this.pause = this.parseFloatToFixed(value);
+      },
+      onFocusout($ev) {
+        if (!/[0-9]/.test($ev.target.value)) {
+          $ev.target.value = this.pause;
+        }
       }
     },
     computed: {
@@ -424,6 +430,15 @@
             }
           }
           return this.blockTypesInRange.length > 1 || this.nowPlaying || !this.selectedBlock || !audiosrc;
+        },
+        cache: false
+      },
+      listenBlockDisplay: {
+        get() {
+          let audioBlocks = Array.isArray(this.blockTypesInRange) ? this.blockTypesInRange.find(b => {
+            return b.voicework !== 'no_audio';
+          }) : {};
+          return audioBlocks && !['hr', 'illustration'].includes(this.blockType);
         },
         cache: false
       },
