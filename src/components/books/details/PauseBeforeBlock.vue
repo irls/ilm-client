@@ -19,9 +19,10 @@
         :debug="false"
         ref="pause_before_slider"
         @input="pauseValueChange"
-        @drag-end="pauseValueChange"
+        @drag-end="pauseDragEnd"
         v-if="bookMode !== 'proofread'"></vue-slider>
-    <div class="hidden">pause: "{{pause}}", range: {{range}}</div><!-- class="hidden" -->
+    <div class="hidden">pause: "{{pause}}", {{parseFloatToFixed(pause)}}, range: {{range}}</div><!-- class="hidden" -->
+    <div class="hidden">{{parseFloatToFixed(pause) === min}},{{parseFloatToFixed(pause) === max}}</div>
     <div class="col-md-12">
       <div class="pause-before-input col-md-8">
         <template v-if="bookMode === 'proofread'">
@@ -104,10 +105,19 @@
       },
       pauseValueChange(val) {
         if (this.pauseUpdateEmitted) {
-          if (val && val % 1 !== 0) {
-            val = parseFloat(parseFloat(val).toFixed(1));
-          }
-          this.$emit('setPauseBefore', this.blockType, val);
+          //console.log('ON INPUT', val, typeof val);
+          val = this.parseFloatToFixed(val);
+          //if (this.pause != val) {
+            this.$emit('setPauseBefore', this.blockType, val);
+          //}
+        }
+      },
+      pauseDragEnd(val) {
+        //console.log('DRAG END');
+        //console.log(arguments)
+        if (val && typeof val.getValue === 'function') {
+          this.pauseValueChange(val.getValue());
+          this.pauseUpdateEmitted = false;
         }
       },
       recalcPauseBeforeRange() {
@@ -133,7 +143,7 @@
         this.recalcPauseBeforeRange();
         let val;
         if (this.range.length === 1 && this.range[0] !== 'none') {
-          val = this.range[0];
+          val = this.parseFloatToFixed(this.range[0]);
         } else {
           val = 0;
         }
@@ -159,7 +169,7 @@
         }
       },
       parseFloatToFixed(val, precision = 1) {
-        if (val && val % 1 !== 0) {
+        if (val && (val % 1 !== 0 || typeof val === 'string')) {
           val = parseFloat(parseFloat(val).toFixed(precision));
         }
         return val;
