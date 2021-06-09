@@ -120,7 +120,7 @@
           this.pauseUpdateEmitted = false;
         }
       },
-      recalcPauseBeforeRange() {
+      recalcPauseBeforeRange(reset_pause = false) {
         let range = [];
         let selectedProps = this.styleProps.get(this.blockType);
         if (selectedProps) {
@@ -137,6 +137,10 @@
         this.range = range.sort((a, b) => {
           return parseFloat(a) > parseFloat(b) ? 1 : -1;
         });
+        if (this.range.length === 1 && this.pause !== this.range[0] && reset_pause) {
+          this.pauseUpdateEmitted = false;
+          this.pause = this.range[0];
+        }
       },
       resetPause() {
         this.pauseUpdateEmitted = false;
@@ -445,9 +449,13 @@
       },
       listenBlockDisplay: {
         get() {
-          let audioBlocks = Array.isArray(this.blockTypesInRange) ? this.blockTypesInRange.find(b => {
+          let blocks = Array.isArray(this.blockTypesInRange) ? this.blockTypesInRange : [];
+          if (blocks.length === 1 && this.selectedBlock.voicework === 'no_audio') {
+            return false;
+          }
+          let audioBlocks = blocks.find(b => {
             return b.voicework !== 'no_audio';
-          }) : {};
+          });
           return audioBlocks && !['hr', 'illustration'].includes(this.blockType);
         },
         cache: false
@@ -477,7 +485,9 @@
       },
       'styleProps': {
         handler() {
-          this.recalcPauseBeforeRange();
+          this.recalcPauseBeforeRange(true);
+          //this.pauseUpdateEmitted = false;
+          //this.resetPause();
         },
         deep: true
       },

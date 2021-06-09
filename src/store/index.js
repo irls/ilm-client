@@ -2863,6 +2863,9 @@ export const store = new Vuex.Store({
                   return Promise.resolve();
                 })
                 .then(() => {
+                  if (checks.length > 0) {
+                    commit('set_selected_blocks');
+                  }
                   if (repeat) {
                     //console.log('getBookAlign 1', 'currentBookid', state.currentBookid, 'watchId', watchId, 'repeat', repeat);
                     if (watchId === state.currentBookid) {
@@ -4004,7 +4007,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    changeBlocksVoicework({state, dispatch}, [block, voicework, updateType]) {
+    changeBlocksVoicework({state, dispatch, commit}, [block, voicework, updateType]) {
       return axios.post(`${state.API_URL}book/block/${state.currentBookid}/${block._uRid}/set_voicework`, {
         voicework: voicework,
         updateType: updateType
@@ -4017,9 +4020,18 @@ export const store = new Vuex.Store({
                   state.storeListO.updBlockByRid(block.rid, {
                     status: block.status
                   });
+                  try {
+                    state.storeList.get(block.blockid).voicework = block.voicework;
+                  } catch (e) {
+                    
+                  }
                 });
                 dispatch('getCurrentJobInfo');
                 dispatch('getAlignCount');
+                if (state.blockSelection.start._id) {
+                  state.blockSelection.refresh = Date.now();
+                  commit('set_selected_blocks');
+                }
               }
             }
           }
