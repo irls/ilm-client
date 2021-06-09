@@ -455,7 +455,7 @@
                       Hide from display
                     </label>
                   </fieldset>
-                  <i v-if="bookMode !== 'narrate'">Please keep defaults unless you have a compelling reason to change them {{blockType}}</i>
+                  <i v-if="bookMode !== 'narrate'">Please keep defaults unless you have a compelling reason to change them</i>
                   <i v-else>Pause adjustment is only applicable to Narration blocks, which are not currently being edited</i>
                   <fieldset v-if="pausesBeforeProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset block-pause-fieldset">
                     <legend>Pause before block (sec.)</legend>
