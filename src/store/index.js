@@ -3944,6 +3944,9 @@ export const store = new Vuex.Store({
                   }
                 })
                 dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
+                if (blocks.length > 1) {
+                  dispatch('tc_loadBookTask', state.currentBookid);
+                }
               }
               return resolve();
             });
