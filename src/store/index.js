@@ -4007,7 +4007,10 @@ export const store = new Vuex.Store({
                     status: block.status
                   });
                   try {
-                    state.storeList.get(block.blockid).voicework = block.voicework;
+                    let blk = state.storeList.get(block.blockid);
+                    blk.voicework = block.voicework;
+                    blk.audiosrc = block.audiosrc;
+                    blk.audiosrc_ver = block.audiorc_ver;
                   } catch (e) {
                     
                   }
