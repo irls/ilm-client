@@ -989,7 +989,8 @@ export default {
     },
     'blockSelection.end._id': {
       handler(val, oldVal) {
-        if (this.blockSelection.start._id && this.blockSelection.end._id && this.blockSelection.start._id !== this.blockSelection.end._id) {
+        let singleSelection = !oldVal && val === this.blockSelection.start._id;
+        if (this.blockSelection.start._id && this.blockSelection.end._id && (this.blockSelection.start._id !== this.blockSelection.end._id || !singleSelection)) {
           this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
         }
       }
