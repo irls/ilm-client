@@ -2436,6 +2436,11 @@ export default {
         return refContainer;
       },
       evFromAudioeditorClosed(event) {
+        if (!event) {
+          let promise = Promise.resolve();
+          event = {};
+          event.waitUntil = p => promise = p
+        }
         event.waitUntil(new Promise((resolve, reject) => {
           let block = this.audioTasksQueueBlock();// block from storeList
           let queueBlock = Object.assign({}, this.audioTasksQueue.block);// queue block info

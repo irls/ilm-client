@@ -712,55 +712,42 @@
               $('.playlist-overlay').on('click', (e) => {
                 if (typeof this.audiosourceEditor !== 'undefined') {
                   let restart = this.isPlaying;
-                  let stop = new Promise((resolve, reject) => {
-                    if (this.isPlaying) {
-                      return this.stop()
-                        .then(() => {
-                          return resolve();
-                        });
-                    } else {
-                      return resolve();
-                    }
-                  });
-                  stop.then(() => {
-                  let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
-                  let pos_r = this._round(pos, 1);
-                  //console.log('click', this.mouseSelection.start, Math.abs(pos_r - this.mouseSelection.start));
-                  if (this.mouseSelection.start !== null && Math.abs(pos_r - this.mouseSelection.start) < 0.1) {
-                    //console.log('2', this.cursorPosition, pos_r);
-                    if (this.mode === 'block' && e.shiftKey && this.cursorPosition >= 0) {
-                      if (this.cursorPosition > pos_r) {
-                        let end_pos = this.cursorPosition;
-                        this.setSelectionStart(pos);
-                        this.setSelectionEnd(end_pos);
+                  this.pause().then(() => {
+                    let pos = (e.clientX + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+                    let pos_r = this._round(pos, 1);
+                    //console.log('click', this.mouseSelection.start, Math.abs(pos_r - this.mouseSelection.start));
+                    if (this.mouseSelection.start !== null && Math.abs(pos_r - this.mouseSelection.start) < 0.1) {
+                      //console.log('2', this.cursorPosition, pos_r);
+                      if (this.mode === 'block' && e.shiftKey && this.cursorPosition >= 0) {
+                        if (this.cursorPosition > pos_r) {
+                          let end_pos = this.cursorPosition;
+                          this.setSelectionStart(pos);
+                          this.setSelectionEnd(end_pos);
+                        } else {
+                          this.setSelectionStart(this.cursorPosition);
+                          this.setSelectionEnd(pos);
+                        }
                       } else {
-                        this.setSelectionStart(this.cursorPosition);
-                        this.setSelectionEnd(pos);
+                        if (typeof this.selection.start !== 'undefined' && !isNaN(this.selection.start)) {
+                          this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                        }
+                        this.cursorPosition = pos;
                       }
                     } else {
-                      if (typeof this.selection.start !== 'undefined' && !isNaN(this.selection.start)) {
-                        this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                      }
-                      this.cursorPosition = pos;
+                      this.wordSelectionMode = false;
                       if (this.isPlaying) {
-                        this.stop().then(() => this.play(pos));
+                        this.cursorPosition = pos;
+                      } else {
+                        this.cursorPosition = this.selection.start;
                       }
+                      //console.log(this.mouseSelection.start, pos)
                     }
-                  } else {
-                    this.wordSelectionMode = false;
-                    if (this.isPlaying) {
-                      this.cursorPosition = pos;
-                    } else {
-                      this.cursorPosition = this.selection.start;
-                    }
-                    //console.log(this.mouseSelection.start, pos)
-                  }
-                  //$('#cursor-position').show();
+                    //$('#cursor-position').show();
 
-                  this._showSelectionBorders();
-                  if (restart) {
-                    this.play();
-                  }
+                    this._showSelectionBorders();
+                    if (restart) {
+                      this.play();
+                    }
                   })
                 }
               });
@@ -773,7 +760,7 @@
 
                 let stop = new Promise((resolve, reject) => {
                     if (this.isPlaying) {
-                      return this.stop()
+                      return this.pause()
                         .then(() => {
                           this.audiosourceEditor.activeTrack.stateObj.active = true;// allow selection by drag after pause, default editor behaviour changed
                           this.audiosourceEditor.activeTrack.stateObj.startX = e.offsetX;
