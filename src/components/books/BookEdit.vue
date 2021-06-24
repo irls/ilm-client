@@ -2436,7 +2436,7 @@ export default {
         return refContainer;
       },
       evFromAudioeditorClosed(event) {
-        if (!event) {
+        if (!event || !(event instanceof Object) || !event.waitUntil) {
           let promise = Promise.resolve();
           event = {};
           event.waitUntil = p => promise = p
