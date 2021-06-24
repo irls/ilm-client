@@ -2063,6 +2063,9 @@ export const store = new Vuex.Store({
                 status: response.data.status
               });
             }
+            if (typeof cleanBlock.type !== 'undefined' && state.blockSelection && state.blockSelection.start && state.blockSelection.start._id) {// changed type of the block
+              commit('set_selected_blocks');
+            }
             return Promise.resolve(response.data);
           })
           .catch(err => {
