@@ -10,7 +10,7 @@
                 <i class="glyphicon glyphicon-volume-off"></i>
             </div>
         </div> -->
-        <div class="table-row check-row" v-if="allowEditing || proofreadModeReadOnly">
+        <div class="table-row check-row">
 
           <div class="set-range">
             <i class="fa fa-square-o -hidden" aria-hidden="true"
@@ -2681,6 +2681,9 @@ Save text changes and realign the Block?`,
             if (this.mode === 'narrate') {// after block was moved from narrator
               this.destroyEditor(true);
             }
+            if (this.isChecked) {// block approval can change block styles, e.g. pause_before
+              this.$root.$emit('from-block-edit:set-style');
+            }
           }
         })
         .catch(err => {
@@ -3796,9 +3799,6 @@ Save text changes and realign the Block?`,
 
       },
       setRangeSelection(type, ev) {
-        if (this.block && !this.tc_isShowEdit(this.block._id)) {
-          return false;
-        }
         let checked;
         if (ev === true || ev === false) checked = ev;
         else checked = ev.target && ev.target.checked;
