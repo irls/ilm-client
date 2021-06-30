@@ -54,6 +54,20 @@
                       <i>Processing, {{audiofile.title}}</i>
                     </div>
                   </template>
+                  <template v-else-if="audiofile.status === 'process_error'">
+                    <div v-if="allowEditing" class="audiofile-options">
+                      <label class="checkbox-container">
+                        <input type="checkbox" :checked="selections.indexOf(audiofile.id) !== -1"
+                               v-on:click="addSelection(audiofile.id, selections.indexOf(audiofile.id) === -1)" />
+                        <span class="checkmark"></span>
+                      </label>
+                    </div>
+                    <div class="audiofile-info">
+                      <div class="audiofile-name" :title="audiofile.title ? audiofile.title : audiofile.name">
+                        <i>Processing error, {{audiofile.title ? audiofile.title : audiofile.id}}</i>
+                      </div>
+                    </div>
+                  </template>
                   <template v-else>
                     <div v-if="allowEditing"
                              class="audiofile-options">
