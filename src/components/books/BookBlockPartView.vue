@@ -3299,6 +3299,9 @@ Save text changes and realign the Block?`,
         if (this.editingLocked) {
           return false;
         }
+        if (['hr', 'illustration'].includes(this.block.type)) {
+          return false;
+        }
         /*if (this._is('narrator', true) && this.mode === 'narrate') {
           console.log(this.range, `${this.range.startOffset}:${this.range.endOffset}`);
         } else */if (((this._is('editor', true) || this.adminOrLibrarian) && this.mode === 'edit') || (this._is('narrator', true) && this.mode === 'narrate')) {
