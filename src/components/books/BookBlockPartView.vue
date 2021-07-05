@@ -402,7 +402,7 @@ export default {
       //'modal': modal,
       'split-pin-cntx-menu': BlockContextMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -2985,6 +2985,9 @@ export default {
         if (index !== -1) {
           this.changes.splice(index, 1);
           this.$emit('hasChanges', change, false);
+          if (this.changes.length === 0) {
+            this.isChanged = false;
+          }
         }
       },
       setContent() {
@@ -3311,16 +3314,19 @@ Save text changes and realign the Block?`,
         /*if (this.isSplittedBlock) {
           return false;
         }*/
-        if (this.block.voicework !== 'narration') {
+        if (!['tts', 'audio_file', 'narration', 'no_audio'].includes(this.block.voicework)) {
           return false;
         }
         if (this.editingLocked) {
           return false;
         }
+        if (['hr', 'illustration'].includes(this.block.type)) {
+          return false;
+        }
         /*if (this._is('narrator', true) && this.mode === 'narrate') {
           console.log(this.range, `${this.range.startOffset}:${this.range.endOffset}`);
         } else */if (((this._is('editor', true) || this.adminOrLibrarian) && this.mode === 'edit') || (this._is('narrator', true) && this.mode === 'narrate')) {
-          if (!(this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
+          //if (!(this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
             if (!this.range) {
               return false;
             }
@@ -3440,7 +3446,7 @@ Save text changes and realign the Block?`,
             }
             //console.log(`${skipLengthCheck}, '${checkRange.toString()}'`);
             return regexp.test(checkRange.toString());
-          }
+          //}
         }
         return false;
       },
@@ -3475,6 +3481,14 @@ Save text changes and realign the Block?`,
         if (this.splitPinSelection) {
           this.splitPinSelection.remove();
           this.splitPinSelection = null;
+        }
+        if (this.block.getIsSplittedBlock()) {
+          let splitPoints = this.$refs.blockContent.querySelectorAll('i.pin');
+          if (splitPoints.length === 0) {
+            this.unsetChange('split_point');
+          }
+        } else {
+          this.splitPointRemoved();
         }
       },
       splitPinCntxClose() {

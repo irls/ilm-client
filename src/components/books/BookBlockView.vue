@@ -256,6 +256,7 @@
               :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
               :addToQueueBlockAudioEdit="addToQueueBlockAudioEdit"
               :splitPointAdded="splitPointAdded"
+              :splitPointRemoved="splitPointRemoved"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -4238,6 +4239,12 @@ Save text changes and realign the Block?`,
 
       splitPointAdded() {
         this.pushChange('split_point');
+      },
+      splitPointRemoved() {
+        let splitPoints = this.$refs.blocks[0].$refs.blockContent.querySelectorAll('i.pin');
+        if (splitPoints.length === 0) {
+          this.unsetChange('split_point');
+        }
       },
       setPartsHtml() {
         if (!this.block.getIsSplittedBlock()) {
