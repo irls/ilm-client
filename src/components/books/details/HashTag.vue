@@ -125,7 +125,7 @@
         let currentTag = this.name
 
         let suggestions = tags.filter(x => {
-          let findIndex = this.tags.findIndex(tag=> tag.toString().toLowerCase() == x.name.toString().toLowerCase());
+          let findIndex = this.tags.findIndex(tag=> tag.toString().toLowerCase() == x.toString().toLowerCase());
           if(findIndex==-1){
             return x
           }
@@ -168,11 +168,13 @@
           }
       },
       checkAndAdd(){
+
         this.name=this.name.trim()
         if(this.name==''){
           return
         }
-        const isExist = (name) => this.tags.findIndex(x=>x.toLowerCase()==name.toLowerCase())
+
+        const isExist = () => this.tags.findIndex(x=>x.toLowerCase() == this.name.toLowerCase())
         if(this.highlight<1){
           if(isExist(this.name)!==-1){
           this.$refs.input.style.color='red'
@@ -188,12 +190,13 @@
             this.add(name);
             return
           }
-          let name = this.listSuggestions[this.highlight].name || false;
+          let name = this.listSuggestions[this.highlight] || false;
           if(isExist(name)==-1){
             this.add(name)
           }
           return
-        }
+        } 
+        this.add(this.name)
       },
       select(e){
         if(!this.listSuggestions || this.highlight < -1 || !this.listSuggestions.length){
@@ -219,6 +222,8 @@
         this.$emit('removeItem',i)
       },
       add(name){
+        if (name == '' || this.tags.includes(name)) return
+
         this.$emit('addItem', name)
         this.name='';
         this.highlight =-1;
