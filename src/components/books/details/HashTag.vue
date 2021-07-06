@@ -2,8 +2,8 @@
   <div>
   <ul class="tag-with-autosuggestion el-input el-input--small" @click="focusInput">
   <!--<transition-group name="list-complete" tag="p">-->
-    <li class="tag-name list-complete-item" v-for="(tag,index) in tags" :key="tag.name">
-      {{tag.name}}
+    <li class="tag-name list-complete-item" v-for="(tag,index) in tags" :key="tag">
+      {{tag}}
       <span class="tag-remove" @click="remove(index)"><i class="fa fa-times-circle-o" aria-hidden="true"></i></span>
     </li>
     <li class="tag-input list-complete-item" key="tag-input">
@@ -11,8 +11,8 @@
       <div class="tag-suggestions-list" v-if="listSuggestions.length">
         <!-- <div class="suggestions-wrapper"> -->
 
-          <li v-for="(tag,index) in listSuggestions" :class="highlight==index?'sugessted-tags sugessted-tags--highlight ' : 'sugessted-tags'" @click="add(tag.name)" ref="results" v-if="tag.name">
-              {{tag.name}}
+          <li v-for="(tag,index) in listSuggestions" :class="highlight==index?'sugessted-tags sugessted-tags--highlight ' : 'sugessted-tags'" @click="add(tag)" ref="results" v-if="tag">
+              {{tag}}
           </li>
         <!-- </div> -->
       </div>
@@ -25,8 +25,8 @@
   <div v-if="showAll">
     <ul class="all-suggesions tag-with-autosuggestion el-input el-input--small">
        <!--<transition-group name="list-complete">-->
-       <li class="tag-name list-complete-item" v-for="(tag,index) in top" @click="addFromSuggestion(tag.name, $event)" :key="index">
-        {{tag.name}}
+       <li class="tag-name list-complete-item" v-for="(tag,index) in top" @click="addFromSuggestion(tag, $event)" :key="index">
+        {{tag}}
        </li>
      <!--</transition-group>-->
        <li class="a-lb show-suggestion-btn" @click="filter=!filter" v-if="top.length>7">
@@ -108,25 +108,24 @@
         }
         let tags = new Set()
         tags = this.suggestions.filter(x => {
-          if(x.name.toString().toLowerCase().includes(this.name.toString().toLowerCase())){
+          if(x.toString().toLowerCase().includes(this.name.toString().toLowerCase())){
             return x
           }
         })
         let isExist;
         if(tags.length!=0){
            isExist = this.tags.findIndex(x=>{
-            if(!x.name){
+            if(!x){
               return
             }
-            return x.name.toString().toLowerCase()==this.name.toString().toLowerCase()
+            return x.toString().toLowerCase()==this.name.toString().toLowerCase()
           })
         }
         
-        let currentTag = {
-         name:this.name
-        }
+        let currentTag = this.name
+
         let suggestions = tags.filter(x => {
-          let findIndex = this.tags.findIndex(tag=> tag.name.toString().toLowerCase() == x.name.toString().toLowerCase());
+          let findIndex = this.tags.findIndex(tag=> tag.toString().toLowerCase() == x.name.toString().toLowerCase());
           if(findIndex==-1){
             return x
           }
@@ -153,10 +152,10 @@
       },
       addFromSuggestion(name,event){
           const isExist = this.tags.findIndex(x=>{
-            if(!x.name){
+            if(!x){
               return
             }
-            return x.name.toString().toLowerCase()==name.toString().toLowerCase()
+            return x.toString().toLowerCase()==name.toString().toLowerCase()
           })
           if(isExist==-1){
             this.tags.push({name})
@@ -173,7 +172,7 @@
         if(this.name==''){
           return
         }
-        const isExist = (name) => this.tags.findIndex(x=>x.name.toLowerCase()==name.toLowerCase())
+        const isExist = (name) => this.tags.findIndex(x=>x.toLowerCase()==name.toLowerCase())
         if(this.highlight<1){
           if(isExist(this.name)!==-1){
           this.$refs.input.style.color='red'
@@ -220,9 +219,7 @@
         this.$emit('removeItem',i)
       },
       add(name){
-        this.$emit('addItem',{
-          name
-        })
+        this.$emit('addItem', name)
         this.name='';
         this.highlight =-1;
         this.pause=true;

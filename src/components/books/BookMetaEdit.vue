@@ -689,30 +689,16 @@ export default {
       },
       activeStyleTab: '',
       tags: [
-        "Hello"
-        /*{
-          //name: "hello"
-        }*/
+        "Hello",
+        "Tomorrow"
       ],
       suggestions: [
-        {
-          name: "Children"
-        },
-        {
-          name: "History"
-        },
-        {
-          name: "Ideas"
-        },
-        {
-          name: "Since"
-        },
-        {
-          name: "Novels"
-        },
-        {
-          name: "Verse"
-        },
+        "Children",
+        "History",
+        "Ideas",
+        "Since",
+        "Novels",
+        "Verse"
       ],
     }
   },
