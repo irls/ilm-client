@@ -158,7 +158,7 @@
             return x.toString().toLowerCase()==name.toString().toLowerCase()
           })
           if(isExist==-1){
-            this.tags.push({name})
+            this.tags.push(name)
           }
           else {
             event.target.classList.add('shake')
