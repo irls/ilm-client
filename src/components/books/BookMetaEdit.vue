@@ -32,8 +32,8 @@
             <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
           </fieldset>
           <fieldset class='hashtags'>
-            <legend>Project tags </legend>
-            <VTagSuggestion :tags="tags" :suggestions="suggestions" :suggestionLength="6" @removeItem="removeTag" @addItem="addTag"/>
+            <legend>Project tags</legend>
+            <VTagSuggestion :tags="currentBook.hashTags || []" :suggestions="suggestions" :suggestionLength="6" @removeItem="removeTag" @addItem="addTag"/>
           </fieldset>
             <BookWorkflow
               v-if="adminOrLibrarian"
@@ -1183,10 +1183,15 @@ export default {
 
 
     removeTag(i){
-      this.tags.splice(i,1)
+      this.currentBook.hashTags.splice(i,1)
+      this.liveUpdate('hashTags', this.currentBook.hashTags)
     },
      addTag(tag){
-      this.tags.push(tag);
+      if (this.currentBook.hashTags)
+        this.currentBook.hashTags.push(tag);
+      else 
+        this.currentBook.hashTags = [tag];
+      this.liveUpdate('hashTags', this.currentBook.hashTags)
     },
 
     change (key) {
