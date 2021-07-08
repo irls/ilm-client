@@ -3316,12 +3316,14 @@ Save text changes and realign the Block?`,
               return false;
             }
             let checkRange = document.createRange();
+            let letters = `a-zA-Zа-яА-Я0-9À-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ\\ufdf`;
             checkRange.setStart( container, this.range.startOffset );
             if (this.range.startOffset > 0) {
               checkRange.setStart(container, this.range.startOffset - 1);
               //let checkString = checkRange.toString();
-              if (checkRange.startOffset > 0 && /^\s$/.test(checkRange.toString())) {//  && checkString.substring(checkString.length - 1, checkString.length) === ' ' container.data.substring(checkRange.endOffset, checkRange.endOffset + 1) === ' '
-                while (checkRange.startOffset > 0 && /^\s$/.test(container.data.substring(checkRange.startOffset, checkRange.startOffset - 1))) {// add all speces till container beginning to range
+              let checkNonWord = new RegExp(`^[${letters}]+$`);
+              if (checkRange.startOffset > 0 && !checkNonWord.test(checkRange.toString())) {//  && checkString.substring(checkString.length - 1, checkString.length) === ' ' container.data.substring(checkRange.endOffset, checkRange.endOffset + 1) === ' '
+                while (checkRange.startOffset > 0 && !checkNonWord.test(container.data.substring(checkRange.startOffset, checkRange.startOffset - 1))) {// add all speces till container beginning to range
                   checkRange.setStart( container, checkRange.startOffset-1 );
                 }
               }
@@ -3369,13 +3371,22 @@ Save text changes and realign the Block?`,
             let regexp = null;
             //console.log(container, container.length, this.range.endOffset);
             if (!isMac) {
-              let wordString = `a-zA-Zа-яА-Я0-9À-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ\\ufdfa\\’"\\?\\!\\:\\;\\.\\\\,\\/\\<\\>\\'\\*\\‒\\|“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…`;
+              let wordString = `${letters}\\’"\\?\\!\\:\\;\\.\\\\,\\/\\<\\>\\'\\*\\‒\\|“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…`;
               regexp = skipLengthCheck ? /^(\S+)|(\s+)$/i : new RegExp(`^([${wordString}]+[^${wordString}]+[${wordString}]*)|([^${wordString}]+[${wordString}]+)|(\\s+)$`, 'i');
               checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
               let checkString = checkRange.toString();
               if (/^\s$/.test(checkString.substring(checkString.length - 1, checkString.length))) {
                 while (checkRange.endOffset < container.length && /^\s$/.test(container.data.substring(checkRange.endOffset, checkRange.endOffset + 1))) {// add all speces till container end to range
                   checkRange.setEnd( container, checkRange.endOffset+1 );
+                }
+              }
+              if (!(new RegExp(`^[${letters}]+`)).test(checkRange.toString()) && checkRange.startOffset === 0) {// check that split point is in the beginning of the block and no letters to the left
+                let checkContainer = container;
+                while (checkContainer.parentElement !== this.$refs.blockContent) {
+                  checkContainer = checkContainer.parentElement;
+                }
+                if (!checkContainer.previousElementSibling) {
+                  return false;
                 }
               }
             } else {// Mac OS right mouse click selects psrt of the text
