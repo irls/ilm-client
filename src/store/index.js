@@ -83,6 +83,7 @@ export const store = new Vuex.Store({
     allowPublishCurrentBook: false,
     publishButtonStatus: false,
     allRolls: [],
+    hashTagsSuggestions: [],
 
     authorsLangFarsi: authorsLangFarsi,
 
@@ -427,6 +428,7 @@ export const store = new Vuex.Store({
     taskTypes: state => state.taskTypes,
     adminOrLibrarian: state => state.adminOrLibrarian,
     adminOrProofer: state => state.adminOrProofer,
+    hashTagsSuggestions: state => state.hashTagsSuggestions,
     currentJobInfo: state => state.currentJobInfo,
     taskTypes: state => state.taskTypes,
     liveDB: state => state.liveDB,
@@ -1211,6 +1213,18 @@ export const store = new Vuex.Store({
             }
           })
           .catch(err => console.log(err));
+
+        axios.get(state.API_URL + 'hashTags')
+          .then(response => {
+            if (response) {
+              if (response.status == 200) {
+                state.hashTagsSuggestions = response.data;
+                console.log('hashTags', response.data);
+              }
+            }
+          })
+          .catch(err => console.log(err));
+
 
 //          state.librariesDB.replicate.from(state.librariesRemoteDB, {
 //          /*filter: '_view',

@@ -33,7 +33,7 @@
           </fieldset>
           <fieldset class='hashtags'>
             <legend>Project tags</legend>
-            <VTagSuggestion :tags="currentBook.hashTags || []" :suggestions="suggestions" :suggestionLength="6" @removeItem="removeTag" @addItem="addTag"/>
+            <VTagSuggestion :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="6" @removeItem="removeTag" @addItem="addTag"/>
           </fieldset>
             <BookWorkflow
               v-if="adminOrLibrarian"
@@ -636,7 +636,6 @@ export default {
       showUnknownAuthorEn: -1,
       lockLanguage: false,
       arbitraryHashtags: '',
-      showTagSuggestion: false,
 
       // set blocks properties
       styleTabs: new Map(),
@@ -688,18 +687,6 @@ export default {
         5: 'hr'
       },
       activeStyleTab: '',
-      tags: [
-        "Hello",
-        "Tomorrow"
-      ],
-      suggestions: [
-        "Children",
-        "History",
-        "Ideas",
-        "Since",
-        "Novels",
-        "Verse"
-      ],
     }
   },
 
@@ -737,7 +724,8 @@ export default {
       adminOrLibrarian: 'adminOrLibrarian',
       allowBookSplitPreview: 'allowBookSplitPreview',
       mode: 'bookMode',
-      aligningBlocks: 'aligningBlocks'
+      aligningBlocks: 'aligningBlocks',
+      hashTagsSuggestions: 'hashTagsSuggestions',
     }),
     proofreadModeReadOnly: {
       get() {
