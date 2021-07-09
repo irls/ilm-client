@@ -687,7 +687,10 @@
 /*
 language specific styles, ILM-4019
 */
-.-langblock-ar .ilm-block, .-langblock-fa .ilm-block, .-langftn-ar, .-langftn-fa, .ilm-display.-langblock-ar, .ilm-display .-langblock-fa, .ilm-display .footnotes .-langftn-ar .-text, .ilm-display .footnotes .-langftn-fa .-text {
+.-langblock-ar .ilm-block, .-langblock-fa .ilm-block, /* edit and proofread mode for block */
+.-langftn-ar, .-langftn-fa, /* edit and proofread mode for footnote */
+.ilm-display.-langblock-ar, .ilm-display.-langblock-fa, /* display mode for block */
+.ilm-display .footnotes .-langftn-ar .-text, .ilm-display .footnotes .-langftn-fa .-text /* display mode for footnote */ {
   .bab, [data-author="bab"], 
   .baha, [data-author="baha"],
   .abd, [data-author="abd"],
