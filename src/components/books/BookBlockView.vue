@@ -2161,6 +2161,7 @@ export default {
         update.blockid = this.block.blockid;
         update.bookid = this.block.bookid;
         this.block.isSaving = true;
+        this.storeListById(this.block.blockid).isSaving = true;// this.block can be different with the one in store, e.g. after style update
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         }
@@ -2171,6 +2172,7 @@ export default {
               this.getBookAlign()
                 .then(() => {
                   this.block.isSaving = false;
+                  this.storeListById(this.block.blockid).isSaving = false;
                   if (this.isLocked && this.isAudioEditing) {
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                   }
