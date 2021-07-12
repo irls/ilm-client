@@ -1327,7 +1327,7 @@ export default {
       this.initEditor();
       this.addContentListeners();
 
-      this.$root.$on('block-state-refresh-' + this.block._id, this.forceReloadContent);
+      this.$root.$on('block-state-refresh-' + this.block._id, this.$forceUpdate);
       this.$root.$on('saved-block:' + this.block._id, () => {
         this.isChanged = false;
         this.isAudioChanged = false;
@@ -1357,7 +1357,7 @@ export default {
 //     console.log('this.isChanged', this.isChanged);
     this.audioEditorEventsOff();
 
-    this.$root.$off('block-state-refresh-' + this.block._id, this.forceReloadContent);
+    this.$root.$off('block-state-refresh-' + this.block._id, this.$forceUpdate);
 
     if (this.check_id) {
       this.block.check_id = this.check_id;
@@ -4263,16 +4263,6 @@ Save text changes and realign the Block?`,
           return false
         } else {
           this.$refs.blockMenu.open(e, this.block.blockid);
-        }
-      },
-      // method to update properties if user swithes modes while block saving is in progress
-      forceReloadContent() {
-        if (!this._isDestroyed) {
-          let content = this.storeListById(this.block.blockid).content;
-          this.block.content = content;
-          Vue.nextTick(() => {
-            this.$forceUpdate();
-          });
         }
       }
   },
