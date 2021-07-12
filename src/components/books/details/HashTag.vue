@@ -18,7 +18,7 @@
       </div>
     </li>
   <!--</transition-group>-->
-    <li class="a-lb show-suggestion-btn" v-if="suggestions.length" @click="showAll=!showAll ">{{showAll ? 'Hide Tags': 'All Tags'}}
+    <li class="a-lb show-suggestion-btn suggestion-btn" v-if="suggestions.length" @click="showAll=!showAll ">{{showAll ? 'Hide Recommended': 'Recommended'}}
     </li>
   </ul>
   <transition name="fade">
@@ -323,6 +323,13 @@ cursor: pointer;
 .tag-with-autosuggestion .show-suggestion-btn {
   margin-right: 5px;
 }
+
+.suggestion-btn {
+  color: #3187d5;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .all-suggesions .tag-name {
   background: #eee;
   cursor: pointer;
