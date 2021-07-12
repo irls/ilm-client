@@ -684,6 +684,28 @@
   }
 
 }
+/*
+language specific styles, ILM-4019
+*/
+.-langblock-ar .ilm-block, .-langblock-fa .ilm-block, /* edit and proofread mode for block */
+.-langftn-ar, .-langftn-fa, /* edit and proofread mode for footnote */
+.ilm-display.-langblock-ar, .ilm-display.-langblock-fa, /* display mode for block */
+.ilm-display .footnotes .-langftn-ar .-text, .ilm-display .footnotes .-langftn-fa .-text /* display mode for footnote */ {
+  .bab, [data-author="bab"], 
+  .baha, [data-author="baha"],
+  .abd, [data-author="abd"],
+  .shoghi, [data-author="shoghi"],
+  .sacred, [data-author="sacred"],
+  .bible, [data-author="bible"],
+  .muhammad, [data-author="muhammad"],
+  .quran, [data-author="quran"],
+  .jesus, [data-author="jesus"],
+  .ali, [data-author="ali"],
+  .tradition, [data-author="tradition"],
+  .husayn, [data-author="husayn"] {
+    font-style: normal;
+  }
+}
 
 &.ilm-global-style {
   &.typewriter {
@@ -1305,4 +1327,44 @@
   }
 
 }
+}
+
+.content-footnotes, .ilm-display .footnotes .-text {
+  /***** Global authors *****/
+  .sacred, .bible, .muhammad,
+  .quran, .jesus, .muh,
+  [data-author] {
+    color: @main_text_color;
+    font-style: italic;
+  }
+  .baha, [data-author="baha"] {
+    color: @author1_color;
+    font-style: italic;
+  }
+  .bab, [data-author="bab"] {
+    color: @author2_color;
+    font-style: italic;
+  }
+  .abd, [data-author="abd"] {
+    color: @author3_color;
+    font-style: italic;
+  }
+  .shoghi, [data-author="shoghi"] {
+    /*color: #333333;*/
+    /*font-style: italic;*/
+    color: @main_text_color;
+    font-style: normal;
+  }
+  .ali, [data-author="ali"],
+  .tradition, [data-author="tradition"],
+  .husayn, [data-author="husayn"] {
+    color: @main_text_color;
+    font-style: normal;
+  }
+  .muhammad, [data-author="muhammad"] {
+    color: @author4_color;
+  }
+  .quran, [data-author="quran"] {
+    color: @author4_color;
+  }
 }
