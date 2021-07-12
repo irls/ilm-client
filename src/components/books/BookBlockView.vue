@@ -2168,6 +2168,11 @@ export default {
         let isSplitting = this.hasChange('split_point');
         return this.putBlockPart(update, realign)
           .then(() => {
+            if (this._isDestroyed) {
+              //this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
+              this.$root.$emit(`block-state-refresh-${this.block.blockid}`);
+              this.$root.$emit(`saved-block:${this.block.blockid}`);
+            }
             if (realign) {
               this.getBookAlign()
                 .then(() => {
@@ -4667,6 +4672,14 @@ Save text changes and realign the Block?`,
             this.initEditor(true);
           }
         }
+      },
+      'block.content': {
+        handler(val, oldval) {
+          if (!oldval) {
+            
+          }
+        },
+        deep: true
       }
 
   }

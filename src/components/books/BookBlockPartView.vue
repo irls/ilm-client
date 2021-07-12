@@ -958,7 +958,7 @@ export default {
       this.initEditor();
       this.addContentListeners();
 
-      this.$root.$on('block-state-refresh-' + this.block._id, this.$forceUpdate);
+      this.$root.$on('block-state-refresh-' + this.block._id, this.forceReloadContent);
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
       this.$root.$on('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
@@ -980,7 +980,7 @@ export default {
 //     console.log('this.isChanged', this.isChanged);
     this.audioEditorEventsOff();
 
-    this.$root.$off('block-state-refresh-' + this.block._id, this.$forceUpdate);
+    this.$root.$off('block-state-refresh-' + this.block._id, this.forceReloadContent);
 
     if (this.check_id) {
       this.block.check_id = this.check_id;
@@ -3582,6 +3582,20 @@ Join with next subblock?`;
               this.$parent.$parent.refreshTmpl();
               return Promise.resolve();
             });
+        }
+      },
+      // method to update properties if user swithes modes while block saving is in progress
+      forceReloadContent() {
+        if (!this._isDestroyed) {
+          let content = this.storeListById(this.block.blockid).getPartContent(this.blockPartIdx);
+          this.blockAudio.map = content;
+          this.blockPart.content = content;
+          //console.log(this.blockAudio.map);
+          //console.log(this);
+          Vue.nextTick(() => {
+            this.storeListO.refresh();
+            this.$forceUpdate();
+          });
         }
       }
 
