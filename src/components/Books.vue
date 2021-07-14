@@ -418,6 +418,7 @@ export default {
    .-langftn-ar,
    .-langftn-fa  {
      direction: rtl;
+     font-size: 15pt;
    }
 
 }
