@@ -4764,7 +4764,7 @@ Save text changes and realign the Block?`,
       margin-bottom: 10px;
 
       .table-row {
-
+        font-size: 13pt;
       }
 
       .-num {
