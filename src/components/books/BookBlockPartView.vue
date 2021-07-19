@@ -3561,6 +3561,14 @@ Join with next subblock?`;
             class: ['align-modal']
           });
         } else {
+          if (this.$parent.$refs.blocks) {
+            let refPlaying = this.$parent.$refs.blocks.find(blk => {
+              return blk.isAudStarted || blk.isAudPaused;
+            });
+            if (refPlaying) {
+              refPlaying.audStop(refPlaying.block.blockid);
+            }
+          }
           this.$parent.isSaving = true;
           this.$parent.$forceUpdate();
           let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
