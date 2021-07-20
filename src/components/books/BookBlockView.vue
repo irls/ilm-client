@@ -4741,7 +4741,7 @@ Save text changes and realign the Block?`,
       margin-top: 5px;
       margin-bottom: 10px;
 
-      .table-row {
+      .content-wrap-footn {
         font-size: 13pt;
       }
 
@@ -4766,7 +4766,7 @@ Save text changes and realign the Block?`,
 .-lang-fa, .-lang-ar {
     .table-body {
         &.footnote  {
-           .table-row {
+           .content-wrap-footn {
              font-size: 15pt;
            }
         }
