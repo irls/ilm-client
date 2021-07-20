@@ -4763,6 +4763,17 @@ Save text changes and realign the Block?`,
     }
 }
 
+.-lang-fa, .-lang-ar {
+    .table-body {
+        &.footnote  {
+           .table-row {
+             font-size: 15pt;
+           }
+        }
+    }
+}
+
+
 .table-cell {
     display: table-cell;
 
