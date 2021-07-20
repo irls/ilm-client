@@ -3170,7 +3170,7 @@ Save text changes and realign the Block?`,
               //console.log(self.recordStartCounter);
               $('#narrateStartCountdown strong').html(self.recordStartCounter);
             }
-          }, 500);
+          }, 710);
         });
       },
       stopRecording(partIdx, reRecordPosition, start_next = false) {
