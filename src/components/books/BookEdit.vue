@@ -1922,10 +1922,12 @@ export default {
     saveBlockAudioChanges(realign = false, preparedData = false) {
       let blk = this.audioTasksQueueBlock();
       if (blk) {
+        let blkPartIdx = this.audioTasksQueue.block.partIdx;
+        let isSplitted = blk.getIsSplittedBlock();
         //console.log(`saveBlockAudioChanges: `, this.audioTasksQueueBlock)
         //console.log(blk.isChanged);
         this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
-        if (blk.getIsSplittedBlock()) {
+        if (isSplitted) {
           blk.parts[this.audioTasksQueue.block.partIdx].isSaving = true;
         } else {
           blk.isSaving = true;
@@ -1936,16 +1938,14 @@ export default {
           })
           .then(response => {
             this.$root.$emit('for-audioeditor:flush');
-            let block = this.audioTasksQueueBlock();
-            let isSplitted = block.getIsSplittedBlock();
-            let refContainer = this._getRefContainer(block);
+            let refContainer = this._getRefContainer(blk);
             if (isSplitted) {
-              block.parts[this.audioTasksQueue.block.partIdx].isSaving = false;
+              blk.parts[blkPartIdx].isSaving = false;
               if (!realign) {
-                block.isSaving = false;
+                blk.isSaving = false;
               }
             } else {
-              block.isSaving = false;
+              blk.isSaving = false;
             }
             //this.$store.commit('set_storeList', block);
             if (refContainer) {
@@ -1953,6 +1953,10 @@ export default {
               refContainer.reloadBlockPart();
               refContainer.isAudioChanged = false;
               refContainer.$parent.$forceUpdate();
+            }
+            let block = this.audioTasksQueueBlock();
+            if (block.blockid !== blk.blockid) {
+              return Promise.resolve(true);
             }
             if (realign) {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
@@ -2428,7 +2432,7 @@ export default {
         let audioQueueBlock = this.audioTasksQueue.block;
         let isBlockPart = audioQueueBlock.partIdx !== null && block.getIsSplittedBlock();
         let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
-          return b.block.blockid === audioQueueBlock.blockId;
+          return b.block.blockid === block.blockid;
         });
         if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
           refContainer = isBlockPart ? refContainer.$refs.blocks.find(b => {
