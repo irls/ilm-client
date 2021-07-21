@@ -295,6 +295,11 @@
           if ((this.blockId && this.blockId != blockId) || (mode == 'file' && reloadOnChange) || mode != this.mode) {
             if (this.mode === 'block') {
               let block = this.audioTasksQueueBlockOrPart();
+              if (this.processRun && this.processRunType === 'save') {
+                this.pendingLoad = arguments;
+                this.setProcessRun(true, 'loading');
+                return;
+              }
               if (block && !block.isAudioChanged && this.isModified) {// button save was pressed
                 this.pendingLoad = arguments;
                 this.setProcessRun(true, 'loading');
