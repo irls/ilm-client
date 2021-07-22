@@ -1633,7 +1633,7 @@ export default {
           }
           if(!this.proofreadModeReadOnly) {
             let footnote = Array.isArray(this.block.footnotes) ? this.block.footnotes.find(f => {
-              return ['ar', 'fa'].indexOf(f.language) !== -1;
+              return ['ar', 'fa'].indexOf(this.getFtnLang(f.language)) !== -1;
             }) : false;
             if (footnote) {
               this.editorFootn = new MediumEditor(`[id="${this.block.blockid}"] .-langftn-fa.content-wrap-footn, [id="${this.block.blockid}"] .-langftn-ar.content-wrap-footn` , {
@@ -1652,7 +1652,7 @@ export default {
 
           if(!this.proofreadModeReadOnly) {
             let footnote = Array.isArray(this.block.footnotes) ? this.block.footnotes.find(f => {
-              return ['ar', 'fa'].indexOf(f.language) === -1;
+              return ['ar', 'fa'].indexOf(this.getFtnLang(f.language)) === -1;
             }) : false;
             if (footnote) {
               this.editorFootn = new MediumEditor(`[id="${this.block.blockid}"] :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
