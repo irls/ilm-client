@@ -130,9 +130,10 @@
   //import Peaks from 'peaks.js';
   import WaveformPlaylist from 'waveform-playlist';
   var Draggable = require ('draggable')
-  var {TimeScale} = require('../store/AudioTimeScale.js');
+  var {TimeScale} = require('../store/audio/AudioTimeScale.js');
 
   import _Playout from 'waveform-playlist/lib/Playout';
+  import { renderTrack } from '../store/audio/AudioTrackRender.js';
   //var _Playout2 = _interopRequireDefault(_Playout);
   Vue.use(v_modal, { dialog: true });
 
@@ -449,6 +450,11 @@
             if (this.mode === 'block') {
               this.clearSelection();
             }
+            // overwrite function, bug ILM-4033
+            this.audiosourceEditor.tracks.forEach(track => {
+              track.render = renderTrack;
+            })
+            //console.log(this.audiosourceEditor.tracks[0].render);
             this.setProcessRun(false);
             this.audiosourceEditor.stopAnimation();
             if (this.audiosourceEditor.tracks.length > 1) {
