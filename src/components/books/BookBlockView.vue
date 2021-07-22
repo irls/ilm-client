@@ -639,7 +639,8 @@ export default {
       player: false,
       range: false,
       editorDescr: false,
-      editorFootn: false,
+      editorFootnLtr: false,
+      editorFootnRtl: false,
       flagsSel: false,
       flagEl: 'f',
       quoteEl: 'qq',
@@ -1593,8 +1594,11 @@ export default {
           this.editorDescr.destroy();
           //this.editorDescr = false;
         }
-        if (this.editorFootn) {
-          this.editorFootn.destroy();
+        if (this.editorFootnLtr) {
+          this.editorFootnLtr.destroy();
+        }
+        if (this.editorFootnRtl) {
+          this.editorFootnRtl.destroy();
         }
         if (destroyPart) {
           this.$refs.blocks.forEach(blk => {
@@ -1612,31 +1616,31 @@ export default {
         if (this.editingLocked) {
           return false;
         }
-        if ((!this.editorFootn || force === true) && this.block.needsText()) {
-          let extensions = {};
-          let toolbar = {buttons: []};
-          if (this.allowEditing) {
-            extensions = {
-                'quoteButton': new QuoteButton(),
-                'quotePreview': new QuotePreview(),
-                'suggestButton': new SuggestButton(),
-                'suggestPreview': new SuggestPreview()
-              };
-            toolbar = {
-                buttons: [
-                  'bold', 'italic', 'underline',
-                  'superscript', 'subscript',
-                  'unorderedlist',
-                  'quoteButton', 'suggestButton'
-                ]
-              };
-          }
+        if ((!this.editorFootnLtr || !this.editorFootnRtl || force === true) && this.block.needsText()) {
           if(!this.proofreadModeReadOnly) {
             let footnote = Array.isArray(this.block.footnotes) ? this.block.footnotes.find(f => {
               return ['ar', 'fa'].indexOf(this.getFtnLang(f.language)) !== -1;
             }) : false;
             if (footnote) {
-              this.editorFootn = new MediumEditor(`[id="${this.block.blockid}"] .-langftn-fa.content-wrap-footn, [id="${this.block.blockid}"] .-langftn-ar.content-wrap-footn` , {
+              let extensions = {};
+              let toolbar = {buttons: []};
+              if (this.allowEditing) {
+                extensions = {
+                    'quoteButton': new QuoteButton(),
+                    'quotePreview': new QuotePreview(),
+                    'suggestButton': new SuggestButton(),
+                    'suggestPreview': new SuggestPreview()
+                  };
+                toolbar = {
+                    buttons: [
+                      'bold', 'italic', 'underline',
+                      'superscript', 'subscript',
+                      'unorderedlist',
+                      'quoteButton', 'suggestButton'
+                    ]
+                  };
+              }
+              this.editorFootnRtl = new MediumEditor(`[id="${this.block.blockid}"] .-langftn-fa.content-wrap-footn, [id="${this.block.blockid}"] .-langftn-ar.content-wrap-footn` , {
                   toolbar: toolbar,
                   buttonLabels: 'fontawesome',
                   quotesList: this.authors,
@@ -1655,7 +1659,25 @@ export default {
               return ['ar', 'fa'].indexOf(this.getFtnLang(f.language)) === -1;
             }) : false;
             if (footnote) {
-              this.editorFootn = new MediumEditor(`[id="${this.block.blockid}"] :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
+              let extensions = {};
+              let toolbar = {buttons: []};
+              if (this.allowEditing) {
+                extensions = {
+                    'quoteButton': new QuoteButton(),
+                    'quotePreview': new QuotePreview(),
+                    'suggestButton': new SuggestButton(),
+                    'suggestPreview': new SuggestPreview()
+                  };
+                toolbar = {
+                    buttons: [
+                      'bold', 'italic', 'underline',
+                      'superscript', 'subscript',
+                      'unorderedlist',
+                      'quoteButton', 'suggestButton'
+                    ]
+                  };
+              }
+              this.editorFootnLtr = new MediumEditor(`[id="${this.block.blockid}"] :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
                   toolbar: toolbar,
                   buttonLabels: 'fontawesome',
                   quotesList: this.authors,
@@ -1669,7 +1691,14 @@ export default {
             }
           }
 
-        } else if (this.editorFootn) this.editorFootn.setup();
+        } else {
+          if (this.editorFootnLtr) {
+            this.editorFootnLtr.setup();
+          }
+          if (this.editorFootnRtl) {
+            this.editorFootnRtl.setup();
+          }
+        }
       },
       onQuoteSave: function() {
         this.putMetaAuthors(this.authors).then(()=>{
