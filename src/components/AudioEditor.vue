@@ -236,27 +236,30 @@
       methods: {
         select (block_id, start, end, selectElement = false) {
           if (block_id && this.blockId === block_id) {
-            this.blockSelectionEmit = true;
-            this.selection.start = start / 1000;
-            this.selection.end = end / 1000;
-            this.cursorPosition = this.selection.start;
-            this.wordSelectionMode = false;
-            this._clearWordSelection();
-            this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-            this._showSelectionBorders(true);
-            if (selectElement) {
-              let index = this.contentContainer.find('w[data-map]:not([data-map=""])').index($(selectElement));
-              if (typeof index =='undefined' || index === false || index < 0) {
-                let index_no_data = this.contentContainer.find('w:not([data-map])').index($(selectElement));
-                let total_index = this.contentContainer.find('w').index($(selectElement));
-                index = total_index - index_no_data;
-              }
-              if (index >= 0) {
-                Vue.nextTick(() => {
-                  this._setWordSelection(index, false, false);
-                });
-              }
-            }
+            this.pause()
+              .then(() => {
+                this.blockSelectionEmit = true;
+                this.selection.start = start / 1000;
+                this.selection.end = end / 1000;
+                this.cursorPosition = this.selection.start;
+                this.wordSelectionMode = false;
+                this._clearWordSelection();
+                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                this._showSelectionBorders(true);
+                if (selectElement) {
+                  let index = this.contentContainer.find('w[data-map]:not([data-map=""])').index($(selectElement));
+                  if (typeof index =='undefined' || index === false || index < 0) {
+                    let index_no_data = this.contentContainer.find('w:not([data-map])').index($(selectElement));
+                    let total_index = this.contentContainer.find('w').index($(selectElement));
+                    index = total_index - index_no_data;
+                  }
+                  if (index >= 0) {
+                    Vue.nextTick(() => {
+                      this._setWordSelection(index, false, false);
+                    });
+                  }
+                }
+            });
           }
         },
         load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
@@ -292,6 +295,11 @@
           if ((this.blockId && this.blockId != blockId) || (mode == 'file' && reloadOnChange) || mode != this.mode) {
             if (this.mode === 'block') {
               let block = this.audioTasksQueueBlockOrPart();
+              if (this.processRun && this.processRunType === 'save') {
+                this.pendingLoad = arguments;
+                this.setProcessRun(true, 'loading');
+                return;
+              }
               if (block && !block.isAudioChanged && this.isModified) {// button save was pressed
                 this.pendingLoad = arguments;
                 this.setProcessRun(true, 'loading');
