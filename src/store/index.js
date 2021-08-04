@@ -3937,7 +3937,7 @@ export const store = new Vuex.Store({
       return new Promise((resolve, reject) => {
         if (old_out !== new_out) {
           dispatch('getAudioBook');
-          dispatch('getBlocksInRange', [old_out, new_out])
+          return dispatch('getBlocksInRange', [old_out, new_out])
             .then(blocks => {
               if (Array.isArray(blocks)) {
                 blocks.forEach(blk => {
