@@ -2041,8 +2041,15 @@ export const store = new Vuex.Store({
           .then(response => {
             //console.log('putBlock', response);
             if (response.data) {
-              dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
+              return dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
+                .then(() => {
+                  return Promise.resolve(response);
+                });
+            } else {
+              return Promise.resolve(response);
             }
+          })
+          .then((response) => {
             commit('clear_blocker', 'putBlock');
             block._rev = response.data.rev;
             dispatch('tc_loadBookTask', block.bookid);
