@@ -1305,13 +1305,6 @@ export default {
         });
       }
 
-      if (this.block.type == 'title' && !this.block.classes.hasOwnProperty('style')){
-        this.block.classes.style = '';
-      }
-      if (this.block.type == 'header' && !this.block.classes.hasOwnProperty('level')){
-        this.block.classes.level = 'h2';
-      }
-
 
       this.updateFlagStatus(this.block._id);
       if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
