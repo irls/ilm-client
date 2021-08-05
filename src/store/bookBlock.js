@@ -1025,6 +1025,10 @@ class BookBlock {
       }
     });
   }
+  
+  setIsSaving(value = true) {
+    this.isSaving = value;
+  }
 }
 
 class FlagPart {

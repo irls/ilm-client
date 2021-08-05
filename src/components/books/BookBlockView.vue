@@ -2035,7 +2035,8 @@ export default {
         this.updateFlagStatus(this.block._id);
         let is_content_changed = this.hasChange('content');
         let is_type_changed = this.hasChange('type');
-        this.block.isSaving = true;
+        //this.block.isSaving = true;
+        this.storeListById(this.block.blockid).setIsSaving(true);
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
@@ -2044,12 +2045,14 @@ export default {
           if (realign) {
             this.getBookAlign()
               .then(() => {
+                //this.storeListById(this.block.blockid).setIsSaving(false);
                 this.block.isSaving = false;
                 if (this.isLocked && this.isAudioEditing) {
                   this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                 }
               });
           } else {
+            //this.storeListById(this.block.blockid).setIsSaving(false);
             this.block.isSaving = false;
           }
           if (this.isCompleted) {
