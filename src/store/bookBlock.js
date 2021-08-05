@@ -1072,6 +1072,10 @@ class BookBlock {
     }
     return true;
   }
+  
+  setIsSaving(value = true) {
+    this.isSaving = value;
+  }
 }
 
 class FlagPart {
