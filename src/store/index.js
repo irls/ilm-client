@@ -577,6 +577,13 @@ export const store = new Vuex.Store({
             'footnote': false
           };
         }
+        if (meta.styles instanceof Object) {
+          Object.keys(meta.styles).forEach(k => {
+            if (k.indexOf('@') === 0) {
+              delete meta.styles[k];
+            }
+          });
+        }
         if (!meta.styles || (meta.styles && Object.keys(meta.styles).length === 0)) {
           meta.styles = {
             global: ''
@@ -592,6 +599,12 @@ export const store = new Vuex.Store({
             state.books_meta.pop();// force re draw lists
           }
         }
+        /*Object.keys(meta).forEach(k => {
+          if (!_.isEqual(meta[k], state.currentBookMeta[k])) {
+            //console.log(`${k}: "${JSON.stringify(state.currentBookMeta[k])}" to "${JSON.stringify(meta[k])}"`);
+            //state.currentBookMeta[k] = meta[k];
+          }
+        });*/
         state.currentBookMeta = meta;
         state.currentBookMeta._id = meta.bookid;
         state.currentBookid = meta.bookid
