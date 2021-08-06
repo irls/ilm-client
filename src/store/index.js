@@ -69,6 +69,7 @@ export const store = new Vuex.Store({
     uploadImage
   },
   state: {
+    audioRenaming : false,
     auth: superlogin,
     isLoggedIn: false,
     isAdmin: false,
@@ -526,6 +527,9 @@ export const store = new Vuex.Store({
   },
 
   mutations: {
+    SET_AUDIO_RENAMING(state, status) {
+      state.audioRenaming = status;
+    },
 
     set_localDB (state, payload) {
         state[payload.dbProp] = new PouchDB(payload.dbName, POUCH_CFG);
@@ -1146,6 +1150,9 @@ export const store = new Vuex.Store({
   },
 
   actions: {
+    setAudioRenamingStatus({ state, commit, dispatch },status) {
+      commit('SET_AUDIO_RENAMING',status);
+    },
 
     emptyDB (context) {
       //PouchDB('ilm_content_meta').destroy()
@@ -1737,7 +1744,7 @@ export const store = new Vuex.Store({
               update['@version'] = response.data['@version'];
               state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], update);
             }
-            
+
             let checkBookid = state.route.params.hasOwnProperty('bookid') ? state.route.params.bookid : state.currentBookid;
             if (response.data.bookid === checkBookid) {// ILM-3773 very quickly switch-over to another book, check bookid in URL or in state property currentBookid
               state.currentBookMeta['@version'] = response.data['@version'];
@@ -2905,7 +2912,7 @@ export const store = new Vuex.Store({
         let request = axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
           .then(audio => {
             if (audio.data) {
-              if (set && !state.updateAudiobookProgress) {
+              if (set && !state.updateAudiobookProgress && !state.audioRenaming) {
                 commit('set_currentAudiobook', audio.data);
               }
               return Promise.resolve(audio.data);
@@ -3992,7 +3999,7 @@ export const store = new Vuex.Store({
                 //vm.closeForm(response)
               })
           }
-          
+
           return Promise.resolve(response);
         })
         .catch(err => {
@@ -4018,7 +4025,7 @@ export const store = new Vuex.Store({
                     blk.audiosrc = block.audiosrc;
                     blk.audiosrc_ver = block.audiorc_ver;
                   } catch (e) {
-                    
+
                   }
                 });
                 dispatch('getCurrentJobInfo');
