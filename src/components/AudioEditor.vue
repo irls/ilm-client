@@ -272,6 +272,9 @@
 
           let blockId = block ? block._id : null;
           let reloadBlockAudio = this.mode === 'block' && blockId === this.blockId;
+          if (this.mode === 'file') {
+            this.pausedAt = null;
+          }
           this.isFootnote = block ? block.is_footnote : false;
 
           this.$root.$off('for-audioeditor:select', this.select);
