@@ -196,7 +196,8 @@
           isFootnote: false,
           wordRepositioning: false,
           editingLocked: false,
-          editingLockedReason: ''
+          editingLockedReason: '',
+          pausedAt: null
         }
       },
       mounted() {
@@ -271,6 +272,10 @@
           }
 
           let blockId = block ? block._id : null;
+          let reloadBlockAudio = this.mode === 'block' && blockId === this.blockId;
+          if (this.mode === 'file') {
+            this.pausedAt = null;
+          }
           this.isFootnote = block ? block.is_footnote : false;
 
           this.$root.$off('for-audioeditor:select', this.select);
@@ -334,7 +339,9 @@
             //this.audioHistory = [];
             //this.close();
           }
-          this.cursorPosition = false;
+          if (!reloadBlockAudio) {
+            this.cursorPosition = false;
+          }
           this.setProcessRun(true, 'loading');
           this.pendingLoad = null;
           this.isPlaying = false;
@@ -456,8 +463,15 @@
             }
           ])
           .then(() => {
-            if (this.mode === 'block') {
+            if (reloadBlockAudio) {
+              if (this.pausedAt) {
+                this.audiosourceEditor.pausedAt = this.pausedAt;
+                this.audiosourceEditor.playbackSeconds = this.pausedAt;
+                $('.annotation-box').removeClass('selected');
+              }
+            } else if (this.mode === 'block') {
               this.clearSelection();
+              this.pausedAt = null;
             }
             // overwrite function, bug ILM-4033
             this.audiosourceEditor.tracks.forEach(track => {
@@ -570,94 +584,7 @@
               //}
               return;
             });
-            let dragDropInterval = setInterval(() => {
-              if ($('.waveform .selection').length > 0) {
-                clearInterval(dragDropInterval);
-                $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>').after('<div id="context-position" class="context-position"></div>');
-                if (self.cursorPosition) {//reset cursor position
-                  let cp = this.cursorPosition;
-                  this.cursorPosition = 0;
-                  Vue.nextTick(() => {
-                    this.cursorPosition = cp;
-                  });
-                }
-                Vue.nextTick(() => {
-                  $('[id="resize-selection-left"]').hide();
-                  $('[id="resize-selection-right"]').hide();
-                });
-                self.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
-
-                  limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
-                  onDrag: function(element, x, y, event) {
-                    //console.log(event.buttons, event.which)
-                    self.pause()
-                      .then(() => {
-                        if (!event.buttons) {
-                          self.dragRight.stop();
-                          event.preventDefault();
-                          self._showSelectionBorders();
-                          return false;
-                        }
-                        self.wordSelectionMode = false;
-                        if ($('[id="resize-selection-left"]').position().left >= x) {
-                          let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
-                          self.selection.start = start-1;
-                          self._setSelectionOnWaveform();
-                          return false;
-                        }
-                        let startX = 0;
-                        if (self.selection && typeof self.selection.start !== 'undefined') {
-                          startX = self.selection.start / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
-                        } else {
-                          startX = $('[id="resize-selection-left"]').position().left;
-                        }
-                        if ($('.selection.segment').length > 0) {
-                          $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
-                        }
-
-                        if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
-                          self.audiosourceEditor.activeTrack.stateObj.startX = startX;
-                          let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
-                          self.plEventEmitter.emit('select', self.selection.start, startSec);
-                        }
-                        //self.cursorPosition = self.selection.start;
-                      })
-                  }
-                })
-                self.dragLeft = new Draggable (document.getElementById('resize-selection-left'), {
-                  limit: {x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
-                  onDrag: function(element, x, y, event) {
-                    self.pause()
-                      .then(() => {
-                        self.wordSelectionMode = false;
-                        if ($('[id="resize-selection-right"]').position().left <= x) {
-                          let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
-                          self.selection.end = start+1;
-                          self._setSelectionOnWaveform();
-                          return false;
-                        }
-                        $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
-                        $('.selection.segment').css('left', x - 5)
-                        let startX = 0;
-                        if (self.selection && typeof self.selection.end !== 'undefined') {
-                          startX = self.selection.end / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
-                        } else {
-                          startX = $('[id="resize-selection-right"]').position().left;
-                        }
-                        if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
-                          self.audiosourceEditor.activeTrack.stateObj.startX = startX;
-                          let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
-                          self.plEventEmitter.emit('select', startSec, self.selection.end);
-                        }
-                        self.cursorPosition = self.selection.start;
-                      });
-                  }
-                })
-                if (self.mode === 'file') {
-                  self._showSelectionBorders();
-                }
-              }
-            }, 100)
+            this.initDragSelection();
             this.hideModal('onDiscardMessage');
             if (this.mode == 'file') {
               if (bookAudiofile && bookAudiofile.positions) {
@@ -952,6 +879,7 @@
                 this.isPlaying = false;
                 this.isPaused = true;
                 this.cursorPosition = this.audiosourceEditor.playbackSeconds;
+                this.pausedAt = this.cursorPosition;
                 this.$root.$emit('from-audioeditor:pause');
                 return Promise.resolve();
               })
@@ -1241,9 +1169,9 @@
             if (this.isModified) {
               this.pause()
                 .then(() => {
-                  this._clearWordSelection();
-                  this.cursorPosition = 0;
-                  this.scrollPlayerToAnnotation(0);
+                  //this._clearWordSelection();
+                  //this.cursorPosition = 0;
+                  //this.scrollPlayerToAnnotation(0);
                   this.$root.$emit('from-audioeditor:save');
                 });
               //this.addTaskQueue('save', []);
@@ -1272,9 +1200,9 @@
             //this.history = [];
             this.pause()
               .then(() => {
-                this._clearWordSelection();
-                this.cursorPosition = 0;
-                this.scrollPlayerToAnnotation(0);
+                //this._clearWordSelection();
+                //this.cursorPosition = 0;
+                //this.scrollPlayerToAnnotation(0);
                 this.$root.$emit('from-audioeditor:save', true);
               });
             //this.isModified = false;
@@ -2667,6 +2595,116 @@ Revert to original block audio?`,
             this.editingLockedReason = reason;
           } else {
             this.editingLockedReason = '';
+          }
+        },
+        initDragSelection() {
+          let dragDropInterval = setInterval(() => {
+            if ($('.waveform .selection').length > 0) {
+              clearInterval(dragDropInterval);
+              $('.waveform .selection').after('<div id="resize-selection-right" class="resize-selection"></div>').after('<div id="resize-selection-left" class="resize-selection"></div>').after('<div id="cursor-position" class="cursor-position"></div>').after('<div id="context-position" class="context-position"></div>');
+              if (this.cursorPosition) {//reset cursor position
+                let cp = this.cursorPosition;
+                this.cursorPosition = 0;
+                Vue.nextTick(() => {
+                  this.cursorPosition = cp;
+                });
+              }
+              Vue.nextTick(() => {
+                $('[id="resize-selection-left"]').hide();
+                $('[id="resize-selection-right"]').hide();
+                if (!isNaN(this.selection.start)) {
+                  $('[id="resize-selection-left"]').show();
+                  //$('[id="resize-selection-left"]').css({'left': this.selection.start / this.getPixelsPerSecond() + 'px'});
+                  this.dragLeft.set(this.selection.start / this.getPixelsPerSecond(), 0);
+                }
+                if (!isNaN(this.selection.end)) {
+                  $('[id="resize-selection-right"]').show();
+                  //$('[id="resize-selection-right"]').css({'left': this.selection.end / this.getPixelsPerSecond() + 'px'});
+                  this.dragRight.set(this.selection.end / this.getPixelsPerSecond(), 0);
+                }
+                if (this.wordSelectionMode) {
+                  this._setWordSelection(this.wordSelectionMode, true, false);
+                }
+              });
+              this.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
+
+                limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
+                onDrag: (element, x, y, event) => {
+                  //console.log(event.buttons, event.which)
+                  this.pause()
+                    .then(() => {
+                      if (!event.buttons) {
+                        this.dragRight.stop();
+                        event.preventDefault();
+                        this._showSelectionBorders();
+                        return false;
+                      }
+                      this.wordSelectionMode = false;
+                      if ($('[id="resize-selection-left"]').position().left >= x) {
+                        let start = x * this.getPixelsPerSecond();
+                        this.selection.start = start-1;
+                        this._setSelectionOnWaveform();
+                        return false;
+                      }
+                      let startX = 0;
+                      if (this.selection && typeof this.selection.start !== 'undefined') {
+                        startX = this.selection.start / (this.getPixelsPerSecond());
+                      } else {
+                        startX = $('[id="resize-selection-left"]').position().left;
+                      }
+                      if ($('.selection.segment').length > 0) {
+                        $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
+                      }
+
+                      if (typeof this.audiosourceEditor.activeTrack !== 'undefined') {
+                        this.audiosourceEditor.activeTrack.stateObj.startX = startX;
+                        let startSec = x * this.getPixelsPerSecond();
+                        this.plEventEmitter.emit('select', this.selection.start, startSec);
+                      }
+                      //self.cursorPosition = self.selection.start;
+                    })
+                }
+              })
+              this.dragLeft = new Draggable (document.getElementById('resize-selection-left'), {
+                limit: {x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
+                onDrag: (element, x, y, event) => {
+                  this.pause()
+                    .then(() => {
+                      this.wordSelectionMode = false;
+                      if ($('[id="resize-selection-right"]').position().left <= x) {
+                        let start = x * this.getPixelsPerSecond();
+                        this.selection.end = start+1;
+                        this._setSelectionOnWaveform();
+                        return false;
+                      }
+                      $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
+                      $('.selection.segment').css('left', x - 5)
+                      let startX = 0;
+                      if (this.selection && typeof this.selection.end !== 'undefined') {
+                        startX = this.selection.end / (this.getPixelsPerSecond());
+                      } else {
+                        startX = $('[id="resize-selection-right"]').position().left;
+                      }
+                      if (typeof this.audiosourceEditor.activeTrack !== 'undefined') {
+                        this.audiosourceEditor.activeTrack.stateObj.startX = startX;
+                        let startSec = x * this.getPixelsPerSecond();
+                        this.plEventEmitter.emit('select', startSec, this.selection.end);
+                      }
+                      this.cursorPosition = this.selection.start;
+                    });
+                }
+              })
+              if (this.mode === 'file') {
+                this._showSelectionBorders();
+              }
+            }
+          }, 100);
+        },
+        getPixelsPerSecond() {
+          if (this.audiosourceEditor) {
+            return this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+          } else {
+            return false;
           }
         },
         ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId'])
