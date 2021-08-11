@@ -349,8 +349,14 @@
             this.audiosourceEditor.tracks.forEach(t => {
               //console.log(t.playout);
               delete t.playout.buffer;
+              delete t.buffer;
             });
             //console.log('CLEAR');
+            delete this.audiosourceEditor.activeTrack;
+            this.content = '';
+            this.words = [];
+            this.annotations = [];
+            delete this.audiosourceEditor.annotationList;
             clear.push(this.audiosourceEditor.clear());
           }
           Promise.all(clear)
@@ -455,6 +461,7 @@
             }
           ])
           .then(() => {
+            console.log(`memory: ${window.performance.memory.usedJSHeapSize}`);
             if (this.mode === 'block') {
               this.clearSelection();
             }
