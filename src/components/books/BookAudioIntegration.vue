@@ -47,7 +47,7 @@
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
           <div class="file-catalogue-files-wrapper">
             <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
-              <div v-for="(audiofile, index) in audiobook.importFiles" v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]" >
+              <div v-for="(audiofile, index) in audiobook.importFiles" v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())"   :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-renaming': (renaming && (renaming.id == audiofile.id && !audiofile.duplicate))}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]" >
                 <template v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())">
                   <template v-if="audiofile.status == 'processing' && (audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())">
                     <div class="audiofile-info">
@@ -74,7 +74,7 @@
                         <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
                         <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
                       </div>
-                      <div class="audiofile-name" v-bind:class="{ renaming: renaming }" >
+                      <div class="audiofile-name">
                         <span v-if="audiofile.duplicate " @click="duplicateAudiofileClick(audiofile.id, audiofile.duplicate, $event)" :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)"><img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" /><i>Duplicate: {{audiofile.title ? audiofile.title : audiofile.name}}</i></span>
                         <span v-if="!renaming || (renaming.id !== audiofile.id && !audiofile.duplicate)"
                               :class="['audiofile-name-edit', audiofile.id.replace(/\./g, '')]"
@@ -380,26 +380,26 @@
         // Empty or only spaces
         result = value.replace(/\s+/g,'').length>0;
 
-        // linux characters
-        result = result && value.match(/[@\/]/,'') === null;
-
-        // windows characters
-        result = result && value.match(/[<>:"\/\\\|\?\*]/,'') === null;
-
-        // windows Filenames cannot end in a dot.
-        result = result && value.match(/(.?)*\.+/,'') === null;
-
-        // windows Filenames cannot end in a space.
-        result = result && value.match(/(.?)*\s+/,'') === null;
-
-        // macOS characters
-        result = result && value.match(/[:/]/,'') === null;
-
-        // non ascii characters
-        result = result && value.match(/[^ -~]+/,'') === null;
-
-        // length
-        result = result && value.length<=245;
+        // // linux characters
+        // result = result && value.match(/[@\/]/,'') === null;
+        //
+        // // windows characters
+        // result = result && value.match(/[<>:"\/\\\|\?\*]/,'') === null;
+        //
+        // // windows Filenames cannot end in a dot.
+        // result = result && value.match(/(.?)*\.+/,'') === null;
+        //
+        // // windows Filenames cannot end in a space.
+        // result = result && value.match(/(.?)*\s+/,'') === null;
+        //
+        // // macOS characters
+        // result = result && value.match(/[:/]/,'') === null;
+        //
+        // // non ascii characters
+        // result = result && value.match(/[^ -~]+/,'') === null;
+        //
+        // // length
+        // result = result && value.length<=245;
 
         return result;
       },
@@ -1349,7 +1349,6 @@
       },
       'renaming': {
         handler(val) {
-          console.log('renaming handler');
           this.setAudioRenamingStatus(val);
           if (val !== false) {
             var i = setInterval(() => {
@@ -1451,14 +1450,6 @@
             vertical-align: sub;
             min-width: 60%;
           }
-          .audiofile-name.renaming{
-            width: 100%;
-            max-width: 100%;
-          }
-          .renaming>#rename-input{
-            width: 90%;
-          }
-
           .audiofile-duration {
             display: inline-block;
             overflow: hidden;
@@ -1765,4 +1756,18 @@
     background-position: center;
     width: 43px;
   }
+
+  .audiofile.-renaming .audiofile-options,.audiofile.-renaming .audiofile-player-controls{
+    display: none !important;
+  }
+
+  .audiofile.-renaming .audiofile-name{
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .audiofile.-renaming #rename-input{
+    width: 90% !important;
+  }
+
+
 </style>
