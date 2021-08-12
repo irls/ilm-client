@@ -465,7 +465,7 @@
             }
           ])
           .then(() => {
-            console.log(`memory: ${window.performance.memory.usedJSHeapSize}`);
+            //console.log(`memory: ${window.performance.memory.usedJSHeapSize}`);
             if (this.mode === 'block') {
               this.clearSelection();
             }
