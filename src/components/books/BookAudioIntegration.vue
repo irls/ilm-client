@@ -79,7 +79,7 @@
                         <span v-if="!renaming || (renaming.id !== audiofile.id && !audiofile.duplicate)"
                               :class="['audiofile-name-edit', audiofile.id.replace(/\./g, '')]"
                               @click="audiofileClick(audiofile.id, false, $event)"  :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)" v-on:dblclick="renameAudiofile(audiofile.id)"><img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" />{{audiofile.title ? audiofile.title : audiofile.name}}</span>
-                        <input id="rename-input" type="text" v-model="audiofile.title"
+                        <input id="rename-input" type="text" v-model="audiofile.title" autocomplete="off"
                              class="audiofile-name-edit"
                                @blur="saveAudiobook()"
                                @keyup.enter="saveAudiobook()"
