@@ -2563,10 +2563,11 @@ Revert to original block audio?`,
                 this.isAudioModified = false;
                 this.history = [];
                 this.actionsLog = [];
-                this.cursorPosition = 0;
+                this.cursorPosition = false;
                 this._clearWordSelection();
                 this.scrollPlayerToAnnotation(0);
                 //$('.playlist-tracks').scrollLeft(0);
+                this.pausedAt = null;
                 return Promise.resolve();
               })
               .then(() => {
