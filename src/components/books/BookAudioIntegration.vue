@@ -1435,6 +1435,8 @@
         span {
           display: inline-block;
           padding: 0px 2px;
+          display: inline-block;
+          width: 100%;
         }
         .audiofile-info {
           display: inline-block;
