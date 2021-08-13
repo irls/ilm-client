@@ -468,6 +468,7 @@
                 this.audiosourceEditor.playbackSeconds = this.pausedAt;
                 $('.annotation-box').removeClass('selected');
               }
+              this.audiosourceEditor.setActiveTrack(this.audiosourceEditor.tracks[0]);
             } else if (this.mode === 'block') {
               this.clearSelection();
               this.pausedAt = null;
