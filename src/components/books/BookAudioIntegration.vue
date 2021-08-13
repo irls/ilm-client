@@ -46,7 +46,7 @@
           </div>
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
           <div class="file-catalogue-files-wrapper">
-            <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
+            <draggable :options="{disabled : renaming}" v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
               <div v-for="(audiofile, index) in audiobook.importFiles" v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())"   :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-renaming': (renaming && (renaming.id == audiofile.id && !audiofile.duplicate))}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]" >
                 <template v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())">
                   <template v-if="audiofile.status == 'processing' && (audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())">
@@ -74,15 +74,17 @@
                         <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
                         <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
                       </div>
-                      <div class="audiofile-name">
+                      <div class="audiofile-name" v-on:dblclick="renameAudiofile(audiofile.id)">
                         <span v-if="audiofile.duplicate " @click="duplicateAudiofileClick(audiofile.id, audiofile.duplicate, $event)" :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)"><img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" /><i>Duplicate: {{audiofile.title ? audiofile.title : audiofile.name}}</i></span>
                         <span v-if="!renaming || (renaming.id !== audiofile.id && !audiofile.duplicate)"
                               :class="['audiofile-name-edit', audiofile.id.replace(/\./g, '')]"
-                              @click="audiofileClick(audiofile.id, false, $event)"  :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)" v-on:dblclick="renameAudiofile(audiofile.id)"><img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" />{{audiofile.title ? audiofile.title : audiofile.name}}</span>
+                              @click="audiofileClick(audiofile.id, false, $event)"  :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)" ><img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" />{{audiofile.title ? audiofile.title : audiofile.name}}</span>
                         <input id="rename-input" type="text" v-model="audiofile.title" autocomplete="off"
                              class="audiofile-name-edit"
-                               @blur="saveAudiobook()"
-                               @keyup.enter="saveAudiobook()"
+                               @blur="renameAudiofileStop()"
+                               @keyup.enter="renameAudiofileStop()"
+                               @change="saveAudiobook()"
+
                              v-else-if="!audiofile.hasOwnProperty('duplicate') || audiofile.duplicate == false" />
                       </div>
                       <div class="audiofile-player-controls">
@@ -403,7 +405,9 @@
 
         return result;
       },
-
+      renameAudiofileStop() {
+        this.renaming = false;
+      },
       saveAudiobook(reorder = [], removeFiles = [], done = [], sortDirection = '') {
         if (removeFiles) {
           removeFiles.forEach(rf => {
@@ -431,7 +435,8 @@
           let renaming = this.audiobook.importFiles.find(aif => aif.id == this.renaming.id);
           if(!this.audiobookValidate(renaming.title)){
             renaming.title = this.renaming.titleOrigin;
-            this.renaming = false;
+            this.renameAudiofileStop();
+            // this.renaming = false;
             return
           }
           if (renaming) {
@@ -452,7 +457,7 @@
           rename.push(d);
         });
         formData.append('rename', JSON.stringify(rename));
-        this.renaming = false;
+        this.renameAudiofileStop();
         let api = this.$store.state.auth.getHttp()
         let self = this;
         return api.post(api_url, formData, {}).then(function(response){
