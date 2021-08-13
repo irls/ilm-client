@@ -300,6 +300,12 @@
                 this.setProcessRun(true, 'loading');
                 return;
               }
+              if (this.blockId && blockId) {
+                if (this.pendingLoad && this.processRun && (this.processRunType === 'save' || this.processRunType === 'loading')) {// second opening of audioeditor while block saving in progress
+                  this.pendingLoad = arguments;
+                  return;
+                }
+              }
               if (block && !block.isAudioChanged && this.isModified) {// button save was pressed
                 this.pendingLoad = arguments;
                 this.setProcessRun(true, 'loading');
