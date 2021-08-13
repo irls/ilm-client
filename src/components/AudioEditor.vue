@@ -479,6 +479,17 @@
                 this.audiosourceEditor.playbackSeconds = this.pausedAt;
                 $('.annotation-box').removeClass('selected');
               }
+              if (this.wordSelectionMode === false) {
+                let selectedAnnotation = $('.annotation-box.selected');
+                if (selectedAnnotation) {
+                  let index = $('.annotations-boxes').find('.annotation-box').index($(selectedAnnotation));
+                  let wrapped = this.contentContainer.find('.content-wrap w[data-map]');
+                  if (index >= 0 && wrapped[index]) {
+                    $(wrapped[index]).addClass('selected');
+                  }
+                }
+              }
+              this.audiosourceEditor.setActiveTrack(this.audiosourceEditor.tracks[0]);
             } else if (this.mode === 'block') {
               this.clearSelection();
               this.pausedAt = null;
