@@ -402,7 +402,7 @@ export default {
       //'modal': modal,
       'split-pin-cntx-menu': BlockContextMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -958,7 +958,7 @@ export default {
       this.initEditor();
       this.addContentListeners();
 
-      this.$root.$on('block-state-refresh-' + this.block._id, this.$forceUpdate);
+      this.$root.$on('block-state-refresh-' + this.block._id, this.forceReloadContent);
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
       this.$root.$on('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
@@ -980,7 +980,7 @@ export default {
 //     console.log('this.isChanged', this.isChanged);
     this.audioEditorEventsOff();
 
-    this.$root.$off('block-state-refresh-' + this.block._id, this.$forceUpdate);
+    this.$root.$off('block-state-refresh-' + this.block._id, this.forceReloadContent);
 
     if (this.check_id) {
       this.block.check_id = this.check_id;
@@ -2985,6 +2985,9 @@ export default {
         if (index !== -1) {
           this.changes.splice(index, 1);
           this.$emit('hasChanges', change, false);
+          if (this.changes.length === 0) {
+            this.isChanged = false;
+          }
         }
       },
       setContent() {
@@ -3311,16 +3314,19 @@ Save text changes and realign the Block?`,
         /*if (this.isSplittedBlock) {
           return false;
         }*/
-        if (this.block.voicework !== 'narration') {
+        if (!['tts', 'audio_file', 'narration', 'no_audio'].includes(this.block.voicework)) {
           return false;
         }
         if (this.editingLocked) {
           return false;
         }
+        if (['hr', 'illustration'].includes(this.block.type)) {
+          return false;
+        }
         /*if (this._is('narrator', true) && this.mode === 'narrate') {
           console.log(this.range, `${this.range.startOffset}:${this.range.endOffset}`);
-        } else */if (((this._is('editor', true) || this.adminOrLibrarian) && this.mode === 'edit') || (this._is('narrator', true) && this.mode === 'narrate')) {
-          if (!(this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
+        } else */if (((this._is('editor', true) || this.adminOrLibrarian) && this.mode === 'edit') || (this._is('narrator', true) && this.mode === 'narrate' && this.block.voicework === 'narration')) {
+          //if (!(this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
             if (!this.range) {
               return false;
             }
@@ -3331,12 +3337,14 @@ Save text changes and realign the Block?`,
               return false;
             }
             let checkRange = document.createRange();
+            let letters = `a-zA-Zа-яА-Я0-9À-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ\\ufdf`;
             checkRange.setStart( container, this.range.startOffset );
             if (this.range.startOffset > 0) {
               checkRange.setStart(container, this.range.startOffset - 1);
               //let checkString = checkRange.toString();
-              if (checkRange.startOffset > 0 && /^\s$/.test(checkRange.toString())) {//  && checkString.substring(checkString.length - 1, checkString.length) === ' ' container.data.substring(checkRange.endOffset, checkRange.endOffset + 1) === ' '
-                while (checkRange.startOffset > 0 && /^\s$/.test(container.data.substring(checkRange.startOffset, checkRange.startOffset - 1))) {// add all speces till container beginning to range
+              let checkNonWord = new RegExp(`^[${letters}]+$`);
+              if (checkRange.startOffset > 0 && !checkNonWord.test(checkRange.toString())) {//  && checkString.substring(checkString.length - 1, checkString.length) === ' ' container.data.substring(checkRange.endOffset, checkRange.endOffset + 1) === ' '
+                while (checkRange.startOffset > 0 && !checkNonWord.test(container.data.substring(checkRange.startOffset, checkRange.startOffset - 1))) {// add all speces till container beginning to range
                   checkRange.setStart( container, checkRange.startOffset-1 );
                 }
               }
@@ -3384,7 +3392,7 @@ Save text changes and realign the Block?`,
             let regexp = null;
             //console.log(container, container.length, this.range.endOffset);
             if (!isMac) {
-              let wordString = `a-zA-Zа-яА-Я0-9À-ÿ\\u0600-\\u06FF\\ā\\ī\\ū\\ṛ\\ṝ\\ḷ\\ṅ\\ñ\\ṭ\\ḍ\\ṇ\\ś\\ṣ\\ḥ\\ṁ\\ṃ\\Ā\\Ī\\Ū\\Ṛ\\Ṝ\\Ḻ\\Ṅ\\Ñ\\Ṭ\\Ḍ\\Ṇ\\Ś\\Ṣ\\Ḥ\\Ṁ\\ufdfa\\’"\\?\\!\\:\\;\\.\\\\,\\/\\<\\>\\'\\*\\‒\\|“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…`;
+              let wordString = `${letters}\\’"\\?\\!\\:\\;\\.\\\\,\\/\\<\\>\\'\\*\\‒\\|“‘«”’»\\(\\[\\{﴾\\)\\]\\}\\-﴿؟؛…`;
               regexp = skipLengthCheck ? /^(\S+)|(\s+)$/i : new RegExp(`^([${wordString}]+[^${wordString}]+[${wordString}]*)|([^${wordString}]+[${wordString}]+)|(\\s+)$`, 'i');
               checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
               let checkString = checkRange.toString();
@@ -3408,6 +3416,15 @@ Save text changes and realign the Block?`,
                       regexp = /^.?/;
                     }
                   }
+                }
+              }
+              if (!(new RegExp(`^[${letters}]+`)).test(checkRange.toString()) && checkRange.startOffset === 0) {// check that split point is in the beginning of the block and no letters to the left
+                let checkContainer = container;
+                while (checkContainer.parentElement !== this.$refs.blockContent) {
+                  checkContainer = checkContainer.parentElement;
+                }
+                if (!checkContainer.previousElementSibling) {
+                  return false;
                 }
               }
             } else {// Mac OS right mouse click selects psrt of the text
@@ -3440,7 +3457,7 @@ Save text changes and realign the Block?`,
             }
             //console.log(`${skipLengthCheck}, '${checkRange.toString()}'`);
             return regexp.test(checkRange.toString());
-          }
+          //}
         }
         return false;
       },
@@ -3475,6 +3492,14 @@ Save text changes and realign the Block?`,
         if (this.splitPinSelection) {
           this.splitPinSelection.remove();
           this.splitPinSelection = null;
+        }
+        if (this.block.getIsSplittedBlock()) {
+          let splitPoints = this.$refs.blockContent.querySelectorAll('i.pin');
+          if (splitPoints.length === 0) {
+            this.unsetChange('split_point');
+          }
+        } else {
+          this.splitPointRemoved();
         }
       },
       splitPinCntxClose() {
@@ -3536,6 +3561,14 @@ Join with next subblock?`;
             class: ['align-modal']
           });
         } else {
+          if (this.$parent.$refs.blocks) {
+            let refPlaying = this.$parent.$refs.blocks.find(blk => {
+              return blk.isAudStarted || blk.isAudPaused;
+            });
+            if (refPlaying) {
+              refPlaying.audStop(refPlaying.block.blockid);
+            }
+          }
           this.$parent.isSaving = true;
           this.$parent.$forceUpdate();
           let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
@@ -3557,6 +3590,20 @@ Join with next subblock?`;
               this.$parent.$parent.refreshTmpl();
               return Promise.resolve();
             });
+        }
+      },
+      // method to update properties if user swithes modes while block saving is in progress
+      forceReloadContent() {
+        if (!this._isDestroyed) {
+          let content = this.storeListById(this.block.blockid).getPartContent(this.blockPartIdx);
+          this.blockAudio.map = content;
+          this.blockPart.content = content;
+          //console.log(this.blockAudio.map);
+          //console.log(this);
+          Vue.nextTick(() => {
+            this.storeListO.refresh();
+            this.$forceUpdate();
+          });
         }
       }
 
