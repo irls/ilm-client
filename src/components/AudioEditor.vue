@@ -256,7 +256,8 @@
                   }
                   if (index >= 0) {
                     Vue.nextTick(() => {
-                      this._setWordSelection(index, false, false);
+                      this.wordSelectionMode = index;
+                      this._setWordSelection(index, true, true);
                     });
                   }
                 }
