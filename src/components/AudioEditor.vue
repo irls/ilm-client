@@ -349,9 +349,19 @@
           if (this.audiosourceEditor) {
             this.audiosourceEditor.tracks.forEach(t => {
               //console.log(t.playout);
-              delete t.playout.buffer;
+              t.playout.buffer = null;
+              //clear.push(t.playout.ac.close());
+              t.buffer = null;
+              t = null;
             });
             //console.log('CLEAR');
+            this.audiosourceEditor.activeTrack = null;
+            this.content = '';
+            this.words = [];
+            this.annotations = [];
+            this.audiosourceEditor.annotationList = null;
+            //console.log(this.audiosourceEditor.ac.close());
+            //Object.getOwnPropertyDescriptor(this.audiosourceEditor, 'activeTrack')
             clear.push(this.audiosourceEditor.clear());
           }
           Promise.all(clear)
@@ -456,6 +466,7 @@
             }
           ])
           .then(() => {
+            //console.log(`memory: ${window.performance.memory.usedJSHeapSize}`);
             if (this.mode === 'block') {
               this.clearSelection();
             }
@@ -690,6 +701,7 @@
           });
           });
           let self = this;
+          $('.wf-playlist').off('click', '.annotations-boxes .annotation-box');
           $('.wf-playlist').on('click', '.annotations-boxes .annotation-box', function(e) {
             self.wordSelectionMode = false;
             let index = $('.annotations-boxes .annotation-box').index($(this));
@@ -1776,7 +1788,7 @@
                     if (autoplay) {
                       this.cursorPosition = false;
                       Vue.nextTick(() => {
-                        this.play()
+                        this.play();
                       });
                     }
                   });
