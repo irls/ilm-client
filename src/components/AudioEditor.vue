@@ -1703,7 +1703,7 @@
           }
         },
         _clearWordSelection() {
-          if (!this.wordSelectionMode) {
+          if (this.wordSelectionMode === false) {
             $(this.contentContainer).find('w').removeClass('selected');
             $('.annotations-boxes .annotation-box').removeClass('selected');
           }
