@@ -3000,60 +3000,44 @@ export default {
       },
 
       addContentListeners() {
-        let handler = (id, ref) => {
-          if (window.getSelection) {
-            //let content = this.range.extractContents();
-            this.range = window.getSelection().getRangeAt(0).cloneRange();
-            //console.log(this.range, window.getSelection(), range)
-            let startElement = this._getParent(this.range.startContainer, 'w');
-            let endElement = this._getParent(this.range.endContainer, 'w');
-            let startRange = this._getClosestAligned(startElement, 1);
-            if (!startRange) {
-              startRange = [0, 0];
-            }
-            let endRange = this._getClosestAligned(endElement, 0);
-            if (!endRange) {
-              endRange = this._getClosestAligned(endElement, 1)
-            }
-            if (startRange && endRange && this.isAudioEditing) {
-              //console.log(startRange[0], endRange[0] + endRange[1])
-              this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null);
-            }
-            //console.log(startElement, endElement, startRange, endRange)
-          }
-
-          if (ref && ref.querySelectorAll) {
-            ref.querySelectorAll('w').forEach(e => {
-              $(e).removeClass('selected');
-            });
-          }
-        }
         if (this.$refs.blockContent) {
-          this.$refs.blockContent.addEventListener("mouseup", () => {
-            //console.log('Selection changed.');
-            handler(this.block._id, this.$refs.blockContent);
-          });
+          this.$refs.blockContent.removeEventListener('mouseup', this.contentClickHandler);
+          this.$refs.blockContent.addEventListener("mouseup", this.contentClickHandler);
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', '[data-flag]', this.handleFlagClick);
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', '[data-flag]', this.handleFlagClick);
 
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', 'i.pin', this.handlePinClick);
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', 'i.pin', this.handlePinClick);
         }
-        if (this.mode !== 'narrate') {
-          if (this.block && this.block.footnotes) {
-            for (let i in this.block.footnotes) {
-              let ref = this.$refs['footnoteContent_' + i];
-              if (ref && ref[0]) {
-                ref = ref[0];
-                ref.addEventListener("mouseup", () => {
-                  //console.log('Selection changed.');
-                  handler(this.block._id + '_' + i, ref);
-                });
-              }
-            }
-          }
-        }
         this.hasContentListeners = true;
+      },
+      contentClickHandler() {
+        if (window.getSelection) {
+          //let content = this.range.extractContents();
+          this.range = window.getSelection().getRangeAt(0).cloneRange();
+          //console.log(this.range, window.getSelection(), range)
+          let startElement = this._getParent(this.range.startContainer, 'w');
+          let endElement = this._getParent(this.range.endContainer, 'w');
+          let startRange = this._getClosestAligned(startElement, 1);
+          if (!startRange) {
+            startRange = [0, 0];
+          }
+          let endRange = this._getClosestAligned(endElement, 0);
+          if (!endRange) {
+            endRange = this._getClosestAligned(endElement, 1)
+          }
+          if (startRange && endRange && this.isAudioEditing) {
+            //console.log(startRange[0], endRange[0] + endRange[1])
+            this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null);
+          }
+          //console.log(startElement, endElement, startRange, endRange)
+        }
+
+        if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
+          this.$refs.blockContent.querySelectorAll('w').forEach(e => {
+            $(e).removeClass('selected');
+          });
+        }
       },
       _handleSpacePress(e) {
         if (e) {
