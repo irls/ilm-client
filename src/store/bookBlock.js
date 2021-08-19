@@ -353,6 +353,12 @@ class BookBlock {
     this.sync_changes = init.sync_changes || [];// changes from synschronization
     this.audio_quality = init.audio_quality || '';
     this.wordsRange = init.wordsRange || {};
+    if (this.type === 'title' && !this.classes.hasOwnProperty('style')) {
+      this.classes.style = '';
+    }
+    if (this.type === 'header' && !this.classes.hasOwnProperty('level')) {
+      this.classes.level = 'h2';
+    }
   }
 
   clean() {
@@ -1071,6 +1077,10 @@ class BookBlock {
       return false;
     }
     return true;
+  }
+  
+  setIsSaving(value = true) {
+    this.isSaving = value;
   }
 }
 

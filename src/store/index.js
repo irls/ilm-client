@@ -69,6 +69,7 @@ export const store = new Vuex.Store({
     uploadImage
   },
   state: {
+    audioRenaming : false,
     auth: superlogin,
     isLoggedIn: false,
     isAdmin: false,
@@ -526,6 +527,9 @@ export const store = new Vuex.Store({
   },
 
   mutations: {
+    SET_AUDIO_RENAMING(state, status) {
+      state.audioRenaming = status;
+    },
 
     set_localDB (state, payload) {
         state[payload.dbProp] = new PouchDB(payload.dbName, POUCH_CFG);
@@ -586,6 +590,13 @@ export const store = new Vuex.Store({
             'footnote': false
           };
         }
+        if (meta.styles instanceof Object) {
+          Object.keys(meta.styles).forEach(k => {
+            if (k.indexOf('@') === 0) {
+              delete meta.styles[k];
+            }
+          });
+        }
         if (!meta.styles || (meta.styles && Object.keys(meta.styles).length === 0)) {
           meta.styles = {
             global: ''
@@ -601,6 +612,12 @@ export const store = new Vuex.Store({
             state.books_meta.pop();// force re draw lists
           }
         }
+        /*Object.keys(meta).forEach(k => {
+          if (!_.isEqual(meta[k], state.currentBookMeta[k])) {
+            //console.log(`${k}: "${JSON.stringify(state.currentBookMeta[k])}" to "${JSON.stringify(meta[k])}"`);
+            //state.currentBookMeta[k] = meta[k];
+          }
+        });*/
         state.currentBookMeta = meta;
         state.currentBookMeta._id = meta.bookid;
         state.currentBookid = meta.bookid
@@ -1146,6 +1163,9 @@ export const store = new Vuex.Store({
   },
 
   actions: {
+    setAudioRenamingStatus({ state, commit, dispatch },status) {
+      commit('SET_AUDIO_RENAMING',status);
+    },
 
     emptyDB (context) {
       //PouchDB('ilm_content_meta').destroy()
@@ -1737,7 +1757,7 @@ export const store = new Vuex.Store({
               update['@version'] = response.data['@version'];
               state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], update);
             }
-            
+
             let checkBookid = state.route.params.hasOwnProperty('bookid') ? state.route.params.bookid : state.currentBookid;
             if (response.data.bookid === checkBookid) {// ILM-3773 very quickly switch-over to another book, check bookid in URL or in state property currentBookid
               state.currentBookMeta['@version'] = response.data['@version'];
@@ -2031,6 +2051,7 @@ export const store = new Vuex.Store({
       if (realign) {
         url+= '?realign=true';
       }
+      let currentBlockO = state.storeListO.get(cleanBlock.blockid);
       // let's update update time in meta:
       //dispatch('updateBookMeta', {})
       return axios.put(url,
@@ -2039,6 +2060,16 @@ export const store = new Vuex.Store({
         })
           .then(response => {
             //console.log('putBlock', response);
+            if (response.data) {
+              return dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
+                .then(() => {
+                  return Promise.resolve(response);
+                });
+            } else {
+              return Promise.resolve(response);
+            }
+          })
+          .then((response) => {
             commit('clear_blocker', 'putBlock');
             block._rev = response.data.rev;
             dispatch('tc_loadBookTask', block.bookid);
@@ -2249,12 +2280,16 @@ export const store = new Vuex.Store({
       if (realign) {
         url+= '?realign=true';
       }
+      let currentBlockO = state.storeListO.get(cleanBlock.blockid);
       return axios.put(url,
         {
           'block': cleanBlock,
         })
           .then(response => {
             console.log('putBlockPart', response);
+            if (response.data) {
+              dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
+            }
             commit('clear_blocker', 'putBlock');
             dispatch('getCurrentJobInfo');
             dispatch('tc_loadBookTask', response.data.bookid);
@@ -2779,6 +2814,7 @@ export const store = new Vuex.Store({
                   let _b = blocks.find(bb => bb.blockid == b._id);
                   if (!_b) {
                     let blockStore = state.storeList.get(b._id);
+                    let blockStoreO = state.storeListO.get(b._id);
                     if (blockStore) {
                       //blockStore.content+=' realigned';
                       checks.push(dispatch('getBlock', b._id)
@@ -2828,6 +2864,7 @@ export const store = new Vuex.Store({
                             }
                           }
                           store.commit('set_storeList', new BookBlock(block));
+                          dispatch('checkInsertedBlocks', [blockStoreO.out, Array.isArray(block.out) ? block.out[0] : block.out])
                           return Promise.resolve();
                         })
                         .catch(err => {
@@ -2905,7 +2942,7 @@ export const store = new Vuex.Store({
         let request = axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
           .then(audio => {
             if (audio.data) {
-              if (set && !state.updateAudiobookProgress) {
+              if (set && !state.updateAudiobookProgress && !state.audioRenaming) {
                 commit('set_currentAudiobook', audio.data);
               }
               return Promise.resolve(audio.data);
@@ -3992,7 +4029,7 @@ export const store = new Vuex.Store({
                 //vm.closeForm(response)
               })
           }
-          
+
           return Promise.resolve(response);
         })
         .catch(err => {
@@ -4018,7 +4055,7 @@ export const store = new Vuex.Store({
                     blk.audiosrc = block.audiosrc;
                     blk.audiosrc_ver = block.audiorc_ver;
                   } catch (e) {
-                    
+
                   }
                 });
                 dispatch('getCurrentJobInfo');
@@ -4036,6 +4073,44 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    
+    getBlocksInRange({state}, [start_id, end_id]) {
+      return axios.get(`${state.API_URL}books/${state.currentBookid}/blocks_range?start_id=${encodeURIComponent(start_id)}&end_id=${encodeURIComponent(end_id)}`)
+        .then(response => {
+          if (response.status === 200) {
+            return Promise.resolve(response.data);
+          }
+        });
+    },
+    
+    checkInsertedBlocks({state, dispatch, commit}, [old_out, new_out]) {
+      return new Promise((resolve, reject) => {
+        if (old_out !== new_out) {
+          dispatch('getAudioBook');
+          return dispatch('getBlocksInRange', [old_out, new_out])
+            .then(blocks => {
+              if (Array.isArray(blocks)) {
+                blocks.forEach(blk => {
+                  if (blk.id !== old_out) {
+                    commit('set_storeList', new BookBlock(blk));
+                    if (!state.storeListO.get(blk.blockid)) {
+                      state.storeListO.addBlock(blk);
+                    } else {
+                      state.storeListO.updBlockByRid(blk.id, blk);
+                    }
+                  }
+                })
+                dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
+                if (blocks.length > 1) {
+                  dispatch('tc_loadBookTask', state.currentBookid);
+                }
+              }
+              return resolve();
+            });
+        }
+        return resolve();
+      });
     }
   }
 })
