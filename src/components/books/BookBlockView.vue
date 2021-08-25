@@ -1438,7 +1438,6 @@ export default {
         'checkError',
         'getBookAlign',
         'updateBlockPart',
-        'recountVoicedBlocks',
         'addAudioTask',
         'applyTasksQueue',
         'saveBlockAudio',
@@ -4508,7 +4507,6 @@ Save text changes and realign the Block?`,
                 });
               }
             });
-            this.recountVoicedBlocks();
           }
           this.block.setChanged(val);
           this.recountApprovedInRange();
