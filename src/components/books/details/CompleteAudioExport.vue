@@ -60,11 +60,11 @@
           if (this.selectedBlocks.length > 0) {
             return this.selectedBlocks.length;
           } else {
-            return this.currentBookMeta.lastBlockId - 100;
+            return this.storeListO.listIds.length;
           }
         }
       },
-      ...mapGetters(['currentBookMeta', 'currentBookCounters', 'blockSelection', 'bookCompleteAudioTime', 'selectedBlocks'])
+      ...mapGetters(['currentBookMeta', 'currentBookCounters', 'blockSelection', 'bookCompleteAudioTime', 'selectedBlocks', 'storeListO'])
     },
     methods: {
       ...mapActions(['generateCompleteAudio'])
