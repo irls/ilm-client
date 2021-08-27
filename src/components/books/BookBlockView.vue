@@ -713,7 +713,7 @@ export default {
       //'VueHighlightJS': VueHighlightJS
       'codemirror': codemirror
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder', 'playNextBlock'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -4207,6 +4207,8 @@ Save text changes and realign the Block?`,
           if (ref) {
             ref.audPlay();
           }
+        } else {
+          this.playNextBlock(this.block.blockid);
         }
       },
       onIsAudioChanged(val) {
@@ -4354,6 +4356,12 @@ Save text changes and realign the Block?`,
           this.block.setContent(this.storeListById(this.block.blockid).getContent());
         }
         this.$forceUpdate();
+      },
+      getSubblockRef(index = 0) {
+        if (Array.isArray(this.$refs.blocks) && this.$refs.blocks.length > 0 && this.$refs.blocks[index]) {
+          return this.$refs.blocks[index];
+        }
+        return null;
       }
   },
   watch: {

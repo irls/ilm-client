@@ -63,6 +63,7 @@
               :joinBlocks="joinBlocks"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="blockUpdated"
+              :playNextBlock="playNextBlock"
           /></BookBlockView>
         </div>
         <!--<div class='col'>-->
@@ -252,7 +253,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges', 'findNextAudioblock']),
 
     test(ev) {
         console.log('test', ev);
@@ -2519,6 +2520,28 @@ export default {
           //this.audioEditorEventsOff();
         }));
       },
+      
+      playNextBlock(blockid) {
+        this.findNextAudioblock([blockid])
+          .then(block => {
+            //console.log(block);
+            if (block) {
+              let element = this.$refs.blocks.find(blk => {
+                return blk.block && blk.block.blockid === block.blockid;
+              });
+              if (element) {
+                let subRef = element.getSubblockRef(0, false);
+                if (subRef && subRef.$el) {
+                  let lastW = subRef.$el.querySelector('w:last-child');
+                  let visible = lastW && this.checkVisible(lastW);
+                  if (!visible) {
+                    subRef.$el.scrollIntoView({behavior: 'smooth'});
+                  }
+                }
+              }
+            }
+          });
+      }
   },
   events: {
       currentEditingBlock_id : function (key) {
