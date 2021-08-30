@@ -2537,6 +2537,42 @@ export default {
                   if (!visible) {
                     subRef.$el.scrollIntoView({behavior: 'smooth'});
                   }
+                  setTimeout(() => {
+                    subRef.audPlay();
+                  }, block.pause_before * 1000);
+                }
+              } else {
+                element = this.$refs.viewBlocks.find(blk => {
+                  return blk.block && blk.block.blockid === block.blockid;
+                });
+                if (element && element.$el) {
+                  element.$el.scrollIntoView();
+                  setTimeout(() => {
+                    let checks = 0;
+                    let checkBlockLoaded = setInterval(() => {
+                      let ref = this.$refs.blocks.find(blk => {
+                        return blk.block && blk.block.blockid === block.blockid;
+                      });
+                      ++checks;
+                      try {
+                        if (ref && ref.$el) {
+                          let subRef = ref.getSubblockRef(0);
+                          if (subRef) {
+                            subRef.audPlay();
+                            clearInterval(checkBlockLoaded);
+                          }
+                        }
+                        if (checks > 10) {
+                          clearInterval(checkBlockLoaded);
+                        }
+                      } catch(e) {
+                        console.log('ERROR', e);
+                        if (checks > 10) {
+                          clearInterval(checkBlockLoaded);
+                        }
+                      }
+                    }, 100);
+                  }, block.pause_before * 1000);
                 }
               }
             }
