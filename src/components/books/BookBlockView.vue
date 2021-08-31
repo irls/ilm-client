@@ -258,6 +258,7 @@
               :splitPointAdded="splitPointAdded"
               :splitPointRemoved="splitPointRemoved"
               :checkVisible="checkVisible"
+              :checkFullyVisible="checkFullyVisible"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -714,7 +715,7 @@ export default {
       //'VueHighlightJS': VueHighlightJS
       'codemirror': codemirror
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder', 'playNextBlock', 'checkVisible'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder', 'playNextBlock', 'checkVisible', 'checkFullyVisible'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {

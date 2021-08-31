@@ -65,6 +65,7 @@
               @blockUpdated="blockUpdated"
               :playNextBlock="playNextBlock"
               :checkVisible="checkVisible"
+              :checkFullyVisible="checkFullyVisible"
           /></BookBlockView>
         </div>
         <!--<div class='col'>-->
@@ -2534,7 +2535,7 @@ export default {
                 let subRef = element.getSubblockRef(0, false);
                 if (subRef && subRef.$el) {
                   let lastW = subRef.$el.querySelector('w:first-child');
-                  let visible = lastW && this.checkVisible(lastW);
+                  let visible = lastW && this.checkFullyVisible(lastW);
                   if (!visible) {
                     subRef.$el.scrollIntoView({behavior: 'smooth'});
                   }
@@ -2578,6 +2579,12 @@ export default {
               }
             }
           });
+      },
+      
+      checkFullyVisible(el) {
+        let rect = el.getBoundingClientRect();
+        let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+        return rect.bottom < viewHeight;
       }
   },
   events: {

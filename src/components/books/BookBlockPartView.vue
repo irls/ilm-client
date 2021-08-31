@@ -402,7 +402,7 @@ export default {
       //'modal': modal,
       'split-pin-cntx-menu': BlockContextMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkVisible'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkVisible', 'checkFullyVisible'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -2574,6 +2574,7 @@ export default {
                 this.isAudPaused = false;
                 this.$root.$emit('playBlock', this.block._id);
                 this.$root.$emit('playBlockFootnote', false);
+                //this.player.audio_element.volume = 0;
             },
             on_pause: ()=>{
                 this.isAudPaused = true;
@@ -2591,14 +2592,20 @@ export default {
                 }
             },
             on_newline: () => {
-              let highlighted = document.getElementById(this.block.blockid).querySelector('w.audio-highlight');
-              let isVisible = this.checkVisible(highlighted);
-              if (!isVisible) {
-                let previousId = this.storeListO.getInId(this.block.blockid);
-                if (previousId) {
-                  let lastW = document.getElementById(previousId).querySelector('w:last');
-                  if (lastW && !this.checkVisible(lastW)) {
-                    highlighted.scrollIntoView();
+              let element = document.getElementById(this.block.blockid);
+              if (element) {
+                let highlighted = element.querySelector('w.audio-highlight');
+                let isVisible = this.checkFullyVisible(highlighted);
+                if (!isVisible) {
+                  let previousId = this.storeListO.getInId(this.block.blockid);
+                  if (previousId) {
+                    let previousBlock = document.getElementById(previousId);
+                    if (previousBlock) {
+                      let lastW = previousBlock.querySelector('w:last-child');
+                      if (lastW && this.checkVisible(lastW)) {
+                        element.querySelector('w:first-child').scrollIntoView({behavior: 'smooth'});
+                      }
+                    }
                   }
                 }
               }
