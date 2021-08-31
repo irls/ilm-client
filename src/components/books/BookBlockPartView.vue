@@ -402,7 +402,7 @@ export default {
       //'modal': modal,
       'split-pin-cntx-menu': BlockContextMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkVisible'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -2589,6 +2589,19 @@ export default {
                 if (!this.isAudPartStarted) {
                   this.$emit('partAudioComplete', this.blockPartIdx);
                 }
+            },
+            on_newline: () => {
+              let highlighted = document.getElementById(this.block.blockid).querySelector('w.audio-highlight');
+              let isVisible = this.checkVisible(highlighted);
+              if (!isVisible) {
+                let previousId = this.storeListO.getInId(this.block.blockid);
+                if (previousId) {
+                  let lastW = document.getElementById(previousId).querySelector('w:last');
+                  if (lastW && !this.checkVisible(lastW)) {
+                    highlighted.scrollIntoView();
+                  }
+                }
+              }
             }
         });
         var self = this;
@@ -3054,6 +3067,7 @@ export default {
             } else {
               this.audResume();
             }
+            e.preventDefault();
           }
         }
       },
@@ -3749,13 +3763,11 @@ Join with next subblock?`;
       },
       'isAudStarted': {
         handler(val) {
-          if (this.mode === 'narrate') {
-            if (val === true) {
-              $('body').off('keypress', this._handleSpacePress);
-              $('body').on('keypress', this._handleSpacePress);
-            } else {
-              $('body').off('keypress', this._handleSpacePress);
-            }
+          if (val === true) {
+            $('body').off('keypress', this._handleSpacePress);
+            $('body').on('keypress', this._handleSpacePress);
+          } else {
+            $('body').off('keypress', this._handleSpacePress);
           }
         }
       },

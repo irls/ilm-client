@@ -64,6 +64,7 @@
               @setRangeSelection="setRangeSelection"
               @blockUpdated="blockUpdated"
               :playNextBlock="playNextBlock"
+              :checkVisible="checkVisible"
           /></BookBlockView>
         </div>
         <!--<div class='col'>-->
@@ -2532,7 +2533,7 @@ export default {
               if (element) {
                 let subRef = element.getSubblockRef(0, false);
                 if (subRef && subRef.$el) {
-                  let lastW = subRef.$el.querySelector('w:last-child');
+                  let lastW = subRef.$el.querySelector('w:first-child');
                   let visible = lastW && this.checkVisible(lastW);
                   if (!visible) {
                     subRef.$el.scrollIntoView({behavior: 'smooth'});
