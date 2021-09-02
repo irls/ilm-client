@@ -3059,7 +3059,7 @@ export default {
           });
         }
       },
-      _handleSpacePress(e) {
+      handleAudioControl(e) {
         if (e) {
           if (e.charCode == 32 && this.isRecording) {
             if (!this.isRecordingPaused) {
@@ -3770,11 +3770,9 @@ Join with next subblock?`;
       },
       'isAudStarted': {
         handler(val) {
+          document.body.removeEventListener('keyup', this.handleAudioControl);
           if (val === true) {
-            $('body').off('keypress', this._handleSpacePress);
-            $('body').on('keypress', this._handleSpacePress);
-          } else {
-            $('body').off('keypress', this._handleSpacePress);
+            document.body.addEventListener('keyup', this.handleAudioControl);
           }
         }
       },

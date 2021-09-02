@@ -4080,24 +4080,6 @@ Save text changes and realign the Block?`,
         }
         this.hasContentListeners = true;
       },
-      _handleSpacePress(e) {
-        if (e) {
-          if (e.charCode == 32 && this.isRecording) {
-            if (!this.isRecordingPaused) {
-              this.pauseRecording();
-            } else {
-              this.resumeRecording();
-            }
-          }
-          if (e.charCode == 32 && this.isAudStarted) {
-            if (!this.isAudPaused) {
-              this.audPause();
-            } else {
-              this.audResume();
-            }
-          }
-        }
-      },
       _saveContent() {
         if (!this.isSplittedBlock && this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
           this.block.content = this.$refs.blocks[0].$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
@@ -4204,7 +4186,7 @@ Save text changes and realign the Block?`,
         }
       },
       partAudioComplete(partIdx) {
-        if (this.block.parts && this.block.parts[partIdx + 1]) {
+        if (this.block.voicework === 'narration' && this.block.parts && this.block.parts[partIdx + 1]) {
           let ref = this.$refs.blocks[partIdx + 1];
           if (ref) {
             ref.audPlay();
@@ -4609,18 +4591,6 @@ Save text changes and realign the Block?`,
             if ((oldVal === 'narrate' && val === 'edit') || (oldVal === 'edit' && val === 'narrate')) {
               this.destroyEditor();
               this.initEditor(true);
-            }
-          }
-        }
-      },
-      'isAudStarted': {
-        handler(val) {
-          if (this.mode === 'narrate') {
-            if (val === true) {
-              $('body').off('keypress', this._handleSpacePress);
-              $('body').on('keypress', this._handleSpacePress);
-            } else {
-              $('body').off('keypress', this._handleSpacePress);
             }
           }
         }
