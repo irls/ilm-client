@@ -60,7 +60,7 @@
           if (this.selectedBlocks.length > 0) {
             return this.selectedBlocks.length;
           } else {
-            return this.storeListO.listIds.length;
+            return this.currentBookCounters.total_blocks ? this.currentBookCounters.total_blocks : this.storeListO.listIds.length;
           }
         }
       },
