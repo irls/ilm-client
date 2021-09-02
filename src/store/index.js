@@ -1371,7 +1371,7 @@ export const store = new Vuex.Store({
       return axios.get(url)
       .then((response) => {
         dispatch('startBookWatch', params.bookId)
-        commit('SET_CURRENTBOOK_COUNTER', {name: 'total_blocks', value: 0});
+        commit('SET_CURRENTBOOK_COUNTER', {name: 'total_blocks', value: null});
         return response.data;
       })
       .catch(err => err)
@@ -1520,7 +1520,7 @@ export const store = new Vuex.Store({
         commit('set_currentAudiobook', {});
         commit('SET_ALLOW_BOOK_PUBLISH', false);
         commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: 0});
-        //commit('SET_CURRENTBOOK_COUNTER', {name: 'total_blocks', value: 0});
+        commit('SET_CURRENTBOOK_COUNTER', {name: 'total_blocks', value: 0});
       }
       //let oldBook = (state.currentBook && state.currentBook._id)
 
