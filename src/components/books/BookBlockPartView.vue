@@ -1041,7 +1041,6 @@ export default {
         'updateBlockToc',
         'checkError',
         'getBookAlign',
-        'recountVoicedBlocks',
         'revertAudio',
         'addAudioTask',
         'clearAudioTasks',
@@ -3675,7 +3674,6 @@ Join with next subblock?`;
         handler(val) {
           if (val === false) {
             this.flushChanges();
-            this.recountVoicedBlocks();
           }
           if (!this.isSplittedBlock) {
             this.block.isChanged = val;
