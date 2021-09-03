@@ -2528,27 +2528,37 @@ export default {
           .then(block => {
             //console.log(block);
             if (block) {
-              let element = this.$refs.blocks.find(blk => {
+              let elementBack = this.$refs.viewBlocks.find(blk => {
                 return blk.block && blk.block.blockid === block.blockid;
               });
-              if (element) {
-                let subRef = element.getSubblockRef(0, false);
-                if (subRef && subRef.$el) {
-                  let lastW = subRef.$el.querySelector('w:first-child');
-                  let visible = lastW && this.checkFullyVisible(lastW);
-                  if (!visible) {
-                    subRef.$el.scrollIntoView({behavior: 'smooth'});
-                  }
-                  setTimeout(() => {
-                    subRef.audPlay();
-                  }, block.pause_before * 1000);
-                }
-              } else {
-                element = this.$refs.viewBlocks.find(blk => {
+              if (elementBack && elementBack.$el) {
+                let elementFront = this.$refs.blocks.find(blk => {
                   return blk.block && blk.block.blockid === block.blockid;
                 });
-                if (element && element.$el) {
-                  element.$el.scrollIntoView();
+                let elementIndex = 0;
+                if (block.voicework === 'narration' && block.parts.length > 0) {
+                  let part = block.parts.find(p => {
+                    return p.audiosrc;
+                  });
+                  if (part) {
+                    elementIndex = block.parts.indexOf(part);
+                  }
+                }
+                if (elementFront) {
+                  let subRef = elementFront.getSubblockRef(elementIndex, false);
+                  if (subRef && subRef.$el) {//#
+                    let lastW = subRef.$el.querySelector('w:first-child');
+                    let visible = lastW && this.checkFullyVisible(lastW);
+                    if (!visible) {
+                      //subRef.$refs['viewBlock'].scrollIntoView({behavior: 'smooth'});
+                      elementBack.$el.scrollIntoView();
+                    }
+                    setTimeout(() => {
+                      subRef.audPlay();
+                    }, block.pause_before * 1000);
+                  }
+                } else {
+                  elementBack.$el.scrollIntoView();
                   setTimeout(() => {
                     let checks = 0;
                     let checkBlockLoaded = setInterval(() => {
@@ -2558,7 +2568,7 @@ export default {
                       ++checks;
                       try {
                         if (ref && ref.$el) {
-                          let subRef = ref.getSubblockRef(0);
+                          let subRef = ref.getSubblockRef(elementIndex);
                           if (subRef) {
                             subRef.audPlay();
                             clearInterval(checkBlockLoaded);

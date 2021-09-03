@@ -4186,7 +4186,7 @@ Save text changes and realign the Block?`,
         }
       },
       partAudioComplete(partIdx) {
-        if (this.block.voicework === 'narration' && this.block.parts && this.block.parts[partIdx + 1]) {
+        if (this.block.voicework === 'narration' && this.block.parts && this.block.parts[partIdx + 1] && this.block.parts[partIdx + 1].audiosrc) {
           let ref = this.$refs.blocks[partIdx + 1];
           if (ref) {
             ref.audPlay();

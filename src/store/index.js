@@ -4119,7 +4119,10 @@ export const store = new Vuex.Store({
         for (let idx = 0; idx < state.storeList.size; idx++) {
           let block = state.storeList.get(crossId);
           if (block) {
-            if (block.audiosrc) {
+            let hasPart = block.voicework === 'narration' && block.parts.length > 0 ? block.parts.find(p => {
+              return p.audiosrc;
+            }) : false;
+            if (block.audiosrc || hasPart) {
               return Promise.resolve(block);
             }
             crossId = state.storeListO.getOutId(block.blockid);

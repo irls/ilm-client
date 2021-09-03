@@ -2603,7 +2603,7 @@ export default {
                     if (previousBlock) {
                       let lastW = previousBlock.querySelector('w:last-child');
                       if (lastW && this.checkVisible(lastW)) {
-                        element.querySelector('w:first-child').scrollIntoView({behavior: 'smooth'});
+                        element.scrollIntoView({behavior: 'smooth'});
                       }
                     }
                   }
@@ -3061,14 +3061,14 @@ export default {
       },
       handleAudioControl(e) {
         if (e) {
-          if (e.charCode == 32 && this.isRecording) {
+          if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isRecording) {
             if (!this.isRecordingPaused) {
               this.pauseRecording();
             } else {
               this.resumeRecording();
             }
           }
-          if (e.charCode == 32 && this.isAudStarted) {
+          if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isAudStarted) {
             if (!this.isAudPaused) {
               this.audPause();
             } else {
@@ -3076,6 +3076,11 @@ export default {
             }
             e.preventDefault();
           }
+          if ((e.keyCode == 27 || (e.code && e.code.toLowerCase() === 'escape')) && this.isAudStarted) {
+            this.audStop(this.block.blockid, e);
+            e.preventDefault();
+          }
+          //console.log(e);
         }
       },
       _saveContent() {
@@ -3770,9 +3775,9 @@ Join with next subblock?`;
       },
       'isAudStarted': {
         handler(val) {
-          document.body.removeEventListener('keyup', this.handleAudioControl);
+          document.body.removeEventListener('keydown', this.handleAudioControl);
           if (val === true) {
-            document.body.addEventListener('keyup', this.handleAudioControl);
+            document.body.addEventListener('keydown', this.handleAudioControl);
           }
         }
       },
