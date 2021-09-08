@@ -241,6 +241,7 @@ export const store = new Vuex.Store({
     updateAudiobookProgress: false,
     coupletSeparator: '',
     selectedBlocks: [],
+    bookTocSections: []
   },
 
   getters: {
@@ -523,6 +524,19 @@ export const store = new Vuex.Store({
     },
     selectedBlocks: state => {
       return state.selectedBlocks;
+    },
+    bookTocSections: state => {
+      return state.bookTocSections;
+    },
+    currentBookTocCombined: state => {
+      let currentBookTocCombined = [];
+      state.currentBookToc.data.forEach(toc => {
+        let section = state.bookTocSections.find(s => {
+          return s.startBlockid === toc.blockid;
+        });
+        currentBookTocCombined.push(Object.assign(toc, {section: section ? section : {}}));
+      });
+      return currentBookTocCombined;
     }
   },
 
@@ -1159,6 +1173,10 @@ export const store = new Vuex.Store({
         }
       }
       state.selectedBlocks = blockList;
+    },
+    
+    set_book_toc_sections(state, sections) {
+      state.bookTocSections = sections;
     }
   },
 
@@ -4113,6 +4131,22 @@ export const store = new Vuex.Store({
         }
         return resolve();
       });
+    },
+    
+    loadBookTocSections({state, dispatch, commit}) {
+      if (state.adminOrLibrarian) {
+        return axios.get(`${state.API_URL}toc_section/book/${state.currentBookid}`)
+          .then(data => {
+            //console.log(data);
+            commit('set_book_toc_sections', data.data);
+          });
+      }
+    },
+    
+    updateBookTocSection({state, dispatch}, [id, update]) {
+      if (state.adminOrLibrarian) {
+        return axios.put(`${state.API_URL}toc_section/${encodeURIComponent(id)}`, update);
+      }
     }
   }
 })
