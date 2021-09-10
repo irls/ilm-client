@@ -20,21 +20,22 @@
         <table class="toc-list-table table-striped">
           <template v-for="(toc, tocIdx) in currentBookTocCombined" >
             <template v-if="toc.section && toc.section.id && sectionsMode">
-              <tr>
+              <tr class="toc-section">
                 <td colspan="4" v-on:dblclick="sectionEditMode(toc.section)">
                   <div class="section-options">
                     <div class="-option -index">
                       {{toc.section.index}}
                     </div>
                     <div class="-option -name">
-                      <input type="text" v-if="editingSectionId === toc.section.id" v-model="editingSlug"
-                        v-on:keyup.enter="updateSlug(editingSlug)"
+                      <input type="text" v-if="editingSectionId === toc.section.id" class="edit-section-slug" v-model="editingSlug"
+                        v-on:keyup.enter="sectionEditMode(null)"
                         v-on:change="updateSlug(editingSlug)"
-                        v-on:blur="updateSlug(editingSlug)" />
+                        v-on:blur="sectionEditMode(null)" />
                       <label v-else>{{toc.section.slug}}</label>
                     </div>
-                    <div class="-option -divider"></div>
-                    <div class="-option -remove"></div>
+                    <div class="-option -remove">
+                      <i class="fa fa-remove" v-on:click="removeTocSection(toc.section.id)"></i>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -54,22 +55,26 @@
                 <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
                 <td colspan="4" class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
               </template>-->
+              <td>
+                <template v-if="(!toc.section || !toc.section.id) && sectionsMode">
+                  <div class="create-toc-section" v-on:click="createSectionFromItem(toc.blockid)"></div>
+                </template>
+              </td>
               <template v-if="toc.level == 'toc1'">
-                <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
-                <td colspan="4" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
-              </template>
-              <template v-if="toc.level == 'toc2'">
-                <td></td>
                 <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
                 <td colspan="3" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
               </template>
+              <template v-if="toc.level == 'toc2'">
+                <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
+                <td colspan="2" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
+              </template>
               <template v-if="toc.level == 'toc3'">
-                <td></td><td></td>
+                <td></td>
                 <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
                 <td colspan="2" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
               </template>
               <template v-if="toc.level == 'toc4'">
-                <td></td><td></td><td></td>
+                <td></td><td></td>
                 <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
                 <td :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
               </template>
@@ -87,6 +92,7 @@
 
 //import Vue from 'vue'
 import { mapGetters, mapActions } from 'vuex'
+import Vue from 'vue';
 
 export default {
 
@@ -116,7 +122,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['freeze', 'unfreeze', 'loadBookToc', 'loadBookTocSections', 'updateBookTocSection']),
+    ...mapActions(['freeze', 'unfreeze', 'loadBookToc', 'loadBookTocSections', 'updateBookTocSection', 'createBookTocSection', 'removeTocSection']),
 
     goToBlock(blockId, ev) {
       //console.log('goToBlock', blockId, this.$route.name);
@@ -156,6 +162,12 @@ export default {
       if (section) {
         this.editingSectionId = section.id;
         this.editingSlug = section.slug;
+        Vue.nextTick(() => {
+          let el = document.getElementsByClassName('edit-section-slug');
+          if (el && el[0]) {
+            el[0].focus();
+          }
+        });
       } else {
         this.editingSectionId = null;
         this.editingSlug = '';
@@ -168,7 +180,7 @@ export default {
         return true;
       }
       let section = this.currentBookTocCombined.find(tc => {
-        return tc.section && tc.section.slug === slug;
+        return tc.section && tc.section.slug === slug && tc.section.id !== this.editingSectionId;
       });
       if (section) {
         this.validationErrors['slug'] = 'Section name is not unique';
@@ -188,9 +200,20 @@ export default {
     },
     
     updateSlug(slug) {
+      slug = slug.trim();
       if (this.editingSectionId && this.validateSlug(slug)) {
-        return this.updateSection({slug: slug, manualSlug: slug ? true : false});
+        let tc = this.currentBookTocCombined.find(toc => {
+          return toc.section && toc.section.id === this.editingSectionId;
+        });
+        if (tc && tc.section && tc.section.slug !== slug) {
+          return this.updateSection({slug: slug, manualSlug: slug ? true : false});
+        }
+        this.sectionEditMode(null);
       }
+    },
+    
+    createSectionFromItem(blockid) {
+      return this.createBookTocSection({startBlockid: blockid, bookid: this.currentBookToc.bookId});
     }
   },
 
@@ -277,10 +300,53 @@ export default {
         width: 100%;
         .-option {
           display: table-cell;
-          &.option-divider {
-            
+          margin: 3px 5px;
+          padding: 3px 5px;
+          &.-index {
+            color: #337ab7;
+            font-weight: bold;
+            font-size: 17px;
+          }
+          &.-name {
+            background: linear-gradient(
+                transparent, 
+                transparent 45%, 
+                rgb(7, 7, 7) 55%, 
+                transparent 55%, transparent
+                );
+            padding: 3px 5px 3px 0px;
+            label {
+              margin: 0px;
+              background-color: white;
+              padding: 0px 3px 0px 0px;
+              max-width: 98%;
+              white-space: nowrap;
+              overflow: hidden;
+              vertical-align: sub;
+            }
+            input {
+              width: 100%;
+            }
+          }
+          &.-remove {
+            i {
+              color: red;
+            }
           }
         }
+      }
+      tr.toc-section {
+        background-color: white;
+      }
+      .create-toc-section {
+        width: 20px;
+        height: 20px;
+        /*background-size: 20px; */
+        background-repeat: no-repeat;
+        background-color: gray;
+        -webkit-mask-image: url(/static/split-blocks.svg);
+        mask-image: url(/static/split-blocks.svg);
+        cursor: pointer;
       }
     }
     .refresh-toc {

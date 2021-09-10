@@ -4145,8 +4145,33 @@ export const store = new Vuex.Store({
     
     updateBookTocSection({state, dispatch}, [id, update]) {
       if (state.adminOrLibrarian) {
-        return axios.put(`${state.API_URL}toc_section/${encodeURIComponent(id)}`, update);
+        return axios.put(`${state.API_URL}toc_section/${encodeURIComponent(id)}`, update)
+          .then(updated => {
+            return dispatch('loadBookTocSections');
+          });
       }
+    },
+    
+    createBookTocSection({state, dispatch}, data) {
+      if (state.adminOrLibrarian) {
+        return axios.post(`${state.API_URL}toc_section`, data)
+          .then(created => {
+            return dispatch('loadBookTocSections');
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      }
+    },
+    
+    removeTocSection({state, dispatch}, id) {
+      return axios.delete(`${state.API_URL}toc_section/${encodeURIComponent(id)}`)
+        .then((response) => {
+          return dispatch('loadBookTocSections');
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })
