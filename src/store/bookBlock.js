@@ -1066,6 +1066,9 @@ class BookBlock {
     //if (this.tc_getBlockTask(block.blockid, 'narrate')) {
       //return true;
     //}
+    if (this.status && this.status.assignee === 'narrator') {
+      return true;
+    }
     let user_id = Vue.prototype.user_id;
     let flags = Array.isArray(this.flags) ? this.flags.filter(flag => {
       return Array.isArray(flag.parts) && !flag.isNew ? flag.parts.find(p => {
