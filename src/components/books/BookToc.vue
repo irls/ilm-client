@@ -5,12 +5,20 @@
       <div class="preloader-spinner"></div>
     </template>
     <template v-else>
-      <button class="btn btn-primary"><i class="fa fa-refresh refresh-toc" v-on:click="loadBookTocProxy(true)"></i>Refresh</button>
       <button class="btn btn-default toggle-sections-mode" v-on:click="toggleSectionsMode()">
         <i class="fa fa-eye-slash" v-if="!sectionsMode"></i>
         <i class="fa fa-eye" v-else></i>
         Sections
       </button>
+      <button class="btn btn-primary">
+        <i class="fa fa-folder-open"></i>
+        Build
+      </button>
+      <button class="btn btn-primary">
+        <i class="fa fa-download"></i>
+        Download
+      </button>
+      <button class="btn btn-default" v-on:click="loadBookTocProxy(true)"><i class="fa fa-refresh refresh-toc"></i>Refresh</button>
       <!-- {{bookTocSections}} -->
       <div v-if="currentBookTocCombined.length > 0" class="toc-list">
         <!--<div :class="['toc-item', toc.level]" v-for="(toc, tocIdx) in tocs" v-bind:key="tocIdx">
@@ -21,7 +29,7 @@
           <template v-for="(toc, tocIdx) in currentBookTocCombined" >
             <template v-if="toc.section && toc.section.id && sectionsMode">
               <tr class="toc-section">
-                <td colspan="4" v-on:dblclick="sectionEditMode(toc.section)">
+                <td colspan="5" v-on:dblclick="sectionEditMode(toc.section)">
                   <div class="section-options">
                     <div class="-option -index">
                       {{toc.section.index}}
@@ -34,7 +42,13 @@
                       <label v-else>{{toc.section.slug}}</label>
                     </div>
                     <div class="-option -remove">
-                      <i class="fa fa-remove" v-on:click="removeTocSection(toc.section.id)"></i>
+                      <i class="fa fa-remove" v-on:click="removeTocSection(toc.section.id)" title="Delete section"></i>
+                    </div>
+                    <div class="-option -build" v-if="!toc.section.zipPath">
+                      <i class="fa fa-folder-open-o" title="Build" v-on:click="exportSection(toc.section.id)"></i>
+                    </div>
+                    <div class="-option -download" v-else>
+                      <i class="fa fa-download" title="Download"></i>
                     </div>
                   </div>
                 </td>
@@ -57,7 +71,7 @@
               </template>-->
               <td>
                 <template v-if="(!toc.section || !toc.section.id) && sectionsMode">
-                  <div class="create-toc-section" v-on:click="createSectionFromItem(toc.blockid)"></div>
+                  <div class="create-toc-section" v-on:click="createSectionFromItem(toc.blockid)" title="Add section"></div>
                 </template>
               </td>
               <template v-if="toc.level == 'toc1'">
@@ -66,7 +80,7 @@
               </template>
               <template v-if="toc.level == 'toc2'">
                 <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
-                <td colspan="2" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
+                <td colspan="3" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
               </template>
               <template v-if="toc.level == 'toc3'">
                 <td></td>
@@ -122,7 +136,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['freeze', 'unfreeze', 'loadBookToc', 'loadBookTocSections', 'updateBookTocSection', 'createBookTocSection', 'removeTocSection']),
+    ...mapActions(['freeze', 'unfreeze', 'loadBookToc', 'loadBookTocSections', 'updateBookTocSection', 'createBookTocSection', 'removeTocSection', 'exportTocSection']),
 
     goToBlock(blockId, ev) {
       //console.log('goToBlock', blockId, this.$route.name);
@@ -214,13 +228,17 @@ export default {
     
     createSectionFromItem(blockid) {
       return this.createBookTocSection({startBlockid: blockid, bookid: this.currentBookToc.bookId});
+    },
+    
+    exportSection(id) {
+      return this.exportTocSection(id);
     }
   },
 
   mounted () {
     //console.log('mounted TOC', this.currBookId);
     this.loadBookTocProxy(true);
-    this.loadBookTocSections();
+    this.loadBookTocSections([]);
     this.$root.$on('from-book-meta:upd-toc', this.loadBookTocProxy)
   },
 
@@ -231,6 +249,7 @@ export default {
         if (this.currBookId !== this.$route.params.bookid) {
           this.currBookId = this.$route.params.bookid;
           this.loadBookTocProxy();
+          this.loadBookTocSections([this.currBookId]);
         }
       }
     }
@@ -351,13 +370,24 @@ export default {
     }
     .refresh-toc {
       margin: 0px 3px;
-      color: white;
       cursor: pointer;
       vertical-align: middle;
     }
     .toggle-sections-mode {
       i.fa {
         color: black;
+      }
+    }
+    .btn-primary {
+      i.fa {
+        color: white;
+      }
+    }
+    .btn {
+      font-size: 12px;
+      padding: 4px 10px;
+      i.fa {
+        vertical-align: middle;
       }
     }
   }

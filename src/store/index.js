@@ -4133,9 +4133,9 @@ export const store = new Vuex.Store({
       });
     },
     
-    loadBookTocSections({state, dispatch, commit}) {
+    loadBookTocSections({state, dispatch, commit}, [bookid = null]) {
       if (state.adminOrLibrarian) {
-        return axios.get(`${state.API_URL}toc_section/book/${state.currentBookid}`)
+        return axios.get(`${state.API_URL}toc_section/book/${bookid ? bookid : state.currentBookid}`)
           .then(data => {
             //console.log(data);
             commit('set_book_toc_sections', data.data);
@@ -4147,7 +4147,7 @@ export const store = new Vuex.Store({
       if (state.adminOrLibrarian) {
         return axios.put(`${state.API_URL}toc_section/${encodeURIComponent(id)}`, update)
           .then(updated => {
-            return dispatch('loadBookTocSections');
+            return dispatch('loadBookTocSections', []);
           });
       }
     },
@@ -4156,7 +4156,7 @@ export const store = new Vuex.Store({
       if (state.adminOrLibrarian) {
         return axios.post(`${state.API_URL}toc_section`, data)
           .then(created => {
-            return dispatch('loadBookTocSections');
+            return dispatch('loadBookTocSections', []);
           })
           .catch(err => {
             return Promise.reject(err);
@@ -4167,10 +4167,20 @@ export const store = new Vuex.Store({
     removeTocSection({state, dispatch}, id) {
       return axios.delete(`${state.API_URL}toc_section/${encodeURIComponent(id)}`)
         .then((response) => {
-          return dispatch('loadBookTocSections');
+          return dispatch('loadBookTocSections', []);
         })
         .catch(err => {
           return Promise.reject(err);
+        });
+    },
+    
+    exportTocSection({state, dispatch}, id) {
+      return axios.post(`${state.API_URL}toc_section/${encodeURIComponent(id)}/export`)
+        .then(response => {
+          
+        })
+        .catch(err => {
+          
         });
     }
   }
