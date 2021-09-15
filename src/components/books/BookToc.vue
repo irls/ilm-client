@@ -44,11 +44,12 @@
                     <div class="-option -remove">
                       <i class="fa fa-remove" v-on:click="removeTocSection(toc.section.id)" title="Delete section"></i>
                     </div>
-                    <div class="-option -build" v-if="!toc.section.zipPath">
-                      <i class="fa fa-folder-open-o" title="Build" v-on:click="exportSection(toc.section.id)"></i>
+                    <div class="-option -build">
+                      <!-- {{toc.section.zipPath}},{{toc.section.zipPath && !toc.section.buildModified ? true : false}} -->
+                      <i class="fa fa-folder-open-o" title="Build" v-on:click="exportSection(toc.section.id)" :disabled="toc.section.zipPath && !toc.section.buildModified ? true : false"></i>
                     </div>
-                    <div class="-option -download" v-else>
-                      <i class="fa fa-download" title="Download"></i>
+                    <div class="-option -download">
+                      <i class="fa fa-download" title="Download" :disabled="!toc.section.zipPath"></i>
                     </div>
                   </div>
                 </td>
@@ -157,6 +158,7 @@ export default {
         return false;
       }
       this.loading = true;
+      this.loadBookTocSections([]);
       this.loadBookToc({bookId: this.currBookId, isWait: isWait})
       .then((res)=>{
         this.loading = false;
@@ -220,7 +222,7 @@ export default {
           return toc.section && toc.section.id === this.editingSectionId;
         });
         if (tc && tc.section && tc.section.slug !== slug) {
-          return this.updateSection({slug: slug, manualSlug: slug ? true : false});
+          return this.updateSection({slug: slug, manualSlug: slug ? true : false, buildModified: tc.section.zipPath ? true : false});
         }
         this.sectionEditMode(null);
       }
@@ -350,6 +352,16 @@ export default {
           &.-remove {
             i {
               color: red;
+            }
+          }
+          &.-download {
+            .fa[disabled] {
+              color: #d6d6d6;
+            }
+          }
+          &.-build {
+            .fa[disabled] {
+              color: #d6d6d6;
             }
           }
         }
