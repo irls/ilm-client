@@ -39,16 +39,20 @@
                         v-on:keyup.enter="sectionEditMode(null)"
                         v-on:change="updateSlug(editingSlug)"
                         v-on:blur="sectionEditMode(null)" />
-                      <label v-else>{{toc.section.slug}}</label>
+                      <label :title="toc.section.slug" v-else>{{toc.section.slug}}</label>
                     </div>
-                    <div class="-option -remove">
+                    <div class="-option -remove -hidden">
                       <i class="fa fa-remove" v-on:click="removeTocSection(toc.section.id)" title="Delete section"></i>
                     </div>
-                    <div class="-option -build">
+                    <div class="-option -build -hidden">
                       <!-- {{toc.section.zipPath}},{{toc.section.zipPath && !toc.section.buildModified ? true : false}} -->
-                      <i class="fa fa-folder-open-o" title="Build" v-on:click="exportSection(toc.section.id)" :disabled="toc.section.zipPath && !toc.section.buildModified ? true : false"></i>
+                      <div class="section-generating" v-if="toc.section.isBuilding"></div>
+                      <template v-else>
+                        <i class="fa fa-file-archive-o" title="Build" disabled v-if="toc.section.zipPath && !toc.section.buildModified"></i>
+                        <i class="fa fa-file-archive-o" title="Build" v-on:click="exportSection(toc.section.id)" v-else></i>
+                      </template>
                     </div>
-                    <div class="-option -download">
+                    <div class="-option -download -hidden">
                       <i class="fa fa-download" title="Download" :disabled="!toc.section.zipPath"></i>
                     </div>
                   </div>
@@ -233,6 +237,12 @@ export default {
     },
     
     exportSection(id) {
+      let toc = this.currentBookTocCombined.find(tocC => {
+        return tocC.section && tocC.section.id === id;
+      });
+      if (toc) {
+        toc.section.isBuilding = true;
+      }
       return this.exportTocSection(id);
     }
   },
@@ -336,6 +346,8 @@ export default {
                 transparent 55%, transparent
                 );
             padding: 3px 5px 3px 0px;
+            width: 300px;
+            color: gray;
             label {
               margin: 0px;
               background-color: white;
@@ -347,6 +359,7 @@ export default {
             }
             input {
               width: 100%;
+              color: black;
             }
           }
           &.-remove {
@@ -362,6 +375,19 @@ export default {
           &.-build {
             .fa[disabled] {
               color: #d6d6d6;
+            }
+          }
+        }
+        .-hidden {
+          visibility: hidden;
+        }
+        &:hover {
+          .-hidden {
+            visibility: visible;
+          }
+          .-option {
+            &.-name {
+              color: black;
             }
           }
         }
@@ -401,6 +427,13 @@ export default {
       i.fa {
         vertical-align: middle;
       }
+    }
+    .section-generating {
+      width: 20px;
+      height: 20px;
+      background-repeat: no-repeat;
+      background-image: url(/static/preloader-bubble-20-gray.png);
+      display: inline-block;
     }
   }
 </style>

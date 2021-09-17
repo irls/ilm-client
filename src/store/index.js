@@ -241,7 +241,9 @@ export const store = new Vuex.Store({
     updateAudiobookProgress: false,
     coupletSeparator: '',
     selectedBlocks: [],
-    bookTocSections: []
+    bookTocSections: [],
+    bookTocSectionsTimer: null,
+    bookTocSectionsXHR: null
   },
 
   getters: {
@@ -4139,15 +4141,32 @@ export const store = new Vuex.Store({
           .then(data => {
             //console.log(data);
             commit('set_book_toc_sections', data.data);
+            if (!this.bookTocSectionsTimer) {
+              this.bookTocSectionsTimer = setInterval(() => {
+                if (!state.bookTocSectionsXHR) {
+                  dispatch('loadBookTocSections', [])
+                    .then(() => {})
+                    .catch(err => {});
+                }
+              }, 30000);
+            }
+          })
+          .catch(err => {
+            return Promise.reject(err);
           });
       }
     },
     
     updateBookTocSection({state, dispatch}, [id, update]) {
       if (state.adminOrLibrarian) {
-        return axios.put(`${state.API_URL}toc_section/${encodeURIComponent(id)}`, update)
-          .then(updated => {
+        state.bookTocSectionsXHR = axios.put(`${state.API_URL}toc_section/${encodeURIComponent(id)}`, update);
+        return state.bookTocSectionsXHR.then(updated => {
+            state.bookTocSectionsXHR = null;
             return dispatch('loadBookTocSections', []);
+          })
+          .catch(err => {
+            state.bookTocSectionsXHR = null;
+            return Promise.reject(err);
           });
       }
     },
@@ -4165,22 +4184,26 @@ export const store = new Vuex.Store({
     },
     
     removeTocSection({state, dispatch}, id) {
-      return axios.delete(`${state.API_URL}toc_section/${encodeURIComponent(id)}`)
-        .then((response) => {
+      state.bookTocSectionsXHR = axios.delete(`${state.API_URL}toc_section/${encodeURIComponent(id)}`);
+      return state.bookTocSectionsXHR.then((response) => {
+          state.bookTocSectionsXHR = null;
           return dispatch('loadBookTocSections', []);
         })
         .catch(err => {
+          state.bookTocSectionsXHR = null;
           return Promise.reject(err);
         });
     },
     
     exportTocSection({state, dispatch}, id) {
-      return axios.post(`${state.API_URL}toc_section/${encodeURIComponent(id)}/export`)
-        .then(response => {
-          
+      state.bookTocSectionsXHR = axios.post(`${state.API_URL}toc_section/${encodeURIComponent(id)}/export`);
+      return state.bookTocSectionsXHR.then(response => {
+          state.bookTocSectionsXHR = null;
+          return Promise.resolve();
         })
         .catch(err => {
-          
+          state.bookTocSectionsXHR = null;
+          return Promise.reject(err);
         });
     }
   }
