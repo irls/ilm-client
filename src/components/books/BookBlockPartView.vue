@@ -391,7 +391,8 @@ export default {
       //isSaving: false,
       splitPinSelection: null,
       editingLocked: false,
-      pinUpdated: null
+      pinUpdated: null,
+      maxSplitPoints: 15
     }
   },
   components: {
@@ -3311,6 +3312,9 @@ Save text changes and realign the Block?`,
         } else */if (((this._is('editor', true) || this.adminOrLibrarian) && this.mode === 'edit') || (this._is('narrator', true) && this.mode === 'narrate' && this.block.voicework === 'narration')) {
           //if (!(this.currentJobInfo.text_cleanup || this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
             if (!this.range) {
+              return false;
+            }
+            if (this.$refs.blockContent.querySelectorAll('i.pin').length >= this.maxSplitPoints) {
               return false;
             }
             //console.log(this.range);
