@@ -243,7 +243,8 @@ export const store = new Vuex.Store({
     selectedBlocks: [],
     bookTocSections: [],
     bookTocSectionsTimer: null,
-    bookTocSectionsXHR: null
+    bookTocSectionsXHR: null,
+    tocSectionBook: {}
   },
 
   getters: {
@@ -539,6 +540,9 @@ export const store = new Vuex.Store({
         currentBookTocCombined.push(Object.assign(toc, {section: section ? section : {}}));
       });
       return currentBookTocCombined;
+    },
+    tocSectionBook: state => {
+      return state.tocSectionBook;
     }
   },
 
@@ -1179,6 +1183,10 @@ export const store = new Vuex.Store({
     
     set_book_toc_sections(state, sections) {
       state.bookTocSections = sections;
+    },
+    
+    set_toc_section_book(state, tocSectionBook) {
+      state.tocSectionBook = tocSectionBook && tocSectionBook.id ? tocSectionBook : {isBuilding: false};
     }
   },
 
@@ -4137,10 +4145,11 @@ export const store = new Vuex.Store({
     
     loadBookTocSections({state, dispatch, commit}, [bookid = null]) {
       if (state.adminOrLibrarian) {
-        return axios.get(`${state.API_URL}toc_section/book/${bookid ? bookid : state.currentBookid}`)
+        return axios.get(`${state.API_URL}toc_section/book/${bookid ? bookid : state.currentBookid}/all`)
           .then(data => {
             //console.log(data);
-            commit('set_book_toc_sections', data.data);
+            commit('set_book_toc_sections', data.data.sections);
+            commit('set_toc_section_book', data.data.book);
             if (!this.bookTocSectionsTimer) {
               this.bookTocSectionsTimer = setInterval(() => {
                 if (!state.bookTocSectionsXHR) {
@@ -4205,6 +4214,21 @@ export const store = new Vuex.Store({
           state.bookTocSectionsXHR = null;
           return Promise.reject(err);
         });
+    },
+    
+    exportTocSectionBook({state, dispatch}) {
+      if (state.currentBookid) {
+        state.tocSectionBook.isBuilding = true;
+        state.bookTocSectionsXHR = axios.post(`${state.API_URL}toc_section/book/${state.currentBookid}/export`);
+        return state.bookTocSectionsXHR.then(response => {
+          state.bookTocSectionsXHR = null;
+          return Promise.resolve();
+        })
+        .catch(err => {
+          state.bookTocSectionsXHR = null;
+          return Promise.reject(err);
+        });
+      }
     }
   }
 })

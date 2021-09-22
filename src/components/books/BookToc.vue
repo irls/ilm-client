@@ -10,10 +10,21 @@
         <i class="fa fa-eye" v-else></i>
         Sections
       </button>
-      <button class="btn btn-primary">
-        <i class="fa fa-folder-open"></i>
-        Build
+      <button class="btn btn-primary book-generating" v-if="tocSectionBook.isBuilding">
+        <span class="book-generating-spinner"></span>
+        Rebuild
       </button>
+      <template v-else>
+        <button class="btn btn-primary" v-if="!tocSectionBook.zipPath || (tocSectionBook.zipPath && !tocSectionBook.buildModified)" v-on:click="exportBook()">
+          <i class="fa fa-file-archive-o"></i>
+          <template v-if="!tocSectionBook.zipPath">Build</template>
+          <template v-else>Rebuild</template>
+        </button>
+        <button class="btn btn-primary book-build-disabled" v-else>
+          <i class="fa fa-file-archive-o"></i>
+          Rebuild
+        </button>
+      </template>
       <button class="btn btn-primary">
         <i class="fa fa-download"></i>
         Download
@@ -137,11 +148,11 @@ export default {
 
 
   computed: {
-    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc', 'bookTocSections', 'currentBookTocCombined'])
+    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc', 'bookTocSections', 'currentBookTocCombined', 'tocSectionBook'])
   },
 
   methods: {
-    ...mapActions(['freeze', 'unfreeze', 'loadBookToc', 'loadBookTocSections', 'updateBookTocSection', 'createBookTocSection', 'removeTocSection', 'exportTocSection']),
+    ...mapActions(['freeze', 'unfreeze', 'loadBookToc', 'loadBookTocSections', 'updateBookTocSection', 'createBookTocSection', 'removeTocSection', 'exportTocSection', 'exportTocSectionBook']),
 
     goToBlock(blockId, ev) {
       //console.log('goToBlock', blockId, this.$route.name);
@@ -244,6 +255,10 @@ export default {
         toc.section.isBuilding = true;
       }
       return this.exportTocSection(id);
+    },
+    
+    exportBook() {
+      this.exportTocSectionBook();
     }
   },
 
@@ -427,6 +442,12 @@ export default {
       i.fa {
         vertical-align: middle;
       }
+      &.book-build-disabled {
+        color: #b1b1b1;
+        i.fa {
+          color: #b1b1b1;
+        }
+      }
     }
     .section-generating {
       width: 20px;
@@ -434,6 +455,18 @@ export default {
       background-repeat: no-repeat;
       background-image: url(/static/preloader-bubble-20-gray.png);
       display: inline-block;
+    }
+    .book-generating {
+      color: #b1b1b1;
+      font-size: 12px;
+      padding: 3px 10px;
+      .book-generating-spinner {
+        background-image: url(/static/preloader-bubble-20-white.png);
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        vertical-align: middle;
+      }
     }
   }
 </style>
