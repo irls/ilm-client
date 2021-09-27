@@ -126,12 +126,13 @@
                   <div v-if="isNumbered"
                     :class="['parnum-row', {'-locked': blockO.isManual==true}]">
 
-                    <input :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='header'"
-                      @input="setNumVal" v-model="blockO.secnum"
+                    <input :disabled="!allowEditing || proofreadModeReadOnly || updatingNumeration ? 'disabled' : false" v-if="block.type=='header'"
+                      v-on:change="setNumVal" v-model="blockO.secnum"
                       class="num" type="text" maxlength="12" size="12"/>
-                    <input :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='par'"
-                      @input="setNumVal" v-model="blockO.parnum"
+                    <input :disabled="!allowEditing || proofreadModeReadOnly || updatingNumeration ? 'disabled' : false" v-if="block.type=='par'"
+                      v-on:change="setNumVal" v-model="blockO.parnum"
                       class="num" type="text" maxlength="12" size="12"/>
+                    <div class="circle-preloader" v-if="updatingNumeration"></div>
 
                   </div>
                   <!--<div v-else class="parnum-row"></div>-->
@@ -256,6 +257,7 @@
               :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
               :addToQueueBlockAudioEdit="addToQueueBlockAudioEdit"
               :splitPointAdded="splitPointAdded"
+              :splitPointRemoved="splitPointRemoved"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -1127,7 +1129,8 @@ export default {
           currentBookCounters: 'currentBookCounters',
           audioTasksQueue: 'audioTasksQueue',
           audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous',
-          blockLockedSimultaneous: 'blockLockedSimultaneous'
+          blockLockedSimultaneous: 'blockLockedSimultaneous',
+          updatingNumeration: 'updatingNumeration'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -1304,13 +1307,6 @@ export default {
         });
       }
 
-      if (this.block.type == 'title' && !this.block.classes.hasOwnProperty('style')){
-        this.block.classes.style = '';
-      }
-      if (this.block.type == 'header' && !this.block.classes.hasOwnProperty('level')){
-        this.block.classes.level = 'h2';
-      }
-
 
       this.updateFlagStatus(this.block._id);
       if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
@@ -1444,7 +1440,6 @@ export default {
         'checkError',
         'getBookAlign',
         'updateBlockPart',
-        'recountVoicedBlocks',
         'addAudioTask',
         'applyTasksQueue',
         'saveBlockAudio',
@@ -2112,6 +2107,7 @@ export default {
         let is_content_changed = this.hasChange('content');
         let is_type_changed = this.hasChange('type');
         this.block.isSaving = true;
+        this.storeListById(this.block.blockid).setIsSaving(true);
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
@@ -2120,12 +2116,14 @@ export default {
           if (realign) {
             this.getBookAlign()
               .then(() => {
+                //this.storeListById(this.block.blockid).setIsSaving(false);
                 this.block.isSaving = false;
                 if (this.isLocked && this.isAudioEditing) {
                   this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                 }
               });
           } else {
+            //this.storeListById(this.block.blockid).setIsSaving(false);
             this.block.isSaving = false;
           }
           if (this.isCompleted) {
@@ -2189,16 +2187,23 @@ export default {
         update.blockid = this.block.blockid;
         update.bookid = this.block.bookid;
         this.block.isSaving = true;
+        this.storeListById(this.block.blockid).isSaving = true;// this.block can be different with the one in store, e.g. after style update
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         }
         let isSplitting = this.hasChange('split_point');
         return this.putBlockPart(update, realign)
           .then(() => {
+            if (this._isDestroyed) {
+              //this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
+              this.$root.$emit(`block-state-refresh-${this.block.blockid}`);
+              this.$root.$emit(`saved-block:${this.block.blockid}`);
+            }
             if (realign) {
               this.getBookAlign()
                 .then(() => {
                   this.block.isSaving = false;
+                  this.storeListById(this.block.blockid).isSaving = false;
                   if (this.isLocked && this.isAudioEditing) {
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                   }
@@ -4268,6 +4273,12 @@ Save text changes and realign the Block?`,
       splitPointAdded() {
         this.pushChange('split_point');
       },
+      splitPointRemoved() {
+        let splitPoints = this.$refs.blocks[0].$refs.blockContent.querySelectorAll('i.pin');
+        if (splitPoints.length === 0) {
+          this.unsetChange('split_point');
+        }
+      },
       setPartsHtml() {
         if (!this.block.getIsSplittedBlock()) {
           let blockValue = this.$refs[`block-html${this.block.blockid}`].codemirror.doc.getValue();
@@ -4498,7 +4509,6 @@ Save text changes and realign the Block?`,
                 });
               }
             });
-            this.recountVoicedBlocks();
           }
           this.block.setChanged(val);
           this.recountApprovedInRange();
@@ -4687,6 +4697,14 @@ Save text changes and realign the Block?`,
             this.initEditor(true);
           }
         }
+      },
+      'block.content': {
+        handler(val, oldval) {
+          if (!oldval) {
+            
+          }
+        },
+        deep: true
       }
 
   }
