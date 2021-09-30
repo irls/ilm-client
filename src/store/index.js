@@ -1667,6 +1667,7 @@ export const store = new Vuex.Store({
         //state.currentBookToc.bookId = params.bookId;
         state.currentBookToc.data = response.data;
         dispatch('unfreeze', 'loadBookToc');
+        dispatch('loadBookTocSections', []);
         return response;
       })
       .catch(err => {

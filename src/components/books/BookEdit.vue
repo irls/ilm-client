@@ -1882,6 +1882,7 @@ export default {
                   this.$store.commit('set_taskBlockMap');
                 }
                 this.loadBookToc({bookId: this.meta._id, isWait: true});
+                this.loadBookTocSections([]);
                 //this.lazyLoad();
               });
             });
