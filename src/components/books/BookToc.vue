@@ -61,14 +61,15 @@
           <template v-for="(toc, tocIdx) in currentBookTocCombined" >
             <template v-if="toc.section && toc.section.id && sectionsMode">
               <tr class="toc-section">
-                <td colspan="5" v-on:dblclick="sectionEditMode(toc.section)">
+                <td colspan="5" v-on:dblclick="sectionEditMode(toc.section)" class="hidden-container">
                   <div class="section-options">
                     <div class="-option -index">
                       {{toc.section.index}}
                     </div>
                     <div class="-option -name">
                       <template v-if="editingSectionId === toc.section.id">
-                        <input type="text" class="edit-section-slug" v-model="editingSlug"
+                        <input type="text" :class="['edit-section-slug', {'-has-error': validationErrors['slug']}]" 
+                          v-model="editingSlug"
                           v-on:keyup.enter="sectionEditMode(null)"
                           v-on:change="updateSlug(editingSlug)"
                           v-on:blur="sectionEditMode(null)"
@@ -78,7 +79,8 @@
                       <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug}]" v-else>{{toc.section.slug}}</label>
                     </div>
                     <div class="-option -remove -hidden">
-                      <i class="fa fa-remove" v-on:click="removeSection(toc.section.id)" title="Delete section"></i>
+                      <i class="fa fa-remove" disabled title="Delete section" v-if="toc.section.isBuilding || tocSectionBook.isBuilding"></i>
+                      <i class="fa fa-remove" v-on:click="removeSection(toc.section.id)" title="Delete section" v-else></i>
                     </div>
                     <div :class="['-option', '-build', '-hidden', {'-building': toc.section.isBuilding}]">
                       <!-- {{toc.section.zipPath}},{{toc.section.zipPath && !toc.section.buildModified ? true : false}} -->
@@ -108,14 +110,14 @@
                 </div>
               </td>
             </tr> -->
-            <tr :class="['toc-item', toc.level]" v-bind:key="tocIdx">
+            <tr :class="['toc-item', toc.level, 'hidden-container']" v-bind:key="tocIdx">
               <!--<template v-if="!toc.level">
                 <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
                 <td colspan="4" class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
               </template>-->
               <td>
                 <template v-if="(!toc.section || !toc.section.id) && sectionsMode">
-                  <div class="create-toc-section" v-on:click="createSectionFromItem(toc.blockid)" title="Add section"></div>
+                  <div class="create-toc-section -hidden" v-on:click="createSectionFromItem(toc.blockid)" title="Add section"></div>
                 </template>
               </td>
               <template v-if="toc.level == 'toc1'">
@@ -216,6 +218,8 @@ export default {
         return false;
       }
       this.loading = true;
+      this.clearErrors();
+      this.sectionEditMode(null);
       this.loadBookTocSections([]);
       this.loadBookToc({bookId: this.currBookId, isWait: isWait})
       .then((res)=>{
@@ -251,12 +255,7 @@ export default {
             this.editingSectionId = section.id;
             this.editingSlug = section.slug;
           }
-          Vue.nextTick(() => {
-            let el = document.getElementsByClassName('edit-section-slug');
-            if (el && el[0]) {
-              el[0].focus();
-            }
-          });
+          this.focusEditingSlug();
         } else {
           if (!this.hasError()) {
             this.editingSectionId = null;
@@ -383,6 +382,7 @@ export default {
             title: 'Ok',
             handler: () => {
               this.$root.$emit('hide-modal');
+              this.focusEditingSlug('middle');
             },
             class: ['btn btn-primary']
           }
@@ -402,6 +402,22 @@ export default {
     clearErrors() {
       Object.keys(this.validationErrors).forEach(k => {
         this.validationErrors[k] = '';
+      });
+    },
+    
+    focusEditingSlug(scrollTo = false) {
+      Vue.nextTick(() => {
+        let el = document.getElementsByClassName('edit-section-slug');
+        if (el && el[0]) {
+          el[0].focus();
+          if (scrollTo === 'middle') {
+            el[0].scrollIntoView({
+              behaviour: 'auto',
+              block: 'center',
+              inline: 'center'
+            });
+          }
+        }
       });
     }
   },
@@ -527,10 +543,23 @@ export default {
               width: 100%;
               color: black;
             }
+            .edit-section-slug {
+              &.-has-error {
+                border-color: red;
+                outline-color: red;
+                &:focus {
+                  border-color: red;
+                  outline-color: red;
+                }
+              }
+            }
           }
           &.-remove {
             i {
               color: red;
+              &[disabled] {
+                color: gray;
+              }
             }
           }
           &.-download {
@@ -547,13 +576,7 @@ export default {
             }
           }
         }
-        .-hidden {
-          visibility: hidden;
-        }
         &:hover {
-          .-hidden {
-            visibility: visible;
-          }
           .-option {
             &.-name {
               color: black;
@@ -651,6 +674,16 @@ export default {
       width: 100% !important;
       color: red;
       float: left !important;
+    }
+    .hidden-container {
+      .-hidden {
+        visibility: hidden;
+      }
+      &:hover {
+        .-hidden {
+          visibility: visible;
+        }
+      }
     }
   }
 </style>
