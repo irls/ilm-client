@@ -572,6 +572,7 @@ import task_controls from '../../mixins/task_controls.js'
 import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
 import { Languages } from "../../mixins/lang_config.js"
+import time_methods from '../../mixins/time_methods.js'
 import { VueTabs, VTab } from 'vue-nav-tabs'
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments from './details/BookAssignments';
@@ -839,7 +840,7 @@ export default {
     }
   },
 
-  mixins: [task_controls, api_config, access],
+  mixins: [task_controls, api_config, access, time_methods],
 
   mounted() {
     this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
@@ -1986,30 +1987,6 @@ export default {
         }
 
       }
-    },
-    convertTime(dt, time = false) {
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-      var date = new Date(dt);
-      var toutc = date.toUTCString();
-      var locdate = new Date(toutc + " UTC");
-
-      var year = locdate.getFullYear(),
-      month = locdate.getMonth() + 1, // months are zero indexed
-      day = locdate.getDate(),
-      hour = locdate.getHours(),
-      minute = locdate.getMinutes(),
-      second = locdate.getSeconds(),
-      hourFormatted = hour < 10 ? `0${hour}` : hour, // hour returned in 24 hour format
-      minuteFormatted = minute < 10 ? "0" + minute : minute
-
-      //console.log(toutc, locdate);
-      let result = day + " " + monthNames[month - 1] + " " + year ;
-      if (time) {
-        result += " " + hourFormatted + ":" + minuteFormatted;
-      }
-      return result;
-
     },
     finishPublished() {
       this.finishPublishedProcess = true;
