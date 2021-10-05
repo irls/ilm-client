@@ -1093,7 +1093,7 @@
         }
       },
       _setCatalogueSize() {
-        let file_catalogue_height = $(document).height() - 500;
+        let file_catalogue_height = $(document).height();
         $('.file-catalogue-files').css('max-height', file_catalogue_height + 'px');
       },
 
@@ -1120,7 +1120,9 @@
             elementStyle: (dimension, size, gutterSize) => {
               let resizeWrapper = true;
               if (!parentHeight) {
-                parentHeight = parseInt($('#file-catalogue').parent().css('height'));
+                parentHeight = parseInt($(document).height());
+                $('.file-catalogue-files').css('height',  `${parentHeight}px`)
+                // parentHeight = parseInt($('#file-catalogue').parent().css('height'));
                 resizeWrapper = false;
                 if (parentHeight) {
                   minSize = parentHeight / 100 * 30;
