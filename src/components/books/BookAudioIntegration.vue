@@ -233,7 +233,8 @@
         aad_sort: '',
         aad_filter: 'all',
         filterFilename: '',
-        highlightDuplicateId: ''
+        highlightDuplicateId: '',
+        AudioEditor: false
       }
     },
     mixins: [task_controls, api_config, access],
@@ -256,6 +257,8 @@
         if (audiofileId && self.playing === audiofileId) {
           self.playing = false;
         }
+        debugger
+        self.AudioEditor = false;
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
         if (self.audiobook && self.audiobook.importFiles) {
@@ -501,6 +504,7 @@
         }
         let BreakException = {};
         if(!this.renaming && event) {
+          this.AudioEditor = true;
           if (event.shiftKey) {
             if (this.selections.length > 0) {
               if (this.selections.indexOf(id) === -1) {
@@ -1121,6 +1125,8 @@
               let resizeWrapper = true;
               if (!parentHeight) {
                 parentHeight = parseInt($(document).height());
+                debugger
+                console.log(this.audioeditor);
                 $('.file-catalogue-files').css('height',  `${parentHeight}px`)
                 // parentHeight = parseInt($('#file-catalogue').parent().css('height'));
                 resizeWrapper = false;
