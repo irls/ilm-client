@@ -1120,9 +1120,8 @@
         if (!parentHeight) {
           parentHeight = parseInt($(document).height());
           if(audioEditor){
-            parentBottomPadding = 250;
+            parentBottomPadding = 230;
           }
-          parentBottomPadding = 250;
           parentHeight -=parentBottomPadding
           debugger
 
