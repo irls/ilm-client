@@ -260,7 +260,7 @@
           self.playing = false;
           self.initSplit(true , true)
         }else{
-          self.initSplit(false , true)
+          self.initSplit(true , false)
         }
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
@@ -1113,42 +1113,6 @@
             console.log(err)
           })
       },
-      fileCatalogueFiles( dimension, size, gutterSize, audioEditor = false, resize = false) {
-        // debugger;
-        let parentHeight = false;
-        let minSize = false;
-        let maxSize = false;
-        let resizeWrapper = true;
-        let parentBottomPadding = 0;
-        if (!parentHeight && !resize) {
-          parentHeight = parseInt($(document).height());
-          if(audioEditor){
-            parentBottomPadding = 230;
-          }
-          parentHeight -=parentBottomPadding
-          // debugger
-
-          $('.file-catalogue-files').css('height',  `${parentHeight}px`)
-          // parentHeight = parseInt($('#file-catalogue').parent().css('height'));
-          resizeWrapper = false;
-          if (parentHeight) {
-            minSize = parentHeight / 100 * 30;
-            $('#audio-import-errors').css('height', minSize + 'px');
-            maxSize = parentHeight - minSize;
-          }
-        }
-        //console.log(dimension, size, gutterSize)
-        let height = parentHeight / 100 * size - gutterSize;
-        //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
-        if (resizeWrapper) {
-          $('.file-catalogue-files-wrapper').css('height', parseInt($('#file-catalogue').css('height')) - parseInt($('.file-catalogue-buttons').css('height')) + 'px')
-        }
-        if (height < minSize && resizeWrapper) {
-          height = minSize;
-        }
-        if (height > maxSize && resizeWrapper) {
-          height = maxSize;
-        }
 
       initSplit(force = false, state) {
         if (force || (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
