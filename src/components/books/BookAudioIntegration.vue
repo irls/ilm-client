@@ -42,6 +42,8 @@
               <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)" v-if="!alignProcess">Align&nbsp;<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
               <span v-else class="align-preloader -small"></span>
               <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign(true)" title="Cancel aligning"><i class="fa fa-ban"></i></button>
+              <button v-on:click="initSplit(true , true)">initSplit 1</button>
+              <button v-on:click="initSplit(true, false)">initSplit 0</button>
             </div>
           </div>
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
@@ -233,7 +235,8 @@
         aad_sort: '',
         aad_filter: 'all',
         filterFilename: '',
-        highlightDuplicateId: ''
+        highlightDuplicateId: '',
+        split : false
       }
     },
     mixins: [task_controls, api_config, access],
@@ -255,6 +258,9 @@
       this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
         if (audiofileId && self.playing === audiofileId) {
           self.playing = false;
+          self.initSplit(true , true)
+        }else{
+          self.initSplit(false , true)
         }
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
@@ -1092,9 +1098,9 @@
           this.saveAudiobook([], [], doneUpdates);
         }
       },
-      _setCatalogueSize() {
-        let file_catalogue_height = $(document).height() - 500;
-        $('.file-catalogue-files').css('max-height', file_catalogue_height + 'px');
+      _setCatalogueSize( ) {
+        let file_catalogue_height = $(document).height();
+        $('.file-catalogue-files').css('max-height', `${file_catalogue_height}px`);
       },
 
       clearErrors() {
@@ -1108,17 +1114,32 @@
           })
       },
 
-      initSplit() {
-        if (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0) {
+      initSplit(force = false, state) {
+        if (force || (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
           let parentHeight = false;
+          let parentBottomPadding = false;
           let minSize = false;
           let maxSize = false;
-          let split = Split(['#file-catalogue', '#audio-import-errors'], {
+          if(this.split){
+            this.split.destroy();
+          }
+          this.split = Split(['#file-catalogue', '#audio-import-errors'], {
             direction: 'vertical',
             //minSize: [80, 80],
             sizes: [70, 30],
             elementStyle: (dimension, size, gutterSize) => {
+              console.log(`----------`);
+
               let resizeWrapper = true;
+              parentHeight = parseInt($(document).height());
+              console.log(`parentHeight:${parentHeight}`);
+              if(state){
+                parentBottomPadding = 400;
+              }else{
+                parentBottomPadding = 0;
+              }
+              parentHeight -=parentBottomPadding
+
               if (!parentHeight) {
                 parentHeight = parseInt($('#file-catalogue').parent().css('height'));
                 resizeWrapper = false;
@@ -1128,11 +1149,17 @@
                   maxSize = parentHeight - minSize;
                 }
               }
+              console.log(`parentHeight:${parentHeight}`);
               //console.log(dimension, size, gutterSize)
+              console.log(`size:${size}`);
+              console.log(`gutterSize:${gutterSize}`);
               let height = parentHeight / 100 * size - gutterSize;
               //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
-              if (resizeWrapper) {
-                $('.file-catalogue-files-wrapper').css('height', parseInt($('#file-catalogue').css('height')) - parseInt($('.file-catalogue-buttons').css('height')) + 'px')
+              if (resizeWrapper || force) {
+                let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
+                console.log(`parentHeight:${parentHeight}`);
+                console.log(`wrapper:${wrapper}`);
+                $('.file-catalogue-files-wrapper').css('height', wrapper + 'px')
               }
               if (height < minSize && resizeWrapper) {
                 height = minSize;
@@ -1140,6 +1167,7 @@
               if (height > maxSize && resizeWrapper) {
                 height = maxSize;
               }
+              console.log(`height:${height}`);
               return {'height': height + 'px'};
             }
           });
