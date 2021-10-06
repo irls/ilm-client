@@ -2621,6 +2621,7 @@ Revert to original block audio?`,
           }
         },
         setEditingLocked(isLocked, reason = '') {
+          this.$root.$emit('from-audioeditor:lock', isLocked,reason);
           this.editingLocked = isLocked;
           if (isLocked) {
             this.editingLockedReason = reason;

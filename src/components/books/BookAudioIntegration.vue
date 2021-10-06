@@ -253,6 +253,9 @@
         linkEndpoints: false
       });*/
 
+      this.$root.$on('from-audioeditor:lock', function(blockId, audiofileId) {
+        self.initSplit(true , true)
+      })
       var self = this;
 
       this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
@@ -1113,7 +1116,12 @@
             console.log(err)
           })
       },
-
+      inViewport($el) {
+        var elH = $el.outerHeight(),
+          H   = $(window).height(),
+          r   = $el[0].getBoundingClientRect(), t=r.top, b=r.bottom;
+        return Math.max(0, t>0? Math.min(elH, H-t) : Math.min(b, H));
+      },
       initSplit(force = false, state) {
         if (force || (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
           let parentHeight = false;
@@ -1140,6 +1148,7 @@
                 parentBottomPadding = 0;
               }
               parentHeight -=parentBottomPadding
+              console.log(`parentHeight:${parentHeight}`);
 
               if (!parentHeight) {
                 parentHeight = parseInt($('#file-catalogue').parent().css('height'));
@@ -1150,7 +1159,6 @@
                   maxSize = parentHeight - minSize;
                 }
               }
-              console.log(`parentHeight:${parentHeight}`);
               //console.log(dimension, size, gutterSize)
               console.log(`size:${size}`);
               console.log(`gutterSize:${gutterSize}`);
@@ -1160,7 +1168,19 @@
                 let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
                 console.log(`parentHeight:${parentHeight}`);
                 console.log(`wrapper:${wrapper}`);
+
                 $('.file-catalogue-files-wrapper').css('height', wrapper + 'px')
+                height = this.inViewport($('.file-catalogue-files-wrapper'));
+                console.log(`parentHeight inViewport:${parentHeight}`);
+
+                if(!state && !self.playing){
+                  height -= 80
+                }else{
+                  height -= 65
+                }
+
+                console.log(`parentHeight inViewport:${parentHeight}`);
+                $('.file-catalogue-files-wrapper').css('height', height + 'px')
               }
               if (height < minSize && resizeWrapper) {
                 height = minSize;
