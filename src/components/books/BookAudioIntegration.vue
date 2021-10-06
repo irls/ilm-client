@@ -1117,7 +1117,7 @@
         let maxSize = false;
         let resizeWrapper = true;
         let parentBottomPadding = 0;
-        if (!parentHeight) {
+        if (!parentHeight && !resize) {
           parentHeight = parseInt($(document).height());
           if(audioEditor){
             parentBottomPadding = 230;
@@ -1128,7 +1128,7 @@
           $('.file-catalogue-files').css('height',  `${parentHeight}px`)
           // parentHeight = parseInt($('#file-catalogue').parent().css('height'));
           resizeWrapper = false;
-          if (parentHeight || resize) {
+          if (parentHeight) {
             minSize = parentHeight / 100 * 30;
             $('#audio-import-errors').css('height', minSize + 'px');
             maxSize = parentHeight - minSize;
