@@ -260,8 +260,12 @@
 
       this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
         if (audiofileId && self.playing === audiofileId) {
+          if(!self.playing ){
+            self.initSplit(true , true)
+          }else{
+            self.initSplit(true , false)
+          }
           self.playing = false;
-          self.initSplit(true , false)
         }else{
           self.initSplit(true , true)
         }
