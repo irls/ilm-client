@@ -258,9 +258,9 @@
       this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
         if (audiofileId && self.playing === audiofileId) {
           self.playing = false;
-          self.initSplit(true , true)
-        }else{
           self.initSplit(true , false)
+        }else{
+          self.initSplit(true , true)
         }
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
