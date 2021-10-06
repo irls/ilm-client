@@ -1123,6 +1123,7 @@
           if(this.split){
             this.split.destroy();
           }
+          let self = this;
           this.split = Split(['#file-catalogue', '#audio-import-errors'], {
             direction: 'vertical',
             //minSize: [80, 80],
@@ -1133,7 +1134,7 @@
               let resizeWrapper = true;
               parentHeight = parseInt($(document).height());
               console.log(`parentHeight:${parentHeight}`);
-              if(state){
+              if(state || self.playing){
                 parentBottomPadding = 400;
               }else{
                 parentBottomPadding = 0;
