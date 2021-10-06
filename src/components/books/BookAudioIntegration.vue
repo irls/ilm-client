@@ -255,9 +255,9 @@
       this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
         if (audiofileId && self.playing === audiofileId) {
           self.playing = false;
-          self.fileCatalogueFiles("height",68,5, false);
+          self.fileCatalogueFiles("height",68,5, false, true);
         }else{
-          self.fileCatalogueFiles("height",68,5, true);
+          self.fileCatalogueFiles("height",68,5, true, true);
         }
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
@@ -1110,8 +1110,8 @@
             console.log(err)
           })
       },
-      fileCatalogueFiles( dimension, size, gutterSize, audioEditor = false) {
-        debugger;
+      fileCatalogueFiles( dimension, size, gutterSize, audioEditor = false, resize = false) {
+        // debugger;
         let parentHeight = false;
         let minSize = false;
         let maxSize = false;
@@ -1123,12 +1123,12 @@
             parentBottomPadding = 230;
           }
           parentHeight -=parentBottomPadding
-          debugger
+          // debugger
 
           $('.file-catalogue-files').css('height',  `${parentHeight}px`)
           // parentHeight = parseInt($('#file-catalogue').parent().css('height'));
           resizeWrapper = false;
-          if (parentHeight) {
+          if (parentHeight || resize) {
             minSize = parentHeight / 100 * 30;
             $('#audio-import-errors').css('height', minSize + 'px');
             maxSize = parentHeight - minSize;
@@ -1155,7 +1155,7 @@
           // let parentHeight = false;
           // let minSize = false;
           // let maxSize = false;
-          debugger;
+          // debugger;
           let split = Split(['#file-catalogue', '#audio-import-errors'], {
             direction: 'vertical',
             //minSize: [80, 80],
