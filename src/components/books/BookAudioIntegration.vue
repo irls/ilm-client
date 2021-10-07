@@ -1147,7 +1147,11 @@
         if(state || $('.waveform-playlist:visible').length ){
           parentBottomPadding = 465;
         }else{
-          parentBottomPadding = 265;
+          if( $('.annotations-boxes').length ){
+            parentBottomPadding = 285;
+          }else{
+            parentBottomPadding = 265;
+          }
         }
 
         parentHeight -=parentBottomPadding
@@ -1182,8 +1186,11 @@
                 // self.audioEditorIsOpeed = true;
                 parentBottomPadding = 465;
               }else{
-                // self.audioEditorIsOpeed = false;
-                parentBottomPadding = 265;
+                if( $('.annotations-boxes').length ){
+                  parentBottomPadding = 285;
+                }else{
+                  parentBottomPadding = 265;
+                }
               }
               parentHeight -=parentBottomPadding
               console.log(`parentHeight:${parentHeight}`);
