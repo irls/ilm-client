@@ -20,12 +20,12 @@
               Rebuild
             </span>
             <template v-else>
-              <button class="btn btn-primary" v-if="buildBookButtonEnabled" v-on:click="exportBook($event)">
+              <button class="btn btn-primary btn-build-book" v-if="buildBookButtonEnabled" v-on:click="exportBook($event)">
                 <i class="fa fa-file-archive-o"></i>
                 <template v-if="!tocSectionBook.zipPath">Build</template>
                 <template v-else>Rebuild</template>
               </button>
-              <span class="btn btn-primary book-build-disabled" v-else>
+              <span class="btn btn-primary btn-build-book book-build-disabled" v-else>
                 <i class="fa fa-file-archive-o"></i>
                 {{tocSectionBook.zipPath ? 'Rebuild' : 'Build'}}
               </span>
@@ -34,11 +34,11 @@
         </div>
         <div class="toc-button">
           <template v-if="sectionsMode && adminOrLibrarian">
-            <a class="btn btn-primary" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath" v-on:click="checkOnAction(null, $event)">
+            <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath" v-on:click="checkOnAction(null, $event)">
               <i class="fa fa-download"></i>
               Download
             </a>
-            <span class="btn btn-primary book-build-disabled" v-else>
+            <span class="btn btn-primary book-build-disabled btn-download-book" v-else>
               <i class="fa fa-download"></i>
               Download
             </span>
@@ -78,6 +78,7 @@
                       </template>
                       <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug}]" v-else>{{toc.section.slug}}</label>
                     </div>
+                    <div class="section-generating-hover -visible" v-if="toc.section.isBuilding"></div>
                     <div class="-option -remove -hidden">
                       <i class="fa fa-remove" disabled title="Delete section" v-if="toc.section.isBuilding || tocSectionBook.isBuilding"></i>
                       <i class="fa fa-remove" v-on:click="removeSection(toc.section.id)" title="Delete section" v-else></i>
@@ -86,8 +87,8 @@
                       <!-- {{toc.section.zipPath}},{{toc.section.zipPath && !toc.section.buildModified ? true : false}} -->
                       <div class="section-generating" v-if="toc.section.isBuilding"></div>
                       <template v-else>
-                        <i class="fa fa-file-archive-o" title="Build" disabled v-if="toc.section.zipPath && !toc.section.buildModified"></i>
-                        <i class="fa fa-file-archive-o" title="Build" v-on:click="exportSection(toc.section.id, $event)" v-else></i>
+                        <i class="fa fa-file-archive-o" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" disabled v-if="toc.section.zipPath && !toc.section.buildModified"></i>
+                        <i class="fa fa-file-archive-o" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" v-on:click="exportSection(toc.section.id, $event)" v-else></i>
                       </template>
                     </div>
                     <a class="-option -download -hidden" :href="downloadSectionLink(toc.section.id)" target="_blank" v-on:click="checkOnAction(toc.section.id, $event)" v-if="toc.section.zipPath">
@@ -658,6 +659,16 @@ export default {
         vertical-align: middle;
       }
     }
+    .section-generating-hover {
+      width: 84px;
+      height: 20px;
+      background-repeat: no-repeat;
+      background-image: url(/static/preloader-horizontal-gray.png);
+      display: inline-block;
+      vertical-align: middle;
+      background-position: bottom;
+      position: absolute;
+    }
     .book-zip-time {
       margin: 5px 2px;
     }
@@ -679,9 +690,15 @@ export default {
       .-hidden {
         visibility: hidden;
       }
+      .-visible {
+        visibility: visible;
+      }
       &:hover {
         .-hidden {
           visibility: visible;
+        }
+        .-visible {
+          visibility: hidden;
         }
       }
     }
