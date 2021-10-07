@@ -1145,13 +1145,13 @@
         parentHeight = parseInt($(document).height());
         console.log(`parentHeight:${parentHeight}`);
         if(state || $('.waveform-playlist:visible').length ){
-          parentBottomPadding = 465;
-        }else{
           if( $('.annotations-boxes').length ){
-            parentBottomPadding = 285;
+            parentBottomPadding = 485;
           }else{
-            parentBottomPadding = 265;
+            parentBottomPadding = 465;
           }
+        }else{
+          parentBottomPadding = 265;
         }
 
         parentHeight -=parentBottomPadding
@@ -1183,14 +1183,13 @@
               parentHeight = parseInt($(document).height());
               console.log(`parentHeight:${parentHeight}`);
               if(state || $('.waveform-playlist:visible').length ){
-                // self.audioEditorIsOpeed = true;
-                parentBottomPadding = 465;
-              }else{
                 if( $('.annotations-boxes').length ){
-                  parentBottomPadding = 285;
+                  parentBottomPadding = 485;
                 }else{
-                  parentBottomPadding = 265;
+                  parentBottomPadding = 465;
                 }
+              }else{
+                parentBottomPadding = 265;
               }
               parentHeight -=parentBottomPadding
               console.log(`parentHeight:${parentHeight}`);
