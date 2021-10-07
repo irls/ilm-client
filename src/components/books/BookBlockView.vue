@@ -89,7 +89,7 @@
                       <li v-else class="disabled">
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Join with previous block</li>
-                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(block.chainid)" @click="joinWithNext()">
+                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(storeListO.getOutId(block.blockid))" @click="joinWithNext()">
                         <i class="fa fa-angle-double-down" aria-hidden="true"></i>
                         Join with next block</li>
                       <li v-else class="disabled">
