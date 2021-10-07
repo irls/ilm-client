@@ -254,7 +254,12 @@
 
       this.$root.$on('from-audioeditor:lock', function(blockId, audiofileId) {
         this.audioEditorIsOpeed = true;
-        self.splitRecalc(true,false)
+
+        var initSplitDebounce = _.debounce(function () {
+          self.splitRecalc(true,false)
+        }, 500);
+        initSplitDebounce();
+
       })
       var self = this;
 
