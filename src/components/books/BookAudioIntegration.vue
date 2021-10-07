@@ -254,7 +254,7 @@
 
       this.$root.$on('from-audioeditor:lock', function(blockId, audiofileId) {
         this.audioEditorIsOpeed = true;
-        self.initSplit(true,false)
+        self.splitRecalc(true,false)
       })
       var self = this;
 
@@ -270,7 +270,7 @@
 
 
         var initSplitDebounce = _.debounce(function () {
-          self.initSplit(true)
+          self.splitRecalc(true)
         }, 500);
         // initSplitDebounce
         initSplitDebounce();
@@ -1133,8 +1133,28 @@
           r   = $el[0].getBoundingClientRect(), t=r.top, b=r.bottom;
         return Math.max(0, t>0? Math.min(elH, H-t) : Math.min(b, H));
       },
+      splitRecalc(force = false, state) {
+        let parentHeight;
+        let parentBottomPadding;
+
+        parentHeight = parseInt($(document).height());
+        console.log(`parentHeight:${parentHeight}`);
+        if(state || $('.waveform-playlist:visible').length ){
+          parentBottomPadding = 465;
+        }else{
+          parentBottomPadding = 265;
+        }
+
+        parentHeight -=parentBottomPadding
+        console.log(`parentHeight:${parentHeight}`);
+        let height = parentHeight / 100 * 70 - 5;
+
+        let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
+        $('.file-catalogue-files-wrapper').css('height', wrapper + 'px')
+
+      },
       initSplit(force = false, state) {
-        if ((this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
+        if (force || (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
           let parentHeight = false;
           let parentBottomPadding = false;
           let minSize = false;
