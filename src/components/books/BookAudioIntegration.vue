@@ -42,8 +42,6 @@
               <button class="btn btn-primary btn-small" :disabled="alignCounter.count == 0 || selections.length == 0" v-on:click="align(null)" v-if="!alignProcess">Align&nbsp;<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
               <span v-else class="align-preloader -small"></span>
               <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign(true)" title="Cancel aligning"><i class="fa fa-ban"></i></button>
-              <button v-on:click="initSplit(true , true)">initSplit 1</button>
-              <button v-on:click="initSplit(true, false)">initSplit 0</button>
             </div>
           </div>
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
@@ -236,7 +234,8 @@
         aad_filter: 'all',
         filterFilename: '',
         highlightDuplicateId: '',
-        split : false
+        split : false,
+        audioEditorIsOpeed : false
       }
     },
     mixins: [task_controls, api_config, access],
@@ -254,21 +253,28 @@
       });*/
 
       this.$root.$on('from-audioeditor:lock', function(blockId, audiofileId) {
-        self.initSplit(true , true)
+        this.audioEditorIsOpeed = true;
+        self.initSplit(true,false)
       })
       var self = this;
 
       this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
         if (audiofileId && self.playing === audiofileId) {
-          if(!self.playing ){
-            self.initSplit(true , true)
-          }else{
-            self.initSplit(true , false)
-          }
           self.playing = false;
+          // this.audioEditorIsOpeed = false;
+          // self.initSplit(true,false);
         }else{
-          self.initSplit(true , true)
+          // this.audioEditorIsOpeed = true;
+          // self.initSplit(true, true);
         }
+
+
+        var initSplitDebounce = _.debounce(function () {
+          self.initSplit(true)
+        }, 500);
+        // initSplitDebounce
+        initSplitDebounce();
+
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
         if (self.audiobook && self.audiobook.importFiles) {
@@ -502,6 +508,7 @@
         }
       },
       audiofileClick:_.debounce(function(id, play, event) {
+        this.initSplit(true, true);
         if (id === this.playing) {
           return false;
         }
@@ -1146,10 +1153,12 @@
               let resizeWrapper = true;
               parentHeight = parseInt($(document).height());
               console.log(`parentHeight:${parentHeight}`);
-              if(state || self.playing){
-                parentBottomPadding = 400;
+              if(state || $('.waveform-playlist:visible').length ){
+                // self.audioEditorIsOpeed = true;
+                parentBottomPadding = 465;
               }else{
-                parentBottomPadding = 0;
+                // self.audioEditorIsOpeed = false;
+                parentBottomPadding = 265;
               }
               parentHeight -=parentBottomPadding
               console.log(`parentHeight:${parentHeight}`);
@@ -1164,6 +1173,7 @@
                 }
               }
               //console.log(dimension, size, gutterSize)
+              console.log(`waveform-playlist:${$('.waveform-playlist:visible').length}`);
               console.log(`size:${size}`);
               console.log(`gutterSize:${gutterSize}`);
               let height = parentHeight / 100 * size - gutterSize;
@@ -1174,17 +1184,23 @@
                 console.log(`wrapper:${wrapper}`);
 
                 $('.file-catalogue-files-wrapper').css('height', wrapper + 'px')
-                height = this.inViewport($('.file-catalogue-files-wrapper'));
-                console.log(`parentHeight inViewport:${parentHeight}`);
+                // height = this.inViewport($('.file-catalogue-files-wrapper'));
+                // console.log(`parentHeight inViewport:${parentHeight}`);
+                //
+                //
+                // setTimeout( () => {
+                //   // debugger;
+                //   if(!state && !self.playing){
+                //     height -= 80
+                //   }else{
+                //     height -= 65
+                //   }
+                //   height = this.inViewport($('.file-catalogue-files-wrapper'));
+                //   console.log(`parentHeight inViewport:${parentHeight}`);
+                //   $('.file-catalogue-files-wrapper').css('height', height + 'px')
+                // }, 5000);
+                // // _.debounce( ,500);
 
-                if(!state && !self.playing){
-                  height -= 80
-                }else{
-                  height -= 65
-                }
-
-                console.log(`parentHeight inViewport:${parentHeight}`);
-                $('.file-catalogue-files-wrapper').css('height', height + 'px')
               }
               if (height < minSize && resizeWrapper) {
                 height = minSize;
