@@ -1208,6 +1208,10 @@
               console.log(`size:${size}`);
               console.log(`gutterSize:${gutterSize}`);
               let height = parentHeight / 100 * size - gutterSize;
+
+              // The additional scroll is appear
+              height -=15;
+
               //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
               if (resizeWrapper || force) {
                 let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
