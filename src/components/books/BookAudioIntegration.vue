@@ -1156,6 +1156,11 @@
 
         parentHeight -=parentBottomPadding
         console.log(`parentHeight:${parentHeight}`);
+
+        // The additional scroll is appear
+        parentHeight -=15;
+
+        console.log(`parentHeight:${parentHeight}`);
         let height = parentHeight / 100 * 70 - 5;
 
         let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
@@ -1207,10 +1212,13 @@
               console.log(`waveform-playlist:${$('.waveform-playlist:visible').length}`);
               console.log(`size:${size}`);
               console.log(`gutterSize:${gutterSize}`);
-              let height = parentHeight / 100 * size - gutterSize;
 
               // The additional scroll is appear
-              height -=15;
+              parentHeight -=15;
+              console.log(`parentHeight:${parentHeight}`);
+
+              let height = parentHeight / 100 * size - gutterSize;
+
 
               //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
               if (resizeWrapper || force) {
