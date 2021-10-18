@@ -1179,6 +1179,7 @@
           let self = this;
           this.split = Split(['#file-catalogue', '#audio-import-errors'], {
             direction: 'vertical',
+            gutterSize: 0,
             //minSize: [80, 80],
             sizes: [70, 30],
             elementStyle: (dimension, size, gutterSize) => {
@@ -1490,8 +1491,17 @@
   }
 </script>
 <style lang="less">
+
+.panel-group.audio-integration-accordion .panel-body{
+  padding-bottom: 0px;
+}
   .btn-small {
     font-size: 12px;
+  }
+  .file-catalogue {
+    .file-catalogue-buttons {
+      padding-bottom: 10px;
+    }
   }
   .file-catalogue {
     .file-catalogue-buttons {
