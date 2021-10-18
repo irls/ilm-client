@@ -1148,10 +1148,10 @@
           if( $('.annotations-boxes').length ){
             parentBottomPadding = 435;
           }else{
-            parentBottomPadding = 425;
+            parentBottomPadding = 410;
           }
         }else{
-          parentBottomPadding = 265;
+          parentBottomPadding = 240;
         }
 
         parentHeight -=parentBottomPadding
@@ -1192,10 +1192,10 @@
                 if( $('.annotations-boxes').length ){
                   parentBottomPadding = 435;
                 }else{
-                  parentBottomPadding = 425;
+                  parentBottomPadding = 410;
                 }
               }else{
-                parentBottomPadding = 265;
+                parentBottomPadding = 240;
               }
               parentHeight -=parentBottomPadding
               console.log(`parentHeight:${parentHeight}`);
