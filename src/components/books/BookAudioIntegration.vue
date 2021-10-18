@@ -1146,9 +1146,9 @@
         console.log(`parentHeight:${parentHeight}`);
         if(state || $('.waveform-playlist:visible').length ){
           if( $('.annotations-boxes').length ){
-            parentBottomPadding = 485;
+            parentBottomPadding = 435;
           }else{
-            parentBottomPadding = 465;
+            parentBottomPadding = 425;
           }
         }else{
           parentBottomPadding = 265;
@@ -1190,9 +1190,9 @@
               console.log(`parentHeight:${parentHeight}`);
               if(state || $('.waveform-playlist:visible').length ){
                 if( $('.annotations-boxes').length ){
-                  parentBottomPadding = 485;
+                  parentBottomPadding = 435;
                 }else{
-                  parentBottomPadding = 465;
+                  parentBottomPadding = 425;
                 }
               }else{
                 parentBottomPadding = 265;
