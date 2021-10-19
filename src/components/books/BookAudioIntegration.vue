@@ -1168,7 +1168,8 @@
 
       },
       initSplit(force = false, state) {
-        if (force || (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
+        // if (force || (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
+        if (force || (this.isActive === true && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
           let parentHeight = false;
           let parentBottomPadding = false;
           let minSize = false;
