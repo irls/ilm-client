@@ -61,7 +61,7 @@
           <template v-for="(toc, tocIdx) in currentBookTocCombined" >
             <template v-if="toc.section && toc.section.id && sectionsMode">
               <tr class="toc-section">
-                <td colspan="5" v-on:dblclick="sectionEditMode(toc.section)" class="hidden-container">
+                <td colspan="5" v-on:dblclick="sectionEditMode(toc.section)" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id}]">
                   <div class="section-options">
                     <div class="-option -index">
                       {{toc.section.index}}
@@ -609,6 +609,16 @@ export default {
       .section-slug {
         &.-manual {
           color: #337ab7;
+        }
+      }
+      .-edit-mode {
+        .section-options {
+          .-option {
+            &.-name {
+              background: none;
+              padding: 3px 0px 3px 0px;
+            }
+          }
         }
       }
     }
