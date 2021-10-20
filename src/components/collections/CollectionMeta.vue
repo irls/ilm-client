@@ -1,78 +1,113 @@
 <template>
-  <div class="collection-meta col-sm-12">
-    <div class="col-sm-12">
-      <div class="coverimg" @click="changeCoverModal()">
-        <img height="80" v-if="collectionImage" v-bind:src="collectionImage" />
-        <div v-else class="coverimg-wrap"></div>
-      </div>
-    </div>
-    <div class="col-sm-12">
-      <i class="fa fa-book"></i>&nbsp;{{collection.title}}
-    </div>
-    <div class="col-sm-12">
-      {{collectionBooksLength}} Books, {{collection.pages}} pages
-    </div>
-    <div class="col-sm-12" v-if="allowCollectionsEdit">
-      <div class="col-sm-6">
-        <button class="btn btn-default" v-on:click="linkBookModal = true">
-          <i class="fa fa-plus"></i>&nbsp;Add to collection
-        </button>
-      </div>
-      <div class="col-sm-6">
-        <button class="btn btn-danger" v-on:click="onRemoveMessage = true">
-          Remove collection
-        </button>
-      </div>
-    </div>
-    <div class="col-sm-12">
+  <vue-tabs ref="collectiontabs" class="meta-edit-tabs">
+    <vue-tab title="Manage collection" id="manageCollection">
+    </vue-tab>
+    <vue-tab title="Meta" id="collectionMeta">
       <fieldset>
-        <legend>
-          Status
-        </legend>
-        <div class="col-sm-9">
-          {{collection.state}}
-        </div>
-        <div class="col-sm-9">
-          Version: {{collection.version ? collection.version : '1.0'}}
-        </div>
-        <div class="col-sm-9" v-if="collection.publishedVersion">
-          Published version: {{collection.publishedVersion}}
-        </div>
-        <div class="col-sm-9" v-if="allowPublishCurrentCollection">
-          <!-- <button class="btn btn-primary" v-on:click="publish()">Publish</button> -->
-        </div>
+        <legend>Collection Metadata</legend>
+        <table class="properties">
+          <tr>
+            <td>
+              Collection ID
+            </td>
+            <td>
+              {{collection._id}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Title
+            </td>
+            <td>
+              <input v-model="collection.title" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Subtitle
+            </td>
+            <td>
+              <input v-model="collection.subtitle" />
+            </td>
+          </tr>
+        </table>
       </fieldset>
-    </div>
-    <div class="col-sm-12">
-      <div class="col-sm-4">Title</div>
-      <div class="col-sm-8">
-        <input type="text" v-model="collection.title" v-on:change="update('title', $event)" :disabled="!allowCollectionsEdit" :class="[{'has-error': hasTitleWarning}]"/>
-        <span v-if="hasTitleWarning" class="error-message">Please define Collection title</span>
-      </div>
-      <div class="col-sm-4">Language</div>
-      <div class="col-sm-8">
-        <select class="form-control" v-model='collection.language' v-on:change="update('language', $event)" :disabled="!allowCollectionsEdit || collectionBooksLength > 0">
-          <option v-for="(value, index) in languages" :value="index">{{ value }}</option>
-        </select>
-      </div>
-    </div>
-    <div class="col-sm-12">
-      <fieldset>
-        <legend>Description</legend>
-        <textarea v-model="collection.description" v-on:change="update('description', $event)" :disabled="!allowCollectionsEdit"></textarea>
-      </fieldset>
-    </div>
+      <div class="collection-meta col-sm-12">
+        <div class="col-sm-12">
+          <div class="coverimg" @click="changeCoverModal()">
+            <img height="80" v-if="collectionImage" v-bind:src="collectionImage" />
+            <div v-else class="coverimg-wrap"></div>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <i class="fa fa-book"></i>&nbsp;{{collection.title}}
+        </div>
+        <div class="col-sm-12">
+          {{collectionBooksLength}} Books, {{collection.pages}} pages
+        </div>
+        <div class="col-sm-12" v-if="allowCollectionsEdit">
+          <div class="col-sm-6">
+            <button class="btn btn-default" v-on:click="linkBookModal = true">
+              <i class="fa fa-plus"></i>&nbsp;Add to collection
+            </button>
+          </div>
+          <div class="col-sm-6">
+            <button class="btn btn-danger" v-on:click="onRemoveMessage = true">
+              Remove collection
+            </button>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <fieldset>
+            <legend>
+              Status
+            </legend>
+            <div class="col-sm-9">
+              {{collection.state}}
+            </div>
+            <div class="col-sm-9">
+              Version: {{collection.version ? collection.version : '1.0'}}
+            </div>
+            <div class="col-sm-9" v-if="collection.publishedVersion">
+              Published version: {{collection.publishedVersion}}
+            </div>
+            <div class="col-sm-9" v-if="allowPublishCurrentCollection">
+              <!-- <button class="btn btn-primary" v-on:click="publish()">Publish</button> -->
+            </div>
+          </fieldset>
+        </div>
+        <div class="col-sm-12">
+          <div class="col-sm-4">Title</div>
+          <div class="col-sm-8">
+            <input type="text" v-model="collection.title" v-on:change="update('title', $event)" :disabled="!allowCollectionsEdit" :class="[{'has-error': hasTitleWarning}]"/>
+            <span v-if="hasTitleWarning" class="error-message">Please define Collection title</span>
+          </div>
+          <div class="col-sm-4">Language</div>
+          <div class="col-sm-8">
+            <select class="form-control" v-model='collection.language' v-on:change="update('language', $event)" :disabled="!allowCollectionsEdit || collectionBooksLength > 0">
+              <option v-for="(value, index) in languages" :value="index">{{ value }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <fieldset>
+            <legend>Description</legend>
+            <textarea v-model="collection.description" v-on:change="update('description', $event)" :disabled="!allowCollectionsEdit"></textarea>
+          </fieldset>
+        </div>
 
-    <linkBook v-if="linkBookModal"
-      @close_modal="linkBookModal = false"
-      :languages="languages"></linkBook>
-    <modal v-model="onRemoveMessage" effect="fade" title="" ok-text="Remove" cancel-text="Cancel" @ok="remove()">
-      <p>
-        Remove {{collection.title}} Collection <template v-if="collection.books && collection.books.length">and unlink {{collection.books.length}} Books</template>?
-      </p>
-    </modal>
-    <CollectionCoverModal ref="collectionCoverModal" @closed="resetCollectionImage"></CollectionCoverModal>
-  </div>
+        <linkBook v-if="linkBookModal"
+          @close_modal="linkBookModal = false"
+          :languages="languages"></linkBook>
+        <modal v-model="onRemoveMessage" effect="fade" title="" ok-text="Remove" cancel-text="Cancel" @ok="remove()">
+          <p>
+            Remove {{collection.title}} Collection <template v-if="collection.books && collection.books.length">and unlink {{collection.books.length}} Books</template>?
+          </p>
+        </modal>
+        <CollectionCoverModal ref="collectionCoverModal" @closed="resetCollectionImage"></CollectionCoverModal>
+      </div>
+    </vue-tab>
+  </vue-tabs>
 </template>
 <script>
   import _ from 'lodash';
@@ -84,6 +119,7 @@
   import { Languages }      from "../../mixins/lang_config.js"
   import {modal} from 'vue-strap';
   import CollectionCoverModal from './CollectionCoverModal';
+  import { VueTabs, VTab } from 'vue-nav-tabs';
   export default {
       name: 'CollectionMeta',
       data() {
@@ -98,7 +134,9 @@
       components: {
         'LinkBook': LinkBook,
         'modal': modal,
-        'CollectionCoverModal': CollectionCoverModal
+        'CollectionCoverModal': CollectionCoverModal,
+        'vue-tabs': VueTabs,
+        'vue-tab': VTab
       },
       mounted() {
         this.init();
@@ -196,6 +234,7 @@
       }
   }
 </script>
+<style scoped src='../books/css/BookProperties.css'></style>
 <style lang="less">
   .collection-meta {
     /*position: fixed;
@@ -255,4 +294,15 @@
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
     background-color: #555;
   }
+  
+  /* Properties editor area */
+  table.properties {margin:0; padding:0; width:100%; font-size: 1em;
+    border-collapse: separate; border-spacing: 3px;
+  }
+  table.properties td:nth-child(1) {width: 30%; padding: 3px; margin:0}
+  table.properties td:nth-child(2) {width: auto; text-align: right !important;}
+  table.properties tr:nth-child(odd) {background-color: #F0F0F0}
+  table tr {border: 2px solid white}
+  table tr.changed {border: 2px solid wheat}
+  table tr input {font-size: 1em; width: 100%}
 </style>
