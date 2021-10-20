@@ -513,12 +513,12 @@
         }
       },
       audiofileClick:_.debounce(function(id, play, event) {
-        this.initSplit(true, true);
         if (id === this.playing) {
           return false;
         }
         if (!this.audioOpening && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
           if (!this.renaming) {
+            this.initSplit(true, true);
             this.audioOpening = id;
           }
         } else if (!event.shiftKey && !event.ctrlKey && !event.metaKey) {
