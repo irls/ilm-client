@@ -78,7 +78,7 @@
 </template>
 <script>
   import Grid from '../generic/Grid';
-  import {mapGetters} from 'vuex';
+  import {mapGetters, mapActions} from 'vuex';
   import api_config from '../../mixins/api_config.js'
   import v_modal from 'vue-js-modal';
   import Vue from 'vue';
@@ -261,18 +261,16 @@
             }
           }
           if (this.selected.length > 0) {
-            let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/link_books';
-            let api = this.$store.state.auth.getHttp();
-            let self = this;
-            api.post(api_url, {books_ids: this.selected}, {}).then(function(response){
-              if (response.status===200) {
-                self.$emit('close_modal');
-              } else {
-                
-              }
-            }).catch((err) => {
-              
-            });
+            return this.linkBooksToCollection(this.selected)
+              .then((response) => {
+                if (response.status===200) {
+                  this.$emit('close_modal');
+                } else {
+
+                }
+              }).catch((err) => {
+
+              });
           }
         },
         filterChange(field, event) {
@@ -286,7 +284,8 @@
         modalClosed() {
           $('.fixed-wrapper .navtable').css('z-index', 999);
           $('.toolbar-wrapper .toolbar').css('z-index', 999);
-        }
+        },
+        ...mapActions(['linkBooksToCollection'])
       },
       mounted() {
         this.booksFilter.language = this.currentCollection.language;

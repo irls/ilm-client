@@ -2,7 +2,7 @@
   <div class="collection-meta col-sm-12">
     <div class="col-sm-12">
       <div class="coverimg" @click="changeCoverModal()">
-        <img height="80" v-if="currentCollectionFiles.coverimg" v-bind:src="currentCollectionFiles.coverimg" />
+        <img height="80" v-if="collectionImage" v-bind:src="collectionImage" />
         <div v-else class="coverimg-wrap"></div>
       </div>
     </div>
@@ -39,19 +39,19 @@
           Published version: {{collection.publishedVersion}}
         </div>
         <div class="col-sm-9" v-if="allowPublishCurrentCollection">
-          <button class="btn btn-primary" v-on:click="publish()">Publish</button>
+          <!-- <button class="btn btn-primary" v-on:click="publish()">Publish</button> -->
         </div>
       </fieldset>
     </div>
     <div class="col-sm-12">
       <div class="col-sm-4">Title</div>
       <div class="col-sm-8">
-        <input type="text" v-model="collection.title" @input="update('title', $event)" :disabled="!allowCollectionsEdit" :class="[{'has-error': hasTitleWarning}]"/>
+        <input type="text" v-model="collection.title" v-on:change="update('title', $event)" :disabled="!allowCollectionsEdit" :class="[{'has-error': hasTitleWarning}]"/>
         <span v-if="hasTitleWarning" class="error-message">Please define Collection title</span>
       </div>
       <div class="col-sm-4">Language</div>
       <div class="col-sm-8">
-        <select class="form-control" v-model='collection.language' @change="change('category')" :disabled="!allowCollectionsEdit || collectionBooksLength > 0">
+        <select class="form-control" v-model='collection.language' v-on:change="update('language', $event)" :disabled="!allowCollectionsEdit || collectionBooksLength > 0">
           <option v-for="(value, index) in languages" :value="index">{{ value }}</option>
         </select>
       </div>
@@ -59,7 +59,7 @@
     <div class="col-sm-12">
       <fieldset>
         <legend>Description</legend>
-        <textarea v-model="collection.description" @input="update('description', $event)" :disabled="!allowCollectionsEdit"></textarea>
+        <textarea v-model="collection.description" v-on:change="update('description', $event)" :disabled="!allowCollectionsEdit"></textarea>
       </fieldset>
     </div>
 
@@ -71,7 +71,7 @@
         Remove {{collection.title}} Collection <template v-if="collection.books && collection.books.length">and unlink {{collection.books.length}} Books</template>?
       </p>
     </modal>
-    <CollectionCoverModal ref="collectionCoverModal"></CollectionCoverModal>
+    <CollectionCoverModal ref="collectionCoverModal" @closed="resetCollectionImage"></CollectionCoverModal>
   </div>
 </template>
 <script>
@@ -91,7 +91,8 @@
           'collection': {},
           linkBookModal: false,
           onRemoveMessage: false,
-          showCollectionCoverModal: false
+          showCollectionCoverModal: false,
+          collectionImage: ''
         }
       },
       components: {
@@ -110,6 +111,7 @@
           } else {
             this.collection = {};
           }
+          this.resetCollectionImage();
         },
         update: _.debounce(function (key, event) {
           this.liveUpdate(key, event.target.value)
@@ -121,31 +123,26 @@
           if (!this.allowCollectionsEdit) {
             return false;
           }
-          var dbPath = superlogin.getDbUrl('ilm_collections')
-          var db = new PouchDB(dbPath)
-          this.collection[field] = value;
-          return db.put(this.collection)
-            .then(doc => {
-              this.updateCollectionVersion({minor: true});
-            }).catch(err => {
-
-            })
+          let update = {};
+          update[field] = value;
+          return this.updateCollection(update)
+            .then(() => {
+              this.collection[field] = value;
+            });
         },
         remove() {
-          let api_url = this.API_URL + 'collection/' + this.currentCollection._id;
-          let api = this.$store.state.auth.getHttp();
-          let self = this;
-          api.delete(api_url, {}, {}).then(function(response){
-            self.onRemoveMessage = false;
-            if (response.status===200) {
-              self.$emit('collectionRemoved');
-              self.$router.replace({ path: '/collections' });
-            } else {
+          return this.removeCollection()
+            .then((response) => {
+              this.onRemoveMessage = false;
+              if (response.status===200) {
+                this.$emit('collectionRemoved');
+                this.$router.replace({ path: '/collections' });
+              } else {
 
-            }
-          }).catch((err) => {
-            self.onRemoveMessage = false;
-          });
+              }
+            }).catch((err) => {
+              this.onRemoveMessage = false;
+            });
         },
         publish() {
           let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/publish';
@@ -160,7 +157,13 @@
         changeCoverModal() {
           this.$refs.collectionCoverModal.show();
         },
-        ...mapActions(['reloadCollection', 'updateCollectionVersion'])
+        resetCollectionImage() {
+          this.collectionImage = '';
+          if (this.currentCollection.coverimgURL) {
+            this.collectionImage = this.currentCollection.coverimgURL + '?' + Date.now();
+          }
+        },
+        ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollection', 'removeCollection'])
       },
       computed: {
         collectionBooksLength: {
@@ -180,11 +183,12 @@
 
         },
 
-        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'currentCollectionFiles', 'allowPublishCurrentCollection'])
+        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'allowPublishCurrentCollection'])
       },
       watch: {
         'currentCollection': {
-          handler(val) {
+          handler(val, oldVal) {
+            
             this.init();
           },
           deep: true

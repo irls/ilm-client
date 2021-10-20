@@ -95,7 +95,7 @@
           //if (current) {
           //this.loadCollection(false);
           if (this.currentCollection._id !== id) {
-            this.$store.commit('SET_CURRENT_COLLECTION', {});
+            this.$store.commit('SET_CURRENT_COLLECTION', false);
             this.selectCollection(id);
             this.collectionMetaVisible = true;
             this.scrollToRow(id);
@@ -201,7 +201,7 @@
           }
         },
         ...mapGetters([
-          'currentCollection', 'currentBookMeta', 'collectionsFilter', 'bookEditMode', 'currentBookCounters'
+          'currentCollection', 'currentBookMeta', 'collectionsFilter', 'bookEditMode', 'currentBookCounters', 'currentCollectionId'
         ])
       },
       watch: {
@@ -223,6 +223,13 @@
               this.collectionMetaVisible = false;
             }
             this.currentBook = Object.assign({}, val);
+          }
+        },
+        'currentCollectionId': {
+          handler(val, oldVal) {
+            if (oldVal && !val) {
+              this.$router.replace({name: 'CollectionsList'});
+            }
           }
         }
       }
