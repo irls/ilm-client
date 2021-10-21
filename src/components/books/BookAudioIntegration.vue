@@ -257,7 +257,7 @@
 
         var initSplitDebounce = _.debounce(function () {
           self.splitRecalc(true,false)
-        }, 500);
+        }, 1000);
         initSplitDebounce();
 
       })
@@ -276,7 +276,7 @@
 
         var initSplitDebounce = _.debounce(function () {
           self.splitRecalc(true)
-        }, 500);
+        }, 1000);
         // initSplitDebounce
         initSplitDebounce();
 
