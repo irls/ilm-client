@@ -364,7 +364,7 @@
       })
       .catch(err=>err);
       this._setCatalogueSize();
-      window.addEventListener('resize', this._setCatalogueSize, true);
+      window.addEventListener('resize', this.splitRecalc, true);
       this.$root.$on('cancel-align', this.cancelAlign)
       this.$root.$on('start-align', () => {
         this.alignProcess = true;
