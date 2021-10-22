@@ -19,7 +19,7 @@
               Title
             </td>
             <td>
-              <input v-model="collection.title" />
+              <input v-model="collection.title" v-on:change="update('title', $event)" />
             </td>
           </tr>
           <tr>
@@ -27,24 +27,123 @@
               Subtitle
             </td>
             <td>
-              <input v-model="collection.subtitle" />
+              <input v-model="collection.subtitle" v-on:change="update('subtitle', $event)" />
+            </td>
+          </tr>
+          <tr class="author">
+            <td>
+              Author
+            </td>
+            <td>
+              <div class="authors">
+                <div class="author-row" v-if="collection.author && collection.author.length === 0">
+                  <input v-model="collection.author[0]" 
+                    v-on:change="update('author', $event)" 
+                    >
+                  <div class="dropdown" v-if="collection.author && collection.author.length === 0">
+                    <div v-on:click="toggleShowUnknownAuthor()" 
+                      class="dropdown-button" >
+                      <i class="fa fa-angle-down" ></i>
+                    </div>
+                    <div class="dropdown-content" 
+                      v-if="showUnknownAuthor" 
+                      v-on:click="setUnknownAuthor()" >Unknown</div>
+                  </div>
+                </div>
+                <template v-for="(author, i) in collection.author" >
+                  <div class="author-row">
+                    <input v-model='collection.author[i]' v-on:change="update('author', $event); ">
+                    <div class="dropdown" v-if=" i == 0">
+                      <div v-on:click="toggleShowUnknownAuthor()" class="dropdown-button">
+                        <i class="fa fa-angle-down" ></i>
+                      </div>
+                      <div class="dropdown-content" v-if="showUnknownAuthor" 
+                        v-on:click="setUnknownAuthor()" >Unknown</div>
+                    </div>
+                    <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="[{'disabled': i == 0 && collection.author.length == 1}, 'remove-author']">
+                      <i class="fa fa-minus-circle"></i>
+                    </button>
+                  </div>
+                </template>
+                <button v-on:click="addAuthor" class="add-author">
+                  <i class="fa fa-plus-circle"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Language
+            </td>
+            <td>
+              <select class="form-control" v-model="collection.language" 
+                v-on:change="update('language', $event)">
+                <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
+              </select>
             </td>
           </tr>
         </table>
       </fieldset>
+      <fieldset>
+        <legend>URL slug</legend>
+        <input v-model="collection.slug" class="collection-slug" />
+      </fieldset>
+      <fieldset>
+        <table class="properties">
+          <tr>
+            <td>
+              Category
+            </td>
+            <td>
+              <select  class="form-control" v-model="collection.category" v-on:change="update('category', $event)">
+                <template v-for="(data, index) in bookCategories">
+                  <optgroup :label="data.group">
+                    <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
+                  </optgroup>
+                </template>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Difficulty
+            </td>
+            <td>
+              <input type="number" min="1" max="14.99" step="0.01" v-model="collection.difficulty" v-on:change="update('difficulty', $event)" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Translator
+            </td>
+            <td>
+              <input v-model="collection.translator" v-on:change="update('translator', $event)" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Weight
+            </td>
+            <td>
+              <input type="number" min="1" max="10.99" step="0.01" v-model="collection.weight" v-on:change="update('weight', $event)" />
+            </td>
+          </tr>
+        </table>
+      </fieldset>
+      <fieldset>
+        <div class="coverimg" v-on:click="changeCoverModal()">
+          <img height="80" v-if="collectionImage" v-bind:src="collectionImage" />
+          <div v-else class="coverimg-wrap"></div>
+        </div>
+        <button class="btn btn-primary edit-coverimg" v-on:click="changeCoverModal()">
+          <i class="fa fa-pencil" ></i>
+        </button>
+      </fieldset>
+      <fieldset>
+        <legend>Description</legend>
+          <textarea v-model="collection.description" class="collection-description" v-on:change="update('description', $event)" :disabled="!allowCollectionsEdit"></textarea>
+      </fieldset>
       <div class="collection-meta col-sm-12">
-        <div class="col-sm-12">
-          <div class="coverimg" @click="changeCoverModal()">
-            <img height="80" v-if="collectionImage" v-bind:src="collectionImage" />
-            <div v-else class="coverimg-wrap"></div>
-          </div>
-        </div>
-        <div class="col-sm-12">
-          <i class="fa fa-book"></i>&nbsp;{{collection.title}}
-        </div>
-        <div class="col-sm-12">
-          {{collectionBooksLength}} Books, {{collection.pages}} pages
-        </div>
         <div class="col-sm-12" v-if="allowCollectionsEdit">
           <div class="col-sm-6">
             <button class="btn btn-default" v-on:click="linkBookModal = true">
@@ -56,44 +155,6 @@
               Remove collection
             </button>
           </div>
-        </div>
-        <div class="col-sm-12">
-          <fieldset>
-            <legend>
-              Status
-            </legend>
-            <div class="col-sm-9">
-              {{collection.state}}
-            </div>
-            <div class="col-sm-9">
-              Version: {{collection.version ? collection.version : '1.0'}}
-            </div>
-            <div class="col-sm-9" v-if="collection.publishedVersion">
-              Published version: {{collection.publishedVersion}}
-            </div>
-            <div class="col-sm-9" v-if="allowPublishCurrentCollection">
-              <!-- <button class="btn btn-primary" v-on:click="publish()">Publish</button> -->
-            </div>
-          </fieldset>
-        </div>
-        <div class="col-sm-12">
-          <div class="col-sm-4">Title</div>
-          <div class="col-sm-8">
-            <input type="text" v-model="collection.title" v-on:change="update('title', $event)" :disabled="!allowCollectionsEdit" :class="[{'has-error': hasTitleWarning}]"/>
-            <span v-if="hasTitleWarning" class="error-message">Please define Collection title</span>
-          </div>
-          <div class="col-sm-4">Language</div>
-          <div class="col-sm-8">
-            <select class="form-control" v-model='collection.language' v-on:change="update('language', $event)" :disabled="!allowCollectionsEdit || collectionBooksLength > 0">
-              <option v-for="(value, index) in languages" :value="index">{{ value }}</option>
-            </select>
-          </div>
-        </div>
-        <div class="col-sm-12">
-          <fieldset>
-            <legend>Description</legend>
-            <textarea v-model="collection.description" v-on:change="update('description', $event)" :disabled="!allowCollectionsEdit"></textarea>
-          </fieldset>
         </div>
 
         <linkBook v-if="linkBookModal"
@@ -128,7 +189,9 @@
           linkBookModal: false,
           onRemoveMessage: false,
           showCollectionCoverModal: false,
-          collectionImage: ''
+          collectionImage: '',
+          showUnknownAuthor: false,
+          showUnknownAuthorEn: false,
         }
       },
       components: {
@@ -151,9 +214,9 @@
           }
           this.resetCollectionImage();
         },
-        update: _.debounce(function (key, event) {
+        update(key, event) {
           this.liveUpdate(key, event.target.value)
-        }, 300),
+        },
         change(field) {
           this.liveUpdate(field, this.collection[field]);
         },
@@ -201,6 +264,28 @@
             this.collectionImage = this.currentCollection.coverimgURL + '?' + Date.now();
           }
         },
+        toggleShowUnknownAuthor(setValue = null) {
+          if (setValue === null) {
+            this.showUnknownAuthor = !this.showUnknownAuthor;
+          } else {
+            this.showUnknownAuthor = setValue ? true : false;
+          }
+        },
+        addAuthor() {
+          this.collection.author.push('');
+          this.liveUpdate('author', this.collection.author);
+        },
+        removeAuthor(i) {
+          if (i > 0 || this.collection.author.length > 1) {
+            this.collection.author.splice(i, 1);
+            this.liveUpdate('author', this.collection.author);
+          }
+        },
+        setUnknownAuthor() {
+          this.toggleShowUnknownAuthor(false);
+          this.collection.author[0] = 'Unknown';
+          this.liveUpdate('author', this.collection.author);
+        },
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollection', 'removeCollection'])
       },
       computed: {
@@ -221,7 +306,7 @@
 
         },
 
-        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'allowPublishCurrentCollection'])
+        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'allowPublishCurrentCollection', 'bookCategories'])
       },
       watch: {
         'currentCollection': {
@@ -265,20 +350,6 @@
     .error-message {
       margin: 0px;
     }
-    .coverimg {
-      padding:0; margin: 5px; margin-right: 8px;
-      float: left;
-      margin-left: 3px;
-      margin-top: 10px;
-      background: white;
-      box-shadow: inset 0px 0px 3px 3px rgba(0,0,0,0.06);
-      cursor: pointer;
-      position: relative;
-    }
-    .coverimg-wrap {
-      height: 80px;
-      width: 60px;
-    }
   }
   .collection-meta::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
@@ -296,13 +367,90 @@
   }
   
   /* Properties editor area */
-  table.properties {margin:0; padding:0; width:100%; font-size: 1em;
-    border-collapse: separate; border-spacing: 3px;
+  table.properties {
+    margin:0; 
+    padding:0; 
+    width:100%; 
+    font-size: 1em;
+    border-collapse: separate; 
+    border-spacing: 3px;
+    td {
+      &:nth-child(1) {
+        width: 30%; 
+        padding: 3px; 
+        margin:0;
+      }
+      &:nth-child(2) {
+        width: auto; 
+        text-align: right !important;
+      }
+    }
+    tr{
+      &:nth-child(odd) {
+        background-color: #F0F0F0;
+      }
+      &.author {
+        .authors {
+          display: table;
+          width: 100%;
+          .dropdown {
+            padding: 0px 2px;
+            width: 10%;
+          }
+          .author-row {
+            display: table-row;
+            input {
+              display: table-cell;
+              width: 90%;
+            }
+            .remove-author {
+              display: table-cell;
+              background: transparent;
+              border: none;
+              width: 10%;
+            }
+          }
+          .add-author {
+            background: transparent;
+            border: none;
+            width: 27px;
+          }
+          .dropdown-content {
+            text-align: center;
+          }
+        }
+      }
+    }
   }
-  table.properties td:nth-child(1) {width: 30%; padding: 3px; margin:0}
-  table.properties td:nth-child(2) {width: auto; text-align: right !important;}
-  table.properties tr:nth-child(odd) {background-color: #F0F0F0}
+  
   table tr {border: 2px solid white}
   table tr.changed {border: 2px solid wheat}
   table tr input {font-size: 1em; width: 100%}
+  .collection-slug {
+    width: 100%;
+  }
+  .coverimg {
+    padding:0; margin: 5px; margin-right: 8px;
+    float: right;
+    margin-left: 3px;
+    margin-top: 10px;
+    background: white;
+    box-shadow: inset 0px 0px 3px 3px rgba(0,0,0,0.06);
+    cursor: pointer;
+    position: relative;
+    .coverimg-wrap {
+      height: 80px;
+      width: 60px;
+    }
+  }
+  .edit-coverimg {
+    float: right;
+    margin-top: 10px;
+    i {
+      color: white;
+    }
+  }
+  .collection-description {
+    width: 100%;
+  }
 </style>

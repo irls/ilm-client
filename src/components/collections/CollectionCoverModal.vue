@@ -155,5 +155,8 @@
       max-width: 200px;
       height: 250px;
     }
+    .tab-pane {
+      display: block;
+    }
   }
 </style>
