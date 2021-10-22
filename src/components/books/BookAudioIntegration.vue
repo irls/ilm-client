@@ -323,6 +323,7 @@
         }
       });
       this.$root.$on('from-audioeditor:audio-loaded', (id) => {
+        console.log('from-audioeditor:audio-loaded')
         this.audioOpening = false;
         if (self.audiobook && self.audiobook.importFiles) {
           let record = this.audiobook.importFiles.find(f => f.id === id);
@@ -1139,6 +1140,8 @@
         return Math.max(0, t>0? Math.min(elH, H-t) : Math.min(b, H));
       },
       splitRecalc(force = false, state) {
+        console.log('splitRecalc')
+
         let parentHeight;
         let parentBottomPadding;
 
@@ -1168,6 +1171,7 @@
 
       },
       initSplit(force = false, state) {
+        console.log('initSplit')
         // if (force || (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
         if (force || (this.isActive === true && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
           let parentHeight = false;
@@ -1184,7 +1188,8 @@
             //minSize: [80, 80],
             sizes: [70, 30],
             elementStyle: (dimension, size, gutterSize) => {
-              console.log(`----------`);
+
+              console.log(`elementStyle`);
 
               let resizeWrapper = true;
               parentHeight = parseInt($(document).height());
