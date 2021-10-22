@@ -255,10 +255,10 @@
       this.$root.$on('from-audioeditor:lock', function(blockId, audiofileId) {
         this.audioEditorIsOpeed = true;
 
-        var initSplitDebounce = _.debounce(function () {
-          self.splitRecalc(true,false)
-        }, 1000);
-        initSplitDebounce();
+        // var initSplitDebounce = _.debounce(function () {
+        //   self.splitRecalc(true,false)
+        // }, 1000);
+        // initSplitDebounce();
 
       })
       var self = this;
@@ -322,11 +322,18 @@
           }
         }
       });
-      this.$root.$on('from-audioeditor:audio-loaded', (id) => {
+      this.$root.$on('from-audioeditor:content-loaded', (id) => {
         var initSplitDebounce = _.debounce(function () {
           self.splitRecalc(true,false)
-        }, 1000);
+        }, 500);
         initSplitDebounce();
+      });
+
+      this.$root.$on('from-audioeditor:audio-loaded', (id) => {
+        // var initSplitDebounce = _.debounce(function () {
+        //   self.splitRecalc(true,false)
+        // }, 1000);
+        // initSplitDebounce();
         this.audioOpening = false;
         if (self.audiobook && self.audiobook.importFiles) {
           let record = this.audiobook.importFiles.find(f => f.id === id);
