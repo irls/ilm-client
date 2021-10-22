@@ -515,6 +515,8 @@
               return;
             }
             let self = this;;
+            this.$root.$emit('from-audioeditor:content-loaded');
+
             this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
             if (this.blockId) {
               this.$root.$emit('from-audioeditor:block-loaded', this.blockId);
