@@ -323,7 +323,10 @@
         }
       });
       this.$root.$on('from-audioeditor:audio-loaded', (id) => {
-        console.log('from-audioeditor:audio-loaded')
+        var initSplitDebounce = _.debounce(function () {
+          self.splitRecalc(true,false)
+        }, 500);
+        initSplitDebounce();
         this.audioOpening = false;
         if (self.audiobook && self.audiobook.importFiles) {
           let record = this.audiobook.importFiles.find(f => f.id === id);
