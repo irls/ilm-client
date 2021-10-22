@@ -257,7 +257,7 @@
 
         var initSplitDebounce = _.debounce(function () {
           self.splitRecalc(true,false)
-        }, 500);
+        }, 1000);
         initSplitDebounce();
 
       })
@@ -276,7 +276,7 @@
 
         var initSplitDebounce = _.debounce(function () {
           self.splitRecalc(true)
-        }, 500);
+        }, 1000);
         // initSplitDebounce
         initSplitDebounce();
 
@@ -325,7 +325,7 @@
       this.$root.$on('from-audioeditor:audio-loaded', (id) => {
         var initSplitDebounce = _.debounce(function () {
           self.splitRecalc(true,false)
-        }, 500);
+        }, 1000);
         initSplitDebounce();
         this.audioOpening = false;
         if (self.audiobook && self.audiobook.importFiles) {
