@@ -96,7 +96,7 @@
         </div>
       </div>
     </div>
-    
+
     <modal name="onDiscardMessage" :resizeable="false" :clickToClose="false" height="auto">
       <div class="modal-header"></div>
       <div class="modal-body">
@@ -515,6 +515,8 @@
               return;
             }
             let self = this;;
+            this.$root.$emit('from-audioeditor:content-loaded');
+
             this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
             if (this.blockId) {
               this.$root.$emit('from-audioeditor:block-loaded', this.blockId);
@@ -675,7 +677,7 @@
           let waitPlaylist = setInterval(() => {
             if ($('.playlist-overlay').length > 0) {
               clearInterval(waitPlaylist);
-              
+
               $('.playlist-overlay.state-select').on('mouseup', this._showSelectionBordersOnClick);
 
               $('.playlist-overlay').on('click', (e) => {
@@ -845,7 +847,7 @@
                           this.play();
                         }
                       });
-                      
+
                     } else {
                       if (replay && (this.audiosourceEditor.pausedAt || this.cursorPosition)) {
                         this.play();
@@ -1103,15 +1105,15 @@
           let original_buffer = this.audiosourceEditor.activeTrack.buffer;
           let time = this._round(this.cursorPosition, 2);
           this.silenceLength = parseFloat(this.silenceLength);
-          
+
           let silence = new Float32Array(this.silenceLength * original_buffer.sampleRate);
-          
+
           this.insertRangeAction(time, silence, this.silenceLength);
           //this.audiosourceEditor.draw(this.audiosourceEditor.render());
           //this.audiosourceEditor.drawRequest();
           //this.audiosourceEditor.renderTrackSection();
-          
-          
+
+
           this._addHistoryLocal('insert_silence', null, this.cursorPosition, this.cursorPosition + this.silenceLength);
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
             if (al.start >= time) {
@@ -1154,7 +1156,7 @@
               //this._changeWordPositions(al, i);
               this._changeWordPositions(this.audiosourceEditor.annotationList.annotations[i - 1], i - 1);
             }
-            
+
           });
         },
         insertRangeAction(position, range, length) {
@@ -1167,13 +1169,13 @@
           }
 
           let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, original_buffer.length + parseInt((length) * original_buffer.sampleRate), original_buffer.sampleRate);
-            
+
           let new_list        = new Float32Array( parseInt( first_list_index ));
           let second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
           let combined        = new Float32Array( new_list.length + range.length + second_list.length );
           //console.log(new_list.length + second_list.length + range.length, first_list_index, second_list_index, combined.length);
           //console.log(new_list.length, range.length, second_list.length);
-          
+
           for (let i = 0; i < original_buffer.numberOfChannels; ++i ) {
 
             original_buffer.copyFromChannel(new_list, i);
@@ -1396,14 +1398,14 @@
           if (second_list_mem_alloc < 0) {
             second_list_mem_alloc = 0;
           }
-          
+
           let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, parseInt( first_list_index ) + parseInt( second_list_mem_alloc ), original_buffer.sampleRate);
 
           let new_list        = new Float32Array( parseInt( first_list_index ));
           let second_list     = new Float32Array( parseInt( second_list_mem_alloc ));
           let combined        = new Float32Array( parseInt( first_list_index ) + parseInt( second_list_mem_alloc ) );
           let cut_range = new Float32Array((end - start) * original_buffer.sampleRate);
-          
+
           //this.actionsLog.push({
             //type: 'cut',
             //buffer: original_buffer
@@ -1413,7 +1415,7 @@
             original_buffer.copyFromChannel(new_list, i);
 
             combined.set(new_list);
-            
+
             if (second_list_mem_alloc > 0) {
               original_buffer.copyFromChannel(second_list, i, second_list_index);
               combined.set(second_list, first_list_index);
@@ -1428,7 +1430,7 @@
           this.audiosourceEditor.activeTrack.duration-= end - start;
           this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
           this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
-          
+
           this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
           this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
           this.audiosourceEditor.drawRequest();
@@ -1472,7 +1474,7 @@
           }
           return pause
             .then(() => {
-              
+
               let original_buffer = this.audiosourceEditor.activeTrack.buffer;
 
               let silence = new Float32Array((this.selection.end - this.selection.start) * original_buffer.sampleRate);
@@ -2046,7 +2048,7 @@
           Vue.nextTick(() => {
             this.audiosourceEditor.annotationList.resizeHandlers.forEach((rh, i) => {
               /*this.audiosourceEditor.annotationList.resizeHandlers[i].ondragover = (e) => {
-                
+
               }*/
               //console.log(rh.playlist.ee)
               if (Array.isArray(rh.playlist.ee.__ee__.dragged)) {
@@ -2261,7 +2263,7 @@
           this.$root.$emit('cancel-align');
         },
         smoothSelection: _.debounce(function (val, oldVal) {
-          
+
           if (!this.blockSelectionEmit) {
             if (typeof val.start !== 'undefined' && typeof val.end !== 'undefined') {
               if (val.start !== oldVal.start || val.end !== oldVal.end) {
@@ -2274,7 +2276,7 @@
           }
           this.$root.$emit('from-audioeditor:selection-change', this.blockId, val.start, val.end);
           if (this.selection.end >= this.audioDuration && this.mode === 'block') {
-            
+
             setTimeout(() => {
               $('.playlist-tracks').scrollLeft($('.playlist-tracks').scrollLeft() + 100);
             }, 500)
@@ -2534,7 +2536,7 @@
               resize_e.removeClass('manual');
             }
           });
-          
+
           this._addHistoryLocal('unpin_right', null, null, null, {unpinned_indexes: unpinned_indexes});
           this.addTaskQueue('unpin_right', [position * 1000]);
           this.isModified = true;
@@ -2596,7 +2598,7 @@ Revert to original block audio?`,
                 return Promise.resolve();
               })
               .then(() => {
-                
+
                 this.$root.$emit('from-audioeditor:revert', this.blockId);
               });
           }
@@ -2621,6 +2623,7 @@ Revert to original block audio?`,
           }
         },
         setEditingLocked(isLocked, reason = '') {
+          this.$root.$emit('from-audioeditor:lock', isLocked,reason);
           this.editingLocked = isLocked;
           if (isLocked) {
             this.editingLockedReason = reason;
@@ -2922,9 +2925,9 @@ Revert to original block audio?`,
           blkSelection: 'blockSelection',
           alignCounter: 'alignCounter',
           hasLocks: 'hasLocks',
-          currentAudiobook: 'currentAudiobook', 
+          currentAudiobook: 'currentAudiobook',
           storeListO: 'storeListO',
-          audioTasksQueue: 'audioTasksQueue', 
+          audioTasksQueue: 'audioTasksQueue',
           audioTasksQueueBlock: 'audioTasksQueueBlock',
           audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
           coupletSeparator: 'coupletSeparator'})
@@ -2998,7 +3001,7 @@ Revert to original block audio?`,
         },
         'selection': {
           handler(val, oldVal) {
-            
+
             Vue.nextTick(() => {
               //return;
               //$('[id="resize-selection-right"]')
@@ -3328,7 +3331,7 @@ Revert to original block audio?`,
     position: absolute;
     z-index: 1000;
     right: 0px;
-    top: -22px;
+    top: -2px;
     padding: 2px;
     height: 20px;
     .close-player {
