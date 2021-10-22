@@ -29,8 +29,8 @@
     </div>
 
     <div class='metaedit' v-if='metaVisible'>
-      <CollectionMeta v-if="collectionMetaVisible"
-        @collectionRemoved="collectionRemoved"></CollectionMeta>
+      <CollectionTabs v-if="collectionMetaVisible"
+        @collectionRemoved="collectionRemoved"></CollectionTabs>
       <BookMetaEdit v-if="bookMetaVisible"
         :blocksForAlignment="blocksForAlignment"></BookMetaEdit>
     </div>
@@ -45,7 +45,7 @@
   import BookEditToolbar from './books/BookEditToolbar';
   import CollectionsToolbar from './collections/CollectionsToolbar';
   import CollectionsGrid from './collections/CollectionsGrid';
-  import CollectionMeta from './collections/CollectionMeta';
+  import CollectionTabs from './collections/CollectionTabs';
   import BookMetaEdit from './books/BookMetaEdit';
   import { mapGetters, mapActions } from 'vuex';
   import AudioEditor from './AudioEditor';
@@ -62,7 +62,7 @@
         BookEditToolbar: BookEditToolbar,
         CollectionsToolbar: CollectionsToolbar,
         CollectionsGrid: CollectionsGrid,
-        CollectionMeta: CollectionMeta,
+        CollectionTabs: CollectionTabs,
         BookMetaEdit: BookMetaEdit,
         AudioEditor: AudioEditor,
         BookEdit: BookEdit
